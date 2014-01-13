@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>fr.ortolang</groupId>
+	<artifactId>ortolang-diffusion</artifactId>
+	<packaging>war</packaging>
+	<name>Ortolang Diffusion Server</name>
+	<version>0.1-SNAPSHOT</version>
+	<url>http://www.ortolang.fr</url>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.8.1</version>
+			</dependency>
+			<dependency>
+				<groupId>org.jmock</groupId>
+				<artifactId>jmock-junit4</artifactId>
+				<version>2.5.1</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	<distributionManagement>
+		<repository>
+			<id>ortolang-maven-repository</id>
+			<name>Ortolang Releases</name>
+			<url>http://maven.ortolang.fr/content/repositories/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>ortolang-maven-repository</id>
+			<name>Ortolang Snapshots</name>
+			<url>http://maven.ortolang.fr/content/repositories/snapshots/</url>
+		</snapshotRepository>
+		<site>
+			<id>dev.ortolang.fr</id>
+			<url>scp://blanchard@ortolang1.inist.fr:/srv/www/vhosts/dev.ortolang.fr/</url>
+		</site>
+	</distributionManagement>
+	<parent>
+		<groupId>fr.ortolang</groupId>
+		<artifactId>ortolang</artifactId>
+		<version>0.2-SNAPSHOT</version>
+		<relativePath>../ortolang</relativePath>
+	</parent>
+	<dependencies>
+		<dependency>
+			<groupId>javax.activation</groupId>
+			<artifactId>activation</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jmock</groupId>
+			<artifactId>jmock-junit4</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
+		</dependency>
+	</dependencies>
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<configuration>
+					<links>
+						<link>http://commons.apache.org/lang/api</link>
+						<link>http://java.sun.com/j2se/1.5.0/docs/api</link>
+						<link>http://this-one-will-not-work</link>
+					</links>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
+</project>

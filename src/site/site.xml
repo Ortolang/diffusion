@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Ortolang" xmlns="http://maven.apache.org/DECORATION/1.3.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd">
+
+	<bannerLeft>
+		<name><![CDATA[<span class="color-highlight">ORTOLANG</span> Diffusion ]]></name>
+		<href>http://dev.ortolang.fr/diffusion</href>
+	</bannerLeft>
+	
+	<publishDate position="bottom" format="yyyy-MM-dd" />
+  	<version position="bottom" />
+  	<googleAnalyticsAccountId>UA-2086251-10</googleAnalyticsAccountId>
+
+	<skin>
+		<groupId>lt.velykis.maven.skins</groupId>
+		<artifactId>reflow-maven-skin</artifactId>
+		<version>1.0.0</version>
+	</skin>
+
+	<custom>
+		<reflowSkin>
+			<!-- Make this to 'false' for local development, i.e. file:// URLs -->
+			<protocolRelativeURLs>false</protocolRelativeURLs>
+			<smoothScroll>true</smoothScroll>
+			<theme>default</theme>
+			<highlightJs>true</highlightJs>
+			<highlightJsTheme>github</highlightJsTheme>
+			<!-- <absoluteResourceURL>http://dev.ortolang.fr/</absoluteResourceURL> -->
+			<brand>
+				<name><![CDATA[<img src="images/ortolang-logo.png" style="height:40px; margin-right:10px;" /><span class="color-highlight">ORTOLANG</span> Community]]></name>
+				<href>http://dev.ortolang.fr</href>
+			</brand>
+			<slogan>Outils et Resources pour un Traitement Optimisé de la LANGue</slogan>
+			<titleTemplate>%2$s | %1$s</titleTemplate>
+			<toc>none</toc>
+			<topNav>Ortolang Diffusion|reports</topNav>
+			<bottomNav maxSpan="9">
+				<column>Ortolang Diffusion</column>
+				<column>reports</column>
+			</bottomNav>
+			<bottomDescription><![CDATA[<img src="images/mariane-avenir.png"/><br/><span class="color-highlight">ORTOLANG</span> bénéficie d'une aide de l’Etat au titre du programme « Investissements d’avenir » (ANR-­‐11-­‐EQPX-­‐0032)]]></bottomDescription>
+			<pages>
+				<index>
+					<titleTemplate>Ortolang Diffusion</titleTemplate>
+					<breadcrumbs>false</breadcrumbs>
+					<toc>false</toc>
+					<markPageHeader>false</markPageHeader>
+					<sections>
+						<body />
+					</sections>
+				</index>
+				<specifications>
+					<titleTemplate>Specifications</titleTemplate>
+					<breadcrumbs>false</breadcrumbs>
+					<toc>false</toc>
+					<markPageHeader>false</markPageHeader>
+					<sections>
+						<body />
+					</sections>
+				</specifications>
+				<download>
+					<titleTemplate>Download</titleTemplate>
+					<breadcrumbs>false</breadcrumbs>
+					<toc>false</toc>
+					<markPageHeader>false</markPageHeader>
+					<sections>
+						<body />
+					</sections>
+				</download>
+			</pages>
+		</reflowSkin>
+	</custom>
+
+	<body>
+		<menu name="Ortolang Diffusion">
+			<item name="Accueil" href="index.html" />
+			<item name="Spécifications" href="specifications.html" />
+			<item name="Télécharger" href="download.html" />
+		</menu>
+
+		<menu name="Développement" ref="reports"/>
+	</body>
+</project>

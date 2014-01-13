@@ -1,0 +1,64 @@
+.color-highlight {
+	color: #008bd0;
+}
+
+body {
+	background-image:url(../images/bg.png);
+}
+
+body[class*="page-themes-bootswatch"] {
+	background-image: none;
+}
+
+body[class*="page-themes-bootswatch"] .color-highlight {
+	color: inherit;
+}
+
+.navbar .brand {
+	padding: 0px 20px;
+}
+
+.bottom-description > blockquote {
+	border: 0;
+	text-align: center;
+}
+
+.thumbnail-row {
+	margin-top: 10px;
+}
+
+/*h1, */h2 {
+  margin-top: 30px;
+}
+
+h3, h4, h5, h6 {
+  margin-top: 20px;
+}
+
+.carousel-caption a {
+  color: white;
+}
+
+/* A bit of workaround for links being not clickable due to :before element in headings */
+.project-reflow-parent.page-index h2[id]:before {
+  height: 30px;
+  margin-top: -30px;
+}
+
+.project-reflow-parent.page-index .sidebar {
+  margin-top: 10px;
+}
+
+.project-reflow-parent.page-index .sidebar {
+  margin-top: 10px;
+}
+
+.project-reflow-parent.page-index .sidebar h3 {
+  margin-top: 10px;
+}
+
+
+h1[id]:before, h2[id]:before, h3[id]:before, h4[id]:before, h5[id]:before, h6[id]:before, a[name]:before {
+    height: 0;
+    margin: 0;
+}
