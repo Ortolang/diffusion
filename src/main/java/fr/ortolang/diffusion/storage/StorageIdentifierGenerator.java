@@ -4,6 +4,6 @@ import java.io.InputStream;
 
 public interface StorageIdentifierGenerator {
 	
-	public String generate(InputStream Stream) throws Exception;
+	public String generate(InputStream Stream) throws StorageServiceException;
 
 }

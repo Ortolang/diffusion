@@ -5,39 +5,74 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.IOUtils;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class FileSystemStorageServiceTest {
 
 	private Logger logger = Logger.getLogger(FileSystemStorageServiceTest.class.getName());
 
-	private static Mockery context;
+	private Mockery context;
+	private StorageIdentifierGenerator generator;
 	private FileSystemStorageService service;
-
-	@BeforeClass
-	public static void init() {
-		context = new Mockery();
-	}
-
+	
 	@Before
 	public void setup() {
 		try {
+			context = new Mockery();
+			generator = context.mock(StorageIdentifierGenerator.class);
 			service = new FileSystemStorageService(Paths.get("/tmp/ortolang-storage/" + System.currentTimeMillis()));
 		} catch (Exception e) {
 			fail(e.getMessage());
+		}
+	}
+	
+	@After
+	public void tearDown() {
+		try {
+			Files.walkFileTree(service.getBase(), new FileVisitor<Path>() {
+				@Override
+				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+					Files.delete(file);
+					return FileVisitResult.CONTINUE;
+				}
+
+				@Override
+				public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+					logger.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
+					return FileVisitResult.TERMINATE;
+				}
+
+				@Override
+				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+					Files.delete(dir);
+					return FileVisitResult.CONTINUE;
+				}
+				
+			});
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 
@@ -70,8 +105,7 @@ public class FileSystemStorageServiceTest {
 	}
 
 	@Test
-	public void testNormalInsertAndRetrieve() {
-		final StorageIdentifierGenerator generator = context.mock(StorageIdentifierGenerator.class);
+	public void testInsertUnexistingObject() {
 		service.setStorageIdentifierGenerator(generator);
 		final byte[] content = "Sample Digital Content v1.0".getBytes();
 
@@ -100,5 +134,54 @@ public class FileSystemStorageServiceTest {
 
 		context.assertIsSatisfied();
 	}
-
+	
+	@Test(expected = ObjectAlreadyExistsException.class)  
+	public void testInsertExistingObject() throws ObjectAlreadyExistsException, StorageServiceException {
+		service.setStorageIdentifierGenerator(generator);
+		final byte[] content1 = "Sample Digital Content v1.0".getBytes();
+		final byte[] content2 = "Sample Digital Content v1.0".getBytes();
+		
+		try {
+			context.checking(new Expectations() {
+				{
+					allowing(generator).generate(with(any(InputStream.class)));
+					will(returnValue("123456789abcdef"));
+				}
+			});
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+		
+		try {
+			service.put(new ByteArrayInputStream(content1));
+			service.put(new ByteArrayInputStream(content2));
+		} catch (ObjectCollisionException e) {
+			fail(e.getMessage());
+		} 
+	}
+	
+	@Test(expected = ObjectCollisionException.class)  
+	public void testInsertCollisionObject() throws StorageServiceException {
+		service.setStorageIdentifierGenerator(generator);
+		final byte[] content1 = "Sample Digital Content v1.0".getBytes();
+		final byte[] content2 = "Sample Digital Content that generate a collision".getBytes();
+		
+		try {
+			context.checking(new Expectations() {
+				{
+					allowing(generator).generate(with(any(InputStream.class)));
+					will(returnValue("123456789abcdef"));
+				}
+			});
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+		
+		try {
+			service.put(new ByteArrayInputStream(content1));
+			service.put(new ByteArrayInputStream(content2));
+		} catch (ObjectAlreadyExistsException e) {
+			fail(e.getMessage());
+		} 
+	}
 }

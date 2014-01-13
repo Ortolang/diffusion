@@ -1,11 +1,14 @@
 package fr.ortolang.diffusion.storage;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.io.IOUtils;
 
 public class FileSystemStorageService implements StorageService {
 
@@ -36,6 +39,10 @@ public class FileSystemStorageService implements StorageService {
 	public StorageIdentifierGenerator getStorageIdentifierGenerator() {
 		return generator;
 	}
+	
+	public Path getBase() {
+		return base;
+	}
 
 	@Override
 	public InputStream get(String identifier) throws StorageServiceException, ObjectNotFoundException {
@@ -52,7 +59,7 @@ public class FileSystemStorageService implements StorageService {
 	}
 
 	@Override
-	public String put(InputStream content) throws StorageServiceException, ObjectAlreadyExistsException {
+	public String put(InputStream content) throws StorageServiceException, ObjectAlreadyExistsException, ObjectCollisionException {
 		try {
 			String identifier = generator.generate(content);
 			Path parent = Paths.get(base.toString(), identifier.substring(0, 4));
@@ -63,10 +70,16 @@ public class FileSystemStorageService implements StorageService {
 			if (!Files.exists(file)) {
 				Files.copy(content, file);
 			} else {
-				// TODO Check if it is a collision.
+				try (InputStream input = Files.newInputStream(file)) {
+					if ( IOUtils.contentEquals(content, input) ) {
+						throw new ObjectAlreadyExistsException();
+					} else {
+						throw new ObjectCollisionException();
+					}
+				} 
 			}
 			return identifier;
-		} catch (Exception e) {
+		} catch (IOException e) {
 			throw new StorageServiceException(e);
 		}
 	}
