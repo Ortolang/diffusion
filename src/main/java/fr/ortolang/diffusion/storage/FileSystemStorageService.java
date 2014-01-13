@@ -38,31 +38,30 @@ public class FileSystemStorageService implements StorageService {
 	}
 
 	@Override
-	public DigitalObject get(String identifier) throws StorageServiceException, ObjectNotFoundException {
-		//TODO Maybe check corruption and generate a ObjectCorruptedException !!
+	public InputStream get(String identifier) throws StorageServiceException, ObjectNotFoundException {
+		// TODO Maybe check corruption and generate a ObjectCorruptedException !!
 		Path path = Paths.get(base.toString(), identifier.substring(0, 4), identifier);
 		if (!Files.exists(path)) {
-			throw new ObjectNotFoundException("Unable to find an DigitalObject with id: " + identifier + " in the storage");
+			throw new ObjectNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
 		try {
-			DigitalObject object = new DigitalObject(Files.newInputStream(path));
-			return object;
+			return Files.newInputStream(path);
 		} catch (Exception e) {
 			throw new StorageServiceException(e);
 		}
 	}
 
 	@Override
-	public String put(DigitalObject object) throws StorageServiceException, ObjectAlreadyExistsException {
+	public String put(InputStream content) throws StorageServiceException, ObjectAlreadyExistsException {
 		try {
-			String identifier = generator.generate(object.getData());
+			String identifier = generator.generate(content);
 			Path parent = Paths.get(base.toString(), identifier.substring(0, 4));
 			Path file = Paths.get(base.toString(), identifier.substring(0, 4), identifier);
 			if (!Files.exists(parent)) {
 				Files.createDirectory(parent);
 			}
 			if (!Files.exists(file)) {
-				Files.copy(object.getData(), file);
+				Files.copy(content, file);
 			} else {
 				// TODO Check if it is a collision.
 			}
@@ -73,10 +72,10 @@ public class FileSystemStorageService implements StorageService {
 	}
 
 	@Override
-	public void verify(String identifier) throws StorageServiceException, ObjectNotFoundException, ObjectCorruptedException {
+	public void check(String identifier) throws StorageServiceException, ObjectNotFoundException, ObjectCorruptedException {
 		Path path = Paths.get(base.toString(), identifier.substring(0, 4), identifier);
 		if (!Files.exists(path)) {
-			throw new ObjectNotFoundException("Unable to find an DigitalObject with id: " + identifier + " in the storage");
+			throw new ObjectNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
 		String check;
 		try {
@@ -85,8 +84,8 @@ public class FileSystemStorageService implements StorageService {
 			throw new StorageServiceException(e);
 		}
 		if (!check.equals(identifier)) {
-			throw new ObjectCorruptedException("The DigitalObject with id: " + identifier
-					+ " is CORRUPTED. The stored content has generate a wrong hash: " + check);
+			throw new ObjectCorruptedException("The object with id [" + identifier
+					+ "] is CORRUPTED. The stored object's content has generate a wrong identifier [" + check + "]");
 		}
 	}
 
@@ -94,7 +93,7 @@ public class FileSystemStorageService implements StorageService {
 	public void delete(String identifier) throws StorageServiceException, ObjectNotFoundException {
 		Path path = Paths.get(base.toString(), identifier.substring(0, 4), identifier);
 		if (!Files.exists(path)) {
-			throw new ObjectNotFoundException("Unable to find an DigitalObject with id: " + identifier + " in the storage");
+			throw new ObjectNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
 		try {
 			Files.delete(path);
@@ -104,12 +103,12 @@ public class FileSystemStorageService implements StorageService {
 	}
 
 	@Override
-	public String hash(DigitalObject object) throws StorageServiceException {
-		try (InputStream input = object.getData()) {
-			String hash = generator.generate(input);
+	public String generate(InputStream content) throws StorageServiceException {
+		try {
+			String hash = generator.generate(content);
 			return hash;
 		} catch (Exception e) {
-			throw new StorageServiceException("Unable to generate StorageIdentifier for DigitalObject: " + e.getMessage(), e);
+			throw new StorageServiceException("Unable to generate an identifier for this content: " + e.getMessage(), e);
 		}
 	}
 
