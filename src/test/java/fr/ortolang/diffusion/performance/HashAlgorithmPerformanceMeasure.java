@@ -16,17 +16,15 @@ import java.util.logging.Logger;
 import java.util.zip.CRC32;
 
 import org.getopt.util.hash.FNV132;
-import org.getopt.util.hash.FNV164;
 import org.getopt.util.hash.FNV1a32;
-import org.getopt.util.hash.FNV1a64;
 import org.junit.Test;
 
-public class HashAlgorithmPerformanceTest {
+public class HashAlgorithmPerformanceMeasure {
 	
 	private static final String SAMPLE_FOLDER = "/home/jerome/Vidéos";
 	//private static final String SAMPLE_FOLDER = "/home/jerome/Images/Photos/Travaux Maison";
 	
-	private Logger logger = Logger.getLogger(HashAlgorithmPerformanceTest.class.getName());
+	private Logger logger = Logger.getLogger(HashAlgorithmPerformanceMeasure.class.getName());
 	
 	@Test
 	public void testGenerateHash1() {
@@ -43,37 +41,37 @@ public class HashAlgorithmPerformanceTest {
 				StringBuffer result = new StringBuffer();
 				result.append("Treating file " + path + "\r\n");
 				Long start = System.currentTimeMillis();
-				String hash = HashAlgorithmPerformanceTest.sha1(path);
+				String hash = HashAlgorithmPerformanceMeasure.sha1(path);
 				Long stop = System.currentTimeMillis();
 				Float throughout = new Float( Files.size(path) / Math.max(1,(stop-start)) * 1000 / (1024*1024) );
 				sha1 += throughout;
 				result.append(throughout + " Mo/s [sha1   :" + hash + "]\r\n");
 				start = System.currentTimeMillis();
-				hash = HashAlgorithmPerformanceTest.sha256(path);
+				hash = HashAlgorithmPerformanceMeasure.sha256(path);
 				stop = System.currentTimeMillis();
 				throughout = new Float( Files.size(path) / Math.max(1,(stop-start)) * 1000 / (1024*1024) );
 				sha256 += throughout;
 				result.append(throughout + " Mo/s [sha256 :" + hash + "]\r\n");
 				start = System.currentTimeMillis();
-				hash = HashAlgorithmPerformanceTest.sha512(path);
+				hash = HashAlgorithmPerformanceMeasure.sha512(path);
 				stop = System.currentTimeMillis();
 				throughout = new Float( Files.size(path) / Math.max(1,(stop-start)) * 1000 / (1024*1024) );
 				sha512 += throughout;
 				result.append(throughout + " Mo/s [sha512 :" + hash + "]\r\n");
 				start = System.currentTimeMillis();
-				hash = HashAlgorithmPerformanceTest.crc32(path);
+				hash = HashAlgorithmPerformanceMeasure.crc32(path);
 				stop = System.currentTimeMillis();
 				throughout = new Float( Files.size(path) / Math.max(1,(stop-start)) * 1000 / (1024*1024) );
 				crc32 += throughout;
 				result.append(throughout + " Mo/s [crc32  :" + hash + "]\r\n");
 				start = System.currentTimeMillis();
-				hash = HashAlgorithmPerformanceTest.fnv132(path);
+				hash = HashAlgorithmPerformanceMeasure.fnv132(path);
 				stop = System.currentTimeMillis();
 				throughout = new Float( Files.size(path) / Math.max(1,(stop-start)) * 1000 / (1024*1024) );
 				fnv132 += throughout;
 				result.append(throughout + " Mo/s [fnv132 :" + hash + "]\r\n");
 				start = System.currentTimeMillis();
-				hash = HashAlgorithmPerformanceTest.fnva32(path);
+				hash = HashAlgorithmPerformanceMeasure.fnva32(path);
 				stop = System.currentTimeMillis();
 				throughout = new Float( Files.size(path) / Math.max(1,(stop-start)) * 1000 / (1024*1024) );
 				fnva32 += throughout;
@@ -169,30 +167,6 @@ public class HashAlgorithmPerformanceTest {
 	private static String fnva32(Path path) throws IOException, NoSuchAlgorithmException {
 		try ( InputStream input = Files.newInputStream(path) ) {
 			FNV1a32 fnv = new FNV1a32();
-			byte[] buffer = new byte[10240];
-			int nbread = 0;
-			while ((nbread = input.read(buffer)) > 0) {
-				fnv.update(buffer, 0, nbread);
-			}
-			return Long.toString(fnv.getHash());
-		}
-	}
-	
-	private static String fnv164(Path path) throws IOException, NoSuchAlgorithmException {
-		try ( InputStream input = Files.newInputStream(path) ) {
-			FNV164 fnv = new FNV164();
-			byte[] buffer = new byte[10240];
-			int nbread = 0;
-			while ((nbread = input.read(buffer)) > 0) {
-				fnv.update(buffer, 0, nbread);
-			}
-			return Long.toString(fnv.getHash());
-		}
-	}
-	
-	private static String fnva64(Path path) throws IOException, NoSuchAlgorithmException {
-		try ( InputStream input = Files.newInputStream(path) ) {
-			FNV1a64 fnv = new FNV1a64();
 			byte[] buffer = new byte[10240];
 			int nbread = 0;
 			while ((nbread = input.read(buffer)) > 0) {

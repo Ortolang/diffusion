@@ -103,6 +103,11 @@ public class FileSystemStorageServiceTest {
 			fail(e.getMessage());
 		}
 	}
+	
+	@Test(expected = ObjectNotFoundException.class)  
+	public void testRetrieveUnexistingObject() throws StorageServiceException {
+		service.get("unexistingidentifier");
+	}
 
 	@Test
 	public void testInsertUnexistingObject() {
