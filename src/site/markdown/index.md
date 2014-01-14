@@ -1,5 +1,3 @@
-
-
 L'activité **Ortolang Diffusion** assure le développement du Centre de Diffusion Ortolang. 
 
 Véritable clé de voute de la plate forme Ortolang, le centre de diffusion assure le **stockage** et la **réstitution** des objets numériques.

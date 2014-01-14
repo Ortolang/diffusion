@@ -2,39 +2,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>fr.ortolang</groupId>
-	<artifactId>ortolang-diffusion</artifactId>
+	<groupId>fr.ortolang.diffusion</groupId>
+	<artifactId>diffusion-server</artifactId>
 	<name>Ortolang Diffusion Server</name>
 	<version>0.1-SNAPSHOT</version>
 	<url>http://www.ortolang.fr</url>
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>4.8.1</version>
-			</dependency>
-			<dependency>
-				<groupId>org.jmock</groupId>
-				<artifactId>jmock-junit4</artifactId>
-				<version>2.5.1</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 	<distributionManagement>
-		<repository>
-			<id>ortolang-maven-repository</id>
-			<name>Ortolang Releases</name>
-			<url>http://maven.ortolang.fr/content/repositories/releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>ortolang-maven-repository</id>
-			<name>Ortolang Snapshots</name>
-			<url>http://maven.ortolang.fr/content/repositories/snapshots/</url>
-		</snapshotRepository>
 		<site>
 			<id>dev.ortolang.fr</id>
-			<url>scp://blanchard@ortolang1.inist.fr:/srv/www/vhosts/dev.ortolang.fr/</url>
+			<url>file:///home/jerome/Work/ortolang-site/diffusion</url>
 		</site>
 	</distributionManagement>
 	<parent>
@@ -71,8 +47,6 @@
 				<configuration>
 					<links>
 						<link>http://commons.apache.org/lang/api</link>
-						<link>http://java.sun.com/j2se/1.5.0/docs/api</link>
-						<link>http://this-one-will-not-work</link>
 					</links>
 				</configuration>
 			</plugin>

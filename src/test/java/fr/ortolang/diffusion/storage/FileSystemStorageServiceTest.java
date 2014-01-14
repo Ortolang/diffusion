@@ -189,4 +189,63 @@ public class FileSystemStorageServiceTest {
 			fail(e.getMessage());
 		} 
 	}
+	
+	@Test(expected = ObjectNotFoundException.class)
+	public void testCheckUnexistingObject() throws ObjectCorruptedException, StorageServiceException {
+		service.check("unexistingidentifier");
+	}
+	
+	@Test
+	public void testCheckExistingObject() {
+		service.setStorageIdentifierGenerator(generator);
+		final byte[] content = "Sample Digital Content v1.0".getBytes();
+
+		try {
+			context.checking(new Expectations() {
+				{
+					allowing(generator).generate(with(any(InputStream.class)));
+					will(returnValue("123456789abcdef"));
+				}
+			});
+		} catch (Exception e1) {
+			fail(e1.getMessage());
+		}
+
+		try {
+			String identifier1 = service.put(new ByteArrayInputStream(content));
+			assertTrue(identifier1.equals("123456789abcdef"));
+
+			service.check(identifier1);
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+
+		context.assertIsSatisfied();
+	}
+	
+	@Test(expected = ObjectCorruptedException.class)
+	public void testCheckExistingCorruptedObject() throws ObjectNotFoundException, StorageServiceException {
+		service.setStorageIdentifierGenerator(generator);
+		final byte[] content = "Sample Digital Content v1.0".getBytes();
+
+		try {
+			context.checking(new Expectations() {
+				{
+					oneOf(generator).generate(with(any(InputStream.class)));
+					will(returnValue("123456789abcdef"));
+					oneOf(generator).generate(with(any(InputStream.class)));
+					will(returnValue("fedcba987654321"));
+				}
+			});
+		} catch (Exception e1) {
+			fail(e1.getMessage());
+		}
+
+		String identifier1 = service.put(new ByteArrayInputStream(content));
+		assertTrue(identifier1.equals("123456789abcdef"));
+
+		service.check(identifier1);
+		
+		context.assertIsSatisfied();
+	}
 }
