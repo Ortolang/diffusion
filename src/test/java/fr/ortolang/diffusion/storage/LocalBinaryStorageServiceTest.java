@@ -24,20 +24,24 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class FileSystemStorageServiceTest {
+import fr.ortolang.diffusion.storage.binary.BinaryStorageException;
+import fr.ortolang.diffusion.storage.binary.LocalBinaryStorageService;
+import fr.ortolang.diffusion.storage.identifier.IdentifierGeneratorService;
 
-	private Logger logger = Logger.getLogger(FileSystemStorageServiceTest.class.getName());
+public class LocalBinaryStorageServiceTest {
+
+	private Logger logger = Logger.getLogger(LocalBinaryStorageServiceTest.class.getName());
 
 	private Mockery context;
-	private StorageIdentifierGenerator generator;
-	private FileSystemStorageService service;
+	private IdentifierGeneratorService generator;
+	private LocalBinaryStorageService service;
 	
 	@Before
 	public void setup() {
 		try {
 			context = new Mockery();
-			generator = context.mock(StorageIdentifierGenerator.class);
-			service = new FileSystemStorageService(Paths.get("/tmp/ortolang-storage/" + System.currentTimeMillis()));
+			generator = context.mock(IdentifierGeneratorService.class);
+			service = new LocalBinaryStorageService(Paths.get("/tmp/ortolang-storage/" + System.currentTimeMillis()));
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -105,7 +109,7 @@ public class FileSystemStorageServiceTest {
 	}
 	
 	@Test(expected = ObjectNotFoundException.class)  
-	public void testRetrieveUnexistingObject() throws StorageServiceException {
+	public void testRetrieveUnexistingObject() throws BinaryStorageException, ObjectNotFoundException {
 		service.get("unexistingidentifier");
 	}
 
@@ -141,7 +145,7 @@ public class FileSystemStorageServiceTest {
 	}
 	
 	@Test(expected = ObjectAlreadyExistsException.class)  
-	public void testInsertExistingObject() throws ObjectAlreadyExistsException, StorageServiceException {
+	public void testInsertExistingObject() throws ObjectAlreadyExistsException, BinaryStorageException {
 		service.setStorageIdentifierGenerator(generator);
 		final byte[] content1 = "Sample Digital Content v1.0".getBytes();
 		final byte[] content2 = "Sample Digital Content v1.0".getBytes();
@@ -166,7 +170,7 @@ public class FileSystemStorageServiceTest {
 	}
 	
 	@Test(expected = ObjectCollisionException.class)  
-	public void testInsertCollisionObject() throws StorageServiceException {
+	public void testInsertCollisionObject() throws BinaryStorageException, ObjectCollisionException {
 		service.setStorageIdentifierGenerator(generator);
 		final byte[] content1 = "Sample Digital Content v1.0".getBytes();
 		final byte[] content2 = "Sample Digital Content that generate a collision".getBytes();
@@ -191,7 +195,7 @@ public class FileSystemStorageServiceTest {
 	}
 	
 	@Test(expected = ObjectNotFoundException.class)
-	public void testCheckUnexistingObject() throws ObjectCorruptedException, StorageServiceException {
+	public void testCheckUnexistingObject() throws ObjectCorruptedException, BinaryStorageException, ObjectNotFoundException {
 		service.check("unexistingidentifier");
 	}
 	
@@ -224,7 +228,7 @@ public class FileSystemStorageServiceTest {
 	}
 	
 	@Test(expected = ObjectCorruptedException.class)
-	public void testCheckExistingCorruptedObject() throws ObjectNotFoundException, StorageServiceException {
+	public void testCheckExistingCorruptedObject() throws ObjectNotFoundException, BinaryStorageException, ObjectAlreadyExistsException, ObjectCollisionException, ObjectCorruptedException {
 		service.setStorageIdentifierGenerator(generator);
 		final byte[] content = "Sample Digital Content v1.0".getBytes();
 
