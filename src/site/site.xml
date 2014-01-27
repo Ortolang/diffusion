@@ -20,13 +20,12 @@
 
 	<custom>
 		<reflowSkin>
-			<!-- Make this to 'false' for local development, i.e. file:// URLs -->
-			<protocolRelativeURLs>false</protocolRelativeURLs>
+			<protocolRelativeURLs>true</protocolRelativeURLs>
+			<skinAttribution>false</skinAttribution>
 			<smoothScroll>true</smoothScroll>
 			<theme>default</theme>
 			<highlightJs>true</highlightJs>
 			<highlightJsTheme>github</highlightJsTheme>
-			<!-- <absoluteResourceURL>http://dev.ortolang.fr/</absoluteResourceURL> -->
 			<brand>
 				<name><![CDATA[<img src="images/ortolang-logo.png" style="height:40px; margin-right:10px;" /><span class="color-highlight">ORTOLANG</span> Community]]></name>
 				<href>http://dev.ortolang.fr</href>
