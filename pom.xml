@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>fr.ortolang.diffusion</groupId>
+	<artifactId>diffusion-server</artifactId>
+	<name>Ortolang Diffusion Server Parent</name>
+	<version>0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<url>http://www.ortolang.fr</url>
+	
+	<parent>
+		<groupId>fr.ortolang</groupId>
+		<artifactId>ortolang</artifactId>
+		<version>0.2-SNAPSHOT</version>
+		<relativePath>../ortolang</relativePath>
+	</parent>
+	
+	<modules>
+	        <module>ejb</module>
+	        <module>war</module>
+	        <module>ear</module>
+	</modules>
+
+	<properties>
+	        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	        <version.jboss.maven.plugin>7.3.Final</version.jboss.maven.plugin>
+	        <version.wildfly>8.0.0.Alpha3</version.wildfly>
+	        <version.compiler.plugin>2.3.1</version.compiler.plugin>
+	        <version.ear.plugin>2.6</version.ear.plugin>
+	        <version.ejb.plugin>2.3</version.ejb.plugin>
+	        <version.war.plugin>2.1.1</version.war.plugin>
+	        <maven.compiler.target>1.7</maven.compiler.target>
+	        <maven.compiler.source>1.7</maven.compiler.source>
+	</properties>
+
+	<dependencyManagement>
+	        <dependencies>
+			<dependency>
+				<groupId>fr.ortolang.diffusion</groupId>
+				<artifactId>diffusion-server-ejb</artifactId>
+				<version>${project.version}</version>
+				<type>ejb</type>
+			</dependency>
+			<dependency>
+		                <groupId>fr.ortolang.diffusion</groupId>
+		                <artifactId>diffusion-server-war</artifactId>
+		                <version>${project.version}</version>
+		                <type>war</type>
+		                <scope>compile</scope>
+		        </dependency>
+			<dependency>
+				<groupId>javax</groupId>  
+				<artifactId>javaee-api</artifactId>  
+				<version>7.0</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+	        </dependencies>
+	</dependencyManagement>
+
+	<distributionManagement>
+		<site>
+			<id>dev.ortolang.fr</id>
+			<url>file:///home/jerome/Work/ortolang-site/diffusion</url>
+		</site>
+	</distributionManagement>
+
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jxr-plugin</artifactId>
+				<version>2.3</version>
+				<reportSets>
+					<reportSet>
+						<id>aggregate</id>
+						<inherited>false</inherited>
+						<reports>
+							<report>aggregate</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<configuration>
+					<links>
+						<link>http://commons.apache.org/lang/api</link>
+					</links>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
+</project>
