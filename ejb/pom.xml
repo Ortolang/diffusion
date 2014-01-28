@@ -3,22 +3,16 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.ortolang.diffusion</groupId>
-	<artifactId>diffusion-server</artifactId>
-	<name>Ortolang Diffusion Server</name>
+	<artifactId>diffusion-server-ejb</artifactId>
+	<name>Ortolang Diffusion Server Business</name>
 	<version>0.1-SNAPSHOT</version>
-	<url>http://www.ortolang.fr</url>
-	<distributionManagement>
-		<site>
-			<id>dev.ortolang.fr</id>
-			<url>file:///home/jerome/Work/ortolang-site/diffusion</url>
-		</site>
-	</distributionManagement>
+	
 	<parent>
-		<groupId>fr.ortolang</groupId>
-		<artifactId>ortolang</artifactId>
-		<version>0.2-SNAPSHOT</version>
-		<relativePath>../ortolang</relativePath>
+		<groupId>fr.ortolang.diffusion</groupId>
+		<artifactId>diffusion-server</artifactId>
+		<version>0.1-SNAPSHOT</version>
 	</parent>
+
 	<dependencies>
 		<dependency>
 			<groupId>javax.activation</groupId>
@@ -39,17 +33,17 @@
 			<version>2.4</version>
 		</dependency>
 	</dependencies>
-	<reporting>
-		<plugins>
+
+	<build>
+        	<finalName>${project.artifactId}</finalName>
+	        <plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
+				<artifactId>maven-ejb-plugin</artifactId>
+				<version>${version.ejb.plugin}</version>
 				<configuration>
-					<links>
-						<link>http://commons.apache.org/lang/api</link>
-					</links>
+					<ejbVersion>3.2</ejbVersion>
 				</configuration>
 			</plugin>
 		</plugins>
-	</reporting>
+	</build>
 </project>
