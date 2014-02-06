@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.ortolang.diffusion</groupId>
 	<artifactId>diffusion-server</artifactId>
@@ -8,34 +8,34 @@
 	<version>0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<url>http://www.ortolang.fr</url>
-	
+
 	<parent>
 		<groupId>fr.ortolang</groupId>
 		<artifactId>ortolang</artifactId>
 		<version>0.2-SNAPSHOT</version>
 		<relativePath>../ortolang</relativePath>
 	</parent>
-	
+
 	<modules>
-	        <module>ejb</module>
-	        <module>war</module>
-	        <module>ear</module>
+		<module>ejb</module>
+		<module>war</module>
+		<module>ear</module>
 	</modules>
 
 	<properties>
-	        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	        <version.jboss.maven.plugin>7.3.Final</version.jboss.maven.plugin>
-	        <version.wildfly>8.0.0.Alpha3</version.wildfly>
-	        <version.compiler.plugin>2.3.1</version.compiler.plugin>
-	        <version.ear.plugin>2.6</version.ear.plugin>
-	        <version.ejb.plugin>2.3</version.ejb.plugin>
-	        <version.war.plugin>2.1.1</version.war.plugin>
-	        <maven.compiler.target>1.7</maven.compiler.target>
-	        <maven.compiler.source>1.7</maven.compiler.source>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<version.wildfly.maven.plugin>1.0.0.Beta1</version.wildfly.maven.plugin>
+		<version.wildfly>8.0.0.CR1</version.wildfly>
+		<version.compiler.plugin>3.1</version.compiler.plugin>
+		<version.ear.plugin>2.9</version.ear.plugin>
+		<version.ejb.plugin>2.3</version.ejb.plugin>
+		<version.war.plugin>2.4</version.war.plugin>
+		<maven.compiler.target>1.7</maven.compiler.target>
+		<maven.compiler.source>1.7</maven.compiler.source>
 	</properties>
 
 	<dependencyManagement>
-	        <dependencies>
+		<dependencies>
 			<dependency>
 				<groupId>fr.ortolang.diffusion</groupId>
 				<artifactId>diffusion-server-ejb</artifactId>
@@ -43,20 +43,34 @@
 				<type>ejb</type>
 			</dependency>
 			<dependency>
-		                <groupId>fr.ortolang.diffusion</groupId>
-		                <artifactId>diffusion-server-war</artifactId>
-		                <version>${project.version}</version>
-		                <type>war</type>
-		                <scope>compile</scope>
-		        </dependency>
+				<groupId>fr.ortolang.diffusion</groupId>
+				<artifactId>diffusion-server-war</artifactId>
+				<version>${project.version}</version>
+				<type>war</type>
+				<scope>compile</scope>
+			</dependency>
 			<dependency>
-				<groupId>javax</groupId>  
-				<artifactId>javaee-api</artifactId>  
+				<groupId>javax</groupId>
+				<artifactId>javaee-api</artifactId>
 				<version>7.0</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
-	        </dependencies>
+			<dependency>
+				<groupId>org.jboss.shrinkwrap.resolver</groupId>
+				<artifactId>shrinkwrap-resolver-bom</artifactId>
+				<version>2.0.0-alpha-5</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
+			<dependency>
+				<groupId>org.jboss.arquillian</groupId>
+				<artifactId>arquillian-bom</artifactId>
+				<version>1.1.2.Final</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
 	</dependencyManagement>
 
 	<distributionManagement>
@@ -65,6 +79,27 @@
 			<url>file:///home/jerome/Work/ortolang-site/diffusion</url>
 		</site>
 	</distributionManagement>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${version.compiler.plugin}</version>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.wildfly.plugins</groupId>
+				<artifactId>wildfly-maven-plugin</artifactId>
+				<version>${version.wildfly.maven.plugin}</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 	<reporting>
 		<plugins>
@@ -90,6 +125,15 @@
 						<link>http://commons.apache.org/lang/api</link>
 					</links>
 				</configuration>
+				<reportSets>
+					<reportSet>
+						<id>aggregate</id>
+						<inherited>false</inherited>
+						<reports>
+							<report>aggregate</report>
+						</reports>
+					</reportSet>
+				</reportSets>
 			</plugin>
 		</plugins>
 	</reporting>

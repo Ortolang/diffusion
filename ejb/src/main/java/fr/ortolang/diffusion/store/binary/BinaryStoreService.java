@@ -25,6 +25,8 @@ import java.io.InputStream;
  * @version 1.0
  */
 public interface BinaryStoreService {
+	
+	public static final String SERVICE_NAME = "BinaryStore";
 
 	/**
 	 * Retrieve the data associated with this identifier.<br/>

@@ -3,15 +3,17 @@ package fr.ortolang.diffusion.core.entity;
 import java.util.HashMap;
 import java.util.Map;
 
-import fr.ortolang.diffusion.DiffusionObject;
-import fr.ortolang.diffusion.DiffusionObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
 
-public class ObjectContainer extends DiffusionObject {
+@SuppressWarnings("serial")
+public class ObjectContainer extends OrtolangObject {
 
 	public static final String OBJECT_TYPE = "container";
 
 	private String id;
+	private String key;
 	private String name;
 	private Map<String, String> streams;
 	
@@ -25,6 +27,14 @@ public class ObjectContainer extends DiffusionObject {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
 	}
 
 	public String getName() {
@@ -52,13 +62,18 @@ public class ObjectContainer extends DiffusionObject {
 	}
 
 	@Override
-	public String getDiffusionObjectName() {
+	public String getObjectKey() {
+		return getKey();
+	}
+	
+	@Override
+	public String getObjectName() {
 		return getName();
 	}
 
 	@Override
-	public DiffusionObjectIdentifier getDiffusionObjectIdentifier() {
-		return new DiffusionObjectIdentifier(CoreService.SERVICE_NAME, ObjectContainer.OBJECT_TYPE, id);
+	public OrtolangObjectIdentifier getObjectIdentifier() {
+		return new OrtolangObjectIdentifier(CoreService.SERVICE_NAME, ObjectContainer.OBJECT_TYPE, id);
 	}
 
 }

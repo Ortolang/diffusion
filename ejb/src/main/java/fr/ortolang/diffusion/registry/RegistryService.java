@@ -1,6 +1,7 @@
 package fr.ortolang.diffusion.registry;
 
-import fr.ortolang.diffusion.DiffusionObjectIdentifier;
+import java.util.List;
+
 
 /**
  * <p>
@@ -22,13 +23,15 @@ public interface RegistryService {
 	
 	public static final String SERVICE_NAME = "Registry";
 	
-	public void bind(String key, DiffusionObjectIdentifier identifier) throws RegistryServiceException, KeyAlreadyBoundException;
+	public void create(RegistryEntry entry) throws RegistryServiceException, EntryAlreadyExistsException;
 	
-	public void rebind(String key, DiffusionObjectIdentifier identifier) throws RegistryServiceException, KeyNotFoundException;
+	public void update(RegistryEntry entry) throws RegistryServiceException, EntryNotFoundException;
 	
-	public void unbind(String key) throws RegistryServiceException, KeyNotFoundException;
+	public void delete(String key) throws RegistryServiceException, EntryNotFoundException;
 	
-	public DiffusionObjectIdentifier lookup(String key) throws RegistryServiceException, KeyNotFoundException;
+	public RegistryEntry lookup(String key) throws RegistryServiceException, EntryNotFoundException;
+	
+	public List<RegistryEntry> list(int offset, int limit) throws RegistryServiceException;
 	
 
 }

@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.registry;
 
+
 @SuppressWarnings("serial")
 public class RegistryServiceException extends Exception {
 
@@ -17,10 +18,6 @@ public class RegistryServiceException extends Exception {
 
 	public RegistryServiceException(String message, Throwable cause) {
 		super(message, cause);
-	}
-
-	public RegistryServiceException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
 	}
 
 }
