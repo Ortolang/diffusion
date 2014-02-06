@@ -14,5 +14,7 @@ public interface BrowserService extends OrtolangService {
 	public RegistryEntry lookup(String key) throws BrowserServiceException, EntryNotFoundException;
 	
 	public List<RegistryEntry> list(int limit, int offset) throws BrowserServiceException;
+	
+	public long count() throws BrowserServiceException;
 
 }

@@ -1,9 +1,11 @@
 package fr.ortolang.diffusion.store.triple;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -39,28 +41,28 @@ public class TripleStoreServiceBean implements TripleStoreService {
 	public static final String DEFAULT_TRIPLE_HOME = "/triple-store";
     
     private static Logger logger = Logger.getLogger(TripleStoreServiceBean.class.getName());
-    private static boolean bootstrapped = false;
+    private Path base;
     private static Repository repository;
     
     public TripleStoreServiceBean() {
+    	this.base = Paths.get(OrtolangConfig.getInstance().getProperty("home"), DEFAULT_TRIPLE_HOME);
     }
 
     @PostConstruct
     public void init() {
-    	if ( !bootstrapped ) {
-    		try {
-        	    this.importOntology("http://www.w3.org/2000/01/rdf-schema#", "ontology/rdfs.xml");
-	            bootstrapped = true;
-    		} catch (Exception e) {
-    			logger.log(Level.SEVERE, "unable to import default ontologies", e);
-    		}
+    	logger.log(Level.FINEST, "Initializing service with base folder: " + base);
+    	try {
+    		Files.createDirectories(base);
+            this.importOntology("http://www.w3.org/2000/01/rdf-schema#", "ontology/rdfs.xml");
+	    } catch (Exception e) {
+    		logger.log(Level.SEVERE, "unable to import default ontologies", e);
     	}
     }
 
     private Repository getRepository() throws TripleStoreServiceException {
         if (repository == null) {
             try {
-                repository = new SailRepository(new NativeStore(new File(OrtolangConfig.getInstance().getProperty("home") + DEFAULT_TRIPLE_HOME)));
+                repository = new SailRepository(new NativeStore(base.toFile()));
                 repository.initialize();
             } catch (RepositoryException e) {
                 throw new TripleStoreServiceException("unable to create triple store", e);
@@ -69,6 +71,9 @@ public class TripleStoreServiceBean implements TripleStoreService {
         return repository;
     }
 
+    public Path getBase() {
+		return base;
+	}
 
 	@Override
 	public void importOntology(String ontologyURI, String resourceName) throws TripleStoreServiceException {

@@ -80,4 +80,9 @@ public class RegistryServiceBean implements RegistryService {
 		return entries;
 	}
 
+	@Override
+	public long count() throws RegistryServiceException {
+		return registry.size();
+	}
+
 }

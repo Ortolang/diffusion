@@ -49,7 +49,7 @@ public class TripleStoreServiceTest {
 	@After
 	public void tearDown() {
 		try {
-			Files.walkFileTree(Paths.get(OrtolangConfig.getInstance().getProperty("home") + TripleStoreServiceBean.DEFAULT_TRIPLE_HOME), new FileVisitor<Path>() {
+			Files.walkFileTree(service.getBase(), new FileVisitor<Path>() {
 				@Override
 				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
 					return FileVisitResult.CONTINUE;

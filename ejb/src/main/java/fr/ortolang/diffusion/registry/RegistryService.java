@@ -33,5 +33,7 @@ public interface RegistryService {
 	
 	public List<RegistryEntry> list(int offset, int limit) throws RegistryServiceException;
 	
+	public long count() throws RegistryServiceException;
+	
 
 }

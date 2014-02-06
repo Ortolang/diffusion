@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import fr.ortolang.diffusion.browser.BrowserService;
 
-public class OrtolangServiceTest {
+public class OrtolangServiceLookupSample {
 
 	@Test
 	public void lookup() throws NamingException {

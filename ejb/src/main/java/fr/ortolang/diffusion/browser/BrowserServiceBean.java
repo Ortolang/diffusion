@@ -46,6 +46,16 @@ public class BrowserServiceBean implements BrowserService {
 			throw new BrowserServiceException("error during listing entries", e);
 		}
 	}
+	
+	@Override
+	public long count() throws BrowserServiceException {
+		logger.log(Level.INFO, "count registry entries");
+		try {
+			return registry.count();
+		} catch ( RegistryServiceException e) {
+			throw new BrowserServiceException("error during count entries", e);
+		}
+	}
 
 	@Override
 	public String getServiceName() {
