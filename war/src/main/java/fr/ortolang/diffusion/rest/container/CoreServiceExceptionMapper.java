@@ -1,16 +1,16 @@
-package fr.ortolang.diffusion.rest.registry;
+package fr.ortolang.diffusion.rest.container;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import fr.ortolang.diffusion.browser.BrowserServiceException;
+import fr.ortolang.diffusion.core.CoreServiceException;
 
 @Provider
-public class BrowserServiceExceptionMapper implements ExceptionMapper<BrowserServiceException> {
+public class CoreServiceExceptionMapper implements ExceptionMapper<CoreServiceException> {
 
-	public Response toResponse(BrowserServiceException ex) {
+	public Response toResponse(CoreServiceException ex) {
 		return Response.status(Status.INTERNAL_SERVER_ERROR)
 				.entity("An error occured : " + ex.getMessage()).type("text/plain")
 				.build();

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<title>Bienvenue sur le Serveur de Diffusion Ortolang</title>
+	<meta charset="utf-8">
+	<meta name="description" content="">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+   	<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+   	<link href="css/jquery.dataTables.css" rel="stylesheet" media="screen">
+	<link href="css/main.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-narrow">
+        <div class="masthead">
+            <ul class="nav nav-pills pull-right" id="ortolangTab">
+            	<li><a href="#search" data-toggle="tab">Rechercher</a></li>
+                <li><a href="#browse" data-toggle="tab">Parcourir</a></li>
+                <li><a href="#post" data-toggle="tab">Déposer</a></li>
+                <li><a href="#about" data-toggle="tab">A propos</a></li>
+            </ul>
+            <img src="./img/logo.png">
+        </div>
+        <div class="tab-content">
+        	<div class="tab-pane" id="search">
+                In progress...
+            </div>
+            <div class="tab-pane" id="browse">
+                <table id="entriesTable">
+					<thead>
+						<tr>
+							<th>Key</th>
+							<th>Service</th>
+							<th>Type</th>
+							<th>Owner</th>
+							<th>Creation Date</th>
+							<th>Modification Date</th>
+							<th>Locked</th>
+							<th>Hidden</th>
+							<th>Deleted</th>
+							<th>State</th>
+							<th>View</th>
+						</tr>
+					</thead>
+					<tbody>
+					</tbody>
+				</table>
+            </div>
+            <div class="tab-pane" id="post">
+                <form id="newDigitalObjectForm" class="form-horizontal">
+                    <legend>Déposer un nouvel objet numérique</legend>
+                    <div class="control-group">
+                        <label class="control-label" for="inputName">Nom de l'objet</label>
+                        <div class="controls">
+                            <div class="input-prepend">
+                                <span class="add-on"><i class="icon-file"></i></span>
+                                <input type="text" id="inputName" name="name" placeholder="mon corpus de test" class="input-xlarge" minlength="3" maxlegnth="50" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label" for="inputDescription">Description de l'objet</label>
+                        <div class="controls">
+                            <div class="input-prepend">
+                                <span class="add-on"><i class="icon-file"></i></span>
+                                <input type="text" id="inputDescription" name="description" placeholder="la description" class="input-xxlarge" minlength="3" maxlegnth="150" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label" for="inputFile">Fichier</label>
+                        <div class="controls">
+                            <input id="file" type="file" name="file" style="display:none">
+							<div class="input-prepend input-append">
+                            	<span class="add-on"><i class="icon-upload"></i></span>
+                                <input type="text" id="inputFile" name="inputFile" class="input-xlarge" required>
+								<a class="btn" onclick="$('input[id=file]').click();">Browse</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label" for="inputCheck">Quel est le carré de 4</label>
+                        <div class="controls">
+                            <div class="input-prepend">
+                                <span class="add-on"><i class="icon-question-sign"></i></span>
+                                <input type="text" id="inputCheck" name="check" placeholder="42" class="input-mini" number="true" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls">
+                            <button type="submit" class="btn">Déposer l'objet</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="tab-pane" id="about">
+                <p>
+                    Ce site est proposé dans le cadre du projet Ortolang.
+                </p>
+                <p>
+                    Tout le contenu de ce site est protégé par la loi sur le Copyright.
+                    Néanmoins pour l'instant il s'agit juste d'une démo :
+                    <address>
+                    <strong>ATILF - CNRS</strong><br/>
+                    44, avenue de la libération<br/>
+                    BP 30687 - 54063 Nancy Cedex<br/>
+                    <abbr title="Phone">P:</abbr> +33 354 505 342<br/>
+                    <abbr title="Email">E:</abbr> <a href="mailto:infos@lists.ortolang.fr">infos@lists.ortolang.fr</a>
+                    </address>
+                </p>
+                <p>
+                    Thanks to <a href="http://getbootstrap.com/">Bootstrap</a>, <a href="http://glyphicons.com">Glyphicons Free</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div id="messageModal" class="modal hide fade">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3 id="messageModalTitle"></h3>
+        </div>
+        <div class="modal-body">
+            <p id="messageModalBody"></p>
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Close</a>
+        </div>
+    </div>
+    <div id="loadingModal" class="modal hide fade">
+        <div class="modal-body">
+        	<p class="text-center"><img src="./img/ajax-loader.gif"/></p>
+            <p class="text-center">Please wait while loading content...</p>
+        </div>
+    </div>
+	<script src="js/jquery-2.0.3.min.js"></script>
+    <script src="js/jquery.validate.min.js"></script>
+    <script src="js/jquery.dataTables.min.js"></script>
+    <script src="js/additional-methods.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
