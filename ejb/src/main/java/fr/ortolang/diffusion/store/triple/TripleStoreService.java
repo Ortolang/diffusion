@@ -7,7 +7,7 @@ import org.openrdf.query.QueryLanguage;
 
 public interface TripleStoreService {
 	
-	public static final String SERVICE_NAME = "TripleStore";
+	public static final String SERVICE_NAME = "triple-store";
 
 	public static final String SERQL_QUERY_LANGUAGE = QueryLanguage.SERQL.getName();
     public static final String SPARQL_QUERY_LANGUAGE = QueryLanguage.SPARQL.getName();

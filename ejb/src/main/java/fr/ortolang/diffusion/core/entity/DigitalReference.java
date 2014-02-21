@@ -1,32 +1,37 @@
 package fr.ortolang.diffusion.core.entity;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
 
 @SuppressWarnings("serial")
-public class ObjectContainer extends OrtolangObject {
-
-	public static final String OBJECT_TYPE = "container";
-
+public class DigitalReference extends OrtolangObject {
+	
+	public static final String OBJECT_TYPE = "reference";
+	
 	private String id;
+	private boolean dynamic;
 	private String key;
 	private String name;
-	private Map<String, String> streams;
+	private String target;
 	
-	public ObjectContainer() {
-		streams = new HashMap<String, String>();
+	public DigitalReference() {
 	}
-
+	
 	public String getId() {
 		return id;
 	}
 
 	public void setId(String id) {
 		this.id = id;
+	}
+	
+	public boolean isDynamic() {
+		return dynamic;
+	}
+	
+	public void setDynamic(boolean dynamic) {
+		this.dynamic = dynamic;
 	}
 
 	public String getKey() {
@@ -44,23 +49,15 @@ public class ObjectContainer extends OrtolangObject {
 	public void setName(String name) {
 		this.name = name;
 	}
-
-	public Map<String, String> getStreams() {
-		return streams;
-	}
-
-	public void setStreams(Map<String, String> streams) {
-		this.streams = streams;
+	
+	public String getTarget() {
+		return target;
 	}
 	
-	public void addStream(String name, String hash) {
-		this.streams.put(name, hash);
+	public void setTarget(String target) {
+		this.target = target;
 	}
 	
-	public void removeStream(String name) {
-		this.streams.remove(name);
-	}
-
 	@Override
 	public String getObjectKey() {
 		return getKey();
@@ -73,7 +70,7 @@ public class ObjectContainer extends OrtolangObject {
 
 	@Override
 	public OrtolangObjectIdentifier getObjectIdentifier() {
-		return new OrtolangObjectIdentifier(CoreService.SERVICE_NAME, ObjectContainer.OBJECT_TYPE, id);
+		return new OrtolangObjectIdentifier(CoreService.SERVICE_NAME, DigitalReference.OBJECT_TYPE, id);
 	}
 
 }

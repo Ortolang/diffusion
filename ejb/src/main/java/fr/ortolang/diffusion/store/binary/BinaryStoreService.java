@@ -26,7 +26,7 @@ import java.io.InputStream;
  */
 public interface BinaryStoreService {
 	
-	public static final String SERVICE_NAME = "BinaryStore";
+	public static final String SERVICE_NAME = "binary-store";
 
 	/**
 	 * Retrieve the data associated with this identifier.<br/>
@@ -38,6 +38,28 @@ public interface BinaryStoreService {
 	 *             if the hash does not exists in the storage
 	 */
 	InputStream get(String hash) throws BinaryStoreServiceException, DataNotFoundException;
+	
+	/**
+	 * Retrieve the data size associated with this identifier.<br/>
+	 * 
+	 * @param hash
+	 *            The hash of the data
+	 * @return a long representing the size
+	 * @throws DataNotFoundException
+	 *             if the hash does not exists in the storage
+	 */
+	long size(String hash) throws BinaryStoreServiceException, DataNotFoundException;
+	
+	/**
+	 * Retrieve the data mime type associated with this identifier.<br/>
+	 * 
+	 * @param hash
+	 *            The hash of the data
+	 * @return a String representing the mime type
+	 * @throws DataNotFoundException
+	 *             if the hash does not exists in the storage
+	 */
+	String type(String hash) throws BinaryStoreServiceException, DataNotFoundException;
 
 	/**
 	 * Insert some data in the storage.<br/>

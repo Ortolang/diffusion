@@ -3,12 +3,15 @@ package fr.ortolang.diffusion.core;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import fr.ortolang.diffusion.registry.EntryNotFoundException;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
 
 public interface CoreServiceLocal {
 	
-	public void addDataStreamToContainer(String key, String name, InputStream data) throws CoreServiceException, EntryNotFoundException;
+	public void createObject(String key, String name, String description, InputStream data) throws CoreServiceException, KeyAlreadyExistsException;
 	
-	public void getDataStreamFromContainer(String key, String name, OutputStream os) throws CoreServiceException, EntryNotFoundException;
-
+	public void updateObject(String key, String name, String description, InputStream data) throws CoreServiceException, KeyNotFoundException;
+	
+	public void getObjectData(String key, OutputStream os) throws CoreServiceException, KeyNotFoundException;
+	
 }

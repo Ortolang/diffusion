@@ -39,9 +39,27 @@ public class OrtolangObjectIdentifier implements Serializable {
 		StringTokenizer tokenizer = new StringTokenizer(serializedIdentifier, "/");
 		return new OrtolangObjectIdentifier(tokenizer.nextToken(), tokenizer.nextToken(), tokenizer.nextToken());
 	}
+	
+	public static String buildFilterPattern(String service, String type) {
+		StringBuffer pattern = new StringBuffer();
+		pattern.append("/");
+		if ( service != null && service.length() > 0 ) {
+			pattern.append(service.toLowerCase());
+		} else {
+			pattern.append(".*");
+		}
+		pattern.append("/");
+		if ( type != null && type.length() > 0 ) {
+			pattern.append(type.toLowerCase());
+		} else {
+			pattern.append(".*");
+		}
+		pattern.append("/.*");
+		return pattern.toString();
+	}
 
 	public String serialize() {
-		return this.getService() + "/" + this.getType() + "/" + this.getId();
+		return "/" + this.getService() + "/" + this.getType() + "/" + this.getId();
 	}
 
 	@Override

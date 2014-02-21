@@ -14,8 +14,8 @@ import javax.ejb.Local;
 import javax.ejb.Stateless;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.tika.Tika;
 
-import fr.ortolang.diffusion.OrtolangNamingConvention;
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStream;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStreamFactory;
@@ -30,13 +30,14 @@ import fr.ortolang.diffusion.store.binary.hash.SHA1FilterInputStreamFactory;
  * @version 1.0
  */
 @Local(BinaryStoreService.class)
-@Stateless(name = BinaryStoreService.SERVICE_NAME, mappedName = OrtolangNamingConvention.LOCAL_SERVICE_PREFIX + BinaryStoreService.SERVICE_NAME)
+@Stateless(name = BinaryStoreService.SERVICE_NAME)
 public class BinaryStoreServiceBean implements BinaryStoreService {
 
 	public static final String DEFAULT_BINARY_HOME = "binary-store";
 	
 	private static final Logger logger = Logger.getLogger(BinaryStoreServiceBean.class.getName());
 
+	private Tika tika;
 	private HashedFilterInputStreamFactory factory;
 	private Path base;
 	private Path working;
@@ -47,6 +48,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	
 	@PostConstruct
 	public void init() {
+		tika = new Tika();
 		this.base = Paths.get(OrtolangConfig.getInstance().getProperty("home"), DEFAULT_BINARY_HOME);
 		this.working = Paths.get(base.toString(), "work");
 		this.collide = Paths.get(base.toString(), "collide");
@@ -81,6 +83,32 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 		}
 		try {
 			return Files.newInputStream(path);
+		} catch (Exception e) {
+			throw new BinaryStoreServiceException(e);
+		}
+	}
+	
+	@Override
+	public long size(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
+		Path path = Paths.get(base.toString(), identifier.substring(0, 4), identifier);
+		if (!Files.exists(path)) {
+			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
+		}
+		try {
+			return Files.size(path);
+		} catch (Exception e) {
+			throw new BinaryStoreServiceException(e);
+		}
+	}
+	
+	@Override
+	public String type(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
+		Path path = Paths.get(base.toString(), identifier.substring(0, 4), identifier);
+		if (!Files.exists(path)) {
+			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
+		}
+		try {
+			return tika.detect(path.toFile()); 
 		} catch (Exception e) {
 			throw new BinaryStoreServiceException(e);
 		}

@@ -2,6 +2,10 @@ package fr.ortolang.diffusion.registry;
 
 import java.util.List;
 
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.registry.entity.RegistryEntry;
+import fr.ortolang.diffusion.registry.entity.RegistryTag;
+
 
 /**
  * <p>
@@ -21,19 +25,36 @@ import java.util.List;
  */
 public interface RegistryService {
 	
-	public static final String SERVICE_NAME = "Registry";
+	public static final String SERVICE_NAME = "registry";
 	
-	public void create(RegistryEntry entry) throws RegistryServiceException, EntryAlreadyExistsException;
+	public void create(String key, OrtolangObjectIdentifier identifier) throws RegistryServiceException, KeyAlreadyExistsException;
 	
-	public void update(RegistryEntry entry) throws RegistryServiceException, EntryNotFoundException;
+	public void create(String key, OrtolangObjectIdentifier identifier, String parent) throws RegistryServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException;
 	
-	public void delete(String key) throws RegistryServiceException, EntryNotFoundException;
+	public void hide(String key) throws RegistryServiceException, KeyNotFoundException;
 	
-	public RegistryEntry lookup(String key) throws RegistryServiceException, EntryNotFoundException;
+	public void show(String key) throws RegistryServiceException, KeyNotFoundException;
 	
-	public List<RegistryEntry> list(int offset, int limit) throws RegistryServiceException;
+	public void delete(String key) throws RegistryServiceException, KeyNotFoundException;
 	
-	public long count() throws RegistryServiceException;
+	public void lock(String key) throws RegistryServiceException, KeyNotFoundException;
 	
-
+	public void tag(String key, String name) throws RegistryServiceException, KeyNotFoundException;
+	
+	public void untag(String key, String name) throws RegistryServiceException, KeyNotFoundException, TagNotFoundException;
+	
+	public List<RegistryTag> taglist() throws RegistryServiceException;
+	
+	public void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException;
+	
+	public String getProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException;
+	
+	public RegistryEntry lookup(String key) throws RegistryServiceException, KeyNotFoundException;
+	
+	public List<RegistryEntry> list(int offset, int limit, String filter, boolean visible) throws RegistryServiceException;
+	
+	//public List<RegistryEntry> findEntryWithTag(String name, boolean visible) throws RegistryServiceException;
+	
+	public long count(String filter, boolean visible) throws RegistryServiceException;
+	
 }

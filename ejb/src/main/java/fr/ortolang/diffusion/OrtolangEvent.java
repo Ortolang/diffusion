@@ -80,5 +80,17 @@ public abstract class OrtolangEvent {
 //		JSONObject jsonObject = JSONObject.fromObject( this );  
 //	    return jsonObject.toString();
 //	}
+	
+	public static String buildEventType(String serviceName, String resourceName, String eventName) {
+    	StringBuffer event = new StringBuffer();
+    	if ( serviceName != null && serviceName.length() > 0 ) {
+    		event.append(serviceName + ".");
+    	}
+    	if ( resourceName != null && resourceName.length() > 0 ) {
+    		event.append(resourceName + ".");
+    	}
+    	event.append(eventName);
+    	return event.toString();
+    }
 
 }
