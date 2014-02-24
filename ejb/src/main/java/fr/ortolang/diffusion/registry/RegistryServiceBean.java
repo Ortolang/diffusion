@@ -141,17 +141,17 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	public long count(String filter, boolean visible) throws RegistryServiceException {
 		logger.log(Level.INFO, "counting " + ((visible)?"all":"only visibles") + " entries and filter:" + filter);
-		if (!visible && filter.length() <= 0) {
-			return entries.size();
-		} else {
-			int cpt = 0;
-			for (RegistryEntry entry : entries.values()) {
-				if ( entry.getIdentifier().serialize().matches(filter) && !entry.isDeleted() && !entry.isHidden() ) {
+		int cpt = 0;
+		for (RegistryEntry entry : entries.values()) {
+			if ( entry.getIdentifier().serialize().matches(filter) ) {
+				if ( !visible ) {
+					cpt++;
+				} else if (!entry.isDeleted() && !entry.isHidden() ) {
 					cpt++;
 				}
 			}
-			return cpt;
 		}
+		return cpt;
 	}
 
 	@Override

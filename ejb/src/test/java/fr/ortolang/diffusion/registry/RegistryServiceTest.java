@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.registry;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -195,48 +196,48 @@ public class RegistryServiceTest {
 		    registry.create(key5, doi5);
 		    List<RegistryEntry> entries = registry.list(0, 10, ".*", true);
 		    long size = registry.count(".*", true);
-		    assertTrue(entries.size() == 5);
-		    assertTrue(size == 5);
+		    assertEquals(5,entries.size());
+		    assertEquals(5,size);
 		    
 		    registry.hide(key2);
 		    entries = registry.list(0, 10, ".*", true);
 		    size = registry.count(".*", true);
-		    assertTrue(entries.size() == 4);
-		    assertTrue(size == 4);
+		    assertEquals(4,entries.size());
+		    assertEquals(4,size);
 		    entries = registry.list(0, 10, ".*", false);
 		    size = registry.count(".*", false);
-		    assertTrue(entries.size() == 5);
-		    assertTrue(size == 5);
+		    assertEquals(5,entries.size());
+		    assertEquals(5,size);
 		    
 		    registry.delete(key4);
 		    entries = registry.list(0, 10, ".*", true);
 		    size = registry.count(".*", true);
-		    assertTrue(entries.size() == 3);
-		    assertTrue(size == 3);
+		    assertEquals(3,entries.size());
+		    assertEquals(3,size);
 		    entries = registry.list(0, 10, ".*", false);
 		    size = registry.count(".*", false);
-		    assertTrue(entries.size() == 5);
-		    assertTrue(size == 5);
+		    assertEquals(5,entries.size());
+		    assertEquals(5,size);
 		    
 		    registry.lock(key5);
 		    entries = registry.list(0, 10, ".*", true);
 		    size = registry.count(".*", true);
-		    assertTrue(entries.size() == 3);
-		    assertTrue(size == 3);
+		    assertEquals(3,entries.size());
+		    assertEquals(3,size);
 		    entries = registry.list(0, 10, ".*", false);
 		    size = registry.count(".*", false);
-		    assertTrue(entries.size() == 5);
-		    assertTrue(size == 5);
+		    assertEquals(5,entries.size());
+		    assertEquals(5,size);
 		    
 		    registry.show(key2);
 		    entries = registry.list(0, 10, ".*", true);
 		    size = registry.count(".*", true);
-		    assertTrue(entries.size() == 4);
-		    assertTrue(size == 4);
+		    assertEquals(4,entries.size());
+		    assertEquals(4,size);
 		    entries = registry.list(0, 10, ".*", false);
 		    size = registry.count(".*", false);
-		    assertTrue(entries.size() == 5);
-		    assertTrue(size == 5);
+		    assertEquals(5,entries.size());
+		    assertEquals(5,size);
 		    
 		} catch (RegistryServiceException | KeyAlreadyExistsException | KeyNotFoundException e ) {
 			fail(e.getMessage());
