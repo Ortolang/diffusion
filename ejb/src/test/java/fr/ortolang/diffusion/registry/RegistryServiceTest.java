@@ -44,7 +44,7 @@ public class RegistryServiceTest {
 			registry.create(key, doi);
 			OrtolangObjectIdentifier doi2 = registry.lookup(key).getIdentifier();
 			assertTrue(doi2.equals(doi));
-		} catch (RegistryServiceException | KeyAlreadyExistsException | KeyNotFoundException e) {
+		} catch (RegistryServiceException | KeyAlreadyExistsException | KeyNotFoundException | IdentifierAlreadyRegisteredException e) {
 			fail(e.getMessage());
 		}
 	}
@@ -69,7 +69,21 @@ public class RegistryServiceTest {
 		    registry.create(key, doi1);
 		    registry.create(key, doi2);
 		    fail("This bind should have raised an exception");
-		} catch (RegistryServiceException e ) {
+		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException e ) {
+			fail(e.getMessage());
+		}
+	}
+	
+	@Test(expected = IdentifierAlreadyRegisteredException.class)
+	public void testBindExistingIdentifier() throws IdentifierAlreadyRegisteredException {
+		String key1 = "key1";
+		String key2 = "key2";
+		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
+		try {
+		    registry.create(key1, doi1);
+		    registry.create(key2, doi1);
+		    fail("This bind should have raised an exception");
+		} catch (RegistryServiceException | KeyAlreadyExistsException e ) {
 			fail(e.getMessage());
 		}
 	}
@@ -84,7 +98,7 @@ public class RegistryServiceTest {
 		    OrtolangObjectIdentifier doi = rentry.getIdentifier();
 			assertTrue(doi1.equals(doi));
 			registry.hide(key);
-		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException e ) {
+		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
 		}	
 		try {
@@ -118,7 +132,7 @@ public class RegistryServiceTest {
 		    OrtolangObjectIdentifier doi = rentry.getIdentifier();
 			assertTrue(doi1.equals(doi));
 			registry.lock(key);
-		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException e ) {
+		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
 		}	
 		try {
@@ -152,7 +166,7 @@ public class RegistryServiceTest {
 		    OrtolangObjectIdentifier doi = rentry.getIdentifier();
 			assertTrue(doi1.equals(doi));
 			registry.delete(key);
-		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException e ) {
+		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
 		}	
 		try {
@@ -239,7 +253,7 @@ public class RegistryServiceTest {
 		    assertEquals(5,entries.size());
 		    assertEquals(5,size);
 		    
-		} catch (RegistryServiceException | KeyAlreadyExistsException | KeyNotFoundException e ) {
+		} catch (RegistryServiceException | KeyAlreadyExistsException | KeyNotFoundException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
 		}
 	}

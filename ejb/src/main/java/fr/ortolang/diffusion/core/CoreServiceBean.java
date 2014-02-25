@@ -36,6 +36,8 @@ import fr.ortolang.diffusion.core.entity.DigitalReference;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.BranchNotAllowedException;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -129,7 +131,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		} catch (KeyAlreadyExistsException e) {
 			logger.log(Level.INFO, "the key [" + key + "] is already used");
 			throw e;
-		} catch (DataCollisionException | DataNotFoundException | BinaryStoreServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException e) {
+		} catch (DataCollisionException | DataNotFoundException | BinaryStoreServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during object creation", e);
 			throw new CoreServiceException("unable to create object with key [" + key + "]", e);
 		}
@@ -177,12 +179,13 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
 			if (objects.containsKey(identifier.getId())) {
-				DigitalObject container = objects.get(identifier.getId());
-				InputStream input = binarystore.get(container.getStreams().get("data-stream"));
+				DigitalObject object = objects.get(identifier.getId());
+				object.setNbReads(object.getNbReads()+1);
+				InputStream input = binarystore.get(object.getStreams().get("data-stream"));
 				try {
 					IOUtils.copy(input, output);
 					notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE,
-							OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "get-data"), "");
+							OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read-data"), "");
 				} catch (IOException e) {
 					throw new CoreServiceException("unable to get data from object with key [" + key + "]", e);
 				} finally {
@@ -280,7 +283,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void cloneObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException {
 		logger.log(Level.INFO, "cloning object for origin [" + origin + "] and key [" + key + "]");
 		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(origin).getIdentifier();
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
 
 			if (objects.containsKey(identifier.getId())) {
@@ -303,7 +306,10 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				registry.setProperty(key, OrtolangObjectProperty.AUTHOR, "users:root");
 				registry.setProperty(key, OrtolangObjectProperty.OWNER, "users:root");
 				
-				//TODO update dynamic references to this object 
+				List<String> refs = findReferencesForTarget(origin);
+				for ( String ref : refs ) {
+					updateReference(ref, key);
+				}
 
 				notification.throwEvent(origin, "users:root", DigitalObject.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "clone"), "key=" + key);
@@ -312,7 +318,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			} else {
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 			}
-		} catch (NotificationServiceException | RegistryServiceException e) {
+		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException e) {
 			throw new CoreServiceException("unable to clone object with origin [" + origin + "] and key [" + key + "]", e);
 		}
 	}
@@ -324,11 +330,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
 			registry.delete(key);
-			if (objects.containsKey(identifier.getId())) {
-				objects.remove(identifier.getId());
-				notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "delete"),
+			notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "delete"),
 						"");
-			}
 		} catch (NotificationServiceException | RegistryServiceException e) {
 			throw new CoreServiceException("unable to delete object with key [" + key + "]", e);
 		}
@@ -356,7 +359,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		} catch (KeyAlreadyExistsException e) {
 			logger.log(Level.INFO, "the key [" + key + "] is already used");
 			throw e;
-		} catch (KeyNotFoundException | RegistryServiceException | NotificationServiceException e) {
+		} catch (KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during collection creation", e);
 			throw new CoreServiceException("unable to create collection with key [" + key + "]", e);
 		}
@@ -488,8 +491,11 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				registry.setProperty(key, OrtolangObjectProperty.AUTHOR, "users:root");
 				registry.setProperty(key, OrtolangObjectProperty.OWNER, "users:root");
 				
-				//TODO update dynamic references to this object
-
+				List<String> refs = findReferencesForTarget(origin);
+				for ( String ref : refs ) {
+					updateReference(ref, key);
+				}
+				
 				notification.throwEvent(origin, "users:root", DigitalCollection.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "clone"), "key=" + key);
 				notification.throwEvent(key, "users:root", DigitalCollection.OBJECT_TYPE,
@@ -497,7 +503,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			} else {
 				throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
 			}
-		} catch (NotificationServiceException | RegistryServiceException e) {
+		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException e) {
 			throw new CoreServiceException("unable to clone collection with origin [" + origin + "] and key [" + key + "]", e);
 		}
 	}
@@ -551,7 +557,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		} catch (KeyAlreadyExistsException e) {
 			logger.log(Level.INFO, "the key [" + key + "] is already used");
 			throw e;
-		} catch (KeyNotFoundException | RegistryServiceException | NotificationServiceException e) {
+		} catch (KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during reference creation", e);
 			throw new CoreServiceException("unable to create reference with key [" + key + "]", e);
 		}
@@ -576,7 +582,42 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			throw new CoreServiceException("unable to get reference with key [" + key + "]", e);
 		}
 	}
-
+	
+	public void updateReference(String key, String target) throws CoreServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "updating reference for key [" + key + "]");
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, DigitalReference.OBJECT_TYPE);
+			if (references.containsKey(identifier.getId())) {
+				DigitalReference reference = references.get(identifier.getId());
+				if ( reference.isDynamic() ) {
+					reference.setTarget(target);
+					notification.throwEvent(key, "users:root", DigitalReference.OBJECT_TYPE,
+							OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalReference.OBJECT_TYPE, "update"), "target=" + target);
+				}
+			} else {
+				throw new CoreServiceException("unable to load reference with id [" + identifier.getId() + "] from storage");
+			}
+		} catch (NotificationServiceException | RegistryServiceException e) {
+			throw new CoreServiceException("unable to get reference with key [" + key + "]", e);
+		}
+	}
+	
+	private List<String> findReferencesForTarget(String target) throws CoreServiceException {
+		List<String> refs = new ArrayList<String> ();
+		for ( DigitalReference reference : references.values() ) {
+			if ( reference.getTarget().equals(target) ) {
+				try {
+					refs.add(registry.lookup(reference.getObjectIdentifier()).getKey());
+				} catch ( RegistryServiceException e ) {
+					throw new CoreServiceException("unable to find key for reference with identifier : " + reference.getObjectIdentifier(), e);
+				} catch (IdentifierNotRegisteredException e) {
+				} 
+			}
+		}
+		return refs;
+	}
+	
 	@Override
 	public OrtolangObject findObject(String key) throws OrtolangException {
 		try {
@@ -656,5 +697,5 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		}
 		return false;
 	}
-
+	
 }

@@ -27,33 +27,41 @@ public class RegistryServiceBean implements RegistryService {
 	}
 	
 	@Override
-	public void create(String key, OrtolangObjectIdentifier identifier) throws RegistryServiceException, KeyAlreadyExistsException {
+	public void create(String key, OrtolangObjectIdentifier identifier) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException {
 		logger.log(Level.INFO, "creating registry entry with key [" + key + "] for OOI [" + identifier + "]");
 		if (entries.containsKey(key)) {
 			throw new KeyAlreadyExistsException("entry already exists for key [" + key + "]");
-		} else {
-			RegistryEntry entry = new RegistryEntry(key, identifier);
-			entries.put(entry.getKey(), entry);
 		}
+		for ( RegistryEntry entry : entries.values() ) {
+			if ( entry.getIdentifier().equals(identifier) ) {
+				throw new IdentifierAlreadyRegisteredException("identifier [" + identifier + "] is already registered");
+			}
+		}
+		RegistryEntry entry = new RegistryEntry(key, identifier);
+		entries.put(entry.getKey(), entry);
 	}
 
 	@Override
-	public void create(String key, OrtolangObjectIdentifier identifier, String parent) throws RegistryServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException {
+	public void create(String key, OrtolangObjectIdentifier identifier, String parent) throws RegistryServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException, IdentifierAlreadyRegisteredException {
 		logger.log(Level.INFO, "creating registry entry with key [" + key + "] for OOI [" + identifier + "] and with parent [" + parent + "]");
 		if (entries.containsKey(key)) {
 			throw new KeyAlreadyExistsException("entry already exists for key [" + key + "]");
-		} else {
-			if (!entries.containsKey(key)) {
-				throw new KeyNotFoundException("no entry found for parent [" + key + "]");
-			} else if ( entries.get(parent).getChildren() != null ) {
-				throw new BranchNotAllowedException("parent entry with key [" + parent + "] has already a child, branching is not aloowed");
-			} else {
-				entries.get(parent).setChildren(key);
-				RegistryEntry entry = new RegistryEntry(key, identifier);
-				entry.setParent(parent);
-				entries.put(entry.getKey(), entry);
+		}
+		for ( RegistryEntry entry : entries.values() ) {
+			if ( entry.getIdentifier().equals(identifier) ) {
+				throw new IdentifierAlreadyRegisteredException("identifier [" + identifier + "] is already registered");
 			}
 		}
+		if (!entries.containsKey(key)) {
+			throw new KeyNotFoundException("no entry found for parent [" + key + "]");
+		} 
+		if ( entries.get(parent).getChildren() != null ) {
+			throw new BranchNotAllowedException("parent entry with key [" + parent + "] has already a child, branching is not aloowed");
+		} 
+		entries.get(parent).setChildren(key);
+		RegistryEntry entry = new RegistryEntry(key, identifier);
+		entry.setParent(parent);
+		entries.put(entry.getKey(), entry);
 	}
 	
 	@Override
@@ -104,6 +112,17 @@ public class RegistryServiceBean implements RegistryService {
 		} else {
 			return entries.get(key);
 		}
+	}
+	
+	@Override
+	public RegistryEntry lookup(OrtolangObjectIdentifier identifier) throws RegistryServiceException, IdentifierNotRegisteredException {
+		logger.log(Level.INFO, "looking up entry for identifier [" + identifier + "]");
+		for ( RegistryEntry entry : entries.values() ) {
+			if ( entry.getIdentifier().equals(identifier) ) {
+				return entry;
+			}
+		}
+		throw new IdentifierNotRegisteredException("no entry found for identifier [" + identifier + "]");
 	}
 
 	@Override

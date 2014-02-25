@@ -27,9 +27,9 @@ public interface RegistryService {
 	
 	public static final String SERVICE_NAME = "registry";
 	
-	public void create(String key, OrtolangObjectIdentifier identifier) throws RegistryServiceException, KeyAlreadyExistsException;
+	public void create(String key, OrtolangObjectIdentifier identifier) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException;
 	
-	public void create(String key, OrtolangObjectIdentifier identifier, String parent) throws RegistryServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException;
+	public void create(String key, OrtolangObjectIdentifier identifier, String parent) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, KeyNotFoundException, BranchNotAllowedException;
 	
 	public void hide(String key) throws RegistryServiceException, KeyNotFoundException;
 	
@@ -50,6 +50,8 @@ public interface RegistryService {
 	public String getProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException;
 	
 	public RegistryEntry lookup(String key) throws RegistryServiceException, KeyNotFoundException;
+	
+	public RegistryEntry lookup(OrtolangObjectIdentifier identifier) throws RegistryServiceException, IdentifierNotRegisteredException;
 	
 	public List<RegistryEntry> list(int offset, int limit, String filter, boolean visible) throws RegistryServiceException;
 	
