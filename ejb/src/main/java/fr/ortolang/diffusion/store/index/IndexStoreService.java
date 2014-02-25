@@ -1,5 +1,20 @@
 package fr.ortolang.diffusion.store.index;
 
-public class IndexStoreService {
+import java.util.List;
+
+import fr.ortolang.diffusion.OrtolangIndexableObject;
+import fr.ortolang.diffusion.OrtolangSearchResult;
+
+public interface IndexStoreService {
+	
+	public static final String SERVICE_NAME = "index-store";
+	
+	public void index(OrtolangIndexableObject object) throws IndexStoreServiceException;
+	
+	public void reindex(String key, OrtolangIndexableObject object) throws IndexStoreServiceException;
+	
+	public void remove(String key) throws IndexStoreServiceException;
+	
+	public List<OrtolangSearchResult> search(String query) throws IndexStoreServiceException;
 
 }
