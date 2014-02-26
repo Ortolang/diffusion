@@ -57,7 +57,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 
 	@PostConstruct
 	public void init() {
-		logger.log(Level.FINE, "Initializing service with base folder: " + base);
+		logger.log(Level.INFO, "Initializing service with base folder: " + base);
 		try {
 			analyzer = new StandardAnalyzer(Version.LUCENE_46);
 			directory = FSDirectory.open(base.toFile());
@@ -71,7 +71,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 
 	@PreDestroy
 	public void shutdown() {
-		logger.log(Level.FINE, "Shuting down service");
+		logger.log(Level.INFO, "Shuting down service");
 		try {
 			writer.close();
 			directory.close();

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -12,10 +13,12 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import fr.ortolang.diffusion.OrtolangIndexableContent;
@@ -27,6 +30,22 @@ public class IndexStoreServiceTest {
 	
 	private Logger logger = Logger.getLogger(IndexStoreServiceTest.class.getName());
 	private IndexStoreServiceBean service;
+	
+	@BeforeClass
+	public static void globalSetup() {
+		try {
+			LogManager.getLogManager().readConfiguration(ClassLoader.getSystemResourceAsStream("logging.properties"));
+		} catch (SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	@Before
 	public void setup() {
@@ -164,10 +183,10 @@ public class IndexStoreServiceTest {
 	
 	private void dumpResults(List<OrtolangSearchResult> results) {
 		StringBuffer dump = new StringBuffer();
-		dump.append(results.size() + " results found :").append("\r\n");
+		dump.append(results.size() + " results found :");
 		for ( OrtolangSearchResult result : results ) {
-			dump.append(result.toString()).append("\r\n");
+			dump.append("\r\n").append(result.toString());
 		}
-		logger.log(Level.INFO, dump.toString());
+		logger.log(Level.FINE, dump.toString());
 	}
 }

@@ -27,6 +27,7 @@ import com.healthmarketscience.rmiio.RemoteOutputStreamClient;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangIndexableContent;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
@@ -657,6 +658,52 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			return results;
 		} catch (KeyNotFoundException | CoreServiceException e) {
 			throw new OrtolangException("unable to find an object for hash " + hash);
+		}
+	}
+	
+	@Override
+	public OrtolangIndexableContent getIndexableContent(String key) throws OrtolangException {
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+
+			if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
+				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+			}
+			
+			OrtolangIndexableContent content = new OrtolangIndexableContent();
+
+			if (identifier.getType().equals(DigitalObject.OBJECT_TYPE)) {
+				if (!objects.containsKey(identifier.getId())) {
+					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
+				}
+				DigitalObject object = objects.get(identifier.getId());
+				content.addContentPart(object.getName());
+				content.addContentPart(object.getDescription());
+				content.addContentPart(object.getContentType());
+				content.addContentPart(object.getPreview());
+				//TODO include the binary content if possible (plain text extraction)
+			}
+
+			if (identifier.getType().equals(DigitalCollection.OBJECT_TYPE)) {
+				if (!collections.containsKey(identifier.getId())) {
+					throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
+				}
+				DigitalCollection collection = collections.get(identifier.getId());
+				content.addContentPart(collection.getName());
+				content.addContentPart(collection.getDescription());
+			}
+			
+			if (identifier.getType().equals(DigitalReference.OBJECT_TYPE)) {
+				if (!references.containsKey(identifier.getId())) {
+					throw new OrtolangException("unable to load reference with id [" + identifier.getId() + "] from storage");
+				}
+				DigitalReference reference = references.get(identifier.getId());
+				content.addContentPart(reference.getName());
+			}
+
+			return content;
+		} catch (KeyNotFoundException | RegistryServiceException e) {
+			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}
 
