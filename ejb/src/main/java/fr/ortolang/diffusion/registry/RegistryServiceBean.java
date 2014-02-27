@@ -18,12 +18,16 @@ import fr.ortolang.diffusion.registry.entity.RegistryTag;
 public class RegistryServiceBean implements RegistryService {
 
 	private Logger logger = Logger.getLogger(RegistryServiceBean.class.getName());
-	private HashMap<String, RegistryEntry> entries;
-	private HashMap<String, RegistryTag> tags;
+	
+	private static HashMap<String, RegistryEntry> entries = new HashMap<String, RegistryEntry>();
+	private static HashMap<String, RegistryTag> tags = new HashMap<String, RegistryTag>();
 
 	public RegistryServiceBean() {
+	}
+	
+	public static void init() {
 		entries = new HashMap<String, RegistryEntry>();
-		tags =  new HashMap<String, RegistryTag>();
+		tags = new HashMap<String, RegistryTag>();
 	}
 	
 	@Override

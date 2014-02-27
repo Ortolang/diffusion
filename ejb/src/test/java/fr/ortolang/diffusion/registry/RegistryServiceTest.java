@@ -26,6 +26,7 @@ public class RegistryServiceTest {
 		logger.log(Level.INFO, "setting up test environment");
 		try {
 			registry = new RegistryServiceBean();
+			RegistryServiceBean.init();
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}

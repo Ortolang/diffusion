@@ -3,10 +3,11 @@ package fr.ortolang.diffusion.core;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 
-public interface CoreServiceLocal {
+public interface CoreServiceLocal extends OrtolangIndexableService {
 	
 	public void createObject(String key, String name, String description, InputStream data) throws CoreServiceException, KeyAlreadyExistsException;
 	

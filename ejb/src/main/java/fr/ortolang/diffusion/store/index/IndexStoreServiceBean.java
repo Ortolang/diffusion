@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.ejb.Local;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -35,15 +35,14 @@ import org.apache.lucene.util.Version;
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangSearchResult;
-import fr.ortolang.diffusion.store.triple.TripleStoreServiceBean;
 
 @Local(IndexStoreService.class)
-@Stateless(name = IndexStoreService.SERVICE_NAME)
+@Singleton(name = IndexStoreService.SERVICE_NAME)
 public class IndexStoreServiceBean implements IndexStoreService {
 
 	public static final String DEFAULT_INDEX_HOME = "/index-store";
 
-	private static Logger logger = Logger.getLogger(TripleStoreServiceBean.class.getName());
+	private static Logger logger = Logger.getLogger(IndexStoreServiceBean.class.getName());
 
 	private Path base;
 	private Analyzer analyzer;
@@ -52,6 +51,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 	private IndexWriter writer;
 	
 	public IndexStoreServiceBean() {
+		logger.log(Level.INFO, "Instanciating service");
 		this.base = Paths.get(OrtolangConfig.getInstance().getProperty("home"), DEFAULT_INDEX_HOME);
 	}
 

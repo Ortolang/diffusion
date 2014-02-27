@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.Local;
-import javax.ejb.Stateless;
+import javax.ejb.Singleton;
 
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
@@ -25,7 +25,6 @@ import org.openrdf.query.TupleQuery;
 import org.openrdf.query.resultio.sparqlxml.SPARQLResultsXMLWriter;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.RepositoryResult;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.rio.RDFFormat;
@@ -35,40 +34,31 @@ import org.openrdf.sail.nativerdf.NativeStore;
 import fr.ortolang.diffusion.OrtolangConfig;
 
 @Local(TripleStoreService.class)
-@Stateless(name = TripleStoreService.SERVICE_NAME)
+@Singleton(name = TripleStoreService.SERVICE_NAME)
 public class TripleStoreServiceBean implements TripleStoreService {
 	
 	public static final String DEFAULT_TRIPLE_HOME = "/triple-store";
     
-    private static Logger logger = Logger.getLogger(TripleStoreServiceBean.class.getName());
+    private Logger logger = Logger.getLogger(TripleStoreServiceBean.class.getName());
     private Path base;
     private static Repository repository;
     
     public TripleStoreServiceBean() {
+    	logger.log(Level.INFO, "Instanciating service");
     	this.base = Paths.get(OrtolangConfig.getInstance().getProperty("home"), DEFAULT_TRIPLE_HOME);
     }
 
     @PostConstruct
     public void init() {
-    	logger.log(Level.FINEST, "Initializing service with base folder: " + base);
+    	logger.log(Level.INFO, "Initializing service with base folder: " + base);
     	try {
     		Files.createDirectories(base);
+    		repository = new SailRepository(new NativeStore(base.toFile()));
+            repository.initialize();
             this.importOntology("http://www.w3.org/2000/01/rdf-schema#", "ontology/rdfs.xml");
 	    } catch (Exception e) {
-    		logger.log(Level.SEVERE, "unable to import default ontologies", e);
+    		logger.log(Level.SEVERE, "unable to initialize triple store", e);
     	}
-    }
-
-    private Repository getRepository() throws TripleStoreServiceException {
-        if (repository == null) {
-            try {
-                repository = new SailRepository(new NativeStore(base.toFile()));
-                repository.initialize();
-            } catch (RepositoryException e) {
-                throw new TripleStoreServiceException("unable to create triple store", e);
-            }
-        }
-        return repository;
     }
 
     public Path getBase() {
@@ -79,7 +69,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
 	public void importOntology(String ontologyURI, String resourceName) throws TripleStoreServiceException {
 		logger.log(Level.INFO, "importing ontology [" + ontologyURI + "] into triple store");
         try {
-            RepositoryConnection con = getRepository().getConnection();
+            RepositoryConnection con = repository.getConnection();
             try {
                 if (!con.hasStatement(new URIImpl(ontologyURI), new URIImpl("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), new URIImpl("http://www.w3.org/2002/07/owl#Ontology"), false)) {
                     logger.log(Level.INFO, "ontology not present, importing...");
@@ -105,7 +95,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
             } catch (IllegalArgumentException iae) {
                 objectValue = new LiteralImpl(object);
             }
-            RepositoryConnection con = getRepository().getConnection();
+            RepositoryConnection con = repository.getConnection();
             try {
                 con.add(new URIImpl(subject), new URIImpl(predicate), objectValue);
             } finally {
@@ -125,7 +115,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
             } catch (IllegalArgumentException iae) {
                 objectValue = new LiteralImpl(object);
             }
-            RepositoryConnection con = getRepository().getConnection();
+            RepositoryConnection con = repository.getConnection();
             try {
                 con.remove(new URIImpl(subject), new URIImpl(predicate), objectValue);
             } finally {
@@ -158,7 +148,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
             throw new TripleStoreServiceException("unable to remove all triples of the store");
         }
         try {
-            RepositoryConnection con = getRepository().getConnection();
+            RepositoryConnection con = repository.getConnection();
             try {
                 con.remove(usubject, upredicate, uobject);
             } finally {
@@ -188,7 +178,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
             }
         }
         try {
-            RepositoryConnection con = getRepository().getConnection();
+            RepositoryConnection con = repository.getConnection();
             try {
                 RepositoryResult<Statement> statements = con.getStatements(usubject, upredicate, uobject, true);
                 Vector<Triple> result = new Vector<Triple>();
@@ -211,7 +201,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
 	public String query(String language, String query) throws TripleStoreServiceException {
 		try {
         	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        	RepositoryConnection con = getRepository().getConnection();
+        	RepositoryConnection con = repository.getConnection();
         	try {
         		if ( language.equals(QueryLanguage.SERQL.getName()) ) {
 	        		RDFXMLWriter writer = new RDFXMLWriter(baos);
@@ -236,7 +226,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
 	@Override
 	public void query(String language, String query, OutputStream os) throws TripleStoreServiceException {
 		try {
-        	RepositoryConnection con = getRepository().getConnection();
+        	RepositoryConnection con = repository.getConnection();
         	try {
         		if ( language.equals(QueryLanguage.SERQL.getName()) ) {
 	        		RDFXMLWriter writer = new RDFXMLWriter(os);

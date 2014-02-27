@@ -28,7 +28,6 @@ import com.healthmarketscience.rmiio.RemoteOutputStreamClient;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableContent;
-import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
@@ -53,9 +52,9 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 @Remote(CoreService.class)
-@Local({CoreServiceLocal.class, OrtolangIndexableService.class})
+@Local(CoreServiceLocal.class)
 @Stateless(name = CoreService.SERVICE_NAME)
-public class CoreServiceBean implements CoreService, CoreServiceLocal, OrtolangIndexableService {
+public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	private Logger logger = Logger.getLogger(CoreServiceBean.class.getName());
 
@@ -68,14 +67,11 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal, OrtolangI
 	@EJB
 	private IndexingService indexing;
 	
-	private HashMap<String, DigitalObject> objects;
-	private HashMap<String, DigitalCollection> collections;
-	private HashMap<String, DigitalReference> references;
+	private static HashMap<String, DigitalObject> objects = new HashMap<String, DigitalObject>(); 
+	private static HashMap<String, DigitalCollection> collections = new HashMap<String, DigitalCollection>();
+	private static HashMap<String, DigitalReference> references = new HashMap<String, DigitalReference>();
 
-	public CoreServiceBean() throws CoreServiceException {
-		objects = new HashMap<String, DigitalObject>();
-		collections = new HashMap<String, DigitalCollection>();
-		references = new HashMap<String, DigitalReference>();
+	public CoreServiceBean() {
 	}
 
 	public RegistryService getRegistryService() {

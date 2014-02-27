@@ -60,7 +60,6 @@ public class IndexingListenerBean implements MessageListener {
 	                this.updateIndexStore(key);
 	            if (action.equals("remove"))
 	                this.removeFromIndexStore(key);
-	            message.acknowledge();
         	} catch (Exception e) {
         		logger.log(Level.WARNING, "error during indexation of key " + key, e);
             }

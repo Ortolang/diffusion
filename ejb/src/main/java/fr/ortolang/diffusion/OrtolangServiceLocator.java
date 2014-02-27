@@ -55,10 +55,10 @@ public class OrtolangServiceLocator {
 		try {
 			NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/" + APPLICATION_NAME + "/" + MODULE_NAME);
 			while (enumeration.hasMoreElements()) {
-				NameClassPair pair = (NameClassPair) enumeration.next();
-				if (pair.getName().endsWith(OrtolangServiceLocator.SERVICE_SUFFIX)) {
-					if (pair.getName().substring(0, pair.getName().indexOf("!")).equals(serviceName)) {
-						return (OrtolangService)getJndiContext().lookup(pair.getNameInNamespace());
+				String name = ((NameClassPair) enumeration.next()).getName();
+				if (name.endsWith(OrtolangServiceLocator.SERVICE_SUFFIX)) {
+					if (name.substring(0, name.indexOf("!")).equals(serviceName)) {
+						return (OrtolangService)getJndiContext().lookup(NAMESPACE + "/" + APPLICATION_NAME + "/" + MODULE_NAME + "/" + name);
 					}
 				}
 			}
@@ -72,10 +72,10 @@ public class OrtolangServiceLocator {
 		try {
 			NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/" + APPLICATION_NAME + "/" + MODULE_NAME);
 			while (enumeration.hasMoreElements()) {
-				NameClassPair pair = (NameClassPair) enumeration.next();
-				if (pair.getName().endsWith(OrtolangServiceLocator.LOCAL_SERVICE_SUFFIX)) {
-					if (pair.getName().substring(0, pair.getName().indexOf("!")).equals(serviceName)) {
-						return (OrtolangService)getJndiContext().lookup(pair.getNameInNamespace());
+				String name = ((NameClassPair) enumeration.next()).getName();
+				if (name.endsWith(OrtolangServiceLocator.LOCAL_SERVICE_SUFFIX)) {
+					if (name.substring(0, name.indexOf("!")).equals(serviceName)) {
+						return (OrtolangService)getJndiContext().lookup(NAMESPACE + "/" + APPLICATION_NAME + "/" + MODULE_NAME + "/" + name);
 					}
 				}
 			}
@@ -89,10 +89,10 @@ public class OrtolangServiceLocator {
 		try {
 			NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/" + APPLICATION_NAME + "/" + MODULE_NAME);
 			while (enumeration.hasMoreElements()) {
-				NameClassPair pair = (NameClassPair) enumeration.next();
-				if (pair.getName().endsWith(OrtolangServiceLocator.LOCAL_SERVICE_SUFFIX)) {
-					if (pair.getName().substring(0, pair.getName().indexOf("!")).equals(serviceName)) {
-						return (OrtolangIndexableService)getJndiContext().lookup(pair.getNameInNamespace());
+				String name = ((NameClassPair) enumeration.next()).getName();
+				if (name.endsWith(OrtolangServiceLocator.LOCAL_SERVICE_SUFFIX)) {
+					if (name.substring(0, name.indexOf("!")).equals(serviceName)) {
+						return (OrtolangIndexableService)getJndiContext().lookup(NAMESPACE + "/" + APPLICATION_NAME + "/" + MODULE_NAME + "/" + name);
 					}
 				}
 			}

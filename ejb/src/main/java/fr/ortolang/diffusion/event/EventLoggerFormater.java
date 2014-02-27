@@ -9,7 +9,6 @@ public class EventLoggerFormater {
 	
 	private static HashMap<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> (); 
 	private static String fieldSeparator = ",";
-	private static String lineSeparator = "\r\n";
 	
 	private static SimpleDateFormat getEventDateFormatter() {
 		String key = Thread.currentThread().getId() + "";
@@ -33,7 +32,6 @@ public class EventLoggerFormater {
 		buffer.append(fieldSeparator);
 		buffer.append(e.getArguments());
 		buffer.append(fieldSeparator);
-		buffer.append(lineSeparator);
 		return buffer.toString();
 	}
 
