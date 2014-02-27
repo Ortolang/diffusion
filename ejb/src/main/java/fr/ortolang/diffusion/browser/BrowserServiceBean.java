@@ -18,8 +18,8 @@ import fr.ortolang.diffusion.OrtolangObjectTag;
 import fr.ortolang.diffusion.OrtolangObjectVersion;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.TagNotFoundException;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 

@@ -28,12 +28,15 @@ import com.healthmarketscience.rmiio.RemoteOutputStreamClient;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableContent;
+import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.core.entity.DigitalCollection;
 import fr.ortolang.diffusion.core.entity.DigitalObject;
 import fr.ortolang.diffusion.core.entity.DigitalReference;
+import fr.ortolang.diffusion.indexing.IndexingService;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.BranchNotAllowedException;
@@ -50,9 +53,9 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 @Remote(CoreService.class)
-@Local(CoreServiceLocal.class)
+@Local({CoreServiceLocal.class, OrtolangIndexableService.class})
 @Stateless(name = CoreService.SERVICE_NAME)
-public class CoreServiceBean implements CoreService, CoreServiceLocal {
+public class CoreServiceBean implements CoreService, CoreServiceLocal, OrtolangIndexableService {
 
 	private Logger logger = Logger.getLogger(CoreServiceBean.class.getName());
 
@@ -62,6 +65,9 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	private BinaryStoreService binarystore;
 	@EJB
 	private NotificationService notification;
+	@EJB
+	private IndexingService indexing;
+	
 	private HashMap<String, DigitalObject> objects;
 	private HashMap<String, DigitalCollection> collections;
 	private HashMap<String, DigitalReference> references;
@@ -94,6 +100,14 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	public void setNotificationService(NotificationService notificationService) {
 		this.notification = notificationService;
+	}
+	
+	public IndexingService getIndexingService() {
+		return indexing;
+	}
+
+	public void setIndexingService(IndexingService indexing) {
+		this.indexing = indexing;
 	}
 
 	@Override
@@ -128,11 +142,12 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, "users:root");
 			registry.setProperty(key, OrtolangObjectProperty.OWNER, "users:root");
 
+			indexing.index(key);
 			notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
 			logger.log(Level.INFO, "the key [" + key + "] is already used");
 			throw e;
-		} catch (DataCollisionException | DataNotFoundException | BinaryStoreServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException e) {
+		} catch (IndexingServiceException | DataCollisionException | DataNotFoundException | BinaryStoreServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException  e) {
 			logger.log(Level.SEVERE, "unexpected error occured during object creation", e);
 			throw new CoreServiceException("unable to create object with key [" + key + "]", e);
 		}
@@ -228,12 +243,13 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				DigitalObject object = objects.get(identifier.getId());
 				object.setName(name);
 				object.setDescription(description);
+				indexing.reindex(key);
 				notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"),
 						"");
 			} else {
 				throw new CoreServiceException("unable to find object with id [" + identifier.getId() + "] from storage");
 			}
-		} catch (NotificationServiceException | RegistryServiceException e) {
+		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException e) {
 			throw new CoreServiceException("unable to update object with key [" + key + "]", e);
 		}
 	}
@@ -254,12 +270,13 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				object.setContentType(binarystore.type(hash));
 				object.removeStream("data-stream");
 				object.addStream("data-stream", hash);
+				indexing.reindex(key);
 				notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"),
 						"");
 			} else {
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 			}
-		} catch (NotificationServiceException | RegistryServiceException | BinaryStoreServiceException | DataCollisionException | DataNotFoundException e) {
+		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | BinaryStoreServiceException | DataCollisionException | DataNotFoundException e) {
 			throw new CoreServiceException("unable to update object with key [" + key + "]", e);
 		}
 	}
@@ -312,6 +329,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 					updateReference(ref, key);
 				}
 
+				indexing.index(key);
 				notification.throwEvent(origin, "users:root", DigitalObject.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "clone"), "key=" + key);
 				notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"),
@@ -319,7 +337,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			} else {
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 			}
-		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException e) {
+		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException e) {
 			throw new CoreServiceException("unable to clone object with origin [" + origin + "] and key [" + key + "]", e);
 		}
 	}
@@ -331,9 +349,10 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
 			registry.delete(key);
+			indexing.remove(key);
 			notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "delete"),
 						"");
-		} catch (NotificationServiceException | RegistryServiceException e) {
+		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException e) {
 			throw new CoreServiceException("unable to delete object with key [" + key + "]", e);
 		}
 	}

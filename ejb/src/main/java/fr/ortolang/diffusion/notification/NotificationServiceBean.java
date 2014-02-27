@@ -20,8 +20,7 @@ public class NotificationServiceBean implements NotificationService {
 	
 	private Logger logger = Logger.getLogger(NotificationServiceBean.class.getName());
 	
-	//Resource(mappedName = "java:jboss/exported/jms/topic/notification")
-	@Resource(mappedName = "jms/topic/notification")
+	@Resource(mappedName = "java:jboss/exported/jms/topic/notification")
 	private Topic notificationTopic;
 	@Inject
 	private JMSContext context;

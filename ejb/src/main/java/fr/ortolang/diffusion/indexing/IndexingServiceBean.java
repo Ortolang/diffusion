@@ -17,7 +17,7 @@ public class IndexingServiceBean implements IndexingService {
 	
 	private Logger logger = Logger.getLogger(IndexingServiceBean.class.getName());
 	
-	@Resource(mappedName = "jms/topic/indexing")
+	@Resource(mappedName = "java:jboss/exported/jms/topic/indexing")
 	private Topic indexingTopic;
 	@Inject
 	private JMSContext context;

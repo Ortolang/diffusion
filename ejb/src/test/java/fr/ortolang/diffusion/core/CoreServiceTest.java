@@ -22,6 +22,7 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.core.entity.DigitalObject;
+import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
@@ -35,6 +36,7 @@ public class CoreServiceTest {
 	private RegistryService registry;
 	private BinaryStoreService binary;
 	private NotificationService notification;
+	private IndexingService indexing;
 	private CoreService core;
 	
 	@Before
@@ -45,10 +47,12 @@ public class CoreServiceTest {
 			registry = mockery.mock(RegistryService.class);
 			binary = mockery.mock(BinaryStoreService.class);
 			notification = mockery.mock(NotificationService.class);
+			indexing = mockery.mock(IndexingService.class);
 			core = new CoreServiceBean();
 			((CoreServiceBean)core).setRegistryService(registry);
 			((CoreServiceBean)core).setBinaryStoreService(binary);
 			((CoreServiceBean)core).setNotificationService(notification);
+			((CoreServiceBean)core).setIndexingService(indexing);
 		} catch (Exception e) {
 			fail(e.getMessage());
 		}
@@ -87,6 +91,8 @@ public class CoreServiceTest {
                     oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.AUTHOR)), with(any(String.class)));
                     inSequence(sequence);
                     oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.OWNER)), with(any(String.class)));
+                    inSequence(sequence);
+                    oneOf(indexing).index(with(equal("K1")));
                     inSequence(sequence);
                     oneOf(notification).throwEvent(with(equal("K1")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"))), with(any(String.class)));
                     inSequence(sequence);
@@ -133,6 +139,8 @@ public class CoreServiceTest {
                     oneOf(registry).lookup(with(equal("K1")));
                     will(returnValue(entry));
                     inSequence(sequence);
+                    oneOf(indexing).reindex(with(equal("K1")));
+                    inSequence(sequence);
                     oneOf(notification).throwEvent(with(equal("K1")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"))), with(any(String.class)));
                     inSequence(sequence);
                 }
@@ -170,6 +178,8 @@ public class CoreServiceTest {
                     inSequence(sequence);
                     oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.OWNER)), with(any(String.class)));
                     inSequence(sequence);
+                    oneOf(indexing).index(with(equal("K2")));
+                    inSequence(sequence);
                     oneOf(notification).throwEvent(with(equal("K1")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "clone"))), with(any(String.class)));
                     inSequence(sequence);
                     oneOf(notification).throwEvent(with(equal("K2")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"))), with(any(String.class)));
@@ -203,6 +213,8 @@ public class CoreServiceTest {
                     will(returnValue(entryClone));
                     inSequence(sequence);
                     oneOf(registry).delete(with(equal("K1")));
+                    inSequence(sequence);
+                    oneOf(indexing).remove(with(equal("K1")));
                     inSequence(sequence);
                     oneOf(notification).throwEvent(with(equal("K1")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "delete"))), with(any(String.class)));
                     inSequence(sequence);
