@@ -32,6 +32,7 @@ import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.core.entity.DigitalCollection;
+import fr.ortolang.diffusion.core.entity.DigitalMetadata;
 import fr.ortolang.diffusion.core.entity.DigitalObject;
 import fr.ortolang.diffusion.core.entity.DigitalReference;
 import fr.ortolang.diffusion.indexing.IndexingService;
@@ -70,6 +71,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	private static HashMap<String, DigitalObject> objects = new HashMap<String, DigitalObject>(); 
 	private static HashMap<String, DigitalCollection> collections = new HashMap<String, DigitalCollection>();
 	private static HashMap<String, DigitalReference> references = new HashMap<String, DigitalReference>();
+	private static HashMap<String, DigitalMetadata> metadatas = new HashMap<String, DigitalMetadata>();
 
 	public CoreServiceBean() {
 	}
@@ -655,6 +657,10 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				return getReference(key);
 			}
 
+			if (identifier.getType().equals(DigitalMetadata.OBJECT_TYPE)) {
+				return getMetadata(key);
+			}
+
 			throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 		} catch (KeyNotFoundException | CoreServiceException | RegistryServiceException e) {
 			throw new OrtolangException("unable to find an object for key " + key);
@@ -759,5 +765,302 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		}
 		return false;
 	}
+
+	@Override
+	public void createMetadata(String key, String name, byte[] data,
+			String target) throws CoreServiceException,
+			KeyAlreadyExistsException {
+		InputStream os = new ByteArrayInputStream(data);
+		createMetadata(key, name, os, target);
+	}
+
+	@Override
+	public void createMetadata(String key, String name, RemoteInputStream data,
+			String target) throws CoreServiceException,
+			KeyAlreadyExistsException {
+		try {
+			InputStream os = RemoteInputStreamClient.wrap(data);
+			createMetadata(key, name, os, target);
+		} catch (IOException e) {
+			throw new CoreServiceException("unable to create metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public void createMetadata(String key, String name, InputStream data,
+			String target) throws CoreServiceException,
+			KeyAlreadyExistsException {
+		logger.log(Level.INFO, "creating new metadata for key [" + key + "]");
+		String id = UUID.randomUUID().toString();
+		try {
+			// Checks if the target is a Reference
+			RegistryEntry entry = registry.lookup(target);
+			if ( !entry.getIdentifier().getType().equals(DigitalReference.OBJECT_TYPE) ) {
+				throw new CoreServiceException("metadata target must be a DigitalReference.");
+			}
+			
+			String hash = binarystore.put(data);
+
+			DigitalMetadata meta = new DigitalMetadata();
+			meta.setId(id);
+			meta.setName(name);
+			meta.setSize(binarystore.size(hash));
+			meta.setContentType(binarystore.type(hash));
+			meta.setStream(hash);
+			//TODO asks to MetadataService whether it recognize the format or ask to the user ??
+			// meta.setFormat(format); 
+			meta.setTarget(target);
+			metadatas.put(meta.getId(), meta);
+
+			registry.create(key, meta.getObjectIdentifier());
+			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, "users:root");
+			registry.setProperty(key, OrtolangObjectProperty.OWNER, "users:root");
+
+			// TODO est ce qu'il faut indexer les metadonnées ??
+//			indexing.index(key);
+			notification.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "create"), "");
+		} catch (KeyAlreadyExistsException e) {
+			logger.log(Level.INFO, "the key [" + key + "] is already used");
+			throw e;
+		} catch (DataCollisionException | DataNotFoundException | BinaryStoreServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException  e) {
+			logger.log(Level.SEVERE, "unexpected error occured during metadata object creation", e);
+			throw new CoreServiceException("unable to create metadata object with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public DigitalMetadata getMetadata(String key) throws CoreServiceException,
+			KeyNotFoundException {
+		logger.log(Level.INFO, "getting metadata for key [" + key + "]");
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
+			if (metadatas.containsKey(identifier.getId())) {
+				DigitalMetadata object = metadatas.get(identifier.getId());
+				object.setKey(key); // TODO pourquoi changer la clé ??
+				notification
+						.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "read"), "");
+				return object;
+			} else {
+				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+			}
+		} catch (NotificationServiceException | RegistryServiceException e) {
+			throw new CoreServiceException("unable to get metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public byte[] getMetadataData(String key) throws CoreServiceException,
+			KeyNotFoundException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		getMetadataData(key, baos);
+		return baos.toByteArray();
+	}
+
+	@Override
+	public void getMetadataData(String key, OutputStream os)
+			throws CoreServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "getting data from metadata with key [" + key + "]");
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
+			if (metadatas.containsKey(identifier.getId())) {
+				DigitalMetadata meta = metadatas.get(identifier.getId());
+				//meta.setNbReads(meta.getNbReads()+1);
+				InputStream input = binarystore.get(meta.getStream());
+				try {
+					IOUtils.copy(input, os);
+					notification.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE,
+							OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "read-data"), "");
+				} catch (IOException e) {
+					throw new CoreServiceException("unable to get data from metadata with key [" + key + "]", e);
+				} finally {
+					IOUtils.closeQuietly(input);
+					IOUtils.closeQuietly(os);
+				}
+			} else {
+				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+			}
+		} catch (DataNotFoundException | BinaryStoreServiceException | RegistryServiceException | NotificationServiceException e) {
+			throw new CoreServiceException("unable to get data from metadata with key [" + key + "]", e);
+		}
+	}
 	
+	@Override
+	public void getMetadataData(String key, RemoteOutputStream ros)
+			throws CoreServiceException, KeyNotFoundException {
+		try {
+			OutputStream os = RemoteOutputStreamClient.wrap(ros);
+			getMetadataData(key, os);
+		} catch (IOException e) {
+			throw new CoreServiceException("unable to get data from metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public void updateMetadata(String key, String name, String target)
+			throws CoreServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "updating metadata for key [" + key + "]");
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
+			
+			// Checks if the target is a Reference
+			RegistryEntry entry = registry.lookup(target);
+			if ( !entry.getIdentifier().getType().equals(DigitalReference.OBJECT_TYPE) ) {
+				throw new CoreServiceException("metadata target must be a DigitalReference.");
+			}
+						
+			if (metadatas.containsKey(identifier.getId())) {
+				DigitalMetadata meta = metadatas.get(identifier.getId());
+				meta.setName(name);
+				meta.setTarget(target);
+				
+				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+				
+				// TODO est ce qu'il faut indexer les metadonnées ??
+//				indexing.reindex(key); 
+				notification.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "update"),
+						"");
+			} else {
+				throw new CoreServiceException("unable to find metadata with id [" + identifier.getId() + "] from storage");
+			}
+		} catch (NotificationServiceException | RegistryServiceException e) {
+			throw new CoreServiceException("unable to update metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public void updateMetadata(String key, String name, InputStream data)
+			throws CoreServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "updating metadata data for key [" + key + "]");
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
+			if (metadatas.containsKey(identifier.getId())) {
+				String hash = binarystore.put(data);
+
+				DigitalMetadata meta = metadatas.get(identifier.getId());
+				meta.setName(name);
+				meta.setSize(binarystore.size(hash));
+				meta.setContentType(binarystore.type(hash));
+				meta.setStream(hash);
+
+				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+				
+				//TODO reindexé ??
+//				indexing.reindex(key); 
+				notification.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "update"),
+						"");
+			} else {
+				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+			}
+		} catch (NotificationServiceException | RegistryServiceException | BinaryStoreServiceException | DataCollisionException | DataNotFoundException e) {
+			throw new CoreServiceException("unable to update metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public void updateMetadata(String key, String name, byte[] data)
+			throws CoreServiceException, KeyNotFoundException {
+		InputStream os = new ByteArrayInputStream(data);
+		updateMetadata(key, name, os);
+	}
+
+	@Override
+	public void updateMetadata(String key, String name, RemoteInputStream data)
+			throws CoreServiceException, KeyNotFoundException {
+		try {
+			InputStream os = RemoteInputStreamClient.wrap(data);
+			updateMetadata(key, name, os);
+		} catch (IOException e) {
+			throw new CoreServiceException("unable to update metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public void cloneMetadata(String key, String origin)
+			throws CoreServiceException, KeyAlreadyExistsException,
+			KeyNotFoundException, BranchNotAllowedException {
+		logger.log(Level.INFO, "cloning metadata for origin [" + origin + "] and key [" + key + "]");
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(origin).getIdentifier();
+			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
+
+			if (metadatas.containsKey(identifier.getId())) {
+				DigitalMetadata meta = metadatas.get(identifier.getId());
+				String id = UUID.randomUUID().toString();
+
+				DigitalMetadata clone = new DigitalMetadata();
+				clone.setId(id);
+				clone.setName(meta.getName());
+				clone.setTarget(meta.getTarget());
+				clone.setSize(meta.getSize());
+				clone.setContentType(meta.getContentType());
+				clone.setStream(meta.getStream());
+				metadatas.put(clone.getId(), clone);
+
+				registry.create(key, clone.getObjectIdentifier(), origin);
+				registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
+				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+				registry.setProperty(key, OrtolangObjectProperty.AUTHOR, "users:root");
+				registry.setProperty(key, OrtolangObjectProperty.OWNER, "users:root");
+				
+				 //TODO reindex ??
+//				indexing.index(key);
+				notification.throwEvent(origin, "users:root", DigitalMetadata.OBJECT_TYPE,
+						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "clone"), "key=" + key);
+				notification.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "create"),
+						"");
+			} else {
+				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+			}
+		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException e) {
+			throw new CoreServiceException("unable to clone metadata with origin [" + origin + "] and key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public void deleteMetadata(String key) throws CoreServiceException,
+			KeyNotFoundException {
+		logger.log(Level.INFO, "deleting metadata for key [" + key + "]");
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
+			registry.delete(key);
+			
+			//TODO delete index ??
+//			indexing.remove(key); 
+			notification.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "delete"),
+						"");
+		} catch (NotificationServiceException | RegistryServiceException e) {
+			throw new CoreServiceException("unable to delete object with key [" + key + "]", e);
+		}
+	}
+
+	/**
+	 * Finds all metadata for a specific target.
+	 * @param target a target digital reference
+	 * @return a list of digital metadata associeted to the target
+	 * @throws CoreServiceException
+	 */
+	private List<String> findMetadatasForTarget(String target) throws CoreServiceException {
+		List<String> metas = new ArrayList<String> ();
+		//TODO check if target is a reference ??
+		for ( DigitalMetadata meta : metadatas.values() ) {
+			if ( meta.getTarget().equals(target) ) {
+				try {
+					metas.add(registry.lookup(meta.getObjectIdentifier()).getKey());
+				} catch ( RegistryServiceException e ) {
+					throw new CoreServiceException("unable to find key for meta with identifier : " + meta.getObjectIdentifier(), e);
+				} catch (IdentifierNotRegisteredException e) {
+				} 
+			}
+		}
+		return metas;
+	}
+	
+
 }
