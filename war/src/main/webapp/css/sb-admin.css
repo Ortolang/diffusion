@@ -39,6 +39,10 @@
 /* ------------------------------- */
 
 /* Top Right Navigation Dropdown Styles */
+.navbar-header .title {
+	font-weight: bold;
+	color: #2a6496;	
+}
 
  .navbar-top-links li {
     display: inline-block;
