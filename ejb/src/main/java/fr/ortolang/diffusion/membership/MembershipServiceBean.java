@@ -65,12 +65,12 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 
 	@Override
 	public String getProfileKeyForConnectedIdentifier() {
-		return MembershipService.PROFILE_KEY_SUFFIX + authentication.getConnectedIdentifier();
+		return authentication.getConnectedIdentifier();
 	}
 
 	@Override
 	public String getProfileKeyForIdentifier(String identifier) {
-		return MembershipService.PROFILE_KEY_SUFFIX + identifier;
+		return identifier;
 	}
 
 	@Override
@@ -100,12 +100,6 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException,
 			ProfileAlreadyExistsException {
 		logger.log(Level.INFO, "creating profile for identifier [" + identifier + "] and email [" + email + "]");
-		if ( email != null && email.length() > 0 ) {
-			List<Profile> profiles = em.createNamedQuery("findProfileByEmail").setParameter("email", email).getResultList();
-			if (profiles != null && profiles.size() > 0) {
-				throw new ProfileAlreadyExistsException("a profile already exists for email " + email);
-			}
-		}
 		
 		String key = getProfileKeyForIdentifier(identifier);
 		logger.log(Level.FINEST, "generated profile key [" + key + "]");
@@ -154,30 +148,6 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 		} catch (RegistryServiceException | NotificationServiceException e) {
 			throw new MembershipServiceException("unable to read the profile with key [" + key + "]", e);
 		}
-	}
-
-	@Override
-	public Profile findProfileByEmail(String email) throws MembershipServiceException, ProfileNotFoundException {
-		logger.log(Level.INFO, "finding profile for email [" + email + "]");
-		try {
-			String caller = getProfileKeyForConnectedIdentifier();
-			
-			List<Profile> profiles = em.createNamedQuery("findProfileByEmail").setParameter("email", email).getResultList();
-			if (profiles == null || profiles.size() == 0) {
-				throw new MembershipServiceException("unable to find a profile for email " + email);
-			}
-			if (profiles.size() > 1) {
-				logger.log(Level.WARNING, "multiple profiles found with same email, possible database corruption...");
-			}
-			Profile profile = profiles.get(0);
-			String key = getProfileKeyForIdentifier(profile.getId());
-			profile.setKey(key);
-			
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read"), "");
-			return profile;
-		} catch (NotificationServiceException e) {
-			throw new MembershipServiceException("error while trying to find a profile with email [" + email + "]");
-		} 
 	}
 
 	@Override

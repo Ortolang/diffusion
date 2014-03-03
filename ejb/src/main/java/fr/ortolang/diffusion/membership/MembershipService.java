@@ -14,7 +14,6 @@ public interface MembershipService extends OrtolangService {
 	public static final String SERVICE_NAME = "membership";
 	public static final String[] OBJECT_TYPE_LIST = new String[] { Group.OBJECT_TYPE, Profile.OBJECT_TYPE };
 	
-	public static final String PROFILE_KEY_SUFFIX = "user_";
 	public static final String UNAUTHENTIFIED_IDENTIFIER = "guest";
 	public static final String SUPERUSER_IDENTIFIER = "root";
 
@@ -25,8 +24,6 @@ public interface MembershipService extends OrtolangService {
 	public List<String> getConnectedIdentifierSubjects() throws MembershipServiceException, KeyNotFoundException;
 
 	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException;
-
-	public Profile findProfileByEmail(String email) throws MembershipServiceException, ProfileNotFoundException;
 
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException;
 

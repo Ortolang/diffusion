@@ -2,8 +2,6 @@ package fr.ortolang.diffusion.membership.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
 
 import fr.ortolang.diffusion.OrtolangObject;
@@ -11,9 +9,6 @@ import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.membership.MembershipService;
 
 @Entity
-@NamedQueries({ 
-	@NamedQuery(name = "findProfileByEmail", query = "select p from Profile p where p.email = :email"),
-})
 @SuppressWarnings("serial")
 public class Profile extends OrtolangObject {
 	
