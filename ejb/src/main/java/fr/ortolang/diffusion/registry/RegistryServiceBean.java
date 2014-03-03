@@ -10,6 +10,7 @@ import javax.ejb.Local;
 import javax.ejb.Stateless;
 
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.registry.entity.RegistryTag;
 
@@ -63,6 +64,7 @@ public class RegistryServiceBean implements RegistryService {
 			throw new BranchNotAllowedException("parent entry with key [" + parent + "] has already a child, branching is not aloowed");
 		} 
 		entries.get(parent).setChildren(key);
+		entries.get(parent).setProperty(OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 		RegistryEntry entry = new RegistryEntry(key, identifier);
 		entry.setParent(parent);
 		entries.put(entry.getKey(), entry);

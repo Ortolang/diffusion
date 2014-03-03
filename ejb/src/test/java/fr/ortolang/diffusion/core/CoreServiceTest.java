@@ -7,11 +7,11 @@ import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.UUID;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jgroups.util.UUID;
 import org.jmock.Expectations;
 import org.jmock.Mockery;
 import org.jmock.Sequence;
@@ -26,6 +26,7 @@ import fr.ortolang.diffusion.core.entity.DigitalMetadata;
 import fr.ortolang.diffusion.core.entity.DigitalObject;
 import fr.ortolang.diffusion.core.entity.DigitalReference;
 import fr.ortolang.diffusion.indexing.IndexingService;
+import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
@@ -38,6 +39,7 @@ public class CoreServiceTest {
 	private Mockery mockery;
 	private RegistryService registry;
 	private BinaryStoreService binary;
+	private MembershipService membership;
 	private NotificationService notification;
 	private IndexingService indexing;
 	private CoreService core;
@@ -49,11 +51,13 @@ public class CoreServiceTest {
 			mockery = new Mockery();
 			registry = mockery.mock(RegistryService.class);
 			binary = mockery.mock(BinaryStoreService.class);
+			membership = mockery.mock(MembershipService.class);
 			notification = mockery.mock(NotificationService.class);
 			indexing = mockery.mock(IndexingService.class);
 			core = new CoreServiceBean();
 			((CoreServiceBean)core).setRegistryService(registry);
 			((CoreServiceBean)core).setBinaryStoreService(binary);
+			((CoreServiceBean)core).setMembershipService(membership);
 			((CoreServiceBean)core).setNotificationService(notification);
 			((CoreServiceBean)core).setIndexingService(indexing);
 		} catch (Exception e) {
@@ -68,6 +72,7 @@ public class CoreServiceTest {
 
 	@Test
 	public void testCRUDObject() {
+		final String caller = "profile:guest";
 		final Sequence sequence = mockery.sequence("sequence1");
 		final Vector<Object> params = new Vector<Object>();
 		final Vector<Object> params2 = new Vector<Object>();
@@ -75,6 +80,9 @@ public class CoreServiceTest {
 		try {
 			mockery.checking(new Expectations() {
                 {
+                	oneOf(membership).getProfileKeyForConnectedIdentifier();
+                	will(returnValue(caller));
+                	inSequence(sequence);
                     oneOf(binary).put(with(any(InputStream.class)));
                     will(returnValue("sha1-object1"));
                     inSequence(sequence);
@@ -91,13 +99,13 @@ public class CoreServiceTest {
                     inSequence(sequence);
                     oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP)), with(any(String.class)));
                     inSequence(sequence);
-                    oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.AUTHOR)), with(any(String.class)));
+                    oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.AUTHOR)), with(equal(caller)));
                     inSequence(sequence);
-                    oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.OWNER)), with(any(String.class)));
+                    oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.OWNER)), with(equal(caller)));
                     inSequence(sequence);
                     oneOf(indexing).index(with(equal("K1")));
                     inSequence(sequence);
-                    oneOf(notification).throwEvent(with(equal("K1")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"))), with(any(String.class)));
+                    oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"))), with(any(String.class)));
                     inSequence(sequence);
                 }
             });
@@ -106,10 +114,13 @@ public class CoreServiceTest {
 			final RegistryEntry entry = new RegistryEntry("K1", (OrtolangObjectIdentifier) params.elementAt(1));
 			mockery.checking(new Expectations() {
                 {
+                	oneOf(membership).getProfileKeyForConnectedIdentifier();
+                	will(returnValue(caller));
+                	inSequence(sequence);
                     oneOf(registry).lookup(with(equal("K1")));
                     will(returnValue(entry));
                     inSequence(sequence);
-                    oneOf(notification).throwEvent(with(equal("K1")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"))), with(any(String.class)));
+                    oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"))), with(any(String.class)));
                     inSequence(sequence);
                 }
             });
@@ -124,13 +135,16 @@ public class CoreServiceTest {
 			
 			mockery.checking(new Expectations() {
                 {
+                	oneOf(membership).getProfileKeyForConnectedIdentifier();
+                	will(returnValue(caller));
+                	inSequence(sequence);
                     oneOf(registry).lookup(with(equal("K1")));
                     will(returnValue(entry));
                     inSequence(sequence);
                     oneOf(binary).get(with(equal("sha1-object1")));
                     will(returnValue(new ByteArrayInputStream("A little bit of sample data".getBytes())));
                     inSequence(sequence);
-                    oneOf(notification).throwEvent(with(equal("K1")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read-data"))), with(any(String.class)));
+                    oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read-data"))), with(any(String.class)));
                     inSequence(sequence);
                 }
             });
@@ -139,12 +153,17 @@ public class CoreServiceTest {
 			
 			mockery.checking(new Expectations() {
                 {
+                	oneOf(membership).getProfileKeyForConnectedIdentifier();
+                	will(returnValue(caller));
+                	inSequence(sequence);
                     oneOf(registry).lookup(with(equal("K1")));
                     will(returnValue(entry));
                     inSequence(sequence);
+                    oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP)), with(any(String.class)));
+                    inSequence(sequence);
                     oneOf(indexing).reindex(with(equal("K1")));
                     inSequence(sequence);
-                    oneOf(notification).throwEvent(with(equal("K1")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"))), with(any(String.class)));
+                    oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"))), with(any(String.class)));
                     inSequence(sequence);
                 }
             });
@@ -152,10 +171,13 @@ public class CoreServiceTest {
 			
 			mockery.checking(new Expectations() {
                 {
+                	oneOf(membership).getProfileKeyForConnectedIdentifier();
+                	will(returnValue(caller));
+                	inSequence(sequence);
                     oneOf(registry).lookup(with(equal("K1")));
                     will(returnValue(entry));
                     inSequence(sequence);
-                    oneOf(notification).throwEvent(with(equal("K1")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"))), with(any(String.class)));
+                    oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"))), with(any(String.class)));
                     inSequence(sequence);
                 }
             });
@@ -167,6 +189,9 @@ public class CoreServiceTest {
 			
 			mockery.checking(new Expectations() {
                 {
+                	oneOf(membership).getProfileKeyForConnectedIdentifier();
+                	will(returnValue(caller));
+                	inSequence(sequence);
                     oneOf(registry).lookup(with(equal("K1")));
                     will(returnValue(entry));
                     inSequence(sequence);
@@ -177,15 +202,15 @@ public class CoreServiceTest {
                     inSequence(sequence);
                     oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP)), with(any(String.class)));
                     inSequence(sequence);
-                    oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.AUTHOR)), with(any(String.class)));
+                    oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.AUTHOR)), with(equal(caller)));
                     inSequence(sequence);
-                    oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.OWNER)), with(any(String.class)));
+                    oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.OWNER)), with(equal(caller)));
                     inSequence(sequence);
                     oneOf(indexing).index(with(equal("K2")));
                     inSequence(sequence);
-                    oneOf(notification).throwEvent(with(equal("K1")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "clone"))), with(any(String.class)));
+                    oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "clone"))), with(any(String.class)));
                     inSequence(sequence);
-                    oneOf(notification).throwEvent(with(equal("K2")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"))), with(any(String.class)));
+                    oneOf(notification).throwEvent(with(equal("K2")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"))), with(any(String.class)));
                     inSequence(sequence);
                 }
             });
@@ -194,10 +219,13 @@ public class CoreServiceTest {
 			final RegistryEntry entryClone = new RegistryEntry("K2", (OrtolangObjectIdentifier) params2.elementAt(1));
 			mockery.checking(new Expectations() {
                 {
+                	oneOf(membership).getProfileKeyForConnectedIdentifier();
+                	will(returnValue(caller));
+                	inSequence(sequence);
                     oneOf(registry).lookup(with(equal("K2")));
                     will(returnValue(entryClone));
                     inSequence(sequence);
-                    oneOf(notification).throwEvent(with(equal("K2")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"))), with(any(String.class)));
+                    oneOf(notification).throwEvent(with(equal("K2")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"))), with(any(String.class)));
                     inSequence(sequence);
                 }
             });
@@ -212,14 +240,17 @@ public class CoreServiceTest {
 			
 			mockery.checking(new Expectations() {
                 {
+                	oneOf(membership).getProfileKeyForConnectedIdentifier();
+                	will(returnValue(caller));
+                	inSequence(sequence);
                     oneOf(registry).lookup(with(equal("K1")));
-                    will(returnValue(entryClone));
+                    will(returnValue(entry));
                     inSequence(sequence);
                     oneOf(registry).delete(with(equal("K1")));
                     inSequence(sequence);
                     oneOf(indexing).remove(with(equal("K1")));
                     inSequence(sequence);
-                    oneOf(notification).throwEvent(with(equal("K1")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "delete"))), with(any(String.class)));
+                    oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "delete"))), with(any(String.class)));
                     inSequence(sequence);
                 }
             });
@@ -228,10 +259,13 @@ public class CoreServiceTest {
 			
 			mockery.checking(new Expectations() {
                 {
+                	oneOf(membership).getProfileKeyForConnectedIdentifier();
+                	will(returnValue(caller));
+                	inSequence(sequence);
                     oneOf(registry).lookup(with(equal("K1")));
                     will(returnValue(entry));
                     inSequence(sequence);
-                    oneOf(notification).throwEvent(with(equal("K1")), with(any(String.class)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"))), with(any(String.class)));
+                    oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)), with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"))), with(any(String.class)));
                     inSequence(sequence);
                 }
             });

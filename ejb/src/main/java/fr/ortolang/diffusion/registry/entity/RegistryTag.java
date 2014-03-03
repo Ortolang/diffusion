@@ -5,11 +5,11 @@ import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-@Entity
+//@Entity
 @SuppressWarnings("serial")
 public class RegistryTag implements Serializable {
 
-	@Id
+	//@Id
 	private String name;
 	private int weight;
 

@@ -37,6 +37,7 @@ import fr.ortolang.diffusion.core.entity.DigitalObject;
 import fr.ortolang.diffusion.core.entity.DigitalReference;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
+import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.BranchNotAllowedException;
@@ -63,6 +64,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	private RegistryService registry;
 	@EJB
 	private BinaryStoreService binarystore;
+	@EJB
+	private MembershipService membership;
 	@EJB
 	private NotificationService notification;
 	@EJB
@@ -107,6 +110,14 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void setIndexingService(IndexingService indexing) {
 		this.indexing = indexing;
 	}
+	
+	public MembershipService getMembershipService() {
+		return membership;
+	}
+
+	public void setMembershipService(MembershipService membership) {
+		this.membership = membership;
+	}
 
 	@Override
 	public String getServiceName() {
@@ -123,6 +134,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		logger.log(Level.INFO, "creating new object for key [" + key + "]");
 		String id = UUID.randomUUID().toString();
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			String hash = binarystore.put(data);
 
 			DigitalObject object = new DigitalObject();
@@ -137,11 +150,11 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.create(key, object.getObjectIdentifier());
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, "users:root");
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, "users:root");
+			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
+			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 
 			indexing.index(key);
-			notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"), "");
+			notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
 			logger.log(Level.INFO, "the key [" + key + "] is already used");
 			throw e;
@@ -171,13 +184,15 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public DigitalObject getObject(String key) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "getting object for key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
 			if (objects.containsKey(identifier.getId())) {
 				DigitalObject object = objects.get(identifier.getId());
 				object.setKey(key);
 				notification
-						.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"), "");
+						.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"), "");
 				return object;
 			} else {
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
@@ -190,6 +205,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void getObjectData(String key, OutputStream output) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "getting data from object with key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
 			if (objects.containsKey(identifier.getId())) {
@@ -198,7 +215,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				InputStream input = binarystore.get(object.getStreams().get("data-stream"));
 				try {
 					IOUtils.copy(input, output);
-					notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE,
+					notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE,
 							OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read-data"), "");
 				} catch (IOException e) {
 					throw new CoreServiceException("unable to get data from object with key [" + key + "]", e);
@@ -235,14 +252,19 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void updateObject(String key, String name, String description) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "updating object for key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
 			if (objects.containsKey(identifier.getId())) {
 				DigitalObject object = objects.get(identifier.getId());
 				object.setName(name);
 				object.setDescription(description);
+				
+				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+				
 				indexing.reindex(key);
-				notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"),
+				notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"),
 						"");
 			} else {
 				throw new CoreServiceException("unable to find object with id [" + identifier.getId() + "] from storage");
@@ -256,6 +278,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void updateObject(String key, String name, String description, InputStream data) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "updating object for key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
 			if (objects.containsKey(identifier.getId())) {
@@ -268,8 +292,11 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				object.setContentType(binarystore.type(hash));
 				object.removeStream("data-stream");
 				object.addStream("data-stream", hash);
+				
+				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+				
 				indexing.reindex(key);
-				notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"),
+				notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"),
 						"");
 			} else {
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
@@ -299,6 +326,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void cloneObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException {
 		logger.log(Level.INFO, "cloning object for origin [" + origin + "] and key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(origin).getIdentifier();
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
 
@@ -319,8 +348,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				registry.create(key, clone.getObjectIdentifier(), origin);
 				registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-				registry.setProperty(key, OrtolangObjectProperty.AUTHOR, "users:root");
-				registry.setProperty(key, OrtolangObjectProperty.OWNER, "users:root");
+				registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
+				registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 				
 				List<String> refs = findReferencesForTarget(origin);
 				for ( String ref : refs ) {
@@ -328,9 +357,9 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				}
 
 				indexing.index(key);
-				notification.throwEvent(origin, "users:root", DigitalObject.OBJECT_TYPE,
+				notification.throwEvent(origin, caller, DigitalObject.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "clone"), "key=" + key);
-				notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"),
+				notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"),
 						"");
 			} else {
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
@@ -344,11 +373,13 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void deleteObject(String key) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "deleting object for key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
 			registry.delete(key);
 			indexing.remove(key);
-			notification.throwEvent(key, "users:root", DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "delete"),
+			notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "delete"),
 						"");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException e) {
 			throw new CoreServiceException("unable to delete object with key [" + key + "]", e);
@@ -360,6 +391,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		logger.log(Level.INFO, "creating new collection for key [" + key + "]");
 		String id = UUID.randomUUID().toString();
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			DigitalCollection collection = new DigitalCollection();
 			collection.setId(id);
 			collection.setName(name);
@@ -369,10 +402,10 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.create(key, collection.getObjectIdentifier());
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, "users:root");
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, "users:root");
+			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
+			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 
-			notification.throwEvent(key, "users:root", DigitalCollection.OBJECT_TYPE,
+			notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
 					OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
 			logger.log(Level.INFO, "the key [" + key + "] is already used");
@@ -387,12 +420,14 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public DigitalCollection getCollection(String key) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "getting collection for key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalCollection.OBJECT_TYPE);
 			if (collections.containsKey(identifier.getId())) {
 				DigitalCollection collection = collections.get(identifier.getId());
 				collection.setKey(key);
-				notification.throwEvent(key, "users:root", DigitalCollection.OBJECT_TYPE,
+				notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"), "");
 				return collection;
 			} else {
@@ -407,13 +442,15 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void updateCollection(String key, String name, String description) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "updating collection for key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalCollection.OBJECT_TYPE);
 			if (collections.containsKey(identifier.getId())) {
 				DigitalCollection collection = collections.get(identifier.getId());
 				collection.setName(name);
 				collection.setDescription(description);
-				notification.throwEvent(key, "users:root", DigitalCollection.OBJECT_TYPE,
+				notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "update"), "");
 			} else {
 				throw new CoreServiceException("unable to find collection with id [" + identifier.getId() + "] from storage");
@@ -427,6 +464,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void addElementToCollection(String key, String element) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "adding element [" + element + "] to collection for key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalCollection.OBJECT_TYPE);
 			if (collections.containsKey(identifier.getId())) {
@@ -453,7 +492,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 					}
 				}
 				collection.addElement(element);
-				notification.throwEvent(key, "users:root", DigitalCollection.OBJECT_TYPE,
+				notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "add-element"), "element=" + element);
 			} else {
 				throw new CoreServiceException("unable to find collection with id [" + identifier.getId() + "] from storage");
@@ -467,6 +506,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void removeElementFromCollection(String key, String element) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "removing element [" + element + "] from collection for key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalCollection.OBJECT_TYPE);
 			if (collections.containsKey(identifier.getId())) {
@@ -475,7 +516,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 					throw new CoreServiceException("element [" + element + "] is NOT in collection with key [" + key + "]");
 				}
 				collection.removeElement(element);
-				notification.throwEvent(key, "users:root", DigitalCollection.OBJECT_TYPE,
+				notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "remove-element"), "element=" + element);
 			} else {
 				throw new CoreServiceException("unable to find collection with id [" + identifier.getId() + "] from storage");
@@ -489,6 +530,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void cloneCollection(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException {
 		logger.log(Level.INFO, "cloning collection for origin [" + origin + "] and key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalCollection.OBJECT_TYPE);
 
@@ -506,17 +549,17 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				registry.create(key, clone.getObjectIdentifier(), origin);
 				registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-				registry.setProperty(key, OrtolangObjectProperty.AUTHOR, "users:root");
-				registry.setProperty(key, OrtolangObjectProperty.OWNER, "users:root");
+				registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
+				registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 				
 				List<String> refs = findReferencesForTarget(origin);
 				for ( String ref : refs ) {
 					updateReference(ref, key);
 				}
 				
-				notification.throwEvent(origin, "users:root", DigitalCollection.OBJECT_TYPE,
+				notification.throwEvent(origin, caller, DigitalCollection.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "clone"), "key=" + key);
-				notification.throwEvent(key, "users:root", DigitalCollection.OBJECT_TYPE,
+				notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "create"), "");
 			} else {
 				throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
@@ -530,12 +573,14 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void deleteCollection(String key) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "deleting collection for key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalCollection.OBJECT_TYPE);
 			registry.delete(key);
 			if (collections.containsKey(identifier.getId())) {
 				collections.remove(identifier.getId());
-				notification.throwEvent(key, "users:root", DigitalCollection.OBJECT_TYPE,
+				notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "delete"), "");
 			}
 		} catch (NotificationServiceException | RegistryServiceException e) {
@@ -548,6 +593,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		logger.log(Level.INFO, "creating new reference for key [" + key + "]");
 		String id = UUID.randomUUID().toString();
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			RegistryEntry entry = registry.lookup(target);
 			if ( !entry.getIdentifier().getType().equals(DigitalObject.OBJECT_TYPE) && 
 					!entry.getIdentifier().equals(DigitalCollection.OBJECT_TYPE) ){
@@ -567,10 +614,10 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.create(key, reference.getObjectIdentifier());
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, "users:root");
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, "users:root");
+			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
+			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 
-			notification.throwEvent(key, "users:root", DigitalReference.OBJECT_TYPE,
+			notification.throwEvent(key, caller, DigitalReference.OBJECT_TYPE,
 					OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalReference.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
 			logger.log(Level.INFO, "the key [" + key + "] is already used");
@@ -585,12 +632,14 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public DigitalReference getReference(String key) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "getting reference for key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalReference.OBJECT_TYPE);
 			if (references.containsKey(identifier.getId())) {
 				DigitalReference reference = references.get(identifier.getId());
 				reference.setKey(key);
-				notification.throwEvent(key, "users:root", DigitalReference.OBJECT_TYPE,
+				notification.throwEvent(key, caller, DigitalReference.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalReference.OBJECT_TYPE, "read"), "");
 				return reference;
 			} else {
@@ -601,16 +650,18 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		}
 	}
 	
-	public void updateReference(String key, String target) throws CoreServiceException, KeyNotFoundException {
+	private void updateReference(String key, String target) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "updating reference for key [" + key + "]");
 		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
 			checkObjectType(identifier, DigitalReference.OBJECT_TYPE);
 			if (references.containsKey(identifier.getId())) {
 				DigitalReference reference = references.get(identifier.getId());
 				if ( reference.isDynamic() ) {
 					reference.setTarget(target);
-					notification.throwEvent(key, "users:root", DigitalReference.OBJECT_TYPE,
+					notification.throwEvent(key, caller, DigitalReference.OBJECT_TYPE,
 							OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalReference.OBJECT_TYPE, "update"), "target=" + target);
 				}
 			} else {

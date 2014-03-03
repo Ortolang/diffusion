@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.rest.container;
+package fr.ortolang.diffusion.rest.core;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;

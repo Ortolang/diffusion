@@ -11,11 +11,11 @@ import javax.persistence.Id;
 
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 
-@Entity
+//@Entity
 @SuppressWarnings("serial")
 public class RegistryEntry implements Serializable {
 
-	@Id
+	//@Id
 	private String key;
 	private boolean hidden;
 	private boolean deleted;

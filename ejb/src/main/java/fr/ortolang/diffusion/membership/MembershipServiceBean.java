@@ -1,0 +1,596 @@
+package fr.ortolang.diffusion.membership;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.Remote;
+import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangIndexableContent;
+import fr.ortolang.diffusion.OrtolangIndexableService;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectProperty;
+import fr.ortolang.diffusion.indexing.IndexingService;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
+import fr.ortolang.diffusion.membership.entity.Group;
+import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.membership.entity.ProfileStatus;
+import fr.ortolang.diffusion.notification.NotificationService;
+import fr.ortolang.diffusion.notification.NotificationServiceException;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.security.authentication.AuthenticationService;
+
+@Remote(MembershipService.class)
+@Local(OrtolangIndexableService.class)
+@Stateless(name = MembershipService.SERVICE_NAME)
+public class MembershipServiceBean implements MembershipService, OrtolangIndexableService {
+
+	private Logger logger = Logger.getLogger(MembershipServiceBean.class.getName());
+
+	@EJB
+	private RegistryService registry;
+	@EJB
+	private NotificationService notification;
+	@EJB
+	private IndexingService indexing;
+	@EJB
+	private AuthenticationService authentication;
+	@PersistenceContext(unitName = "ortolangPU")
+	private EntityManager em;
+	
+	@Override
+	public String getServiceName() {
+		return SERVICE_NAME;
+	}
+
+	@Override
+	public String[] getObjectTypeList() {
+		return OBJECT_TYPE_LIST;
+	}
+
+	@Override
+	public String getProfileKeyForConnectedIdentifier() {
+		return MembershipService.PROFILE_KEY_SUFFIX + authentication.getConnectedIdentifier();
+	}
+
+	@Override
+	public String getProfileKeyForIdentifier(String identifier) {
+		return MembershipService.PROFILE_KEY_SUFFIX + identifier;
+	}
+
+	@Override
+	public List<String> getConnectedIdentifierSubjects() throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "getting connected identifier subjects");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+	
+			OrtolangObjectIdentifier identifier = registry.lookup(caller).getIdentifier();
+			Profile profile = em.find(Profile.class, identifier.getId());
+			if (profile == null) {
+				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
+			}
+	
+			String[] groups = profile.getGroups();
+			List<String> subjects = new ArrayList<String>(groups.length + 1);
+			subjects.add(caller);
+			subjects.addAll(Arrays.asList(groups));
+	
+			return subjects;
+		} catch ( RegistryServiceException e ) {
+			throw new MembershipServiceException("unable to get connected identifier subjects", e);
+		}
+	}
+
+	@Override
+	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException,
+			ProfileAlreadyExistsException {
+		logger.log(Level.INFO, "creating profile for identifier [" + identifier + "] and email [" + email + "]");
+		if ( email != null && email.length() > 0 ) {
+			List<Profile> profiles = em.createNamedQuery("findProfileByEmail").setParameter("email", email).getResultList();
+			if (profiles != null && profiles.size() > 0) {
+				throw new ProfileAlreadyExistsException("a profile already exists for email " + email);
+			}
+		}
+		
+		String key = getProfileKeyForIdentifier(identifier);
+		logger.log(Level.FINEST, "generated profile key [" + key + "]");
+		
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			Profile profile = new Profile();
+			profile.setId(identifier);
+			profile.setFullname(fullname);
+			profile.setEmail(email);
+			profile.setStatus(ProfileStatus.ACTIVATED);
+			em.persist(profile);
+			
+			registry.create(key, profile.getObjectIdentifier());
+			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
+			registry.setProperty(key, OrtolangObjectProperty.OWNER, key);
+
+			indexing.index(key);
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
+		} catch (KeyAlreadyExistsException e ) {
+			throw new ProfileAlreadyExistsException("a profile already exists for identifier " + identifier, e);
+		} catch (RegistryServiceException  | IdentifierAlreadyRegisteredException | KeyNotFoundException | IndexingServiceException | NotificationServiceException e) {
+			throw new MembershipServiceException("unable to create profile with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "reading profile for key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, Profile.OBJECT_TYPE);
+			Profile profile = em.find(Profile.class, identifier.getId());
+			if (profile == null) {
+				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
+			}
+			profile.setKey(key);
+			
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read"), "");
+			return profile;
+		} catch (RegistryServiceException | NotificationServiceException e) {
+			throw new MembershipServiceException("unable to read the profile with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public Profile findProfileByEmail(String email) throws MembershipServiceException, ProfileNotFoundException {
+		logger.log(Level.INFO, "finding profile for email [" + email + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			List<Profile> profiles = em.createNamedQuery("findProfileByEmail").setParameter("email", email).getResultList();
+			if (profiles == null || profiles.size() == 0) {
+				throw new MembershipServiceException("unable to find a profile for email " + email);
+			}
+			if (profiles.size() > 1) {
+				logger.log(Level.WARNING, "multiple profiles found with same email, possible database corruption...");
+			}
+			Profile profile = profiles.get(0);
+			String key = getProfileKeyForIdentifier(profile.getId());
+			profile.setKey(key);
+			
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read"), "");
+			return profile;
+		} catch (NotificationServiceException e) {
+			throw new MembershipServiceException("error while trying to find a profile with email [" + email + "]");
+		} 
+	}
+
+	@Override
+	public void updateProfile(String key, String fullname, ProfileStatus status) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "updating profile for key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, Profile.OBJECT_TYPE);
+			Profile profile = em.find(Profile.class, identifier.getId());
+			if (profile == null) {
+				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
+			}
+			profile.setFullname(fullname);
+			profile.setStatus(status);
+			em.merge(profile);
+
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			
+			indexing.reindex(key);
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update"), "");
+		} catch (NotificationServiceException | IndexingServiceException | RegistryServiceException e) {
+			throw new MembershipServiceException("error while trying to update the profile with key [" + key + "]");
+		} 
+	}
+
+	@Override
+	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "deleting profile for key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, Profile.OBJECT_TYPE);
+			registry.delete(key);
+			indexing.remove(key);
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "delete"), "");
+		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException e) {
+			throw new MembershipServiceException("unable to delete object with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public void createGroup(String key, String name, String description) throws MembershipServiceException, KeyAlreadyExistsException {
+		logger.log(Level.INFO, "creating group for key [" + key + "] and name [" + name + "]");
+		try { 
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			Group group = new Group();
+			group.setId(UUID.randomUUID().toString());
+			group.setName(name);
+			group.setDescription(description);
+			em.persist(group);
+
+			registry.create(key, group.getObjectIdentifier());
+			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
+			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
+
+			indexing.index(key);
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "create"), "");
+		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | KeyNotFoundException e) {
+			throw new MembershipServiceException("unable to create group with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public Group readGroup(String key) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "reading group for key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, Group.OBJECT_TYPE);
+			Group group = em.find(Group.class, identifier.getId());
+			if (group == null) {
+				throw new MembershipServiceException("unable to find a group for id " + identifier.getId());
+			}
+			group.setKey(key);
+			
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "read"), "");
+			return group;
+		} catch (RegistryServiceException | NotificationServiceException e) {
+			throw new MembershipServiceException("unable to read the group with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public void updateGroup(String key, String name, String description) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "updating group for key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, Group.OBJECT_TYPE);
+			Group group = em.find(Group.class, identifier.getId());
+			if (group == null) {
+				throw new MembershipServiceException("unable to find a group for id " + identifier.getId());
+			}
+			group.setName(name);
+			group.setDescription(description);
+			em.merge(group);
+
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			
+			indexing.reindex(key);
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "update"), "");
+		} catch (NotificationServiceException | IndexingServiceException | RegistryServiceException e) {
+			throw new MembershipServiceException("error while trying to update the group with key [" + key + "]");
+		} 
+	}
+
+	@Override
+	public void deleteGroup(String key) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "deleting group for key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, Group.OBJECT_TYPE);
+			registry.delete(key);
+			indexing.remove(key);
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "delete"), "");
+		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException e) {
+			throw new MembershipServiceException("unable to delete group with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public void addMemberInGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "adding member in group for key [" + key + "] and member [" + member + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier gidentifier = registry.lookup(key).getIdentifier();
+			checkObjectType(gidentifier, Group.OBJECT_TYPE);
+			OrtolangObjectIdentifier midentifier = registry.lookup(member).getIdentifier();
+			checkObjectType(midentifier, Profile.OBJECT_TYPE);
+			
+			Group group = em.find(Group.class, gidentifier.getId());
+			if (group == null) {
+				throw new MembershipServiceException("unable to find a group for id " + gidentifier.getId());
+			}
+			Profile profile = em.find(Profile.class, midentifier.getId());
+			if (profile == null) {
+				throw new MembershipServiceException("unable to find a profile for id " + midentifier.getId());
+			}
+			group.addMember(member);
+			profile.addGroup(key);
+			em.merge(profile);
+			em.merge(group);
+			
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(member, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			
+			indexing.reindex(key);
+			indexing.reindex(member);
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "add-member"), "member=" + member);
+		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			throw new MembershipServiceException("unable to add member in group with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public void removeMemberFromGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "removing member [" + member + "] from group with key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier gidentifier = registry.lookup(key).getIdentifier();
+			checkObjectType(gidentifier, Group.OBJECT_TYPE);
+			OrtolangObjectIdentifier midentifier = registry.lookup(member).getIdentifier();
+			checkObjectType(midentifier, Profile.OBJECT_TYPE);
+			
+			Group group = em.find(Group.class, gidentifier.getId());
+			if (group == null) {
+				throw new MembershipServiceException("unable to find a group for id " + gidentifier.getId());
+			}
+			if ( !group.isMember(member) ) {
+				throw new MembershipServiceException("Profile " + member + " is not member of group with key [" + key + "]");
+			}
+			Profile profile = em.find(Profile.class, midentifier.getId());
+			if (profile == null) {
+				throw new MembershipServiceException("unable to find a profile for id " + midentifier.getId());
+			}
+			group.removeMember(member);
+			profile.removeGroup(key);
+			em.merge(profile);
+			em.merge(group);
+			
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(member, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			
+			indexing.reindex(key);
+			indexing.reindex(member);
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "remove-member"), "member=" + member);
+		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			throw new MembershipServiceException("unable to remove member from group with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public void joinGroup(String key) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "joining group with key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier gidentifier = registry.lookup(key).getIdentifier();
+			checkObjectType(gidentifier, Group.OBJECT_TYPE);
+			OrtolangObjectIdentifier midentifier = registry.lookup(caller).getIdentifier();
+			checkObjectType(midentifier, Profile.OBJECT_TYPE);
+			
+			Group group = em.find(Group.class, gidentifier.getId());
+			if (group == null) {
+				throw new MembershipServiceException("unable to find a group for id " + gidentifier.getId());
+			}
+			Profile profile = em.find(Profile.class, midentifier.getId());
+			if (profile == null) {
+				throw new MembershipServiceException("unable to find a profile for id " + midentifier.getId());
+			}
+			group.addMember(caller);
+			profile.addGroup(key);
+			em.merge(profile);
+			em.merge(group);
+			
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(caller, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			
+			indexing.reindex(key);
+			indexing.reindex(caller);
+			notification.throwEvent(caller, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "join"), "group=" + key);
+		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			throw new MembershipServiceException("unable to join group with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public void leaveGroup(String key) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "leaving group with key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier gidentifier = registry.lookup(key).getIdentifier();
+			checkObjectType(gidentifier, Group.OBJECT_TYPE);
+			OrtolangObjectIdentifier midentifier = registry.lookup(caller).getIdentifier();
+			checkObjectType(midentifier, Profile.OBJECT_TYPE);
+			
+			Group group = em.find(Group.class, gidentifier.getId());
+			if (group == null) {
+				throw new MembershipServiceException("unable to find a group for id " + gidentifier.getId());
+			}
+			if ( !group.isMember(caller) ) {
+				throw new MembershipServiceException("Profile " + caller + " is not member of group with key [" + key + "]");
+			}
+			Profile profile = em.find(Profile.class, midentifier.getId());
+			if (profile == null) {
+				throw new MembershipServiceException("unable to find a profile for id " + midentifier.getId());
+			}
+			group.removeMember(caller);
+			profile.removeGroup(key);
+			em.merge(profile);
+			em.merge(group);
+			
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(caller, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			
+			indexing.reindex(key);
+			indexing.reindex(caller);
+			notification.throwEvent(caller, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "leave"), "group=" + key);
+		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			throw new MembershipServiceException("unable to leave group with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public List<String> listMembers(String key) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "listing members of group with key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, Group.OBJECT_TYPE);
+			
+			Group group = em.find(Group.class, identifier.getId());
+			if (group == null) {
+				throw new MembershipServiceException("unable to find a group for id " + identifier.getId());
+			}
+			String[] members = group.getMembers();
+			
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "list-members"), "");
+			return Arrays.asList(members);
+		} catch (NotificationServiceException | RegistryServiceException e) {
+			throw new MembershipServiceException("unable to list members in group with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public List<String> getProfileGroups(String key) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "listing groups of profile with key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			checkObjectType(identifier, Profile.OBJECT_TYPE);
+			
+			Profile profile = em.find(Profile.class, identifier.getId());
+			if (profile == null) {
+				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
+			}
+			String[] groups = profile.getGroups();
+			
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "list-groups"), "");
+			return Arrays.asList(groups);
+		} catch (NotificationServiceException | RegistryServiceException e) {
+			throw new MembershipServiceException("unable to list groups of profile with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	public boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "checking membership of member [" + member + "] in group with key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier gidentifier = registry.lookup(key).getIdentifier();
+			checkObjectType(gidentifier, Group.OBJECT_TYPE);
+			OrtolangObjectIdentifier midentifier = registry.lookup(member).getIdentifier();
+			checkObjectType(midentifier, Profile.OBJECT_TYPE);
+			
+			Group group = em.find(Group.class, gidentifier.getId());
+			if (group == null) {
+				throw new MembershipServiceException("unable to find a group for id " + gidentifier.getId());
+			}
+			boolean isMember = false;
+			if ( group.isMember(member) ) {
+				isMember = true;
+			}
+			
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "is-member"), "member=" + member);
+			return isMember;
+		} catch (NotificationServiceException | RegistryServiceException e) {
+			throw new MembershipServiceException("unable to check membership in group with key [" + key + "]", e);
+		}
+	}
+	
+	@Override
+	public OrtolangObject findObject(String key) throws OrtolangException {
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+
+			if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+			}
+
+			if (identifier.getType().equals(Profile.OBJECT_TYPE)) {
+				return readProfile(key);
+			}
+
+			if (identifier.getType().equals(Group.OBJECT_TYPE)) {
+				return readGroup(key);
+			}
+			
+			throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+		} catch (KeyNotFoundException | MembershipServiceException | RegistryServiceException e) {
+			throw new OrtolangException("unable to find an object for key " + key);
+		}
+	}
+	
+	@Override
+	public OrtolangIndexableContent getIndexableContent(String key) throws OrtolangException {
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+
+			if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+			}
+			
+			OrtolangIndexableContent content = new OrtolangIndexableContent();
+
+			if (identifier.getType().equals(Profile.OBJECT_TYPE)) {
+				Profile profile = em.find(Profile.class, identifier.getId());
+				if ( profile != null ) {
+					content.addContentPart(profile.getFullname());
+					content.addContentPart(profile.getEmail());
+					content.addContentPart(profile.getGroupsList());
+				}
+			}
+
+			if (identifier.getType().equals(Group.OBJECT_TYPE)) {
+				Group group = em.find(Group.class, identifier.getId());
+				if ( group != null ) {
+					content.addContentPart(group.getName());
+					content.addContentPart(group.getDescription());
+					content.addContentPart(group.getMembersList());
+				}
+			}
+			
+			return content;
+		} catch (KeyNotFoundException | RegistryServiceException e) {
+			throw new OrtolangException("unable to find an object for key " + key);
+		}
+	}
+
+	private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws MembershipServiceException {
+		if (!identifier.getService().equals(getServiceName())) {
+			throw new MembershipServiceException("object identifier " + identifier + " does not refer to service " + getServiceName());
+		}
+
+		if (!identifier.getType().equals(objectType)) {
+			throw new MembershipServiceException("object identifier " + identifier + " does not refer to an object of type " + objectType);
+		}
+	}
+
+}

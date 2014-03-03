@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.rest.object;
+package fr.ortolang.diffusion.rest.api;
 
 import java.net.URI;
 import java.util.List;

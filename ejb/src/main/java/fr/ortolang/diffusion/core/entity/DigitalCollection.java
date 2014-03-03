@@ -10,13 +10,13 @@ import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
 
-@Entity
+//@Entity
 @SuppressWarnings("serial")
 public class DigitalCollection extends OrtolangObject {
 	
 	public static final String OBJECT_TYPE = "collection";
 	
-	@Id
+	//@Id
 	private String id;
 	private String key;
 	private String name;

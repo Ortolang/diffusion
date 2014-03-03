@@ -25,6 +25,7 @@ public class Profile extends OrtolangObject {
 	private String fullname;
 	private String email;
 	private String groupsList;
+	private ProfileStatus status;
 	
 	public Profile() {
 		groupsList = "";
@@ -61,6 +62,14 @@ public class Profile extends OrtolangObject {
 
 	public void setFullname(String fullname) {
 		this.fullname = fullname;
+	}
+	
+	public ProfileStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(ProfileStatus status) {
+		this.status = status;
 	}
 
 	public String getGroupsList() {

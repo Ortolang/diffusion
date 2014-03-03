@@ -2,6 +2,7 @@ package fr.ortolang.diffusion.membership.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import fr.ortolang.diffusion.OrtolangObject;
@@ -9,6 +10,7 @@ import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.membership.MembershipService;
 
 @Entity
+@Table(name = "`GROUP`")
 @SuppressWarnings("serial")
 public class Group extends OrtolangObject {
 	

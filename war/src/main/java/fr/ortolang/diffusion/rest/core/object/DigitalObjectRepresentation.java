@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.rest.container;
+package fr.ortolang.diffusion.rest.core.object;
 
 import fr.ortolang.diffusion.core.entity.DigitalObject;
 

@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.rest.container;
+package fr.ortolang.diffusion.rest.core.object;
 
 import java.io.IOException;
 import java.io.InputStream;
