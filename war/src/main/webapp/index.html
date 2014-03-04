@@ -111,6 +111,67 @@
 						<h1 class="page-header">Mon espace</h1>
 					</div>
 				</div>
+				<div class="row">
+					<div class="col-lg-12">
+						<div class="panel panel-default">
+							<div class="panel-heading">Naviguer dans mes collections</div>
+							<!-- /.panel-heading -->
+							<div class="panel-body">
+								<div class="panel panel-default">
+									<div class="panel-body">
+										<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Créer une collection</button>
+									</div>
+								</div>
+							
+								<div class="table-responsive">
+									<table class="table table-striped table-bordered table-hover"
+										id="entriesTable">
+										<thead>
+											<tr>
+												<th>Nom</th>
+												<th>Description</th>
+												<th>Type</th>
+												<th>Propriétaire</th>
+												<th>Date Modification</th>
+											</tr>
+										</thead>
+										<tbody>
+										</tbody>
+									</table>
+								</div>
+								
+								<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+								  <div class="modal-dialog modal-sm">
+								    <div class="modal-content">
+								      <div class="modal-header">
+								        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+								        <h4 class="modal-title" id="myModalLabel">Nouvelle collection</h4>
+								      </div>
+								      <div class="modal-body">
+								        <!-- Create collection -->
+								        <form role="form" id="createCollection" method="post" action="rest/core/collection">
+										  <div class="form-group">
+										    <label for="name">Nom</label>
+										    <input type="text" class="form-control" id="name" placeholder="Nom du répertoire">
+										  </div>
+										  <div class="form-group">
+										    <label for="description">Description</label>
+										    <input type="text" class="form-control" id="description" placeholder="Description">
+										  </div>
+										  
+										</form>
+								      </div>
+								      <div class="modal-footer">
+								        <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+								        <button type="button" class="btn btn-primary" id="createCollectionButton">Créer</button>
+								      </div>
+								    </div><!-- /.modal-content -->
+								  </div><!-- /.modal-dialog -->
+								</div><!-- /.modal -->
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>

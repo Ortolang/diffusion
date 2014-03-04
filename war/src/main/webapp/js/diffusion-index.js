@@ -44,5 +44,13 @@ $(document).ready(function() {
                             	 }, "aTargets": [ 9 ] }
                             ],
 	});
+	
+	$('#createCollectionButton').click(function() {
+		$('#createCollection').submit(function(event) {
+			//TODO refresh the page
+			//TODO manage form validation and error code return by the server
+			event.preventDefault();
+		});
+	});
 });
 
