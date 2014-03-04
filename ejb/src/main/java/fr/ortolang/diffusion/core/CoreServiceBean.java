@@ -597,7 +597,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			
 			RegistryEntry entry = registry.lookup(target);
 			if ( !entry.getIdentifier().getType().equals(DigitalObject.OBJECT_TYPE) && 
-					!entry.getIdentifier().equals(DigitalCollection.OBJECT_TYPE) ){
+					!entry.getIdentifier().getType().equals(DigitalCollection.OBJECT_TYPE) ){
 				throw new CoreServiceException("reference target must be either a DigitalObject nor a DigitalCollection.");
 			}
 			if ( dynamic && entry.hasChildren() ) {
