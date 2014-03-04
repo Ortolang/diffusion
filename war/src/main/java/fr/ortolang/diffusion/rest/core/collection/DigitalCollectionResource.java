@@ -53,7 +53,7 @@ public class DigitalCollectionResource {
     @Path("/{key}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response read( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException {
-    	logger.log(Level.INFO, "reading digital object with key: " + key);
+    	logger.log(Level.INFO, "reading digital collection with key: " + key);
     	DigitalCollection collection = core.getCollection(key);
     	DigitalCollectionRepresentation representation = DigitalCollectionRepresentation.fromDigitalCollection(collection);
     	Response response = Response.ok(representation).build();
