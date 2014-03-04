@@ -46,11 +46,12 @@ $(document).ready(function() {
 	});
 	
 	$('#createCollectionButton').click(function() {
-		$('#createCollection').submit(function(event) {
-			//TODO refresh the page
-			//TODO manage form validation and error code return by the server
-			event.preventDefault();
-		});
+		$('#createCollectionForm').submit();
+	});
+	
+
+	$('#createReferenceButton').click(function() {
+		$('#createReferenceForm').submit();
 	});
 });
 
