@@ -13,7 +13,9 @@ $(function() {
     });
 });
 
-$(document).ready(function() {
+$(document).ready(function() { 
+	console.log("yala");
+	$('#test a[href="#consulter"]').tab('show');
 	$('#entriesTable').dataTable( {
             "bProcessing": true,
             "bServerSide": true,
