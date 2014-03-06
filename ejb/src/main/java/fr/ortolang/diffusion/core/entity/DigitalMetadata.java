@@ -2,6 +2,7 @@ package fr.ortolang.diffusion.core.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Transient;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -11,7 +12,7 @@ import fr.ortolang.diffusion.core.CoreService;
  * A DigitalMetadata object contains a metadata file which is attached to a DigitalReference.
  * 
  * @author cyril pestel <cyril.pestel@atilf.fr>
- *
+ * 
  */
 @Entity
 @SuppressWarnings("serial")
@@ -21,11 +22,12 @@ public class DigitalMetadata extends OrtolangObject {
 
 	@Id
 	private String id;
+	@Transient
 	private String key;
 	private String name;
 	private long size;
 	private String contentType;
-	//private String preview; // ??
+	// private String preview; // ??
 	// nbReads, description ??
 	/**
 	 * Hash from binary store (SHA-1).
@@ -80,7 +82,6 @@ public class DigitalMetadata extends OrtolangObject {
 		this.size = size;
 	}
 
-
 	public String getStream() {
 		return stream;
 	}
@@ -109,7 +110,7 @@ public class DigitalMetadata extends OrtolangObject {
 	public String getObjectKey() {
 		return getKey();
 	}
-	
+
 	@Override
 	public String getObjectName() {
 		return getName();

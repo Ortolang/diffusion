@@ -5,7 +5,8 @@
     <defaultProtocol type="Servlet 3.0" />
     <container qualifier="wildfly-managed" default="true">
         <configuration>
-            <property name="jbossHome">/opt/wildfly-8.0.0.CR1</property>
+            <property name="jbossHome">/opt/wildfly-8.0.0.Final</property>
+            <property name="serverConfig">standalone-full.xml</property>
         </configuration>
     </container>
 </arquillian>

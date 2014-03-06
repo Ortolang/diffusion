@@ -8,28 +8,70 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.Resource;
+import javax.ejb.EJB;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.transaction.UserTransaction;
+
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.registry.entity.RegistryEntry;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 
+@RunWith(Arquillian.class)
 public class RegistryServiceTest {
 	
-	private Logger logger = Logger.getLogger(RegistryServiceTest.class.getName());
+	private static Logger logger = Logger.getLogger(RegistryServiceTest.class.getName());
 
+    @PersistenceContext
+    private EntityManager em;
+    
+    @Resource(name="java:jboss/UserTransaction")
+    private UserTransaction utx;
+    
+    @EJB
 	private RegistryService registry;
 	
+	@Deployment
+    public static EnterpriseArchive createDeployment() {
+		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "registry.jar");
+		jar.addPackage("fr.ortolang.diffusion");
+		jar.addPackage("fr.ortolang.diffusion.registry");
+		jar.addPackage("fr.ortolang.diffusion.registry.entity");
+		jar.addAsResource("config.properties");
+		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
+        logger.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
+
+		EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class, "test-registry.ear");
+		ear.addAsModule(jar);
+		ear.addAsLibraries(Maven.resolver().loadPomFromFile("pom.xml").resolve("org.jmock:jmock-junit4:2.5.1").withTransitivity().asFile());
+		logger.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
+
+		return ear;
+    }
+ 
 	@Before
-	public void setup() {
-		logger.log(Level.INFO, "setting up test environment");
-		try {
-			registry = new RegistryServiceBean();
-			RegistryServiceBean.init();
-		} catch (Exception e) {
-			fail(e.getMessage());
-		}
+	public void setup() throws Exception {
+		logger.log(Level.INFO, "Setting up test environment, clearing data");
+		utx.begin();
+	    em.joinTransaction();
+		em.createQuery("delete from RegistryEntry").executeUpdate();
+	    em.createQuery("delete from RegistryTag").executeUpdate();
+	    utx.commit();
 	}
 	
 	@After
@@ -43,7 +85,7 @@ public class RegistryServiceTest {
 		OrtolangObjectIdentifier doi = new OrtolangObjectIdentifier("Test", "testing", "atestid");
 		try {
 			registry.create(key, doi);
-			OrtolangObjectIdentifier doi2 = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier doi2 = registry.lookup(key);
 			assertTrue(doi2.equals(doi));
 		} catch (RegistryServiceException | KeyAlreadyExistsException | KeyNotFoundException | IdentifierAlreadyRegisteredException e) {
 			fail(e.getMessage());
@@ -95,18 +137,15 @@ public class RegistryServiceTest {
 		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
 		try {
 		    registry.create(key, doi1);
-		    RegistryEntry rentry = registry.lookup(key);
-		    OrtolangObjectIdentifier doi = rentry.getIdentifier();
+		    OrtolangObjectIdentifier doi = registry.lookup(key);
 			assertTrue(doi1.equals(doi));
 			registry.hide(key);
 		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
 		}	
 		try {
-		    RegistryEntry entry = registry.lookup(key);
-		    assertTrue(entry.isHidden());
-		    assertTrue(!entry.isLocked());
-		    assertTrue(!entry.isDeleted());
+			boolean hidden = registry.isHidden(key);
+			assertTrue(hidden);
 		} catch (RegistryServiceException | KeyNotFoundException e) {
 			fail(e.getMessage());
 		}
@@ -129,18 +168,15 @@ public class RegistryServiceTest {
 		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
 		try {
 		    registry.create(key, doi1);
-		    RegistryEntry rentry = registry.lookup(key);
-		    OrtolangObjectIdentifier doi = rentry.getIdentifier();
+		    OrtolangObjectIdentifier doi = registry.lookup(key);
 			assertTrue(doi1.equals(doi));
 			registry.lock(key);
 		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
 		}	
 		try {
-		    RegistryEntry entry = registry.lookup(key);
-		    assertTrue(!entry.isHidden());
-		    assertTrue(entry.isLocked());
-		    assertTrue(!entry.isDeleted());
+			boolean locked = registry.isLocked(key);
+		    assertTrue(locked);
 		} catch (RegistryServiceException | KeyNotFoundException e) {
 			fail(e.getMessage());
 		}
@@ -163,18 +199,15 @@ public class RegistryServiceTest {
 		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
 		try {
 		    registry.create(key, doi1);
-		    RegistryEntry rentry = registry.lookup(key);
-		    OrtolangObjectIdentifier doi = rentry.getIdentifier();
+		    OrtolangObjectIdentifier doi = registry.lookup(key);
 			assertTrue(doi1.equals(doi));
 			registry.delete(key);
 		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
 		}	
 		try {
-		    RegistryEntry entry = registry.lookup(key);
-		    assertTrue(!entry.isHidden());
-		    assertTrue(!entry.isLocked());
-		    assertTrue(entry.isDeleted());
+		    boolean deleted = registry.isDeleted(key);
+		    assertTrue(deleted);
 		} catch (RegistryServiceException | KeyNotFoundException e) {
 			fail(e.getMessage());
 		}
@@ -209,50 +242,34 @@ public class RegistryServiceTest {
 		    registry.create(key3, doi3);
 		    registry.create(key4, doi4);
 		    registry.create(key5, doi5);
-		    List<RegistryEntry> entries = registry.list(0, 10, ".*", true);
-		    long size = registry.count(".*", true);
+		    List<String> entries = registry.list(0, 10, "");
+		    long size = registry.count("");
 		    assertEquals(5,entries.size());
 		    assertEquals(5,size);
 		    
 		    registry.hide(key2);
-		    entries = registry.list(0, 10, ".*", true);
-		    size = registry.count(".*", true);
+		    entries = registry.list(0, 10, "");
+		    size = registry.count("");
 		    assertEquals(4,entries.size());
 		    assertEquals(4,size);
-		    entries = registry.list(0, 10, ".*", false);
-		    size = registry.count(".*", false);
-		    assertEquals(5,entries.size());
-		    assertEquals(5,size);
 		    
 		    registry.delete(key4);
-		    entries = registry.list(0, 10, ".*", true);
-		    size = registry.count(".*", true);
+		    entries = registry.list(0, 10, "");
+		    size = registry.count("");
 		    assertEquals(3,entries.size());
 		    assertEquals(3,size);
-		    entries = registry.list(0, 10, ".*", false);
-		    size = registry.count(".*", false);
-		    assertEquals(5,entries.size());
-		    assertEquals(5,size);
 		    
 		    registry.lock(key5);
-		    entries = registry.list(0, 10, ".*", true);
-		    size = registry.count(".*", true);
+		    entries = registry.list(0, 10, "");
+		    size = registry.count("");
 		    assertEquals(3,entries.size());
 		    assertEquals(3,size);
-		    entries = registry.list(0, 10, ".*", false);
-		    size = registry.count(".*", false);
-		    assertEquals(5,entries.size());
-		    assertEquals(5,size);
 		    
 		    registry.show(key2);
-		    entries = registry.list(0, 10, ".*", true);
-		    size = registry.count(".*", true);
+		    entries = registry.list(0, 10, "");
+		    size = registry.count("");
 		    assertEquals(4,entries.size());
 		    assertEquals(4,size);
-		    entries = registry.list(0, 10, ".*", false);
-		    size = registry.count(".*", false);
-		    assertEquals(5,entries.size());
-		    assertEquals(5,size);
 		    
 		} catch (RegistryServiceException | KeyAlreadyExistsException | KeyNotFoundException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());

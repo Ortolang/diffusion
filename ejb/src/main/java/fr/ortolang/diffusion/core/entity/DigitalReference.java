@@ -1,19 +1,34 @@
 package fr.ortolang.diffusion.core.entity;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
 
+@Entity
+@Table(indexes = {@Index(columnList="target")})
+@NamedQueries({
+	@NamedQuery(name="findReferencesByTarget", query="select r from DigitalReference r where r.target = :target")
+})
 @SuppressWarnings("serial")
 public class DigitalReference extends OrtolangObject {
 	
 	public static final String OBJECT_TYPE = "reference";
 	
+	@Id
 	private String id;
-	private boolean dynamic;
+	@Transient
 	private String key;
 	private String name;
 	private String target;
+	private boolean dynamic;
 	
 	public DigitalReference() {
 	}

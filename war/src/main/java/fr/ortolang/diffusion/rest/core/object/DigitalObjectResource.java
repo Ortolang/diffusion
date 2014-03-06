@@ -60,7 +60,7 @@ public class DigitalObjectResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response read( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException {
     	logger.log(Level.INFO, "reading digital object with key: " + key);
-    	DigitalObject object = core.getObject(key);
+    	DigitalObject object = core.readObject(key);
     	DigitalObjectRepresentation representation = DigitalObjectRepresentation.fromDigitalObject(object);
     	Response response = Response.ok(representation).build();
     	return response;
@@ -70,17 +70,17 @@ public class DigitalObjectResource {
     @Path("/{key}/data")
     public void getData( @PathParam(value="key") String key, @Context HttpServletResponse response ) throws CoreServiceException, KeyNotFoundException, IOException {
     	logger.log(Level.INFO, "reading digital object data with key: " + key);
-    	DigitalObject object = core.getObject(key);
+    	DigitalObject object = core.readObject(key);
     	response.setHeader("Content-Disposition", "attachment; filename=" + object.getName());
     	response.setContentLength((int)object.getSize());
     	response.setContentType(object.getContentType());
     	if ( coreLocal != null ) {
     		logger.log(Level.INFO, "using local core interface for optimisation");
-    		coreLocal.getObjectData(key, response.getOutputStream());
+    		coreLocal.readObjectContent(key, response.getOutputStream());
     	} else {
     		logger.log(Level.INFO, "using remote core interface");
     		RemoteOutputStreamServer ros = new SimpleRemoteOutputStream(response.getOutputStream());
-    		core.getObjectData(key, ros.export());
+    		core.readObjectContent(key, ros.export());
     	}
     	
     }

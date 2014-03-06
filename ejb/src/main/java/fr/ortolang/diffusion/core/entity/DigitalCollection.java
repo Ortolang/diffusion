@@ -3,24 +3,28 @@ package fr.ortolang.diffusion.core.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Transient;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
 
-//@Entity
+@Entity
 @SuppressWarnings("serial")
 public class DigitalCollection extends OrtolangObject {
 	
 	public static final String OBJECT_TYPE = "collection";
 	
-	//@Id
+	@Id
 	private String id;
+	@Transient
 	private String key;
 	private String name;
 	private String description;
+	@ElementCollection
 	private List<String> elements;
 	
 	public DigitalCollection() {

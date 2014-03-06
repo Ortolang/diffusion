@@ -22,17 +22,17 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService {
 	
 	public void createObject(String key, String name, String description, RemoteInputStream data) throws CoreServiceException, KeyAlreadyExistsException;
 	
-	public DigitalObject getObject(String key) throws CoreServiceException, KeyNotFoundException;
+	public DigitalObject readObject(String key) throws CoreServiceException, KeyNotFoundException;
 	
-	public byte[] getObjectData(String key) throws CoreServiceException, KeyNotFoundException;
+	public byte[] readObjectContent(String key) throws CoreServiceException, KeyNotFoundException;
 	
-	public void getObjectData(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException;
+	public void readObjectContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException;
 	
 	public void updateObject(String key, String name, String description) throws CoreServiceException, KeyNotFoundException;
 	
-	public void updateObject(String key, String name, String description, byte[] data) throws CoreServiceException, KeyNotFoundException;
+	public void updateObjectContent(String key, String name, String description, byte[] data) throws CoreServiceException, KeyNotFoundException;
 	
-	public void updateObject(String key, String name, String description, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException;
+	public void updateObjectContent(String key, String name, String description, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException;
 	
 	public void cloneObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException;
 	
@@ -40,7 +40,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService {
 	
 	public void createCollection(String key, String name, String description) throws CoreServiceException, KeyAlreadyExistsException;
 	
-	public DigitalCollection getCollection(String key) throws CoreServiceException, KeyNotFoundException;
+	public DigitalCollection readCollection(String key) throws CoreServiceException, KeyNotFoundException;
 	
 	public void updateCollection(String key, String name, String description) throws CoreServiceException, KeyNotFoundException;
 	
@@ -54,23 +54,23 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService {
 	
 	public void createReference(String key, boolean dynamic, String name, String target) throws CoreServiceException, KeyAlreadyExistsException;
 	
-	public DigitalReference getReference(String key) throws CoreServiceException, KeyNotFoundException;
+	public DigitalReference readReference(String key) throws CoreServiceException, KeyNotFoundException;
 	
 	public void createMetadata(String key, String name, byte[] data, String target) throws CoreServiceException, KeyAlreadyExistsException;
 	
 	public void createMetadata(String key, String name, RemoteInputStream data, String target) throws CoreServiceException, KeyAlreadyExistsException;
 	
-	public DigitalMetadata getMetadata(String key) throws CoreServiceException, KeyNotFoundException;
+	public DigitalMetadata readMetadata(String key) throws CoreServiceException, KeyNotFoundException;
 	
-	public byte[] getMetadataData(String key) throws CoreServiceException, KeyNotFoundException;
+	public byte[] readMetadataDataContent(String key) throws CoreServiceException, KeyNotFoundException;
 	
-	public void getMetadataData(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException;
+	public void readMetadataDataContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException;
 	
-	public void updateMetadata(String key, String name, String target) throws CoreServiceException, KeyNotFoundException;
+	public void updateMetadata(String key, String name) throws CoreServiceException, KeyNotFoundException;
 	
-	public void updateMetadata(String key, String name, byte[] data) throws CoreServiceException, KeyNotFoundException;
+	public void updateMetadataContent(String key, String name, byte[] data) throws CoreServiceException, KeyNotFoundException;
 	
-	public void updateMetadata(String key, String name, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException;
+	public void updateMetadataContent(String key, String name, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException;
 	
 	public void cloneMetadata(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException;
 	

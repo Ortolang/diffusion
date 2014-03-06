@@ -6,17 +6,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Remote;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
 import org.apache.commons.io.IOUtils;
 
@@ -42,12 +48,10 @@ import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.BranchNotAllowedException;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
-import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
@@ -70,11 +74,10 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	private NotificationService notification;
 	@EJB
 	private IndexingService indexing;
-	
-	private static HashMap<String, DigitalObject> objects = new HashMap<String, DigitalObject>(); 
-	private static HashMap<String, DigitalCollection> collections = new HashMap<String, DigitalCollection>();
-	private static HashMap<String, DigitalReference> references = new HashMap<String, DigitalReference>();
-	private static HashMap<String, DigitalMetadata> metadatas = new HashMap<String, DigitalMetadata>();
+	@PersistenceContext(unitName = "ortolangPU")
+	private EntityManager em;
+	@Resource
+	private SessionContext ctx;
 
 	public CoreServiceBean() {
 	}
@@ -102,7 +105,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void setNotificationService(NotificationService notificationService) {
 		this.notification = notificationService;
 	}
-	
+
 	public IndexingService getIndexingService() {
 		return indexing;
 	}
@@ -110,7 +113,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void setIndexingService(IndexingService indexing) {
 		this.indexing = indexing;
 	}
-	
+
 	public MembershipService getMembershipService() {
 		return membership;
 	}
@@ -118,7 +121,23 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	public void setMembershipService(MembershipService membership) {
 		this.membership = membership;
 	}
+	
+	public void setEntityManager(EntityManager em) {
+		this.em = em;
+	}
 
+	public EntityManager getEntityManager() {
+		return this.em;
+	}
+
+	public void setSessionContext(SessionContext ctx) {
+		this.ctx = ctx;
+	}
+
+	public SessionContext getSessionContext() {
+		return this.ctx;
+	}
+	
 	@Override
 	public String getServiceName() {
 		return SERVICE_NAME;
@@ -130,12 +149,13 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createObject(String key, String name, String description, InputStream data) throws CoreServiceException, KeyAlreadyExistsException {
 		logger.log(Level.INFO, "creating new object for key [" + key + "]");
 		String id = UUID.randomUUID().toString();
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
+
 			String hash = binarystore.put(data);
 
 			DigitalObject object = new DigitalObject();
@@ -145,7 +165,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			object.setSize(binarystore.size(hash));
 			object.setContentType(binarystore.type(hash));
 			object.addStream("data-stream", hash);
-			objects.put(object.getId(), object);
+			em.persist(object);
 
 			registry.create(key, object.getObjectIdentifier());
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
@@ -157,247 +177,273 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
 			logger.log(Level.INFO, "the key [" + key + "] is already used");
+			ctx.setRollbackOnly();
 			throw e;
-		} catch (IndexingServiceException | DataCollisionException | DataNotFoundException | BinaryStoreServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException  e) {
+		} catch (IndexingServiceException | DataCollisionException | DataNotFoundException | BinaryStoreServiceException | KeyNotFoundException | RegistryServiceException
+				| NotificationServiceException | IdentifierAlreadyRegisteredException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during object creation", e);
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to create object with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createObject(String key, String name, String description, RemoteInputStream data) throws CoreServiceException, KeyAlreadyExistsException {
 		try {
 			InputStream os = RemoteInputStreamClient.wrap(data);
 			createObject(key, name, description, os);
 		} catch (IOException e) {
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to create object with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createObject(String key, String name, String description, byte[] data) throws CoreServiceException, KeyAlreadyExistsException {
 		InputStream os = new ByteArrayInputStream(data);
 		createObject(key, name, description, os);
 	}
 
 	@Override
-	public DigitalObject getObject(String key) throws CoreServiceException, KeyNotFoundException {
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public DigitalObject readObject(String key) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "getting object for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
-			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
-			if (objects.containsKey(identifier.getId())) {
-				DigitalObject object = objects.get(identifier.getId());
-				object.setKey(key);
-				notification
-						.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"), "");
-				return object;
-			} else {
-				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
-			}
-		} catch (NotificationServiceException | RegistryServiceException e) {
-			throw new CoreServiceException("unable to get object with key [" + key + "]", e);
-		}
-	}
 
-	public void getObjectData(String key, OutputStream output) throws CoreServiceException, KeyNotFoundException {
-		logger.log(Level.INFO, "getting data from object with key [" + key + "]");
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
-			if (objects.containsKey(identifier.getId())) {
-				DigitalObject object = objects.get(identifier.getId());
-				object.setNbReads(object.getNbReads()+1);
-				InputStream input = binarystore.get(object.getStreams().get("data-stream"));
-				try {
-					IOUtils.copy(input, output);
-					notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE,
-							OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read-data"), "");
-				} catch (IOException e) {
-					throw new CoreServiceException("unable to get data from object with key [" + key + "]", e);
-				} finally {
-					IOUtils.closeQuietly(input);
-					IOUtils.closeQuietly(output);
-				}
-			} else {
+			DigitalObject object = em.find(DigitalObject.class, identifier.getId());
+			if (object == null) {
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 			}
-		} catch (DataNotFoundException | BinaryStoreServiceException | RegistryServiceException | NotificationServiceException e) {
-			throw new CoreServiceException("unable to get data from object with key [" + key + "]", e);
+			object.setKey(key);
+
+			notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"), "");
+			return object;
+		} catch (NotificationServiceException | RegistryServiceException e) {
+			throw new CoreServiceException("unable to read object with key [" + key + "]", e);
 		}
 	}
 
 	@Override
-	public void getObjectData(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException {
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void readObjectContent(String key, OutputStream output) throws CoreServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "getting content of object with key [" + key + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
+			DigitalObject object = em.find(DigitalObject.class, identifier.getId());
+			if (object == null) {
+				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
+			}
+			InputStream input = binarystore.get(object.getStreams().get("data-stream"));
+			try {
+				IOUtils.copy(input, output);
+
+				object.setNbReads(object.getNbReads() + 1);
+				em.merge(object);
+
+				notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read-data"), "");
+			} catch (IOException e) {
+				throw new CoreServiceException("unable to read data from object with key [" + key + "]", e);
+			} finally {
+				IOUtils.closeQuietly(input);
+				IOUtils.closeQuietly(output);
+			}
+		} catch (DataNotFoundException | BinaryStoreServiceException | RegistryServiceException | NotificationServiceException e) {
+			throw new CoreServiceException("unable to read data from object with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void readObjectContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException {
 		try {
 			OutputStream os = RemoteOutputStreamClient.wrap(ros);
-			getObjectData(key, os);
+			readObjectContent(key, os);
 		} catch (IOException e) {
 			throw new CoreServiceException("unable to get data from object with key [" + key + "]", e);
 		}
 	}
 
 	@Override
-	public byte[] getObjectData(String key) throws CoreServiceException, KeyNotFoundException {
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public byte[] readObjectContent(String key) throws CoreServiceException, KeyNotFoundException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		getObjectData(key, baos);
+		readObjectContent(key, baos);
 		return baos.toByteArray();
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateObject(String key, String name, String description) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "updating object for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
-			if (objects.containsKey(identifier.getId())) {
-				DigitalObject object = objects.get(identifier.getId());
-				object.setName(name);
-				object.setDescription(description);
-				
-				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-				
-				indexing.reindex(key);
-				notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"),
-						"");
-			} else {
-				throw new CoreServiceException("unable to find object with id [" + identifier.getId() + "] from storage");
+			DigitalObject object = em.find(DigitalObject.class, identifier.getId());
+			if (object == null) {
+				ctx.setRollbackOnly();
+				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 			}
+			object.setName(name);
+			object.setDescription(description);
+			em.merge(object);
+
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+
+			indexing.reindex(key);
+			notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException e) {
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to update object with key [" + key + "]", e);
 		}
 	}
 
 	@Override
-	public void updateObject(String key, String name, String description, InputStream data) throws CoreServiceException, KeyNotFoundException {
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void updateObjectContent(String key, String name, String description, InputStream data) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "updating object for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
-			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
-			if (objects.containsKey(identifier.getId())) {
-				String hash = binarystore.put(data);
 
-				DigitalObject object = objects.get(identifier.getId());
-				object.setName(name);
-				object.setDescription(description);
-				object.setSize(binarystore.size(hash));
-				object.setContentType(binarystore.type(hash));
-				object.removeStream("data-stream");
-				object.addStream("data-stream", hash);
-				
-				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-				
-				indexing.reindex(key);
-				notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"),
-						"");
-			} else {
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
+			DigitalObject object = em.find(DigitalObject.class, identifier.getId());
+			if (object == null) {
+				ctx.setRollbackOnly();
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 			}
+			String hash = binarystore.put(data);
+
+			object.setName(name);
+			object.setDescription(description);
+			object.setSize(binarystore.size(hash));
+			object.setContentType(binarystore.type(hash));
+			object.removeStream("data-stream");
+			object.addStream("data-stream", hash);
+			em.merge(object);
+
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+
+			indexing.reindex(key);
+			notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | BinaryStoreServiceException | DataCollisionException | DataNotFoundException e) {
-			throw new CoreServiceException("unable to update object with key [" + key + "]", e);
+			ctx.setRollbackOnly();
+			throw new CoreServiceException("unable to update object content with key [" + key + "]", e);
 		}
 	}
 
 	@Override
-	public void updateObject(String key, String name, String description, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException {
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void updateObjectContent(String key, String name, String description, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException {
 		try {
 			InputStream os = RemoteInputStreamClient.wrap(data);
-			updateObject(key, name, description, os);
+			updateObjectContent(key, name, description, os);
 		} catch (IOException e) {
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to update object with key [" + key + "]", e);
 		}
 	}
 
 	@Override
-	public void updateObject(String key, String name, String description, byte[] data) throws CoreServiceException, KeyNotFoundException {
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void updateObjectContent(String key, String name, String description, byte[] data) throws CoreServiceException, KeyNotFoundException {
 		InputStream os = new ByteArrayInputStream(data);
-		updateObject(key, name, description, os);
+		updateObjectContent(key, name, description, os);
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void cloneObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException {
 		logger.log(Level.INFO, "cloning object for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(origin).getIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(origin);
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
 
-			if (objects.containsKey(identifier.getId())) {
-				DigitalObject object = objects.get(identifier.getId());
-				String id = UUID.randomUUID().toString();
-
-				DigitalObject clone = new DigitalObject();
-				clone.setId(id);
-				clone.setName(object.getName());
-				clone.setDescription(object.getDescription());
-				clone.setSize(object.getSize());
-				clone.setContentType(object.getContentType());
-				clone.setStreams(object.getStreams());
-				clone.setPreview(object.getPreview());
-				objects.put(clone.getId(), clone);
-
-				registry.create(key, clone.getObjectIdentifier(), origin);
-				registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
-				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-				registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-				registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
-				
-				List<String> refs = findReferencesForTarget(origin);
-				for ( String ref : refs ) {
-					updateReference(ref, key);
-				}
-
-				indexing.index(key);
-				notification.throwEvent(origin, caller, DigitalObject.OBJECT_TYPE,
-						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "clone"), "key=" + key);
-				notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"),
-						"");
-			} else {
+			DigitalObject object = em.find(DigitalObject.class, identifier.getId());
+			if (object == null) {
+				ctx.setRollbackOnly();
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 			}
+
+			String id = UUID.randomUUID().toString();
+
+			DigitalObject clone = new DigitalObject();
+			clone.setId(id);
+			clone.setName(object.getName());
+			clone.setDescription(object.getDescription());
+			clone.setSize(object.getSize());
+			clone.setContentType(object.getContentType());
+			clone.setStreams(object.getStreams());
+			clone.setPreview(object.getPreview());
+			em.persist(clone);
+
+			registry.create(key, clone.getObjectIdentifier(), origin);
+			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
+			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
+
+			List<DigitalReference> refs = findReferencesForTarget(origin);
+			for (DigitalReference ref : refs) {
+				if (ref.isDynamic()) {
+					ref.setTarget(key);
+					em.merge(ref);
+				}
+			}
+
+			indexing.index(key);
+			notification.throwEvent(origin, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "clone"), "key="
+					+ key);
+			notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException e) {
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to clone object with origin [" + origin + "] and key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteObject(String key) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "deleting object for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, DigitalObject.OBJECT_TYPE);
+
 			registry.delete(key);
 			indexing.remove(key);
-			notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "delete"),
-						"");
+			notification.throwEvent(key, caller, DigitalObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "delete"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException e) {
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to delete object with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createCollection(String key, String name, String description) throws CoreServiceException, KeyAlreadyExistsException {
 		logger.log(Level.INFO, "creating new collection for key [" + key + "]");
 		String id = UUID.randomUUID().toString();
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
+
 			DigitalCollection collection = new DigitalCollection();
 			collection.setId(id);
 			collection.setName(name);
 			collection.setDescription(description);
-			collections.put(collection.getId(), collection);
+			em.persist(collection);
 
 			registry.create(key, collection.getObjectIdentifier());
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
@@ -405,211 +451,252 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
 			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 
-			notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
-					OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "create"), "");
+			indexing.index(key);
+			notification
+					.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
 			logger.log(Level.INFO, "the key [" + key + "] is already used");
+			ctx.setRollbackOnly();
 			throw e;
-		} catch (KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException e) {
+		} catch (KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during collection creation", e);
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to create collection with key [" + key + "]", e);
 		}
 	}
 
 	@Override
-	public DigitalCollection getCollection(String key) throws CoreServiceException, KeyNotFoundException {
-		logger.log(Level.INFO, "getting collection for key [" + key + "]");
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public DigitalCollection readCollection(String key) throws CoreServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "reading collection for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, DigitalCollection.OBJECT_TYPE);
-			if (collections.containsKey(identifier.getId())) {
-				DigitalCollection collection = collections.get(identifier.getId());
-				collection.setKey(key);
-				notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
-						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"), "");
-				return collection;
-			} else {
+
+			DigitalCollection collection = em.find(DigitalCollection.class, identifier.getId());
+			if (collection == null) {
 				throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
 			}
+			collection.setKey(key);
+
+			notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"), "");
+			return collection;
 		} catch (NotificationServiceException | RegistryServiceException e) {
-			throw new CoreServiceException("unable to get collection with key [" + key + "]", e);
+			throw new CoreServiceException("unable to read collection with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateCollection(String key, String name, String description) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "updating collection for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, DigitalCollection.OBJECT_TYPE);
-			if (collections.containsKey(identifier.getId())) {
-				DigitalCollection collection = collections.get(identifier.getId());
-				collection.setName(name);
-				collection.setDescription(description);
-				notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
-						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "update"), "");
-			} else {
-				throw new CoreServiceException("unable to find collection with id [" + identifier.getId() + "] from storage");
+
+			DigitalCollection collection = em.find(DigitalCollection.class, identifier.getId());
+			if (collection == null) {
+				ctx.setRollbackOnly();
+				throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
 			}
-		} catch (NotificationServiceException | RegistryServiceException e) {
+			collection.setName(name);
+			collection.setDescription(description);
+			em.merge(collection);
+
+			indexing.reindex(key); 
+			notification
+					.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "update"), "");
+		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to update collection with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	//TODO Refactor this !!
 	public void addElementToCollection(String key, String element) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "adding element [" + element + "] to collection for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
-			checkObjectType(identifier, DigitalCollection.OBJECT_TYPE);
-			if (collections.containsKey(identifier.getId())) {
-				OrtolangObjectIdentifier eidentifier = registry.lookup(key).getIdentifier();
-				if ( !eidentifier.getService().equals(CoreService.SERVICE_NAME) ) {
-					throw new CoreServiceException("element [" + element + "] is not an object that can be added to a collection");
-				}
-				DigitalCollection collection = collections.get(identifier.getId());
-				if ( collection.getElements().contains(element) ) {
-					throw new CoreServiceException("element [" + element + "] is already in collection with key [" + key + "]");
-				}
-				if ( eidentifier.getType().equals(DigitalCollection.OBJECT_TYPE) ) {
-					if ( isMember(element, key, new Vector<String> ())) {
-						throw new CoreServiceException("unable to add element into collection : cycle detected");
-					}
-				}
-				if ( eidentifier.getType().equals(DigitalReference.OBJECT_TYPE) ) {
-					DigitalReference reference = references.get(eidentifier.getId());
-					OrtolangObjectIdentifier tidentifier = registry.lookup(reference.getTarget()).getIdentifier();
-					if ( tidentifier.getType().equals(DigitalCollection.OBJECT_TYPE) ) {
-						if ( isMember(element, key, new Vector<String> ())) {
-							throw new CoreServiceException("unable to add element into collection : cycle detected");
-						}
-					}
-				}
-				collection.addElement(element);
-				notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
-						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "add-element"), "element=" + element);
-			} else {
-				throw new CoreServiceException("unable to find collection with id [" + identifier.getId() + "] from storage");
+
+			OrtolangObjectIdentifier cidentifier = registry.lookup(key);
+			checkObjectType(cidentifier, DigitalCollection.OBJECT_TYPE);
+
+			OrtolangObjectIdentifier eidentifier = registry.lookup(element);
+			if (!eidentifier.getService().equals(CoreService.SERVICE_NAME)) {
+				ctx.setRollbackOnly();
+				throw new CoreServiceException("element [" + element + "] is not an object that can be added to a collection");
 			}
-		} catch (NotificationServiceException | RegistryServiceException e) {
+
+			DigitalCollection collection = em.find(DigitalCollection.class, cidentifier.getId());
+			if (collection == null) {
+				ctx.setRollbackOnly();
+				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
+			}
+			if (collection.getElements().contains(element)) {
+				ctx.setRollbackOnly();
+				throw new CoreServiceException("element [" + element + "] is already in collection with key [" + key + "]");
+			}
+
+			if (eidentifier.getType().equals(DigitalCollection.OBJECT_TYPE)) {
+				if (isMember(element, key, new Vector<String>())) {
+					ctx.setRollbackOnly();
+					throw new CoreServiceException("unable to add element into collection because collection is already an element of this element so a cycle is detected");
+				}
+			}
+			if (eidentifier.getType().equals(DigitalReference.OBJECT_TYPE)) {
+				DigitalReference reference = em.find(DigitalReference.class, eidentifier.getId());
+				OrtolangObjectIdentifier tidentifier = registry.lookup(reference.getTarget());
+				if (tidentifier.getType().equals(DigitalCollection.OBJECT_TYPE)) {
+					if (isMember(element, key, new Vector<String>())) {
+						ctx.setRollbackOnly();
+						throw new CoreServiceException("unable to add element into collection because collection is already an element of this element so a cycle is detected");
+					}
+				}
+			}
+			collection.addElement(element);
+			em.merge(collection);
+
+			indexing.reindex(key);
+			notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
+					OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "add-element"), "element=" + element);
+		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to add element [" + element + "] into collection with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void removeElementFromCollection(String key, String element) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "removing element [" + element + "] from collection for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, DigitalCollection.OBJECT_TYPE);
-			if (collections.containsKey(identifier.getId())) {
-				DigitalCollection collection = collections.get(identifier.getId());
-				if ( !collection.getElements().contains(element) ) {
-					throw new CoreServiceException("element [" + element + "] is NOT in collection with key [" + key + "]");
-				}
-				collection.removeElement(element);
-				notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
-						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "remove-element"), "element=" + element);
-			} else {
-				throw new CoreServiceException("unable to find collection with id [" + identifier.getId() + "] from storage");
+
+			DigitalCollection collection = em.find(DigitalCollection.class, identifier.getId());
+			if (collection == null) {
+				ctx.setRollbackOnly();
+				throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
 			}
-		} catch (NotificationServiceException | RegistryServiceException e) {
+			if (!collection.getElements().contains(element)) {
+				ctx.setRollbackOnly();
+				throw new CoreServiceException("element [" + element + "] is NOT in collection with key [" + key + "]");
+			}
+
+			collection.removeElement(element);
+			em.merge(collection);
+
+			indexing.reindex(key);
+			notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
+					OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "remove-element"), "element=" + element);
+		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to remove element [" + element + "] into collection with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void cloneCollection(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException {
 		logger.log(Level.INFO, "cloning collection for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(origin);
 			checkObjectType(identifier, DigitalCollection.OBJECT_TYPE);
 
-			if (collections.containsKey(identifier.getId())) {
-				DigitalCollection collection = collections.get(identifier.getId());
-				String id = UUID.randomUUID().toString();
-
-				DigitalCollection clone = new DigitalCollection();
-				clone.setId(id);
-				clone.setName(collection.getName());
-				clone.setDescription(collection.getDescription());
-				clone.setElements(collection.getElements());
-				collections.put(clone.getId(), clone);
-
-				registry.create(key, clone.getObjectIdentifier(), origin);
-				registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
-				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-				registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-				registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
-				
-				List<String> refs = findReferencesForTarget(origin);
-				for ( String ref : refs ) {
-					updateReference(ref, key);
-				}
-				
-				notification.throwEvent(origin, caller, DigitalCollection.OBJECT_TYPE,
-						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "clone"), "key=" + key);
-				notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
-						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "create"), "");
-			} else {
+			DigitalCollection collection = em.find(DigitalCollection.class, identifier.getId());
+			if (collection == null) {
+				ctx.setRollbackOnly();
 				throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
 			}
-		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException e) {
+
+			String id = UUID.randomUUID().toString();
+
+			DigitalCollection clone = new DigitalCollection();
+			clone.setId(id);
+			clone.setName(collection.getName());
+			clone.setDescription(collection.getDescription());
+			clone.setElements(collection.getElements());
+			em.persist(clone);
+
+			registry.create(key, clone.getObjectIdentifier(), origin);
+			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
+			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
+
+			List<DigitalReference> refs = findReferencesForTarget(origin);
+			for (DigitalReference ref : refs) {
+				if (ref.isDynamic()) {
+					ref.setTarget(key);
+					em.merge(ref);
+				}
+			}
+
+			indexing.index(key);
+			notification.throwEvent(origin, caller, DigitalCollection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "clone"),
+					"key=" + key);
+			notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "create"),
+					"origin=" + origin);
+		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException e) {
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to clone collection with origin [" + origin + "] and key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteCollection(String key) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "deleting collection for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, DigitalCollection.OBJECT_TYPE);
 			registry.delete(key);
-			if (collections.containsKey(identifier.getId())) {
-				collections.remove(identifier.getId());
-				notification.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE,
-						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "delete"), "");
-			}
-		} catch (NotificationServiceException | RegistryServiceException e) {
+
+			indexing.remove(key);
+			notification
+					.throwEvent(key, caller, DigitalCollection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "delete"), "");
+		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to delete collection with key [" + key + "]", e);
 		}
 	}
-	
+
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createReference(String key, boolean dynamic, String name, String target) throws CoreServiceException, KeyAlreadyExistsException {
 		logger.log(Level.INFO, "creating new reference for key [" + key + "]");
 		String id = UUID.randomUUID().toString();
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			RegistryEntry entry = registry.lookup(target);
-			if ( !entry.getIdentifier().getType().equals(DigitalObject.OBJECT_TYPE) && 
-					!entry.getIdentifier().getType().equals(DigitalCollection.OBJECT_TYPE) ){
+
+			OrtolangObjectIdentifier identifier = registry.lookup(target);
+			if (!identifier.getType().equals(DigitalObject.OBJECT_TYPE) && !identifier.getType().equals(DigitalCollection.OBJECT_TYPE)) {
+				ctx.setRollbackOnly();
 				throw new CoreServiceException("reference target must be either a DigitalObject nor a DigitalCollection.");
 			}
-			if ( dynamic && entry.hasChildren() ) {
+			if (dynamic && registry.hasChildren(target)) {
+				ctx.setRollbackOnly();
 				throw new CoreServiceException("a dynamic reference target must be the latest version target key and this one has earlier versions");
 			}
-			
+
 			DigitalReference reference = new DigitalReference();
 			reference.setId(id);
 			reference.setName(name);
 			reference.setDynamic(dynamic);
 			reference.setTarget(target);
-			references.put(reference.getId(), reference);
+			em.persist(reference);
 
 			registry.create(key, reference.getObjectIdentifier());
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
@@ -617,99 +704,353 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
 			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 
-			notification.throwEvent(key, caller, DigitalReference.OBJECT_TYPE,
-					OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalReference.OBJECT_TYPE, "create"), "");
+			indexing.index(key);
+			notification.throwEvent(key, caller, DigitalReference.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalReference.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
 			logger.log(Level.INFO, "the key [" + key + "] is already used");
+			ctx.setRollbackOnly();
 			throw e;
-		} catch (KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException e) {
+		} catch (KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during reference creation", e);
+			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to create reference with key [" + key + "]", e);
 		}
 	}
 
 	@Override
-	public DigitalReference getReference(String key) throws CoreServiceException, KeyNotFoundException {
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public DigitalReference readReference(String key) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "getting reference for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, DigitalReference.OBJECT_TYPE);
-			if (references.containsKey(identifier.getId())) {
-				DigitalReference reference = references.get(identifier.getId());
-				reference.setKey(key);
-				notification.throwEvent(key, caller, DigitalReference.OBJECT_TYPE,
-						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalReference.OBJECT_TYPE, "read"), "");
-				return reference;
-			} else {
+
+			DigitalReference reference = em.find(DigitalReference.class, identifier.getId());
+			if (reference == null) {
 				throw new CoreServiceException("unable to load reference with id [" + identifier.getId() + "] from storage");
 			}
+			reference.setKey(key);
+
+			notification.throwEvent(key, caller, DigitalReference.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalReference.OBJECT_TYPE, "read"), "");
+			return reference;
 		} catch (NotificationServiceException | RegistryServiceException e) {
 			throw new CoreServiceException("unable to get reference with key [" + key + "]", e);
 		}
 	}
-	
-	private void updateReference(String key, String target) throws CoreServiceException, KeyNotFoundException {
-		logger.log(Level.INFO, "updating reference for key [" + key + "]");
+
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private List<DigitalReference> findReferencesForTarget(String target) throws CoreServiceException {
+		TypedQuery<DigitalReference> query = em.createNamedQuery("findReferencesForTarget", DigitalReference.class).setParameter("target", target);
+		List<DigitalReference> refs = query.getResultList();
+		return refs;
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void createMetadata(String key, String name, InputStream data, String target) throws CoreServiceException, KeyAlreadyExistsException {
+		logger.log(Level.INFO, "creating new metadata for key [" + key + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(target);
+			if (!identifier.getType().equals(DigitalReference.OBJECT_TYPE)) {
+				ctx.setRollbackOnly();
+				throw new CoreServiceException("metadata target must be a DigitalReference.");
+			}
+
+			String hash = binarystore.put(data);
+
+			DigitalMetadata meta = new DigitalMetadata();
+			meta.setId(UUID.randomUUID().toString());
+			meta.setName(name);
+			meta.setSize(binarystore.size(hash));
+			meta.setContentType(binarystore.type(hash));
+			meta.setStream(hash);
+			// TODO asks to MetadataService whether it recognize the format or ask to the user ??
+			// meta.setFormat(format);
+			meta.setTarget(target);
+			em.persist(meta);
+
+			registry.create(key, meta.getObjectIdentifier());
+			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
+			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
+
+			indexing.index(key);
+			notification.throwEvent(key, caller, DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "create"), "");
+		} catch (KeyAlreadyExistsException e) {
+			logger.log(Level.INFO, "the key [" + key + "] is already used");
+			ctx.setRollbackOnly();
+			throw e;
+		} catch (DataCollisionException | DataNotFoundException | BinaryStoreServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException
+				| IdentifierAlreadyRegisteredException | IndexingServiceException e) {
+			logger.log(Level.SEVERE, "unexpected error occured during metadata object creation", e);
+			ctx.setRollbackOnly();
+			throw new CoreServiceException("unable to create metadata object with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void createMetadata(String key, String name, byte[] data, String target) throws CoreServiceException, KeyAlreadyExistsException {
+		InputStream os = new ByteArrayInputStream(data);
+		createMetadata(key, name, os, target);
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void createMetadata(String key, String name, RemoteInputStream data, String target) throws CoreServiceException, KeyAlreadyExistsException {
+		try {
+			InputStream os = RemoteInputStreamClient.wrap(data);
+			createMetadata(key, name, os, target);
+		} catch (IOException e) {
+			ctx.setRollbackOnly();
+			throw new CoreServiceException("unable to create metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public DigitalMetadata readMetadata(String key) throws CoreServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "reading metadata for key [" + key + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
+
+			DigitalMetadata meta = em.find(DigitalMetadata.class, identifier.getId());
+			if (meta == null) {
+				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+			}
+			meta.setKey(key);
+
+			notification.throwEvent(key, caller, DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "read"), "");
+			return meta;
+		} catch (NotificationServiceException | RegistryServiceException e) {
+			throw new CoreServiceException("unable to read metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void readMetadataDataContent(String key, OutputStream os) throws CoreServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "reading content from metadata with key [" + key + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
+
+			DigitalMetadata meta = em.find(DigitalMetadata.class, identifier.getId());
+			if (meta == null) {
+				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+			}
+
+			InputStream input = binarystore.get(meta.getStream());
+			try {
+				IOUtils.copy(input, os);
+				notification.throwEvent(key, caller, DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "read-data"),
+						"");
+			} catch (IOException e) {
+				throw new CoreServiceException("unable to read content from metadata with key [" + key + "]", e);
+			} finally {
+				IOUtils.closeQuietly(input);
+				IOUtils.closeQuietly(os);
+			}
+		} catch (DataNotFoundException | BinaryStoreServiceException | RegistryServiceException | NotificationServiceException e) {
+			throw new CoreServiceException("unable to read content from metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void readMetadataDataContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException {
+		try {
+			OutputStream os = RemoteOutputStreamClient.wrap(ros);
+			readMetadataDataContent(key, os);
+		} catch (IOException e) {
+			throw new CoreServiceException("unable to read content from metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public byte[] readMetadataDataContent(String key) throws CoreServiceException, KeyNotFoundException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		readMetadataDataContent(key, baos);
+		return baos.toByteArray();
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void updateMetadata(String key, String name) throws CoreServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "updating metadata for key [" + key + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
+
+			DigitalMetadata meta = em.find(DigitalMetadata.class, identifier.getId());
+			if (meta == null) {
+				ctx.setRollbackOnly();
+				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+			}
+			meta.setName(name);
+			em.merge(meta);
+
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+
+			indexing.reindex(key);
+			notification.throwEvent(key, caller, DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "update"), "");
+		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			ctx.setRollbackOnly();
+			throw new CoreServiceException("unable to update metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void updateMetadataContent(String key, String name, InputStream data) throws CoreServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "updating metadata content for key [" + key + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
+
+			DigitalMetadata meta = em.find(DigitalMetadata.class, identifier.getId());
+			if (meta == null) {
+				ctx.setRollbackOnly();
+				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+			}
+			String hash = binarystore.put(data);
+
+			meta.setName(name);
+			meta.setSize(binarystore.size(hash));
+			meta.setContentType(binarystore.type(hash));
+			meta.setStream(hash);
+			em.merge(meta);
+
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+
+			indexing.reindex(key);
+			notification.throwEvent(key, caller, DigitalMetadata.OBJECT_TYPE,
+					OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "update-content"), "");
+		} catch (NotificationServiceException | RegistryServiceException | BinaryStoreServiceException | DataCollisionException | DataNotFoundException | IndexingServiceException e) {
+			ctx.setRollbackOnly();
+			throw new CoreServiceException("unable to update metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void updateMetadataContent(String key, String name, byte[] data) throws CoreServiceException, KeyNotFoundException {
+		InputStream os = new ByteArrayInputStream(data);
+		updateMetadataContent(key, name, os);
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void updateMetadataContent(String key, String name, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException {
+		try {
+			InputStream os = RemoteInputStreamClient.wrap(data);
+			updateMetadataContent(key, name, os);
+		} catch (IOException e) {
+			ctx.setRollbackOnly();
+			throw new CoreServiceException("unable to update metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void cloneMetadata(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException {
+		logger.log(Level.INFO, "cloning metadata for origin [" + origin + "] and key [" + key + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(origin);
+			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
+
+			DigitalMetadata meta = em.find(DigitalMetadata.class, identifier.getId());
+			if (meta == null) {
+				ctx.setRollbackOnly();
+				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+			}
+
+			DigitalMetadata clone = new DigitalMetadata();
+			clone.setId(UUID.randomUUID().toString());
+			clone.setName(meta.getName());
+			clone.setTarget(meta.getTarget());
+			clone.setSize(meta.getSize());
+			clone.setContentType(meta.getContentType());
+			clone.setStream(meta.getStream());
+			em.persist(clone);
+
+			registry.create(key, clone.getObjectIdentifier(), origin);
+			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
+			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
+
+			indexing.index(key);
+			notification.throwEvent(origin, caller, DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "clone"),
+					"key=" + key);
+			notification.throwEvent(key, caller, DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "create"),
+					"origin=" + origin);
+		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException e) {
+			ctx.setRollbackOnly();
+			throw new CoreServiceException("unable to clone metadata with origin [" + origin + "] and key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void deleteMetadata(String key) throws CoreServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "deleting metadata for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
-			checkObjectType(identifier, DigitalReference.OBJECT_TYPE);
-			if (references.containsKey(identifier.getId())) {
-				DigitalReference reference = references.get(identifier.getId());
-				if ( reference.isDynamic() ) {
-					reference.setTarget(target);
-					notification.throwEvent(key, caller, DigitalReference.OBJECT_TYPE,
-							OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalReference.OBJECT_TYPE, "update"), "target=" + target);
-				}
-			} else {
-				throw new CoreServiceException("unable to load reference with id [" + identifier.getId() + "] from storage");
-			}
-		} catch (NotificationServiceException | RegistryServiceException e) {
-			throw new CoreServiceException("unable to get reference with key [" + key + "]", e);
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
+			registry.delete(key);
+
+			indexing.remove(key);
+			notification.throwEvent(key, caller, DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "delete"),
+					"");
+		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			throw new CoreServiceException("unable to delete object with key [" + key + "]", e);
 		}
-	}
-	
-	private List<String> findReferencesForTarget(String target) throws CoreServiceException {
-		List<String> refs = new ArrayList<String> ();
-		for ( DigitalReference reference : references.values() ) {
-			if ( reference.getTarget().equals(target) ) {
-				try {
-					refs.add(registry.lookup(reference.getObjectIdentifier()).getKey());
-				} catch ( RegistryServiceException e ) {
-					throw new CoreServiceException("unable to find key for reference with identifier : " + reference.getObjectIdentifier(), e);
-				} catch (IdentifierNotRegisteredException e) {
-				} 
-			}
-		}
-		return refs;
 	}
 	
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObject findObject(String key) throws OrtolangException {
 		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
 			if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 			}
 
 			if (identifier.getType().equals(DigitalObject.OBJECT_TYPE)) {
-				return getObject(key);
+				return readObject(key);
 			}
 
 			if (identifier.getType().equals(DigitalCollection.OBJECT_TYPE)) {
-				return getCollection(key);
+				return readCollection(key);
 			}
-			
+
 			if (identifier.getType().equals(DigitalReference.OBJECT_TYPE)) {
-				return getReference(key);
+				return readReference(key);
 			}
 
 			if (identifier.getType().equals(DigitalMetadata.OBJECT_TYPE)) {
-				return getMetadata(key);
+				return readMetadata(key);
 			}
 
 			throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
@@ -719,58 +1060,69 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<OrtolangObject> findObjectByBinaryHash(String hash) throws OrtolangException {
 		try {
-			List<OrtolangObject> results = new ArrayList<OrtolangObject>();
-			for (DigitalObject container : objects.values()) {
-				if (container.getStreams().containsKey(hash)) {
-					results.add(getObject(container.getKey()));
-				}
-			}
-			return results;
-		} catch (KeyNotFoundException | CoreServiceException e) {
+			TypedQuery<DigitalObject> query = em.createNamedQuery("findObjectByBinaryHash", DigitalObject.class).setParameter("hash", hash);
+			List<DigitalObject> objects = query.getResultList();
+			List<OrtolangObject> oobjects = new ArrayList<OrtolangObject> ();
+			oobjects.addAll(objects);
+			return oobjects;
+		} catch ( Exception e) {
 			throw new OrtolangException("unable to find an object for hash " + hash);
-		}
+		}	
 	}
 	
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangIndexableContent getIndexableContent(String key) throws OrtolangException {
 		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
 			if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 			}
-			
+
 			OrtolangIndexableContent content = new OrtolangIndexableContent();
 
 			if (identifier.getType().equals(DigitalObject.OBJECT_TYPE)) {
-				if (!objects.containsKey(identifier.getId())) {
+				DigitalObject object = em.find(DigitalObject.class, identifier.getId());
+				if (object == null) {
 					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
 				}
-				DigitalObject object = objects.get(identifier.getId());
 				content.addContentPart(object.getName());
 				content.addContentPart(object.getDescription());
 				content.addContentPart(object.getContentType());
 				content.addContentPart(object.getPreview());
-				//TODO include the binary content if possible (plain text extraction)
+				// TODO include the binary content if possible (plain text extraction)
 			}
 
 			if (identifier.getType().equals(DigitalCollection.OBJECT_TYPE)) {
-				if (!collections.containsKey(identifier.getId())) {
+				DigitalCollection collection = em.find(DigitalCollection.class, identifier.getId());
+				if (collection == null) {
 					throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
 				}
-				DigitalCollection collection = collections.get(identifier.getId());
 				content.addContentPart(collection.getName());
 				content.addContentPart(collection.getDescription());
 			}
-			
+
 			if (identifier.getType().equals(DigitalReference.OBJECT_TYPE)) {
-				if (!references.containsKey(identifier.getId())) {
+				DigitalReference reference = em.find(DigitalReference.class, identifier.getId());
+				if (reference == null) {
 					throw new OrtolangException("unable to load reference with id [" + identifier.getId() + "] from storage");
 				}
-				DigitalReference reference = references.get(identifier.getId());
 				content.addContentPart(reference.getName());
+			}
+			
+			if (identifier.getType().equals(DigitalMetadata.OBJECT_TYPE)) {
+				DigitalMetadata metadata = em.find(DigitalMetadata.class, identifier.getId());
+				if (metadata == null) {
+					throw new OrtolangException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+				}
+				content.addContentPart(metadata.getName());
+				content.addContentPart(metadata.getContentType());
+				content.addContentPart(metadata.getFormat());
+				content.addContentPart(metadata.getTarget());
 			}
 
 			return content;
@@ -789,329 +1141,28 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		}
 	}
 
-	private boolean isMember(String collectionKey, String memberKey, Vector<String> cycleDetection) throws CoreServiceException, RegistryServiceException, KeyNotFoundException {
-		DigitalCollection collection = getCollection(collectionKey);
-		cycleDetection.add(collectionKey);
-		if (collection.getElements().contains(memberKey)) {
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private boolean isMember(String collection, String member, Vector<String> cycleDetection) throws CoreServiceException, RegistryServiceException, KeyNotFoundException {
+		OrtolangObjectIdentifier cidentifier = registry.lookup(collection);
+		DigitalCollection coll = em.find(DigitalCollection.class, cidentifier.getId());
+		if (coll == null) {
+			throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
+		}
+		cycleDetection.add(collection);
+		if (coll.getElements().contains(member)) {
 			return true;
 		}
-		// TODO maybe prefix entries types in the collection to avoid too much lookup in the registry when checking members types...
-		for (String entry : collection.getElements()) {
-			OrtolangObjectIdentifier identifier = registry.lookup(entry).getIdentifier();  
-			if (identifier.getType().equals(DigitalCollection.OBJECT_TYPE)) {
-				if (!cycleDetection.contains(entry) && isMember(entry, memberKey, cycleDetection)) {
-					return true;
-				}
+		for (String entry : coll.getElements()) {
+			OrtolangObjectIdentifier eidentifier = registry.lookup(entry);
+			DigitalReference reference = em.find(DigitalReference.class, eidentifier.getId());
+			if (reference == null) {
+				throw new CoreServiceException("unable to load reference with id [" + eidentifier.getId() + "] from storage");
 			}
-			if (identifier.getType().equals(DigitalReference.OBJECT_TYPE)) {
-				if (references.containsKey(identifier.getId())) {
-					DigitalReference reference = references.get(identifier.getId());
-					if (!cycleDetection.contains(reference.getTarget()) && isMember(reference.getTarget(), memberKey, cycleDetection)) {
-						return true;
-					}
-				} else {
-					throw new CoreServiceException("unable to load reference with id [" + identifier.getId() + "] from storage");
-				}
+			if (!cycleDetection.contains(reference.getTarget()) && isMember(reference.getTarget(), member, cycleDetection)) {
+				return true;
 			}
 		}
 		return false;
 	}
-
-	@Override
-	public void createMetadata(String key, String name, byte[] data,
-			String target) throws CoreServiceException,
-			KeyAlreadyExistsException {
-		InputStream os = new ByteArrayInputStream(data);
-		createMetadata(key, name, os, target);
-	}
-
-	@Override
-	public void createMetadata(String key, String name, RemoteInputStream data,
-			String target) throws CoreServiceException,
-			KeyAlreadyExistsException {
-		try {
-			InputStream os = RemoteInputStreamClient.wrap(data);
-			createMetadata(key, name, os, target);
-		} catch (IOException e) {
-			throw new CoreServiceException("unable to create metadata with key [" + key + "]", e);
-		}
-	}
-
-	@Override
-	public void createMetadata(String key, String name, InputStream data,
-			String target) throws CoreServiceException,
-			KeyAlreadyExistsException {
-		logger.log(Level.INFO, "creating new metadata for key [" + key + "]");
-		String id = UUID.randomUUID().toString();
-		try {
-			// Checks if the target is a Reference
-			RegistryEntry entry = registry.lookup(target);
-			if ( !entry.getIdentifier().getType().equals(DigitalReference.OBJECT_TYPE) ) {
-				throw new CoreServiceException("metadata target must be a DigitalReference.");
-			}
-			
-			String hash = binarystore.put(data);
-
-			DigitalMetadata meta = new DigitalMetadata();
-			meta.setId(id);
-			meta.setName(name);
-			meta.setSize(binarystore.size(hash));
-			meta.setContentType(binarystore.type(hash));
-			meta.setStream(hash);
-			//TODO asks to MetadataService whether it recognize the format or ask to the user ??
-			// meta.setFormat(format); 
-			meta.setTarget(target);
-			metadatas.put(meta.getId(), meta);
-
-			registry.create(key, meta.getObjectIdentifier());
-			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
-			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, "users:root");
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, "users:root");
-
-			// TODO est ce qu'il faut indexer les metadonnées ??
-//			indexing.index(key);
-			notification.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "create"), "");
-		} catch (KeyAlreadyExistsException e) {
-			logger.log(Level.INFO, "the key [" + key + "] is already used");
-			throw e;
-		} catch (DataCollisionException | DataNotFoundException | BinaryStoreServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException  e) {
-			logger.log(Level.SEVERE, "unexpected error occured during metadata object creation", e);
-			throw new CoreServiceException("unable to create metadata object with key [" + key + "]", e);
-		}
-	}
-
-	@Override
-	public DigitalMetadata getMetadata(String key) throws CoreServiceException,
-			KeyNotFoundException {
-		logger.log(Level.INFO, "getting metadata for key [" + key + "]");
-		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
-			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
-			if (metadatas.containsKey(identifier.getId())) {
-				DigitalMetadata object = metadatas.get(identifier.getId());
-				object.setKey(key); // TODO pourquoi changer la clé ??
-				notification
-						.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "read"), "");
-				return object;
-			} else {
-				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
-			}
-		} catch (NotificationServiceException | RegistryServiceException e) {
-			throw new CoreServiceException("unable to get metadata with key [" + key + "]", e);
-		}
-	}
-
-	@Override
-	public byte[] getMetadataData(String key) throws CoreServiceException,
-			KeyNotFoundException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		getMetadataData(key, baos);
-		return baos.toByteArray();
-	}
-
-	@Override
-	public void getMetadataData(String key, OutputStream os)
-			throws CoreServiceException, KeyNotFoundException {
-		logger.log(Level.INFO, "getting data from metadata with key [" + key + "]");
-		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
-			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
-			if (metadatas.containsKey(identifier.getId())) {
-				DigitalMetadata meta = metadatas.get(identifier.getId());
-				//meta.setNbReads(meta.getNbReads()+1);
-				InputStream input = binarystore.get(meta.getStream());
-				try {
-					IOUtils.copy(input, os);
-					notification.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE,
-							OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "read-data"), "");
-				} catch (IOException e) {
-					throw new CoreServiceException("unable to get data from metadata with key [" + key + "]", e);
-				} finally {
-					IOUtils.closeQuietly(input);
-					IOUtils.closeQuietly(os);
-				}
-			} else {
-				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
-			}
-		} catch (DataNotFoundException | BinaryStoreServiceException | RegistryServiceException | NotificationServiceException e) {
-			throw new CoreServiceException("unable to get data from metadata with key [" + key + "]", e);
-		}
-	}
-	
-	@Override
-	public void getMetadataData(String key, RemoteOutputStream ros)
-			throws CoreServiceException, KeyNotFoundException {
-		try {
-			OutputStream os = RemoteOutputStreamClient.wrap(ros);
-			getMetadataData(key, os);
-		} catch (IOException e) {
-			throw new CoreServiceException("unable to get data from metadata with key [" + key + "]", e);
-		}
-	}
-
-	@Override
-	public void updateMetadata(String key, String name, String target)
-			throws CoreServiceException, KeyNotFoundException {
-		logger.log(Level.INFO, "updating metadata for key [" + key + "]");
-		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
-			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
-			
-			// Checks if the target is a Reference
-			RegistryEntry entry = registry.lookup(target);
-			if ( !entry.getIdentifier().getType().equals(DigitalReference.OBJECT_TYPE) ) {
-				throw new CoreServiceException("metadata target must be a DigitalReference.");
-			}
-						
-			if (metadatas.containsKey(identifier.getId())) {
-				DigitalMetadata meta = metadatas.get(identifier.getId());
-				meta.setName(name);
-				meta.setTarget(target);
-				
-				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-				
-				// TODO est ce qu'il faut indexer les metadonnées ??
-//				indexing.reindex(key); 
-				notification.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "update"),
-						"");
-			} else {
-				throw new CoreServiceException("unable to find metadata with id [" + identifier.getId() + "] from storage");
-			}
-		} catch (NotificationServiceException | RegistryServiceException e) {
-			throw new CoreServiceException("unable to update metadata with key [" + key + "]", e);
-		}
-	}
-
-	@Override
-	public void updateMetadata(String key, String name, InputStream data)
-			throws CoreServiceException, KeyNotFoundException {
-		logger.log(Level.INFO, "updating metadata data for key [" + key + "]");
-		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
-			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
-			if (metadatas.containsKey(identifier.getId())) {
-				String hash = binarystore.put(data);
-
-				DigitalMetadata meta = metadatas.get(identifier.getId());
-				meta.setName(name);
-				meta.setSize(binarystore.size(hash));
-				meta.setContentType(binarystore.type(hash));
-				meta.setStream(hash);
-
-				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-				
-				//TODO reindexé ??
-//				indexing.reindex(key); 
-				notification.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "update"),
-						"");
-			} else {
-				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
-			}
-		} catch (NotificationServiceException | RegistryServiceException | BinaryStoreServiceException | DataCollisionException | DataNotFoundException e) {
-			throw new CoreServiceException("unable to update metadata with key [" + key + "]", e);
-		}
-	}
-
-	@Override
-	public void updateMetadata(String key, String name, byte[] data)
-			throws CoreServiceException, KeyNotFoundException {
-		InputStream os = new ByteArrayInputStream(data);
-		updateMetadata(key, name, os);
-	}
-
-	@Override
-	public void updateMetadata(String key, String name, RemoteInputStream data)
-			throws CoreServiceException, KeyNotFoundException {
-		try {
-			InputStream os = RemoteInputStreamClient.wrap(data);
-			updateMetadata(key, name, os);
-		} catch (IOException e) {
-			throw new CoreServiceException("unable to update metadata with key [" + key + "]", e);
-		}
-	}
-
-	@Override
-	public void cloneMetadata(String key, String origin)
-			throws CoreServiceException, KeyAlreadyExistsException,
-			KeyNotFoundException, BranchNotAllowedException {
-		logger.log(Level.INFO, "cloning metadata for origin [" + origin + "] and key [" + key + "]");
-		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(origin).getIdentifier();
-			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
-
-			if (metadatas.containsKey(identifier.getId())) {
-				DigitalMetadata meta = metadatas.get(identifier.getId());
-				String id = UUID.randomUUID().toString();
-
-				DigitalMetadata clone = new DigitalMetadata();
-				clone.setId(id);
-				clone.setName(meta.getName());
-				clone.setTarget(meta.getTarget());
-				clone.setSize(meta.getSize());
-				clone.setContentType(meta.getContentType());
-				clone.setStream(meta.getStream());
-				metadatas.put(clone.getId(), clone);
-
-				registry.create(key, clone.getObjectIdentifier(), origin);
-				registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
-				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
-				registry.setProperty(key, OrtolangObjectProperty.AUTHOR, "users:root");
-				registry.setProperty(key, OrtolangObjectProperty.OWNER, "users:root");
-				
-				 //TODO reindex ??
-//				indexing.index(key);
-				notification.throwEvent(origin, "users:root", DigitalMetadata.OBJECT_TYPE,
-						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "clone"), "key=" + key);
-				notification.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "create"),
-						"");
-			} else {
-				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
-			}
-		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException e) {
-			throw new CoreServiceException("unable to clone metadata with origin [" + origin + "] and key [" + key + "]", e);
-		}
-	}
-
-	@Override
-	public void deleteMetadata(String key) throws CoreServiceException,
-			KeyNotFoundException {
-		logger.log(Level.INFO, "deleting metadata for key [" + key + "]");
-		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
-			checkObjectType(identifier, DigitalMetadata.OBJECT_TYPE);
-			registry.delete(key);
-			
-			//TODO delete index ??
-//			indexing.remove(key); 
-			notification.throwEvent(key, "users:root", DigitalMetadata.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalMetadata.OBJECT_TYPE, "delete"),
-						"");
-		} catch (NotificationServiceException | RegistryServiceException e) {
-			throw new CoreServiceException("unable to delete object with key [" + key + "]", e);
-		}
-	}
-
-	/**
-	 * Finds all metadata for a specific target.
-	 * @param target a target digital reference
-	 * @return a list of digital metadata associeted to the target
-	 * @throws CoreServiceException
-	 */
-	private List<String> findMetadatasForTarget(String target) throws CoreServiceException {
-		List<String> metas = new ArrayList<String> ();
-		//TODO check if target is a reference ??
-		for ( DigitalMetadata meta : metadatas.values() ) {
-			if ( meta.getTarget().equals(target) ) {
-				try {
-					metas.add(registry.lookup(meta.getObjectIdentifier()).getKey());
-				} catch ( RegistryServiceException e ) {
-					throw new CoreServiceException("unable to find key for meta with identifier : " + meta.getObjectIdentifier(), e);
-				} catch (IdentifierNotRegisteredException e) {
-				} 
-			}
-		}
-		return metas;
-	}
-	
 
 }

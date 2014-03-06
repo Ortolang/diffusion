@@ -12,11 +12,11 @@ import javax.jms.MessageListener;
 import fr.ortolang.diffusion.OrtolangIndexableContent;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangIndexableService;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.registry.RegistryService;
-import fr.ortolang.diffusion.registry.entity.RegistryEntry;
-import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
 import fr.ortolang.diffusion.store.index.IndexStoreService;
+import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
 
 @MessageDriven(name = "IndexingTopicMDB", activationConfig = {
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
@@ -96,14 +96,14 @@ public class IndexingListenerBean implements MessageListener {
 	
 	private OrtolangIndexableObject buildIndexableObject(String key) throws IndexingServiceException {
 		try {
-			RegistryEntry entry = registry.lookup(key);
-			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(entry.getIdentifier().getService());
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
 			OrtolangIndexableContent content = service.getIndexableContent(key);
 			OrtolangIndexableObject iobject = new OrtolangIndexableObject();
 			iobject.setKey(key);
-			iobject.setIdentifier(entry.getIdentifier());
-			iobject.setService(entry.getIdentifier().getService());
-			iobject.setType(entry.getIdentifier().getType());
+			iobject.setIdentifier(identifier);
+			iobject.setService(identifier.getService());
+			iobject.setType(identifier.getType());
 			iobject.setName(key);
 			//TODO remove the name
 			iobject.setContent(content);

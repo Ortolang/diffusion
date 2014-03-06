@@ -17,6 +17,7 @@ public class Group extends OrtolangObject {
 	public static final String OBJECT_TYPE = "group";
 	@Id
 	private String id;
+	@Transient
 	private String key;
 	private String name;
 	private String description;

@@ -112,7 +112,7 @@ public class StoreAndRetrieveFileUseCase {
 
 		// Retrieve this digital object informations using the key
 		try {
-			DigitalObject object = core.getObject(key);
+			DigitalObject object = core.readObject(key);
 			logger.log(Level.INFO, "Detected mime type : " + object.getContentType());
 			logger.log(Level.INFO, "Detected size : " + object.getSize());
 		} catch (Exception e) {
@@ -122,7 +122,7 @@ public class StoreAndRetrieveFileUseCase {
 
 		// Retrieve this digital object data using the key
 		try {
-			byte[] data = core.getObjectData(key);
+			byte[] data = core.readObjectContent(key);
 			Files.copy(new ByteArrayInputStream(data), destination);
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);

@@ -16,6 +16,7 @@ public class Profile extends OrtolangObject {
 	
 	@Id
 	private String id;
+	@Transient
 	private String key;
 	private String fullname;
 	private String email;

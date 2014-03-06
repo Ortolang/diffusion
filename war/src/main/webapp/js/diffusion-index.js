@@ -27,21 +27,12 @@ $(document).ready(function() {
                           { "mData": "owner", "sClass": "center", "bSortable": false },
                           { "mData": "creationDate", "sClass": "center", "bSortable": false },
                           { "mData": "modificationDate", "sClass": "center", "bSortable": false },
-                          { "mData": "locked", "sClass": "center", "bSortable": false },
-                          { "mData": "hidden", "sClass": "center", "bSortable": false },
-                          { "mData": "deleted", "sClass": "center", "bSortable": false },
                           { "mData": "state", "sClass": "center", "bSortable": false },
                           { "mData": "view", "sClass": "center", "bSortable": false }
                       ],
-            "aoColumnDefs": [
-                             { "bVisible": false,  "aTargets": [ 5 ] },
-                             { "bVisible": false,  "aTargets": [ 6 ] },
-                             { "bVisible": false,  "aTargets": [ 7 ] },
-                             { "bVisible": false,  "aTargets": [ 8 ] },
-                             { "mRender": function(data, type, row ) { 
-                            	 return row[5] + ' ' + row[6] + ' ' + row[7]; 
-                            	 }, "aTargets": [ 9 ] }
-                            ],
+            "aoColumnDefs": [ 
+                          { "bVisible": false,  "aTargets": [ 5 ] } 
+            		  ],
 	});
 
 	// Get the file name in order to set the object name

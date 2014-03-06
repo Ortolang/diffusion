@@ -7,10 +7,14 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Remote;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -52,7 +56,44 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 	private AuthenticationService authentication;
 	@PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;
+	@Resource
+	private SessionContext ctx;
 	
+	public MembershipServiceBean() {
+	}
+	
+	public RegistryService getRegistryService() {
+		return registry;
+	}
+
+	public void setRegistryService(RegistryService registry) {
+		this.registry = registry;
+	}
+
+	public NotificationService getNotificationService() {
+		return notification;
+	}
+
+	public void setNotificationService(NotificationService notification) {
+		this.notification = notification;
+	}
+
+	public IndexingService getIndexingService() {
+		return indexing;
+	}
+
+	public void setIndexingService(IndexingService indexing) {
+		this.indexing = indexing;
+	}
+
+	public AuthenticationService getAuthenticationService() {
+		return authentication;
+	}
+
+	public void setAuthenticationService(AuthenticationService authentication) {
+		this.authentication = authentication;
+	}
+
 	@Override
 	public String getServiceName() {
 		return SERVICE_NAME;
@@ -74,12 +115,13 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> getConnectedIdentifierSubjects() throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "getting connected identifier subjects");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 	
-			OrtolangObjectIdentifier identifier = registry.lookup(caller).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(caller);
 			Profile profile = em.find(Profile.class, identifier.getId());
 			if (profile == null) {
 				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
@@ -97,6 +139,7 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException,
 			ProfileAlreadyExistsException {
 		logger.log(Level.INFO, "creating profile for identifier [" + identifier + "] and email [" + email + "]");
@@ -123,19 +166,22 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 			indexing.index(key);
 			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e ) {
+			ctx.setRollbackOnly();
 			throw new ProfileAlreadyExistsException("a profile already exists for identifier " + identifier, e);
 		} catch (RegistryServiceException  | IdentifierAlreadyRegisteredException | KeyNotFoundException | IndexingServiceException | NotificationServiceException e) {
+			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to create profile with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "reading profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Profile.OBJECT_TYPE);
 			Profile profile = em.find(Profile.class, identifier.getId());
 			if (profile == null) {
@@ -151,12 +197,13 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateProfile(String key, String fullname, ProfileStatus status) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "updating profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Profile.OBJECT_TYPE);
 			Profile profile = em.find(Profile.class, identifier.getId());
 			if (profile == null) {
@@ -171,27 +218,31 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 			indexing.reindex(key);
 			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update"), "");
 		} catch (NotificationServiceException | IndexingServiceException | RegistryServiceException e) {
+			ctx.setRollbackOnly();
 			throw new MembershipServiceException("error while trying to update the profile with key [" + key + "]");
 		} 
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "deleting profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Profile.OBJECT_TYPE);
 			registry.delete(key);
 			indexing.remove(key);
 			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "delete"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException e) {
+			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to delete object with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createGroup(String key, String name, String description) throws MembershipServiceException, KeyAlreadyExistsException {
 		logger.log(Level.INFO, "creating group for key [" + key + "] and name [" + name + "]");
 		try { 
@@ -212,17 +263,19 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 			indexing.index(key);
 			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "create"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | KeyNotFoundException e) {
+			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to create group with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Group readGroup(String key) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "reading group for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Group.OBJECT_TYPE);
 			Group group = em.find(Group.class, identifier.getId());
 			if (group == null) {
@@ -238,12 +291,13 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateGroup(String key, String name, String description) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "updating group for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Group.OBJECT_TYPE);
 			Group group = em.find(Group.class, identifier.getId());
 			if (group == null) {
@@ -258,35 +312,39 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 			indexing.reindex(key);
 			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "update"), "");
 		} catch (NotificationServiceException | IndexingServiceException | RegistryServiceException e) {
+			ctx.setRollbackOnly();
 			throw new MembershipServiceException("error while trying to update the group with key [" + key + "]");
 		} 
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteGroup(String key) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "deleting group for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Group.OBJECT_TYPE);
 			registry.delete(key);
 			indexing.remove(key);
 			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "delete"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException e) {
+			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to delete group with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void addMemberInGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "adding member in group for key [" + key + "] and member [" + member + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier gidentifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier gidentifier = registry.lookup(key);
 			checkObjectType(gidentifier, Group.OBJECT_TYPE);
-			OrtolangObjectIdentifier midentifier = registry.lookup(member).getIdentifier();
+			OrtolangObjectIdentifier midentifier = registry.lookup(member);
 			checkObjectType(midentifier, Profile.OBJECT_TYPE);
 			
 			Group group = em.find(Group.class, gidentifier.getId());
@@ -309,19 +367,21 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 			indexing.reindex(member);
 			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "add-member"), "member=" + member);
 		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to add member in group with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void removeMemberFromGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "removing member [" + member + "] from group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier gidentifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier gidentifier = registry.lookup(key);
 			checkObjectType(gidentifier, Group.OBJECT_TYPE);
-			OrtolangObjectIdentifier midentifier = registry.lookup(member).getIdentifier();
+			OrtolangObjectIdentifier midentifier = registry.lookup(member);
 			checkObjectType(midentifier, Profile.OBJECT_TYPE);
 			
 			Group group = em.find(Group.class, gidentifier.getId());
@@ -347,19 +407,21 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 			indexing.reindex(member);
 			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "remove-member"), "member=" + member);
 		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to remove member from group with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void joinGroup(String key) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "joining group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier gidentifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier gidentifier = registry.lookup(key);
 			checkObjectType(gidentifier, Group.OBJECT_TYPE);
-			OrtolangObjectIdentifier midentifier = registry.lookup(caller).getIdentifier();
+			OrtolangObjectIdentifier midentifier = registry.lookup(caller);
 			checkObjectType(midentifier, Profile.OBJECT_TYPE);
 			
 			Group group = em.find(Group.class, gidentifier.getId());
@@ -382,19 +444,21 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 			indexing.reindex(caller);
 			notification.throwEvent(caller, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "join"), "group=" + key);
 		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to join group with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void leaveGroup(String key) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "leaving group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier gidentifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier gidentifier = registry.lookup(key);
 			checkObjectType(gidentifier, Group.OBJECT_TYPE);
-			OrtolangObjectIdentifier midentifier = registry.lookup(caller).getIdentifier();
+			OrtolangObjectIdentifier midentifier = registry.lookup(caller);
 			checkObjectType(midentifier, Profile.OBJECT_TYPE);
 			
 			Group group = em.find(Group.class, gidentifier.getId());
@@ -420,17 +484,19 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 			indexing.reindex(caller);
 			notification.throwEvent(caller, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "leave"), "group=" + key);
 		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
+			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to leave group with key [" + key + "]", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> listMembers(String key) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "listing members of group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Group.OBJECT_TYPE);
 			
 			Group group = em.find(Group.class, identifier.getId());
@@ -447,12 +513,13 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> getProfileGroups(String key) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "listing groups of profile with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Profile.OBJECT_TYPE);
 			
 			Profile profile = em.find(Profile.class, identifier.getId());
@@ -469,14 +536,15 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "checking membership of member [" + member + "] in group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
-			OrtolangObjectIdentifier gidentifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier gidentifier = registry.lookup(key);
 			checkObjectType(gidentifier, Group.OBJECT_TYPE);
-			OrtolangObjectIdentifier midentifier = registry.lookup(member).getIdentifier();
+			OrtolangObjectIdentifier midentifier = registry.lookup(member);
 			checkObjectType(midentifier, Profile.OBJECT_TYPE);
 			
 			Group group = em.find(Group.class, gidentifier.getId());
@@ -496,9 +564,10 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 	}
 	
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObject findObject(String key) throws OrtolangException {
 		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
 			if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
@@ -519,9 +588,10 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 	}
 	
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangIndexableContent getIndexableContent(String key) throws OrtolangException {
 		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key).getIdentifier();
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
 			if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());

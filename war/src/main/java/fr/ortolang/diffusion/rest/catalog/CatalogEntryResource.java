@@ -19,7 +19,6 @@ import javax.ws.rs.core.UriInfo;
 
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
-import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -64,10 +63,7 @@ public class CatalogEntryResource {
     		entry.setOwner(browser.getProperty(key, OrtolangObjectProperty.OWNER).getValue());
     		entry.setCreationDate(sdf.format(new Date(Long.parseLong(browser.getProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP).getValue()))));
     		entry.setModificationDate(sdf.format(new Date(Long.parseLong(browser.getProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP).getValue()))));
-    		OrtolangObjectState state = browser.getState(key);
-    		entry.setLocked(state.isLocked()+"");
-    		entry.setHidden(state.isHidden()+"");
-    		entry.setDeleted(state.isDeleted()+"");
+    		entry.setState(browser.getState(key).toString());
     		URI view = UriBuilder.fromUri(uriInfo.getBaseUri()).path(entry.getService()).path(entry.getType()).path(key).build();
     		entry.setView(view.toString());
     		collection.addEntry(entry);

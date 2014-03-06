@@ -10,6 +10,8 @@ import javax.ejb.Stateless;
 
 @Local(AuthenticationService.class)
 @Stateless(name = AuthenticationService.SERVICE_NAME)
+//@SecurityDomain(value="ortolang", unauthenticatedPrincipal= "guest")
+//@PermitAll
 public class AuthenticationServiceBean implements AuthenticationService {
 	
 	private Logger logger = Logger.getLogger(AuthenticationServiceBean.class.getName());

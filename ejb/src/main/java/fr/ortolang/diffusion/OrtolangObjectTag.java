@@ -1,22 +1,18 @@
 package fr.ortolang.diffusion;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 @SuppressWarnings("serial")
 public class OrtolangObjectTag implements Serializable {
 
 	private String name;
-	private List<String> keys;
+	private int weight;
 
 	public OrtolangObjectTag() {
-		keys = new ArrayList<String>();
 	}
 
-	public OrtolangObjectTag(String name, List<String> keys) {
+	public OrtolangObjectTag(String name, int weight) {
 		this.name = name;
-		this.keys = keys;
 	}
 
 	public String getName() {
@@ -27,20 +23,12 @@ public class OrtolangObjectTag implements Serializable {
 		this.name = name;
 	}
 
-	public List<String> getKeys() {
-		return keys;
+	public int getWeight() {
+		return weight;
 	}
 
-	public void setKeys(List<String> keys) {
-		this.keys = keys;
+	public void setWeight(int weight) {
+		this.weight = weight;
 	}
 	
-	public void addKey(String key) {
-		this.keys.add(key);
-	}
-	
-	public void removeKey(String key) {
-		this.keys.remove(key);
-	}
-
 }

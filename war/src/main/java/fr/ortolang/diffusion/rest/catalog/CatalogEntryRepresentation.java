@@ -12,9 +12,7 @@ public class CatalogEntryRepresentation {
 	private String owner;
 	private String creationDate;
 	private String modificationDate;
-	private String hidden;
-	private String locked;
-	private String deleted;
+	private String state;
 	private String view;
 
 	public CatalogEntryRepresentation() {
@@ -68,28 +66,12 @@ public class CatalogEntryRepresentation {
 		this.modificationDate = modificationDate;
 	}
 
-	public String getHidden() {
-		return hidden;
+	public String getState() {
+		return state;
 	}
 
-	public void setHidden(String hidden) {
-		this.hidden = hidden;
-	}
-
-	public String getLocked() {
-		return locked;
-	}
-
-	public void setLocked(String locked) {
-		this.locked = locked;
-	}
-
-	public String getDeleted() {
-		return deleted;
-	}
-
-	public void setDeleted(String deleted) {
-		this.deleted = deleted;
+	public void setState(String state) {
+		this.state = state;
 	}
 
 	public String getView() {

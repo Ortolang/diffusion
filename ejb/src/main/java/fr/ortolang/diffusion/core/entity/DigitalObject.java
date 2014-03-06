@@ -3,21 +3,29 @@ package fr.ortolang.diffusion.core.entity;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Transient;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
 
-//@Entity
+@Entity
+@NamedQueries({
+	@NamedQuery(name="findObjectByBinaryHash", query="select o from DigitalObject o where :hash MEMBER OF o.streams")
+})
 @SuppressWarnings("serial")
 public class DigitalObject extends OrtolangObject {
 
 	public static final String OBJECT_TYPE = "object";
 
-	//@Id
+	@Id
 	private String id;
+	@Transient
 	private String key;
 	private String name;
 	private String description;
@@ -25,6 +33,7 @@ public class DigitalObject extends OrtolangObject {
 	private String contentType;
 	private String preview;
 	private long nbReads;
+	@ElementCollection
 	private Map<String, String> streams;
 	
 	public DigitalObject() {

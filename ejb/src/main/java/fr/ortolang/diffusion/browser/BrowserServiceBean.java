@@ -1,6 +1,5 @@
 package fr.ortolang.diffusion.browser;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,10 +17,9 @@ import fr.ortolang.diffusion.OrtolangObjectTag;
 import fr.ortolang.diffusion.OrtolangObjectVersion;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.registry.TagNotFoundException;
-import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 
 @Remote(BrowserService.class)
 @Stateless(name = BrowserService.SERVICE_NAME)
@@ -39,8 +37,8 @@ public class BrowserServiceBean implements BrowserService {
 	public OrtolangObjectIdentifier lookup(String key) throws BrowserServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "looking up identifier for key [" + key + "]");
 		try {
-			RegistryEntry entry = registry.lookup(key); 
-			return entry.getIdentifier();
+			//TODO notify lookup for caller
+			return registry.lookup(key);
 		} catch ( RegistryServiceException e) {
 			throw new BrowserServiceException("unable to lookup identifier for key [" + key + "]", e);
 		}
@@ -50,12 +48,7 @@ public class BrowserServiceBean implements BrowserService {
 	public List<String> list(int offset, int limit, String service, String type) throws BrowserServiceException {
 		logger.log(Level.INFO, "listing keys");
 		try {
-			List<RegistryEntry> entries = registry.list(offset, limit, OrtolangObjectIdentifier.buildFilterPattern(service, type), true);
-			List<String> keys = new ArrayList<String>();
-			for ( RegistryEntry entry : entries ) {
-				keys.add(entry.getKey());
-			}
-			return keys;
+			return registry.list(offset, limit, OrtolangObjectIdentifier.buildFilterPattern(service, type));
 		} catch ( RegistryServiceException e) {
 			throw new BrowserServiceException("error during listing keys", e);
 		}
@@ -63,9 +56,9 @@ public class BrowserServiceBean implements BrowserService {
 	
 	@Override
 	public long count(String service, String type) throws BrowserServiceException {
-		logger.log(Level.INFO, "counting identifiers");
+		logger.log(Level.INFO, "counting keys");
 		try {
-			return registry.count(OrtolangObjectIdentifier.buildFilterPattern(service, type), true);
+			return registry.count(OrtolangObjectIdentifier.buildFilterPattern(service, type));
 		} catch ( RegistryServiceException e) {
 			throw new BrowserServiceException("error during couting identifiers", e);
 		}
@@ -75,7 +68,9 @@ public class BrowserServiceBean implements BrowserService {
 	public OrtolangObjectState getState(String key) throws BrowserServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "getting state for key [" + key + "]");
 		try {
-			return OrtolangObjectState.fromEntry(registry.lookup(key));
+			OrtolangObjectState state = new OrtolangObjectState();
+			state.setLocked(registry.isLocked(key));
+			return state;
 		} catch ( RegistryServiceException e) {
 			throw new BrowserServiceException("error during getting state", e);
 		}
@@ -85,12 +80,7 @@ public class BrowserServiceBean implements BrowserService {
 	public List<OrtolangObjectProperty> listProperties(String key) throws BrowserServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "listing properties for key [" + key + "]");
 		try {
-			RegistryEntry entry = registry.lookup(key);
-			List<OrtolangObjectProperty> properties = new ArrayList<OrtolangObjectProperty>();
-			for ( String name : entry.getProperties().keySet() ) {
-				properties.add(new OrtolangObjectProperty(name, entry.getProperties().get(name)));
-			}
-			return properties;
+			return registry.getProperties(key);
 		} catch ( RegistryServiceException e) {
 			throw new BrowserServiceException("error during listing entries", e);
 		}
@@ -101,11 +91,8 @@ public class BrowserServiceBean implements BrowserService {
 			PropertyNotFoundException {
 		logger.log(Level.INFO, "getting property with name [" + name + "] for key [" + key + "]");
 		try {
-			RegistryEntry entry = registry.lookup(key);
-			if ( entry.getProperties().containsKey(name) ) {
-				return new OrtolangObjectProperty(name, entry.getProperties().get(name));
-			}
-			throw new PropertyNotFoundException("unable to find a property with name [" + name + "] for key[" + key + "]");
+			String value = registry.getProperty(key, name);
+			return new OrtolangObjectProperty(name, value);
 		} catch ( RegistryServiceException e) {
 			throw new BrowserServiceException("error during getting property", e);
 		}
@@ -115,8 +102,7 @@ public class BrowserServiceBean implements BrowserService {
 	public void setProperty(String key, String name, String value) throws BrowserServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "setting property with name [" + name + "] for key [" + key + "]");
 		try {
-			RegistryEntry entry = registry.lookup(key);
-			entry.setProperty(name, value);
+			registry.setProperty(key, name, value);
 		} catch ( RegistryServiceException e) {
 			throw new BrowserServiceException("error during setting property", e);
 		}
