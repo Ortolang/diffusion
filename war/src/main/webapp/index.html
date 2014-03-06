@@ -119,12 +119,15 @@
 							<div class="panel-body">
 								<div class="panel panel-default">
 									<div class="panel-body">
+										<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createCollectionModal">Nouveau dossier</button>
+								
 										<div class="btn-group">
-											<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Créer <span class="caret"></span></button>
+											<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Charger <span class="caret"></span></button>
 											  <ul class="dropdown-menu" role="menu">
-											    <li><a data-toggle="modal" href="#createCollectionModal">Collection</a></li>
-											    <li><a data-toggle="modal" href="#createReferenceModal">Référence</a></li>
-											    <li><a data-toggle="modal" href="#createMetadataModal">Métadonnées</a></li>
+											    <!--  <li><a data-toggle="modal" href="#createCollectionModal">Collection</a></li> -->
+											    <!--  <li><a data-toggle="modal" href="#createReferenceModal">Référence</a></li> -->
+											    <li><a data-toggle="modal" href="#uploadFileModal">Fichier</a></li>
+											    <li class="disabled"><a data-toggle="modal" href="#">Dossier</a></li>
 											  </ul>
 										</div>
 									</div>
@@ -147,6 +150,65 @@
 									</table>
 								</div>
 								
+								<div class="modal fade" id="createFolderModal" tabindex="-1" role="dialog" aria-labelledby="createFolderModalLabel" aria-hidden="true">
+								  <div class="modal-dialog modal-sm">
+								    <div class="modal-content">
+								      <div class="modal-header">
+								        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+								        <h4 class="modal-title" id="createFolderModalLabel">Nouveau dossier</h4>
+								      </div>
+								      <div class="modal-body">
+								        <!-- Create collection -->
+								        <form role="form" id="createFolderForm">
+										  <div class="form-group">
+										    <label for="name">Nom</label>
+										    <input type="text" class="form-control" id="name" name="name" placeholder="Nom du dossier">
+										  </div>
+										  <div class="form-group">
+										    <label for="description">Description</label>
+										    <input type="text" class="form-control" id="description" name="description" placeholder="Description">
+										  </div>
+										  
+										</form>
+								      </div>
+								      <div class="modal-footer">
+								        <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+								        <button type="button" class="btn btn-primary" id="createFolderButton">Créer</button>
+								      </div>
+								    </div><!-- /.modal-content -->
+								  </div><!-- /.modal-dialog -->
+								</div><!-- /.modal -->
+								
+								
+								<div class="modal fade" id="uploadFileModal" tabindex="-1" role="dialog" aria-labelledby="uploadFileLabel" aria-hidden="true">
+								  <div class="modal-dialog modal-sm">
+								    <div class="modal-content">
+								      <div class="modal-header">
+								        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+								        <h4 class="modal-title" id="uploadFileLabel">Charger un fichier</h4>
+								      </div>
+								      <div class="modal-body">
+								        <!-- Create collection -->
+								        <form role="form" id="uploadFileForm" method="post" enctype="multipart/form-data">
+										  <div class="form-group">
+										    <label for="file">Fichier</label>
+										    <input type="file" class="form-control" id="file" name="file">
+										  </div>
+										  <div class="form-group">
+										    <label for="description">Description</label>
+										    <input type="text" class="form-control" id="description" name="description" placeholder="Description">
+										  </div>
+										  <input type="hidden" id="name" name="name">
+										</form>
+								      </div>
+								      <div class="modal-footer">
+								        <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+								        <button type="button" class="btn btn-primary" id="uploadFileButton">Créer</button>
+								      </div>
+								    </div><!-- /.modal-content -->
+								  </div><!-- /.modal-dialog -->
+								</div><!-- /.modal -->
+								
 								<div class="modal fade" id="createCollectionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 								  <div class="modal-dialog modal-sm">
 								    <div class="modal-content">
@@ -159,11 +221,11 @@
 								        <form role="form" id="createCollectionForm" method="post" action="rest/core/collection">
 										  <div class="form-group">
 										    <label for="name">Nom</label>
-										    <input type="text" class="form-control" id="name" placeholder="Nom de la collection">
+										    <input type="text" class="form-control" id="name" name="name" placeholder="Nom de la collection">
 										  </div>
 										  <div class="form-group">
 										    <label for="description">Description</label>
-										    <input type="text" class="form-control" id="description" placeholder="Description">
+										    <input type="text" class="form-control" id="description" name="description" placeholder="Description">
 										  </div>
 										  
 										</form>

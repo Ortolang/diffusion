@@ -4,7 +4,7 @@ $(function() {
 
 $(function() {
     $(window).bind("load resize", function() {
-        console.log($(this).width());
+        //console.log($(this).width());
         if ($(this).width() < 768) {
             $('div.sidebar-collapse').addClass('collapse');
         } else {
@@ -13,8 +13,7 @@ $(function() {
     });
 });
 
-$(document).ready(function() { 
-	console.log("yala");
+$(document).ready(function() {
 	$('#test a[href="#consulter"]').tab('show');
 	$('#entriesTable').dataTable( {
             "bProcessing": true,
@@ -44,9 +43,109 @@ $(document).ready(function() {
                             	 }, "aTargets": [ 9 ] }
                             ],
 	});
+
+	// Get the file name in order to set the object name
+	$("#uploadFileModal #file").change(function() {
+		var filename = $(this).val().split('\\').pop();
+		$("#uploadFileModal #name").val(filename);
+    });
+	
+	$('#createFolderButton').click(function() {
+		// Create a collection
+		var urlCoreCollection = "rest/core/collection";
+		var urlCoreReference = "rest/core/reference";
+		var params = $('#createFolderForm').serialize();
+		var folderName = params['name'];
+		
+		$.ajax({
+			type: "POST",
+			url: urlCoreCollection,
+			data: params,
+			success: function(msg, textStatus, xhr){
+				var pathToNewCollection = xhr.getResponseHeader('Location').split('/');
+				//console.log("Location : "+pathToNewCollection);
+
+				// And create a dynamic reference on the new collection
+				if(pathToNewCollection.length>0) {
+					var keyCollection = pathToNewCollection[pathToNewCollection.length-1];
+	
+					$.ajax({
+						type: "POST",
+						url: urlCoreReference,
+						data: "name="+folderName+"&target="+keyCollection,
+						success: function(msg){
+//							alert( "Dossier créé");
+							
+							location.reload();
+						}
+					});
+				}
+			}
+		});
+		$('#createCollectionModal').modal('hide');
+		
+	});
+
+	$('#uploadFileButton').click(function() {
+		// Create a collection
+		var urlCoreObject = "rest/core/object";
+		var urlCoreReference = "rest/core/reference";
+		var params = $('#uploadFileForm').serialize();
+		var fileName = params['name'];
+		
+		var formData = new FormData(document.getElementById("uploadFileForm"));
+		
+		$.ajax({
+			type: "POST",
+			url: urlCoreObject,
+			mimeType:"multipart/form-data",
+			processData:false,
+		    contentType:false,
+			//contentType: 'multipart/form-data',
+		    cache: false,
+//			data: params,
+			data: formData,
+            async: false,
+			success: function(msg, textStatus, xhr){
+				var pathToNewObject = xhr.getResponseHeader('Location').split('/');
+				//console.log("Location : "+pathToNewCollection);
+
+				// And create a dynamic reference on the new collection
+				if(pathToNewObject.length>0) {
+					var keyObject = pathToNewObject[pathToNewObject.length-1];
+	
+					$.ajax({
+						type: "POST",
+						url: urlCoreReference,
+						data: "name="+fileName+"&target="+keyObject,
+						success: function(msg){
+							location.reload();
+						}
+					});
+				}
+			},
+			error: function(xhr, textStatus, errorThrown) {
+				alert(errorThrown);
+			}
+		});
+		$('#uploadFileModal').modal('hide');
+		
+	});
 	
 	$('#createCollectionButton').click(function() {
-		$('#createCollectionForm').submit();
+//		$('#createCollectionForm').submit();
+		var url = $('#createCollectionForm').attr('action');
+		var params = $('#createCollectionForm').serialize();
+		$.ajax({
+			type: "POST",
+			url: url,
+			data: params,
+			success: function(msg){
+				//alert( "Collection créée !");
+				location.reload();
+			}
+		});
+		$('#createCollectionModal').modal('hide');
 	});
 	
 
