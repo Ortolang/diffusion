@@ -19,6 +19,6 @@ public interface CoreServiceLocal extends OrtolangIndexableService {
 	
 	public void updateMetadataContent(String key, String name, InputStream data) throws CoreServiceException, KeyNotFoundException;
 
-	public void readMetadataDataContent(String key, OutputStream os) throws CoreServiceException, KeyNotFoundException;
+	public void readMetadataContent(String key, OutputStream os) throws CoreServiceException, KeyNotFoundException;
 	
 }

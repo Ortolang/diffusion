@@ -60,7 +60,7 @@ public class DigitalMetadataResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response read( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException {
     	logger.log(Level.INFO, "reading digital metadata with key: " + key);
-    	DigitalMetadata meta = core.getMetadata(key);
+    	DigitalMetadata meta = core.readMetadata(key);
     	DigitalMetadataRepresentation representation = DigitalMetadataRepresentation.fromDigitalMetadata(meta);
     	Response response = Response.ok(representation).build();
     	return response;
@@ -70,17 +70,17 @@ public class DigitalMetadataResource {
     @Path("/{key}/data")
     public void getData( @PathParam(value="key") String key, @Context HttpServletResponse response ) throws CoreServiceException, KeyNotFoundException, IOException {
     	logger.log(Level.INFO, "reading digital metadata data with key: " + key);
-    	DigitalMetadata meta = core.getMetadata(key);
+    	DigitalMetadata meta = core.readMetadata(key);
     	response.setHeader("Content-Disposition", "attachment; filename=" + meta.getName());
     	response.setContentLength((int)meta.getSize());
     	response.setContentType(meta.getContentType());
     	if ( coreLocal != null ) {
     		logger.log(Level.INFO, "using local core interface for optimisation");
-    		coreLocal.getMetadataData(key, response.getOutputStream());
+    		coreLocal.readMetadataContent(key, response.getOutputStream());
     	} else {
     		logger.log(Level.INFO, "using remote core interface");
     		RemoteOutputStreamServer ros = new SimpleRemoteOutputStream(response.getOutputStream());
-    		core.getMetadataData(key, ros.export());
+    		core.readMetadataContent(key, ros.export());
     	}
     	
     }

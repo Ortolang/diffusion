@@ -46,7 +46,7 @@ public class DigitalReferenceResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response read( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException {
     	logger.log(Level.INFO, "reading digital reference with key: " + key);
-    	DigitalReference reference = core.getReference(key);
+    	DigitalReference reference = core.readReference(key);
     	DigitalReferenceRepresentation representation = DigitalReferenceRepresentation.fromDigitalReference(reference);
     	Response response = Response.ok(representation).build();
     	return response;

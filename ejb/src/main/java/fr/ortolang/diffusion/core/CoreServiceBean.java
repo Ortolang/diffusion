@@ -837,7 +837,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void readMetadataDataContent(String key, OutputStream os) throws CoreServiceException, KeyNotFoundException {
+	public void readMetadataContent(String key, OutputStream os) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "reading content from metadata with key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -868,10 +868,10 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void readMetadataDataContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException {
+	public void readMetadataContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException {
 		try {
 			OutputStream os = RemoteOutputStreamClient.wrap(ros);
-			readMetadataDataContent(key, os);
+			readMetadataContent(key, os);
 		} catch (IOException e) {
 			throw new CoreServiceException("unable to read content from metadata with key [" + key + "]", e);
 		}
@@ -879,9 +879,9 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public byte[] readMetadataDataContent(String key) throws CoreServiceException, KeyNotFoundException {
+	public byte[] readMetadataContent(String key) throws CoreServiceException, KeyNotFoundException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		readMetadataDataContent(key, baos);
+		readMetadataContent(key, baos);
 		return baos.toByteArray();
 	}
 

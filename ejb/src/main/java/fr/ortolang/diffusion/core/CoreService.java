@@ -62,9 +62,9 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService {
 	
 	public DigitalMetadata readMetadata(String key) throws CoreServiceException, KeyNotFoundException;
 	
-	public byte[] readMetadataDataContent(String key) throws CoreServiceException, KeyNotFoundException;
+	public byte[] readMetadataContent(String key) throws CoreServiceException, KeyNotFoundException;
 	
-	public void readMetadataDataContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException;
+	public void readMetadataContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException;
 	
 	public void updateMetadata(String key, String name) throws CoreServiceException, KeyNotFoundException;
 	
