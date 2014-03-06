@@ -341,7 +341,7 @@ public class RegistryServiceBean implements RegistryService {
 	public String getProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException {
 		logger.log(Level.INFO, "getting property [" + name + "] for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
-		if (entry.getProperties().containsKey(name)) {
+		if (!entry.getProperties().containsKey(name)) {
 			throw new PropertyNotFoundException("no property with name [" + name + "] found for key [" + key + "]");
 		}
 		return entry.getProperties().get(name);
