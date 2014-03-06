@@ -53,5 +53,9 @@ $(document).ready(function() {
 	$('#createReferenceButton').click(function() {
 		$('#createReferenceForm').submit();
 	});
+
+	$('#createMetadataButton').click(function() {
+		$('#createMetadataForm').submit();
+	});
 });
 
