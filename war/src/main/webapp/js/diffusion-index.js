@@ -13,6 +13,8 @@ $(function() {
     });
 });
 
+var current_dir = "undefined";
+
 $(document).ready(function() {
 
 	var urlPart = window.location.hash;
@@ -31,6 +33,7 @@ $(document).ready(function() {
 		$('#test a[href="'+tabName+'"]').tab('show');
 		
 		if(tabName=="#myspace" && ooName!="undefined") {
+			current_dir = ooName;
 			getFolder(ooName);
 		}
 		
@@ -75,14 +78,34 @@ $(document).ready(function() {
 		// Create a folder
 		var urlFsFolder = "rest/fs/folders";
 		var params = $('#createFolderForm').serialize();
-		var folderName = params['name'];
+//		var folderName = params['name'];
 		
 		$.ajax({
 			type: "POST",
 			url: urlFsFolder,
 			data: params,
 			success: function(msg, textStatus, xhr){
-				location.reload();
+				if(current_dir!="undefined") {
+					var pathToNewObject = xhr.getResponseHeader('Location').split('/');
+					//console.log("Location : "+pathToNewCollection);
+
+					// Update the folder to add the new collection
+					if(pathToNewObject.length>0) {
+						var keyObject = pathToNewObject[pathToNewObject.length-1];
+						var urlFsFolderElements = "rest/fs/folders/"+current_dir+"/elements";
+		
+						$.ajax({
+							type: "POST",
+							url: urlFsFolderElements,
+							data: "element="+keyObject,
+							success: function(msg){
+								location.reload();
+							}
+						});
+					}
+				} else {
+					location.reload();
+				}
 			}
 		});
 		$('#createFolderModal').modal('hide');
@@ -162,6 +185,7 @@ $(document).ready(function() {
 });
 
 function getFolder(key) {
+	/*
 	var urlFsFolder = "rest/fs/folders/"+key;
 	$.ajax({
 		type: "GET",
@@ -170,5 +194,29 @@ function getFolder(key) {
 			console.log(msg);
 		}
 	});
-	
+	*/
+
+	$('#fsEntriesTable').dataTable( {
+            "bProcessing": true,
+            "bServerSide": true,
+            "bFilter": false,
+            "sAjaxSource": "./rest/fs/folders/"+key+"/elements",
+            "aoColumns": [
+                          { "mData": "name", "sClass": "center", "bSortable": false },
+//                          { "mData": "key", "sClass": "center", "bSortable": false },
+//                          { "mData": "service", "sClass": "center", "bSortable": false},
+                          { "mData": "type", "sClass": "center", "bSortable": false },
+                          { "mData": "owner", "sClass": "center", "bSortable": false },
+//                          { "mData": "creationDate", "sClass": "center", "bSortable": false },
+                          { "mData": "modificationDate", "sClass": "center", "bSortable": false },
+//                          { "mData": "state", "sClass": "center", "bSortable": false },
+//                          { "mData": "view", "sClass": "center", "bSortable": false }
+                      ],
+                      /*
+            "aoColumnDefs": [ 
+                          { "bVisible": false,  "aTargets": [ 5 ] } 
+            		  ],
+            		  */
+	});
+
 }
