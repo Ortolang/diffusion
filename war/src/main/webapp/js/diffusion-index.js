@@ -14,7 +14,31 @@ $(function() {
 });
 
 $(document).ready(function() {
-	$('#test a[href="#consulter"]').tab('show');
+
+	var urlPart = window.location.hash;
+	var urlPartSplit = urlPart.split('/');
+	//alert(urlPartSplit);
+	var tabName = "undefined";
+	if(urlPartSplit!=null && urlPartSplit.length>0)
+		tabName = urlPartSplit[0];
+
+	var ooName = "undefined";
+	if(urlPartSplit!=null && urlPartSplit.length>1)
+		ooName = urlPartSplit[1];
+	console.log("Ortolang object : "+ooName);
+	if(tabName!=null && tabName!="undefined" && tabName!="null" && tabName!="") {
+		//alert("tabName == "+tabName);
+		$('#test a[href="'+tabName+'"]').tab('show');
+		
+		if(tabName=="#myspace" && ooName!="undefined") {
+			getFolder(ooName);
+		}
+		
+	} else {
+		console.log("tabName == null");
+		$('#test a').tab('show');
+	}
+	
 	$('#entriesTable').dataTable( {
             "bProcessing": true,
             "bServerSide": true,
@@ -35,6 +59,12 @@ $(document).ready(function() {
             		  ],
 	});
 
+	// Mon espace
+	// Accéder à un dossier/fichier : .../index.html#myspace/{clé}
+	// Si dossier Alors tableau avec liste des dossiers/fichiers
+	// Si fichier Alors tableau avec les propriétés du fichier + onglet metadonnées + bouton télécharger
+	// Accéder à la fiche d'un dossier/fichier : .../index.html#myspace/{clé_dossier}/properties
+
 	// Get the file name in order to set the object name
 	$("#uploadFileModal #file").change(function() {
 		var filename = $(this).val().split('\\').pop();
@@ -42,38 +72,20 @@ $(document).ready(function() {
     });
 	
 	$('#createFolderButton').click(function() {
-		// Create a collection
-		var urlCoreCollection = "rest/core/collection";
-		var urlCoreReference = "rest/core/reference";
+		// Create a folder
+		var urlFsFolder = "rest/fs/folders";
 		var params = $('#createFolderForm').serialize();
 		var folderName = params['name'];
 		
 		$.ajax({
 			type: "POST",
-			url: urlCoreCollection,
+			url: urlFsFolder,
 			data: params,
 			success: function(msg, textStatus, xhr){
-				var pathToNewCollection = xhr.getResponseHeader('Location').split('/');
-				//console.log("Location : "+pathToNewCollection);
-
-				// And create a dynamic reference on the new collection
-				if(pathToNewCollection.length>0) {
-					var keyCollection = pathToNewCollection[pathToNewCollection.length-1];
-	
-					$.ajax({
-						type: "POST",
-						url: urlCoreReference,
-						data: "name="+folderName+"&target="+keyCollection,
-						success: function(msg){
-//							alert( "Dossier créé");
-							
-							location.reload();
-						}
-					});
-				}
+				location.reload();
 			}
 		});
-		$('#createCollectionModal').modal('hide');
+		$('#createFolderModal').modal('hide');
 		
 	});
 
@@ -149,3 +161,14 @@ $(document).ready(function() {
 	});
 });
 
+function getFolder(key) {
+	var urlFsFolder = "rest/fs/folders/"+key;
+	$.ajax({
+		type: "GET",
+		url: urlFsFolder,
+		success: function(msg, textStatus, xhr){
+			console.log(msg);
+		}
+	});
+	
+}
