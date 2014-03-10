@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
@@ -24,7 +25,7 @@ public class DigitalCollection extends OrtolangObject {
 	private String key;
 	private String name;
 	private String description;
-	@ElementCollection
+	@ElementCollection(fetch=FetchType.EAGER)
 	private List<String> elements;
 	
 	public DigitalCollection() {
