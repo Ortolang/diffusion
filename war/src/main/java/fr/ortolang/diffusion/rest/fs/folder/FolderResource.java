@@ -63,9 +63,9 @@ public class FolderResource {
     public Response read( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException {
     	logger.log(Level.INFO, "reading folder with key: " + key);
     	
-    	DigitalReference reference = core.getReference(key);
+    	DigitalReference reference = core.readReference(key);
     	
-    	DigitalCollection collection = core.getCollection(reference.getTarget());
+    	DigitalCollection collection = core.readCollection(reference.getTarget());
     	
     	//TODO a representation plus riche avec les propriétés (registre), ...
     	DigitalCollectionRepresentation representation = DigitalCollectionRepresentation.fromDigitalCollection(collection);
