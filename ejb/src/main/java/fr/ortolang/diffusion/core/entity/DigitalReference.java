@@ -15,7 +15,7 @@ import fr.ortolang.diffusion.core.CoreService;
 @Entity
 @Table(indexes = {@Index(columnList="target")})
 @NamedQueries({
-	@NamedQuery(name="findReferencesByTarget", query="select r from DigitalReference r where r.target = :target")
+	@NamedQuery(name="findReferencesForTarget", query="select r from DigitalReference r where r.target = :target")
 })
 @SuppressWarnings("serial")
 public class DigitalReference extends OrtolangObject {
