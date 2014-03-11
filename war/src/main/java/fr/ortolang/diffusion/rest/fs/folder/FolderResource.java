@@ -74,14 +74,13 @@ public class FolderResource {
      */
     @POST
     @Consumes("application/x-www-form-urlencoded")
-    public Response create( @DefaultValue("Nouvelle collection") @FormParam("name") String name
+    public Response create( @DefaultValue("Nouveau dossier") @FormParam("name") String name
     		, @DefaultValue("") @FormParam("description") String description
     		) throws CoreServiceException, KeyAlreadyExistsException {
     	logger.log(Level.INFO, "creating folder");
     	// Generate a key for the registry
     	String key = UUID.randomUUID().toString();
     	
-    	//TODO Pourquoi pas de méthode createCollection dans l'interface du CoreLocal
 		logger.log(Level.INFO, "using remote core interface");
 		core.createCollection(key, name, description);
 
@@ -156,7 +155,17 @@ public class FolderResource {
 	    		
 	    		OrtolangObjectIdentifier identifier = browser.lookup(keyElement);
 	    		entry.setService(identifier.getService());
-	    		entry.setType(identifier.getType());
+	    		
+	    		// Retrieve type (collection or object)
+	    		String typeElement = identifier.getType();
+	    		if(identifier.getType().equals(DigitalReference.OBJECT_TYPE)) {
+	    			DigitalReference refElement = (DigitalReference) oo;
+	    			String keyTarget = refElement.getTarget();
+	    			OrtolangObjectIdentifier idTarget = browser.lookup(keyTarget);
+	    			typeElement = idTarget.getType();
+	    		}
+	    		entry.setType(typeElement);
+	    		
 	    		entry.setOwner(browser.getProperty(keyElement, OrtolangObjectProperty.OWNER).getValue());
 	    		entry.setCreationDate(sdf.format(new Date(Long.parseLong(browser.getProperty(keyElement, OrtolangObjectProperty.CREATION_TIMESTAMP).getValue()))));
 	    		entry.setModificationDate(sdf.format(new Date(Long.parseLong(browser.getProperty(keyElement, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP).getValue()))));
@@ -202,6 +211,23 @@ public class FolderResource {
     	core.addElementToCollection(reference.getTarget(), element);
     	
     	return Response.ok().build();
+    }
+    
+    @GET
+    @Path("/importSample")
+    public Response read( ) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException {
+    	logger.log(Level.INFO, "importing sample");
+    	
+    	core.createCollection("C1","Toto","Toto description");
+    	core.createReference("RC1", true, "Toto", "C1");
+
+    	core.createCollection("C2","Titi","Titi description");
+    	core.createReference("RC2", true, "Titi", "C2");
+    	
+    	core.addElementToCollection("C1", "RC2");
+    	
+    	Response response = Response.ok().build();
+    	return response;
     }
     
 }
