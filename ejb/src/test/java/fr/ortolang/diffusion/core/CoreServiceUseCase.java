@@ -35,6 +35,7 @@ import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceBean;
+import fr.ortolang.diffusion.core.entity.DigitalCollection;
 import fr.ortolang.diffusion.core.entity.DigitalObject;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -382,6 +383,356 @@ public class CoreServiceUseCase {
 		}
 	}
 
+	@Test
+	public void testCRUDCollection() {
+		final String caller = "profile:guest";
+		final Sequence sequence = mockery.sequence("sequence1");
+		final Vector<Object> identifier = new Vector<Object>();
+		final Vector<Object> identifier2 = new Vector<Object>();
+		final Vector<Object> identifierClone = new Vector<Object>();
+
+		try {
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					
+					oneOf(registry).create(with(equal("K1")), with(any(OrtolangObjectIdentifier.class)));
+					will(saveParams(identifier));
+					inSequence(sequence);
+					oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.CREATION_TIMESTAMP)), with(any(String.class)));
+					inSequence(sequence);
+					oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP)), with(any(String.class)));
+					inSequence(sequence);
+					oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.AUTHOR)), with(equal(caller)));
+					inSequence(sequence);
+					oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.OWNER)), with(equal(caller)));
+					inSequence(sequence);
+					
+					oneOf(indexing).index(with(equal("K1")));
+					inSequence(sequence);
+					
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "create"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			utx.begin();
+			em.joinTransaction();
+			core.createCollection("K1", "Name1", "This is the object one");
+			utx.commit();
+			
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					oneOf(registry).lookup(with(equal("K1")));
+					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
+					inSequence(sequence);
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			utx.begin();
+			em.joinTransaction();
+			DigitalCollection collection = core.readCollection("K1");
+			utx.commit();
+			assertEquals("K1", collection.getKey());
+			assertEquals("Name1", collection.getName());
+			assertEquals("This is the object one", collection.getDescription());
+
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					oneOf(registry).lookup(with(equal("K1")));
+					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
+					inSequence(sequence);
+					//TODO need to update last update timestamp when update a collection ??
+//					oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP)), with(any(String.class)));
+//					inSequence(sequence);
+					oneOf(indexing).reindex(with(equal("K1")));
+					inSequence(sequence);
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "update"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			utx.begin();
+			em.joinTransaction();
+			core.updateCollection("K1", "Name11", "This is the object one updated");
+			utx.commit();
+
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					oneOf(registry).lookup(with(equal("K1")));
+					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
+					inSequence(sequence);
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			utx.begin();
+			em.joinTransaction();
+			collection = core.readCollection("K1");
+			utx.commit();
+			assertEquals("K1", collection.getKey());
+			assertEquals("Name11", collection.getName());
+			assertEquals("This is the object one updated", collection.getDescription());
+
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					
+					oneOf(registry).create(with(equal("K2")), with(any(OrtolangObjectIdentifier.class)));
+					will(saveParams(identifier2));
+					inSequence(sequence);
+					oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.CREATION_TIMESTAMP)), with(any(String.class)));
+					inSequence(sequence);
+					oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP)), with(any(String.class)));
+					inSequence(sequence);
+					oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.AUTHOR)), with(equal(caller)));
+					inSequence(sequence);
+					oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.OWNER)), with(equal(caller)));
+					inSequence(sequence);
+					
+					oneOf(indexing).index(with(equal("K2")));
+					inSequence(sequence);
+					
+					oneOf(notification).throwEvent(with(equal("K2")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "create"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			utx.begin();
+			em.joinTransaction();
+			core.createCollection("K2", "Name2", "This is the object two");
+			utx.commit();
+
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					
+					oneOf(registry).lookup(with(equal("K1")));
+					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
+					inSequence(sequence);
+
+					oneOf(registry).lookup(with(equal("K2")));
+					will(returnValue((OrtolangObjectIdentifier) identifier2.elementAt(1)));
+					inSequence(sequence);
+					// isMember
+					oneOf(registry).lookup(with(equal("K2")));
+					will(returnValue((OrtolangObjectIdentifier) identifier2.elementAt(1)));
+					inSequence(sequence);
+
+					oneOf(indexing).reindex(with(equal("K1")));
+					inSequence(sequence);
+					
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "add-element"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			utx.begin();
+			em.joinTransaction();
+			core.addElementToCollection("K1", "K2");
+			utx.commit();
+			
+
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					oneOf(registry).lookup(with(equal("K1")));
+					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
+					inSequence(sequence);
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			utx.begin();
+			em.joinTransaction();
+			collection = core.readCollection("K1");
+			utx.commit();
+			assertEquals("K1", collection.getKey());
+			assertEquals(1, collection.getElements().size());
+			assertEquals("K2", collection.getElements().get(0));
+
+
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					
+					oneOf(registry).lookup(with(equal("K1")));
+					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
+					inSequence(sequence);
+
+					oneOf(indexing).reindex(with(equal("K1")));
+					inSequence(sequence);
+					
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "remove-element"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			utx.begin();
+			em.joinTransaction();
+			core.removeElementFromCollection("K1", "K2");
+			utx.commit();
+			
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					oneOf(registry).lookup(with(equal("K1")));
+					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
+					inSequence(sequence);
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			utx.begin();
+			em.joinTransaction();
+			collection = core.readCollection("K1");
+			utx.commit();
+			assertEquals("K1", collection.getKey());
+			assertEquals(0, collection.getElements().size());
+/*
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					
+					oneOf(registry).lookup(with(equal("K1")));
+					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
+					inSequence(sequence);
+					
+					oneOf(registry).create(with(equal("K3")), with(any(OrtolangObjectIdentifier.class)), with(equal("K1")));
+					will(saveParams(identifierClone));
+					inSequence(sequence);
+					oneOf(registry).setProperty(with(equal("K3")), with(equal(OrtolangObjectProperty.CREATION_TIMESTAMP)), with(any(String.class)));
+					inSequence(sequence);
+					oneOf(registry).setProperty(with(equal("K3")), with(equal(OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP)), with(any(String.class)));
+					inSequence(sequence);
+					oneOf(registry).setProperty(with(equal("K3")), with(equal(OrtolangObjectProperty.AUTHOR)), with(equal(caller)));
+					inSequence(sequence);
+					oneOf(registry).setProperty(with(equal("K3")), with(equal(OrtolangObjectProperty.OWNER)), with(equal(caller)));
+					inSequence(sequence);
+					
+					oneOf(indexing).index(with(equal("K3")));
+					inSequence(sequence);
+					
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "clone"))), with(any(String.class)));
+					inSequence(sequence);
+					oneOf(notification).throwEvent(with(equal("K3")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "create"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			utx.begin();
+			em.joinTransaction();
+			core.cloneCollection("K3", "K1");
+			utx.commit();
+
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					oneOf(registry).lookup(with(equal("K3")));
+					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
+					inSequence(sequence);
+					oneOf(notification).throwEvent(with(equal("K3")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			utx.begin();
+			em.joinTransaction();
+			DigitalCollection clone = core.readCollection("K3");
+			utx.commit();
+			assertEquals("K3", clone.getKey());
+			assertEquals("Name11", clone.getName());
+			assertEquals("This is the object one updated", clone.getDescription());
+			assertEquals(0, clone.getElements().size());
+
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					oneOf(registry).lookup(with(equal("K1")));
+					will(returnValue((OrtolangObjectIdentifier) identifierClone.elementAt(1)));
+					inSequence(sequence);
+					oneOf(registry).delete(with(equal("K1")));
+					inSequence(sequence);
+					oneOf(indexing).remove(with(equal("K1")));
+					inSequence(sequence);
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "delete"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			utx.begin();
+			em.joinTransaction();
+			core.deleteObject("K1");
+			utx.commit();
+			
+			mockery.checking(new Expectations() {
+				{
+					oneOf(membership).getProfileKeyForConnectedIdentifier();
+					will(returnValue(caller));
+					inSequence(sequence);
+					oneOf(registry).lookup(with(equal("K1")));
+					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
+					inSequence(sequence);
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"))), with(any(String.class)));
+					inSequence(sequence);
+				}
+			});
+			try {
+				utx.begin();
+				em.joinTransaction();
+				core.readObject("K1");
+				utx.commit();
+				// TODO Should generate an exception
+				// fail("This object is deleted, should give an exception !!");
+			} catch (Exception e) {
+				// Normal
+			}
+			*/
+			
+			mockery.assertIsSatisfied();
+			
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			e.printStackTrace();
+			fail(e.getMessage());
+		}
+	}
+	
+	
 	// @Test
 	// public void testCRUDMetadata() {
 	// final Sequence sequence = mockery.sequence("sequence1");
