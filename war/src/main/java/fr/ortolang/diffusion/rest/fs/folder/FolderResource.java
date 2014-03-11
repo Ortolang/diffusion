@@ -218,13 +218,30 @@ public class FolderResource {
     public Response read( ) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException {
     	logger.log(Level.INFO, "importing sample");
     	
-    	core.createCollection("C1","Toto","Toto description");
-    	core.createReference("RC1", true, "Toto", "C1");
+    	core.createCollection("C1","Corpus","Corpus description");
+    	core.createReference("RC1", true, "Corpus", "C1");
 
-    	core.createCollection("C2","Titi","Titi description");
-    	core.createReference("RC2", true, "Titi", "C2");
+    	core.createCollection("C2","Vincent1_Can","Vincent1_Can description");
+    	core.createReference("RC2", true, "Vincent1_Can", "C2");
     	
     	core.addElementToCollection("C1", "RC2");
+    	
+    	core.createObject("O1", "Vincent1_Can.trs", "Vincent1_Can.trs description", "".getBytes());
+    	core.createReference("RO1", true, "file1", "O1");
+    	
+    	core.addElementToCollection("C1", "RO1");
+
+    	core.createCollection("C3","Wav","Wav description");
+    	core.createReference("RC3", true, "Wav", "C3");
+    	
+    	core.addElementToCollection("C2", "RC3");
+    	
+    	core.createObject("O2", "Vincent1_Can.wav", "Vincent1_Can.wav description", "".getBytes());
+    	core.createReference("RO2", true, "Vincent1_Can.wav", "O2");
+    	
+    	core.addElementToCollection("C3", "RO2");
+    	
+    	
     	
     	Response response = Response.ok().build();
     	return response;
