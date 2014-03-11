@@ -553,7 +553,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				DigitalReference reference = em.find(DigitalReference.class, eidentifier.getId());
 				OrtolangObjectIdentifier tidentifier = registry.lookup(reference.getTarget());
 				if (tidentifier.getType().equals(DigitalCollection.OBJECT_TYPE)) {
-					if (isMember(element, key, new Vector<String>())) {
+					if (isMember(reference.getTarget(), key, new Vector<String>())) {
 						ctx.setRollbackOnly();
 						throw new CoreServiceException("unable to add element into collection because collection is already an element of this element so a cycle is detected");
 					}
