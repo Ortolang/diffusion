@@ -103,8 +103,8 @@ function getFolder(key) {
             "bFilter": false,
             "sAjaxSource": "./rest/fs/folders/"+key+"/elements",
             "aoColumns": [
+                          { "mData": "key", "sClass": "center", "bSortable": false },
                           { "mData": "name", "sClass": "center", "bSortable": false },
-//                          { "mData": "key", "sClass": "center", "bSortable": false },
 //                          { "mData": "service", "sClass": "center", "bSortable": false},
                           { "mData": "type", "sClass": "center", "bSortable": false },
                           { "mData": "owner", "sClass": "center", "bSortable": false },
@@ -114,11 +114,16 @@ function getFolder(key) {
 //                          { "mData": "view", "sClass": "center", "bSortable": false }
                       ],
 		});
+
 	} else {
 		$fsEntriesTable.fnReloadAjax();
 	}
-	
 
+	$('#fsEntriesTable tbody').on('click','tr',function(){
+//        var aData = $fsEntriesTable.fnGetData(this);
+        var key = $("td:first", this).text();
+        $fsEntriesTable.fnReloadAjax("./rest/fs/folders/"+key+"/elements");
+    });
 }
 
 function initTabView() {
