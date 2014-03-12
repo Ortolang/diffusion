@@ -13,13 +13,13 @@ $(function() {
     });
 });
 
-var current_dir="undefined";
+var current_element="undefined";
 
 $(document).ready(function() {
 
 	var urlPart = window.location.hash;
 	var urlPartSplit = urlPart.split('/');
-	//alert(urlPartSplit);
+	
 	var tabName = "undefined";
 	if(urlPartSplit!=null && urlPartSplit.length>0)
 		tabName = urlPartSplit[0];
@@ -33,15 +33,13 @@ $(document).ready(function() {
 	}
 	
 	initTabView();
-	
-	console.log("[INIT] View tab "+$a.attr('href'));
-//	$('#test a[href="'+tabName+'"]').tab('show');
-	$a.tab('show');
-	
-//	showTab(tabName, urlPartSplit);
-	
+
 	initMySpaceTabView();
 	initRegistryTabView();
+	
+	console.log("[INIT] View tab "+$a.attr('href'));
+	$a.tab('show');
+	
 });
 
 /**
@@ -71,14 +69,25 @@ function showMySpaceTab() {
 //		tabName = urlPartSplit[0];
 
 	if(urlPartSplit!=null && urlPartSplit.length>1)
-		current_dir = urlPartSplit[1];
+		current_element = urlPartSplit[1];
 	else
-		current_dir = "undefined";
+		current_element = "undefined";
 	
-	console.log("[showMySpaceTab] Selected ortolang object is "+current_dir);
-	if(current_dir!="undefined") {
-//		current_dir = ooName;
-		getFolder(current_dir);
+	console.log("[showMySpaceTab] Selected ortolang object is "+current_element);
+	//TODO Get all information of the element or just type ?
+	if(current_element!="undefined") {
+//		current_element = ooName;
+		getFolder(current_element);
+	}
+	
+	if(urlPartSplit!=null && urlPartSplit.length>2)
+		view_element = urlPartSplit[2];
+	else
+		view_element = "undefined";
+	
+	if(view_element!="undefined") {
+//		current_element = ooName;
+		showElementView(view_element);
 	}
 }
 
@@ -115,15 +124,37 @@ function getFolder(key) {
                       ],
 		});
 
+		$('#fsEntriesTable tbody').on('click','tr',function(){
+//	        var aData = $fsEntriesTable.fnGetData(this);
+	        var key = $("td:first", this).text();
+	        var type = $("td:eq(2)", this).text();
+	        console.log("[getFolder] type : "+type);
+	        if(type=="collection") {
+	        	$fsEntriesTable.fnReloadAjax("./rest/fs/folders/"+key+"/elements");
+	        } else if(type=="object") {
+	        	showElementView("panelFileView");
+	        }
+	        
+	    });
 	} else {
 		$fsEntriesTable.fnReloadAjax();
 	}
 
-	$('#fsEntriesTable tbody').on('click','tr',function(){
-//        var aData = $fsEntriesTable.fnGetData(this);
-        var key = $("td:first", this).text();
-        $fsEntriesTable.fnReloadAjax("./rest/fs/folders/"+key+"/elements");
-    });
+}
+
+/**
+ * Show a specific view for the element (folder or file)
+ * @param view
+ */
+function showElementView(view) {
+	console.log("[showElementView] view : "+view);
+	if(view=="panelFolderView") {
+    	$('#panelFileView').hide();
+    	$('#panelFolderView').show();
+	} else if(view=="panelFileView") {
+    	$('#panelFileView').show();
+    	$('#panelFolderView').hide();
+	}
 }
 
 function initTabView() {
@@ -194,7 +225,8 @@ function initMySpaceTabView() {
 	// Si dossier Alors tableau avec liste des dossiers/fichiers
 	// Si fichier Alors tableau avec les propriétés du fichier + onglet metadonnées + bouton télécharger
 	// Accéder à la fiche d'un dossier/fichier : .../index.html#myspace/{clé_dossier}/properties
-
+	showElementView("panelFolderView");
+	
 	$('#createFolderButton').click(function() {
 		// Create a folder
 		var urlFsFolder = "rest/fs/folders";
@@ -206,14 +238,14 @@ function initMySpaceTabView() {
 			url: urlFsFolder,
 			data: params,
 			success: function(msg, textStatus, xhr){
-				if(current_dir!="undefined") {
+				if(current_element!="undefined") {
 					var pathToNewObject = xhr.getResponseHeader('Location').split('/');
 					//console.log("Location : "+pathToNewCollection);
 
 					// Update the folder to add the new collection
 					if(pathToNewObject.length>0) {
 						var keyObject = pathToNewObject[pathToNewObject.length-1];
-						var urlFsFolderElements = "rest/fs/folders/"+current_dir+"/elements";
+						var urlFsFolderElements = "rest/fs/folders/"+current_element+"/elements";
 		
 						$.ajax({
 							type: "POST",
@@ -259,14 +291,14 @@ function initMySpaceTabView() {
 			data: formData,
             async: false,
 			success: function(msg, textStatus, xhr){
-				if(current_dir!="undefined") {
+				if(current_element!="undefined") {
 					var pathToNewObject = xhr.getResponseHeader('Location').split('/');
 					//console.log("Location : "+pathToNewCollection);
 	
 					// And create a dynamic reference on the new collection
 					if(pathToNewObject.length>0) {
 						var keyObject = pathToNewObject[pathToNewObject.length-1];
-						var urlFsFolderElements = "rest/fs/folders/"+current_dir+"/elements";
+						var urlFsFolderElements = "rest/fs/folders/"+current_element+"/elements";
 						
 						$.ajax({
 							type: "POST",
