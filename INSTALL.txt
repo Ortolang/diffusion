@@ -1,0 +1,124 @@
+## Requirements : 
+
+Java 7 (JDK)
+Maven 3
+Wildfly 8.0.0.Final
+
+
+## Compilation : 
+
+mvn clean package
+
+
+## Installation : 
+
+1. Install Wildfly
+2. Use the standalone-full.xml configuration
+3. Package ortolang-diffusion and copy ear into ${WILDFLY_HOME}/standalone/deployements
+4. Customize standalone-full.xml according to your configuration
+
+
+## Typical Configuration : 
+
+Wildfly configuration is done into standalone-full.xml :
+
+To add ortolang logging facilities : 
+
+<subsystem xmlns="urn:jboss:domain:logging:2.0">
+	[...]
+    <logger category="fr.ortolang" use-parent-handlers="true">
+    	<level name="FINEST"/>
+	</logger>
+	[...]
+</subsystem>
+
+
+Datasource declaration : 
+
+<subsystem xmlns="urn:jboss:domain:datasources:2.0">
+	<datasources>
+		[...]
+		<datasource jndi-name="java:jboss/datasources/OrtolangDS" pool-name="OrtolangDS" enabled="true" use-java-context="true">
+			<connection-url>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</connection-url>
+			<driver>h2</driver>
+			<security>
+				<user-name>sa</user-name>
+				<password>sa</password>
+			</security>
+		</datasource>
+		[...]
+	</datasources>
+	[...]
+</subsystem>
+
+Messaging configuration : 
+
+<subsystem xmlns="urn:jboss:domain:messaging:2.0">
+	<hornetq-server>
+		[...]
+		<security-settings>
+			<security-setting match="#">
+				<permission type="send" roles="guest user"/>
+				<permission type="consume" roles="guest user"/>
+				<permission type="createNonDurableQueue" roles="guest user"/>
+				<permission type="deleteNonDurableQueue" roles="guest user"/>
+			</security-setting>
+		</security-settings>
+        <security-domain>ortolang</security-domain>
+    	[...]
+    	<jms-destinations>
+			<jms-topic name="notificationTopic">
+				<entry name="jms/topic/notification"/>
+				<entry name="java:jboss/exported/jms/topic/notification"/>
+			</jms-topic>
+			<jms-topic name="indexingTopic">
+				<entry name="jms/topic/indexing"/>
+				<entry name="java:jboss/exported/jms/topic/indexing"/>
+			</jms-topic>
+		</jms-destinations>
+	</hornetq-server>
+</subsystem>
+
+
+Security Configuration : 
+
+<subsystem xmlns="urn:jboss:domain:security:1.2">
+	[...]
+	<security-domains>
+		[...]
+		<security-domain name="ortolang" cache-type="default">
+	    	<authentication>
+				<login-module code="UsersRoles" flag="sufficient">
+					<module-option name="usersProperties" value="${jboss.server.config.dir}/ortolang-users.properties"/>
+					<module-option name="rolesProperties" value="${jboss.server.config.dir}/ortolang-roles.properties"/>
+					<module-option name="hashUserPassword" value="false"/>
+				</login-module>
+				<login-module code="Identity" flag="required">
+					<module-option name="roles" value="user"/>
+				</login-module>
+			</authentication>
+			<authorization>
+				<policy-module code="Delegating" flag="required"/>
+			</authorization>
+		</security-domain>
+	</security-domains>
+</subsystem>
+
+create the two files for users and roles : 
+
+ortolang-users.properties :
+
+root=tagada54
+user1=tagada
+user2=tagada
+user3=tagada
+user4=tagada
+
+ortolang-roles.properties :
+
+root=system user
+user1=user
+user2=user
+user3=user
+user4=user
+    

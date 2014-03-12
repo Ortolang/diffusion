@@ -13,6 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Remote;
@@ -25,6 +26,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import org.apache.commons.io.IOUtils;
+import org.jboss.ejb3.annotation.SecurityDomain;
 
 import com.healthmarketscience.rmiio.RemoteInputStream;
 import com.healthmarketscience.rmiio.RemoteInputStreamClient;
@@ -60,6 +62,8 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 @Remote(CoreService.class)
 @Local(CoreServiceLocal.class)
 @Stateless(name = CoreService.SERVICE_NAME)
+@SecurityDomain("ortolang")
+@RolesAllowed("user")
 public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	private Logger logger = Logger.getLogger(CoreServiceBean.class.getName());
@@ -1075,6 +1079,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@RolesAllowed("system")
 	public OrtolangIndexableContent getIndexableContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);

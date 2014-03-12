@@ -11,7 +11,7 @@ import javax.jms.MessageListener;
 import fr.ortolang.diffusion.event.entity.Event;
 
 @MessageDriven(name = "EventLoggerTopicMDB", activationConfig = {
-        @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
+		@ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/notification"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 public class EventLoggerListenerBean implements MessageListener {
@@ -19,7 +19,7 @@ public class EventLoggerListenerBean implements MessageListener {
 	private Logger logger = Logger.getLogger(EventLoggerListenerBean.class.getName());
 	
 	@Override
-    public void onMessage(Message message) {
+	public void onMessage(Message message) {
 		try {
 			Event e = new Event();
 			e.fromJMSMessage(message);

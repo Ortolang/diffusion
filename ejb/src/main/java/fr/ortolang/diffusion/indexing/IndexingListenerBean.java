@@ -3,11 +3,15 @@ package fr.ortolang.diffusion.indexing;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RunAs;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.EJB;
 import javax.ejb.MessageDriven;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangIndexableContent;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
@@ -22,6 +26,8 @@ import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
         @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
+@SecurityDomain("ortolang")
+@RunAs("system")
 public class IndexingListenerBean implements MessageListener {
 	
 	private Logger logger = Logger.getLogger(IndexingListenerBean.class.getName());
@@ -48,7 +54,8 @@ public class IndexingListenerBean implements MessageListener {
 	}
 
 	@Override
-    public void onMessage(Message message) {
+	@PermitAll
+	public void onMessage(Message message) {
 		try {
 			String action = message.getStringProperty("action");
 			String key = message.getStringProperty("key");
@@ -98,6 +105,7 @@ public class IndexingListenerBean implements MessageListener {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
+			//TODO probably authentify the driven bean to act as a authentified user with role guest (or better system)
 			OrtolangIndexableContent content = service.getIndexableContent(key);
 			OrtolangIndexableObject iobject = new OrtolangIndexableObject();
 			iobject.setKey(key);

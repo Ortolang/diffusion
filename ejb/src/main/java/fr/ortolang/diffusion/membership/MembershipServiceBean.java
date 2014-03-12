@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Remote;
@@ -17,6 +18,8 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
@@ -42,6 +45,8 @@ import fr.ortolang.diffusion.security.authentication.AuthenticationService;
 @Remote(MembershipService.class)
 @Local(OrtolangIndexableService.class)
 @Stateless(name = MembershipService.SERVICE_NAME)
+@SecurityDomain("ortolang")
+@RolesAllowed("user")
 public class MembershipServiceBean implements MembershipService, OrtolangIndexableService {
 
 	private Logger logger = Logger.getLogger(MembershipServiceBean.class.getName());
@@ -589,6 +594,7 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@RolesAllowed("system")
 	public OrtolangIndexableContent getIndexableContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);

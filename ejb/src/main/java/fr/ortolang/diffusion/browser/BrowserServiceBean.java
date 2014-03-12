@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Remote;
 import javax.ejb.Stateless;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
@@ -23,6 +26,8 @@ import fr.ortolang.diffusion.registry.TagNotFoundException;
 
 @Remote(BrowserService.class)
 @Stateless(name = BrowserService.SERVICE_NAME)
+@SecurityDomain("ortolang")
+@RolesAllowed("user")
 public class BrowserServiceBean implements BrowserService {
 	
 	private Logger logger = Logger.getLogger(BrowserServiceBean.class.getName());

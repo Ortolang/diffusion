@@ -25,7 +25,7 @@ import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
 @Produces({ MediaType.APPLICATION_JSON })
 public class ProfileResource {
 	
-private Logger logger = Logger.getLogger(OrtolangObjectResource.class.getName());
+	private Logger logger = Logger.getLogger(OrtolangObjectResource.class.getName());
 	
 	@Context
     private UriInfo uriInfo;
