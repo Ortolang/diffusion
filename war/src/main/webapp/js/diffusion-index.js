@@ -32,9 +32,13 @@ $(document).ready(function() {
 		tabName = $a.attr('href');
 	}
 	
-	initTabView();
+	var state = new ApplicationState();
+	state.load();
+    console.log("Application state loaded, username: " + state.getUsername());
+    //TODO refresh the view to display the unlogged informations and menus.
 
-	initMySpaceTabView();
+	initTabView();
+    initMySpaceTabView();
 	initRegistryTabView();
 	
 	console.log("[INIT] View tab "+$a.attr('href'));
@@ -189,7 +193,7 @@ function initRegistryTabView() {
                       ],
             "aoColumnDefs": [ 
                           { "bVisible": false,  "aTargets": [ 5 ] } 
-            		  ],
+            		  ]
 	});
 	
 	$('#createCollectionButton').click(function() {
