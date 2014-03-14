@@ -10,11 +10,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -27,13 +30,18 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import org.jboss.resteasy.util.GenericType;
 
 import com.healthmarketscience.rmiio.RemoteInputStreamServer;
+import com.healthmarketscience.rmiio.RemoteOutputStreamServer;
 import com.healthmarketscience.rmiio.SimpleRemoteInputStream;
+import com.healthmarketscience.rmiio.SimpleRemoteOutputStream;
 
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.CoreServiceLocal;
+import fr.ortolang.diffusion.core.entity.DigitalObject;
+import fr.ortolang.diffusion.core.entity.DigitalReference;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.rest.core.object.DigitalObjectResource;
 import fr.ortolang.diffusion.rest.fs.folder.FolderResource;
 
@@ -112,5 +120,41 @@ public class FileResource {
     	URI newly = UriBuilder.fromUri(uriInfo.getBaseUri()).path(FileResource.class).path(keyRef).build();
     	return Response.created(newly).build();
     }
-    
+ 
+
+    @GET
+    @Path("/{key}/data")
+    public void getData( @PathParam(value="key") String key, @Context HttpServletResponse response ) throws CoreServiceException, KeyNotFoundException, IOException {
+    	logger.log(Level.INFO, "reading file data with key: " + key);
+
+    	DigitalReference reference = core.readReference(key);
+    	
+    	DigitalObject object = core.readObject(reference.getTarget());
+    	response.setHeader("Content-Disposition", "attachment; filename=" + object.getName());
+    	response.setContentLength((int)object.getSize());
+    	response.setContentType(object.getContentType());
+    	if ( coreLocal != null ) {
+    		logger.log(Level.INFO, "using local core interface for optimisation");
+    		coreLocal.readObjectContent(reference.getTarget(), response.getOutputStream());
+    	} else {
+    		logger.log(Level.INFO, "using remote core interface");
+    		RemoteOutputStreamServer ros = new SimpleRemoteOutputStream(response.getOutputStream());
+    		core.readObjectContent(reference.getTarget(), ros.export());
+    	}
+    	
+    }
+
+    @POST
+    @Path("/{key}/release")
+    public Response release( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, IOException, KeyAlreadyExistsException {
+    	logger.log(Level.INFO, "release file with key: " + key);
+
+    	DigitalReference reference = core.readReference(key);
+    	String keyNelease = UUID.randomUUID().toString();
+    	
+    	core.createReference(keyNelease, false, reference.getName(), reference.getTarget());
+
+//    	URI newly = UriBuilder.fromUri(uriInfo.getBaseUri()).path(FileResource.class).path(keyRef).build();
+    	return Response.ok().build();
+    }
 }

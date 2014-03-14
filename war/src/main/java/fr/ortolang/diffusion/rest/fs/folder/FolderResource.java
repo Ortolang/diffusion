@@ -32,6 +32,7 @@ import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.DigitalCollection;
+import fr.ortolang.diffusion.core.entity.DigitalObject;
 import fr.ortolang.diffusion.core.entity.DigitalReference;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -164,7 +165,10 @@ public class FolderResource {
 	    			OrtolangObjectIdentifier idTarget = browser.lookup(keyTarget);
 	    			typeElement = idTarget.getType();
 	    		}
-	    		entry.setType(typeElement);
+	    		if(typeElement.equals(DigitalCollection.OBJECT_TYPE))
+	    			entry.setType("folder");
+	    		else if(typeElement.equals(DigitalObject.OBJECT_TYPE))
+	    			entry.setType("file");
 	    		
 	    		entry.setOwner(browser.getProperty(keyElement, OrtolangObjectProperty.OWNER).getValue());
 	    		entry.setCreationDate(sdf.format(new Date(Long.parseLong(browser.getProperty(keyElement, OrtolangObjectProperty.CREATION_TIMESTAMP).getValue()))));
