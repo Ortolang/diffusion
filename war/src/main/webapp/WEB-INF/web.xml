@@ -2,13 +2,23 @@
 <web-app xmlns="http://java.sun.com/xml/ns/javaee"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-      version="3.0"> 
+      version="3.0">
+    <filter>
+		<description>Handle Origin Headers</description>
+		<display-name>OriginFilter</display-name>
+		<filter-name>OriginFilter</filter-name>
+		<filter-class>fr.ortolang.diffusion.rest.security.OriginFilter</filter-class>
+	</filter> 
 	<filter>
 		<description>Handle Basic HTTP Authentication Headers</description>
 		<display-name>BasicAuthenticationFilter</display-name>
 		<filter-name>BasicAuthenticationFilter</filter-name>
 		<filter-class>fr.ortolang.diffusion.rest.security.BasicAuthenticationFilter</filter-class>
 	</filter>
+	<filter-mapping>
+		<filter-name>OriginFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
 	<filter-mapping>
 		<filter-name>BasicAuthenticationFilter</filter-name>
 		<url-pattern>/*</url-pattern>

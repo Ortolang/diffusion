@@ -32,23 +32,23 @@ public class BasicAuthenticationFilter implements Filter {
 	
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		logger.log(Level.INFO, "Filtering requests");
+		logger.log(Level.INFO, "Filtering Basic Authentication");
 		
 		HttpServletRequest hrequest = (HttpServletRequest)request;
 		String authorization = hrequest.getHeader(AUTHORIZATION_PROPERTY);
         if(authorization == null || authorization.isEmpty()) {
-        	logger.log(Level.INFO, "No authentication found in headers : guest login");
+        	logger.log(Level.FINEST, "No authentication found in headers : guest login");
         	hrequest.login("guest", "tagada");
         	chain.doFilter(request, response);
         	hrequest.logout();
         } else {
-        	logger.log(Level.INFO, "Authentication headers founds : parsing credentials and performing user login");
+        	logger.log(Level.FINEST, "Authentication headers founds : parsing credentials and performing user login");
 			String encodedUserPassword = authorization.replaceFirst(AUTHENTICATION_SCHEME + " ", "");
 			String usernameAndPassword = new String(Base64.decodeBase64(encodedUserPassword));
 			StringTokenizer tokenizer = new StringTokenizer(usernameAndPassword, ":");
 			String username = tokenizer.nextToken();
 			String password = tokenizer.nextToken();
-			logger.log(Level.FINE, "received credentials : " + username + "/" + password);
+			logger.log(Level.FINEST, "received credentials : " + username + "/" + password);
 			hrequest.login(username, password);
 			chain.doFilter(request, response);
 			hrequest.logout();
