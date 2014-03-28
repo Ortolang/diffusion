@@ -14,6 +14,8 @@ public interface OrtolangService {
 	public abstract String getServiceName();
 
 	public abstract String[] getObjectTypeList();
+	
+	public abstract String[] getObjectPermissionsList(String type) throws OrtolangException;
 
 	public abstract OrtolangObject findObject(String key) throws OrtolangException;
 	

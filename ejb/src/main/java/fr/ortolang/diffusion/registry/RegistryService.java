@@ -27,9 +27,9 @@ public interface RegistryService {
 	
 	public static final String SERVICE_NAME = "registry";
 	
-	public void create(String key, OrtolangObjectIdentifier identifier) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException;
+	public void register(String key, OrtolangObjectIdentifier identifier) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException;
 	
-	public void create(String key, OrtolangObjectIdentifier identifier, String parent) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, KeyNotFoundException, BranchNotAllowedException;
+	public void register(String key, OrtolangObjectIdentifier identifier, String parent, boolean inherit) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, KeyNotFoundException;
 	
 	public void hide(String key) throws RegistryServiceException, KeyNotFoundException;
 	
@@ -41,9 +41,15 @@ public interface RegistryService {
 	
 	public boolean isDeleted(String key) throws RegistryServiceException, KeyNotFoundException;
 	
-	public void lock(String key) throws RegistryServiceException, KeyNotFoundException;
+	public void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException;
 	
 	public boolean isLocked(String key) throws RegistryServiceException, KeyNotFoundException;
+	
+	public String getLock(String key) throws RegistryServiceException, KeyNotFoundException;
+	
+	public void setPublicationStatus(String key, String status) throws RegistryServiceException, KeyNotFoundException;
+	
+	public String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException;
 	
 	public boolean hasChildren(String key) throws RegistryServiceException, KeyNotFoundException;
 	

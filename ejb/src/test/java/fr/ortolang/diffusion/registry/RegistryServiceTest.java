@@ -84,7 +84,7 @@ public class RegistryServiceTest {
 		String key = "mytestkey";
 		OrtolangObjectIdentifier doi = new OrtolangObjectIdentifier("Test", "testing", "atestid");
 		try {
-			registry.create(key, doi);
+			registry.register(key, doi);
 			OrtolangObjectIdentifier doi2 = registry.lookup(key);
 			assertTrue(doi2.equals(doi));
 		} catch (RegistryServiceException | KeyAlreadyExistsException | KeyNotFoundException | IdentifierAlreadyRegisteredException e) {
@@ -109,8 +109,8 @@ public class RegistryServiceTest {
 		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
 		OrtolangObjectIdentifier doi2 = new OrtolangObjectIdentifier("Test", "testing", "atestid2");
 		try {
-		    registry.create(key, doi1);
-		    registry.create(key, doi2);
+		    registry.register(key, doi1);
+		    registry.register(key, doi2);
 		    fail("This bind should have raised an exception");
 		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
@@ -123,8 +123,8 @@ public class RegistryServiceTest {
 		String key2 = "key2";
 		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
 		try {
-		    registry.create(key1, doi1);
-		    registry.create(key2, doi1);
+		    registry.register(key1, doi1);
+		    registry.register(key2, doi1);
 		    fail("This bind should have raised an exception");
 		} catch (RegistryServiceException | KeyAlreadyExistsException e ) {
 			fail(e.getMessage());
@@ -136,7 +136,7 @@ public class RegistryServiceTest {
 		String key = "hidekey";
 		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
 		try {
-		    registry.create(key, doi1);
+		    registry.register(key, doi1);
 		    OrtolangObjectIdentifier doi = registry.lookup(key);
 			assertTrue(doi1.equals(doi));
 			registry.hide(key);
@@ -165,12 +165,13 @@ public class RegistryServiceTest {
 	@Test
 	public void testLock() {
 		String key = "lockkey";
+		String lock = "lockowner";
 		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
 		try {
-		    registry.create(key, doi1);
+		    registry.register(key, doi1);
 		    OrtolangObjectIdentifier doi = registry.lookup(key);
 			assertTrue(doi1.equals(doi));
-			registry.lock(key);
+			registry.lock(key, lock);
 		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
 		}	
@@ -185,8 +186,9 @@ public class RegistryServiceTest {
 	@Test (expected = KeyNotFoundException.class)
 	public void testLockUnexisting() throws KeyNotFoundException {
 		String key = "lockunexistingkey";
+		String lock = "lockowner";
 		try {
-		    registry.lock(key);
+		    registry.lock(key, lock);
 		    fail("the lock should have raised an exception");
 		} catch (RegistryServiceException e ) {
 			fail(e.getMessage());
@@ -198,7 +200,7 @@ public class RegistryServiceTest {
 		String key = "deletekey";
 		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
 		try {
-		    registry.create(key, doi1);
+		    registry.register(key, doi1);
 		    OrtolangObjectIdentifier doi = registry.lookup(key);
 			assertTrue(doi1.equals(doi));
 			registry.delete(key);
@@ -231,17 +233,18 @@ public class RegistryServiceTest {
 		String key3 = "key3";
 		String key4 = "key4";
 		String key5 = "key5";
+		String lock = "lockowner";
 		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
 		OrtolangObjectIdentifier doi2 = new OrtolangObjectIdentifier("Test", "testing", "atestid2");
 		OrtolangObjectIdentifier doi3 = new OrtolangObjectIdentifier("Test", "testing", "atestid3");
 		OrtolangObjectIdentifier doi4 = new OrtolangObjectIdentifier("Test", "testing", "atestid4");
 		OrtolangObjectIdentifier doi5 = new OrtolangObjectIdentifier("Test", "testing", "atestid5");
 		try {
-		    registry.create(key1, doi1);
-		    registry.create(key2, doi2);
-		    registry.create(key3, doi3);
-		    registry.create(key4, doi4);
-		    registry.create(key5, doi5);
+		    registry.register(key1, doi1);
+		    registry.register(key2, doi2);
+		    registry.register(key3, doi3);
+		    registry.register(key4, doi4);
+		    registry.register(key5, doi5);
 		    List<String> entries = registry.list(0, 10, "");
 		    long size = registry.count("");
 		    assertEquals(5,entries.size());
@@ -259,7 +262,7 @@ public class RegistryServiceTest {
 		    assertEquals(3,entries.size());
 		    assertEquals(3,size);
 		    
-		    registry.lock(key5);
+		    registry.lock(key5, lock);
 		    entries = registry.list(0, 10, "");
 		    size = registry.count("");
 		    assertEquals(3,entries.size());

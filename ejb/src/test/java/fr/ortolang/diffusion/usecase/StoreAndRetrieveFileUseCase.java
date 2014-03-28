@@ -32,8 +32,9 @@ import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.entity.DigitalObject;
+import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 @RunWith(Arquillian.class)
 public class StoreAndRetrieveFileUseCase {
@@ -94,7 +95,7 @@ public class StoreAndRetrieveFileUseCase {
 		try {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			Files.copy(origin, baos);
-			core.createObject(key, "Test Container", "A really simple test container !!", baos.toByteArray());
+			core.createDataObject(key, "Test Container", "A really simple test container !!", baos.toByteArray());
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
 			fail(e.getMessage());
@@ -104,15 +105,15 @@ public class StoreAndRetrieveFileUseCase {
 		try {
 			OrtolangObjectIdentifier identifier = browser.lookup(key);
 			assertEquals(identifier.getService(), CoreService.SERVICE_NAME);
-			assertEquals(identifier.getType(), DigitalObject.OBJECT_TYPE);
-		} catch (BrowserServiceException | KeyNotFoundException e) {
+			assertEquals(identifier.getType(), DataObject.OBJECT_TYPE);
+		} catch (BrowserServiceException | KeyNotFoundException | AccessDeniedException e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
 			fail(e.getMessage());
 		}
 
 		// Retrieve this digital object informations using the key
 		try {
-			DigitalObject object = core.readObject(key);
+			DataObject object = core.readDataObject(key);
 			logger.log(Level.INFO, "Detected mime type : " + object.getContentType());
 			logger.log(Level.INFO, "Detected size : " + object.getSize());
 		} catch (Exception e) {
@@ -122,7 +123,7 @@ public class StoreAndRetrieveFileUseCase {
 
 		// Retrieve this digital object data using the key
 		try {
-			byte[] data = core.readObjectContent(key);
+			byte[] data = core.readDataObjectContent(key);
 			Files.copy(new ByteArrayInputStream(data), destination);
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);

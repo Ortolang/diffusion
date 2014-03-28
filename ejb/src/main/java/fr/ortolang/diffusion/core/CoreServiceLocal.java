@@ -6,19 +6,20 @@ import java.io.OutputStream;
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface CoreServiceLocal extends OrtolangIndexableService {
 	
-	public void createObject(String key, String name, String description, InputStream data) throws CoreServiceException, KeyAlreadyExistsException;
+	public void createDataObject(String key, String name, String description, InputStream data) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
-	public void updateObjectContent(String key, String name, String description, InputStream data) throws CoreServiceException, KeyNotFoundException;
+	public void updateDataObjectContent(String key, String name, String description, InputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void readObjectContent(String key, OutputStream os) throws CoreServiceException, KeyNotFoundException;
+	public void readDataObjectContent(String key, OutputStream os) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void createMetadata(String key, String name, InputStream data, String target) throws CoreServiceException, KeyAlreadyExistsException;
+	public void createMetadataObject(String key, String name, InputStream data, String target) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
-	public void updateMetadataContent(String key, String name, InputStream data) throws CoreServiceException, KeyNotFoundException;
+	public void updateMetadataObjectContent(String key, String name, InputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void readMetadataContent(String key, OutputStream os) throws CoreServiceException, KeyNotFoundException;
+	public void readMetadataObjectContent(String key, OutputStream os) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 }

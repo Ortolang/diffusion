@@ -33,10 +33,8 @@ import org.junit.runner.RunWith;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
-import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.CoreServiceBean;
-import fr.ortolang.diffusion.core.entity.DigitalCollection;
-import fr.ortolang.diffusion.core.entity.DigitalObject;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -155,7 +153,7 @@ public class CoreServiceUseCase {
 					oneOf(binary).type(with(equal("sha1-object1")));
 					will(returnValue("text/plain"));
 					inSequence(sequence);
-					oneOf(registry).create(with(equal("K1")), with(any(OrtolangObjectIdentifier.class)));
+					oneOf(registry).register(with(equal("K1")), with(any(OrtolangObjectIdentifier.class)));
 					will(saveParams(identifier));
 					inSequence(sequence);
 					oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.CREATION_TIMESTAMP)), with(any(String.class)));
@@ -168,14 +166,14 @@ public class CoreServiceUseCase {
 					inSequence(sequence);
 					oneOf(indexing).index(with(equal("K1")));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DataObject.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "create"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
 			utx.begin();
 			em.joinTransaction();
-			core.createObject("K1", "Name1", "This is the object one", "A little bit of sample data".getBytes());
+			core.createDataObject("K1", "Name1", "This is the object one", "A little bit of sample data".getBytes());
 			utx.commit();
 			
 			mockery.checking(new Expectations() {
@@ -186,14 +184,14 @@ public class CoreServiceUseCase {
 					oneOf(registry).lookup(with(equal("K1")));
 					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DataObject.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "read"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
 			utx.begin();
 			em.joinTransaction();
-			DigitalObject object = core.readObject("K1");
+			DataObject object = core.readDataObject("K1");
 			utx.commit();
 			assertEquals("K1", object.getKey());
 			assertEquals("Name1", object.getName());
@@ -214,14 +212,14 @@ public class CoreServiceUseCase {
 					oneOf(binary).get(with(equal("sha1-object1")));
 					will(returnValue(new ByteArrayInputStream("A little bit of sample data".getBytes())));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read-data"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DataObject.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "read-data"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
 			utx.begin();
 			em.joinTransaction();
-			byte[] data = core.readObjectContent("K1");
+			byte[] data = core.readDataObjectContent("K1");
 			utx.commit();
 			assertEquals(27, data.length);
 
@@ -237,14 +235,14 @@ public class CoreServiceUseCase {
 					inSequence(sequence);
 					oneOf(indexing).reindex(with(equal("K1")));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "update"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DataObject.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "update"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
 			utx.begin();
 			em.joinTransaction();
-			core.updateObject("K1", "Name11", "This is the object one updated");
+			core.updateDataObject("K1", "Name11", "This is the object one updated");
 			utx.commit();
 
 			mockery.checking(new Expectations() {
@@ -255,14 +253,14 @@ public class CoreServiceUseCase {
 					oneOf(registry).lookup(with(equal("K1")));
 					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DataObject.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "read"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
 			utx.begin();
 			em.joinTransaction();
-			object = core.readObject("K1");
+			object = core.readDataObject("K1");
 			utx.commit();
 			assertEquals("K1", object.getKey());
 			assertEquals("Name11", object.getName());
@@ -277,7 +275,7 @@ public class CoreServiceUseCase {
 					oneOf(registry).lookup(with(equal("K1")));
 					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
 					inSequence(sequence);
-					oneOf(registry).create(with(equal("K2")), with(any(OrtolangObjectIdentifier.class)), with(equal("K1")));
+					oneOf(registry).register(with(equal("K2")), with(any(OrtolangObjectIdentifier.class)), with(equal("K1")), with(equal(false)));
 					will(saveParams(identifierClone));
 					inSequence(sequence);
 					oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.CREATION_TIMESTAMP)), with(any(String.class)));
@@ -290,17 +288,17 @@ public class CoreServiceUseCase {
 					inSequence(sequence);
 					oneOf(indexing).index(with(equal("K2")));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "clone"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DataObject.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "clone"))), with(any(String.class)));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K2")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "create"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K2")), with(equal(caller)), with(equal(DataObject.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "create"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
 			utx.begin();
 			em.joinTransaction();
-			core.cloneObject("K2", "K1");
+			core.cloneDataObject("K2", "K1");
 			utx.commit();
 
 			mockery.checking(new Expectations() {
@@ -311,14 +309,14 @@ public class CoreServiceUseCase {
 					oneOf(registry).lookup(with(equal("K2")));
 					will(returnValue((OrtolangObjectIdentifier) identifierClone.elementAt(1)));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K2")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K2")), with(equal(caller)), with(equal(DataObject.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "read"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
 			utx.begin();
 			em.joinTransaction();
-			DigitalObject clone = core.readObject("K2");
+			DataObject clone = core.readDataObject("K2");
 			utx.commit();
 			assertEquals("K2", clone.getKey());
 			assertEquals("Name11", clone.getName());
@@ -340,14 +338,14 @@ public class CoreServiceUseCase {
 					inSequence(sequence);
 					oneOf(indexing).remove(with(equal("K1")));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "delete"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DataObject.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "delete"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
 			utx.begin();
 			em.joinTransaction();
-			core.deleteObject("K1");
+			core.deleteDataObject("K1");
 			utx.commit();
 			
 			mockery.checking(new Expectations() {
@@ -358,15 +356,15 @@ public class CoreServiceUseCase {
 					oneOf(registry).lookup(with(equal("K1")));
 					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalObject.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalObject.OBJECT_TYPE, "read"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DataObject.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "read"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
 			try {
 				utx.begin();
 				em.joinTransaction();
-				core.readObject("K1");
+				core.readDataObject("K1");
 				utx.commit();
 				// TODO Should generate an exception
 				// fail("This object is deleted, should give an exception !!");
@@ -389,7 +387,7 @@ public class CoreServiceUseCase {
 		final Sequence sequence = mockery.sequence("sequence1");
 		final Vector<Object> identifier = new Vector<Object>();
 		final Vector<Object> identifier2 = new Vector<Object>();
-		final Vector<Object> identifierClone = new Vector<Object>();
+		//final Vector<Object> identifierClone = new Vector<Object>();
 
 		try {
 			mockery.checking(new Expectations() {
@@ -398,7 +396,7 @@ public class CoreServiceUseCase {
 					will(returnValue(caller));
 					inSequence(sequence);
 					
-					oneOf(registry).create(with(equal("K1")), with(any(OrtolangObjectIdentifier.class)));
+					oneOf(registry).register(with(equal("K1")), with(any(OrtolangObjectIdentifier.class)));
 					will(saveParams(identifier));
 					inSequence(sequence);
 					oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.CREATION_TIMESTAMP)), with(any(String.class)));
@@ -413,8 +411,8 @@ public class CoreServiceUseCase {
 					oneOf(indexing).index(with(equal("K1")));
 					inSequence(sequence);
 					
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "create"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(Collection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
@@ -431,14 +429,14 @@ public class CoreServiceUseCase {
 					oneOf(registry).lookup(with(equal("K1")));
 					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(Collection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "read"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
 			utx.begin();
 			em.joinTransaction();
-			DigitalCollection collection = core.readCollection("K1");
+			Collection collection = core.readCollection("K1");
 			utx.commit();
 			assertEquals("K1", collection.getKey());
 			assertEquals("Name1", collection.getName());
@@ -457,8 +455,8 @@ public class CoreServiceUseCase {
 //					inSequence(sequence);
 					oneOf(indexing).reindex(with(equal("K1")));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "update"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(Collection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "update"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
@@ -475,8 +473,8 @@ public class CoreServiceUseCase {
 					oneOf(registry).lookup(with(equal("K1")));
 					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(Collection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "read"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
@@ -494,7 +492,7 @@ public class CoreServiceUseCase {
 					will(returnValue(caller));
 					inSequence(sequence);
 					
-					oneOf(registry).create(with(equal("K2")), with(any(OrtolangObjectIdentifier.class)));
+					oneOf(registry).register(with(equal("K2")), with(any(OrtolangObjectIdentifier.class)));
 					will(saveParams(identifier2));
 					inSequence(sequence);
 					oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.CREATION_TIMESTAMP)), with(any(String.class)));
@@ -509,8 +507,8 @@ public class CoreServiceUseCase {
 					oneOf(indexing).index(with(equal("K2")));
 					inSequence(sequence);
 					
-					oneOf(notification).throwEvent(with(equal("K2")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "create"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K2")), with(equal(caller)), with(equal(Collection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
@@ -540,14 +538,14 @@ public class CoreServiceUseCase {
 					oneOf(indexing).reindex(with(equal("K1")));
 					inSequence(sequence);
 					
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "add-element"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(Collection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "add-element"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
 			utx.begin();
 			em.joinTransaction();
-			core.addElementToCollection("K1", "K2");
+			core.addElementToCollection("K1", "K2", false);
 			utx.commit();
 			
 
@@ -559,8 +557,8 @@ public class CoreServiceUseCase {
 					oneOf(registry).lookup(with(equal("K1")));
 					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(Collection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "read"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
@@ -586,8 +584,8 @@ public class CoreServiceUseCase {
 					oneOf(indexing).reindex(with(equal("K1")));
 					inSequence(sequence);
 					
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "remove-element"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(Collection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "remove-element"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});
@@ -604,8 +602,8 @@ public class CoreServiceUseCase {
 					oneOf(registry).lookup(with(equal("K1")));
 					will(returnValue((OrtolangObjectIdentifier) identifier.elementAt(1)));
 					inSequence(sequence);
-					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DigitalCollection.OBJECT_TYPE)),
-							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DigitalCollection.OBJECT_TYPE, "read"))), with(any(String.class)));
+					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(Collection.OBJECT_TYPE)),
+							with(equal(OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "read"))), with(any(String.class)));
 					inSequence(sequence);
 				}
 			});

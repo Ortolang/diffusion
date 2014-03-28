@@ -54,7 +54,7 @@ public class RegistryServiceBean implements RegistryService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void create(String key, OrtolangObjectIdentifier identifier) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException {
+	public void register(String key, OrtolangObjectIdentifier identifier) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException {
 		logger.log(Level.INFO, "creating key [" + key + "] for OOI [" + identifier + "]");
 		try {
 			findEntryByKey(key);
@@ -80,7 +80,7 @@ public class RegistryServiceBean implements RegistryService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void create(String key, OrtolangObjectIdentifier identifier, String parent) throws RegistryServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException, IdentifierAlreadyRegisteredException {
+	public void register(String key, OrtolangObjectIdentifier identifier, String parent, boolean inherit) throws RegistryServiceException, KeyAlreadyExistsException, KeyNotFoundException, IdentifierAlreadyRegisteredException {
 		logger.log(Level.INFO, "creating key [" + key + "] for OOI [" + identifier + "] and with parent [" + parent + "]");
 		try {
 			findEntryByKey(key);
@@ -98,17 +98,17 @@ public class RegistryServiceBean implements RegistryService {
 		} catch (KeyNotFoundException e) {
 			throw new KeyNotFoundException("no entry found for parent [" + key + "]");
 		}
-		if ( pentry.getChildren() != null ) {
-			throw new BranchNotAllowedException("key [" + parent + "] has already a child, branching is not aloowed");
-		} 
+		
 		try {
-			pentry.setChildren(key);
-			pentry.setProperty(OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			pentry.addChildren(key);
 			em.merge(pentry);
 			RegistryEntry entry = new RegistryEntry();
 			entry.setKey(key);
 			entry.setIdentifier(identifier.serialize());
 			entry.setParent(parent);
+			if ( inherit ) {
+				entry.setProperties(pentry.getProperties());
+			}
 			em.persist(entry);
 		} catch ( Exception e ) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -170,14 +170,45 @@ public class RegistryServiceBean implements RegistryService {
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.isLocked();
 	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public String getLock(String key) throws RegistryServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "getting lock owner for key [" + key + "]");
+		RegistryEntry entry = findEntryByKey(key);
+		return entry.getLock();
+	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void lock(String key) throws RegistryServiceException, KeyNotFoundException {
+	public void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "locking key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		try {
-			entry.setLocked(true);
+			entry.setLock(owner);
+			em.merge(entry);
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			ctx.setRollbackOnly();
+			throw new RegistryServiceException(e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "getting state for key [" + key + "]");
+		RegistryEntry entry = findEntryByKey(key);
+		return entry.getPublicationStatus();
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void setPublicationStatus(String key, String state) throws RegistryServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "setting key [" + key + "] with state [" + state + "]");
+		RegistryEntry entry = findEntryByKey(key);
+		try {
+			entry.setPublicationStatus(state);
 			em.merge(entry);
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -359,10 +390,9 @@ public class RegistryServiceBean implements RegistryService {
 		return properties;
 	}
 	
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private RegistryEntry findEntryByKey(String key) throws KeyNotFoundException {
 		RegistryEntry entry = em.find(RegistryEntry.class, key);
-
 		if (entry == null) {
 			throw new KeyNotFoundException("no entry found for key [" + key + "]");
 		}
@@ -370,7 +400,7 @@ public class RegistryServiceBean implements RegistryService {
 		return entry;
 	}
 	
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private RegistryEntry findEntryByIdentifier(OrtolangObjectIdentifier identifier) throws IdentifierNotRegisteredException {
 		List<RegistryEntry> entries = null;
 

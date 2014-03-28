@@ -1,79 +1,112 @@
 package fr.ortolang.diffusion.core;
 
+import java.util.Set;
+
 import com.healthmarketscience.rmiio.RemoteInputStream;
 import com.healthmarketscience.rmiio.RemoteOutputStream;
 
 import fr.ortolang.diffusion.OrtolangBinaryService;
 import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.core.entity.DigitalCollection;
-import fr.ortolang.diffusion.core.entity.DigitalMetadata;
-import fr.ortolang.diffusion.core.entity.DigitalObject;
-import fr.ortolang.diffusion.core.entity.DigitalReference;
-import fr.ortolang.diffusion.registry.BranchNotAllowedException;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.Link;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface CoreService extends OrtolangService, OrtolangBinaryService {
 	
 	public static final String SERVICE_NAME = "core";
-	public static final String[] OBJECT_TYPE_LIST = new String[] { DigitalObject.OBJECT_TYPE, DigitalCollection.OBJECT_TYPE, DigitalReference.OBJECT_TYPE, DigitalMetadata.OBJECT_TYPE };
+	public static final String[] OBJECT_TYPE_LIST = new String[] { DataObject.OBJECT_TYPE, Collection.OBJECT_TYPE, Link.OBJECT_TYPE, MetadataObject.OBJECT_TYPE };
+	public static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
+		{ DataObject.OBJECT_TYPE, "read,update,delete" },
+		{ Collection.OBJECT_TYPE, "read,update,delete" },
+		{ Link.OBJECT_TYPE, "read,update,delete" },
+		{ MetadataObject.OBJECT_TYPE, "read,update,delete"}};
 	
-	public void createObject(String key, String name, String description, byte[] data) throws CoreServiceException, KeyAlreadyExistsException;
+	/*Collection*/
 	
-	public void createObject(String key, String name, String description, RemoteInputStream data) throws CoreServiceException, KeyAlreadyExistsException;
+	public void createCollection(String key, String name, String description) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
-	public DigitalObject readObject(String key) throws CoreServiceException, KeyNotFoundException;
+	public Collection readCollection(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public byte[] readObjectContent(String key) throws CoreServiceException, KeyNotFoundException;
+	public void updateCollection(String key, String name, String description) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void readObjectContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException;
+	public void addElementToCollection(String key, String element, boolean inheritSecurity) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateObject(String key, String name, String description) throws CoreServiceException, KeyNotFoundException;
+	public void removeElementFromCollection(String key, String element) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateObjectContent(String key, String name, String description, byte[] data) throws CoreServiceException, KeyNotFoundException;
+	public void cloneCollection(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateObjectContent(String key, String name, String description, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException;
+	public void cloneCollectionContent(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
 	
-	public void cloneObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException;
+	public Set<String> listCollectionContent(String key) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
 	
-	public void deleteObject(String key) throws CoreServiceException, KeyNotFoundException;
+	public void forkCollection(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
 	
-	public void createCollection(String key, String name, String description) throws CoreServiceException, KeyAlreadyExistsException;
+	public void deleteCollection(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public DigitalCollection readCollection(String key) throws CoreServiceException, KeyNotFoundException;
+	/*DataObject*/
 	
-	public void updateCollection(String key, String name, String description) throws CoreServiceException, KeyNotFoundException;
+	public void createDataObject(String key, String name, String description, byte[] data) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
-	public void addElementToCollection(String key, String element) throws CoreServiceException, KeyNotFoundException;
+	public void createDataObject(String key, String name, String description, RemoteInputStream data) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
-	public void removeElementFromCollection(String key, String element) throws CoreServiceException, KeyNotFoundException;
+	public DataObject readDataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void cloneCollection(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException;
+	public byte[] readDataObjectContent(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void deleteCollection(String key) throws CoreServiceException, KeyNotFoundException;
+	public void readDataObjectContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void createReference(String key, boolean dynamic, String name, String target) throws CoreServiceException, KeyAlreadyExistsException;
+	public void updateDataObject(String key, String name, String description) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public DigitalReference readReference(String key) throws CoreServiceException, KeyNotFoundException;
+	public void updateDataObjectContent(String key, String name, String description, byte[] data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void createMetadata(String key, String name, byte[] data, String target) throws CoreServiceException, KeyAlreadyExistsException;
+	public void updateDataObjectContent(String key, String name, String description, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void createMetadata(String key, String name, RemoteInputStream data, String target) throws CoreServiceException, KeyAlreadyExistsException;
+	public void cloneDataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
 	
-	public DigitalMetadata readMetadata(String key) throws CoreServiceException, KeyNotFoundException;
+	public void forkDataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
 	
-	public byte[] readMetadataContent(String key) throws CoreServiceException, KeyNotFoundException;
+	public void deleteDataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void readMetadataContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException;
+	/*MetadataObject*/
 	
-	public void updateMetadata(String key, String name) throws CoreServiceException, KeyNotFoundException;
+	public void createMetadataObject(String key, String name, byte[] data, String target) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
-	public void updateMetadataContent(String key, String name, byte[] data) throws CoreServiceException, KeyNotFoundException;
+	public void createMetadataObject(String key, String name, RemoteInputStream data, String target) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
-	public void updateMetadataContent(String key, String name, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException;
+	public MetadataObject readMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void cloneMetadata(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, BranchNotAllowedException;
+	public byte[] readMetadataObjectContent(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void deleteMetadata(String key) throws CoreServiceException, KeyNotFoundException;
+	public void readMetadataObjectContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void updateMetadataObject(String key, String name, String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void updateMetadataObjectContent(String key, String name, byte[] data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void updateMetadataObjectContent(String key, String name, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void cloneMetadataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
+	
+	public void forkMetadataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
+	
+	public void deleteMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	/*Link*/
+	
+	public void createLink(String key, String name, String target) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	
+	public Link readLink(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void updateLink(String key, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void cloneLink(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
+	
+	public void forkLink(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
+	
+	public void deleteLink(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 }

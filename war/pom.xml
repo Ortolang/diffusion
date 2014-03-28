@@ -47,6 +47,23 @@
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 				</configuration>
 			</plugin>
+			<!-- 
+			<plugin>
+				<groupId>com.qmino</groupId>
+				<artifactId>miredot-maven-plugin</artifactId>
+				<version>1.4</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>restdoc</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<licence>UHJvamVjdHxmci5vcnRvbGFuZy5kaWZmdXNpb24uZGlmZnVzaW9uLXNlcnZlci13YXJ8MjAxOS0wMy0yOHxmYWxzZSNNQ3dDRkJNYkRzcHlLcktDTFkwNTZXZzF2ZFFjbnRHNUFoUlp6R09XV1A4dmIvNWxOaXU5K2NsVTQ2RExGUT09</licence>
+				</configuration>
+			</plugin>
+			 -->
 		</plugins>
 	</build>
 

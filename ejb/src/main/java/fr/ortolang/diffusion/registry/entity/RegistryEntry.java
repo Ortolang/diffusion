@@ -8,11 +8,14 @@ import java.util.Map;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+
+import fr.ortolang.diffusion.OrtolangObjectState;
 
 @Entity
 @Table(indexes = {@Index(columnList="identifier")})
@@ -28,21 +31,24 @@ public class RegistryEntry implements Serializable {
 	private String key;
 	private boolean hidden;
 	private boolean deleted;
-	private boolean locked;
-	private String parent;
-	private String children;
+	private String lock;
+	private String publicationStatus;
 	private String identifier;
-	@ElementCollection
+	private String parent;
+	@ElementCollection(fetch=FetchType.EAGER)
+	private List<String> children;
+	@ElementCollection(fetch=FetchType.EAGER)
 	private Map<String, String> properties;
-	@ElementCollection
+	@ElementCollection(fetch=FetchType.EAGER)
 	private List<String> tags;
 
 	public RegistryEntry() {
 		hidden = false;
 		deleted = false;
-		locked = false;
+		lock = "";
+		publicationStatus = OrtolangObjectState.Status.DRAFT.name();
 		parent = null;
-		children = null;
+		children = new ArrayList<String> ();
 		properties = new HashMap<String, String> ();
 		tags = new ArrayList<String> ();
 	}
@@ -86,11 +92,23 @@ public class RegistryEntry implements Serializable {
 	}
 	
 	public boolean isLocked() {
-		return locked;
+		return lock.length() > 0;
 	}
 
-	public void setLocked(boolean locked) {
-		this.locked = locked;
+	public void setLock(String owner) {
+		this.lock = owner;
+	}
+	
+	public String getLock() {
+		return this.lock;
+	}
+	
+	public String getPublicationStatus() {
+		return publicationStatus;
+	}
+
+	public void setPublicationStatus(String publicationStatus) {
+		this.publicationStatus = publicationStatus;
 	}
 
 	public String getParent() {
@@ -101,16 +119,20 @@ public class RegistryEntry implements Serializable {
 		this.parent = parent;
 	}
 	
-	public String getChildren() {
+	public List<String> getChildren() {
 		return children;
 	}
 
-	public void setChildren(String children) {
+	public void setChildren(List<String> children) {
 		this.children = children;
 	}
 	
+	public void addChildren(String child) {
+		this.children.add(child);
+	}
+	
 	public boolean hasChildren() {
-		if (children != null && children.length() > 0) {
+		if (children.size() > 0) {
 			return true;
 		}
 		return false;
