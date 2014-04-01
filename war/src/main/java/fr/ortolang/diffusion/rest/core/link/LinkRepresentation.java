@@ -6,8 +6,8 @@ public class LinkRepresentation {
 
 	private String key;
 	private String name;
-	private boolean dynamic;
 	private String target;
+	private boolean dynamic;
 	
 	public LinkRepresentation() {
 	}

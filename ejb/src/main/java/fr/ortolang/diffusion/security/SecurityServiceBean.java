@@ -149,11 +149,39 @@ public class SecurityServiceBean implements SecurityService {
 			throw new SecurityServiceException(e);
 		}
 	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void setRules(String key, Map<String, List<String>> rules) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "setting rules for key [" + key + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkOwnership(key, subjects);
+			if ( registry.isLocked(key) ) {
+				throw new SecurityServiceException("key [" + key + "] is locked and cannot be modified.");
+			}
+			
+			OrtolangObjectIdentifier keyid = registry.lookup(key);
+			for ( String subject : rules.keySet() ) {
+				OrtolangObjectIdentifier identifier = registry.lookup(subject);
+				if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+					throw new SecurityServiceException("rule subject must be an object managed by " + MembershipService.SERVICE_NAME);
+				}
+			}
+			authorisation.setPolicyRules(key, rules);
+			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-rules"), "");
+		} catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
+			ctx.setRollbackOnly();
+			throw new SecurityServiceException(e);
+		}
+		throw new SecurityServiceException("not implemented");
+	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void setRule(String key, String subject, List<String> permissions) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "setting rule for key [" + key + "]");
+		logger.log(Level.INFO, "setting rule for key [" + key + "] and subject [" + subject + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -168,7 +196,11 @@ public class SecurityServiceBean implements SecurityService {
 				throw new SecurityServiceException("rule subject must be an object managed by " + MembershipService.SERVICE_NAME);
 			}
 			Map<String, List<String>> rules = authorisation.getPolicyRules(key);
-			rules.put(subject, permissions);
+			if ( permissions == null || permissions.size() == 0 ) {
+				rules.remove(subject);
+			} else {
+				rules.put(subject, permissions);
+			}
 			authorisation.setPolicyRules(key, rules);
 			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-rule"), "subject=" + subject + ", permissions=" + permissions);
 		} catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {

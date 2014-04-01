@@ -7,6 +7,8 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
 
 import fr.ortolang.diffusion.OrtolangObject;
@@ -14,6 +16,9 @@ import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
 
 @Entity
+@NamedQueries(value= {
+		@NamedQuery(name="findProjectByMember", query="select p from Project p where p.members IN :groups")
+})
 @SuppressWarnings("serial")
 public class Project extends OrtolangObject {
 
@@ -24,6 +29,7 @@ public class Project extends OrtolangObject {
 	@Transient
 	private String key;
 	private String type;
+	private String category;
 	private String name;
 	private String root;
 	private String members;
@@ -64,6 +70,14 @@ public class Project extends OrtolangObject {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+	
+	public String getCategory() {
+		return category;
+	}
+	
+	public void setCategory(String category) {
+		this.category = category;
 	}
 
 	public String getRoot() {

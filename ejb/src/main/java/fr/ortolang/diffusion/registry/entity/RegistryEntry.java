@@ -147,6 +147,9 @@ public class RegistryEntry implements Serializable {
 	}
 	
 	public void setProperty(String name, String value) {
+		if ( value == null || value.equals("") ) {
+			this.properties.remove(name);
+		}
 		this.properties.put(name, value);
 	}
 	

@@ -181,8 +181,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
-
+			
 			authorisation.createPolicy(key, caller);
 
 			indexing.index(key);
@@ -328,7 +327,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateDataObjectContent(String key, String name, String description, InputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	public void updateDataObjectContent(String key, InputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "updating object for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -347,8 +346,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			}
 			String hash = binarystore.put(data);
 
-			object.setName(name);
-			object.setDescription(description);
 			object.setSize(binarystore.size(hash));
 			object.setContentType(binarystore.type(hash));
 			object.removeStream("data-stream");
@@ -368,11 +365,11 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateDataObjectContent(String key, String name, String description, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException,
+	public void updateDataObjectContent(String key, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException,
 			AccessDeniedException {
 		try {
 			InputStream os = RemoteInputStreamClient.wrap(data);
-			updateDataObjectContent(key, name, description, os);
+			updateDataObjectContent(key, os);
 		} catch (IOException e) {
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to update object with key [" + key + "]", e);
@@ -381,9 +378,9 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateDataObjectContent(String key, String name, String description, byte[] data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	public void updateDataObjectContent(String key, byte[] data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		InputStream os = new ByteArrayInputStream(data);
-		updateDataObjectContent(key, name, description, os);
+		updateDataObjectContent(key, os);
 	}
 
 	@Override
@@ -457,7 +454,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 
 			authorisation.createPolicy(key, caller);
@@ -515,8 +511,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
-
+			
 			authorisation.createPolicy(key, caller);
 
 			indexing.index(key);
@@ -838,7 +833,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 
 			authorisation.createPolicy(key, caller);
@@ -902,8 +896,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
-
+			
 			authorisation.createPolicy(key, caller);
 
 			indexing.index(key);
@@ -1044,7 +1037,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 
 			authorisation.createPolicy(key, caller);
@@ -1119,8 +1111,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
-
+			
 			authorisation.createPolicy(key, caller);
 
 			indexing.index(key);
@@ -1274,7 +1265,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateMetadataObjectContent(String key, String name, InputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	public void updateMetadataObjectContent(String key, InputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "updating metadata content for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -1293,7 +1284,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			}
 			String hash = binarystore.put(data);
 
-			meta.setName(name);
 			meta.setSize(binarystore.size(hash));
 			meta.setContentType(binarystore.type(hash));
 			meta.setStream(hash);
@@ -1313,17 +1303,17 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateMetadataObjectContent(String key, String name, byte[] data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	public void updateMetadataObjectContent(String key, byte[] data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		InputStream os = new ByteArrayInputStream(data);
-		updateMetadataObjectContent(key, name, os);
+		updateMetadataObjectContent(key, os);
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateMetadataObjectContent(String key, String name, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	public void updateMetadataObjectContent(String key, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		try {
 			InputStream os = RemoteInputStreamClient.wrap(data);
-			updateMetadataObjectContent(key, name, os);
+			updateMetadataObjectContent(key, os);
 		} catch (IOException e) {
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to update metadata with key [" + key + "]", e);
@@ -1398,7 +1388,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 
 			authorisation.createPolicy(key, caller);
@@ -1499,6 +1488,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			List<DataObject> objects = query.getResultList();
 			List<OrtolangObject> oobjects = new ArrayList<OrtolangObject>();
 			oobjects.addAll(objects);
+			//TODO IL manque la key dans les OrtolangObjects !! ça ne sert pas à grand chose du coup :-/
 			return oobjects;
 		} catch (Exception e) {
 			throw new OrtolangException("unable to find an object for hash " + hash);

@@ -13,9 +13,11 @@ public interface SecurityService extends OrtolangService {
 	
 	public void changeOwner(String key, String subject) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public String getOwner(String key) throws SecurityServiceException, AccessDeniedException;
+	public String getOwner(String key) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public Map<String, List<String>> listRules(String key) throws SecurityServiceException, AccessDeniedException;
+	public Map<String, List<String>> listRules(String key) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void setRules(String key, Map<String, List<String>> rules) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public void setRule(String key, String subject, List<String> permissions) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException;
 	

@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.rest.api;
 
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+
 public class OrtolangObjectRepresentation {
 	
 	public static String DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm";
@@ -7,12 +9,7 @@ public class OrtolangObjectRepresentation {
 	private String key;
 	private String service;
 	private String type;
-	private String owner;
-	private String creationDate;
-	private String modificationDate;
-	private String state;
-	private String view;
-
+	
 	public OrtolangObjectRepresentation() {
 	}
 
@@ -40,44 +37,11 @@ public class OrtolangObjectRepresentation {
 		this.type = type;
 	}
 
-	public String getOwner() {
-		return owner;
-	}
-
-	public void setOwner(String owner) {
-		this.owner = owner;
-	}
-
-	public String getCreationDate() {
-		return creationDate;
-	}
-
-	public void setCreationDate(String creationDate) {
-		this.creationDate = creationDate;
-	}
-
-	public String getModificationDate() {
-		return modificationDate;
-	}
-
-	public void setModificationDate(String modificationDate) {
-		this.modificationDate = modificationDate;
-	}
-
-	public String getState() {
-		return state;
-	}
-
-	public void setState(String state) {
-		this.state = state;
-	}
-
-	public String getView() {
-		return view;
-	}
-
-	public void setView(String view) {
-		this.view = view;
+	public static OrtolangObjectRepresentation fromOrtolangObjectIdentifier(OrtolangObjectIdentifier identifier) {
+		OrtolangObjectRepresentation representation = new OrtolangObjectRepresentation();
+		representation.setService(identifier.getService());
+		representation.setType(identifier.getType());
+		return representation;
 	}
 
 }

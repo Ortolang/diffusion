@@ -30,8 +30,8 @@ public interface MembershipService extends OrtolangService {
 	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException;
 
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
-
-	public void updateProfile(String key, String fullname, ProfileStatus status) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void updateProfile(String key, String fullname) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 

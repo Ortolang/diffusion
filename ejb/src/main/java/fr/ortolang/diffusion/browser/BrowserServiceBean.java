@@ -161,6 +161,24 @@ public class BrowserServiceBean implements BrowserService {
 	}
 	
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void setProperty(String key, String name, String value) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "setting property with name [" + name + "] for key [" + key + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			if ( value.startsWith(OrtolangObjectProperty.SYSTEM_PROPERTY_PREFIX ) ) {
+				authorisation.checkSuperUser(caller);
+			}
+			authorisation.checkPermission(key, subjects, "update");
+			registry.setProperty(key, name, value);
+			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "set-property"), "name=" + name + ", value=" + value);
+		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException | NotificationServiceException e) {
+			throw new BrowserServiceException("error during getting property", e);
+		}
+	}
+	
+	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObjectState getState(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "getting state for key [" + key + "]");

@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.collaboration;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -39,6 +41,7 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -158,6 +161,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			project.setId(id);
 			project.setName(name);
 			project.setType(type);
+			project.setCategory(category);
 			project.setRoot(root);
 			em.persist(project);
 
@@ -165,7 +169,6 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 
 			authorisation.createPolicy(key, caller);
 
@@ -208,10 +211,39 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			throw new CollaborationServiceException("unable to read project with key [" + key + "]", e);
 		}
 	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<String> findMyProjects() throws CollaborationServiceException {
+		logger.log(Level.INFO, "finding project for connected profile");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkAuthentified(caller);
+			
+			List<String> keys = new ArrayList<String>();
+			TypedQuery<Project> query = em.createNamedQuery("findProjectByMember", Project.class).setParameter("groups", subjects);
+			List<Project> projects = query.getResultList();
+			for ( Project project : projects ) {
+				OrtolangObjectIdentifier identifier = project.getObjectIdentifier(); 
+				try {
+					keys.add(registry.lookup(identifier));
+				} catch ( IdentifierNotRegisteredException e ) {
+					logger.log(Level.WARNING, "a project with an unregistered identifier has be found : " + identifier);
+				}
+			}
+
+			notification.throwEvent("", caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Project.OBJECT_TYPE, "find"), "");
+			return keys;
+		} catch (NotificationServiceException | MembershipServiceException | AuthorisationServiceException | AccessDeniedException | RegistryServiceException | KeyNotFoundException e) {
+			logger.log(Level.SEVERE, "unexpected error occured during finding projects for connected profile", e);
+			throw new CollaborationServiceException("unable to find projects for connected profile", e);
+		}
+	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateProject(String key, String name) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
+	public void updateProject(String key, String name, String category) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "updating project for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -226,8 +258,11 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 				throw new CollaborationServiceException("unable to load project with id [" + identifier.getId() + "] from storage");
 			}
 			project.setName(name);
+			project.setCategory(category);
 			em.merge(project);
 
+			registry.setProperty(project.getRoot(), ProjectProperty.CATEGORY, category);
+			registry.setProperty(project.getRoot(), OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 
 			indexing.reindex(key);

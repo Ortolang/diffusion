@@ -82,4 +82,5 @@ public class DataObjectRepresentation {
 		representation.setPreview(object.getPreview());
 		return representation;
 	}
+	
 }

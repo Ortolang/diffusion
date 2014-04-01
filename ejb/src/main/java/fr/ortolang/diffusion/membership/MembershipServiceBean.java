@@ -168,7 +168,6 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, key);
 			
 			authorisation.createPolicy(key, key);
 
@@ -206,10 +205,10 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 			throw new MembershipServiceException("unable to read the profile with key [" + key + "]", e);
 		}
 	}
-
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateProfile(String key, String fullname, ProfileStatus status) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+	public void updateProfile(String key, String fullname) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "updating profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
@@ -223,7 +222,6 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
 			}
 			profile.setFullname(fullname);
-			profile.setStatus(status);
 			em.merge(profile);
 
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
@@ -255,7 +253,7 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 			throw new MembershipServiceException("unable to delete object with key [" + key + "]", e);
 		}
 	}
-
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createGroup(String key, String name, String description) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException {
@@ -274,7 +272,6 @@ public class MembershipServiceBean implements MembershipService, OrtolangIndexab
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-			registry.setProperty(key, OrtolangObjectProperty.OWNER, caller);
 			
 			authorisation.createPolicy(key, caller);
 

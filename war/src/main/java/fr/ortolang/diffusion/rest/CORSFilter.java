@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.rest.security;
+package fr.ortolang.diffusion.rest;
 
 import java.io.IOException;
 import java.util.logging.Level;

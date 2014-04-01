@@ -107,7 +107,7 @@ public class Profile extends OrtolangObject {
 
 		return groupsList.split(",");
 	}
-
+	
 	@Override
 	public String getObjectKey() {
 		return getKey();

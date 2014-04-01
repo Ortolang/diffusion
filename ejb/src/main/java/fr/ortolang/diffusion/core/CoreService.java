@@ -61,9 +61,9 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService {
 	
 	public void updateDataObject(String key, String name, String description) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateDataObjectContent(String key, String name, String description, byte[] data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	public void updateDataObjectContent(String key, byte[] data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateDataObjectContent(String key, String name, String description, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	public void updateDataObjectContent(String key, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public void cloneDataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
 	
@@ -85,9 +85,9 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService {
 	
 	public void updateMetadataObject(String key, String name, String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateMetadataObjectContent(String key, String name, byte[] data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	public void updateMetadataObjectContent(String key, byte[] data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateMetadataObjectContent(String key, String name, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	public void updateMetadataObjectContent(String key, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public void cloneMetadataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
 	

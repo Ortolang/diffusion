@@ -162,8 +162,6 @@ public class CoreServiceUseCase {
 					inSequence(sequence);
 					oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.AUTHOR)), with(equal(caller)));
 					inSequence(sequence);
-					oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.OWNER)), with(equal(caller)));
-					inSequence(sequence);
 					oneOf(indexing).index(with(equal("K1")));
 					inSequence(sequence);
 					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DataObject.OBJECT_TYPE)),
@@ -284,8 +282,6 @@ public class CoreServiceUseCase {
 					inSequence(sequence);
 					oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.AUTHOR)), with(equal(caller)));
 					inSequence(sequence);
-					oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.OWNER)), with(equal(caller)));
-					inSequence(sequence);
 					oneOf(indexing).index(with(equal("K2")));
 					inSequence(sequence);
 					oneOf(notification).throwEvent(with(equal("K1")), with(equal(caller)), with(equal(DataObject.OBJECT_TYPE)),
@@ -405,8 +401,6 @@ public class CoreServiceUseCase {
 					inSequence(sequence);
 					oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.AUTHOR)), with(equal(caller)));
 					inSequence(sequence);
-					oneOf(registry).setProperty(with(equal("K1")), with(equal(OrtolangObjectProperty.OWNER)), with(equal(caller)));
-					inSequence(sequence);
 					
 					oneOf(indexing).index(with(equal("K1")));
 					inSequence(sequence);
@@ -500,8 +494,6 @@ public class CoreServiceUseCase {
 					oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP)), with(any(String.class)));
 					inSequence(sequence);
 					oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.AUTHOR)), with(equal(caller)));
-					inSequence(sequence);
-					oneOf(registry).setProperty(with(equal("K2")), with(equal(OrtolangObjectProperty.OWNER)), with(equal(caller)));
 					inSequence(sequence);
 					
 					oneOf(indexing).index(with(equal("K2")));
