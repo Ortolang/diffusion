@@ -142,7 +142,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 				Document doc = searcher.doc(docs.scoreDocs[i].doc);
 				float score = docs.scoreDocs[i].score;
 				String identifier = doc.get("IDENTIFIER");
-				String higlighteText = highlighter.getBestFragment(analyzer, "CONTENT", doc.get("CONTENT"));
+				String higlightedText = highlighter.getBestFragment(analyzer, "CONTENT", doc.get("CONTENT"));
 				String name = doc.get("NAME");
 				String type = doc.get("SERVICE") + "/" + doc.get("TYPE");
 				String key = doc.get("KEY");
@@ -152,7 +152,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 				result.setIdentifier(identifier);
 				result.setType(type);
 				result.setKey(key);
-				result.setExplain(higlighteText);
+				result.setExplain(higlightedText);
 				results.add(result);
 			}
 			return results;

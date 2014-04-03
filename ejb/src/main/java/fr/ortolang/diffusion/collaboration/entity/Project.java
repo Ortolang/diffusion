@@ -29,7 +29,6 @@ public class Project extends OrtolangObject {
 	@Transient
 	private String key;
 	private String type;
-	private String category;
 	private String name;
 	private String root;
 	private String members;
@@ -72,14 +71,6 @@ public class Project extends OrtolangObject {
 		this.type = type;
 	}
 	
-	public String getCategory() {
-		return category;
-	}
-	
-	public void setCategory(String category) {
-		this.category = category;
-	}
-
 	public String getRoot() {
 		return root;
 	}

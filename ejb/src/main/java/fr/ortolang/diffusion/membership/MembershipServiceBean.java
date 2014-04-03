@@ -24,7 +24,6 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableContent;
-import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
@@ -46,11 +45,11 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 
 @Remote(MembershipService.class)
-@Local(OrtolangIndexableService.class)
+@Local(MembershipServiceLocal.class)
 @Stateless(name = MembershipService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @RolesAllowed("user")
-public class MembershipServiceBean implements MembershipService, OrtolangIndexableService {
+public class MembershipServiceBean implements MembershipService, MembershipServiceLocal {
 
 	private Logger logger = Logger.getLogger(MembershipServiceBean.class.getName());
 

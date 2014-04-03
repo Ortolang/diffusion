@@ -31,9 +31,9 @@ import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.collaboration.entity.Project;
-import fr.ortolang.diffusion.collaboration.entity.ProjectProperty;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.entity.CollectionProperty;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -137,7 +137,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createProject(String key, String name, String type, String category) throws CollaborationServiceException, KeyAlreadyExistsException, AccessDeniedException {
+	public void createProject(String key, String name, String type) throws CollaborationServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		logger.log(Level.INFO, "creating new project for key [" + key + "]");
 		String id = UUID.randomUUID().toString();
 		try {
@@ -150,9 +150,8 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 
 			String root = UUID.randomUUID().toString();
 			core.createCollection(root, "/", "root collection for workspace " + name);
-			registry.setProperty(root, ProjectProperty.LEVEL, ProjectProperty.Level.TOP.name());
-			registry.setProperty(root, ProjectProperty.VERSION, ProjectProperty.Version.WORK.name());
-			registry.setProperty(root, ProjectProperty.CATEGORY, category);
+			registry.setProperty(root, CollectionProperty.LEVEL, CollectionProperty.Level.TOP.name());
+			registry.setProperty(root, CollectionProperty.VERSION, CollectionProperty.Version.WORK.name());
 			Map<String, List<String>> rules = new HashMap<String, List<String>>();
 			rules.put(members, Arrays.asList("read", "update", "delete"));
 			authorisation.setPolicyRules(root, rules);
@@ -161,7 +160,6 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			project.setId(id);
 			project.setName(name);
 			project.setType(type);
-			project.setCategory(category);
 			project.setRoot(root);
 			em.persist(project);
 
@@ -243,7 +241,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateProject(String key, String name, String category) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
+	public void updateProject(String key, String name) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "updating project for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -258,10 +256,8 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 				throw new CollaborationServiceException("unable to load project with id [" + identifier.getId() + "] from storage");
 			}
 			project.setName(name);
-			project.setCategory(category);
 			em.merge(project);
 
-			registry.setProperty(project.getRoot(), ProjectProperty.CATEGORY, category);
 			registry.setProperty(project.getRoot(), OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 
@@ -315,7 +311,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			String newroot = UUID.randomUUID().toString();
 			// TODO optimize snapshot operation in order to avoid unnecessary clones (between 2 snapshots)
 			core.cloneCollectionContent(newroot, root);
-			registry.setProperty(root, ProjectProperty.VERSION, ProjectProperty.Version.SNAPSHOT.name() + "." + System.currentTimeMillis());
+			registry.setProperty(root, CollectionProperty.VERSION, CollectionProperty.Version.SNAPSHOT.name() + "." + System.currentTimeMillis());
 			
 			project.setRoot(newroot);
 			project.addVersion(root);
@@ -350,7 +346,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			String root = project.getRoot();
 			String newroot = UUID.randomUUID().toString();
 			core.cloneCollectionContent(newroot, root);
-			registry.setProperty(root, ProjectProperty.VERSION, ProjectProperty.Version.RELEASE.name() + "." + name);
+			registry.setProperty(root, CollectionProperty.VERSION, CollectionProperty.Version.RELEASE.name() + "." + name);
 			
 			project.setRoot(newroot);
 			project.addVersion(root);

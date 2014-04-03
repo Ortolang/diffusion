@@ -15,11 +15,11 @@ public interface CollaborationService extends OrtolangService {
 	public static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
 		{ Project.OBJECT_TYPE, "read,update,delete,snapshot,release"}};
 	
-	public void createProject(String key, String name, String type, String category) throws CollaborationServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	public void createProject(String key, String name, String type) throws CollaborationServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
 	public Project readProject(String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateProject(String key, String name, String category) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException;
+	public void updateProject(String key, String name) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public void snapshotProject(String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException;
 	

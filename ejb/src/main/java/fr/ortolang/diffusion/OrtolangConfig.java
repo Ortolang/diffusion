@@ -42,7 +42,7 @@ public class OrtolangConfig {
     public static synchronized OrtolangConfig getInstance() {
         try {
             if (config == null) {
-                String configFilePath = System.getProperty("sourceplant.config");
+                String configFilePath = System.getProperty("ortolang.config.file");
                 if (configFilePath != null && configFilePath.length() != 0) {
                     config = new OrtolangConfig(configFilePath);
                     logger.log(Level.INFO, "using custom config file : " + configFilePath);
@@ -61,36 +61,12 @@ public class OrtolangConfig {
         return null;
     }
 
-//	private DiffusionConfig(Path configfile) throws Exception {
-//		props = new Properties();
-//		try (InputStream in = Files.newInputStream(configfile)) {
-//			props.load(in);
-//		} 
-//	}
-//
-//	public static synchronized DiffusionConfig getInstance() {
-//		try {
-//			if (config == null) {
-//				if (System.getProperty("diffusion.config") != null) {
-//					Path configfile = Paths.get(System.getProperty("diffusion.config"));
-//					if ( Files.exists(configfile) ) {
-//						logger.info("using custom config file : " + configfile);
-//						return new DiffusionConfig(configfile);
-//					}
-//				} 
-//				Path configfile = Paths.get(DiffusionConfig.class.getClassLoader().getResource("config.properties").getPath());
-//				logger.info("using default config file : " + configfile);
-//				return new DiffusionConfig(configfile);
-//			}
-//			return config;
-//		} catch (Exception e) {
-//			logger.log(Level.SEVERE, "error while creating configuration", e);
-//		}
-//		return null;
-//	}
-
 	public String getProperty(String name) {
 		return props.getProperty(name);
+	}
+	
+	public Properties getProperties() {
+		return props;
 	}
 
 }

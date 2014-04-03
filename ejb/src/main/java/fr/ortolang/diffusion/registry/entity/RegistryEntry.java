@@ -46,7 +46,7 @@ public class RegistryEntry implements Serializable {
 		hidden = false;
 		deleted = false;
 		lock = "";
-		publicationStatus = OrtolangObjectState.Status.DRAFT.name();
+		publicationStatus = OrtolangObjectState.Status.DRAFT.value();
 		parent = null;
 		children = new ArrayList<String> ();
 		properties = new HashMap<String, String> ();

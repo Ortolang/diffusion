@@ -79,7 +79,7 @@ public class OrtolangServiceLocator {
 					}
 				}
 			}
-			throw new OrtolangException("service not found");
+			throw new OrtolangException("service not found: " + serviceName);
 		} catch (Exception e) {
 			throw new OrtolangException(e);
 		}

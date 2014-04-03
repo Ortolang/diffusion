@@ -25,7 +25,7 @@ import javax.ws.rs.core.UriInfo;
 import fr.ortolang.diffusion.collaboration.CollaborationService;
 import fr.ortolang.diffusion.collaboration.CollaborationServiceException;
 import fr.ortolang.diffusion.collaboration.entity.Project;
-import fr.ortolang.diffusion.collaboration.entity.ProjectProperty;
+import fr.ortolang.diffusion.core.entity.CollectionProperty;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.rest.core.collection.CollectionResource;
@@ -57,10 +57,10 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response createProject(@FormParam(value="name") String name, @FormParam(value="type") String type, @FormParam(value="category") String category) throws CollaborationServiceException, KeyAlreadyExistsException, AccessDeniedException {
+    public Response createProject(@FormParam(value="name") String name, @FormParam(value="type") String type) throws CollaborationServiceException, KeyAlreadyExistsException, AccessDeniedException {
     	logger.log(Level.INFO, "creating new project");
     	String key = UUID.randomUUID().toString();
-    	collaboration.createProject(key, name, type, category);
+    	collaboration.createProject(key, name, type);
     	URI location = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProjectResource.class).path(key).build();
     	return Response.created(location).build();
     }
@@ -80,7 +80,7 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateProject(@PathParam(value="key") String key, ProjectRepresentation representation) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "updating project for key: " + key);
-    	collaboration.updateProject(key, representation.getName(), representation.getCategory());
+    	collaboration.updateProject(key, representation.getName());
     	return Response.noContent().build();
     }
     
@@ -107,9 +107,9 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     	logger.log(Level.INFO, "creating new versions for project with key: " + key);
     	Project project = collaboration.readProject(key);
     	String oldroot = project.getRoot();
-    	if ( type.toUpperCase().equals(ProjectProperty.Version.SNAPSHOT.name()) ) {
+    	if ( type.toUpperCase().equals(CollectionProperty.Version.SNAPSHOT.name()) ) {
     		collaboration.snapshotProject(key);
-    	} else if ( type.toUpperCase().equals(ProjectProperty.Version.RELEASE.name()) ) {
+    	} else if ( type.toUpperCase().equals(CollectionProperty.Version.RELEASE.name()) ) {
     		collaboration.releaseProject(key, name);
     	} else {
     		return Response.status(400).entity("unable to understand type").build();

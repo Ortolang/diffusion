@@ -7,8 +7,7 @@ public class ProjectRepresentation {
 	private String key;
 	private String name;
 	private String type;
-	private String category;
-
+	
 	public ProjectRepresentation() {
 	}
 
@@ -36,20 +35,11 @@ public class ProjectRepresentation {
 		this.type = type;
 	}
 
-	public String getCategory() {
-		return category;
-	}
-
-	public void setCategory(String category) {
-		this.category = category;
-	}
-
 	public static ProjectRepresentation fromProject(Project project) {
 		ProjectRepresentation representation = new ProjectRepresentation();
 		representation.setKey(project.getKey());
 		representation.setName(project.getName());
 		representation.setType(project.getType());
-		representation.setCategory(project.getCategory());
 		return representation;
 	}
 

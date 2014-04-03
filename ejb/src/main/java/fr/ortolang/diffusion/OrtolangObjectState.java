@@ -60,26 +60,38 @@ public class OrtolangObjectState implements Serializable {
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		if ( isLocked() ) {
-			buffer.append("LOCKED by (" + getLock() + "), ");
+			buffer.append("locked by (" + getLock() + "), ");
 		} else {
-			buffer.append("UNLOCKED, ");
+			buffer.append("unlocked, ");
 		}
 		if ( isHidden() ) {
-			buffer.append("HIDDEN, ");
+			buffer.append("hidden, ");
 		} else {
-			buffer.append("VISIBLE, ");
+			buffer.append("visible, ");
 		}
 		if ( isDeleted() ) {
-			buffer.append("DELETED, ");
+			buffer.append("deleted, ");
 		} else {
-			buffer.append("ACTIVE, ");
+			buffer.append("active, ");
 		}
-		buffer.append("STATUS (" + getStatus() + ")");
+		buffer.append("status (" + getStatus() + ")");
 		return buffer.toString();
 	}
 
 	public enum Status {
-		DRAFT, WAITING, PUBLISHED
+		DRAFT ("draft"), 
+		WAITING ("waiting"),
+		PUBLISHED ("published");
+		
+		private String value;
+		
+		private Status(String value) {
+			this.value = value;
+		}
+		
+		public String value() {
+			return value;
+		}
 	}
 
 }

@@ -7,6 +7,8 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface PublicationService extends OrtolangService {
 	
+	public static final String MODERATORS_KEY = "moderators";
+	
 	public static final String SERVICE_NAME = "publication";
 	public static final String[] OBJECT_TYPE_LIST = new String[] { };
 	

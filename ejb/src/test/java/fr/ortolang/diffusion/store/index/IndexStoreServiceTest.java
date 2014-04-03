@@ -11,6 +11,7 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
@@ -24,6 +25,7 @@ import org.junit.Test;
 import fr.ortolang.diffusion.OrtolangIndexableContent;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangSearchResult;
 
 public class IndexStoreServiceTest {
@@ -103,11 +105,22 @@ public class IndexStoreServiceTest {
 		object.setService("service");
 		object.setType("type");
 		object.setName("the name");
+		object.setDeleted(false);
+		object.setHidden(false);
+		object.setLocked(false);
+		object.setStatus("draft");
+		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
 		object.setContent(content);
 		
 		try {
 			service.index(object);
 			List<OrtolangSearchResult> results = service.search("tagada");
+			dumpResults(results);
+			assertEquals(1, results.size());
+			results = service.search("PROPERTY.AUTHOR:jayblanc");
+			dumpResults(results);
+			assertEquals(1, results.size());
+			results = service.search("STATUS:DRAFT");
 			dumpResults(results);
 			assertEquals(1, results.size());
 		} catch (IndexStoreServiceException e) {
@@ -127,6 +140,11 @@ public class IndexStoreServiceTest {
 		object.setService("service");
 		object.setType("type");
 		object.setName("the name");
+		object.setDeleted(false);
+		object.setHidden(false);
+		object.setLocked(false);
+		object.setStatus("DRAFT");
+		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
 		object.setContent(content);
 		
 		try {
@@ -162,6 +180,11 @@ public class IndexStoreServiceTest {
 		object.setService("service");
 		object.setType("type");
 		object.setName("the name");
+		object.setDeleted(false);
+		object.setHidden(false);
+		object.setLocked(false);
+		object.setStatus("DRAFT");
+		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
 		object.setContent(content);
 		
 		try {

@@ -126,7 +126,7 @@ public class PublicationServiceBean implements PublicationService {
 				rules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
 				authorisation.updatePolicyOwner(key, MembershipService.SUPERUSER_IDENTIFIER);
 				authorisation.setPolicyRules(key, rules);
-				registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.name());
+				registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
 				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 				indexing.reindex(key);
@@ -147,13 +147,13 @@ public class PublicationServiceBean implements PublicationService {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			for ( String key : keys ) {
 				authorisation.checkOwnership(key, subjects);
-				if ( !registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.DRAFT.name()) ) {
+				if ( !registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.DRAFT.value()) ) {
 					throw new PublicationServiceException("unable to submit key [" + key + "] for publication because key is not in state " + OrtolangObjectState.Status.DRAFT.name());
 				}
 				if ( registry.getLock(key).length() > 0 ) {
 					throw new PublicationServiceException("unable to submit key [" + key + "] for publication because key is locked");
 				}
-				registry.setPublicationStatus(key, OrtolangObjectState.Status.WAITING.name());
+				registry.setPublicationStatus(key, OrtolangObjectState.Status.WAITING.value());
 				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
 				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "submit-for-publication"), "");

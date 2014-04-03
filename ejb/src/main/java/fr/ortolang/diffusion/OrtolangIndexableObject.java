@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion;
 
+import java.util.List;
+
 public class OrtolangIndexableObject {
 
 	private OrtolangObjectIdentifier identifier;
@@ -7,6 +9,11 @@ public class OrtolangIndexableObject {
 	private String type;
 	private String key;
 	private String name;
+	private boolean locked;
+	private boolean deleted;
+	private boolean hidden;
+	private String status;
+	private List<OrtolangObjectProperty> properties;
 	private OrtolangIndexableContent content;
 	
 	public OrtolangIndexableObject() {
@@ -35,6 +42,26 @@ public class OrtolangIndexableObject {
 	public void setKey(String key) {
 		this.key = key;
 	}
+	
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}
+	
+	public void setHidden(boolean hidden) {
+		this.hidden = hidden;
+	}
+	
+	public void setLocked(boolean locked) {
+		this.locked = locked;
+	}
+	
+	public void setStatus(String status) {
+		this.status = status;
+	}
+	
+	public void setProperties(List<OrtolangObjectProperty> properties) {
+		this.properties = properties;
+	}
 
 	public OrtolangObjectIdentifier getIdentifier() {
 		return identifier;
@@ -59,5 +86,25 @@ public class OrtolangIndexableObject {
 	public String getKey() {
 		return key;
 	}
-
+	
+	public boolean isDeleted() {
+		return deleted;
+	}
+	
+	public boolean isHidden() {
+		return hidden;
+	}
+	
+	public boolean isLocked() {
+		return locked;
+	}
+	
+	public String getStatus() {
+		return status;
+	}
+	
+	public List<OrtolangObjectProperty> getProperties() {
+		return properties;
+	}
+	
 }

@@ -105,19 +105,21 @@ public class IndexingListenerBean implements MessageListener {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
-			//TODO probably authentify the driven bean to act as a authentified user with role guest (or better system)
 			OrtolangIndexableContent content = service.getIndexableContent(key);
 			OrtolangIndexableObject iobject = new OrtolangIndexableObject();
 			iobject.setKey(key);
 			iobject.setIdentifier(identifier);
 			iobject.setService(identifier.getService());
 			iobject.setType(identifier.getType());
+			iobject.setHidden(registry.isHidden(key));
+			iobject.setDeleted(registry.isDeleted(key));
+			iobject.setStatus(registry.getPublicationStatus(key));
+			iobject.setProperties(registry.getProperties(key));
 			iobject.setName(key);
-			//TODO remove the name
 			iobject.setContent(content);
 			return iobject;
 		} catch ( Exception e ) {
-			throw new IndexingServiceException("unable to get indexable contentn for object ", e);
+			throw new IndexingServiceException("unable to get indexable content for object ", e);
 		}
 	}
 	
