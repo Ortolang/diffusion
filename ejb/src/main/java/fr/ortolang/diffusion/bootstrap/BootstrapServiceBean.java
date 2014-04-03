@@ -76,23 +76,31 @@ public class BootstrapServiceBean implements BootstrapService {
 		} catch ( KeyNotFoundException e ) {
 			try {
 				logger.log(Level.INFO, "bootstrap key not found, bootstraping plateform...");
+				
+				Map<String, List<String>> guestReadRules = new HashMap<String, List<String>>();
+	            guestReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] {"read"}));
+	            
 				logger.log(Level.INFO, "creating root profile");
 	            membership.createProfile(MembershipService.SUPERUSER_IDENTIFIER, "Super User", "root@ortolang.org", ProfileStatus.ACTIVATED);
+	            
 	            logger.log(Level.INFO, "creating guest profile");
 	            membership.createProfile(MembershipService.UNAUTHENTIFIED_IDENTIFIER, "Guest", "guest@ortolang.org", ProfileStatus.ACTIVATED);
-	            logger.log(Level.FINE, "change owner of guest profile to root");
+	            logger.log(Level.FINE, "change owner of guest profile to root and set guest read rules");
 	            authorisation.updatePolicyOwner(MembershipService.UNAUTHENTIFIED_IDENTIFIER, MembershipService.SUPERUSER_IDENTIFIER);
-	            Map<String, List<String>> rules = new HashMap<String, List<String>>();
-	            rules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] {"read"}));
-	            authorisation.setPolicyRules(MembershipService.UNAUTHENTIFIED_IDENTIFIER, rules);
+	            authorisation.setPolicyRules(MembershipService.UNAUTHENTIFIED_IDENTIFIER, guestReadRules);
+	            
 	            logger.log(Level.INFO, "creating moderators group");
 	            membership.createGroup(PublicationService.MODERATORS_KEY, "Publication Moderators", "Users that have the ability to publich some keys");
+	            logger.log(Level.FINE, "set guest read rules");
+	            authorisation.setPolicyRules(PublicationService.MODERATORS_KEY, guestReadRules);
+	            
 	            logger.log(Level.FINE, "create bootstrap file");
 	            Properties props = new Properties();
                 props.setProperty("bootstrap.status", "done");
                 props.setProperty("bootstrap.timestamp", System.currentTimeMillis() + "");
                 props.setProperty("bootstrap.version", BootstrapService.VERSION);
 	            core.createDataObject(BootstrapService.BOOTSTRAP_KEY, "bootstrap.txt", "bootstrap file", props.toString().getBytes());
+	            
 	            logger.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | AccessDeniedException e1) {
 				ctx.setRollbackOnly();

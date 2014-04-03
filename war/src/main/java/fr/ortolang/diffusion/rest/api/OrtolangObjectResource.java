@@ -25,10 +25,13 @@ import javax.ws.rs.core.UriInfo;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
+import fr.ortolang.diffusion.search.SearchService;
+import fr.ortolang.diffusion.search.SearchServiceException;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -43,6 +46,8 @@ public class OrtolangObjectResource {
 	private UriInfo uriInfo;
 	@EJB
 	private BrowserService browser;
+	@EJB
+	private SearchService search;
 	@EJB
 	private SecurityService security;
 
@@ -194,6 +199,15 @@ public class OrtolangObjectResource {
 		logger.log(Level.INFO, "removing permissions for key: " + key + " and subject: " + subject);
 		security.setRule(key, subject, null);
 		return Response.noContent().build();
+	}
+	
+	@GET
+	@Path("/search")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response search(@QueryParam(value = "query") String query) throws SearchServiceException {
+		logger.log(Level.INFO, "searching objects with query: " + query);
+		List<OrtolangSearchResult> results = search.search(query); 
+		return Response.ok(results).build();
 	}
 	
 }
