@@ -110,7 +110,7 @@ public class GroupResource {
     
     @PUT
     @Path("/{key}/members/{member}")
-    public Response AddMember(@PathParam(value="key") String key, @PathParam(value="member") String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+    public Response addMember(@PathParam(value="key") String key, @PathParam(value="member") String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "adding member: " + member + " in group with key: " + key);
     	membership.addMemberInGroup(key, member);
     	return Response.noContent().build();
@@ -119,7 +119,7 @@ public class GroupResource {
     @DELETE
     @Path("/{key}/members/{member}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response listMembers(@PathParam(value="key") String key, @PathParam(value="member") String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+    public Response removeMember(@PathParam(value="key") String key, @PathParam(value="member") String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "removing member: " + member + " from group with key: " + key);
     	membership.removeMemberFromGroup(key, member);
     	return Response.noContent().build();

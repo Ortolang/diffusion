@@ -67,7 +67,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	private EntityManager em;
 	@Resource
 	private SessionContext ctx;
-
+	
 	public MembershipServiceBean() {
 	}
 
@@ -112,11 +112,13 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getProfileKeyForConnectedIdentifier() {
 		return authentication.getConnectedIdentifier();
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getProfileKeyForIdentifier(String identifier) {
 		return identifier;
 	}
@@ -144,10 +146,45 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 			throw new MembershipServiceException("unable to get connected identifier subjects", e);
 		}
 	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void createProfile(String fullname, String email) throws MembershipServiceException, ProfileAlreadyExistsException {
+		logger.log(Level.INFO, "creating profile for connected identifier");
+
+		String connectedIdentifier = authentication.getConnectedIdentifier();
+		String key = getProfileKeyForConnectedIdentifier();
+
+		try {
+			
+			Profile profile = new Profile();
+			profile.setId(connectedIdentifier);
+			profile.setFullname(fullname);
+			profile.setEmail(email);
+			profile.setStatus(ProfileStatus.ACTIVATED);
+			em.persist(profile);
+
+			registry.register(key, profile.getObjectIdentifier());
+			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, key);
+			
+			authorisation.createPolicy(key, key);
+
+			indexing.index(key);
+			notification.throwEvent(key, key, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
+		} catch (KeyAlreadyExistsException e) {
+			ctx.setRollbackOnly();
+			throw new ProfileAlreadyExistsException("a profile already exists for connected identifier: " + connectedIdentifier, e);
+		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | KeyNotFoundException | IndexingServiceException | AuthorisationServiceException | NotificationServiceException e) {
+			ctx.setRollbackOnly();
+			throw new MembershipServiceException("unable to create profile with key [" + key + "]", e);
+		}
+	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException {
+	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException {
 		logger.log(Level.INFO, "creating profile for identifier [" + identifier + "] and email [" + email + "]");
 
 		String key = getProfileKeyForIdentifier(identifier);
@@ -155,6 +192,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
+			authorisation.checkSuperUser(caller);
 
 			Profile profile = new Profile();
 			profile.setId(identifier);

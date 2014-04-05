@@ -27,7 +27,9 @@ public interface MembershipService extends OrtolangService {
 
 	public List<String> getConnectedIdentifierSubjects() throws MembershipServiceException, KeyNotFoundException;
 
-	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException;
+	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
+	
+	public void createProfile(String fullname, String email) throws MembershipServiceException, ProfileAlreadyExistsException;
 
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 	

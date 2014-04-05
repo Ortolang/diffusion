@@ -8,7 +8,10 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -21,7 +24,9 @@ import javax.ws.rs.core.UriInfo;
 
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
 import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
@@ -47,6 +52,14 @@ public class ProfileResource {
     	String key = membership.getProfileKeyForConnectedIdentifier();
     	URI view = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProfileResource.class).path(key).build(); 
     	return Response.ok(key).link(view, "view").build();
+    }
+    
+    @POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public Response createProfile(@DefaultValue("change my name") @FormParam("fullname") String fullname, @DefaultValue("change my email") @FormParam("email") String email) throws MembershipServiceException, KeyAlreadyExistsException, ProfileAlreadyExistsException {
+    	logger.log(Level.INFO, "creating profile for connected identifier");
+    	membership.createProfile(fullname, email);
+    	return Response.noContent().build();
     }
     
     @GET

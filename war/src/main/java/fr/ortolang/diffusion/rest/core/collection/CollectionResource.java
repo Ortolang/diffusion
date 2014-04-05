@@ -107,7 +107,6 @@ public class CollectionResource {
     
     @PUT
     @Path("/{key}/elements/{element}")
-    @Consumes(MediaType.APPLICATION_JSON)
     public Response addElement( @PathParam(value="key") String key, @PathParam(value="element") String element ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "adding element " + element + " into collection with key: " + key);
     	core.addElementToCollection(key, element, true);

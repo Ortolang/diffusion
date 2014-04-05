@@ -160,6 +160,9 @@ public class AuthorisationServiceBean implements AuthorisationService {
 		if (policy == null) {
 			throw new AuthorisationServiceException("unable to find security policy for key [" + key + "] in the storage");
 		}
+		if ( policy.hasPermission(MembershipService.UNAUTHENTIFIED_IDENTIFIER, permission)) {
+			return;
+		}
 		for (String subject : subjects) {
 			if (policy.isOwner(subject) || policy.hasPermission(subject, permission)) {
 				return;
