@@ -96,7 +96,7 @@ public class SecurityServiceBean implements SecurityService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void changeOwner(String key, String newowner) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "changing owner to subject [" + newowner + "] on key [" + key + "]");
+		logger.log(Level.FINE, "changing owner to subject [" + newowner + "] on key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -121,7 +121,7 @@ public class SecurityServiceBean implements SecurityService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getOwner(String key) throws SecurityServiceException, AccessDeniedException {
-		logger.log(Level.INFO, "getting owner for key [" + key + "]");
+		logger.log(Level.FINE, "getting owner for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -137,7 +137,7 @@ public class SecurityServiceBean implements SecurityService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Map<String, List<String>> listRules(String key) throws SecurityServiceException, AccessDeniedException {
-		logger.log(Level.INFO, "listing rules for key [" + key + "]");
+		logger.log(Level.FINE, "listing rules for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -153,7 +153,7 @@ public class SecurityServiceBean implements SecurityService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void setRules(String key, Map<String, List<String>> rules) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "setting rules for key [" + key + "]");
+		logger.log(Level.FINE, "setting rules for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -181,7 +181,7 @@ public class SecurityServiceBean implements SecurityService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void setRule(String key, String subject, List<String> permissions) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "setting rule for key [" + key + "] and subject [" + subject + "]");
+		logger.log(Level.FINE, "setting rule for key [" + key + "] and subject [" + subject + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -213,7 +213,7 @@ public class SecurityServiceBean implements SecurityService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> listAvailablePermissions(String key) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "listing availables permissions for key [" + key + "]");
+		logger.log(Level.FINE, "listing availables permissions for key [" + key + "]");
 //		try {
 //			String caller = membership.getProfileKeyForConnectedIdentifier();
 //			List<String> subjects = membership.getConnectedIdentifierSubjects();

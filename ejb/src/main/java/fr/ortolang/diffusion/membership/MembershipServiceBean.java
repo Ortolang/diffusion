@@ -126,7 +126,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> getConnectedIdentifierSubjects() throws MembershipServiceException, KeyNotFoundException {
-		logger.log(Level.INFO, "getting connected identifier subjects");
+		logger.log(Level.FINE, "getting connected identifier subjects");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 
@@ -150,7 +150,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createProfile(String fullname, String email) throws MembershipServiceException, ProfileAlreadyExistsException {
-		logger.log(Level.INFO, "creating profile for connected identifier");
+		logger.log(Level.FINE, "creating profile for connected identifier");
 
 		String connectedIdentifier = authentication.getConnectedIdentifier();
 		String key = getProfileKeyForConnectedIdentifier();
@@ -185,7 +185,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "creating profile for identifier [" + identifier + "] and email [" + email + "]");
+		logger.log(Level.FINE, "creating profile for identifier [" + identifier + "] and email [" + email + "]");
 
 		String key = getProfileKeyForIdentifier(identifier);
 		logger.log(Level.FINEST, "generated profile key [" + key + "]");
@@ -222,7 +222,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "reading profile for key [" + key + "]");
+		logger.log(Level.FINE, "reading profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -246,7 +246,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateProfile(String key, String fullname) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "updating profile for key [" + key + "]");
+		logger.log(Level.FINE, "updating profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -274,7 +274,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "deleting profile for key [" + key + "]");
+		logger.log(Level.FINE, "deleting profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -294,7 +294,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createGroup(String key, String name, String description) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "creating group for key [" + key + "] and name [" + name + "]");
+		logger.log(Level.FINE, "creating group for key [" + key + "] and name [" + name + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			authorisation.checkAuthentified(caller);
@@ -323,7 +323,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Group readGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "reading group for key [" + key + "]");
+		logger.log(Level.FINE, "reading group for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -347,7 +347,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateGroup(String key, String name, String description) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "updating group for key [" + key + "]");
+		logger.log(Level.FINE, "updating group for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -376,7 +376,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "deleting group for key [" + key + "]");
+		logger.log(Level.FINE, "deleting group for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -396,7 +396,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void addMemberInGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "adding member in group for key [" + key + "] and member [" + member + "]");
+		logger.log(Level.FINE, "adding member in group for key [" + key + "] and member [" + member + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -437,7 +437,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void removeMemberFromGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "removing member [" + member + "] from group with key [" + key + "]");
+		logger.log(Level.FINE, "removing member [" + member + "] from group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -481,7 +481,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void joinGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "joining group with key [" + key + "]");
+		logger.log(Level.FINE, "joining group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -520,7 +520,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void leaveGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "leaving group with key [" + key + "]");
+		logger.log(Level.FINE, "leaving group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -563,7 +563,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> listMembers(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "listing members of group with key [" + key + "]");
+		logger.log(Level.FINE, "listing members of group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -588,7 +588,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> getProfileGroups(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "listing groups of profile with key [" + key + "]");
+		logger.log(Level.FINE, "listing groups of profile with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -613,7 +613,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "checking membership of member [" + member + "] in group with key [" + key + "]");
+		logger.log(Level.FINE, "checking membership of member [" + member + "] in group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();

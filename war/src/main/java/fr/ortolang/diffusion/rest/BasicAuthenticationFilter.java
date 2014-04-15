@@ -32,7 +32,7 @@ public class BasicAuthenticationFilter implements Filter {
 	
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		logger.log(Level.INFO, "Filtering Basic Authentication");
+		logger.log(Level.FINE, "Filtering Basic Authentication");
 		
 		HttpServletRequest hrequest = (HttpServletRequest)request;
 		String authorization = hrequest.getHeader(AUTHORIZATION_PROPERTY);
@@ -48,7 +48,7 @@ public class BasicAuthenticationFilter implements Filter {
 			StringTokenizer tokenizer = new StringTokenizer(usernameAndPassword, ":");
 			String username = tokenizer.nextToken();
 			String password = tokenizer.nextToken();
-			logger.log(Level.FINEST, "received credentials : " + username + "/" + password);
+			logger.log(Level.FINEST, "received credentials : " + username + "/" + password.replaceAll(".*", "*"));
 			hrequest.login(username, password);
 			chain.doFilter(request, response);
 			hrequest.logout();

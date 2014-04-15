@@ -122,9 +122,9 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 				Path tmpfile = Paths.get(working.toString(), Long.toString(System.currentTimeMillis()));
 				
 				Files.copy(input, tmpfile);
-				logger.log(Level.INFO, "content stored in local temporary file: " + tmpfile.toString());
+				logger.log(Level.FINE, "content stored in local temporary file: " + tmpfile.toString());
 				String hash = input.getHash();
-				logger.log(Level.INFO, "content based generated sha1 hash: " + hash);
+				logger.log(Level.FINE, "content based generated sha1 hash: " + hash);
 				
 				Path parent = Paths.get(base.toString(), hash.substring(0, 4));
 				Path file = Paths.get(base.toString(), hash.substring(0, 4), hash);
@@ -133,7 +133,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 				}
 				if (!Files.exists(file)) {
 					Files.move(tmpfile, file);
-					logger.log(Level.INFO, "content moved in local definitive file: " + file.toString());
+					logger.log(Level.FINE, "content moved in local definitive file: " + file.toString());
 				} else {
 					logger.log(Level.INFO, "a file with same hash already exists, trying to detect collision");
 					try (InputStream input1 = Files.newInputStream(file); 

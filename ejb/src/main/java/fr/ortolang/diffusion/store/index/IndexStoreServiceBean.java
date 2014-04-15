@@ -86,7 +86,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 	
 	@Override
 	public void index(OrtolangIndexableObject object) throws IndexStoreServiceException {
-		logger.log(Level.FINE, "Indexing new object: " + object);
+		logger.log(Level.FINE, "Indexing new object: " + object.getIdentifier());
 		try {
 			writer.addDocument(IndexStoreDocumentBuilder.buildDocument(object));
 			writer.commit();

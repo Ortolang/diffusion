@@ -55,7 +55,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createPolicy(String key, String owner) throws AuthorisationServiceException {
-		logger.log(Level.INFO, "creating authorisation policy for key [" + key + "]");
+		logger.log(Level.FINE, "creating authorisation policy for key [" + key + "]");
 		AuthorisationPolicy policy = em.find(AuthorisationPolicy.class, key);
 		if (policy != null) {
 			throw new AuthorisationServiceException("a security policy already exists for key [" + key + "] in the storage");
@@ -69,7 +69,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void clonePolicy(String key, String origin) throws AuthorisationServiceException {
-		logger.log(Level.INFO, "cloning authorisation policy from origin [" + origin + "]for key [" + key + "]");
+		logger.log(Level.FINE, "cloning authorisation policy from origin [" + origin + "]for key [" + key + "]");
 		AuthorisationPolicy opolicy = em.find(AuthorisationPolicy.class, origin);
 		if (opolicy == null) {
 			throw new AuthorisationServiceException("unable to find security policy for key [" + origin + "] in the storage");
@@ -88,7 +88,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void copyPolicy(String from, String to) throws AuthorisationServiceException {
-		logger.log(Level.INFO, "copying authorisation policy from key [" + from + "] to key [" + to + "]");
+		logger.log(Level.FINE, "copying authorisation policy from key [" + from + "] to key [" + to + "]");
 		AuthorisationPolicy frompolicy = em.find(AuthorisationPolicy.class, from);
 		if (frompolicy == null) {
 			throw new AuthorisationServiceException("unable to find security policy for key [" + from + "] in the storage");
@@ -105,20 +105,20 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updatePolicyOwner(String key, String newowner) throws AuthorisationServiceException {
-		logger.log(Level.INFO, "updating authorisation policy owner to subject [" + newowner + "] on key [" + key + "]");
+		logger.log(Level.FINE, "updating authorisation policy owner to subject [" + newowner + "] on key [" + key + "]");
 		AuthorisationPolicy policy = em.find(AuthorisationPolicy.class, key);
 		if (policy == null) {
 			throw new AuthorisationServiceException("unable to find security policy for key [" + key + "] in the storage");
 		}
 		policy.setOwner(newowner);
 		em.merge(policy);
-		logger.log(Level.INFO, "owner changed to [" + newowner + "] for key [" + key + "]");
+		logger.log(Level.FINE, "owner changed to [" + newowner + "] for key [" + key + "]");
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getPolicyOwner(String key) throws AuthorisationServiceException {
-		logger.log(Level.INFO, "getting authorisation policy owner for key [" + key + "]");
+		logger.log(Level.FINE, "getting authorisation policy owner for key [" + key + "]");
 		AuthorisationPolicy policy = em.find(AuthorisationPolicy.class, key);
 		if (policy == null) {
 			throw new AuthorisationServiceException("unable to find security policy for key [" + key + "] in the storage");
@@ -129,7 +129,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void setPolicyRules(String key, Map<String, List<String>> rules) throws AuthorisationServiceException {
-		logger.log(Level.INFO, "setting authorisation policy rules for key [" + key + "]");
+		logger.log(Level.FINE, "setting authorisation policy rules for key [" + key + "]");
 		AuthorisationPolicy policy = em.find(AuthorisationPolicy.class, key);
 		if (policy == null) {
 			throw new AuthorisationServiceException("unable to find security policy for key [" + key + "] in the storage");
@@ -141,7 +141,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Map<String, List<String>> getPolicyRules(String key) throws AuthorisationServiceException {
-		logger.log(Level.INFO, "getting authorisation policy rules for key [" + key + "]");
+		logger.log(Level.FINE, "getting authorisation policy rules for key [" + key + "]");
 		AuthorisationPolicy policy = em.find(AuthorisationPolicy.class, key);
 		if (policy == null) {
 			throw new AuthorisationServiceException("unable to find security policy for key [" + key + "] in the storage");
@@ -152,7 +152,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void checkPermission(String key, List<String> subjects, String permission) throws AuthorisationServiceException, AccessDeniedException {
-		logger.log(Level.INFO, "checking permission [" + permission + "] for subjects [" + subjects + "] on key [" + key + "]");
+		logger.log(Level.FINE, "checking permission [" + permission + "] for subjects [" + subjects + "] on key [" + key + "]");
 		if (subjects.contains(MembershipService.SUPERUSER_IDENTIFIER)) {
 			return;
 		}
@@ -173,7 +173,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 
 	@Override
 	public void checkOwnership(String key, List<String> subjects) throws AuthorisationServiceException, AccessDeniedException {
-		logger.log(Level.INFO, "checking ownership of subjects [" + subjects + "] on key [" + key + "]");
+		logger.log(Level.FINE, "checking ownership of subjects [" + subjects + "] on key [" + key + "]");
 		if (subjects.contains(MembershipService.SUPERUSER_IDENTIFIER)) {
 			return;
 		}
@@ -191,7 +191,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	
 	@Override
 	public void checkAuthentified(String identifier) throws AuthorisationServiceException, AccessDeniedException {
-		logger.log(Level.INFO, "checking authentification of identifier [" + identifier + "]");
+		logger.log(Level.FINE, "checking authentification of identifier [" + identifier + "]");
 		if (!identifier.equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
 			return;
 		}
@@ -200,7 +200,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	
 	@Override
 	public void checkSuperUser(String identifier) throws AuthorisationServiceException, AccessDeniedException {
-		logger.log(Level.INFO, "checking super user for identifier [" + identifier + "]");
+		logger.log(Level.FINE, "checking super user for identifier [" + identifier + "]");
 		if (identifier.equals(MembershipService.SUPERUSER_IDENTIFIER)) {
 			return;
 		}

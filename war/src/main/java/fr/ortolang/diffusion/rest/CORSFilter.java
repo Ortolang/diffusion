@@ -30,7 +30,7 @@ public class CORSFilter implements Filter {
 	
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		logger.log(Level.INFO, "Filtering Origin");
+		logger.log(Level.FINE, "Filtering Origin");
 		
 		HttpServletRequest hrequest = (HttpServletRequest)request;
 		String origin = hrequest.getHeader(ORIGIN_PROPERTY);

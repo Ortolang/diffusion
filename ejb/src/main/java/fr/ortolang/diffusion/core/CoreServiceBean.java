@@ -160,7 +160,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createDataObject(String key, String name, String description, InputStream data) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "creating new object for key [" + key + "]");
+		logger.log(Level.FINE, "creating new object for key [" + key + "]");
 		String id = UUID.randomUUID().toString();
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -219,7 +219,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public DataObject readDataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "getting object for key [" + key + "]");
+		logger.log(Level.FINE, "getting object for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -243,7 +243,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void readDataObjectContent(String key, OutputStream output) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "getting content of object with key [" + key + "]");
+		logger.log(Level.FINE, "getting content of object with key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -295,7 +295,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateDataObject(String key, String name, String description) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "updating object for key [" + key + "]");
+		logger.log(Level.FINE, "updating object for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -328,7 +328,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateDataObjectContent(String key, InputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "updating object for key [" + key + "]");
+		logger.log(Level.FINE, "updating object for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -386,7 +386,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void cloneDataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "cloning object for origin [" + origin + "] and key [" + key + "]");
+		logger.log(Level.FINE, "cloning object for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			authorisation.checkAuthentified(caller);
@@ -426,7 +426,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void forkDataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "forking object for origin [" + origin + "] and key [" + key + "]");
+		logger.log(Level.FINE, "forking object for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -471,7 +471,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteDataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "deleting object for key [" + key + "]");
+		logger.log(Level.FINE, "deleting object for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -495,7 +495,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createCollection(String key, String name, String description) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "creating new collection for key [" + key + "]");
+		logger.log(Level.FINE, "creating new collection for key [" + key + "]");
 		String id = UUID.randomUUID().toString();
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -517,7 +517,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			indexing.index(key);
 			notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
-			logger.log(Level.INFO, "the key [" + key + "] is already used");
+			logger.log(Level.FINE, "the key [" + key + "] is already used");
 			ctx.setRollbackOnly();
 			throw e;
 		} catch (KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException
@@ -531,7 +531,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Collection readCollection(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "reading collection for key [" + key + "]");
+		logger.log(Level.FINE, "reading collection for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -556,7 +556,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateCollection(String key, String name, String description) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "updating collection for key [" + key + "]");
+		logger.log(Level.FINE, "updating collection for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -588,7 +588,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void addElementToCollection(String key, String element, boolean inheritSecurity) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "adding element [" + element + "] to collection for key [" + key + "]");
+		logger.log(Level.FINE, "adding element [" + element + "] to collection for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -632,7 +632,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void removeElementFromCollection(String key, String element) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "removing element [" + element + "] from collection for key [" + key + "]");
+		logger.log(Level.FINE, "removing element [" + element + "] from collection for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -668,7 +668,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void cloneCollection(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "cloning collection for origin [" + origin + "] and key [" + key + "]");
+		logger.log(Level.FINE, "cloning collection for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			authorisation.checkAuthentified(caller);
@@ -707,7 +707,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void cloneCollectionContent(String key, String origin) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "cloning collection for origin [" + origin + "] and key [" + key + "]");
+		logger.log(Level.FINE, "cloning collection for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			authorisation.checkAuthentified(caller);
@@ -760,7 +760,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Set<String> listCollectionContent(String key) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "listing collection content for key [" + key + "]");
+		logger.log(Level.FINE, "listing collection content for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -808,7 +808,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void forkCollection(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "forking collection for origin [" + origin + "] and key [" + key + "]");
+		logger.log(Level.FINE, "forking collection for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -851,7 +851,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteCollection(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "deleting collection for key [" + key + "]");
+		logger.log(Level.FINE, "deleting collection for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -875,7 +875,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createLink(String key, String name, String target) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "creating new link for key [" + key + "]");
+		logger.log(Level.FINE, "creating new link for key [" + key + "]");
 		String id = UUID.randomUUID().toString();
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -902,7 +902,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			indexing.index(key);
 			notification.throwEvent(key, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
-			logger.log(Level.INFO, "the key [" + key + "] is already used");
+			logger.log(Level.FINE, "the key [" + key + "] is already used");
 			ctx.setRollbackOnly();
 			throw e;
 		} catch (KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException
@@ -916,7 +916,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateLink(String key, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "updating link for key [" + key + "]");
+		logger.log(Level.FINE, "updating link for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -949,7 +949,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Link readLink(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "getting link for key [" + key + "]");
+		logger.log(Level.FINE, "getting link for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -974,7 +974,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void cloneLink(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "cloning link for origin [" + origin + "] and key [" + key + "]");
+		logger.log(Level.FINE, "cloning link for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			authorisation.checkAuthentified(caller);
@@ -1012,7 +1012,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void forkLink(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "forking link for origin [" + origin + "] and key [" + key + "]");
+		logger.log(Level.FINE, "forking link for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1054,7 +1054,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteLink(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "deleting link for key [" + key + "]");
+		logger.log(Level.FINE, "deleting link for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1084,7 +1084,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createMetadataObject(String key, String name, InputStream data, String target) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "creating new metadata for key [" + key + "]");
+		logger.log(Level.FINE, "creating new metadata for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			authorisation.checkAuthentified(caller);
@@ -1117,7 +1117,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			indexing.index(key);
 			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
-			logger.log(Level.INFO, "the key [" + key + "] is already used");
+			logger.log(Level.FINE, "the key [" + key + "] is already used");
 			ctx.setRollbackOnly();
 			throw e;
 		} catch (DataCollisionException | DataNotFoundException | BinaryStoreServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException
@@ -1150,7 +1150,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public MetadataObject readMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "reading metadata for key [" + key + "]");
+		logger.log(Level.FINE, "reading metadata for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1175,7 +1175,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void readMetadataObjectContent(String key, OutputStream os) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "reading content from metadata with key [" + key + "]");
+		logger.log(Level.FINE, "reading content from metadata with key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1228,7 +1228,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateMetadataObject(String key, String name, String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "updating metadata for key [" + key + "]");
+		logger.log(Level.FINE, "updating metadata for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1266,7 +1266,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateMetadataObjectContent(String key, InputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "updating metadata content for key [" + key + "]");
+		logger.log(Level.FINE, "updating metadata content for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1323,7 +1323,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void cloneMetadataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "cloning metadata for origin [" + origin + "] and key [" + key + "]");
+		logger.log(Level.FINE, "cloning metadata for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			authorisation.checkAuthentified(caller);
@@ -1363,7 +1363,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void forkMetadataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "forking metadata for origin [" + origin + "] and key [" + key + "]");
+		logger.log(Level.FINE, "forking metadata for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1407,7 +1407,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "deleting metadata for key [" + key + "]");
+		logger.log(Level.FINE, "deleting metadata for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();

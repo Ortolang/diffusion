@@ -44,7 +44,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
     private static Repository repository;
     
     public TripleStoreServiceBean() {
-    	logger.log(Level.INFO, "Instanciating service");
+    	logger.log(Level.FINE, "Instanciating service");
     	this.base = Paths.get(OrtolangConfig.getInstance().getProperty("home"), DEFAULT_TRIPLE_HOME);
     }
 
@@ -67,16 +67,16 @@ public class TripleStoreServiceBean implements TripleStoreService {
 
 	@Override
 	public void importOntology(String ontologyURI, String resourceName) throws TripleStoreServiceException {
-		logger.log(Level.INFO, "importing ontology [" + ontologyURI + "] into triple store");
+		logger.log(Level.FINE, "importing ontology [" + ontologyURI + "] into triple store");
         try {
             RepositoryConnection con = repository.getConnection();
             try {
                 if (!con.hasStatement(new URIImpl(ontologyURI), new URIImpl("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), new URIImpl("http://www.w3.org/2002/07/owl#Ontology"), false)) {
-                    logger.log(Level.INFO, "ontology not present, importing...");
+                    logger.log(Level.FINE, "ontology not present, importing...");
                     InputStream is = getClass().getClassLoader().getResourceAsStream(resourceName);
                     con.add(is, ontologyURI, RDFFormat.RDFXML);
                 } else {
-                    logger.log(Level.INFO, "ontology already present, no need to import");
+                    logger.log(Level.FINE, "ontology already present, no need to import");
                 }
             } finally {
                 con.close();

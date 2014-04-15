@@ -59,7 +59,7 @@ public class IndexingListenerBean implements MessageListener {
 		try {
 			String action = message.getStringProperty("action");
 			String key = message.getStringProperty("key");
-			logger.log(Level.INFO, action + " action called on key: " + key);
+			logger.log(Level.FINE, action + " action called on key: " + key);
 			try {
         		if (action.equals("index"))
 	                this.addToIndexStore(key);

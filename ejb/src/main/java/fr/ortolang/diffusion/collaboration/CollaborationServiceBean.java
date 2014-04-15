@@ -138,7 +138,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createProject(String key, String name, String type) throws CollaborationServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "creating new project for key [" + key + "]");
+		logger.log(Level.FINE, "creating new project for key [" + key + "]");
 		String id = UUID.randomUUID().toString();
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -173,7 +173,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			indexing.index(key);
 			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Project.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
-			logger.log(Level.INFO, "the key [" + key + "] is already used");
+			logger.log(Level.FINE, "the key [" + key + "] is already used");
 			ctx.setRollbackOnly();
 			throw e;
 		} catch (CoreServiceException | IndexingServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException
@@ -187,7 +187,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Project readProject(String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "reading project for key [" + key + "]");
+		logger.log(Level.FINE, "reading project for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -213,7 +213,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> findMyProjects() throws CollaborationServiceException {
-		logger.log(Level.INFO, "finding project for connected profile");
+		logger.log(Level.FINE, "finding project for connected profile");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -242,7 +242,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateProject(String key, String name) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "updating project for key [" + key + "]");
+		logger.log(Level.FINE, "updating project for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -273,7 +273,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteProject(String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "deleting project for key [" + key + "]");
+		logger.log(Level.FINE, "deleting project for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -294,7 +294,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void snapshotProject(String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "create snapshot of project with key [" + key + "]");
+		logger.log(Level.FINE, "create snapshot of project with key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -330,7 +330,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void releaseProject(String key, String name) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "release project with key [" + key + "]");
+		logger.log(Level.FINE, "release project with key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();

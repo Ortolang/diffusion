@@ -23,6 +23,11 @@
 			<artifactId>diffusion-server-ejb</artifactId>
 			<type>ejb</type>
 		</dependency>
+		<dependency>
+			<groupId>net.bull.javamelody</groupId>
+			<artifactId>javamelody-core</artifactId>
+			<version>1.48.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

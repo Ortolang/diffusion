@@ -112,7 +112,7 @@ public class PublicationServiceBean implements PublicationService {
 
 	@Override
 	public void publish(Set<String> keys) throws PublicationServiceException, AccessDeniedException {
-		logger.log(Level.INFO, "publishing keys");
+		logger.log(Level.FINE, "publishing keys");
 		try {
 			//TODO l'appel à publish doit être fait par un modérateur
 			// il faudra surement créer un groupe global à la plateforme (moderators) pour l'instant seul root peut publier
@@ -141,7 +141,7 @@ public class PublicationServiceBean implements PublicationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void submit(Set<String> keys) throws PublicationServiceException, AccessDeniedException {
-		logger.log(Level.INFO, "submiting keys for publication");
+		logger.log(Level.FINE, "submiting keys for publication");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();

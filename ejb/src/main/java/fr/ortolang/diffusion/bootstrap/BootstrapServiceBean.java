@@ -80,16 +80,16 @@ public class BootstrapServiceBean implements BootstrapService {
 				Map<String, List<String>> guestReadRules = new HashMap<String, List<String>>();
 	            guestReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] {"read"}));
 	            
-				logger.log(Level.INFO, "creating root profile");
+				logger.log(Level.FINE, "creating root profile");
 	            membership.createProfile(MembershipService.SUPERUSER_IDENTIFIER, "Super User", "root@ortolang.org", ProfileStatus.ACTIVATED);
 	            
-	            logger.log(Level.INFO, "creating guest profile");
+	            logger.log(Level.FINE, "creating guest profile");
 	            membership.createProfile(MembershipService.UNAUTHENTIFIED_IDENTIFIER, "Guest", "guest@ortolang.org", ProfileStatus.ACTIVATED);
 	            logger.log(Level.FINE, "change owner of guest profile to root and set guest read rules");
 	            authorisation.updatePolicyOwner(MembershipService.UNAUTHENTIFIED_IDENTIFIER, MembershipService.SUPERUSER_IDENTIFIER);
 	            authorisation.setPolicyRules(MembershipService.UNAUTHENTIFIED_IDENTIFIER, guestReadRules);
 	            
-	            logger.log(Level.INFO, "creating moderators group");
+	            logger.log(Level.FINE, "creating moderators group");
 	            membership.createGroup(PublicationService.MODERATORS_KEY, "Publication Moderators", "Users that have the ability to publich some keys");
 	            logger.log(Level.FINE, "set guest read rules");
 	            authorisation.setPolicyRules(PublicationService.MODERATORS_KEY, guestReadRules);

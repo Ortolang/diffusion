@@ -86,7 +86,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObjectIdentifier lookup(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "looking up identifier for key [" + key + "]");
+		logger.log(Level.FINE, "looking up identifier for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -102,7 +102,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> list(int offset, int limit, String service, String type) throws BrowserServiceException {
-		logger.log(Level.INFO, "listing keys");
+		logger.log(Level.FINE, "listing keys");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> keys = registry.list(offset, limit, OrtolangObjectIdentifier.buildFilterPattern(service, type));
@@ -116,7 +116,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public long count(String service, String type) throws BrowserServiceException {
-		logger.log(Level.INFO, "counting keys");
+		logger.log(Level.FINE, "counting keys");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			long num = registry.count(OrtolangObjectIdentifier.buildFilterPattern(service, type));
@@ -130,7 +130,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<OrtolangObjectProperty> listProperties(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "listing properties for key [" + key + "]");
+		logger.log(Level.FINE, "listing properties for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -146,7 +146,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObjectProperty getProperty(String key, String name) throws BrowserServiceException, KeyNotFoundException, PropertyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "getting property with name [" + name + "] for key [" + key + "]");
+		logger.log(Level.FINE, "getting property with name [" + name + "] for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -181,7 +181,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObjectState getState(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "getting state for key [" + key + "]");
+		logger.log(Level.FINE, "getting state for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
