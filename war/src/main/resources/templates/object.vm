@@ -1,0 +1,21 @@
+<html lang="en">
+<head>
+	<title>Ortolang REST API - object</title>
+	<link rel="stylesheet" type="text/css" media="screen" href="../../css/basic.css" />
+</head>
+<body>
+	<div class="oobjects" id="$entity.key">
+		<div class="content">
+			<div class="key">key: $entity.key</div>
+			<div class="service">service: $entity.service</div>
+			<div class="type">type: $entity.type</div>
+		</div>
+		<div class="navigation">
+		#foreach( $link in $entity.links )
+			[<a class="link" href="$link.uri">$link.rel</a>]#if( $foreach.hasNext ) - #end 
+		#end
+		</div>
+	</div>	
+</body>
+</html>
+		

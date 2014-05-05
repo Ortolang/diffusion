@@ -610,12 +610,11 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			if (collection == null) {
 				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
 			}
-			if (collection.getElements().contains(element)) {
+			if ( collection.addElement(element) ) {
+				em.merge(collection);
+			} else {
 				throw new CoreServiceException("element [" + element + "] is already in collection with key [" + key + "]");
 			}
-
-			collection.addElement(element);
-			em.merge(collection);
 
 			if (inheritSecurity) {
 				authorisation.copyPolicy(element, key);
@@ -649,12 +648,12 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			if (collection == null) {
 				throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
 			}
-			if (!collection.getElements().contains(element)) {
+			
+			if ( collection.removeElement(element) ) {
+				em.merge(collection);
+			} else {
 				throw new CoreServiceException("element [" + element + "] is NOT in collection with key [" + key + "]");
 			}
-
-			collection.removeElement(element);
-			em.merge(collection);
 
 			indexing.reindex(key);
 			notification
@@ -1517,7 +1516,11 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				content.addContentPart(object.getDescription());
 				content.addContentPart(object.getContentType());
 				content.addContentPart(object.getPreview());
-				// TODO include the binary content if possible (plain text extraction)
+				try {
+					content.addContentPart(binarystore.extract(object.getStreams().get("data-stream")));
+				} catch ( DataNotFoundException | BinaryStoreServiceException e ) {
+					logger.log(Level.WARNING, "unable to extract plain text for key : " + key, e);
+				}
 			}
 
 			if (identifier.getType().equals(Collection.OBJECT_TYPE)) {

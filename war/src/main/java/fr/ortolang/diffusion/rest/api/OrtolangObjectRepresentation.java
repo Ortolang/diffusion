@@ -1,11 +1,10 @@
 package fr.ortolang.diffusion.rest.api;
 
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.rest.DiffusionRepresentation;
 
-public class OrtolangObjectRepresentation {
+public class OrtolangObjectRepresentation extends DiffusionRepresentation {
 	
-	public static String DATE_TIME_PATTERN = "dd.MM.yyyy HH:mm";
-
 	private String key;
 	private String service;
 	private String type;
@@ -36,12 +35,12 @@ public class OrtolangObjectRepresentation {
 	public void setType(String type) {
 		this.type = type;
 	}
-
+	
 	public static OrtolangObjectRepresentation fromOrtolangObjectIdentifier(OrtolangObjectIdentifier identifier) {
 		OrtolangObjectRepresentation representation = new OrtolangObjectRepresentation();
 		representation.setService(identifier.getService());
 		representation.setType(identifier.getType());
 		return representation;
 	}
-
+	
 }

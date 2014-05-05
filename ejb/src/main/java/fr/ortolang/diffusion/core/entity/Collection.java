@@ -1,7 +1,7 @@
 package fr.ortolang.diffusion.core.entity;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -26,10 +26,10 @@ public class Collection extends OrtolangObject {
 	private String name;
 	private String description;
 	@ElementCollection(fetch=FetchType.EAGER)
-	private List<String> elements;
+	private Set<String> elements;
 	
 	public Collection() {
-		elements = new ArrayList<String>();
+		elements = new HashSet<String>();
 	}
 	
 	public String getId() {
@@ -64,20 +64,20 @@ public class Collection extends OrtolangObject {
 		this.description = description;
 	}
 
-	public void setElements(List<String> elements) {
+	public void setElements(Set<String> elements) {
 		this.elements = elements;
 	}
 	
-	public List<String> getElements() {
+	public Set<String> getElements() {
 		return elements;
 	}
 	
-	public void addElement(String element) {
-		this.elements.add(element);
+	public boolean addElement(String element) {
+		return this.elements.add(element);
 	}
 	
-	public void removeElement(String element) {
-		this.elements.remove(element);
+	public boolean removeElement(String element) {
+		return this.elements.remove(element);
 	}
 
 	@Override

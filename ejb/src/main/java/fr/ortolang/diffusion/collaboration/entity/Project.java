@@ -13,7 +13,7 @@ import javax.persistence.Transient;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.collaboration.CollaborationService;
 
 @Entity
 @NamedQueries(value= {
@@ -111,7 +111,7 @@ public class Project extends OrtolangObject {
 
 	@Override
 	public OrtolangObjectIdentifier getObjectIdentifier() {
-		return new OrtolangObjectIdentifier(CoreService.SERVICE_NAME, Project.OBJECT_TYPE, id);
+		return new OrtolangObjectIdentifier(CollaborationService.SERVICE_NAME, Project.OBJECT_TYPE, id);
 	}
 
 }

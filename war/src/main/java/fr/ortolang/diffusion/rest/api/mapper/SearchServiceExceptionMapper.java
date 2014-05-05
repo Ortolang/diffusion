@@ -1,16 +1,16 @@
-package fr.ortolang.diffusion.rest.api;
+package fr.ortolang.diffusion.rest.api.mapper;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
-import fr.ortolang.diffusion.security.SecurityServiceException;
+import fr.ortolang.diffusion.search.SearchServiceException;
 
 @Provider
-public class SecurityServiceExceptionMapper implements ExceptionMapper<SecurityServiceException> {
+public class SearchServiceExceptionMapper implements ExceptionMapper<SearchServiceException> {
 
-	public Response toResponse(SecurityServiceException ex) {
+	public Response toResponse(SearchServiceException ex) {
 		return Response.status(Status.INTERNAL_SERVER_ERROR)
 				.entity("An error occured : " + ex.getMessage()).type("text/plain")
 				.build();

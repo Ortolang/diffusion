@@ -560,7 +560,7 @@ public class CoreServiceUseCase {
 			utx.commit();
 			assertEquals("K1", collection.getKey());
 			assertEquals(1, collection.getElements().size());
-			assertEquals("K2", collection.getElements().get(0));
+			assertTrue(collection.getElements().contains("K2"));
 
 
 			mockery.checking(new Expectations() {

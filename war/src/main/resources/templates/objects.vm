@@ -1,0 +1,31 @@
+<html lang="en">
+<head>
+	<title>Ortolang REST API - objects</title>
+	<link rel="stylesheet" type="text/css" media="screen" href="../css/basic.css" />
+</head>
+<body>
+	<div class="oobjects">
+		<div class="content">
+			<ul>
+			#foreach( $entry in $entity.entries.keySet() )
+				<li>
+					<span class="entry">$entry</span>
+    				#foreach( $link in $entity.entries.get($entry) )
+    					[<a class="link" href="$link.uri">$link.rel</a>]#if( $foreach.hasNext ) - #end 
+    				#end
+    			</li>
+			#end
+			</ul>
+		</div>
+		<div class="informations">
+			#set( $to = $entity.start + $entity.size - 1 )
+			showing items from $entity.start to $to on a total of $entity.totalSize
+		</div>
+		<div class="navigation">
+		#foreach( $link in $entity.links )
+			[<a class="link" href="$link.uri">$link.rel</a>]#if( $foreach.hasNext ) - #end 
+		#end
+		</div>
+	</div>	
+</body>
+</html>

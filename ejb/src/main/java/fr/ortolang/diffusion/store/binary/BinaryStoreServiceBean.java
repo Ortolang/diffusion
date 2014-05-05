@@ -113,6 +113,19 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 			throw new BinaryStoreServiceException(e);
 		}
 	}
+	
+	@Override
+	public String extract(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
+		Path path = Paths.get(base.toString(), identifier.substring(0, 4), identifier);
+		if (!Files.exists(path)) {
+			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
+		}
+		try {
+			return tika.parseToString(path.toFile()); 
+		} catch (Exception e) {
+			throw new BinaryStoreServiceException(e);
+		}
+	}
 
 	@Override
 	public String put(InputStream content) throws BinaryStoreServiceException, DataCollisionException {

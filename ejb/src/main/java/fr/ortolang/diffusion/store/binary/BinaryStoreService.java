@@ -60,6 +60,17 @@ public interface BinaryStoreService {
 	 *             if the hash does not exists in the storage
 	 */
 	String type(String hash) throws BinaryStoreServiceException, DataNotFoundException;
+	
+	/**
+	 * Extract the plain texte part of the data associated with this identifier.<br/>
+	 * 
+	 * @param hash
+	 *            The hash of the data
+	 * @return a String representing the plain text extraction
+	 * @throws DataNotFoundException
+	 *             if the hash does not exists in the storage
+	 */
+	String extract(String hash) throws BinaryStoreServiceException, DataNotFoundException;
 
 	/**
 	 * Insert some data in the storage.<br/>

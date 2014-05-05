@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.rest.api;
+package fr.ortolang.diffusion.rest.api.mapper;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;

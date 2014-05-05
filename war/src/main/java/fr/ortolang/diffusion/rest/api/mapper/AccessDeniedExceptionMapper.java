@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.rest.api;
+package fr.ortolang.diffusion.rest.api.mapper;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -11,8 +11,9 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 public class AccessDeniedExceptionMapper implements ExceptionMapper<AccessDeniedException> {
 
 	public Response toResponse(AccessDeniedException ex) {
-		return Response.status(Status.FORBIDDEN)
-				.entity("An error occured : " + ex.getMessage()).type("text/plain")
+		return Response.status(Status.UNAUTHORIZED)
+				.header("WWW-Authenticate", "Basic")
+				.entity("Access denied").type("text/plain")
 				.build();
 	}
 }
