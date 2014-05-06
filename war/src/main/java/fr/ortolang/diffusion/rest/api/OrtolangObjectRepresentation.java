@@ -8,6 +8,7 @@ public class OrtolangObjectRepresentation extends DiffusionRepresentation {
 	private String key;
 	private String service;
 	private String type;
+	private String id;
 	
 	public OrtolangObjectRepresentation() {
 	}
@@ -36,10 +37,19 @@ public class OrtolangObjectRepresentation extends DiffusionRepresentation {
 		this.type = type;
 	}
 	
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+	
 	public static OrtolangObjectRepresentation fromOrtolangObjectIdentifier(OrtolangObjectIdentifier identifier) {
 		OrtolangObjectRepresentation representation = new OrtolangObjectRepresentation();
 		representation.setService(identifier.getService());
 		representation.setType(identifier.getType());
+		representation.setId(identifier.getId());
 		return representation;
 	}
 	

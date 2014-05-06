@@ -1,0 +1,23 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><strong>Object's State</strong></h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Deleted</strong></p></div>
+	  <div class="col-md-10">$entity.deleted</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Hidden</strong></p></div>
+	  <div class="col-md-10">$entity.hidden</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Locked</strong></p></div>
+	  <div class="col-md-10">$entity.locked #if($entity.locked)(by $entity.lock)#end</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Status</strong></p></div>
+	  <div class="col-md-10">$entity.status</div>
+    </div>
+  </div>
+</div> 

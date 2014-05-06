@@ -110,7 +110,7 @@ public class ProjectBench {
 
 			WebTarget projectsTarget = base.path("/collaboration/projects");
 			WebTarget collectionsTarget = base.path("/core/collections");
-			WebTarget objectsTarget = base.path("/core/dataobjects");
+			WebTarget objectsTarget = base.path("/core/objects");
 
 			logger.log(Level.INFO, "Creating project");
 			Form newproject = new Form().param("name", "benchmark project " + System.currentTimeMillis()).param("type", "benchmark");

@@ -1,8 +1,10 @@
 package fr.ortolang.diffusion.core.entity;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -18,6 +20,7 @@ import fr.ortolang.diffusion.core.CoreService;
 public class Collection extends OrtolangObject {
 	
 	public static final String OBJECT_TYPE = "collection";
+	private static final int MAX_SEGMENT_SIZE = 7700;
 	
 	@Id
 	private String id;
@@ -26,10 +29,11 @@ public class Collection extends OrtolangObject {
 	private String name;
 	private String description;
 	@ElementCollection(fetch=FetchType.EAGER)
-	private Set<String> elements;
+	@Column(length=7800)
+	private Set<String> segments;
 	
 	public Collection() {
-		elements = new HashSet<String>();
+		segments = new HashSet<String>();
 	}
 	
 	public String getId() {
@@ -64,22 +68,87 @@ public class Collection extends OrtolangObject {
 		this.description = description;
 	}
 
-	public void setElements(Set<String> elements) {
-		this.elements = elements;
+	public void setSegments(Set<String> segments) {
+		this.segments = segments;
+	}
+	
+	public Set<String> getSegments() {
+		return segments;
 	}
 	
 	public Set<String> getElements() {
+		Set<String> elements = new HashSet<String> ();
+		for ( String segment : segments ) {
+			if ( segment.length() > 0 ) {
+				elements.addAll(Arrays.asList(segment.split(",")));
+			}
+		}
 		return elements;
 	}
 	
+	public void setElements(Set<String> elements) {
+		segments.clear();
+		StringBuffer newsegment = new StringBuffer();
+		for ( String element : elements ) {
+			if ( newsegment.length() >= MAX_SEGMENT_SIZE ) {
+				segments.add(newsegment.toString());
+				newsegment = new StringBuffer();
+			}
+			if ( newsegment.length() > 0 ) {
+				newsegment.append(",");
+			}
+			newsegment.append(element);
+		}
+		if ( newsegment.length() > 0 ) {
+			segments.add(newsegment.toString());
+		}
+	}
+	
 	public boolean addElement(String element) {
-		return this.elements.add(element);
+		if ( !isElement(element) ) {
+			String freesegment = "";
+			for ( String segment : segments ) {
+				if ( segment.length() < MAX_SEGMENT_SIZE ) {
+					freesegment = segment;
+					segments.remove(segment);
+					break;
+				}
+			}
+			if ( freesegment.length() > 0 ) {
+				freesegment += ("," + element);
+			} else {
+				freesegment += element;
+			}
+			segments.add(freesegment);
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	public boolean removeElement(String element) {
-		return this.elements.remove(element);
+		if ( isElement(element) ) {
+			for ( String segment : segments ) {
+				if ( segment.indexOf(element) != -1 ) {
+					segment = segment.replaceAll("(" + element + "){1},?", "");
+					break;
+				}
+			}
+			return true;
+		} else {
+			return false;
+		}
 	}
-
+	
+	private boolean isElement(String element) {
+		for ( String segment : segments ) {
+			if ( segment.indexOf(element) != -1 ) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	@Override
 	public String getObjectKey() {
 		return key;

@@ -1512,10 +1512,18 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				if (object == null) {
 					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
 				}
-				content.addContentPart(object.getName());
-				content.addContentPart(object.getDescription());
-				content.addContentPart(object.getContentType());
-				content.addContentPart(object.getPreview());
+				if ( object.getName() != null ) {
+					content.addContentPart(object.getName());
+				}
+				if ( object.getDescription() != null ) {
+					content.addContentPart(object.getDescription());
+				}
+				if ( object.getContentType() != null ) {
+					content.addContentPart(object.getContentType());
+				}
+				if ( object.getPreview() != null ) {
+					content.addContentPart(object.getPreview());
+				}
 				try {
 					content.addContentPart(binarystore.extract(object.getStreams().get("data-stream")));
 				} catch ( DataNotFoundException | BinaryStoreServiceException e ) {

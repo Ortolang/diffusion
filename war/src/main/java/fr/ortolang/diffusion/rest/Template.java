@@ -11,5 +11,6 @@ import javax.ws.rs.NameBinding;
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(value = RetentionPolicy.RUNTIME)
 public @interface Template {
-	String value() default "base.vm";
+	String template() default "default.vm";
+	String[] types() default {};
 }

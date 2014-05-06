@@ -1,0 +1,37 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+  	#set( $to = $entity.start + $entity.size - 1 )
+	<h3 class="panel-title"><strong>Listing all objects</strong></h3>
+  </div>
+  <table class="table table-condensed table-hover">
+	<thead>
+       	<tr>
+       		<th>#</th>
+       		<th>Key</th>
+       		<th>Links</th>
+      	</tr>
+   	</thead>
+   	<tbody>
+	#foreach( $entry in $entity.entries.keySet() )
+		#set( $count = $foreach.count + $entity.start - 1 )
+		<tr>
+			<td>$count</td>
+			<td>$entry</td>
+			<td>
+				<div class="btn-group">
+   				#foreach( $link in $entity.entries.get($entry) )
+   					<a class="btn btn-default btn-xs" href="$link.uri">$link.rel</a> 
+   				#end
+   				</div>
+   			</td>
+   		</tr>
+	#end
+	</tbody>
+  </table>
+</div>
+<p>Showing items from $entity.start to $to on a total of $entity.totalSize</p>
+<ul class="pagination">
+	#foreach( $link in $entity.links )
+		<li><a href="$link.uri">$link.rel</a></li> 
+	#end
+</ul>

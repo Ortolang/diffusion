@@ -23,7 +23,7 @@ public class IndexStoreDocumentBuilder {
 	
 	public static Document buildDocument(OrtolangIndexableObject object) {
 		Document document = new Document();
-		document.add(new Field(IDENTIFIER_FIELD, object.getIdentifier().serialize(), TextField.TYPE_NOT_STORED));
+		document.add(new Field(IDENTIFIER_FIELD, object.getIdentifier().serialize(), TextField.TYPE_STORED));
 		document.add(new Field(SERVICE_FIELD, object.getService(), StringField.TYPE_STORED));
 		document.add(new Field(TYPE_FIELD, object.getType(), StringField.TYPE_STORED));
 		document.add(new Field(KEY_FIELD, object.getKey(), StringField.TYPE_STORED));

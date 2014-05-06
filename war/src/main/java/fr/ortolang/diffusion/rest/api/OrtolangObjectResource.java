@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.rest.api;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -56,7 +57,7 @@ public class OrtolangObjectResource {
 	}
 
 	@GET
-	@Template("templates/objects.vm")
+	@Template( template="api/objects.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit)
 			throws BrowserServiceException {
@@ -65,7 +66,7 @@ public class OrtolangObjectResource {
 		long nbentries = browser.count("", "");
 		UriBuilder objects = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class);
 
-		OrtolangObjectsRepresentation representation = new OrtolangObjectsRepresentation();
+		OrtolangObjectsRepresentation representation = new OrtolangObjectsRepresentation ();
 		for ( String key : keys ) {
 			representation.addEntry(key, Link.fromUri(objects.clone().path(key).build()).rel("view").build());
 		}
@@ -83,7 +84,7 @@ public class OrtolangObjectResource {
 
 	@GET
 	@Path("/{key}")
-	@Template("templates/object.vm")
+	@Template( template="api/object.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response get(@PathParam(value = "key") String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "getting object identifier for key: " + key);
@@ -103,6 +104,7 @@ public class OrtolangObjectResource {
 
 	@GET
 	@Path("/{key}/properties")
+	@Template( template="api/properties.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response getProperties(@PathParam(value = "key") String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "getting object properties for key: " + key);
@@ -112,7 +114,7 @@ public class OrtolangObjectResource {
 
 	@GET
 	@Path("/{key}/properties/{name}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response getProperty(@PathParam(value = "key") String key, @PathParam(value = "name") String name) throws BrowserServiceException, KeyNotFoundException,
 			AccessDeniedException, PropertyNotFoundException {
 		logger.log(Level.INFO, "getting object property value for key: " + key + " and name: " + name);
@@ -144,7 +146,8 @@ public class OrtolangObjectResource {
 
 	@GET
 	@Path("/{key}/state")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Template( template="api/state.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response getState(@PathParam(value = "key") String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "getting object state for key: " + key);
 		OrtolangObjectState state = browser.getState(key);
@@ -153,7 +156,8 @@ public class OrtolangObjectResource {
 
 	@GET
 	@Path("/{key}/owner")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Template( template="api/owner.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response getOwner(@PathParam(value = "key") String key) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "getting owner for key: " + key);
 		String owner = security.getOwner(key);
@@ -171,7 +175,8 @@ public class OrtolangObjectResource {
 
 	@GET
 	@Path("/{key}/permissions")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Template( template="api/permissions.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response listPermissions(@PathParam(value = "key") String key) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "getting permissions for key: " + key);
 		Map<String, List<String>> permissions = security.listRules(key);
@@ -190,7 +195,7 @@ public class OrtolangObjectResource {
 
 	@GET
 	@Path("/{key}/permissions/{subject}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response getPermissions(@PathParam(value = "key") String key, @PathParam(value = "subject") String subject) throws SecurityServiceException, KeyNotFoundException,
 			AccessDeniedException {
 		logger.log(Level.INFO, "getting permissions for key: " + key + ", and subject: " + subject);
@@ -222,10 +227,16 @@ public class OrtolangObjectResource {
 
 	@GET
 	@Path("/search")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Template( template="api/search.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response search(@QueryParam(value = "query") String query) throws SearchServiceException {
 		logger.log(Level.INFO, "searching objects with query: " + query);
-		List<OrtolangSearchResult> results = search.search(query);
+		List<OrtolangSearchResult> results;
+		if ( query != null && query.length() > 0 ) {
+			results = search.search(query);
+		} else {
+			results = Collections.emptyList();
+		}
 		return Response.ok(results).build();
 	}
 

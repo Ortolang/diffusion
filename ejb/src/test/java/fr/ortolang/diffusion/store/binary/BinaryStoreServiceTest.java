@@ -161,9 +161,15 @@ public class BinaryStoreServiceTest {
 	public void testCheckExistingCorruptedObject() throws DataNotFoundException, BinaryStoreServiceException, DataCollisionException, DataCorruptedException {
 		service.setHashedFilterInputStreamFactory(new RandomFilterInputStreamFactory());
 		final byte[] content = "Sample Digital Content v1.0".getBytes();
-
 		String identifier1 = service.put(new ByteArrayInputStream(content));
-		
 		service.check(identifier1);
+	}
+	
+	@Test
+	public void testExtractDataContent() throws BinaryStoreServiceException, DataCollisionException, DataNotFoundException {
+		final byte[] content = "Sample Digital Content v1.0".getBytes();
+		String identifier1 = service.put(new ByteArrayInputStream(content));
+		String extraction = service.extract(identifier1);
+		System.out.println("extracted data: " + extraction);
 	}
 }

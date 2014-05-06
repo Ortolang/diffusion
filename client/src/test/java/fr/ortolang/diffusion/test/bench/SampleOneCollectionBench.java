@@ -164,7 +164,7 @@ public class SampleOneCollectionBench {
 		@Override
 		public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 			logger.log(Level.FINE, "Creating DataObject for file : " + file);
-			WebTarget objectsTarget = base.path("/core/dataobjects");
+			WebTarget objectsTarget = base.path("/core/objects");
 			WebTarget collectionsTarget = base.path("/core/collections");
 			
 			File thefile = file.toFile();

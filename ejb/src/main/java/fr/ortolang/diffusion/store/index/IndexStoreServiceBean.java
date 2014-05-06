@@ -144,12 +144,14 @@ public class IndexStoreServiceBean implements IndexStoreService {
 				String identifier = doc.get("IDENTIFIER");
 				String higlightedText = highlighter.getBestFragment(analyzer, "CONTENT", doc.get("CONTENT"));
 				String name = doc.get("NAME");
-				String type = doc.get("SERVICE") + "/" + doc.get("TYPE");
+				String service = doc.get("SERVICE");
+				String type = doc.get("TYPE");
 				String key = doc.get("KEY");
 				OrtolangSearchResult result = new OrtolangSearchResult();
 				result.setScore(score);
 				result.setName(name);
 				result.setIdentifier(identifier);
+				result.setService(service);
 				result.setType(type);
 				result.setKey(key);
 				result.setExplain(higlightedText);

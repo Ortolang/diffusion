@@ -42,7 +42,7 @@ import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
-@Path("/core/dataobjects")
+@Path("/core/objects")
 @Produces({ MediaType.APPLICATION_JSON })
 public class DataObjectResource {
 	

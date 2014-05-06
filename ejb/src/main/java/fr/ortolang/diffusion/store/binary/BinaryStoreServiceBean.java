@@ -37,7 +37,6 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	
 	private static final Logger logger = Logger.getLogger(BinaryStoreServiceBean.class.getName());
 
-	private Tika tika;
 	private HashedFilterInputStreamFactory factory;
 	private Path base;
 	private Path working;
@@ -48,7 +47,6 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	
 	@PostConstruct
 	public void init() {
-		tika = new Tika();
 		this.base = Paths.get(OrtolangConfig.getInstance().getProperty("home"), DEFAULT_BINARY_HOME);
 		this.working = Paths.get(base.toString(), "work");
 		this.collide = Paths.get(base.toString(), "collide");
@@ -108,6 +106,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
 		try {
+			Tika tika = new Tika();
 			return tika.detect(path.toFile()); 
 		} catch (Exception e) {
 			throw new BinaryStoreServiceException(e);
@@ -121,7 +120,10 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
 		try {
-			return tika.parseToString(path.toFile()); 
+			Tika tika = new Tika();
+			tika.setMaxStringLength(20000000);
+			String result = tika.parseToString(path.toFile());
+			return  result;
 		} catch (Exception e) {
 			throw new BinaryStoreServiceException(e);
 		}

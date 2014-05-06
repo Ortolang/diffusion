@@ -38,7 +38,7 @@ public class CollectionBench {
 	private static final String SAMPLE_FILE = "/mnt/space/jerome/Data/sample.txt";
 	private static final String OUTPUT_FILE = "/mnt/space/jerome/Data/collection-bench.csv";
 	private static final int ITERATION_SIZE = 100;
-	private static final int ITERATION = 2;
+	private static final int ITERATION = 100;
 	private static final int CPT = 0;
 	private static final int MIN = 1;
 	private static final int SUM = 2;
@@ -111,7 +111,7 @@ public class CollectionBench {
 			}
 
 			WebTarget collectionsTarget = base.path("/core/collections");
-			WebTarget objectsTarget = base.path("/core/dataobjects");
+			WebTarget objectsTarget = base.path("/core/objects");
 
 			logger.log(Level.INFO, "Creating collection");
 			Form newcollection = new Form().param("name", "benchmark collection " + System.currentTimeMillis()).param("description", "A collection to perform benchmark test");

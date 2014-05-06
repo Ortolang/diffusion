@@ -3,12 +3,15 @@ package fr.ortolang.diffusion.rest;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 
 import org.apache.velocity.VelocityContext;
@@ -19,7 +22,13 @@ import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 @Template
 public class TemplateFilter implements ContainerResponseFilter {
 	
-	private Logger logger = Logger.getLogger(TemplateFilter.class.getName());
+	private static final String TEMPLATES_BASE = "templates";
+	private static final String DECORATOR = "decorator.vm";
+	
+	private static Logger logger = Logger.getLogger(TemplateFilter.class.getName());
+	
+	@Context 
+	private ServletContext context;
 	
 	public TemplateFilter() {
 		Velocity.setProperty(Velocity.RESOURCE_LOADER, "classpath");
@@ -29,25 +38,25 @@ public class TemplateFilter implements ContainerResponseFilter {
  
 	@Override
 	public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-		logger.log(Level.INFO, "Template Filter.");
-		for (Annotation a : responseContext.getEntityAnnotations()) {
-			if (a.annotationType() == Template.class) {
-				//TODO include MediaType in template annotation to check if template is compatible
-				String template = ((Template) a).value();
-				logger.log(Level.INFO, "Found template annotation with name:" + template);
-				String render = render(template, responseContext.getEntity());
-				responseContext.setEntity(render);
-				break;
+		if ( responseContext.getEntityAnnotations() != null ) {
+			for (Annotation a : responseContext.getEntityAnnotations()) {
+				if (a.annotationType() == Template.class) {
+					if ( Arrays.asList(((Template) a).types()).contains(responseContext.getMediaType().toString()) ) {
+						logger.log(Level.INFO, "Compatible Template annotation found, applying template");
+						VelocityContext ctx = new VelocityContext();
+						ctx.put("template", TEMPLATES_BASE + "/" + ((Template) a).template());
+						ctx.put("params", requestContext.getUriInfo().getQueryParameters());
+						ctx.put("mediatype", responseContext.getMediaType().toString());
+						ctx.put("context", context.getContextPath());
+						ctx.put("entity", responseContext.getEntity());
+						StringWriter writer = new StringWriter();
+						Velocity.getTemplate(TEMPLATES_BASE + "/" + DECORATOR).merge(ctx, writer);
+						responseContext.setEntity(writer.toString());
+						break;
+					};
+				}
 			}
 		}
-	}
-	
-	private String render(String template, Object entity) {
-		VelocityContext ctx = new VelocityContext();
-		ctx.put("entity", entity);
-		StringWriter writer = new StringWriter();
-		Velocity.getTemplate(template).merge(ctx, writer);
-		return writer.toString();
 	}
 	
 }

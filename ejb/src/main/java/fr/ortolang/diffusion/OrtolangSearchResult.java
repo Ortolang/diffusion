@@ -9,9 +9,10 @@ public class OrtolangSearchResult implements Serializable {
 	private float score;
 	private String explain;
 	private String name;
+	private String service;
 	private String type;
 	private OrtolangObjectIdentifier identifier;
-	
+
 	public OrtolangSearchResult() {
 	}
 
@@ -55,6 +56,14 @@ public class OrtolangSearchResult implements Serializable {
 		this.type = type;
 	}
 
+	public String getService() {
+		return service;
+	}
+
+	public void setService(String service) {
+		this.service = service;
+	}
+
 	public OrtolangObjectIdentifier getIdentifier() {
 		return identifier;
 	}
@@ -62,15 +71,16 @@ public class OrtolangSearchResult implements Serializable {
 	public void setIdentifier(OrtolangObjectIdentifier identifier) {
 		this.identifier = identifier;
 	}
-	
+
 	public void setIdentifier(String identifier) {
 		this.identifier = OrtolangObjectIdentifier.deserialize(identifier);
 	}
-	
+
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("[").append(getScore()).append("]");
 		buffer.append(" key:").append(getKey());
+		buffer.append(" service:").append(getService());
 		buffer.append(" type:").append(getType());
 		buffer.append(" name:").append(getName());
 		buffer.append(" explain:").append(getExplain());
