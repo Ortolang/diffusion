@@ -78,7 +78,7 @@ public class ProjectBench {
 			
 			os.write("size,create min, create avg, create max, insert min, insert avg, insert max, read min, read avg, read max, clone min, clone avg, clone max\r\n".getBytes());
 
-			WebTarget connectedProfile = base.path("/membership/profiles/connected");
+			WebTarget connectedProfile = base.path("/membership/profiles");
 			Response response1 = connectedProfile.request(MediaType.APPLICATION_JSON_TYPE).get();
 			if (response1.getStatus() == Status.OK.getStatusCode()) {
 				String connectedIdentifier = response1.readEntity(String.class);
@@ -91,22 +91,22 @@ public class ProjectBench {
 				fail("Unable to get Connected Identifier");
 			}
 
-			WebTarget profile = base.path("/membership/profiles/" + BenchSuite.USERID);
-			Response response2 = profile.request(MediaType.APPLICATION_JSON_TYPE).get();
-			if (response2.getStatus() == Status.NOT_FOUND.getStatusCode()) {
-				logger.log(Level.FINE, "Profile does NOT exists, creating it");
-				WebTarget profileCreate = base.path("/membership/profiles");
-				Form newprofile = new Form().param("fullname", BenchSuite.USERID.toUpperCase()).param("email", BenchSuite.USERID + "@ortolang.fr");
-				Response response3 = profileCreate.request(MediaType.APPLICATION_FORM_URLENCODED).accept(MediaType.MEDIA_TYPE_WILDCARD)
-						.post(Entity.entity(newprofile, MediaType.APPLICATION_FORM_URLENCODED));
-				if (response3.getStatus() != Status.NO_CONTENT.getStatusCode()) {
-					logger.log(Level.WARNING, "Unexpected response code while trying to create profile : " + response3.getStatus());
-					fail("Unable to create profile");
-				}
-			} else if (response2.getStatus() != Status.OK.getStatusCode()) {
-				logger.log(Level.WARNING, "Unexpected response code while getting profile : " + response2.getStatus());
-				fail("Unable to get profile");
-			}
+//			WebTarget profile = base.path("/membership/profiles/" + BenchSuite.USERID);
+//			Response response2 = profile.request(MediaType.APPLICATION_JSON_TYPE).get();
+//			if (response2.getStatus() == Status.NOT_FOUND.getStatusCode()) {
+//				logger.log(Level.FINE, "Profile does NOT exists, creating it");
+//				WebTarget profileCreate = base.path("/membership/profiles");
+//				Form newprofile = new Form().param("fullname", BenchSuite.USERID.toUpperCase()).param("email", BenchSuite.USERID + "@ortolang.fr");
+//				Response response3 = profileCreate.request(MediaType.APPLICATION_FORM_URLENCODED).accept(MediaType.MEDIA_TYPE_WILDCARD)
+//						.post(Entity.entity(newprofile, MediaType.APPLICATION_FORM_URLENCODED));
+//				if (response3.getStatus() != Status.NO_CONTENT.getStatusCode()) {
+//					logger.log(Level.WARNING, "Unexpected response code while trying to create profile : " + response3.getStatus());
+//					fail("Unable to create profile");
+//				}
+//			} else if (response2.getStatus() != Status.OK.getStatusCode()) {
+//				logger.log(Level.WARNING, "Unexpected response code while getting profile : " + response2.getStatus());
+//				fail("Unable to get profile");
+//			}
 
 			WebTarget projectsTarget = base.path("/collaboration/projects");
 			WebTarget collectionsTarget = base.path("/core/collections");

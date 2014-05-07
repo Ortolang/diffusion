@@ -66,7 +66,7 @@ public class SampleOneCollectionBench {
 		long start = System.currentTimeMillis();
 		
 		logger.log(Level.INFO, "Starting Sample One benchmark");
-		WebTarget connectedProfile = base.path("/membership/profiles/connected");
+		WebTarget connectedProfile = base.path("/membership/profiles");
 		Response response1 = connectedProfile.request(MediaType.APPLICATION_JSON_TYPE).get();
 		if (response1.getStatus() == Status.OK.getStatusCode()) {
 			String connectedIdentifier = response1.readEntity(String.class);
@@ -79,22 +79,22 @@ public class SampleOneCollectionBench {
 			fail("Unable to get Connected Identifier");
 		}
 
-		WebTarget profile = base.path("/membership/profiles/" + BenchSuite.USERID);
-		Response response2 = profile.request(MediaType.APPLICATION_JSON_TYPE).get();
-		if (response2.getStatus() == Status.NOT_FOUND.getStatusCode()) {
-			logger.log(Level.FINE, "Profile does NOT exists, creating it");
-			WebTarget profileCreate = base.path("/membership/profiles");
-			Form newprofile = new Form().param("fullname", BenchSuite.USERID.toUpperCase()).param("email", BenchSuite.USERID + "@ortolang.fr");
-			Response response3 = profileCreate.request(MediaType.APPLICATION_FORM_URLENCODED).accept(MediaType.MEDIA_TYPE_WILDCARD)
-					.post(Entity.entity(newprofile, MediaType.APPLICATION_FORM_URLENCODED));
-			if (response3.getStatus() != Status.NO_CONTENT.getStatusCode()) {
-				logger.log(Level.WARNING, "Unexpected response code while trying to create profile : " + response3.getStatus());
-				fail("Unable to create profile");
-			}
-		} else if (response2.getStatus() != Status.OK.getStatusCode()) {
-			logger.log(Level.WARNING, "Unexpected response code while getting profile : " + response2.getStatus());
-			fail("Unable to get profile");
-		}
+//		WebTarget profile = base.path("/membership/profiles/" + BenchSuite.USERID);
+//		Response response2 = profile.request(MediaType.APPLICATION_JSON_TYPE).get();
+//		if (response2.getStatus() == Status.NOT_FOUND.getStatusCode()) {
+//			logger.log(Level.FINE, "Profile does NOT exists, creating it");
+//			WebTarget profileCreate = base.path("/membership/profiles");
+//			Form newprofile = new Form().param("fullname", BenchSuite.USERID.toUpperCase()).param("email", BenchSuite.USERID + "@ortolang.fr");
+//			Response response3 = profileCreate.request(MediaType.APPLICATION_FORM_URLENCODED).accept(MediaType.MEDIA_TYPE_WILDCARD)
+//					.post(Entity.entity(newprofile, MediaType.APPLICATION_FORM_URLENCODED));
+//			if (response3.getStatus() != Status.NO_CONTENT.getStatusCode()) {
+//				logger.log(Level.WARNING, "Unexpected response code while trying to create profile : " + response3.getStatus());
+//				fail("Unable to create profile");
+//			}
+//		} else if (response2.getStatus() != Status.OK.getStatusCode()) {
+//			logger.log(Level.WARNING, "Unexpected response code while getting profile : " + response2.getStatus());
+//			fail("Unable to get profile");
+//		}
 
 		Path root = Paths.get(COLLECTION_ROOT_FOLDER);
 		Map<Path, String> collections = new HashMap<Path, String>();

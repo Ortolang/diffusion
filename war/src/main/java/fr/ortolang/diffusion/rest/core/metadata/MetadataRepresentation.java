@@ -1,8 +1,9 @@
 package fr.ortolang.diffusion.rest.core.metadata;
 
 import fr.ortolang.diffusion.core.entity.MetadataObject;
+import fr.ortolang.diffusion.rest.DiffusionRepresentation;
 
-public class MetadataObjectRepresentation {
+public class MetadataRepresentation extends DiffusionRepresentation { 
 
 	private String key;
 	private String name;
@@ -11,7 +12,7 @@ public class MetadataObjectRepresentation {
 	private String target;
 	private String format;
 	
-	public MetadataObjectRepresentation() {
+	public MetadataRepresentation() {
 	}
 
 	public String getKey() {
@@ -62,8 +63,8 @@ public class MetadataObjectRepresentation {
 		this.format = format;
 	}
 
-	public static MetadataObjectRepresentation fromMetadataObject(MetadataObject meta) {
-		MetadataObjectRepresentation representation = new MetadataObjectRepresentation();
+	public static MetadataRepresentation fromMetadataObject(MetadataObject meta) {
+		MetadataRepresentation representation = new MetadataRepresentation();
 		representation.setKey(meta.getKey());
 		representation.setName(meta.getName());
 		representation.setContentType(meta.getContentType());

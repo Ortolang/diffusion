@@ -27,6 +27,6 @@ public interface CollaborationService extends OrtolangService {
 	
 	public void deleteProject(String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public List<String> findMyProjects() throws CollaborationServiceException;
+	public List<String> findMyProjects() throws CollaborationServiceException, AccessDeniedException;
 	
 }

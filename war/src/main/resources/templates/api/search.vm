@@ -15,9 +15,10 @@
   	#if( $entity.size() > 0 ) 
 	  	<p>$entity.size() result#if($entity.size() > 1)s#end found</p>
 	  	#foreach ( $result in $entity )
+	  		#set ($url = "http://localhost:8080/" + $context + "/rest/" + $result.service + "/" + $result.type + "s/" + $result.identifier.id )
 	  		<h4>$result.name <small>$result.type</small></h4>
-	  		<h6><a href="$context/rest/$result.service/$result.type/$result.identifier.id">$result.identifier</a></h6>
-	  		<p>$result.explain</p>
+		  	<small><a href="$url">$url</a></small>
+		  	<p>$result.explain</p>
 	  	#end
 	#end
   </div>

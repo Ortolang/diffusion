@@ -31,6 +31,7 @@ import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
+import fr.ortolang.diffusion.rest.KeysPaginatedRepresentation;
 import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.search.SearchServiceException;
@@ -66,7 +67,7 @@ public class OrtolangObjectResource {
 		long nbentries = browser.count("", "");
 		UriBuilder objects = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class);
 
-		OrtolangObjectsRepresentation representation = new OrtolangObjectsRepresentation ();
+		KeysPaginatedRepresentation representation = new KeysPaginatedRepresentation ();
 		for ( String key : keys ) {
 			representation.addEntry(key, Link.fromUri(objects.clone().path(key).build()).rel("view").build());
 		}

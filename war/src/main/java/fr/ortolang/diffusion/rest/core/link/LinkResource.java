@@ -27,15 +27,16 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rest.KeysRepresentation;
+import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
-import fr.ortolang.diffusion.rest.core.collection.CollectionResource;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 @Path("/core/links")
 @Produces({ MediaType.APPLICATION_JSON })
 public class LinkResource {
 
-	private Logger logger = Logger.getLogger(CollectionResource.class.getName());
+	private Logger logger = Logger.getLogger(LinkResource.class.getName());
 
 	@Context
 	private UriInfo uriInfo;
@@ -43,6 +44,18 @@ public class LinkResource {
 	private CoreService core;
 
 	public LinkResource() {
+	}
+	
+	@GET
+	@Template( template="core/links.vm", types={MediaType.TEXT_HTML})
+	@Produces(MediaType.TEXT_HTML)
+	public Response list() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "listing all links");
+		UriBuilder links = UriBuilder.fromUri(uriInfo.getBaseUri()).path(LinkResource.class);
+
+		KeysRepresentation representation = new KeysRepresentation ();
+		representation.addLink(javax.ws.rs.core.Link.fromUri(links.clone().build()).rel("create").build());
+		return Response.ok(representation).build();
 	}
 
 	@POST
@@ -58,11 +71,15 @@ public class LinkResource {
 	
 	@GET
 	@Path("/{key}")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Template( template="core/link.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response read(@PathParam(value = "key") String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "reading link with key: " + key);
 		Link link = core.readLink(key);
+		UriBuilder links = UriBuilder.fromUri(uriInfo.getBaseUri()).path(LinkResource.class);
+		
 		LinkRepresentation representation = LinkRepresentation.fromLink(link);
+		representation.addLink(javax.ws.rs.core.Link.fromUri(links.clone().path(key).path("target").build()).rel("target").build());
 		return Response.ok(representation).build();
 	}
 
@@ -85,7 +102,6 @@ public class LinkResource {
 	
     @GET
     @Path("/{key}/target")
-    @Produces(MediaType.APPLICATION_JSON)
     public Response target( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading target for link with key: " + key);
     	Link link = core.readLink(key);

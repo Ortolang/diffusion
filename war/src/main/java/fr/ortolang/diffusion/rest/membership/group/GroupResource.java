@@ -15,6 +15,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -24,6 +25,8 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rest.KeysRepresentation;
+import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
@@ -43,11 +46,15 @@ public class GroupResource {
     
     @GET
     @Path("/{key}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getGroup(@PathParam(value="key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+    @Template( template="membership/group.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	public Response getGroup(@PathParam(value="key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading group for key: " + key);
     	Group group = membership.readGroup(key);
+    	UriBuilder groups = UriBuilder.fromUri(uriInfo.getBaseUri()).path(GroupResource.class);
+    	
     	GroupRepresentation representation = GroupRepresentation.fromGroup(group);
+    	representation.addLink(Link.fromUri(groups.clone().path(key).path("members").build()).rel("members").build());
     	return Response.ok(representation).build();
     }
     
@@ -86,12 +93,19 @@ public class GroupResource {
     
     @GET
     @Path("/{key}/members")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response listMembers(@PathParam(value="key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+    @Template( template="membership/members.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	public Response listMembers(@PathParam(value="key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "listing members of group for key: " + key);
     	Group group = membership.readGroup(key);
     	List<String> members = Arrays.asList(group.getMembers());
-    	return Response.ok(members).build();
+    	UriBuilder groups = UriBuilder.fromUri(uriInfo.getBaseUri()).path(GroupResource.class);
+
+		KeysRepresentation representation = new KeysRepresentation ();
+		for ( String member : members ) {
+			representation.addEntry(member, Link.fromUri(groups.clone().path(key).path("members").path(member).build()).rel("view").build());
+		}
+		return Response.ok(representation).build();
     }
     
     @GET
@@ -118,7 +132,6 @@ public class GroupResource {
     
     @DELETE
     @Path("/{key}/members/{member}")
-    @Produces(MediaType.APPLICATION_JSON)
     public Response removeMember(@PathParam(value="key") String key, @PathParam(value="member") String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "removing member: " + member + " from group with key: " + key);
     	membership.removeMemberFromGroup(key, member);

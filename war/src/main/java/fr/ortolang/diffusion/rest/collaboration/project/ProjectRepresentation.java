@@ -1,8 +1,9 @@
 package fr.ortolang.diffusion.rest.collaboration.project;
 
 import fr.ortolang.diffusion.collaboration.entity.Project;
+import fr.ortolang.diffusion.rest.DiffusionRepresentation;
 
-public class ProjectRepresentation {
+public class ProjectRepresentation extends DiffusionRepresentation {
 
 	private String key;
 	private String name;

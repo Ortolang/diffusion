@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.rest.api;
+package fr.ortolang.diffusion.rest;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,16 +7,14 @@ import java.util.Map;
 
 import javax.ws.rs.core.Link;
 
-import fr.ortolang.diffusion.rest.DiffusionRepresentation;
-
-public class OrtolangObjectsRepresentation extends DiffusionRepresentation {
+public class KeysPaginatedRepresentation extends DiffusionRepresentation {
 
 	private Map<String, List<Link>> entries;
 	private long totalSize = 0;
 	private int start = 0;
 	private int size = 0;
 	
-	public OrtolangObjectsRepresentation() {
+	public KeysPaginatedRepresentation() {
 		entries = new HashMap<String, List<Link>>();
 	}
 

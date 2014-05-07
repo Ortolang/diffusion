@@ -1,8 +1,9 @@
 package fr.ortolang.diffusion.rest.core.object;
 
 import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.rest.DiffusionRepresentation;
 
-public class DataObjectRepresentation {
+public class ObjectRepresentation extends DiffusionRepresentation {
 
 	private String key;
 	private String name;
@@ -12,7 +13,7 @@ public class DataObjectRepresentation {
 	private String preview;
 	private String nbReads;
 	
-	public DataObjectRepresentation() {
+	public ObjectRepresentation() {
 	}
 
 	public String getKey() {
@@ -71,8 +72,8 @@ public class DataObjectRepresentation {
 		this.nbReads = nbReads;
 	}
 
-	public static DataObjectRepresentation fromDataObject(DataObject object) {
-		DataObjectRepresentation representation = new DataObjectRepresentation();
+	public static ObjectRepresentation fromDataObject(DataObject object) {
+		ObjectRepresentation representation = new ObjectRepresentation();
 		representation.setKey(object.getKey());
 		representation.setName(object.getName());
 		representation.setDescription(object.getDescription());

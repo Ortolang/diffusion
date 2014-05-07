@@ -1,8 +1,9 @@
 package fr.ortolang.diffusion.rest.membership.profile;
 
 import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.rest.DiffusionRepresentation;
 
-public class ProfileRepresentation {
+public class ProfileRepresentation extends DiffusionRepresentation {
 
 	private String key;
 	private String email;

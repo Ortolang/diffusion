@@ -17,6 +17,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -28,8 +29,9 @@ import fr.ortolang.diffusion.collaboration.entity.Project;
 import fr.ortolang.diffusion.core.entity.CollectionProperty;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.rest.core.collection.CollectionResource;
-import fr.ortolang.diffusion.rest.membership.group.GroupResource;
+import fr.ortolang.diffusion.rest.KeysRepresentation;
+import fr.ortolang.diffusion.rest.Template;
+import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 
@@ -48,11 +50,19 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     }
     
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response findProjects() throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
+    @Template( template="collaboration/projects.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	public Response findProjects() throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "finding projects for connected identifier");
     	List<String> keys = collaboration.findMyProjects();
-    	return Response.ok(keys).build();
+    	UriBuilder projects = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProjectResource.class);
+
+		KeysRepresentation representation = new KeysRepresentation ();
+		for ( String key : keys ) {
+			representation.addEntry(key, Link.fromUri(projects.clone().path(key).build()).rel("view").build());
+		}
+		representation.addLink(Link.fromUri(projects.clone().build()).rel("create").build());
+		return Response.ok(representation).build();
     }
     
     @POST
@@ -67,11 +77,17 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     
     @GET
     @Path("/{key}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getProject(@PathParam(value="key") String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
+    @Template( template="collaboration/project.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	public Response getProject(@PathParam(value="key") String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading project for key: " + key);
     	Project project = collaboration.readProject(key);
+    	UriBuilder projects = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProjectResource.class);
+		
     	ProjectRepresentation representation = ProjectRepresentation.fromProject(project);
+    	representation.addLink(Link.fromUri(projects.clone().path(key).path("root").build()).rel("root").build());
+    	representation.addLink(Link.fromUri(projects.clone().path(key).path("members").build()).rel("members").build());
+    	representation.addLink(Link.fromUri(projects.clone().path(key).path("versions").build()).rel("versions").build());
     	return Response.ok(representation).build();
     }
     
@@ -94,11 +110,20 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     
     @GET
     @Path("/{key}/versions")
-    public Response listVersions(@PathParam(value="key") String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
+    @Template( template="collaboration/versions.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	public Response listVersions(@PathParam(value="key") String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "listing versions for project for key: " + key);
     	Project project = collaboration.readProject(key);
     	List<String> versions = project.getHistory();
-    	return Response.ok(versions).build();
+    	UriBuilder projects = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProjectResource.class);
+		
+    	KeysRepresentation representation = new KeysRepresentation ();
+		for ( String version : versions ) {
+			representation.addEntry(key, Link.fromUri(projects.path(key).path("versions").path(version).build()).rel("view").build());
+		}
+		representation.addLink(Link.fromUri(projects.clone().path(key).path("versions").build()).rel("create").build());
+		return Response.ok(representation).build();
     }
     
     @POST
@@ -114,7 +139,7 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     	} else {
     		return Response.status(400).entity("unable to understand type").build();
     	}
-    	URI location = UriBuilder.fromUri(uriInfo.getBaseUri()).path(GroupResource.class).path(key).path("versions").path(oldroot).build();
+    	URI location = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProjectResource.class).path(key).path("versions").path(oldroot).build();
     	return Response.created(location).build();
     }
     
@@ -122,9 +147,13 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     @Path("/{key}/versions/{version}")
     public Response getVersion(@PathParam(value="key") String key, @PathParam(value="version") String version) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading version " + version + " of project for key: " + key);
-    	collaboration.readProject(key);
-    	URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(CollectionResource.class).path(version).build();
-    	return Response.seeOther(redirect).build();
+    	Project project = collaboration.readProject(key);
+    	if ( project.getHistory().contains(version) ) {
+    		URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class).path(version).build();
+        	return Response.seeOther(redirect).build();
+    	} else {
+    		throw new KeyNotFoundException("this version is not in this project");
+    	}
     }
     
     @GET
@@ -132,7 +161,7 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     public Response listMembers(@PathParam(value="key") String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "listing members of project for key: " + key);
     	Project project = collaboration.readProject(key);
-    	URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(GroupResource.class).path(project.getMembers()).build();
+    	URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class).path(project.getMembers()).build();
     	return Response.seeOther(redirect).build();
     }
     
@@ -141,7 +170,7 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     public Response readRootCollection(@PathParam(value="key") String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading root collection of project for key: " + key);
     	Project project = collaboration.readProject(key);
-    	URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(CollectionResource.class).path(project.getRoot()).build();
+    	URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class).path(project.getRoot()).build();
     	return Response.seeOther(redirect).build();
     }
 

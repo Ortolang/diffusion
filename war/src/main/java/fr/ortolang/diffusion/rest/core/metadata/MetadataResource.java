@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.rest.core.object;
+package fr.ortolang.diffusion.rest.core.metadata;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +20,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -37,16 +38,19 @@ import com.healthmarketscience.rmiio.SimpleRemoteOutputStream;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.CoreServiceLocal;
-import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rest.KeysRepresentation;
+import fr.ortolang.diffusion.rest.Template;
+import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
-@Path("/core/objects")
+@Path("/core/metadatas")
 @Produces({ MediaType.APPLICATION_JSON })
-public class DataObjectResource {
+public class MetadataResource {
 	
-	private Logger logger = Logger.getLogger(DataObjectResource.class.getName());
+	private Logger logger = Logger.getLogger(MetadataResource.class.getName());
 	
 	@Context
     private UriInfo uriInfo;
@@ -55,13 +59,25 @@ public class DataObjectResource {
 	@EJB 
 	private CoreServiceLocal coreLocal;
  
-    public DataObjectResource() {
+    public MetadataResource() {
     }
+    
+    @GET
+	@Template( template="core/metadatas.vm", types={MediaType.TEXT_HTML})
+	@Produces(MediaType.TEXT_HTML)
+	public Response list() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "listing all metadatas");
+		UriBuilder metadatas = UriBuilder.fromUri(uriInfo.getBaseUri()).path(MetadataResource.class);
+
+		KeysRepresentation representation = new KeysRepresentation ();
+		representation.addLink(Link.fromUri(metadatas.clone().build()).rel("create").build());
+		return Response.ok(representation).build();
+	}
     
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response create( MultipartFormDataInput input ) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
-    	logger.log(Level.INFO, "creating dataobject");
+    	logger.log(Level.INFO, "creating metadataobject");
     	String key = UUID.randomUUID().toString();
     	Map<String, List<InputPart>> formParts = input.getFormDataMap();
     	try {
@@ -70,11 +86,18 @@ public class DataObjectResource {
 	    	for (InputPart inputPart : inParts) {
 	    		name = inputPart.getBodyAsString();
 	    	}
-	    	String description = "No description provided";
-	    	inParts = formParts.get("description");
+	    	String target = null;
+	    	inParts = formParts.get("target");
 	    	for (InputPart inputPart : inParts) {
-	    		description = inputPart.getBodyAsString();
+	    		target = inputPart.getBodyAsString();
 	    	}
+	    	//TODO que faire du format ?? le mettre dans les param du createMetadata ou le generer auto ??
+//	    	String format = null;
+//	    	inParts = formParts.get("format");
+//	    	if(inParts!=null) {
+//	    	for (InputPart inputPart : inParts) {
+//	    		format = inputPart.getBodyAsString();
+//	    	}
 	    	InputStream is = null;
 	    	inParts = formParts.get("file");
 	    	for (InputPart inputPart : inParts) {
@@ -82,13 +105,13 @@ public class DataObjectResource {
 	    	}
 	    	if ( coreLocal != null ) {
 	    		logger.log(Level.INFO, "using local core interface for optimisation");
-	    		coreLocal.createDataObject(key, name, description, is);
+	    		coreLocal.createMetadataObject(key, name, is, target);
 	    	} else {
 	    		logger.log(Level.INFO, "using remote core interface");
 	    		RemoteInputStreamServer ris = new SimpleRemoteInputStream(is);
-	    		core.createDataObject(key, name, description, ris.export());
+	    		core.createMetadataObject(key, name, ris.export(), target);
 	    	}
-	    	URI newly = UriBuilder.fromUri(uriInfo.getBaseUri()).path(DataObjectResource.class).path(key).build();
+	    	URI newly = UriBuilder.fromUri(uriInfo.getBaseUri()).path(MetadataResource.class).path(key).build();
 	    	return Response.created(newly).build();
     	} catch ( IOException ioe ) {
     		return Response.serverError().entity(ioe.getMessage()).build();
@@ -97,54 +120,60 @@ public class DataObjectResource {
     
     @GET
     @Path("/{key}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response read( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-    	logger.log(Level.INFO, "reading dataobject with key: " + key);
-    	DataObject object = core.readDataObject(key);
-    	DataObjectRepresentation representation = DataObjectRepresentation.fromDataObject(object);
+    @Template( template="core/object.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	public Response read( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    	logger.log(Level.INFO, "reading metadataobject with key: " + key);
+    	MetadataObject meta = core.readMetadataObject(key);
+    	UriBuilder metadatas = UriBuilder.fromUri(uriInfo.getBaseUri()).path(MetadataResource.class);
+    	
+    	MetadataRepresentation representation = MetadataRepresentation.fromMetadataObject(meta);
+    	representation.addLink(Link.fromUri(metadatas.clone().path(key).path("target").build()).rel("target").build());
+    	representation.addLink(Link.fromUri(metadatas.clone().path(key).path("content").build()).rel("content").build());
     	return Response.ok(representation).build();
     }
     
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response update( @PathParam(value="key") String key, DataObjectRepresentation representation ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-    	logger.log(Level.INFO, "updating dataobject with key: " + key);
-    	core.updateDataObject(key, representation.getName(), representation.getDescription());
+    public Response update( @PathParam(value="key") String key, MetadataRepresentation representation ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    	logger.log(Level.INFO, "updating metadataobject with key: " + key);
+    	core.updateMetadataObject(key, representation.getName(), representation.getTarget());
     	return Response.noContent().build();
     }
     
     @DELETE
     @Path("/{key}")
     public Response delete( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-    	logger.log(Level.INFO, "deleting dataobject with key: " + key);
-    	core.deleteDataObject(key);
+    	logger.log(Level.INFO, "deleting metadataobject with key: " + key);
+    	core.deleteMetadataObject(key);
     	return Response.noContent().build();
     }
     
     @GET
     @Path("/{key}/content")
-    public void getContent( @PathParam(value="key") String key, @Context HttpServletResponse response ) throws CoreServiceException, KeyNotFoundException, IOException, AccessDeniedException {
-    	logger.log(Level.INFO, "reading dataobject content with key: " + key);
-    	DataObject object = core.readDataObject(key);
-    	response.setHeader("Content-Disposition", "attachment; filename=" + object.getName());
-    	response.setContentLength((int)object.getSize());
-    	response.setContentType(object.getContentType());
+    public void readContent( @PathParam(value="key") String key, @Context HttpServletResponse response ) throws CoreServiceException, KeyNotFoundException, IOException, AccessDeniedException {
+    	logger.log(Level.INFO, "reading metadataobject content with key: " + key);
+    	MetadataObject meta = core.readMetadataObject(key);
+    	response.setHeader("Content-Disposition", "attachment; filename=" + meta.getName());
+    	response.setContentLength((int)meta.getSize());
+    	response.setContentType(meta.getContentType());
     	if ( coreLocal != null ) {
     		logger.log(Level.INFO, "using local core interface for optimisation");
-    		coreLocal.readDataObjectContent(key, response.getOutputStream());
+    		coreLocal.readMetadataObjectContent(key, response.getOutputStream());
     	} else {
     		logger.log(Level.INFO, "using remote core interface");
     		RemoteOutputStreamServer ros = new SimpleRemoteOutputStream(response.getOutputStream());
-    		core.readDataObjectContent(key, ros.export());
+    		core.readMetadataObjectContent(key, ros.export());
     	}
+    	
     }
     
     @POST
     @Path("/{key}/content")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response udpateContent( @PathParam(value="key") String key, MultipartFormDataInput input ) throws CoreServiceException, KeyNotFoundException, IOException, AccessDeniedException {
-    	logger.log(Level.INFO, "updating dataobject content with key: " + key);
+    	logger.log(Level.INFO, "updating metadataobject content with key: " + key);
     	Map<String, List<InputPart>> formParts = input.getFormDataMap();
     	try {
         	InputStream is = null;
@@ -154,16 +183,25 @@ public class DataObjectResource {
 	    	}
 	    	if ( coreLocal != null ) {
 	    		logger.log(Level.INFO, "using local core interface for optimisation");
-	    		coreLocal.updateDataObjectContent(key, is);
+	    		coreLocal.updateMetadataObjectContent(key, is);
 	    	} else {
 	    		logger.log(Level.INFO, "using remote core interface");
 	    		RemoteInputStreamServer ris = new SimpleRemoteInputStream(is);
-	    		core.updateDataObjectContent(key, ris.export());
+	    		core.updateMetadataObjectContent(key, ris.export());
 	    	}
 	    	return Response.noContent().build();
     	} catch ( IOException ioe ) {
     		return Response.serverError().entity(ioe.getMessage()).build();
     	}
+    }
+    
+    @GET
+    @Path("/{key}/target")
+    public Response target( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    	logger.log(Level.INFO, "reading target for link with key: " + key);
+    	MetadataObject meta = core.readMetadataObject(key);
+    	URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class).path(meta.getTarget()).build();
+    	return Response.seeOther(redirect).build();
     }
     
 }

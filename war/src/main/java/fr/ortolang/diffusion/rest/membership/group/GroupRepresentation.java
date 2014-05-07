@@ -1,8 +1,9 @@
 package fr.ortolang.diffusion.rest.membership.group;
 
 import fr.ortolang.diffusion.membership.entity.Group;
+import fr.ortolang.diffusion.rest.DiffusionRepresentation;
 
-public class GroupRepresentation {
+public class GroupRepresentation extends DiffusionRepresentation {
 	
 	private String key;
 	private String name;

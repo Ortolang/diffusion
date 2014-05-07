@@ -1,8 +1,9 @@
 package fr.ortolang.diffusion.rest.core.link;
 
 import fr.ortolang.diffusion.core.entity.Link;
+import fr.ortolang.diffusion.rest.DiffusionRepresentation;
 
-public class LinkRepresentation {
+public class LinkRepresentation extends DiffusionRepresentation {
 
 	private String key;
 	private String name;

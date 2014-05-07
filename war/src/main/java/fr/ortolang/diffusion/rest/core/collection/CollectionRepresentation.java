@@ -1,8 +1,9 @@
 package fr.ortolang.diffusion.rest.core.collection;
 
 import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.rest.DiffusionRepresentation;
 
-public class CollectionRepresentation {
+public class CollectionRepresentation extends DiffusionRepresentation {
 
 	private String key;
 	private String name;

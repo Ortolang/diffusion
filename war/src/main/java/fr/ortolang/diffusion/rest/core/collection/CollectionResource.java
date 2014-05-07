@@ -17,6 +17,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -27,6 +28,7 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -43,6 +45,18 @@ public class CollectionResource {
 	private CoreService core;
 
 	public CollectionResource() {
+	}
+	
+	@GET
+	@Template( template="core/collections.vm", types={MediaType.TEXT_HTML})
+	@Produces(MediaType.TEXT_HTML)
+	public Response list() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "listing all collections");
+		UriBuilder collections = UriBuilder.fromUri(uriInfo.getBaseUri()).path(CollectionResource.class);
+
+		KeysRepresentation representation = new KeysRepresentation ();
+		representation.addLink(Link.fromUri(collections.clone().build()).rel("create").build());
+		return Response.ok(representation).build();
 	}
 
 	@POST
@@ -63,8 +77,11 @@ public class CollectionResource {
 	public Response read(@PathParam(value = "key") String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "reading collection with key: " + key);
 		Collection collection = core.readCollection(key);
+		UriBuilder collections = UriBuilder.fromUri(uriInfo.getBaseUri()).path(CollectionResource.class);
+		
 		CollectionRepresentation representation = CollectionRepresentation.fromCollection(collection);
-		return Response.ok(representation).build();
+		representation.addLink(Link.fromUri(collections.clone().path(key).path("elements").build()).rel("elements").build());
+    	return Response.ok(representation).build();
 	}
 
 	@PUT
@@ -86,16 +103,22 @@ public class CollectionResource {
 	
     @GET
     @Path("/{key}/elements")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Template( template="core/elements.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
     public Response listElements( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading elements of collection with key: " + key);
     	Collection collection = core.readCollection(key);
-    	return Response.ok(collection.getElements()).build();
+    	UriBuilder collections = UriBuilder.fromUri(uriInfo.getBaseUri()).path(CollectionResource.class);
+		
+    	KeysRepresentation representation = new KeysRepresentation ();
+		for ( String element : collection.getElements() ) {
+			representation.addEntry(key, Link.fromUri(collections.clone().path(key).path("elements").path(element).build()).rel("view").build());
+		}
+		return Response.ok(representation).build();
     }
     
     @GET
     @Path("/{key}/elements/{element}")
-    @Produces(MediaType.APPLICATION_JSON)
     public Response getElement( @PathParam(value="key") String key, @PathParam(value="element") String element ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading element " + element + " of collection with key: " + key);
     	Collection collection = core.readCollection(key);
@@ -103,7 +126,7 @@ public class CollectionResource {
     		URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class).path(element).build();
     		return Response.seeOther(redirect).build();
     	} else {
-    		throw new KeyNotFoundException();
+    		throw new KeyNotFoundException("this element is not in this collection");
     	}
     }
     

@@ -161,6 +161,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			project.setName(name);
 			project.setType(type);
 			project.setRoot(root);
+			project.setMembers(members);
 			em.persist(project);
 
 			registry.register(key, project.getObjectIdentifier());
@@ -171,7 +172,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			authorisation.createPolicy(key, caller);
 
 			indexing.index(key);
-			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Project.OBJECT_TYPE, "create"), "");
+			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CollaborationService.SERVICE_NAME, Project.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
 			logger.log(Level.FINE, "the key [" + key + "] is already used");
 			ctx.setRollbackOnly();
@@ -202,7 +203,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			}
 			project.setKey(key);
 
-			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Project.OBJECT_TYPE, "read"), "");
+			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CollaborationService.SERVICE_NAME, Project.OBJECT_TYPE, "read"), "");
 			return project;
 		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during project reading", e);
@@ -212,7 +213,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> findMyProjects() throws CollaborationServiceException {
+	public List<String> findMyProjects() throws CollaborationServiceException, AccessDeniedException {
 		logger.log(Level.FINE, "finding project for connected profile");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -231,9 +232,9 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 				}
 			}
 
-			notification.throwEvent("", caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Project.OBJECT_TYPE, "find"), "");
+			notification.throwEvent("", caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CollaborationService.SERVICE_NAME, Project.OBJECT_TYPE, "find"), "");
 			return keys;
-		} catch (NotificationServiceException | MembershipServiceException | AuthorisationServiceException | AccessDeniedException | RegistryServiceException | KeyNotFoundException e) {
+		} catch (NotificationServiceException | MembershipServiceException | AuthorisationServiceException | RegistryServiceException | KeyNotFoundException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during finding projects for connected profile", e);
 			throw new CollaborationServiceException("unable to find projects for connected profile", e);
 		}
@@ -262,7 +263,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 
 			indexing.reindex(key);
-			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Project.OBJECT_TYPE, "update"), "");
+			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CollaborationService.SERVICE_NAME, Project.OBJECT_TYPE, "update"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during workspace update", e);
 			ctx.setRollbackOnly();
@@ -284,7 +285,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 
 			registry.delete(key);
 			indexing.remove(key);
-			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Project.OBJECT_TYPE, "delete"), "");
+			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CollaborationService.SERVICE_NAME, Project.OBJECT_TYPE, "delete"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new CollaborationServiceException("unable to delete project with key [" + key + "]", e);
@@ -320,7 +321,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 
 			indexing.reindex(key);
-			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Project.OBJECT_TYPE, "snapshot"), "");
+			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CollaborationService.SERVICE_NAME, Project.OBJECT_TYPE, "snapshot"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			throw new CollaborationServiceException("unable to create snapshot for project with key [" + key + "]", e);
@@ -356,7 +357,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			
 			indexing.reindex(key);
 			
-			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Project.OBJECT_TYPE, "release"), "name=" + name);
+			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CollaborationService.SERVICE_NAME, Project.OBJECT_TYPE, "release"), "name=" + name);
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			throw new CollaborationServiceException("unable to create snapshot for project with key [" + key + "]", e);
@@ -422,6 +423,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 					throw new OrtolangException("unable to find project with id [" + identifier.getId() + "] from storage");
 				}
 				content.addContentPart(project.getName());
+				content.addContentPart(project.getType());
 			}
 
 			return content;
