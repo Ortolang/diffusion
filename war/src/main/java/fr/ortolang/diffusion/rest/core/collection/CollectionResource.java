@@ -112,7 +112,7 @@ public class CollectionResource {
 		
     	KeysRepresentation representation = new KeysRepresentation ();
 		for ( String element : collection.getElements() ) {
-			representation.addEntry(key, Link.fromUri(collections.clone().path(key).path("elements").path(element).build()).rel("view").build());
+			representation.addEntry(element, Link.fromUri(collections.clone().path(key).path("elements").path(element).build()).rel("view").build());
 		}
 		return Response.ok(representation).build();
     }
