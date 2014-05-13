@@ -251,7 +251,7 @@ public class OrtolangObjectResource {
 			String results = search.semanticSearch(query);
 			return Response.ok(results).build();
 		} else {
-			return Response.ok().build();
+			return Response.ok("").build();
 		}
 	}
 

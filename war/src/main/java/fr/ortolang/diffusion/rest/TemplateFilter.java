@@ -17,6 +17,7 @@ import javax.ws.rs.ext.Provider;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+import org.apache.velocity.tools.generic.EscapeTool;
 
 @Provider
 @Template
@@ -43,12 +44,14 @@ public class TemplateFilter implements ContainerResponseFilter {
 				if (a.annotationType() == Template.class) {
 					if ( Arrays.asList(((Template) a).types()).contains(responseContext.getMediaType().toString()) ) {
 						logger.log(Level.INFO, "Compatible Template annotation found, applying template");
+						EscapeTool escape = new EscapeTool();
 						VelocityContext ctx = new VelocityContext();
 						ctx.put("template", TEMPLATES_BASE + "/" + ((Template) a).template());
 						ctx.put("params", requestContext.getUriInfo().getQueryParameters());
 						ctx.put("mediatype", responseContext.getMediaType().toString());
 						ctx.put("context", context.getContextPath());
 						ctx.put("entity", responseContext.getEntity());
+						ctx.put("esc", escape);
 						StringWriter writer = new StringWriter();
 						Velocity.getTemplate(TEMPLATES_BASE + "/" + DECORATOR).merge(ctx, writer);
 						responseContext.setEntity(writer.toString());
