@@ -29,6 +29,8 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.index.IndexStoreService;
 import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
+import fr.ortolang.diffusion.store.triple.TripleStoreService;
+import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 
 @Remote(SearchService.class)
 @Stateless(name = SearchService.SERVICE_NAME)
@@ -43,7 +45,9 @@ public class SearchServiceBean implements SearchService {
 	@EJB
 	private AuthorisationService authorisation;
 	@EJB
-	private IndexStoreService store;
+	private IndexStoreService indexStore;
+	@EJB
+	private TripleStoreService tripleStore;
 	@EJB
 	private NotificationService notification;
 	@Resource
@@ -61,11 +65,19 @@ public class SearchServiceBean implements SearchService {
 	}
 
 	public IndexStoreService getIndexStoreService() {
-		return store;
+		return indexStore;
 	}
 
 	public void setIndexStoreService(IndexStoreService store) {
-		this.store = store;
+		this.indexStore = store;
+	}
+
+	public TripleStoreService getTripleStoreService() {
+		return tripleStore;
+	}
+
+	public void setTripleStoreService(TripleStoreService store) {
+		this.tripleStore = store;
 	}
 
 	public MembershipService getMembershipService() {
@@ -113,23 +125,36 @@ public class SearchServiceBean implements SearchService {
 	}
 
 	@Override
-	public List<OrtolangSearchResult> search(String query) throws SearchServiceException {
-		logger.log(Level.FINE, "Performing search with query: " + query);
+	public List<OrtolangSearchResult> indexSearch(String query) throws SearchServiceException {
+		logger.log(Level.FINE, "Performing index search with query: " + query);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			List<OrtolangSearchResult> checkedResults = new ArrayList<OrtolangSearchResult>();
-			for ( OrtolangSearchResult result : store.search(query) ) {
+			for ( OrtolangSearchResult result : indexStore.search(query) ) {
 				try {
 					authorisation.checkPermission(result.getKey(), subjects, "read");
 					checkedResults.add(result);
 				} catch ( AccessDeniedException e ) {
 				}
 			}
-			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "search"), "query=" + query);
+			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "index-search"), "query=" + query);
 			return checkedResults;
 		} catch ( IndexStoreServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | NotificationServiceException e ) {
-			throw new SearchServiceException("unable to perform search", e);
+			throw new SearchServiceException("unable to perform index search", e);
+		}
+	}
+	
+	@Override
+	public String semanticSearch(String query) throws SearchServiceException {
+		logger.log(Level.FINE, "Performing semantic search with query: " + query);
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			String result = tripleStore.query("SPARQL", query);
+			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "triple-search"), "query=" + query);
+			return result;
+		} catch ( TripleStoreServiceException | NotificationServiceException e ) {
+			throw new SearchServiceException("unable to perform semantic search", e);
 		}
 	}
 

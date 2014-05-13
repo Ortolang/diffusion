@@ -11,7 +11,7 @@ public interface IndexStoreService {
 	
 	public void index(OrtolangIndexableObject object) throws IndexStoreServiceException;
 	
-	public void reindex(String key, OrtolangIndexableObject object) throws IndexStoreServiceException;
+	public void reindex(OrtolangIndexableObject object) throws IndexStoreServiceException;
 	
 	public void remove(String key) throws IndexStoreServiceException;
 	

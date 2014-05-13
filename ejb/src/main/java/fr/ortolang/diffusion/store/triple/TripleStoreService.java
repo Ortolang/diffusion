@@ -1,9 +1,10 @@
 package fr.ortolang.diffusion.store.triple;
 
 import java.io.OutputStream;
-import java.util.List;
 
 import org.openrdf.query.QueryLanguage;
+
+import fr.ortolang.diffusion.OrtolangIndexableObject;
 
 public interface TripleStoreService {
 	
@@ -11,16 +12,16 @@ public interface TripleStoreService {
 
 	public static final String SERQL_QUERY_LANGUAGE = QueryLanguage.SERQL.getName();
     public static final String SPARQL_QUERY_LANGUAGE = QueryLanguage.SPARQL.getName();
+    
+    public static final String BASE_CONTEXT_URI = "http://www.ortolang.fr/rdf-context#";
 
 	public void importOntology(String ontologyURI, String resourceName) throws TripleStoreServiceException;
 
-	public void insertTriple(String subject, String predicate, String object) throws TripleStoreServiceException;
+	public void index(OrtolangIndexableObject object) throws TripleStoreServiceException;
 	
-	public void removeTriple(String subject, String predicate, String object) throws TripleStoreServiceException;
+	public void reindex(OrtolangIndexableObject object) throws TripleStoreServiceException;
 	
-	public void removeTriples(String subject, String predicate, String object) throws TripleStoreServiceException;
-	
-	public List<Triple> listTriples(String subject, String predicate, String object) throws TripleStoreServiceException;
+	public void remove(String key) throws TripleStoreServiceException;
 	
 	public String query(String language, String query) throws TripleStoreServiceException;
 	

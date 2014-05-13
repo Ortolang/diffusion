@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.core;
 
+import java.util.List;
 import java.util.Set;
 
 import com.healthmarketscience.rmiio.RemoteInputStream;
@@ -77,6 +78,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService {
 	
 	public void createMetadataObject(String key, String name, RemoteInputStream data, String target) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
+	public List<String> findMetadataObjectsForTarget(String target) throws CoreServiceException, AccessDeniedException;
+	
 	public MetadataObject readMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public byte[] readMetadataObjectContent(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
@@ -98,6 +101,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService {
 	/*Link*/
 	
 	public void createLink(String key, String name, String target) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	
+	public List<String> findLinksForTarget(String target) throws CoreServiceException, AccessDeniedException;
 	
 	public Link readLink(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	

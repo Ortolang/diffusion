@@ -26,7 +26,8 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangIndexableContent;
+import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
+import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
@@ -150,7 +151,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 
 			String root = UUID.randomUUID().toString();
 			core.createCollection(root, "/", "root collection for workspace " + name);
-			registry.setProperty(root, CollectionProperty.LEVEL, CollectionProperty.Level.TOP.name());
+			registry.setProperty(root, CollectionProperty.ROOT, "true");
 			registry.setProperty(root, CollectionProperty.VERSION, CollectionProperty.Version.WORK.name());
 			Map<String, List<String>> rules = new HashMap<String, List<String>>();
 			rules.put(members, Arrays.asList("read", "update", "delete"));
@@ -407,7 +408,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	@RolesAllowed("system")
-	public OrtolangIndexableContent getIndexableContent(String key) throws OrtolangException {
+	public OrtolangIndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
@@ -415,7 +416,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 			}
 
-			OrtolangIndexableContent content = new OrtolangIndexableContent();
+			OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
 
 			if (identifier.getType().equals(Project.OBJECT_TYPE)) {
 				Project project = em.find(Project.class, identifier.getId());
@@ -424,6 +425,29 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 				}
 				content.addContentPart(project.getName());
 				content.addContentPart(project.getType());
+			}
+
+			return content;
+		} catch (KeyNotFoundException | RegistryServiceException e) {
+			throw new OrtolangException("unable to find an object for key " + key);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@RolesAllowed("system")
+	public OrtolangIndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException {
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+
+			if (!identifier.getService().equals(getServiceName())) {
+				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+			}
+
+			OrtolangIndexableSemanticContent content = new OrtolangIndexableSemanticContent();
+
+			if (identifier.getType().equals(Project.OBJECT_TYPE)) {
+				
 			}
 
 			return content;

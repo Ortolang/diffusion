@@ -97,10 +97,10 @@ public class IndexStoreServiceBean implements IndexStoreService {
 	}
 
 	@Override
-	public void reindex(String key, OrtolangIndexableObject object) throws IndexStoreServiceException {
-		logger.log(Level.FINE, "Reindexing key: " + key);
+	public void reindex(OrtolangIndexableObject object) throws IndexStoreServiceException {
+		logger.log(Level.FINE, "Reindexing object: " + object.getIdentifier());
 		try {
-			Term term = new Term("KEY", key);
+			Term term = new Term("KEY", object.getKey());
 			writer.updateDocument(term, IndexStoreDocumentBuilder.buildDocument(object));
 			writer.commit();
 		} catch (IOException e) {

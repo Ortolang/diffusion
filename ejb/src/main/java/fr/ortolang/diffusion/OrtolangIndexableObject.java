@@ -14,7 +14,8 @@ public class OrtolangIndexableObject {
 	private boolean hidden;
 	private String status;
 	private List<OrtolangObjectProperty> properties;
-	private OrtolangIndexableContent content;
+	private OrtolangIndexablePlainTextContent plainTextContent;
+	private OrtolangIndexableSemanticContent semanticContent;
 	
 	public OrtolangIndexableObject() {
 	}
@@ -35,8 +36,12 @@ public class OrtolangIndexableObject {
 		this.name = name;
 	}
 
-	public void setContent(OrtolangIndexableContent content) {
-		this.content = content;
+	public void setPlainTextContent(OrtolangIndexablePlainTextContent content) {
+		this.plainTextContent = content;
+	}
+	
+	public void setSemanticContent(OrtolangIndexableSemanticContent content) {
+		this.semanticContent = content;
 	}
 
 	public void setKey(String key) {
@@ -79,8 +84,12 @@ public class OrtolangIndexableObject {
 		return name;
 	}
 
-	public OrtolangIndexableContent getContent() {
-		return content;
+	public OrtolangIndexablePlainTextContent getPlainTextContent() {
+		return plainTextContent;
+	}
+	
+	public OrtolangIndexableSemanticContent getSemanticContent() {
+		return semanticContent;
 	}
 
 	public String getKey() {

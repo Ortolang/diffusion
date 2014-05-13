@@ -42,7 +42,7 @@ public class IndexStoreDocumentBuilder {
 			document.add(new Field(PROPERTY_FIELD_PREFIX + prop.getName().toUpperCase(), prop.getValue().toLowerCase(), StringField.TYPE_STORED));
 		}
 		document.add(new Field(STATUS_FIELD, object.getStatus().toLowerCase(), StringField.TYPE_STORED));
-		document.add(new Field(CONTENT_FIELD, object.getContent().toString(), TextField.TYPE_STORED));
+		document.add(new Field(CONTENT_FIELD, object.getPlainTextContent().toString(), TextField.TYPE_STORED));
 		return document;
 	}
 

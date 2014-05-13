@@ -6,18 +6,15 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.ejb.Local;
 import javax.ejb.Singleton;
 
-import org.openrdf.model.Statement;
-import org.openrdf.model.Value;
-import org.openrdf.model.impl.LiteralImpl;
+import org.openrdf.model.Resource;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
@@ -25,19 +22,20 @@ import org.openrdf.query.TupleQuery;
 import org.openrdf.query.resultio.sparqlxml.SPARQLResultsXMLWriter;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryResult;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.rdfxml.RDFXMLWriter;
 import org.openrdf.sail.nativerdf.NativeStore;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangIndexableObject;
 
 @Local(TripleStoreService.class)
 @Singleton(name = TripleStoreService.SERVICE_NAME)
 public class TripleStoreServiceBean implements TripleStoreService {
 	
 	public static final String DEFAULT_TRIPLE_HOME = "/triple-store";
+	
     
     private Logger logger = Logger.getLogger(TripleStoreServiceBean.class.getName());
     private Path base;
@@ -56,8 +54,20 @@ public class TripleStoreServiceBean implements TripleStoreService {
     		repository = new SailRepository(new NativeStore(base.toFile()));
             repository.initialize();
             this.importOntology("http://www.w3.org/2000/01/rdf-schema#", "ontology/rdfs.xml");
+            this.importOntology("http://xmlns.com/foaf/0.1/", "ontology/foaf.xml");
+            this.importOntology("http://www.ortolang.fr/2014/05/diffusion#", "ontology/ortolang.xml");
 	    } catch (Exception e) {
     		logger.log(Level.SEVERE, "unable to initialize triple store", e);
+    	}
+    }
+    
+    @PreDestroy
+    public void shutdown() {
+    	logger.log(Level.INFO, "Shuting down triple store");
+    	try {
+    		repository.shutDown();
+        } catch (Exception e) {
+    		logger.log(Level.SEVERE, "unable to shutdown triple store", e);
     	}
     }
 
@@ -85,19 +95,13 @@ public class TripleStoreServiceBean implements TripleStoreService {
             throw new TripleStoreServiceException("unable to import ontology in store", e);
         }
 	}
-
+	
 	@Override
-	public void insertTriple(String subject, String predicate, String object) throws TripleStoreServiceException {
+	public void index(OrtolangIndexableObject object) throws TripleStoreServiceException {
 		try {
-            Value objectValue;
+			RepositoryConnection con = repository.getConnection();
             try {
-                objectValue = new URIImpl(object);
-            } catch (IllegalArgumentException iae) {
-                objectValue = new LiteralImpl(object);
-            }
-            RepositoryConnection con = repository.getConnection();
-            try {
-                con.add(new URIImpl(subject), new URIImpl(predicate), objectValue);
+            	con.add(TripleStoreStatementBuilder.buildStatements(object), getContext(object.getKey()));
             } finally {
                 con.close();
             }
@@ -107,93 +111,30 @@ public class TripleStoreServiceBean implements TripleStoreService {
 	}
 
 	@Override
-	public void removeTriple(String subject, String predicate, String object) throws TripleStoreServiceException {
+	public void reindex(OrtolangIndexableObject object) throws TripleStoreServiceException {
 		try {
-            Value objectValue;
-            try {
-                objectValue = new URIImpl(object);
-            } catch (IllegalArgumentException iae) {
-                objectValue = new LiteralImpl(object);
-            }
             RepositoryConnection con = repository.getConnection();
             try {
-                con.remove(new URIImpl(subject), new URIImpl(predicate), objectValue);
+            	con.clear(getContext(object.getKey()));
             } finally {
                 con.close();
             }
         } catch (Exception e) {
-            throw new TripleStoreServiceException("unable to remove triple from store", e);
+            throw new TripleStoreServiceException("unable to remove triples for key: " + object.getKey(), e);
         }
 	}
-
+	
 	@Override
-	public void removeTriples(String subject, String predicate, String object) throws TripleStoreServiceException {
-		URIImpl usubject = null;
-        URIImpl upredicate = null;
-        Value uobject = null;
-        if (subject != null) {
-            usubject = new URIImpl(subject);
-        }
-        if (predicate != null) {
-            upredicate = new URIImpl(predicate);
-        }
-        if (object != null) {
-            try {
-                uobject = new URIImpl(object);
-            } catch (IllegalArgumentException iae) {
-                uobject = new LiteralImpl(object);
-            }
-        }
-        if (usubject == null && upredicate == null && uobject == null) {
-            throw new TripleStoreServiceException("unable to remove all triples of the store");
-        }
-        try {
+	public void remove(String key) throws TripleStoreServiceException {
+		try {
             RepositoryConnection con = repository.getConnection();
             try {
-                con.remove(usubject, upredicate, uobject);
+            	con.clear(getContext(key));
             } finally {
                 con.close();
             }
         } catch (Exception e) {
-            throw new TripleStoreServiceException("unable to remove triples" + subject, e);
-        }
-	}
-
-	@Override
-	public List<Triple> listTriples(String subject, String predicate, String object) throws TripleStoreServiceException {
-		URIImpl usubject = null;
-        URIImpl upredicate = null;
-        Value uobject = null;
-        if (subject != null) {
-            usubject = new URIImpl(subject);
-        }
-        if (predicate != null) {
-            upredicate = new URIImpl(predicate);
-        }
-        if (object != null) {
-            try {
-                uobject = new URIImpl(object);
-            } catch (IllegalArgumentException iae) {
-                uobject = new LiteralImpl(object);
-            }
-        }
-        try {
-            RepositoryConnection con = repository.getConnection();
-            try {
-                RepositoryResult<Statement> statements = con.getStatements(usubject, upredicate, uobject, true);
-                Vector<Triple> result = new Vector<Triple>();
-                while (statements.hasNext()) {
-                    Statement statement = statements.next();
-                    Triple tuple = new Triple(statement.getSubject().stringValue(), statement.getPredicate().stringValue(), statement.getObject().stringValue());
-                    result.add(tuple);
-                }
-                statements.close();
-                return result;
-            } finally {
-                con.close();
-            }
-        } catch (Exception e) {
-            throw new TripleStoreServiceException("unable to list triples" + subject, e);
+            throw new TripleStoreServiceException("unable to remove triples for key: " + key, e);
         }
 	}
 
@@ -246,5 +187,9 @@ public class TripleStoreServiceBean implements TripleStoreService {
             throw new TripleStoreServiceException("unable to execute query", e);
         }
 	}
-
+	
+	private Resource getContext(String key) {
+		return new URIImpl(BASE_CONTEXT_URI + key);
+	}
+	
 }

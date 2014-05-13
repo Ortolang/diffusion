@@ -13,38 +13,50 @@ import javax.jms.MessageListener;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangIndexableContent;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
+import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
+import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.store.index.IndexStoreService;
 import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
+import fr.ortolang.diffusion.store.triple.TripleStoreService;
+import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 
-@MessageDriven(name = "IndexingTopicMDB", activationConfig = {
-        @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
-        @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
+@MessageDriven(name = "IndexingTopicMDB", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
+		@ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
+		@ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @SecurityDomain("ortolang")
 @RunAs("system")
 public class IndexingListenerBean implements MessageListener {
-	
+
 	private Logger logger = Logger.getLogger(IndexingListenerBean.class.getName());
-	
+
 	@EJB
-	private IndexStoreService store;
+	private IndexStoreService indexStore;
+	@EJB
+	private TripleStoreService tripleStore;
 	@EJB
 	private RegistryService registry;
-	
+
 	public void setIndexStoreService(IndexStoreService store) {
-		this.store = store;
+		this.indexStore = store;
 	}
-	
+
 	public IndexStoreService getIndexStoreService() {
-		return store;
+		return indexStore;
 	}
-	
+
+	public TripleStoreService getTripleStoreService() {
+		return tripleStore;
+	}
+
+	public void setTripleStoreService(TripleStoreService triple) {
+		this.tripleStore = triple;
+	}
+
 	public RegistryService getRegistry() {
 		return registry;
 	}
@@ -61,51 +73,55 @@ public class IndexingListenerBean implements MessageListener {
 			String key = message.getStringProperty("key");
 			logger.log(Level.FINE, action + " action called on key: " + key);
 			try {
-        		if (action.equals("index"))
-	                this.addToIndexStore(key);
-	            if (action.equals("reindex"))
-	                this.updateIndexStore(key);
-	            if (action.equals("remove"))
-	                this.removeFromIndexStore(key);
-        	} catch (Exception e) {
-        		logger.log(Level.WARNING, "error during indexation of key " + key, e);
-            }
+				if (action.equals("index"))
+					this.addToStore(key);
+				if (action.equals("reindex"))
+					this.updateStore(key);
+				if (action.equals("remove"))
+					this.removeFromStore(key);
+			} catch (Exception e) {
+				logger.log(Level.WARNING, "error during indexation of key " + key, e);
+			}
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "unable to index content", e);
 		}
 	}
-	
-	private void addToIndexStore(String key) throws IndexingServiceException {
+
+	private void addToStore(String key) throws IndexingServiceException {
 		try {
 			OrtolangIndexableObject object = buildIndexableObject(key);
-			store.index(object);
-		} catch ( IndexStoreServiceException e ) {
-			throw new IndexingServiceException("unable to insert object in index store", e);
+			indexStore.index(object);
+			tripleStore.index(object);
+		} catch (IndexStoreServiceException | TripleStoreServiceException e) {
+			throw new IndexingServiceException("unable to insert object in store", e);
 		}
 	}
-	
-	private void updateIndexStore(String key) throws IndexingServiceException {
+
+	private void updateStore(String key) throws IndexingServiceException {
 		try {
 			OrtolangIndexableObject object = buildIndexableObject(key);
-			store.reindex(key, object);
-		} catch ( IndexStoreServiceException e ) {
-			throw new IndexingServiceException("unable to update object in index store", e);
+			indexStore.reindex(object);
+			tripleStore.reindex(object);
+		} catch (IndexStoreServiceException | TripleStoreServiceException e) {
+			throw new IndexingServiceException("unable to update object in store", e);
 		}
 	}
-	
-	private void removeFromIndexStore(String key) throws IndexingServiceException {
+
+	private void removeFromStore(String key) throws IndexingServiceException {
 		try {
-			store.remove(key);
-		} catch ( IndexStoreServiceException e ) {
-			throw new IndexingServiceException("unable to remove object from index store", e);
+			indexStore.remove(key);
+			tripleStore.remove(key);
+		} catch (IndexStoreServiceException | TripleStoreServiceException e) {
+			throw new IndexingServiceException("unable to remove object from store", e);
 		}
 	}
-	
+
 	private OrtolangIndexableObject buildIndexableObject(String key) throws IndexingServiceException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
-			OrtolangIndexableContent content = service.getIndexableContent(key);
+			OrtolangIndexablePlainTextContent content = service.getIndexablePlainTextContent(key);
+			OrtolangIndexableSemanticContent scontent = service.getIndexableSemanticContent(key);
 			OrtolangIndexableObject iobject = new OrtolangIndexableObject();
 			iobject.setKey(key);
 			iobject.setIdentifier(identifier);
@@ -116,11 +132,12 @@ public class IndexingListenerBean implements MessageListener {
 			iobject.setStatus(registry.getPublicationStatus(key));
 			iobject.setProperties(registry.getProperties(key));
 			iobject.setName(key);
-			iobject.setContent(content);
+			iobject.setPlainTextContent(content);
+			iobject.setSemanticContent(scontent);
 			return iobject;
-		} catch ( Exception e ) {
+		} catch (Exception e) {
 			throw new IndexingServiceException("unable to get indexable content for object ", e);
 		}
 	}
-	
+
 }

@@ -2,9 +2,37 @@
   <div class="panel-heading">
   	<h3 class="panel-title"><strong>Listing all metadatas</strong></h3>
   </div>
+  #if ( $params['target'] ) 
+  <table class="table table-condensed table-hover">
+	<thead>
+       	<tr>
+       		<th>#</th>
+       		<th>Key</th>
+       		<th>Links</th>
+      	</tr>
+   	</thead>
+   	<tbody>
+	#foreach( $entry in $entity.entries.keySet() )
+		#set( $count = $foreach.count + $entity.start - 1 )
+		<tr>
+			<td>$count</td>
+			<td>$entry</td>
+			<td>
+				<div class="btn-group">
+   				#foreach( $link in $entity.entries.get($entry) )
+   					<a class="btn btn-default btn-xs" href="$link.uri">$link.rel</a> 
+   				#end
+   				</div>
+   			</td>
+   		</tr>
+	#end
+	</tbody>
+  </table>
+  #{else}
   <div class="panel-body">
-  	<p>listing of metadatas is not allowed</p>
+  	Listing of metadatas is only allowed for a specific target
   </div>
+  #end
 </div>
 #foreach( $link in $entity.links )
 	#if( $link.rel == "create" )

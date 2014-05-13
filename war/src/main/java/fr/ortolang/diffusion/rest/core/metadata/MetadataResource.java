@@ -19,6 +19,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
@@ -41,6 +42,7 @@ import fr.ortolang.diffusion.core.CoreServiceLocal;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rest.KeysPaginatedRepresentation;
 import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
@@ -65,9 +67,16 @@ public class MetadataResource {
     @GET
 	@Template( template="core/metadatas.vm", types={MediaType.TEXT_HTML})
 	@Produces(MediaType.TEXT_HTML)
-	public Response list() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "listing all metadatas");
+	public Response list(@QueryParam(value = "target") String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "listing metadatas for target: " + target);
 		UriBuilder metadatas = UriBuilder.fromUri(uriInfo.getBaseUri()).path(MetadataResource.class);
+		if ( target != null ) {
+			List<String> keys = core.findMetadataObjectsForTarget(target);
+			KeysPaginatedRepresentation representation = new KeysPaginatedRepresentation ();
+			for ( String key : keys ) {
+				representation.addEntry(key, javax.ws.rs.core.Link.fromUri(metadatas.clone().path(key).build()).rel("view").build());
+			}
+		}
 
 		KeysRepresentation representation = new KeysRepresentation ();
 		representation.addLink(Link.fromUri(metadatas.clone().build()).rel("create").build());

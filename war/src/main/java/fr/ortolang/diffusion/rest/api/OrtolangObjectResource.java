@@ -227,18 +227,32 @@ public class OrtolangObjectResource {
 	}
 
 	@GET
-	@Path("/search")
-	@Template( template="api/search.vm", types={MediaType.TEXT_HTML})
+	@Path("/index")
+	@Template( template="api/index.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
-	public Response search(@QueryParam(value = "query") String query) throws SearchServiceException {
-		logger.log(Level.INFO, "searching objects with query: " + query);
+	public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
+		logger.log(Level.INFO, "searching objects with plain text query: " + query);
 		List<OrtolangSearchResult> results;
 		if ( query != null && query.length() > 0 ) {
-			results = search.search(query);
+			results = search.indexSearch(query);
 		} else {
 			results = Collections.emptyList();
 		}
 		return Response.ok(results).build();
+	}
+	
+	@GET
+	@Path("/semantic")
+	@Template( template="api/semantic.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	public Response semanticSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
+		if ( query != null && query.length() > 0 ) {
+			logger.log(Level.INFO, "searching objects with semantic query: " + query);
+			String results = search.semanticSearch(query);
+			return Response.ok(results).build();
+		} else {
+			return Response.ok().build();
+		}
 	}
 
 }

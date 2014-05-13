@@ -43,6 +43,7 @@ public class Triple implements Serializable {
 		this.object = object;
 	}
 	
+	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("{").append(subject);

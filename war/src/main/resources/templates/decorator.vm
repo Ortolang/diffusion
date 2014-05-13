@@ -27,7 +27,8 @@
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
             <li><a href="$context/rest/objects">Browse</a></li>
-            <li><a href="$context/rest/objects/search">Search</a></li>
+            <li><a href="$context/rest/objects/index">Plain Text Search</a></li>
+            <li><a href="$context/rest/objects/semantic">Semantic Search</a></li>
             <li><a href="$context/rest/collaboration/projects">Projects</a></li>
           </ul>
         </div>

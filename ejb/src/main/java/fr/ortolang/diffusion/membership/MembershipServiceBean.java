@@ -23,7 +23,8 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangIndexableContent;
+import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
+import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
@@ -43,6 +44,9 @@ import fr.ortolang.diffusion.security.authentication.AuthenticationService;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import fr.ortolang.diffusion.store.triple.Triple;
+import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
+import fr.ortolang.diffusion.store.triple.URIHelper;
 
 @Remote(MembershipService.class)
 @Local(MembershipServiceLocal.class)
@@ -110,7 +114,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	public void setAuthorisationService(AuthorisationService authorisation) {
 		this.authorisation = authorisation;
 	}
-
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getProfileKeyForConnectedIdentifier() {
@@ -689,7 +693,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	@RolesAllowed("system")
-	public OrtolangIndexableContent getIndexableContent(String key) throws OrtolangException {
+	public OrtolangIndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
@@ -697,7 +701,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 			}
 
-			OrtolangIndexableContent content = new OrtolangIndexableContent();
+			OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
 
 			if (identifier.getType().equals(Profile.OBJECT_TYPE)) {
 				Profile profile = em.find(Profile.class, identifier.getId());
@@ -719,8 +723,46 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 
 			return content;
 		} catch (KeyNotFoundException | RegistryServiceException e) {
-			throw new OrtolangException("unable to find an object for key " + key);
+			throw new OrtolangException("unable to get indexable plain text content for key " + key);
 		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@RolesAllowed("system")
+	public OrtolangIndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException {
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+
+			if (!identifier.getService().equals(getServiceName())) {
+				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+			}
+
+			OrtolangIndexableSemanticContent content = new OrtolangIndexableSemanticContent();
+			
+			if (identifier.getType().equals(Profile.OBJECT_TYPE)) {
+				Profile profile = em.find(Profile.class, identifier.getId());
+				if (profile != null) {
+					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "http://xmlns.com/foaf/0.1/Person"));
+					content.addTriple(new Triple(URIHelper.fromKey(key), "http://xmlns.com/foaf/0.1/givenName", profile.getFullname()));
+					content.addTriple(new Triple(URIHelper.fromKey(key), "http://xmlns.com/foaf/0.1/mbox", profile.getEmail()));
+					for ( String group : profile.getGroups() ) {
+						content.addTriple(new Triple(URIHelper.fromKey(key), "http://xmlns.com/foaf/0.1/member", URIHelper.fromKey(group)));
+					}
+				}
+			}
+
+			if (identifier.getType().equals(Group.OBJECT_TYPE)) {
+				Group group = em.find(Group.class, identifier.getId());
+				if (group != null) {
+					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "http://xmlns.com/foaf/0.1/Group"));
+				}
+			}
+
+			return content;
+		} catch (KeyNotFoundException | RegistryServiceException | TripleStoreServiceException e) {
+			throw new OrtolangException("unable to get indexable semantic content for key " + key);
+		} 
 	}
 
 	private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws MembershipServiceException {

@@ -1,6 +1,7 @@
 package fr.ortolang.diffusion.rest.core.link;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,6 +17,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -27,6 +29,7 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rest.KeysPaginatedRepresentation;
 import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
@@ -49,9 +52,16 @@ public class LinkResource {
 	@GET
 	@Template( template="core/links.vm", types={MediaType.TEXT_HTML})
 	@Produces(MediaType.TEXT_HTML)
-	public Response list() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "listing all links");
+	public Response list(@QueryParam(value = "target") String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "listing links for target : " + target);
 		UriBuilder links = UriBuilder.fromUri(uriInfo.getBaseUri()).path(LinkResource.class);
+		if ( target != null ) {
+			List<String> keys = core.findLinksForTarget(target);
+			KeysPaginatedRepresentation representation = new KeysPaginatedRepresentation ();
+			for ( String key : keys ) {
+				representation.addEntry(key, javax.ws.rs.core.Link.fromUri(links.clone().path(key).build()).rel("view").build());
+			}
+		}
 
 		KeysRepresentation representation = new KeysRepresentation ();
 		representation.addLink(javax.ws.rs.core.Link.fromUri(links.clone().build()).rel("create").build());

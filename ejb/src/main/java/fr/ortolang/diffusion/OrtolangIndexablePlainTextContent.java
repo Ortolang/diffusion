@@ -1,10 +1,10 @@
 package fr.ortolang.diffusion;
 
-public class OrtolangIndexableContent {
+public class OrtolangIndexablePlainTextContent {
 	
 	private StringBuffer sb;
 
-    public OrtolangIndexableContent() {
+    public OrtolangIndexablePlainTextContent() {
         sb = new StringBuffer();
     }
 

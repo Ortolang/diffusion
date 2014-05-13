@@ -22,7 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import fr.ortolang.diffusion.OrtolangIndexableContent;
+import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
@@ -95,7 +95,7 @@ public class IndexStoreServiceTest {
 	
 	@Test
     public void testIndexDocument() {
-		OrtolangIndexableContent content = new OrtolangIndexableContent();
+		OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
 		content.addContentPart("tagada");
 		content.addContentPart("ceci est une petite phrase");
 		content.addContentPart("qui dure longtemps...");
@@ -110,7 +110,7 @@ public class IndexStoreServiceTest {
 		object.setLocked(false);
 		object.setStatus("draft");
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
-		object.setContent(content);
+		object.setPlainTextContent(content);
 		
 		try {
 			service.index(object);
@@ -130,7 +130,7 @@ public class IndexStoreServiceTest {
 	
 	@Test
     public void testReindexDocument() {
-		OrtolangIndexableContent content = new OrtolangIndexableContent();
+		OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
 		content.addContentPart("tagada");
 		content.addContentPart("ceci est une petite phrase");
 		content.addContentPart("qui dure longtemps...");
@@ -145,7 +145,7 @@ public class IndexStoreServiceTest {
 		object.setLocked(false);
 		object.setStatus("DRAFT");
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
-		object.setContent(content);
+		object.setPlainTextContent(content);
 		
 		try {
 			service.index(object);
@@ -157,8 +157,8 @@ public class IndexStoreServiceTest {
 			dumpResults(results);
 			assertEquals(0, results.size());
 			
-			object.getContent().addContentPart("avec des bidules en plus !");
-			service.reindex("K1", object);
+			object.getPlainTextContent().addContentPart("avec des bidules en plus !");
+			service.reindex(object);
 			
 			results = service.search("bidules");
 			dumpResults(results);
@@ -170,7 +170,7 @@ public class IndexStoreServiceTest {
 	
 	@Test
     public void testRemoveDocument() {
-		OrtolangIndexableContent content = new OrtolangIndexableContent();
+		OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
 		content.addContentPart("tagada");
 		content.addContentPart("ceci est une petite phrase");
 		content.addContentPart("qui dure longtemps...");
@@ -185,7 +185,7 @@ public class IndexStoreServiceTest {
 		object.setLocked(false);
 		object.setStatus("DRAFT");
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
-		object.setContent(content);
+		object.setPlainTextContent(content);
 		
 		try {
 			service.index(object);

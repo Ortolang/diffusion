@@ -36,7 +36,8 @@ import com.healthmarketscience.rmiio.RemoteOutputStreamClient;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangIndexableContent;
+import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
+import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
@@ -52,6 +53,7 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -1073,24 +1075,42 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		}
 	}
 
+	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	private List<Link> findLinksForTarget(String target) throws CoreServiceException {
-		TypedQuery<Link> query = em.createNamedQuery("findLinksForTarget", Link.class).setParameter("target", target);
-		List<Link> links = query.getResultList();
-		return links;
+	public List<String> findLinksForTarget(String target) throws CoreServiceException, AccessDeniedException {
+		logger.log(Level.FINE, "finding metadata for target [" + target + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkPermission(target, subjects, "read");
+			
+			TypedQuery<Link> query = em.createNamedQuery("findLinksForTarget", Link.class).setParameter("target", target);
+			List<Link> links = query.getResultList();
+			List<String> results = new ArrayList<String> ();
+			for ( Link link : links ) {
+				String key = registry.lookup(link.getObjectIdentifier());
+				results.add(key);
+			}
+			notification.throwEvent("", caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "find"), "target=" + target);
+			return results;
+		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
+			throw new CoreServiceException("unable to find link for target [" + target + "]", e);
+		}
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createMetadataObject(String key, String name, InputStream data, String target) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.FINE, "creating new metadata for key [" + key + "]");
+		logger.log(Level.FINE, "creating new metadata with key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkAuthentified(caller);
+			authorisation.checkOwnership(target, subjects);
 
 			OrtolangObjectIdentifier identifier = registry.lookup(target);
 			if (!identifier.getType().equals(Link.OBJECT_TYPE) || !identifier.getType().equals(Collection.OBJECT_TYPE) || !identifier.getType().equals(DataObject.OBJECT_TYPE)) {
-				throw new CoreServiceException("metadata target can only be a Reference, a DataObject or a Collection.");
+				throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
 			}
 
 			String hash = binarystore.put(data);
@@ -1101,8 +1121,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			meta.setSize(binarystore.size(hash));
 			meta.setContentType(binarystore.type(hash));
 			meta.setStream(hash);
-			// TODO asks to MetadataService whether it recognize the format or ask to the user ??
-			// meta.setFormat(format);
 			meta.setTarget(target);
 			em.persist(meta);
 
@@ -1120,7 +1138,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			ctx.setRollbackOnly();
 			throw e;
 		} catch (DataCollisionException | DataNotFoundException | BinaryStoreServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException
-				| IdentifierAlreadyRegisteredException | IndexingServiceException | AuthorisationServiceException e) {
+				| IdentifierAlreadyRegisteredException | IndexingServiceException | AuthorisationServiceException | MembershipServiceException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during metadata object creation", e);
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to create metadata object with key [" + key + "]", e);
@@ -1423,7 +1441,30 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			indexing.remove(key);
 			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "delete"), "");
 		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException | MembershipServiceException | AuthorisationServiceException e) {
-			throw new CoreServiceException("unable to delete object with key [" + key + "]", e);
+			throw new CoreServiceException("unable to delete metadata with key [" + key + "]", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<String> findMetadataObjectsForTarget(String target) throws CoreServiceException, AccessDeniedException {
+		logger.log(Level.FINE, "finding metadata for target [" + target + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkPermission(target, subjects, "read");
+			
+			TypedQuery<MetadataObject> query = em.createNamedQuery("findMetadataObjectsForTarget", MetadataObject.class).setParameter("target", target);
+			List<MetadataObject> mdos = query.getResultList();
+			List<String> results = new ArrayList<String> ();
+			for ( MetadataObject mdo : mdos ) {
+				String key = registry.lookup(mdo.getObjectIdentifier());
+				results.add(key);
+			}
+			notification.throwEvent("", caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "find"), "target=" + target);
+			return results;
+		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
+			throw new CoreServiceException("unable to find metadata for target [" + target + "]", e);
 		}
 	}
 
@@ -1497,7 +1538,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	@RolesAllowed("system")
-	public OrtolangIndexableContent getIndexableContent(String key) throws OrtolangException {
+	public OrtolangIndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
@@ -1505,7 +1546,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 			}
 
-			OrtolangIndexableContent content = new OrtolangIndexableContent();
+			OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
 
 			if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
 				DataObject object = em.find(DataObject.class, identifier.getId());
@@ -1557,6 +1598,61 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				content.addContentPart(metadata.getContentType());
 				content.addContentPart(metadata.getFormat());
 				content.addContentPart(metadata.getTarget());
+			}
+
+			return content;
+		} catch (KeyNotFoundException | RegistryServiceException e) {
+			throw new OrtolangException("unable to find an object for key " + key);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@RolesAllowed("system")
+	public OrtolangIndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException {
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+
+			if (!identifier.getService().equals(getServiceName())) {
+				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+			}
+
+			OrtolangIndexableSemanticContent content = new OrtolangIndexableSemanticContent();
+			
+			if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
+				DataObject object = em.find(DataObject.class, identifier.getId());
+				if (object == null) {
+					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
+				}
+				
+				//TODO insert semantic data based on ontology
+			}
+
+			if (identifier.getType().equals(Collection.OBJECT_TYPE)) {
+				Collection collection = em.find(Collection.class, identifier.getId());
+				if (collection == null) {
+					throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
+				}
+				
+				//TODO insert semantic data based on ontology
+			}
+
+			if (identifier.getType().equals(Link.OBJECT_TYPE)) {
+				Link reference = em.find(Link.class, identifier.getId());
+				if (reference == null) {
+					throw new OrtolangException("unable to load reference with id [" + identifier.getId() + "] from storage");
+				}
+				
+				//TODO insert semantic data based on ontology
+			}
+
+			if (identifier.getType().equals(MetadataObject.OBJECT_TYPE)) {
+				MetadataObject metadata = em.find(MetadataObject.class, identifier.getId());
+				if (metadata == null) {
+					throw new OrtolangException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+				}
+				
+				//TODO wrap internal metadata object semantic information into a node based on ontology
 			}
 
 			return content;

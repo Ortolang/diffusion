@@ -129,6 +129,7 @@ public class PublicationServiceBean implements PublicationService {
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
 				registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
+				registry.setProperty(key, OrtolangObjectProperty.PUBLICATION_TIMESTAMP, "" + System.currentTimeMillis());
 				indexing.reindex(key);
 				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "publish"), "");
 			}
