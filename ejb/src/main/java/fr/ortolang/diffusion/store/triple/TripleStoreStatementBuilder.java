@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.store.triple;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -11,14 +13,33 @@ import org.openrdf.model.impl.StatementImpl;
 import org.openrdf.model.impl.URIImpl;
 
 import fr.ortolang.diffusion.OrtolangIndexableObject;
+import fr.ortolang.diffusion.OrtolangObjectProperty;
 
 public class TripleStoreStatementBuilder {
+	
+	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 	
 	public static Set<Statement> buildStatements(OrtolangIndexableObject object) throws TripleStoreServiceException {
 		Set<Statement> statements = new HashSet<Statement> ();
 		statements.add(buildStatement(URIHelper.fromKey(object.getKey()), "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "http://www.ortolang.fr/2014/05/diffusion#Object"));
 		statements.add(buildStatement(URIHelper.fromKey(object.getKey()), "http://www.ortolang.fr/2014/05/diffusion#service", object.getService()));
 		statements.add(buildStatement(URIHelper.fromKey(object.getKey()), "http://www.ortolang.fr/2014/05/diffusion#type", object.getType()));
+		for ( OrtolangObjectProperty property : object.getProperties() ) {
+			switch ( property.getName() ) {
+				case OrtolangObjectProperty.AUTHOR :
+					statements.add(buildStatement(URIHelper.fromKey(object.getKey()), "http://www.ortolang.fr/2014/05/diffusion#author", URIHelper.fromKey(property.getValue())));
+					break;
+				case OrtolangObjectProperty.CREATION_TIMESTAMP :
+					statements.add(buildStatement(URIHelper.fromKey(object.getKey()), "http://www.ortolang.fr/2014/05/diffusion#creationDate", sdf.format(new Date(Long.parseLong(property.getValue())))));
+					break;
+				case OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP :
+					statements.add(buildStatement(URIHelper.fromKey(object.getKey()), "http://www.ortolang.fr/2014/05/diffusion#modificationDate", sdf.format(new Date(Long.parseLong(property.getValue())))));
+					break;
+				case OrtolangObjectProperty.PUBLICATION_TIMESTAMP :
+					statements.add(buildStatement(URIHelper.fromKey(object.getKey()), "http://www.ortolang.fr/2014/05/diffusion#publicationDate", sdf.format(new Date(Long.parseLong(property.getValue())))));
+					break;
+			}
+		}
 		for ( Triple triple : object.getSemanticContent().getTriples() ) {
 			statements.add(buildStatement(triple.getSubject(), triple.getPredicate(), triple.getObject()));
 		}
