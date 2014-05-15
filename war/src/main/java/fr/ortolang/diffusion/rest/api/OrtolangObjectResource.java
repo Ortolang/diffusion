@@ -244,11 +244,11 @@ public class OrtolangObjectResource {
 	@GET
 	@Path("/semantic")
 	@Template( template="api/semantic.vm", types={MediaType.TEXT_HTML})
-	@Produces({MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML})
 	public Response semanticSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
 		if ( query != null && query.length() > 0 ) {
 			logger.log(Level.INFO, "searching objects with semantic query: " + query);
-			String results = search.semanticSearch(query);
+			String results = search.semanticSearch(query, "json");
 			return Response.ok(results).build();
 		} else {
 			return Response.ok("").build();

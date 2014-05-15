@@ -23,8 +23,8 @@ public interface TripleStoreService {
 	
 	public void remove(String key) throws TripleStoreServiceException;
 	
-	public String query(String language, String query) throws TripleStoreServiceException;
+	public String query(String language, String query, String languageResult) throws TripleStoreServiceException;
 	
-	public void query(String language, String query, OutputStream os) throws TripleStoreServiceException;
+	public void query(String language, String query, OutputStream os, String languageResult) throws TripleStoreServiceException;
 
 }

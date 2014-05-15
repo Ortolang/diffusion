@@ -19,6 +19,8 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQuery;
+import org.openrdf.query.resultio.TupleQueryResultWriter;
+import org.openrdf.query.resultio.sparqljson.SPARQLResultsJSONWriter;
 import org.openrdf.query.resultio.sparqlxml.SPARQLResultsXMLWriter;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
@@ -139,7 +141,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
 	}
 
 	@Override
-	public String query(String language, String query) throws TripleStoreServiceException {
+	public String query(String language, String query, String languageResult) throws TripleStoreServiceException {
 		try {
         	ByteArrayOutputStream baos = new ByteArrayOutputStream();
         	RepositoryConnection con = repository.getConnection();
@@ -149,7 +151,16 @@ public class TripleStoreServiceBean implements TripleStoreService {
 		            GraphQuery gquery = con.prepareGraphQuery(QueryLanguage.SERQL, query);
 	                gquery.evaluate(writer);
         		} else if ( language.equals(QueryLanguage.SPARQL.getName()) ) {
-        			SPARQLResultsXMLWriter writer = new SPARQLResultsXMLWriter(baos);
+        			TupleQueryResultWriter writer = null;
+        			switch(languageResult) {
+        				case "json":
+        					writer = new SPARQLResultsJSONWriter(baos);
+        					break;
+        				case "xml":
+        				default:		
+        					writer = new SPARQLResultsXMLWriter(baos);
+        				break;
+        			}
         			TupleQuery tquery = con.prepareTupleQuery(QueryLanguage.SPARQL, query);
         			tquery.evaluate(writer);
         		} else {
@@ -165,7 +176,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
 	}
 
 	@Override
-	public void query(String language, String query, OutputStream os) throws TripleStoreServiceException {
+	public void query(String language, String query, OutputStream os, String languageResult) throws TripleStoreServiceException {
 		try {
         	RepositoryConnection con = repository.getConnection();
         	try {
@@ -174,7 +185,16 @@ public class TripleStoreServiceBean implements TripleStoreService {
 		            GraphQuery gquery = con.prepareGraphQuery(QueryLanguage.SERQL, query);
 	                gquery.evaluate(writer);
         		} else if ( language.equals(QueryLanguage.SPARQL.getName()) ) {
-        			SPARQLResultsXMLWriter writer = new SPARQLResultsXMLWriter(os);
+        			TupleQueryResultWriter writer = null;
+        			switch(languageResult) {
+        				case "json":
+        					writer = new SPARQLResultsJSONWriter(os);
+        					break;
+        				case "xml":
+        				default:		
+        					writer = new SPARQLResultsXMLWriter(os);
+        				break;
+        			}
         			TupleQuery tquery = con.prepareTupleQuery(QueryLanguage.SPARQL, query);
         			tquery.evaluate(writer);
         		} else {

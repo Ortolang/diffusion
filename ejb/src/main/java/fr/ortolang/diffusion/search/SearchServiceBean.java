@@ -146,11 +146,11 @@ public class SearchServiceBean implements SearchService {
 	}
 	
 	@Override
-	public String semanticSearch(String query) throws SearchServiceException {
+	public String semanticSearch(String query, String languageResult) throws SearchServiceException {
 		logger.log(Level.FINE, "Performing semantic search with query: " + query);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			String result = tripleStore.query("SPARQL", query);
+			String result = tripleStore.query("SPARQL", query, languageResult);
 			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "triple-search"), "query=" + query);
 			return result;
 		} catch ( TripleStoreServiceException | NotificationServiceException e ) {

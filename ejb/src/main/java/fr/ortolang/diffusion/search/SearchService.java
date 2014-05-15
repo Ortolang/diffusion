@@ -12,6 +12,6 @@ public interface SearchService extends OrtolangService {
 	
 	public List<OrtolangSearchResult> indexSearch(String query) throws SearchServiceException;
 	
-	public String semanticSearch(String query) throws SearchServiceException;
+	public String semanticSearch(String query, String languageResult) throws SearchServiceException;
 	
 }
