@@ -104,11 +104,11 @@ public class TripleStoreServiceTest {
 			String query = "SELECT ?x WHERE { ?x  <http://purl.org/dc/elements/1.1/language>  \"en\" }";
 			
 			service.index(object);
-			String result = service.query("SPARQL", query);
+			String result = service.query("SPARQL", query, "xml");
 			assertTrue(result.contains("<uri>http://www.w3schools.com</uri>"));
 			
 			service.remove("K1");
-			result = service.query("SPARQL", query);
+			result = service.query("SPARQL", query, "xml");
 			assertFalse(result.contains("<uri>http://www.w3schools.com</uri>"));
 		} catch (Exception e) {
 			e.printStackTrace();
