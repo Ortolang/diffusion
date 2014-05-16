@@ -65,6 +65,9 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import fr.ortolang.diffusion.store.triple.Triple;
+import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
+import fr.ortolang.diffusion.store.triple.URIHelper;
 
 @Remote(CoreService.class)
 @Local(CoreServiceLocal.class)
@@ -1109,7 +1112,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			authorisation.checkOwnership(target, subjects);
 
 			OrtolangObjectIdentifier identifier = registry.lookup(target);
-			if (!identifier.getType().equals(Link.OBJECT_TYPE) || !identifier.getType().equals(Collection.OBJECT_TYPE) || !identifier.getType().equals(DataObject.OBJECT_TYPE)) {
+			if (!identifier.getType().equals(Link.OBJECT_TYPE) && !identifier.getType().equals(Collection.OBJECT_TYPE) && !identifier.getType().equals(DataObject.OBJECT_TYPE)) {
 				throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
 			}
 
@@ -1625,6 +1628,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
 				}
 				
+				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", object.getName()));
+				
 				//TODO insert semantic data based on ontology
 			}
 
@@ -1633,6 +1638,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				if (collection == null) {
 					throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
 				}
+
+				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", collection.getName()));
 				
 				//TODO insert semantic data based on ontology
 			}
@@ -1642,6 +1649,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				if (reference == null) {
 					throw new OrtolangException("unable to load reference with id [" + identifier.getId() + "] from storage");
 				}
+
+				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", reference.getName()));
 				
 				//TODO insert semantic data based on ontology
 			}
@@ -1651,12 +1660,18 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				if (metadata == null) {
 					throw new OrtolangException("unable to load metadata with id [" + identifier.getId() + "] from storage");
 				}
+
+				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", metadata.getName()));
 				
 				//TODO wrap internal metadata object semantic information into a node based on ontology
+				if(metadata.getFormat().equals("text/rdf+application")) { //TODO mettre le bon mime type
+					//TODO convert RDF to Triple
+					binarystore.extract(metadata.getStream());
+				}
 			}
 
 			return content;
-		} catch (KeyNotFoundException | RegistryServiceException e) {
+		} catch (KeyNotFoundException | RegistryServiceException | TripleStoreServiceException | BinaryStoreServiceException | DataNotFoundException e) {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}

@@ -61,4 +61,20 @@
   <rdfs:domain rdf:resource="http://www.ortolang.fr/2014/05/diffusion#Resource"/>
 </rdf:Property>
 
+<rdf:Property rdf:about="http://www.ortolang.fr/2014/05/diffusion#name">
+  <rdfs:isDefinedBy rdf:resource="http://www.ortolang.fr/2014/05/diffusion#"/>
+  <rdfs:label>name</rdfs:label>
+  <rdfs:comment>The subject has a name.</rdfs:comment>
+  <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal" rdf:Datatype="xsd:string"/>
+  <rdfs:domain rdf:resource="http://www.ortolang.fr/2014/05/diffusion#Resource"/>
+</rdf:Property>
+
+<rdf:Property rdf:about="http://www.ortolang.fr/2014/05/diffusion#description">
+  <rdfs:isDefinedBy rdf:resource="http://www.ortolang.fr/2014/05/diffusion#"/>
+  <rdfs:label>description</rdfs:label>
+  <rdfs:comment>The subject has a description.</rdfs:comment>
+  <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal" rdf:Datatype="xsd:string"/>
+  <rdfs:domain rdf:resource="http://www.ortolang.fr/2014/05/diffusion#Resource"/>
+</rdf:Property>
+
 </rdf:RDF>
