@@ -66,6 +66,7 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.triple.Triple;
+import fr.ortolang.diffusion.store.triple.TripleStoreService;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 import fr.ortolang.diffusion.store.triple.URIHelper;
 
@@ -82,6 +83,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	private RegistryService registry;
 	@EJB
 	private BinaryStoreService binarystore;
+	@EJB
+	private TripleStoreService triplestore;
 	@EJB
 	private MembershipService membership;
 	@EJB
@@ -112,6 +115,14 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	public void setBinaryStoreService(BinaryStoreService binaryStoreService) {
 		this.binarystore = binaryStoreService;
+	}
+
+	public TripleStoreService getTripleStoreService() {
+		return triplestore;
+	}
+
+	public void setTripleStoreService(TripleStoreService tripleStoreService) {
+		this.triplestore = tripleStoreService;
 	}
 
 	public NotificationService getNotificationService() {
@@ -1664,9 +1675,14 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", metadata.getName()));
 				
 				//TODO wrap internal metadata object semantic information into a node based on ontology
-				if(metadata.getFormat().equals("text/rdf+application")) { //TODO mettre le bon mime type
-					//TODO convert RDF to Triple
-					binarystore.extract(metadata.getStream());
+				// Convert RDF to Triple
+				try {
+					Set<Triple> triplesContent = triplestore.extractTriples(binarystore.get(metadata.getStream()), metadata.getContentType());
+					for(Triple triple : triplesContent) {
+						content.addTriple(triple);
+					}
+				} catch(TripleStoreServiceException te) {
+					//TODO Warning ?
 				}
 			}
 

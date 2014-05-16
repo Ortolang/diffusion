@@ -1,11 +1,14 @@
 package fr.ortolang.diffusion.store.triple;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,7 +17,9 @@ import javax.annotation.PreDestroy;
 import javax.ejb.Local;
 import javax.ejb.Singleton;
 
+import org.openrdf.model.Model;
 import org.openrdf.model.Resource;
+import org.openrdf.model.Statement;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
@@ -26,6 +31,10 @@ import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.rio.RDFFormat;
+import org.openrdf.rio.RDFParseException;
+import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.Rio;
+import org.openrdf.rio.UnsupportedRDFormatException;
 import org.openrdf.rio.rdfxml.RDFXMLWriter;
 import org.openrdf.sail.nativerdf.NativeStore;
 
@@ -207,9 +216,33 @@ public class TripleStoreServiceBean implements TripleStoreService {
             throw new TripleStoreServiceException("unable to execute query", e);
         }
 	}
+
+	/**
+	 * Extracts triples from RDF string.
+	 * @param rdf a string representation of the RDF
+	 * @return the list of triples extracted from RDF
+	 */
+	@Override
+	public Set<Triple> extractTriples(InputStream input, String contentType) throws TripleStoreServiceException {
+		RDFFormat format = Rio.getParserFormatForMIMEType(contentType); //TODO use fallback ?
+		
+		try {
+			//TODO creates our own RDFHandler
+			Model results = Rio.parse(input, "", format);
+
+			Set<Triple> triples = new HashSet<Triple>();
+			for (Statement statement: results) {
+				triples.add(new Triple(statement.getSubject().stringValue(), statement.getPredicate().stringValue(), statement.getObject().stringValue()));
+			}
+			return triples;
+		} catch (RDFParseException | UnsupportedRDFormatException | IOException e) {
+			throw new TripleStoreServiceException("Unable to extract triples");
+		}
+	}
 	
 	private Resource getContext(String key) {
 		return new URIImpl(BASE_CONTEXT_URI + key);
 	}
+
 	
 }

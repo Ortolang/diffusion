@@ -1,6 +1,8 @@
 package fr.ortolang.diffusion.store.triple;
 
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Set;
 
 import org.openrdf.query.QueryLanguage;
 
@@ -27,4 +29,5 @@ public interface TripleStoreService {
 	
 	public void query(String language, String query, OutputStream os, String languageResult) throws TripleStoreServiceException;
 
+	public Set<Triple> extractTriples(InputStream input, String contentType) throws TripleStoreServiceException;
 }
