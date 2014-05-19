@@ -66,20 +66,24 @@ public class MetadataResource {
     
     @GET
 	@Template( template="core/metadatas.vm", types={MediaType.TEXT_HTML})
-	@Produces(MediaType.TEXT_HTML)
+	@Produces({MediaType.APPLICATION_JSON,MediaType.TEXT_HTML})
 	public Response list(@QueryParam(value = "target") String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "listing metadatas for target: " + target);
+		KeysRepresentation representation = new KeysRepresentation ();
 		UriBuilder metadatas = UriBuilder.fromUri(uriInfo.getBaseUri()).path(MetadataResource.class);
+		
 		if ( target != null ) {
 			List<String> keys = core.findMetadataObjectsForTarget(target);
-			KeysPaginatedRepresentation representation = new KeysPaginatedRepresentation ();
+			logger.log(Level.INFO, "listing for target: " + keys.size());
+//			KeysPaginatedRepresentation representation = new KeysPaginatedRepresentation ();
+			
 			for ( String key : keys ) {
 				representation.addEntry(key, javax.ws.rs.core.Link.fromUri(metadatas.clone().path(key).build()).rel("view").build());
 			}
 		}
 
-		KeysRepresentation representation = new KeysRepresentation ();
-		representation.addLink(Link.fromUri(metadatas.clone().build()).rel("create").build());
+//		KeysRepresentation representation = new KeysRepresentation ();
+//		representation.addLink(Link.fromUri(metadatas.clone().build()).rel("create").build());
 		return Response.ok(representation).build();
 	}
     
