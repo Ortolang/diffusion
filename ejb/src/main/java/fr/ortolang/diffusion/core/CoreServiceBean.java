@@ -426,21 +426,19 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			streams.putAll(object.getStreams());
 			clone.setStreams(streams);
 			clone.setPreview(object.getPreview());
+			Set<String> metadatas = new HashSet<String>();
+			for (String metadata : object.getMetadatas()) {
+				String mid = UUID.randomUUID().toString();
+				systemCloneMetadataObject(mid, metadata, id);
+				metadatas.add(mid);
+			}
+			clone.setMetadatas(metadatas);
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
 			
 			authorisation.clonePolicy(key, origin);
 			
-			Set<String> metadatas = new HashSet<String>();
-			for (String metadata : object.getMetadatas()) {
-				String mid = UUID.randomUUID().toString();
-				cloneMetadataObject(mid, metadata, id);
-				metadatas.add(mid);
-			}
-			clone.setMetadatas(metadatas);
-			em.merge(clone);
-
 			indexing.index(key);
 			notification.throwEvent(origin, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "clone"), "key=" + key);
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException e) {
@@ -731,21 +729,19 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			Set<String> elements = new HashSet<String>();
 			elements.addAll(collection.getElements());
 			clone.setElements(elements);
+			Set<String> metadatas = new HashSet<String>();
+			for (String metadata : collection.getMetadatas()) {
+				String mid = UUID.randomUUID().toString();
+				systemCloneMetadataObject(mid, metadata, id);
+				metadatas.add(mid);
+			}
+			clone.setMetadatas(metadatas);
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
 			
 			authorisation.clonePolicy(key, origin);
 			
-			Set<String> metadatas = new HashSet<String>();
-			for (String metadata : collection.getMetadatas()) {
-				String mid = UUID.randomUUID().toString();
-				cloneMetadataObject(mid, metadata, id);
-				metadatas.add(mid);
-			}
-			clone.setMetadatas(metadatas);
-			em.merge(clone);
-
 			indexing.index(key);
 			notification.throwEvent(origin, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "clone"), "key=" + key);
 		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException | AuthorisationServiceException e) {
@@ -1061,21 +1057,19 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			clone.setName(link.getName());
 			clone.setDynamic(link.isDynamic());
 			clone.setTarget(link.getTarget());
+			Set<String> metadatas = new HashSet<String>();
+			for (String metadata : link.getMetadatas()) {
+				String mid = UUID.randomUUID().toString();
+				systemCloneMetadataObject(mid, metadata, id);
+				metadatas.add(mid);
+			}
+			clone.setMetadatas(metadatas);
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
 			
 			authorisation.clonePolicy(key, origin);
 			
-			Set<String> metadatas = new HashSet<String>();
-			for (String metadata : link.getMetadatas()) {
-				String mid = UUID.randomUUID().toString();
-				cloneMetadataObject(mid, metadata, id);
-				metadatas.add(mid);
-			}
-			clone.setMetadatas(metadatas);
-			em.merge(clone);
-
 			indexing.index(key);
 			notification.throwEvent(origin, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "clone"), "key=" + key);
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException e) {
@@ -1449,6 +1443,41 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		} catch (IOException e) {
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to update metadata with key [" + key + "]", e);
+		}
+	}
+	
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	private void systemCloneMetadataObject(String key, String origin, String target) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.FINE, "system clone of metadata for origin [" + origin + "] and key [" + key + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier identifier = registry.lookup(origin);
+			checkObjectType(identifier, MetadataObject.OBJECT_TYPE);
+
+			MetadataObject meta = em.find(MetadataObject.class, identifier.getId());
+			if (meta == null) {
+				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+			}
+
+			MetadataObject clone = new MetadataObject();
+			clone.setId(UUID.randomUUID().toString());
+			clone.setName(meta.getName());
+			clone.setTarget(target);
+			clone.setSize(meta.getSize());
+			clone.setContentType(meta.getContentType());
+			clone.setStream(meta.getStream());
+			em.persist(clone);
+
+			registry.register(key, clone.getObjectIdentifier(), origin, true);
+			authorisation.clonePolicy(key, origin);
+
+			indexing.index(key);
+			notification.throwEvent(origin, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "clone"), "key="
+					+ key);
+		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException | AuthorisationServiceException e) {
+			ctx.setRollbackOnly();
+			throw new CoreServiceException("unable to clone metadata with origin [" + origin + "] and key [" + key + "]", e);
 		}
 	}
 
