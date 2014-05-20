@@ -1,6 +1,6 @@
 package fr.ortolang.diffusion.test.usecase;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,6 +9,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,12 +38,14 @@ import fr.ortolang.diffusion.test.bench.CookieFilter;
 
 public class WorkAndPublishUseCase {
 	
-	private static final String PROJECT_ROOT_FOLDER = "/mnt/space/jerome/Data/PROJECT";
+	private static final String PROJECT_ROOT_FOLDER = "/Users/cyril/tmp/diffusion/usecase/WorkAndPublishUseCase";
 
 	private static Logger logger = Logger.getLogger(WorkAndPublishUseCase.class.getName());
 	private static Client client;
 	private static WebTarget base;
-
+	
+	private static WebTarget metadatas;
+	
 	@BeforeClass
 	public static void init() {
 		HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic(BenchSuite.USERID, BenchSuite.PASSWORD);
@@ -51,6 +54,8 @@ public class WorkAndPublishUseCase {
 		client.register(MultiPartFeature.class);
 		client.register(CookieFilter.class);
 		base = client.target("http://" + BenchSuite.SERVER_ADDRESS + ":" + BenchSuite.SERVER_PORT + "/" + BenchSuite.APPLICATION_NAME + "/" + BenchSuite.APPLICATION_REST_PREFIX);
+		
+		metadatas = base.path("/core/metadatas");
 	}
 
 	@AfterClass
@@ -66,7 +71,9 @@ public class WorkAndPublishUseCase {
 		WebTarget projects = base.path("/collaboration/projects");
 		WebTarget collections = base.path("/core/collections");
 		WebTarget objects = base.path("/core/objects");
-		WebTarget metadatas = base.path("/core/metadatas");
+		WebTarget processs = base.path("/workflow/processs");
+		
+		ArrayList<String> listKeyToPublish = new ArrayList<String>();
 
 		Response connectedProfileResponse = profiles.path("connected").request(MediaType.APPLICATION_JSON_TYPE).get();
 		if (connectedProfileResponse.getStatus() == Status.OK.getStatusCode()) {
@@ -90,6 +97,7 @@ public class WorkAndPublishUseCase {
 		}
 		String projectKey = newProjectResponse.getLocation().getPath().substring(newProjectResponse.getLocation().getPath().lastIndexOf("/")+1);
 		logger.log(Level.INFO, "Created project key : " + projectKey);
+		listKeyToPublish.add(projectKey);
 		
 		logger.log(Level.INFO, "Getting project root collection");
 		Response getProjectRootResponse = projects.path(projectKey).path("root").request(MediaType.APPLICATION_JSON_TYPE).get();
@@ -104,13 +112,20 @@ public class WorkAndPublishUseCase {
 			fail("Unable to get project root collection key");
 		}
 		logger.log(Level.INFO, "Root collection key : " + projectRootKey);
+		listKeyToPublish.add(projectRootKey);
 		
-		Path projectFolder = Paths.get(PROJECT_ROOT_FOLDER);
+		// Attach metadata to root collection
+		File metadataProject = new File(PROJECT_ROOT_FOLDER+"/metadata/frantext.rdf");
+		String metadataProjectKey = createMetadata(metadataProject, projectRootKey);
+		assertNotNull("Metadata key is null", metadataProjectKey);
+		listKeyToPublish.add(metadataProjectKey);
+		
+		Path projectFolder = Paths.get(PROJECT_ROOT_FOLDER+"/data");
 		try ( DirectoryStream<Path> stream = Files.newDirectoryStream(projectFolder) ) {
 			for ( Path file : stream ) {
 				File thefile = file.toFile();
-				if ( thefile.isFile() ) {
-					logger.log(Level.FINE, "Creating DataObject for path : " + file);
+				if ( thefile.isFile() && !thefile.getName().startsWith(".") ) {
+					logger.log(Level.INFO, "Creating DataObject for path : " + file);
 					FileDataBodyPart filePart = new FileDataBodyPart("file", thefile);
 					MultiPart multipart = new FormDataMultiPart()
 				    .field("name", file.getFileName().toString())
@@ -122,14 +137,19 @@ public class WorkAndPublishUseCase {
 						fail("Unable to create dataobject");
 					}
 					String objectKey = createObjectResponse.getLocation().getPath().substring(createObjectResponse.getLocation().getPath().lastIndexOf("/"));
-					logger.log(Level.FINE, "Created data object key : " + objectKey);
+					logger.log(Level.INFO, "Created data object key : " + objectKey);
 					
-					logger.log(Level.FINE, "Adding the created dataobject as a member of root collection : " + projectRootKey);
+					logger.log(Level.INFO, "Adding the created dataobject as a member of root collection : " + projectRootKey);
 					Response addToCollectionResponse = collections.path(projectRootKey).path("elements").path(objectKey).request(MediaType.APPLICATION_JSON_TYPE).put(Entity.entity(objectKey, MediaType.TEXT_PLAIN));
 					if ( addToCollectionResponse.getStatus() != Status.NO_CONTENT.getStatusCode() ) {
 						logger.log(Level.WARNING, "Unexpected response code while trying to add element to collection : " + addToCollectionResponse.getStatus() );
 						fail("Unable to add element to collection");
 					}
+					
+					// Create metadata for object
+					File metadataObject = new File(PROJECT_ROOT_FOLDER+"/metadata/"+thefile.getName().substring(0, thefile.getName().indexOf('.'))+".rdf");
+					createMetadata(metadataObject, objectKey.substring(1)); // objectKey == "/{key}" but needs to remove "/"
+					
 				}
 			}
 		}
@@ -145,8 +165,44 @@ public class WorkAndPublishUseCase {
 		String releaseKey = newReleaseResponse.getLocation().getPath().substring(newReleaseResponse.getLocation().getPath().lastIndexOf("/")+1);
 		logger.log(Level.INFO, "Created release key (should be same than old root collection): " + releaseKey);
 		
+		logger.log(Level.INFO, "Publishing release");
+		logger.log(Level.INFO, "Publish with key : "+projectRootKey);
+		Form newPublishForm = new Form().param("name", "published v1.0").param("type", "simple-publication").param("keys", projectRootKey);
+		Response newPublishResponse = processs.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(newPublishForm, MediaType.APPLICATION_FORM_URLENCODED));
+		if (newPublishResponse.getStatus() != Status.CREATED.getStatusCode()) {
+			logger.log(Level.WARNING, "Unexpected response code while trying to publish : " + newPublishResponse.getStatus());
+			logger.log(Level.WARNING, "entity: " + newPublishResponse.readEntity(String.class)); 
+			fail("Unable to publish project");
+		}
+		String processKey = newPublishResponse.getLocation().getPath().substring(newPublishResponse.getLocation().getPath().lastIndexOf("/")+1);
+		logger.log(Level.INFO, "Created process key : " + processKey);
 		
 		
+	}
+	
+	private String createMetadata(File file, String target) {
+		String metadataProjectKey = null;
+		if(file.exists()) {
+			logger.log(Level.INFO, "Creating MetadataObject for target "+target+" with file : " + file);
+			FileDataBodyPart fileMetadataPart = new FileDataBodyPart("file", file);
+			MultiPart multipartForMetadataProject = new FormDataMultiPart()
+		    .field("name", file.getName())
+		    .field("target", target)
+		    .bodyPart(fileMetadataPart);
+			Response createMetadataProjectResponse = metadatas.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(multipartForMetadataProject, multipartForMetadataProject.getMediaType()));
+			if ( createMetadataProjectResponse.getStatus() != Status.CREATED.getStatusCode() ) {
+				logger.log(Level.WARNING, "Unexpected response code while trying to create metadataObject : " + createMetadataProjectResponse.getStatus() );
+				logger.log(Level.WARNING, "status info "+createMetadataProjectResponse.toString());
+				fail("Unable to create metadataObject for project");
+			}
+			metadataProjectKey = createMetadataProjectResponse.getLocation().getPath().substring(createMetadataProjectResponse.getLocation().getPath().lastIndexOf("/"));
+			logger.log(Level.INFO, "Created metadata object key : " + metadataProjectKey);
+		} else {
+			logger.log(Level.WARNING, "Metadata file doesn't exist : " + file );
+			fail("Unable to create dataobject");
+		}
+		
+		return metadataProjectKey.substring(1);
 	}
 
 }
