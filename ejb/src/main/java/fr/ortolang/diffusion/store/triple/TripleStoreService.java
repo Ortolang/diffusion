@@ -29,5 +29,4 @@ public interface TripleStoreService {
 	
 	public void query(String language, String query, OutputStream os, String languageResult) throws TripleStoreServiceException;
 
-	public Set<Triple> extractTriples(InputStream input, String contentType) throws TripleStoreServiceException;
 }

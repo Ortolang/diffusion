@@ -216,29 +216,6 @@ public class TripleStoreServiceBean implements TripleStoreService {
             throw new TripleStoreServiceException("unable to execute query", e);
         }
 	}
-
-	/**
-	 * Extracts triples from RDF string.
-	 * @param rdf a string representation of the RDF
-	 * @return the list of triples extracted from RDF
-	 */
-	@Override
-	public Set<Triple> extractTriples(InputStream input, String contentType) throws TripleStoreServiceException {
-		RDFFormat format = Rio.getParserFormatForMIMEType(contentType); //TODO use fallback ?
-		
-		try {
-			//TODO creates our own RDFHandler
-			Model results = Rio.parse(input, "", format);
-
-			Set<Triple> triples = new HashSet<Triple>();
-			for (Statement statement: results) {
-				triples.add(new Triple(statement.getSubject().stringValue(), statement.getPredicate().stringValue(), statement.getObject().stringValue()));
-			}
-			return triples;
-		} catch (RDFParseException | UnsupportedRDFormatException | IOException e) {
-			throw new TripleStoreServiceException("Unable to extract triples");
-		}
-	}
 	
 	private Resource getContext(String key) {
 		return new URIImpl(BASE_CONTEXT_URI + key);

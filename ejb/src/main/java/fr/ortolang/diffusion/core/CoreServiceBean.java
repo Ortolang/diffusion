@@ -67,6 +67,7 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.triple.Triple;
+import fr.ortolang.diffusion.store.triple.TripleHelper;
 import fr.ortolang.diffusion.store.triple.TripleStoreService;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 import fr.ortolang.diffusion.store.triple.URIHelper;
@@ -84,8 +85,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	private RegistryService registry;
 	@EJB
 	private BinaryStoreService binarystore;
-	@EJB
-	private TripleStoreService triplestore;
 	@EJB
 	private MembershipService membership;
 	@EJB
@@ -116,14 +115,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	public void setBinaryStoreService(BinaryStoreService binaryStoreService) {
 		this.binarystore = binaryStoreService;
-	}
-
-	public TripleStoreService getTripleStoreService() {
-		return triplestore;
-	}
-
-	public void setTripleStoreService(TripleStoreService tripleStoreService) {
-		this.triplestore = tripleStoreService;
 	}
 
 	public NotificationService getNotificationService() {
@@ -1193,7 +1184,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			authorisation.checkPermission(target, subjects, "update");
 
 			OrtolangObjectIdentifier identifier = registry.lookup(target);
-			if (!identifier.getType().equals(Link.OBJECT_TYPE) || !identifier.getType().equals(Collection.OBJECT_TYPE) || !identifier.getType().equals(DataObject.OBJECT_TYPE)) {
+			if (!identifier.getType().equals(Link.OBJECT_TYPE) && !identifier.getType().equals(Collection.OBJECT_TYPE) && !identifier.getType().equals(DataObject.OBJECT_TYPE)) {
 				throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
 			}
 
@@ -1864,12 +1855,13 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 					throw new OrtolangException("unable to load metadata with id [" + identifier.getId() + "] from storage");
 				}
 
-				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", metadata.getName()));
+				String subj = URIHelper.fromKey(key);
+				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#name", metadata.getName()));
 
 				// TODO wrap internal metadata object semantic information into a node based on ontology
 				// Convert RDF to Triple
 				try {
-					Set<Triple> triplesContent = triplestore.extractTriples(binarystore.get(metadata.getStream()), metadata.getContentType());
+					Set<Triple> triplesContent = TripleHelper.extractTriples(subj, binarystore.get(metadata.getStream()), metadata.getContentType());
 					for(Triple triple : triplesContent) {
 						content.addTriple(triple);
 					}
