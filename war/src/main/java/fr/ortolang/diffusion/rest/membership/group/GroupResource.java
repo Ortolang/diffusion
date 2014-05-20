@@ -25,6 +25,7 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
@@ -51,7 +52,7 @@ public class GroupResource {
 	public Response getGroup(@PathParam(value="key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading group for key: " + key);
     	Group group = membership.readGroup(key);
-    	UriBuilder groups = UriBuilder.fromUri(uriInfo.getBaseUri()).path(GroupResource.class);
+    	UriBuilder groups = DiffusionUriBuilder.getRestUriBuilder().path(GroupResource.class);
     	
     	GroupRepresentation representation = GroupRepresentation.fromGroup(group);
     	representation.addLink(Link.fromUri(groups.clone().path(key).path("members").build()).rel("members").build());
@@ -99,7 +100,7 @@ public class GroupResource {
     	logger.log(Level.INFO, "listing members of group for key: " + key);
     	Group group = membership.readGroup(key);
     	List<String> members = Arrays.asList(group.getMembers());
-    	UriBuilder groups = UriBuilder.fromUri(uriInfo.getBaseUri()).path(GroupResource.class);
+    	UriBuilder groups = DiffusionUriBuilder.getRestUriBuilder().path(GroupResource.class);
 
 		KeysRepresentation representation = new KeysRepresentation ();
 		for ( String member : members ) {
@@ -115,7 +116,7 @@ public class GroupResource {
     	Group group = membership.readGroup(key);
     	List<String> members = Arrays.asList(group.getMembers());
     	if ( members.contains(member) ) {
-    		URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class).path(member).build();
+    		URI redirect = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class).path(member).build();
     		return Response.seeOther(redirect).build();
     	} else {
     		throw new KeyNotFoundException("this member is not in this group");

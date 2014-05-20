@@ -49,7 +49,7 @@ public class TemplateFilter implements ContainerResponseFilter {
 						ctx.put("template", TEMPLATES_BASE + "/" + ((Template) a).template());
 						ctx.put("params", requestContext.getUriInfo().getQueryParameters());
 						ctx.put("mediatype", responseContext.getMediaType().toString());
-						ctx.put("context", context.getContextPath());
+						ctx.put("base", DiffusionUriBuilder.getBaseUriBuilder().build().toString());
 						ctx.put("entity", responseContext.getEntity());
 						ctx.put("esc", escape);
 						StringWriter writer = new StringWriter();

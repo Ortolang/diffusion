@@ -1,7 +1,9 @@
 package fr.ortolang.diffusion.registry;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -107,7 +109,9 @@ public class RegistryServiceBean implements RegistryService {
 			entry.setIdentifier(identifier.serialize());
 			entry.setParent(parent);
 			if ( inherit ) {
-				entry.setProperties(pentry.getProperties());
+				Map<String, String> properties = new HashMap<String, String>();
+				properties.putAll(pentry.getProperties());
+				entry.setProperties(properties);
 			}
 			em.persist(entry);
 		} catch ( Exception e ) {

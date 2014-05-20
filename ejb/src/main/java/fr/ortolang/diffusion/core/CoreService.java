@@ -86,15 +86,15 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService {
 	
 	public void readMetadataObjectContent(String key, RemoteOutputStream ros) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateMetadataObject(String key, String name, String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	public void updateMetadataObject(String key, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public void updateMetadataObjectContent(String key, byte[] data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public void updateMetadataObjectContent(String key, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void cloneMetadataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
+	public void cloneMetadataObject(String key, String origin, String target) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
 	
-	public void forkMetadataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
+	public void forkMetadataObject(String key, String origin, String target) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException;
 	
 	public void deleteMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	

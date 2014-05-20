@@ -28,6 +28,7 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
@@ -52,7 +53,7 @@ public class CollectionResource {
 	@Produces(MediaType.TEXT_HTML)
 	public Response list() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "listing all collections");
-		UriBuilder collections = UriBuilder.fromUri(uriInfo.getBaseUri()).path(CollectionResource.class);
+		UriBuilder collections = DiffusionUriBuilder.getRestUriBuilder().path(CollectionResource.class);
 
 		KeysRepresentation representation = new KeysRepresentation ();
 		representation.addLink(Link.fromUri(collections.clone().build()).rel("create").build());
@@ -66,7 +67,7 @@ public class CollectionResource {
 		logger.log(Level.INFO, "creating collection");
 		String key = UUID.randomUUID().toString();
 		core.createCollection(key, name, description);
-		URI newly = UriBuilder.fromUri(uriInfo.getBaseUri()).path(CollectionResource.class).path(key).build();
+		URI newly = DiffusionUriBuilder.getRestUriBuilder().path(CollectionResource.class).path(key).build();
 		return Response.created(newly).build();
 	}
 	
@@ -77,10 +78,11 @@ public class CollectionResource {
 	public Response read(@PathParam(value = "key") String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "reading collection with key: " + key);
 		Collection collection = core.readCollection(key);
-		UriBuilder collections = UriBuilder.fromUri(uriInfo.getBaseUri()).path(CollectionResource.class);
+		UriBuilder collections = DiffusionUriBuilder.getRestUriBuilder().path(CollectionResource.class);
 		
 		CollectionRepresentation representation = CollectionRepresentation.fromCollection(collection);
 		representation.addLink(Link.fromUri(collections.clone().path(key).path("elements").build()).rel("elements").build());
+		representation.addLink(Link.fromUri(collections.clone().path(key).path("metadatas").build()).rel("metadatas").build());
     	return Response.ok(representation).build();
 	}
 
@@ -108,7 +110,7 @@ public class CollectionResource {
     public Response listElements( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading elements of collection with key: " + key);
     	Collection collection = core.readCollection(key);
-    	UriBuilder collections = UriBuilder.fromUri(uriInfo.getBaseUri()).path(CollectionResource.class);
+    	UriBuilder collections = DiffusionUriBuilder.getRestUriBuilder().path(CollectionResource.class);
 		
     	KeysRepresentation representation = new KeysRepresentation ();
 		for ( String element : collection.getElements() ) {
@@ -123,7 +125,7 @@ public class CollectionResource {
     	logger.log(Level.INFO, "reading element " + element + " of collection with key: " + key);
     	Collection collection = core.readCollection(key);
     	if ( collection.getElements().contains(element) ) {
-    		URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class).path(element).build();
+    		URI redirect = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class).path(element).build();
     		return Response.seeOther(redirect).build();
     	} else {
     		throw new KeyNotFoundException("this element is not in this collection");
@@ -146,5 +148,34 @@ public class CollectionResource {
     	core.removeElementFromCollection(key, element);
     	return Response.noContent().build();
     }
-
+    
+    @GET
+    @Path("/{key}/metadatas")
+    @Template( template="core/metas.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+    public Response listMetadatas( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    	logger.log(Level.INFO, "reading metadatas of collection with key: " + key);
+    	Collection collection = core.readCollection(key);
+    	UriBuilder collections = DiffusionUriBuilder.getRestUriBuilder().path(CollectionResource.class);
+		
+    	KeysRepresentation representation = new KeysRepresentation ();
+		for ( String metadata : collection.getMetadatas() ) {
+			representation.addEntry(metadata, Link.fromUri(collections.clone().path(key).path("metadatas").path(metadata).build()).rel("view").build());
+		}
+		return Response.ok(representation).build();
+    }
+    
+    @GET
+    @Path("/{key}/metadatas/{metadata}")
+    public Response getMetadata( @PathParam(value="key") String key, @PathParam(value="metadata") String metadata ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    	logger.log(Level.INFO, "reading metadata " + metadata + " of collection with key: " + key);
+    	Collection collection = core.readCollection(key);
+    	if ( collection.getMetadatas().contains(metadata) ) {
+    		URI redirect = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class).path(metadata).build();
+    		return Response.seeOther(redirect).build();
+    	} else {
+    		throw new KeyNotFoundException("this element is not in this collection");
+    	}
+    }
+    
 }

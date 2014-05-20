@@ -31,6 +31,7 @@ import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
+import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.rest.KeysPaginatedRepresentation;
 import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.search.SearchService;
@@ -65,7 +66,7 @@ public class OrtolangObjectResource {
 		logger.log(Level.INFO, "list objects, offset=" + offset + ", limit=" + limit);
 		List<String> keys = browser.list(offset, limit, "", "");
 		long nbentries = browser.count("", "");
-		UriBuilder objects = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class);
+		UriBuilder objects = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class);
 
 		KeysPaginatedRepresentation representation = new KeysPaginatedRepresentation ();
 		for ( String key : keys ) {
@@ -90,8 +91,8 @@ public class OrtolangObjectResource {
 	public Response get(@PathParam(value = "key") String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "getting object identifier for key: " + key);
 		OrtolangObjectIdentifier identifier = browser.lookup(key);
-		UriBuilder base = UriBuilder.fromUri(uriInfo.getBaseUri());
-		UriBuilder objects = base.clone().path(OrtolangObjectResource.class);
+		UriBuilder base = DiffusionUriBuilder.getRestUriBuilder();
+		UriBuilder objects = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class);
 
 		OrtolangObjectRepresentation representation = OrtolangObjectRepresentation.fromOrtolangObjectIdentifier(identifier);
 		representation.setKey(key);

@@ -20,6 +20,10 @@ public interface MembershipService extends OrtolangService {
 	
 	public static final String UNAUTHENTIFIED_IDENTIFIER = "guest";
 	public static final String SUPERUSER_IDENTIFIER = "root";
+	
+	public static final String ALL_AUTHENTIFIED_GROUP_KEY = "authentified";
+	public static final String ADMIN_GROUP_KEY = "admins";
+	public static final String MODERATOR_GROUP_KEY = "moderators";
 
 	public String getProfileKeyForConnectedIdentifier();
 

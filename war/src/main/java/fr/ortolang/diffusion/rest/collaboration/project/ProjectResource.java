@@ -29,6 +29,7 @@ import fr.ortolang.diffusion.collaboration.entity.Project;
 import fr.ortolang.diffusion.core.entity.CollectionProperty;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
@@ -55,7 +56,7 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
 	public Response findProjects() throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "finding projects for connected identifier");
     	List<String> keys = collaboration.findMyProjects();
-    	UriBuilder projects = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProjectResource.class);
+    	UriBuilder projects = DiffusionUriBuilder.getRestUriBuilder().path(ProjectResource.class);
 
 		KeysRepresentation representation = new KeysRepresentation ();
 		for ( String key : keys ) {
@@ -71,7 +72,7 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     	logger.log(Level.INFO, "creating new project");
     	String key = UUID.randomUUID().toString();
     	collaboration.createProject(key, name, type);
-    	URI location = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProjectResource.class).path(key).build();
+    	URI location = DiffusionUriBuilder.getRestUriBuilder().path(ProjectResource.class).path(key).build();
     	return Response.created(location).build();
     }
     
@@ -82,7 +83,7 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
 	public Response getProject(@PathParam(value="key") String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading project for key: " + key);
     	Project project = collaboration.readProject(key);
-    	UriBuilder projects = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProjectResource.class);
+    	UriBuilder projects = DiffusionUriBuilder.getRestUriBuilder().path(ProjectResource.class);
 		
     	ProjectRepresentation representation = ProjectRepresentation.fromProject(project);
     	representation.addLink(Link.fromUri(projects.clone().path(key).path("root").build()).rel("root").build());
@@ -116,11 +117,11 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     	logger.log(Level.INFO, "listing versions for project for key: " + key);
     	Project project = collaboration.readProject(key);
     	List<String> versions = project.getHistory();
-    	UriBuilder projects = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProjectResource.class);
+    	UriBuilder projects = DiffusionUriBuilder.getRestUriBuilder().path(ProjectResource.class);
 		
     	KeysRepresentation representation = new KeysRepresentation ();
 		for ( String version : versions ) {
-			representation.addEntry(key, Link.fromUri(projects.path(key).path("versions").path(version).build()).rel("view").build());
+			representation.addEntry(version, Link.fromUri(projects.path(key).path("versions").path(version).build()).rel("view").build());
 		}
 		representation.addLink(Link.fromUri(projects.clone().path(key).path("versions").build()).rel("create").build());
 		return Response.ok(representation).build();
@@ -129,17 +130,19 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     @POST
     @Path("/{key}/versions")
     public Response snapshot(@PathParam(value="key") String key, @FormParam(value="type") String type, @FormParam(value="name") String name) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
-    	logger.log(Level.INFO, "creating new versions for project with key: " + key);
+    	logger.log(Level.INFO, "creating new version for project with key: " + key);
     	Project project = collaboration.readProject(key);
     	String oldroot = project.getRoot();
     	if ( type.toUpperCase().equals(CollectionProperty.Version.SNAPSHOT.name()) ) {
+    		logger.log(Level.INFO, "version type: snapshot");
     		collaboration.snapshotProject(key);
     	} else if ( type.toUpperCase().equals(CollectionProperty.Version.RELEASE.name()) ) {
+    		logger.log(Level.INFO, "version type: release");
     		collaboration.releaseProject(key, name);
     	} else {
     		return Response.status(400).entity("unable to understand type").build();
     	}
-    	URI location = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProjectResource.class).path(key).path("versions").path(oldroot).build();
+    	URI location = DiffusionUriBuilder.getRestUriBuilder().path(ProjectResource.class).path(key).path("versions").path(oldroot).build();
     	return Response.created(location).build();
     }
     
@@ -149,7 +152,7 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     	logger.log(Level.INFO, "reading version " + version + " of project for key: " + key);
     	Project project = collaboration.readProject(key);
     	if ( project.getHistory().contains(version) ) {
-    		URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class).path(version).build();
+    		URI redirect = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class).path(version).build();
         	return Response.seeOther(redirect).build();
     	} else {
     		throw new KeyNotFoundException("this version is not in this project");
@@ -161,7 +164,7 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     public Response listMembers(@PathParam(value="key") String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "listing members of project for key: " + key);
     	Project project = collaboration.readProject(key);
-    	URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class).path(project.getMembers()).build();
+    	URI redirect = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class).path(project.getMembers()).build();
     	return Response.seeOther(redirect).build();
     }
     
@@ -170,7 +173,7 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     public Response readRootCollection(@PathParam(value="key") String key) throws CollaborationServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading root collection of project for key: " + key);
     	Project project = collaboration.readProject(key);
-    	URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class).path(project.getRoot()).build();
+    	URI redirect = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class).path(project.getRoot()).build();
     	return Response.seeOther(redirect).build();
     }
 

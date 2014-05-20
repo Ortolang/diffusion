@@ -27,7 +27,6 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
 import fr.ortolang.diffusion.membership.entity.ProfileStatus;
-import fr.ortolang.diffusion.publication.PublicationService;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -90,9 +89,9 @@ public class BootstrapServiceBean implements BootstrapService {
 	            authorisation.setPolicyRules(MembershipService.UNAUTHENTIFIED_IDENTIFIER, guestReadRules);
 	            
 	            logger.log(Level.FINE, "creating moderators group");
-	            membership.createGroup(PublicationService.MODERATORS_KEY, "Publication Moderators", "Users that have the ability to publich some keys");
+	            membership.createGroup(MembershipService.MODERATOR_GROUP_KEY, "Publication Moderators", "Users that have the ability to publich some keys");
 	            logger.log(Level.FINE, "set guest read rules");
-	            authorisation.setPolicyRules(PublicationService.MODERATORS_KEY, guestReadRules);
+	            authorisation.setPolicyRules(MembershipService.MODERATOR_GROUP_KEY, guestReadRules);
 	            
 	            logger.log(Level.FINE, "create bootstrap file");
 	            Properties props = new Properties();

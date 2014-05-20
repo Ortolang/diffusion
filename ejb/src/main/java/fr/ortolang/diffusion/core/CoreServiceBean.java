@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -41,7 +43,6 @@ import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
-import fr.ortolang.diffusion.collaboration.entity.Project;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
@@ -197,7 +198,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-			
+
 			authorisation.createPolicy(key, caller);
 
 			indexing.index(key);
@@ -381,8 +382,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateDataObjectContent(String key, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException,
-			AccessDeniedException {
+	public void updateDataObjectContent(String key, RemoteInputStream data) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		try {
 			InputStream os = RemoteInputStreamClient.wrap(data);
 			updateDataObjectContent(key, os);
@@ -422,8 +422,17 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			clone.setDescription(object.getDescription());
 			clone.setSize(object.getSize());
 			clone.setContentType(object.getContentType());
-			clone.setStreams(object.getStreams());
+			Map<String, String> streams = new HashMap<String, String>();
+			streams.putAll(object.getStreams());
+			clone.setStreams(streams);
 			clone.setPreview(object.getPreview());
+			Set<String> metadatas = new HashSet<String>();
+			for (String metadata : object.getMetadatas()) {
+				String mid = UUID.randomUUID().toString();
+				cloneMetadataObject(mid, metadata, id);
+				metadatas.add(mid);
+			}
+			clone.setMetadatas(metadatas);
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
@@ -432,7 +441,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 			indexing.index(key);
 			notification.throwEvent(origin, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "clone"), "key=" + key);
-			notification.throwEvent(key, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "create"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to clone object with origin [" + origin + "] and key [" + key + "]", e);
@@ -465,8 +473,16 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			clone.setDescription(object.getDescription());
 			clone.setSize(object.getSize());
 			clone.setContentType(object.getContentType());
-			clone.setStreams(object.getStreams());
+			Map<String, String> streams = new HashMap<String, String>();
+			streams.putAll(object.getStreams());
 			clone.setPreview(object.getPreview());
+			Set<String> metadatas = new HashSet<String>();
+			for (String metadata : object.getMetadatas()) {
+				String mid = UUID.randomUUID().toString();
+				forkMetadataObject(mid, metadata, id);
+				metadatas.add(mid);
+			}
+			clone.setMetadatas(metadatas);
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
@@ -476,7 +492,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 			indexing.index(key);
 			notification.throwEvent(origin, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "fork"), "key=" + key);
-			notification.throwEvent(key, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "create"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | MembershipServiceException
 				| AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
@@ -497,6 +512,15 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			checkObjectType(identifier, DataObject.OBJECT_TYPE);
 			if (registry.isLocked(key)) {
 				throw new CoreServiceException("object with [" + key + "] is locked and cannot be modified.");
+			}
+
+			DataObject object = em.find(DataObject.class, identifier.getId());
+			if (object == null) {
+				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
+			}
+			for (String metadata : object.getMetadatas()) {
+				registry.delete(metadata);
+				indexing.remove(metadata);
 			}
 
 			registry.delete(key);
@@ -527,7 +551,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-			
+
 			authorisation.createPolicy(key, caller);
 
 			indexing.index(key);
@@ -618,7 +642,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			}
 
 			OrtolangObjectIdentifier eidentifier = registry.lookup(element);
-			if (!eidentifier.getService().equals(CoreService.SERVICE_NAME) || eidentifier.getType().equals(Project.OBJECT_TYPE)) {
+			if (!eidentifier.getType().equals(Collection.OBJECT_TYPE) && !eidentifier.getType().equals(DataObject.OBJECT_TYPE) && !eidentifier.getType().equals(Link.OBJECT_TYPE)) {
 				throw new CoreServiceException("element [" + element + "] is not an object that can be added to a collection");
 			}
 
@@ -626,7 +650,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			if (collection == null) {
 				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
 			}
-			if ( collection.addElement(element) ) {
+			if (collection.addElement(element)) {
 				em.merge(collection);
 			} else {
 				throw new CoreServiceException("element [" + element + "] is already in collection with key [" + key + "]");
@@ -664,8 +688,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			if (collection == null) {
 				throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
 			}
-			
-			if ( collection.removeElement(element) ) {
+
+			if (collection.removeElement(element)) {
 				em.merge(collection);
 			} else {
 				throw new CoreServiceException("element [" + element + "] is NOT in collection with key [" + key + "]");
@@ -702,7 +726,16 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			clone.setId(id);
 			clone.setName(collection.getName());
 			clone.setDescription(collection.getDescription());
-			clone.setElements(collection.getElements());
+			Set<String> elements = new HashSet<String>();
+			elements.addAll(collection.getElements());
+			clone.setElements(elements);
+			Set<String> metadatas = new HashSet<String>();
+			for (String metadata : collection.getMetadatas()) {
+				String mid = UUID.randomUUID().toString();
+				cloneMetadataObject(mid, metadata, id);
+				metadatas.add(mid);
+			}
+			clone.setMetadatas(metadatas);
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
@@ -711,14 +744,12 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 			indexing.index(key);
 			notification.throwEvent(origin, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "clone"), "key=" + key);
-			notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), "origin="
-					+ origin);
 		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to clone collection with origin [" + origin + "] and key [" + key + "]", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void cloneCollectionContent(String key, String origin) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, AccessDeniedException {
@@ -726,23 +757,23 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			authorisation.checkAuthentified(caller);
-			
+
 			OrtolangObjectIdentifier identifier = registry.lookup(origin);
 			checkObjectType(identifier, Collection.OBJECT_TYPE);
-			
-			List<String> cycleDetection = new ArrayList<String> (); 
+
+			List<String> cycleDetection = new ArrayList<String>();
 			cloneCollectionContent(key, origin, cycleDetection);
-			
+
 		} catch (RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to clone collection with origin [" + origin + "] and key [" + key + "]", e);
 		}
-			
+
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	private void cloneCollectionContent(String key, String origin, List<String> cycleDetection) throws CoreServiceException, KeyNotFoundException,
-			KeyAlreadyExistsException, AccessDeniedException, RegistryServiceException {
+	private void cloneCollectionContent(String key, String origin, List<String> cycleDetection) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException,
+			AccessDeniedException, RegistryServiceException {
 		OrtolangObjectIdentifier oidentifier = registry.lookup(origin);
 		Collection coll = em.find(Collection.class, oidentifier.getId());
 		if (coll == null) {
@@ -759,19 +790,20 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				switch (eidentifier.getType()) {
 				case Collection.OBJECT_TYPE:
 					cloneCollectionContent(newkey, entry, cycleDetection);
+					break;
 				case DataObject.OBJECT_TYPE:
 					cloneDataObject(newkey, entry);
-				case MetadataObject.OBJECT_TYPE:
-					cloneMetadataObject(newkey, entry);
+					break;
 				case Link.OBJECT_TYPE:
 					cloneLink(newkey, entry);
+					break;
 				}
 				removeElementFromCollection(key, entry);
 				addElementToCollection(key, newkey, false);
 			}
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Set<String> listCollectionContent(String key) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, AccessDeniedException {
@@ -780,14 +812,14 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
-			
+
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Collection.OBJECT_TYPE);
-			
-			List<String> cycleDetection = new ArrayList<String> ();
-			Set<String> content = new HashSet<String> ();
+
+			List<String> cycleDetection = new ArrayList<String>();
+			Set<String> content = new HashSet<String>();
 			listCollectionContent(key, content, cycleDetection);
-			
+
 			notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "list-content"), "");
 			return content;
 		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException | NotificationServiceException e) {
@@ -797,8 +829,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 	}
 
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	private void listCollectionContent(String key, Set<String> content, List<String> cycleDetection) throws CoreServiceException, KeyNotFoundException,
-			KeyAlreadyExistsException, AccessDeniedException, RegistryServiceException {
+	private void listCollectionContent(String key, Set<String> content, List<String> cycleDetection) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException,
+			AccessDeniedException, RegistryServiceException {
 		OrtolangObjectIdentifier identifier = registry.lookup(key);
 		Collection coll = em.find(Collection.class, identifier.getId());
 		if (coll == null) {
@@ -812,7 +844,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			} else {
 				OrtolangObjectIdentifier eidentifier = registry.lookup(entry);
 				if (eidentifier.getType().equals(Collection.OBJECT_TYPE)) {
-					listCollectionContent(entry,content, cycleDetection);
+					listCollectionContent(entry, content, cycleDetection);
 				} else {
 					content.add(entry);
 				}
@@ -844,7 +876,16 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			clone.setId(id);
 			clone.setName(collection.getName());
 			clone.setDescription(collection.getDescription());
+			Set<String> elements = new HashSet<String>();
+			elements.addAll(collection.getElements());
 			clone.setElements(collection.getElements());
+			Set<String> metadatas = new HashSet<String>();
+			for (String metadata : collection.getMetadatas()) {
+				String mid = UUID.randomUUID().toString();
+				forkMetadataObject(mid, metadata, id);
+				metadatas.add(mid);
+			}
+			clone.setMetadatas(metadatas);
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
@@ -854,8 +895,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 			indexing.index(key);
 			notification.throwEvent(origin, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "fork"), "key=" + key);
-			notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), "origin="
-					+ origin);
 		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException | AuthorisationServiceException
 				| MembershipServiceException e) {
 			ctx.setRollbackOnly();
@@ -877,8 +916,17 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			if (registry.isLocked(key)) {
 				throw new CoreServiceException("collection with [" + key + "] is locked and cannot be modified.");
 			}
+			
+			Collection collection = em.find(Collection.class, identifier.getId());
+			if (collection == null) {
+				throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
+			}
+			for (String metadata : collection.getMetadatas()) {
+				registry.delete(metadata);
+				indexing.remove(metadata);
+			}
+			
 			registry.delete(key);
-
 			indexing.remove(key);
 			notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "delete"), "");
 		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException | MembershipServiceException | AuthorisationServiceException e) {
@@ -911,7 +959,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-			
+
 			authorisation.createPolicy(key, caller);
 
 			indexing.index(key);
@@ -1009,6 +1057,13 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			clone.setName(link.getName());
 			clone.setDynamic(link.isDynamic());
 			clone.setTarget(link.getTarget());
+			Set<String> metadatas = new HashSet<String>();
+			for (String metadata : link.getMetadatas()) {
+				String mid = UUID.randomUUID().toString();
+				cloneMetadataObject(mid, metadata, id);
+				metadatas.add(mid);
+			}
+			clone.setMetadatas(metadatas);
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
@@ -1017,7 +1072,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 			indexing.index(key);
 			notification.throwEvent(origin, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "clone"), "key=" + key);
-			notification.throwEvent(key, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "create"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to clone link with origin [" + origin + "] and key [" + key + "]", e);
@@ -1049,6 +1103,13 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			clone.setName(link.getName());
 			clone.setDynamic(link.isDynamic());
 			clone.setTarget(link.getTarget());
+			Set<String> metadatas = new HashSet<String>();
+			for (String metadata : link.getMetadatas()) {
+				String mid = UUID.randomUUID().toString();
+				forkMetadataObject(mid, metadata, id);
+				metadatas.add(mid);
+			}
+			clone.setMetadatas(metadatas);
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
@@ -1058,7 +1119,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 			indexing.index(key);
 			notification.throwEvent(origin, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "fork"), "key=" + key);
-			notification.throwEvent(key, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "create"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
 				| MembershipServiceException e) {
 			ctx.setRollbackOnly();
@@ -1080,8 +1140,17 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			if (registry.isLocked(key)) {
 				throw new CoreServiceException("link with [" + key + "] is locked and cannot be modified.");
 			}
+			
+			Link link = em.find(Link.class, identifier.getId());
+			if (link == null) {
+				throw new CoreServiceException("unable to load link with id [" + identifier.getId() + "] from storage");
+			}
+			for (String metadata : link.getMetadatas()) {
+				registry.delete(metadata);
+				indexing.remove(metadata);
+			}
+			
 			registry.delete(key);
-
 			indexing.remove(key);
 			notification.throwEvent(key, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "delete"), "");
 		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException | AuthorisationServiceException | MembershipServiceException e) {
@@ -1097,17 +1166,18 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(target, subjects, "read");
-			
+
 			TypedQuery<Link> query = em.createNamedQuery("findLinksForTarget", Link.class).setParameter("target", target);
 			List<Link> links = query.getResultList();
-			List<String> results = new ArrayList<String> ();
-			for ( Link link : links ) {
+			List<String> results = new ArrayList<String>();
+			for (Link link : links) {
 				String key = registry.lookup(link.getObjectIdentifier());
 				results.add(key);
 			}
 			notification.throwEvent("", caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "find"), "target=" + target);
 			return results;
-		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
+		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException
+				| IdentifierNotRegisteredException e) {
 			throw new CoreServiceException("unable to find link for target [" + target + "]", e);
 		}
 	}
@@ -1120,10 +1190,10 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkAuthentified(caller);
-			authorisation.checkOwnership(target, subjects);
+			authorisation.checkPermission(target, subjects, "update");
 
 			OrtolangObjectIdentifier identifier = registry.lookup(target);
-			if (!identifier.getType().equals(Link.OBJECT_TYPE) && !identifier.getType().equals(Collection.OBJECT_TYPE) && !identifier.getType().equals(DataObject.OBJECT_TYPE)) {
+			if (!identifier.getType().equals(Link.OBJECT_TYPE) || !identifier.getType().equals(Collection.OBJECT_TYPE) || !identifier.getType().equals(DataObject.OBJECT_TYPE)) {
 				throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
 			}
 
@@ -1138,15 +1208,46 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			meta.setTarget(target);
 			em.persist(meta);
 
+			switch (identifier.getType()) {
+			case Collection.OBJECT_TYPE:
+				Collection collection = em.find(Collection.class, identifier.getId());
+				if (collection == null) {
+					throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
+				}
+				collection.addMetadata(key);
+				em.merge(collection);
+				break;
+			case DataObject.OBJECT_TYPE:
+				DataObject object = em.find(DataObject.class, identifier.getId());
+				if (object == null) {
+					throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
+				}
+				object.addMetadata(key);
+				em.merge(object);
+				break;
+			case Link.OBJECT_TYPE:
+				Link link = em.find(Link.class, identifier.getId());
+				if (link == null) {
+					throw new CoreServiceException("unable to load link with id [" + identifier.getId() + "] from storage");
+				}
+				link.addMetadata(key);
+				em.merge(link);
+				break;
+			}
+
 			registry.register(key, meta.getObjectIdentifier());
 			registry.setProperty(key, OrtolangObjectProperty.CREATION_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
 			registry.setProperty(key, OrtolangObjectProperty.AUTHOR, caller);
-			
+
 			authorisation.createPolicy(key, caller);
 
 			indexing.index(key);
+			indexing.reindex(target);
+
 			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "create"), "");
+			notification
+					.throwEvent(target, caller, identifier.getType(), OrtolangEvent.buildEventType(identifier.getService(), identifier.getType(), "add-metadata"), "key=" + key);
 		} catch (KeyAlreadyExistsException e) {
 			logger.log(Level.FINE, "the key [" + key + "] is already used");
 			ctx.setRollbackOnly();
@@ -1258,7 +1359,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateMetadataObject(String key, String name, String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	public void updateMetadataObject(String key, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.FINE, "updating metadata for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -1271,17 +1372,11 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				throw new CoreServiceException("metadata with [" + key + "] is locked and cannot be modified.");
 			}
 
-			OrtolangObjectIdentifier tidentifier = registry.lookup(target);
-			if (!tidentifier.getType().equals(Link.OBJECT_TYPE) || !tidentifier.getType().equals(Collection.OBJECT_TYPE) || !tidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
-				throw new CoreServiceException("metadata target can only be a Reference, a DataObject or a Collection.");
-			}
-
 			MetadataObject meta = em.find(MetadataObject.class, identifier.getId());
 			if (meta == null) {
 				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
 			}
 			meta.setName(name);
-			meta.setTarget(target);
 			em.merge(meta);
 
 			registry.setProperty(key, OrtolangObjectProperty.LAST_UPDATE_TIMESTAMP, "" + System.currentTimeMillis());
@@ -1353,14 +1448,21 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void cloneMetadataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
+	public void cloneMetadataObject(String key, String origin, String target) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.FINE, "cloning metadata for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkAuthentified(caller);
+			authorisation.checkPermission(target, subjects, "update");
 
 			OrtolangObjectIdentifier identifier = registry.lookup(origin);
 			checkObjectType(identifier, MetadataObject.OBJECT_TYPE);
+
+			OrtolangObjectIdentifier tidentifier = registry.lookup(target);
+			if (!tidentifier.getType().equals(Link.OBJECT_TYPE) || !tidentifier.getType().equals(Collection.OBJECT_TYPE) || !tidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
+				throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
+			}
 
 			MetadataObject meta = em.find(MetadataObject.class, identifier.getId());
 			if (meta == null) {
@@ -1370,7 +1472,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			MetadataObject clone = new MetadataObject();
 			clone.setId(UUID.randomUUID().toString());
 			clone.setName(meta.getName());
-			clone.setTarget(meta.getTarget());
+			clone.setTarget(target);
 			clone.setSize(meta.getSize());
 			clone.setContentType(meta.getContentType());
 			clone.setStream(meta.getStream());
@@ -1383,9 +1485,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			indexing.index(key);
 			notification.throwEvent(origin, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "clone"), "key="
 					+ key);
-			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "create"),
-					"origin=" + origin);
-		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException | AuthorisationServiceException e) {
+		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException | AuthorisationServiceException
+				| MembershipServiceException e) {
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to clone metadata with origin [" + origin + "] and key [" + key + "]", e);
 		}
@@ -1393,16 +1494,22 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void forkMetadataObject(String key, String origin) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
+	public void forkMetadataObject(String key, String origin, String target) throws CoreServiceException, KeyAlreadyExistsException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.FINE, "forking metadata for origin [" + origin + "] and key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkAuthentified(caller);
-			authorisation.checkPermission(key, subjects, "read");
+			authorisation.checkPermission(origin, subjects, "read");
+			authorisation.checkPermission(target, subjects, "read");
 
 			OrtolangObjectIdentifier identifier = registry.lookup(origin);
 			checkObjectType(identifier, MetadataObject.OBJECT_TYPE);
+
+			OrtolangObjectIdentifier tidentifier = registry.lookup(target);
+			if (!tidentifier.getType().equals(Link.OBJECT_TYPE) || !tidentifier.getType().equals(Collection.OBJECT_TYPE) || !tidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
+				throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
+			}
 
 			MetadataObject meta = em.find(MetadataObject.class, identifier.getId());
 			if (meta == null) {
@@ -1412,7 +1519,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			MetadataObject clone = new MetadataObject();
 			clone.setId(UUID.randomUUID().toString());
 			clone.setName(meta.getName());
-			clone.setTarget(meta.getTarget());
+			clone.setTarget(target);
 			clone.setSize(meta.getSize());
 			clone.setContentType(meta.getContentType());
 			clone.setStream(meta.getStream());
@@ -1426,8 +1533,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			indexing.index(key);
 			notification.throwEvent(origin, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "fork"), "key="
 					+ key);
-			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "create"),
-					"origin=" + origin);
 		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | IndexingServiceException | AuthorisationServiceException
 				| MembershipServiceException e) {
 			ctx.setRollbackOnly();
@@ -1449,16 +1554,56 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			if (registry.isLocked(key)) {
 				throw new CoreServiceException("metadata with [" + key + "] is locked and cannot be modified.");
 			}
+			
+			MetadataObject meta = em.find(MetadataObject.class, identifier.getId());
+			if (meta == null) {
+				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+			}
+
+			OrtolangObjectIdentifier tidentifier = registry.lookup(meta.getTarget());
+			if (!tidentifier.getType().equals(Link.OBJECT_TYPE) || !tidentifier.getType().equals(Collection.OBJECT_TYPE) || !tidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
+				throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
+			}
+
+			switch (tidentifier.getType()) {
+				case Collection.OBJECT_TYPE:
+					Collection collection = em.find(Collection.class, identifier.getId());
+					if (collection == null) {
+						throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
+					}
+					collection.removeMetadata(key);
+					em.merge(collection);
+					break;
+				case DataObject.OBJECT_TYPE:
+					DataObject object = em.find(DataObject.class, identifier.getId());
+					if (object == null) {
+						throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
+					}
+					object.removeMetadata(key);
+					em.merge(object);
+					break;
+				case Link.OBJECT_TYPE:
+					Link link = em.find(Link.class, identifier.getId());
+					if (link == null) {
+						throw new CoreServiceException("unable to load link with id [" + identifier.getId() + "] from storage");
+					}
+					link.removeMetadata(key);
+					em.merge(link);
+					break;
+			}
 
 			registry.delete(key);
 
 			indexing.remove(key);
+			indexing.reindex(meta.getTarget());
+			
 			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "delete"), "");
+			notification.throwEvent(meta.getTarget(), caller, tidentifier.getType(), OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "remove-metadata"), "key=" + key);
 		} catch (NotificationServiceException | RegistryServiceException | IndexingServiceException | MembershipServiceException | AuthorisationServiceException e) {
 			throw new CoreServiceException("unable to delete metadata with key [" + key + "]", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> findMetadataObjectsForTarget(String target) throws CoreServiceException, AccessDeniedException {
@@ -1467,17 +1612,19 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(target, subjects, "read");
-			
+
 			TypedQuery<MetadataObject> query = em.createNamedQuery("findMetadataObjectsForTarget", MetadataObject.class).setParameter("target", target);
 			List<MetadataObject> mdos = query.getResultList();
-			List<String> results = new ArrayList<String> ();
-			for ( MetadataObject mdo : mdos ) {
+			List<String> results = new ArrayList<String>();
+			for (MetadataObject mdo : mdos) {
 				String key = registry.lookup(mdo.getObjectIdentifier());
 				results.add(key);
 			}
-			notification.throwEvent("", caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "find"), "target=" + target);
+			notification.throwEvent("", caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "find"), "target="
+					+ target);
 			return results;
-		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
+		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException
+				| IdentifierNotRegisteredException e) {
 			throw new CoreServiceException("unable to find metadata for target [" + target + "]", e);
 		}
 	}
@@ -1540,9 +1687,17 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 		try {
 			TypedQuery<DataObject> query = em.createNamedQuery("findObjectByBinaryHash", DataObject.class).setParameter("hash", hash);
 			List<DataObject> objects = query.getResultList();
+			for ( DataObject object : objects ) {
+				object.setKey(registry.lookup(object.getObjectIdentifier()));
+			}
+			TypedQuery<MetadataObject> query2 = em.createNamedQuery("findMetadataObjectByBinaryHash", MetadataObject.class).setParameter("hash", hash);
+			List<MetadataObject> objects2 = query2.getResultList();
+			for ( MetadataObject mobject : objects2 ) {
+				mobject.setKey(registry.lookup(mobject.getObjectIdentifier()));
+			}
 			List<OrtolangObject> oobjects = new ArrayList<OrtolangObject>();
 			oobjects.addAll(objects);
-			//TODO IL manque la key dans les OrtolangObjects !! ça ne sert pas à grand chose du coup :-/
+			oobjects.addAll(objects2);
 			return oobjects;
 		} catch (Exception e) {
 			throw new OrtolangException("unable to find an object for hash " + hash);
@@ -1567,21 +1722,21 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				if (object == null) {
 					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
 				}
-				if ( object.getName() != null ) {
+				if (object.getName() != null) {
 					content.addContentPart(object.getName());
 				}
-				if ( object.getDescription() != null ) {
+				if (object.getDescription() != null) {
 					content.addContentPart(object.getDescription());
 				}
-				if ( object.getContentType() != null ) {
+				if (object.getContentType() != null) {
 					content.addContentPart(object.getContentType());
 				}
-				if ( object.getPreview() != null ) {
+				if (object.getPreview() != null) {
 					content.addContentPart(object.getPreview());
 				}
 				try {
 					content.addContentPart(binarystore.extract(object.getStreams().get("data-stream")));
-				} catch ( DataNotFoundException | BinaryStoreServiceException e ) {
+				} catch (DataNotFoundException | BinaryStoreServiceException e) {
 					logger.log(Level.WARNING, "unable to extract plain text for key : " + key, e);
 				}
 			}
@@ -1619,7 +1774,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	@RolesAllowed("system")
@@ -1632,12 +1787,14 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			}
 
 			OrtolangIndexableSemanticContent content = new OrtolangIndexableSemanticContent();
-			
+
 			if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
 				DataObject object = em.find(DataObject.class, identifier.getId());
 				if (object == null) {
 					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
 				}
+
+				// TODO insert semantic data based on ontology
 				
 				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", object.getName()));
 				
@@ -1651,8 +1808,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				}
 
 				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", collection.getName()));
-				
-				//TODO insert semantic data based on ontology
+
+				// TODO insert semantic data based on ontology
 			}
 
 			if (identifier.getType().equals(Link.OBJECT_TYPE)) {
@@ -1662,8 +1819,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				}
 
 				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", reference.getName()));
-				
-				//TODO insert semantic data based on ontology
+
+				// TODO insert semantic data based on ontology
 			}
 
 			if (identifier.getType().equals(MetadataObject.OBJECT_TYPE)) {
@@ -1673,8 +1830,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				}
 
 				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", metadata.getName()));
-				
-				//TODO wrap internal metadata object semantic information into a node based on ontology
+
+				// TODO wrap internal metadata object semantic information into a node based on ontology
 				// Convert RDF to Triple
 				try {
 					Set<Triple> triplesContent = triplestore.extractTriples(binarystore.get(metadata.getStream()), metadata.getContentType());

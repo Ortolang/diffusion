@@ -1,10 +1,13 @@
 package fr.ortolang.diffusion.core.entity;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
@@ -33,11 +36,14 @@ public class DataObject extends OrtolangObject {
 	private String contentType;
 	private String preview;
 	private long nbReads;
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
 	private Map<String, String> streams;
+	@ElementCollection(fetch=FetchType.EAGER)
+	private Set<String> metadatas;
 	
 	public DataObject() {
 		streams = new HashMap<String, String>();
+		metadatas = new HashSet<String>();
 	}
 
 	public String getId() {
@@ -118,6 +124,22 @@ public class DataObject extends OrtolangObject {
 	
 	public void removeStream(String name) {
 		this.streams.remove(name);
+	}
+	
+	public void setMetadatas(Set<String> metadatas) {
+		this.metadatas = metadatas;
+	}
+	
+	public Set<String> getMetadatas() {
+		return metadatas;
+	}
+	
+	public void addMetadata(String metadata) {
+		this.metadatas.add(metadata);
+	}
+	
+	public void removeMetadata(String metadata) {
+		this.metadatas.remove(metadata);
 	}
 
 	@Override

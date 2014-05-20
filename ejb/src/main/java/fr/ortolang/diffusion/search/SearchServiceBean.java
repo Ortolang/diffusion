@@ -22,7 +22,6 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.publication.PublicationServiceBean;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
@@ -31,6 +30,7 @@ import fr.ortolang.diffusion.store.index.IndexStoreService;
 import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
 import fr.ortolang.diffusion.store.triple.TripleStoreService;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
+import fr.ortolang.diffusion.workflow.WorkflowServiceBean;
 
 @Remote(SearchService.class)
 @Stateless(name = SearchService.SERVICE_NAME)
@@ -38,7 +38,7 @@ import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 @RolesAllowed("user")
 public class SearchServiceBean implements SearchService {
 
-	private Logger logger = Logger.getLogger(PublicationServiceBean.class.getName());
+	private Logger logger = Logger.getLogger(SearchServiceBean.class.getName());
 	
 	@EJB
 	private MembershipService membership;

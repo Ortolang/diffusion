@@ -41,7 +41,7 @@
   <rdfs:isDefinedBy rdf:resource="http://www.ortolang.fr/2014/05/diffusion#"/>
   <rdfs:label>creationDate</rdfs:label>
   <rdfs:comment>The subject has a creation date.</rdfs:comment>
-  <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal" rdf:Datatype="xsd:date"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
   <rdfs:domain rdf:resource="http://www.ortolang.fr/2014/05/diffusion#Resource"/>
 </rdf:Property>
 
@@ -49,7 +49,7 @@
   <rdfs:isDefinedBy rdf:resource="http://www.ortolang.fr/2014/05/diffusion#"/>
   <rdfs:label>modificationDate</rdfs:label>
   <rdfs:comment>The subject has a modification date.</rdfs:comment>
-  <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal" rdf:Datatype="xsd:date"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
   <rdfs:domain rdf:resource="http://www.ortolang.fr/2014/05/diffusion#Resource"/>
 </rdf:Property>
 
@@ -57,7 +57,7 @@
   <rdfs:isDefinedBy rdf:resource="http://www.ortolang.fr/2014/05/diffusion#"/>
   <rdfs:label>publicationDate</rdfs:label>
   <rdfs:comment>The subject has a publication date.</rdfs:comment>
-  <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal" rdf:Datatype="xsd:date"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
   <rdfs:domain rdf:resource="http://www.ortolang.fr/2014/05/diffusion#Resource"/>
 </rdf:Property>
 

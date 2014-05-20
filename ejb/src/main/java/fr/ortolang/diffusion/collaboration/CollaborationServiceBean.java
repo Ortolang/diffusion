@@ -150,7 +150,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			membership.addMemberInGroup(members, caller);
 
 			String root = UUID.randomUUID().toString();
-			core.createCollection(root, "/", "root collection for workspace " + name);
+			core.createCollection(root, "/", "root collection for project " + name);
 			registry.setProperty(root, CollectionProperty.ROOT, "true");
 			registry.setProperty(root, CollectionProperty.VERSION, CollectionProperty.Version.WORK.name());
 			Map<String, List<String>> rules = new HashMap<String, List<String>>();
@@ -266,9 +266,9 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			indexing.reindex(key);
 			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CollaborationService.SERVICE_NAME, Project.OBJECT_TYPE, "update"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
-			logger.log(Level.SEVERE, "unexpected error occured during workspace update", e);
+			logger.log(Level.SEVERE, "unexpected error occured during project update", e);
 			ctx.setRollbackOnly();
-			throw new CollaborationServiceException("unable to update workspace with key [" + key + "]", e);
+			throw new CollaborationServiceException("unable to update project with key [" + key + "]", e);
 		}
 	}
 
@@ -288,6 +288,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			indexing.remove(key);
 			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CollaborationService.SERVICE_NAME, Project.OBJECT_TYPE, "delete"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
+			logger.log(Level.SEVERE, "unexpected error occured during project delete", e);
 			ctx.setRollbackOnly();
 			throw new CollaborationServiceException("unable to delete project with key [" + key + "]", e);
 		}
@@ -324,6 +325,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			indexing.reindex(key);
 			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CollaborationService.SERVICE_NAME, Project.OBJECT_TYPE, "snapshot"), "");
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException e) {
+			logger.log(Level.SEVERE, "unexpected error occured during project snapshot", e);
 			ctx.setRollbackOnly();
 			throw new CollaborationServiceException("unable to create snapshot for project with key [" + key + "]", e);
 		}
@@ -360,6 +362,7 @@ public class CollaborationServiceBean implements CollaborationService, Collabora
 			
 			notification.throwEvent(key, caller, Project.OBJECT_TYPE, OrtolangEvent.buildEventType(CollaborationService.SERVICE_NAME, Project.OBJECT_TYPE, "release"), "name=" + name);
 		} catch (IndexingServiceException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException e) {
+			logger.log(Level.SEVERE, "unexpected error occured during project release", e);
 			ctx.setRollbackOnly();
 			throw new CollaborationServiceException("unable to create snapshot for project with key [" + key + "]", e);
 		}

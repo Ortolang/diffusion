@@ -20,6 +20,7 @@ import fr.ortolang.diffusion.core.CoreService;
 public class Collection extends OrtolangObject {
 	
 	public static final String OBJECT_TYPE = "collection";
+	
 	private static final int MAX_SEGMENT_SIZE = 7700;
 	
 	@Id
@@ -31,9 +32,12 @@ public class Collection extends OrtolangObject {
 	@ElementCollection(fetch=FetchType.EAGER)
 	@Column(length=7800)
 	private Set<String> segments;
+	@ElementCollection(fetch=FetchType.EAGER)
+	private Set<String> metadatas;
 	
 	public Collection() {
 		segments = new HashSet<String>();
+		metadatas = new HashSet<String>();
 	}
 	
 	public String getId() {
@@ -128,11 +132,20 @@ public class Collection extends OrtolangObject {
 	
 	public boolean removeElement(String element) {
 		if ( isElement(element) ) {
+			String newsegment = "";
 			for ( String segment : segments ) {
 				if ( segment.indexOf(element) != -1 ) {
-					segment = segment.replaceAll("(" + element + "){1},?", "");
+					newsegment = segment;
+					segments.remove(segment);
 					break;
 				}
+			}
+			newsegment = newsegment.replaceAll("(" + element + "){1},?", "");
+			if ( newsegment.endsWith(",") ) {
+				newsegment = newsegment.substring(0, newsegment.length()-1);
+			}
+			if ( newsegment.length() > 0 ) {
+				segments.add(newsegment);
 			}
 			return true;
 		} else {
@@ -147,6 +160,22 @@ public class Collection extends OrtolangObject {
 			}
 		}
 		return false;
+	}
+	
+	public void setMetadatas(Set<String> metadatas) {
+		this.metadatas = metadatas;
+	}
+	
+	public Set<String> getMetadatas() {
+		return metadatas;
+	}
+	
+	public void addMetadata(String metadata) {
+		this.metadatas.add(metadata);
+	}
+	
+	public void removeMetadata(String metadata) {
+		this.metadatas.remove(metadata);
 	}
 	
 	@Override

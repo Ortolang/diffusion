@@ -1,6 +1,11 @@
 package fr.ortolang.diffusion.core.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.NamedQueries;
@@ -29,8 +34,11 @@ public class Link extends OrtolangObject {
 	private String name;
 	private String target;
 	private boolean dynamic;
+	@ElementCollection(fetch=FetchType.EAGER)
+	private Set<String> metadatas;
 	
 	public Link() {
+		metadatas = new HashSet<String>();
 	}
 	
 	public String getId() {
@@ -71,6 +79,22 @@ public class Link extends OrtolangObject {
 	
 	public void setTarget(String target) {
 		this.target = target;
+	}
+	
+	public void setMetadatas(Set<String> metadatas) {
+		this.metadatas = metadatas;
+	}
+	
+	public Set<String> getMetadatas() {
+		return metadatas;
+	}
+	
+	public void addMetadata(String metadata) {
+		this.metadatas.add(metadata);
+	}
+	
+	public void removeMetadata(String metadata) {
+		this.metadatas.remove(metadata);
 	}
 	
 	@Override

@@ -42,6 +42,7 @@ import fr.ortolang.diffusion.core.CoreServiceLocal;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.rest.KeysPaginatedRepresentation;
 import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
@@ -69,21 +70,16 @@ public class MetadataResource {
 	@Produces({MediaType.APPLICATION_JSON,MediaType.TEXT_HTML})
 	public Response list(@QueryParam(value = "target") String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "listing metadatas for target: " + target);
-		KeysRepresentation representation = new KeysRepresentation ();
-		UriBuilder metadatas = UriBuilder.fromUri(uriInfo.getBaseUri()).path(MetadataResource.class);
+		UriBuilder metadatas = DiffusionUriBuilder.getRestUriBuilder().path(MetadataResource.class);
 		
+		KeysRepresentation representation = new KeysRepresentation ();
 		if ( target != null ) {
 			List<String> keys = core.findMetadataObjectsForTarget(target);
-			logger.log(Level.INFO, "listing for target: " + keys.size());
-//			KeysPaginatedRepresentation representation = new KeysPaginatedRepresentation ();
-			
 			for ( String key : keys ) {
 				representation.addEntry(key, javax.ws.rs.core.Link.fromUri(metadatas.clone().path(key).build()).rel("view").build());
 			}
 		}
-
-//		KeysRepresentation representation = new KeysRepresentation ();
-//		representation.addLink(Link.fromUri(metadatas.clone().build()).rel("create").build());
+		representation.addLink(Link.fromUri(metadatas.clone().build()).rel("create").build());
 		return Response.ok(representation).build();
 	}
     
@@ -124,7 +120,7 @@ public class MetadataResource {
 	    		RemoteInputStreamServer ris = new SimpleRemoteInputStream(is);
 	    		core.createMetadataObject(key, name, ris.export(), target);
 	    	}
-	    	URI newly = UriBuilder.fromUri(uriInfo.getBaseUri()).path(MetadataResource.class).path(key).build();
+	    	URI newly = DiffusionUriBuilder.getRestUriBuilder().path(MetadataResource.class).path(key).build();
 	    	return Response.created(newly).build();
     	} catch ( IOException ioe ) {
     		return Response.serverError().entity(ioe.getMessage()).build();
@@ -138,7 +134,7 @@ public class MetadataResource {
 	public Response read( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading metadataobject with key: " + key);
     	MetadataObject meta = core.readMetadataObject(key);
-    	UriBuilder metadatas = UriBuilder.fromUri(uriInfo.getBaseUri()).path(MetadataResource.class);
+    	UriBuilder metadatas = DiffusionUriBuilder.getRestUriBuilder().path(MetadataResource.class);
     	
     	MetadataRepresentation representation = MetadataRepresentation.fromMetadataObject(meta);
     	representation.addLink(Link.fromUri(metadatas.clone().path(key).path("target").build()).rel("target").build());
@@ -151,7 +147,7 @@ public class MetadataResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response update( @PathParam(value="key") String key, MetadataRepresentation representation ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "updating metadataobject with key: " + key);
-    	core.updateMetadataObject(key, representation.getName(), representation.getTarget());
+    	core.updateMetadataObject(key, representation.getName());
     	return Response.noContent().build();
     }
     
@@ -213,7 +209,7 @@ public class MetadataResource {
     public Response target( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading target for link with key: " + key);
     	MetadataObject meta = core.readMetadataObject(key);
-    	URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class).path(meta.getTarget()).build();
+    	URI redirect = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class).path(meta.getTarget()).build();
     	return Response.seeOther(redirect).build();
     }
     

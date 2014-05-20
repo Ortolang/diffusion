@@ -18,6 +18,7 @@ import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
 import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.store.index.IndexStoreService;
@@ -91,7 +92,9 @@ public class IndexingListenerBean implements MessageListener {
 		try {
 			OrtolangIndexableObject object = buildIndexableObject(key);
 			indexStore.index(object);
-			tripleStore.index(object);
+			if ( object.getStatus().equals(OrtolangObjectState.Status.PUBLISHED) ) {
+				tripleStore.index(object);
+			}
 		} catch (IndexStoreServiceException | TripleStoreServiceException e) {
 			throw new IndexingServiceException("unable to insert object in store", e);
 		}
@@ -101,7 +104,9 @@ public class IndexingListenerBean implements MessageListener {
 		try {
 			OrtolangIndexableObject object = buildIndexableObject(key);
 			indexStore.reindex(object);
-			tripleStore.reindex(object);
+			if ( object.getStatus().equals(OrtolangObjectState.Status.PUBLISHED) ) {
+				tripleStore.reindex(object);
+			}
 		} catch (IndexStoreServiceException | TripleStoreServiceException e) {
 			throw new IndexingServiceException("unable to update object in store", e);
 		}

@@ -34,6 +34,7 @@ import fr.ortolang.diffusion.store.binary.hash.SHA1FilterInputStreamFactory;
 public class BinaryStoreServiceBean implements BinaryStoreService {
 
 	public static final String DEFAULT_BINARY_HOME = "binary-store";
+	public static final int DISTINGUISH_SIZE = 2;
 	
 	private static final Logger logger = Logger.getLogger(BinaryStoreServiceBean.class.getName());
 
@@ -75,7 +76,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 
 	@Override
 	public InputStream get(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, 4), identifier);
+		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
 		if (!Files.exists(path)) {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
@@ -88,7 +89,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	
 	@Override
 	public long size(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, 4), identifier);
+		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
 		if (!Files.exists(path)) {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
@@ -101,7 +102,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	
 	@Override
 	public String type(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, 4), identifier);
+		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
 		if (!Files.exists(path)) {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
@@ -115,7 +116,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	
 	@Override
 	public String extract(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, 4), identifier);
+		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
 		if (!Files.exists(path)) {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
@@ -141,8 +142,8 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 				String hash = input.getHash();
 				logger.log(Level.FINE, "content based generated sha1 hash: " + hash);
 				
-				Path parent = Paths.get(base.toString(), hash.substring(0, 4));
-				Path file = Paths.get(base.toString(), hash.substring(0, 4), hash);
+				Path parent = Paths.get(base.toString(), hash.substring(0, DISTINGUISH_SIZE));
+				Path file = Paths.get(base.toString(), hash.substring(0, DISTINGUISH_SIZE), hash);
 				if (!Files.exists(parent)) {
 					Files.createDirectory(parent);
 				}
@@ -194,7 +195,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 
 	@Override
 	public void delete(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, 4), identifier);
+		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
 		if (!Files.exists(path)) {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}

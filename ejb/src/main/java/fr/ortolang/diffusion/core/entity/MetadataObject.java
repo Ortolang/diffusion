@@ -35,11 +35,9 @@ public class MetadataObject extends OrtolangObject {
 	private String name;
 	private long size;
 	private String contentType;
-	// private String preview; // ??
-	// nbReads, description ??
 	private String stream;
 	private String target;
-	private String format; // ??
+	private String format; 
 
 	public String getId() {
 		return id;

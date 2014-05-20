@@ -41,8 +41,10 @@ import fr.ortolang.diffusion.core.CoreServiceLocal;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
+import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 @Path("/core/objects")
@@ -66,7 +68,7 @@ public class ObjectResource {
 	@Produces(MediaType.TEXT_HTML)
 	public Response list() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "listing all objects");
-		UriBuilder objects = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ObjectResource.class);
+		UriBuilder objects = DiffusionUriBuilder.getRestUriBuilder().path(ObjectResource.class);
 
 		KeysRepresentation representation = new KeysRepresentation ();
 		representation.addLink(Link.fromUri(objects.clone().build()).rel("create").build());
@@ -103,7 +105,7 @@ public class ObjectResource {
 	    		RemoteInputStreamServer ris = new SimpleRemoteInputStream(is);
 	    		core.createDataObject(key, name, description, ris.export());
 	    	}
-	    	URI newly = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ObjectResource.class).path(key).build();
+	    	URI newly = DiffusionUriBuilder.getRestUriBuilder().path(ObjectResource.class).path(key).build();
 	    	return Response.created(newly).build();
     	} catch ( IOException ioe ) {
     		return Response.serverError().entity(ioe.getMessage()).build();
@@ -117,10 +119,11 @@ public class ObjectResource {
 	public Response read( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading dataobject with key: " + key);
     	DataObject object = core.readDataObject(key);
-    	UriBuilder objects = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ObjectResource.class);
+    	UriBuilder objects = DiffusionUriBuilder.getRestUriBuilder().path(ObjectResource.class);
     	
     	ObjectRepresentation representation = ObjectRepresentation.fromDataObject(object);
     	representation.addLink(Link.fromUri(objects.clone().path(key).path("content").build()).rel("content").build());
+    	representation.addLink(Link.fromUri(objects.clone().path(key).path("metadatas").build()).rel("metadatas").build());
     	return Response.ok(representation).build();
     }
     
@@ -182,6 +185,35 @@ public class ObjectResource {
 	    	return Response.noContent().build();
     	} catch ( IOException ioe ) {
     		return Response.serverError().entity(ioe.getMessage()).build();
+    	}
+    }
+    
+    @GET
+    @Path("/{key}/metadatas")
+    @Template( template="core/metas.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+    public Response listMetadatas( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    	logger.log(Level.INFO, "reading metadatas of object with key: " + key);
+    	DataObject object= core.readDataObject(key);
+    	UriBuilder objects = DiffusionUriBuilder.getRestUriBuilder().path(ObjectResource.class);
+		
+    	KeysRepresentation representation = new KeysRepresentation ();
+		for ( String metadata : object.getMetadatas() ) {
+			representation.addEntry(metadata, Link.fromUri(objects.clone().path(key).path("metadatas").path(metadata).build()).rel("view").build());
+		}
+		return Response.ok(representation).build();
+    }
+    
+    @GET
+    @Path("/{key}/metadatas/{metadata}")
+    public Response getMetadata( @PathParam(value="key") String key, @PathParam(value="metadata") String metadata ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    	logger.log(Level.INFO, "reading metadata " + metadata + " of object with key: " + key);
+    	DataObject object = core.readDataObject(key);
+    	if ( object.getMetadatas().contains(metadata) ) {
+    		URI redirect = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class).path(metadata).build();
+    		return Response.seeOther(redirect).build();
+    	} else {
+    		throw new KeyNotFoundException("this element is not in this collection");
     	}
     }
     

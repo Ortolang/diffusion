@@ -723,7 +723,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 
 			return content;
 		} catch (KeyNotFoundException | RegistryServiceException e) {
-			throw new OrtolangException("unable to get indexable plain text content for key " + key);
+			throw new OrtolangException("unable to get indexable plain text content for key " + key, e);
 		}
 	}
 	
@@ -761,7 +761,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 
 			return content;
 		} catch (KeyNotFoundException | RegistryServiceException | TripleStoreServiceException e) {
-			throw new OrtolangException("unable to get indexable semantic content for key " + key);
+			throw new OrtolangException("unable to get indexable semantic content for key " + key, e);
 		} 
 	}
 

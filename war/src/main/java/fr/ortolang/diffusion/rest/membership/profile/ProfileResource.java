@@ -25,6 +25,7 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
@@ -59,7 +60,7 @@ public class ProfileResource {
     		membership.createProfile("no name provided", "no email provided");
     	} catch ( AccessDeniedException e ) {
     	}
-    	URI view = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProfileResource.class).path(key).build(); 
+    	URI view = DiffusionUriBuilder.getRestUriBuilder().path(ProfileResource.class).path(key).build(); 
     	return Response.seeOther(view).build();
     }
     
@@ -70,7 +71,7 @@ public class ProfileResource {
 	public Response getProfile(@PathParam(value="key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading profile for key: " + key);
     	Profile profile = membership.readProfile(key);
-    	UriBuilder profiles = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProfileResource.class);
+    	UriBuilder profiles = DiffusionUriBuilder.getRestUriBuilder().path(ProfileResource.class);
     	
     	ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
     	representation.addLink(Link.fromUri(profiles.clone().path(key).path("groups").build()).rel("groups").build());
@@ -94,7 +95,7 @@ public class ProfileResource {
     	logger.log(Level.INFO, "listing groups of profile for key: " + key);
     	Profile profile = membership.readProfile(key);
     	List<String> groups = Arrays.asList(profile.getGroups());
-    	UriBuilder profiles = UriBuilder.fromUri(uriInfo.getBaseUri()).path(ProfileResource.class);
+    	UriBuilder profiles = DiffusionUriBuilder.getRestUriBuilder().path(ProfileResource.class);
 
 		KeysRepresentation representation = new KeysRepresentation ();
 		for ( String group : groups ) {
@@ -109,7 +110,7 @@ public class ProfileResource {
     	logger.log(Level.INFO, "reading group " + group + " of profile for key: " + key);
     	Profile profile = membership.readProfile(key);
     	if ( Arrays.asList(profile.getGroups()).contains(group) ) {
-    		URI redirect = UriBuilder.fromUri(uriInfo.getBaseUri()).path(OrtolangObjectResource.class).path(group).build();
+    		URI redirect = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class).path(group).build();
         	return Response.seeOther(redirect).build();
     	} else {
     		throw new KeyNotFoundException("this group is not in this profile");

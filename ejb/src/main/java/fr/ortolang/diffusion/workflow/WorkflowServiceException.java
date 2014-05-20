@@ -7,16 +7,16 @@ public class WorkflowServiceException extends Exception {
 		super();
 	}
 
-	public WorkflowServiceException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
 	public WorkflowServiceException(String message) {
 		super(message);
 	}
 
 	public WorkflowServiceException(Throwable cause) {
 		super(cause);
+	}
+
+	public WorkflowServiceException(String message, Throwable cause) {
+		super(message, cause);
 	}
 
 }
