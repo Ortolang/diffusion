@@ -426,6 +426,12 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			streams.putAll(object.getStreams());
 			clone.setStreams(streams);
 			clone.setPreview(object.getPreview());
+			em.persist(clone);
+
+			registry.register(key, clone.getObjectIdentifier(), origin, true);
+			
+			authorisation.clonePolicy(key, origin);
+			
 			Set<String> metadatas = new HashSet<String>();
 			for (String metadata : object.getMetadatas()) {
 				String mid = UUID.randomUUID().toString();
@@ -433,11 +439,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				metadatas.add(mid);
 			}
 			clone.setMetadatas(metadatas);
-			em.persist(clone);
-
-			registry.register(key, clone.getObjectIdentifier(), origin, true);
-
-			authorisation.clonePolicy(key, origin);
+			em.merge(clone);
 
 			indexing.index(key);
 			notification.throwEvent(origin, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "clone"), "key=" + key);
@@ -729,6 +731,12 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			Set<String> elements = new HashSet<String>();
 			elements.addAll(collection.getElements());
 			clone.setElements(elements);
+			em.persist(clone);
+
+			registry.register(key, clone.getObjectIdentifier(), origin, true);
+			
+			authorisation.clonePolicy(key, origin);
+			
 			Set<String> metadatas = new HashSet<String>();
 			for (String metadata : collection.getMetadatas()) {
 				String mid = UUID.randomUUID().toString();
@@ -736,11 +744,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				metadatas.add(mid);
 			}
 			clone.setMetadatas(metadatas);
-			em.persist(clone);
-
-			registry.register(key, clone.getObjectIdentifier(), origin, true);
-
-			authorisation.clonePolicy(key, origin);
+			em.merge(clone);
 
 			indexing.index(key);
 			notification.throwEvent(origin, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "clone"), "key=" + key);
@@ -1057,6 +1061,12 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			clone.setName(link.getName());
 			clone.setDynamic(link.isDynamic());
 			clone.setTarget(link.getTarget());
+			em.persist(clone);
+
+			registry.register(key, clone.getObjectIdentifier(), origin, true);
+			
+			authorisation.clonePolicy(key, origin);
+			
 			Set<String> metadatas = new HashSet<String>();
 			for (String metadata : link.getMetadatas()) {
 				String mid = UUID.randomUUID().toString();
@@ -1064,11 +1074,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				metadatas.add(mid);
 			}
 			clone.setMetadatas(metadatas);
-			em.persist(clone);
-
-			registry.register(key, clone.getObjectIdentifier(), origin, true);
-
-			authorisation.clonePolicy(key, origin);
+			em.merge(clone);
 
 			indexing.index(key);
 			notification.throwEvent(origin, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "clone"), "key=" + key);
