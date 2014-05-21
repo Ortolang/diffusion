@@ -38,7 +38,7 @@ import fr.ortolang.diffusion.test.bench.CookieFilter;
 
 public class WorkAndPublishUseCase {
 	
-	private static final String PROJECT_ROOT_FOLDER = "/Users/cyril/tmp/diffusion/usecase/WorkAndPublishUseCase";
+	private static final String PROJECT_ROOT_FOLDER = "src/test/resources/usecase/WorkAndPublishUseCase";
 
 	private static Logger logger = Logger.getLogger(WorkAndPublishUseCase.class.getName());
 	private static Client client;
@@ -97,7 +97,6 @@ public class WorkAndPublishUseCase {
 		}
 		String projectKey = newProjectResponse.getLocation().getPath().substring(newProjectResponse.getLocation().getPath().lastIndexOf("/")+1);
 		logger.log(Level.INFO, "Created project key : " + projectKey);
-		listKeyToPublish.add(projectKey);
 		
 		logger.log(Level.INFO, "Getting project root collection");
 		Response getProjectRootResponse = projects.path(projectKey).path("root").request(MediaType.APPLICATION_JSON_TYPE).get();
@@ -146,10 +145,13 @@ public class WorkAndPublishUseCase {
 						fail("Unable to add element to collection");
 					}
 					
+					listKeyToPublish.add(objectKey.substring(1));
+					
 					// Create metadata for object
 					File metadataObject = new File(PROJECT_ROOT_FOLDER+"/metadata/"+thefile.getName().substring(0, thefile.getName().indexOf('.'))+".rdf");
-					createMetadata(metadataObject, objectKey.substring(1)); // objectKey == "/{key}" but needs to remove "/"
-					
+					String metadataObjectKey = createMetadata(metadataObject, objectKey.substring(1)); // objectKey == "/{key}" but needs to remove "/"
+				
+					listKeyToPublish.add(metadataObjectKey);
 				}
 			}
 		}
@@ -167,7 +169,11 @@ public class WorkAndPublishUseCase {
 		
 		logger.log(Level.INFO, "Publishing release");
 		logger.log(Level.INFO, "Publish with key : "+projectRootKey);
-		Form newPublishForm = new Form().param("name", "published v1.0").param("type", "simple-publication").param("keys", projectRootKey);
+		Form newPublishForm = new Form().param("name", "published v1.0").param("type", "simple-publication");
+		
+		for(String keyToPublish : listKeyToPublish) {
+			newPublishForm.param("keys", keyToPublish);
+		}
 		Response newPublishResponse = processs.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(newPublishForm, MediaType.APPLICATION_FORM_URLENCODED));
 		if (newPublishResponse.getStatus() != Status.CREATED.getStatusCode()) {
 			logger.log(Level.WARNING, "Unexpected response code while trying to publish : " + newPublishResponse.getStatus());
@@ -177,7 +183,10 @@ public class WorkAndPublishUseCase {
 		String processKey = newPublishResponse.getLocation().getPath().substring(newPublishResponse.getLocation().getPath().lastIndexOf("/")+1);
 		logger.log(Level.INFO, "Created process key : " + processKey);
 		
+		// TODO Waiting until the process is finished
 		
+		
+		// SPARQL : SELECT ?pred ?obj WHERE {<http://localhost:8080/diffusion/rest/objects/12d2dc82-5e67-47cf-ba07-7bfe6e5688db> ?pred ?obj }
 	}
 	
 	private String createMetadata(File file, String target) {

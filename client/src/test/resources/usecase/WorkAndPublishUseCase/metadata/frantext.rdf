@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+    Collection / (racine du projet Frantext)
+        key : c0e0a2df-0a0f-429b-9619-031c6f6e7bc0
+        name: /
+        description: Issu de la base Frantext, 
+        ...
+    === prendre les informations sur :
+    Projet Frantext
+        key : XX
+        name: Frantext
+        type: Corpus
+-->
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:dcterms="http://purl.org/dc/terms/">
+    <rdf:Description rdf:about="http://diffusion.ortolang.fr:80/91d27092-68f4-425f-8fd9-dfa23583f1e3">
+        <!-- nom demandé à l'utilisateur ? par defaut, nom du projet -->
+        <dc:title>Frantext V2</dc:title>
+        <!-- description de la collection -->
+        <dc:description>Issu de la base Frantext, le corpus Frantext « textes libres de droits » offre à la communauté scientifique, un large champ d’investigation où sont réunies 500 œuvres de la littérature française couvrant la période du 18e au 20e siècle. Le traitement informatique des données textuelles en format TEI XML a été réalisé par le laboratoire ATILF. L'interface de recherche permet d'effectuer des sélections au sein du corpus par genre de texte, auteur, période…</dc:description>
+        <!-- type de projet -->
+        <!-- <rdf:type rdf:resource="http://www.ortolang.fr/class/OrtolangCorpus"/> -->
+        <!-- creation date -->
+        <!-- <dcterms:created>2014-05-12</dcterms:created> -->
+        <!-- modification date -->
+        <!-- <dcterms:modified>2014-05-13</dcterms:modified> -->
+    </rdf:Description>
+</rdf:RDF>
