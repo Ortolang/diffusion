@@ -5,6 +5,7 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URLEncoder;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +22,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -29,6 +31,7 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
+import org.glassfish.jersey.uri.UriComponent;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -67,6 +70,7 @@ public class WorkAndPublishUseCase {
 	public void scenario() throws IOException {
 		logger.log(Level.INFO, "Starting Work And Publish Scenario");
 
+		WebTarget ortolangObjects = base.path("/objects");
 		WebTarget profiles = base.path("/membership/profiles");
 		WebTarget projects = base.path("/collaboration/projects");
 		WebTarget collections = base.path("/core/collections");
@@ -168,27 +172,69 @@ public class WorkAndPublishUseCase {
 		logger.log(Level.INFO, "Created release key (should be same than old root collection): " + releaseKey);
 		
 		logger.log(Level.INFO, "Publishing release");
-		logger.log(Level.INFO, "Publish with key : "+projectRootKey);
 		Form newPublishForm = new Form().param("name", "published v1.0").param("type", "simple-publication");
 		
 		for(String keyToPublish : listKeyToPublish) {
 			newPublishForm.param("keys", keyToPublish);
 		}
-		Response newPublishResponse = processs.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(newPublishForm, MediaType.APPLICATION_FORM_URLENCODED));
-		if (newPublishResponse.getStatus() != Status.CREATED.getStatusCode()) {
-			logger.log(Level.WARNING, "Unexpected response code while trying to publish : " + newPublishResponse.getStatus());
-			logger.log(Level.WARNING, "entity: " + newPublishResponse.readEntity(String.class)); 
+		Response newProcessResponse = processs.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(newPublishForm, MediaType.APPLICATION_FORM_URLENCODED));
+		if (newProcessResponse.getStatus() != Status.CREATED.getStatusCode()) {
+			logger.log(Level.WARNING, "Unexpected response code while trying to publish : " + newProcessResponse.getStatus());
+			logger.log(Level.WARNING, "entity: " + newProcessResponse.readEntity(String.class)); 
 			fail("Unable to publish project");
 		}
-		String processKey = newPublishResponse.getLocation().getPath().substring(newPublishResponse.getLocation().getPath().lastIndexOf("/")+1);
+		String processKey = newProcessResponse.getLocation().getPath().substring(newProcessResponse.getLocation().getPath().lastIndexOf("/")+1);
 		logger.log(Level.INFO, "Created process key : " + processKey);
 		
-		// TODO Waiting until the process is finished
+		// Waiting until the process is finished
+		try {
+			logger.log(Level.INFO, "Waiting process");
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			logger.log(Level.SEVERE, "Cannot wait !!");
+			fail("Unable to wait process");
+		}
 		
+		logger.log(Level.INFO, "Getting process object");
+		String statusProcessPublish = "";
+		Response getProcessResponse = processs.path(processKey).request(MediaType.APPLICATION_JSON_TYPE).get();
+		if (getProcessResponse.getStatus() == Status.OK.getStatusCode()) {
+			String processObject = getProcessResponse.readEntity(String.class);
+			JsonObject jsonProcessObject = Json.createReader(new StringReader(processObject)).readObject();
+			statusProcessPublish = jsonProcessObject.getJsonString("status").getString();
+		} else {
+			logger.log(Level.WARNING, "Unexpected response code while trying to read process : " + getProcessResponse.getStatus());
+			fail("Unable to get process object");
+		}
+		logger.log(Level.INFO, "Process status : " + statusProcessPublish);
+		
+		assertEquals("Process not stopped", statusProcessPublish, "STOPPED");
 		
 		// SPARQL : SELECT ?pred ?obj WHERE {<http://localhost:8080/diffusion/rest/objects/12d2dc82-5e67-47cf-ba07-7bfe6e5688db> ?pred ?obj }
+		logger.log(Level.INFO, "Getting triples about root collection");
+		String query = "SELECT ?pred ?obj WHERE {<http://localhost:8080/diffusion/rest/objects/"+projectRootKey+"> ?pred ?obj }";
+		
+		Response getSemanticRootCollectionResponse = ortolangObjects.path("semantic").queryParam("query", UriComponent.encode(query, UriComponent.Type.QUERY_PARAM)).request(MediaType.APPLICATION_JSON_TYPE).get();
+		if (getSemanticRootCollectionResponse.getStatus() == Status.OK.getStatusCode()) {
+			String sparqlResponse = getSemanticRootCollectionResponse.readEntity(String.class);
+			JsonObject jsonSPARQLResultObject = Json.createReader(new StringReader(sparqlResponse)).readObject();
+			logger.log(Level.INFO, jsonSPARQLResultObject.toString());
+			//statusProcessPublish = jsonProcessObject.getJsonString("status").getString();
+			//logger.log(Level.INFO, "Process retreived : " + projectRootKey);
+		} else {
+			logger.log(Level.WARNING, "Unexpected response code while trying to get sparql response : " + getSemanticRootCollectionResponse.getStatus());
+			logger.log(Level.WARNING, "entity: " + getSemanticRootCollectionResponse.readEntity(String.class)); 
+			fail("Unable to get SPARQL Result");
+		}
 	}
 	
+	/**
+	 * Creates a metadata object.
+	 * 
+	 * @param file
+	 * @param target
+	 * @return
+	 */
 	private String createMetadata(File file, String target) {
 		String metadataProjectKey = null;
 		if(file.exists()) {
