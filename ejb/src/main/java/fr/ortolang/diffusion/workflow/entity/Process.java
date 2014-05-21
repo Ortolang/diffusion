@@ -3,6 +3,7 @@ package fr.ortolang.diffusion.workflow.entity;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Index;
+import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -31,6 +32,7 @@ public class Process extends OrtolangObject {
 	private String status;
 	private String start;
 	private String stop;
+	@Lob
 	private String log;
 
 	public Process() {
