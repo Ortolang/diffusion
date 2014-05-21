@@ -89,7 +89,7 @@ public class AddAndRemoveElementUseCase {
 		logger.log(Level.INFO, "Created collection key : " + collectionKey);
 		
 		Set<String> elements = new HashSet<String> ();
-		for (int i = 0; i < 250; i++) {
+		for (int i = 0; i < 2500; i++) {
 			logger.log(Level.FINE, "Creating sample DataObject to populate collection");
 			File thefile = Paths.get(SAMPLE_FILE).toFile();
 			FileDataBodyPart filePart = new FileDataBodyPart("file", thefile);

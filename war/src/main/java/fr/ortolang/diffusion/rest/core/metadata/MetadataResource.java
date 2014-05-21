@@ -43,7 +43,6 @@ import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
-import fr.ortolang.diffusion.rest.KeysPaginatedRepresentation;
 import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
