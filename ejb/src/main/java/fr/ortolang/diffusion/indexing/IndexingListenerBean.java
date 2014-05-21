@@ -92,7 +92,7 @@ public class IndexingListenerBean implements MessageListener {
 		try {
 			OrtolangIndexableObject object = buildIndexableObject(key);
 			indexStore.index(object);
-			if ( object.getStatus().equals(OrtolangObjectState.Status.PUBLISHED) ) {
+			if ( object.getStatus().equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
 				tripleStore.index(object);
 			}
 		} catch (IndexStoreServiceException | TripleStoreServiceException e) {
@@ -104,7 +104,7 @@ public class IndexingListenerBean implements MessageListener {
 		try {
 			OrtolangIndexableObject object = buildIndexableObject(key);
 			indexStore.reindex(object);
-			if ( object.getStatus().equals(OrtolangObjectState.Status.PUBLISHED) ) {
+			if ( object.getStatus().equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
 				tripleStore.reindex(object);
 			}
 		} catch (IndexStoreServiceException | TripleStoreServiceException e) {
