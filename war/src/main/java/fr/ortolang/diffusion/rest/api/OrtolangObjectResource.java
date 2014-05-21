@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.rest.api;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +12,9 @@ import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -248,8 +252,14 @@ public class OrtolangObjectResource {
 	@Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML})
 	public Response semanticSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
 		if ( query != null && query.length() > 0 ) {
-			logger.log(Level.INFO, "searching objects with semantic query: " + query);
-			String results = search.semanticSearch(query, "json");
+			String queryEncoded = "";
+			try {
+				queryEncoded = URLDecoder.decode(query, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				logger.log(Level.WARNING, "cannot decode URL "+query);
+			}
+			logger.log(Level.INFO, "searching objects with semantic query: " + queryEncoded);
+			String results = search.semanticSearch(queryEncoded, "json");
 			return Response.ok(results).build();
 		} else {
 			return Response.ok("").build();
