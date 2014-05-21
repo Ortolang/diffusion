@@ -127,11 +127,12 @@ public class TripleStoreServiceBean implements TripleStoreService {
             RepositoryConnection con = repository.getConnection();
             try {
             	con.clear(getContext(object.getKey()));
+            	con.add(TripleStoreStatementBuilder.buildStatements(object), getContext(object.getKey()));
             } finally {
                 con.close();
             }
         } catch (Exception e) {
-            throw new TripleStoreServiceException("unable to remove triples for key: " + object.getKey(), e);
+            throw new TripleStoreServiceException("unable to reindex triples for key: " + object.getKey(), e);
         }
 	}
 	
