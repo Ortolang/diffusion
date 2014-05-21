@@ -1861,7 +1861,8 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				// TODO wrap internal metadata object semantic information into a node based on ontology
 				// Convert RDF to Triple
 				try {
-					Set<Triple> triplesContent = TripleHelper.extractTriples(subj, binarystore.get(metadata.getStream()), metadata.getContentType());
+					String subjForContent = URIHelper.fromKey(metadata.getTarget());
+					Set<Triple> triplesContent = TripleHelper.extractTriples(subjForContent, binarystore.get(metadata.getStream()), metadata.getContentType());
 					for(Triple triple : triplesContent) {
 						content.addTriple(triple);
 					}
