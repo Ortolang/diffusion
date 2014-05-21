@@ -55,15 +55,16 @@ public class ProcessResource {
 	public Response list(@QueryParam(value = "initier") String initier) throws WorkflowServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "listing processes for initier : " + initier);
 		UriBuilder links = DiffusionUriBuilder.getRestUriBuilder().path(ProcessResource.class);
+		KeysPaginatedRepresentation representation = new KeysPaginatedRepresentation ();
 		if ( initier != null ) {
 			List<String> keys = workflow.findProcessForInitier(initier);
-			KeysPaginatedRepresentation representation = new KeysPaginatedRepresentation ();
+			
 			for ( String key : keys ) {
 				representation.addEntry(key, javax.ws.rs.core.Link.fromUri(links.clone().path(key).build()).rel("view").build());
 			}
 		}
 
-		KeysRepresentation representation = new KeysRepresentation ();
+//		KeysRepresentation representation = new KeysRepresentation ();
 		representation.addLink(javax.ws.rs.core.Link.fromUri(links.clone().build()).rel("create").build());
 		return Response.ok(representation).build();
 	}
