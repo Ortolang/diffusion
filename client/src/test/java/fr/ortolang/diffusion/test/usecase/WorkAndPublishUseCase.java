@@ -15,6 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -48,6 +49,7 @@ public class WorkAndPublishUseCase {
 	private static WebTarget base;
 	
 	private static WebTarget metadatas;
+	private static WebTarget ortolangObjects;
 	
 	@BeforeClass
 	public static void init() {
@@ -59,6 +61,7 @@ public class WorkAndPublishUseCase {
 		base = client.target("http://" + BenchSuite.SERVER_ADDRESS + ":" + BenchSuite.SERVER_PORT + "/" + BenchSuite.APPLICATION_NAME + "/" + BenchSuite.APPLICATION_REST_PREFIX);
 		
 		metadatas = base.path("/core/metadatas");
+		ortolangObjects = base.path("/objects");
 	}
 
 	@AfterClass
@@ -70,7 +73,7 @@ public class WorkAndPublishUseCase {
 	public void scenario() throws IOException {
 		logger.log(Level.INFO, "Starting Work And Publish Scenario");
 
-		WebTarget ortolangObjects = base.path("/objects");
+//		WebTarget ortolangObjects = base.path("/objects");
 		WebTarget profiles = base.path("/membership/profiles");
 		WebTarget projects = base.path("/collaboration/projects");
 		WebTarget collections = base.path("/core/collections");
@@ -177,6 +180,7 @@ public class WorkAndPublishUseCase {
 		for(String keyToPublish : listKeyToPublish) {
 			newPublishForm.param("keys", keyToPublish);
 		}
+		
 		Response newProcessResponse = processs.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(newPublishForm, MediaType.APPLICATION_FORM_URLENCODED));
 		if (newProcessResponse.getStatus() != Status.CREATED.getStatusCode()) {
 			logger.log(Level.WARNING, "Unexpected response code while trying to publish : " + newProcessResponse.getStatus());
@@ -210,22 +214,23 @@ public class WorkAndPublishUseCase {
 		
 		assertEquals("Process not stopped", statusProcessPublish, "STOPPED");
 		
-		// SPARQL : SELECT ?pred ?obj WHERE {<http://localhost:8080/diffusion/rest/objects/12d2dc82-5e67-47cf-ba07-7bfe6e5688db> ?pred ?obj }
-		logger.log(Level.INFO, "Getting triples about root collection");
-		String query = "SELECT ?pred ?obj WHERE {<http://localhost:8080/diffusion/rest/objects/"+projectRootKey+"> ?pred ?obj }";
+
+		//TODO list projects from triplestore
+		logger.log(Level.INFO, "Listing project publised");
+		String queryListRootCollection = "SELECT ?subj ?title ?description WHERE {?subj <http://www.ortolang.fr/2014/05/diffusion#type> \"collection\" ; <http://purl.org/dc/elements/1.1/title> ?title ; <http://purl.org/dc/elements/1.1/description> ?description }";
+		JsonObject jsonSPARQLResultObject = semanticSearch(queryListRootCollection);
+		JsonObject resultsSPARQL = jsonSPARQLResultObject.getJsonObject("results");
+		JsonArray bindings = resultsSPARQL.getJsonArray("bindings");
+		logger.log(Level.INFO, "bindings : "+bindings);
+		assertTrue("List of project is empty",bindings.size()>0);
 		
-		Response getSemanticRootCollectionResponse = ortolangObjects.path("semantic").queryParam("query", UriComponent.encode(query, UriComponent.Type.QUERY_PARAM)).request(MediaType.APPLICATION_JSON_TYPE).get();
-		if (getSemanticRootCollectionResponse.getStatus() == Status.OK.getStatusCode()) {
-			String sparqlResponse = getSemanticRootCollectionResponse.readEntity(String.class);
-			JsonObject jsonSPARQLResultObject = Json.createReader(new StringReader(sparqlResponse)).readObject();
-			logger.log(Level.INFO, jsonSPARQLResultObject.toString());
-			//statusProcessPublish = jsonProcessObject.getJsonString("status").getString();
-			//logger.log(Level.INFO, "Process retreived : " + projectRootKey);
-		} else {
-			logger.log(Level.WARNING, "Unexpected response code while trying to get sparql response : " + getSemanticRootCollectionResponse.getStatus());
-			logger.log(Level.WARNING, "entity: " + getSemanticRootCollectionResponse.readEntity(String.class)); 
-			fail("Unable to get SPARQL Result");
-		}
+		logger.log(Level.INFO, "Getting triples about root collection");
+		String queryCollectionDetails = "SELECT ?pred ?obj WHERE {<http://localhost:8080/diffusion/rest/objects/"+projectRootKey+"> ?pred ?obj }";
+		jsonSPARQLResultObject = semanticSearch(queryCollectionDetails);
+		resultsSPARQL = jsonSPARQLResultObject.getJsonObject("results");
+		bindings = resultsSPARQL.getJsonArray("bindings");
+		assertTrue("Informations about project is empty", bindings.size()>0);
+		
 	}
 	
 	/**
@@ -260,4 +265,22 @@ public class WorkAndPublishUseCase {
 		return metadataProjectKey.substring(1);
 	}
 
+	
+	private JsonObject semanticSearch(String query) {
+		JsonObject jsonSPARQLResultObject = null;
+		Response getSemanticRootCollectionResponse = ortolangObjects.path("semantic").queryParam("query", UriComponent.encode(query, UriComponent.Type.QUERY_PARAM)).request(MediaType.APPLICATION_JSON_TYPE).get();
+		if (getSemanticRootCollectionResponse.getStatus() == Status.OK.getStatusCode()) {
+			String sparqlResponse = getSemanticRootCollectionResponse.readEntity(String.class);
+			jsonSPARQLResultObject = Json.createReader(new StringReader(sparqlResponse)).readObject();
+			logger.log(Level.INFO, jsonSPARQLResultObject.toString());
+			//TODO check that the metadata project is published
+			//statusProcessPublish = jsonProcessObject.getJsonString("status").getString();
+			//logger.log(Level.INFO, "Process retreived : " + projectRootKey);
+		} else {
+			logger.log(Level.WARNING, "Unexpected response code while trying to get sparql response : " + getSemanticRootCollectionResponse.getStatus());
+			logger.log(Level.WARNING, "entity: " + getSemanticRootCollectionResponse.readEntity(String.class)); 
+			fail("Unable to get SPARQL Result");
+		}
+		return jsonSPARQLResultObject;
+	}
 }
