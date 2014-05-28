@@ -1,10 +1,15 @@
 package fr.ortolang.diffusion.rest.membership.profile;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.rest.DiffusionRepresentation;
+import fr.ortolang.diffusion.rest.api.OrtolangLinkableRepresentation;
 
-public class ProfileRepresentation extends DiffusionRepresentation {
+@XmlRootElement(name="profile")
+public class ProfileRepresentation extends OrtolangLinkableRepresentation {
 
+	@XmlAttribute(name="key")
 	private String key;
 	private String email;
 	private String fullname;

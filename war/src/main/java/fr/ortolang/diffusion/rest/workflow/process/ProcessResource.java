@@ -27,9 +27,9 @@ import javax.ws.rs.core.UriInfo;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
-import fr.ortolang.diffusion.rest.KeysPaginatedRepresentation;
-import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
+import fr.ortolang.diffusion.rest.api.OrtolangCollectionRepresentation;
+import fr.ortolang.diffusion.rest.api.OrtolangLinkRepresentation;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.workflow.WorkflowService;
 import fr.ortolang.diffusion.workflow.WorkflowServiceException;
@@ -55,17 +55,20 @@ public class ProcessResource {
 	public Response list(@QueryParam(value = "initier") String initier) throws WorkflowServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "listing processes for initier : " + initier);
 		UriBuilder links = DiffusionUriBuilder.getRestUriBuilder().path(ProcessResource.class);
-		KeysPaginatedRepresentation representation = new KeysPaginatedRepresentation ();
+		OrtolangCollectionRepresentation representation = new OrtolangCollectionRepresentation ();
+		representation.setStart(0);
+		representation.setSize(0);
+		representation.setTotalSize(0);
 		if ( initier != null ) {
 			List<String> keys = workflow.findProcessForInitier(initier);
-			
+			representation.setSize(keys.size());
+			representation.setTotalSize(keys.size());
 			for ( String key : keys ) {
-				representation.addEntry(key, javax.ws.rs.core.Link.fromUri(links.clone().path(key).build()).rel("view").build());
+				representation.addEntry(key, OrtolangLinkRepresentation.fromUri(links.clone().path(key).build()).rel("view"));
 			}
 		}
 
-//		KeysRepresentation representation = new KeysRepresentation ();
-		representation.addLink(javax.ws.rs.core.Link.fromUri(links.clone().build()).rel("create").build());
+		representation.addLink(OrtolangLinkRepresentation.fromUri(links.clone().build()).rel("create"));
 		return Response.ok(representation).build();
 	}
 
@@ -96,8 +99,6 @@ public class ProcessResource {
 	public Response getProcess(@PathParam(value = "key") String key) throws WorkflowServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "reading process for key: " + key);
 		Process process = workflow.readProcess(key);
-//		UriBuilder processes = DiffusionUriBuilder.getUriBuilder().path(ProcessResource.class);
-
 		ProcessRepresentation representation = ProcessRepresentation.fromProcess(process);
 		return Response.ok(representation).build();
 	}

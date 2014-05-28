@@ -1,7 +1,7 @@
 package fr.ortolang.diffusion.store.triple;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.Reader;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,21 +19,19 @@ public class TripleHelper {
 	 * @param rdf a string representation of the RDF
 	 * @return the list of triples extracted from RDF
 	 */
-	public static Set<Triple> extractTriples(String subject, InputStream input, String contentType) throws TripleStoreServiceException {
-		RDFFormat format = Rio.getParserFormatForMIMEType(contentType); //TODO use fallback ?
+	public static Set<Triple> extractTriples(Reader reader, String contentType) throws TripleStoreServiceException {
+		RDFFormat format = Rio.getParserFormatForMIMEType(contentType);
 		
 		try {
-			//TODO creates our own RDFHandler
-			Model results = Rio.parse(input, "", format);
+			Model results = Rio.parse(reader, "", format);
 
 			Set<Triple> triples = new HashSet<Triple>();
 			for (Statement statement: results) {
-				// statement.getSubject().stringValue()
-				triples.add(new Triple(subject, statement.getPredicate().stringValue(), statement.getObject().stringValue()));
+				triples.add(new Triple(statement.getSubject().stringValue(), statement.getPredicate().stringValue(), statement.getObject().stringValue()));
 			}
 			return triples;
 		} catch (RDFParseException | UnsupportedRDFormatException | IOException e) {
-			throw new TripleStoreServiceException("Unable to extract triples");
+			throw new TripleStoreServiceException("Unable to extract triples", e);
 		}
 	}
 }

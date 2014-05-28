@@ -12,13 +12,14 @@
       	</tr>
    	</thead>
    	<tbody>
-	#foreach( $entry in $entity.entries.keySet() )
+	#foreach( $entry in $entity.entries )
+		#set( $count = $foreach.count + $entity.start - 1 )
 		<tr>
-			<td>$foreach.count</td>
-			<td>$entry</td>
+			<td>$count</td>
+			<td>$entry.key</td>
 			<td>
 				<div class="btn-group">
-   				#foreach( $link in $entity.entries.get($entry) )
+   				#foreach( $link in $entry.links )
    					<a class="btn btn-default btn-xs" href="$link.uri">$link.rel</a> 
    				#end
    				</div>

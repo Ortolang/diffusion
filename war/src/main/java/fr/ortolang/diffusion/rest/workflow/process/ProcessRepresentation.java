@@ -1,10 +1,15 @@
 package fr.ortolang.diffusion.rest.workflow.process;
 
-import fr.ortolang.diffusion.rest.DiffusionRepresentation;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import fr.ortolang.diffusion.rest.api.OrtolangLinkableRepresentation;
 import fr.ortolang.diffusion.workflow.entity.Process;
 
-public class ProcessRepresentation extends DiffusionRepresentation {
+@XmlRootElement(name="process")
+public class ProcessRepresentation extends OrtolangLinkableRepresentation {
 
+	@XmlAttribute(name="key")
 	private String key;
 	private String name;
 	private String type;

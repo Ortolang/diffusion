@@ -4,7 +4,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +32,8 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import com.healthmarketscience.rmiio.RemoteInputStream;
@@ -68,7 +73,6 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.triple.Triple;
 import fr.ortolang.diffusion.store.triple.TripleHelper;
-import fr.ortolang.diffusion.store.triple.TripleStoreService;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 import fr.ortolang.diffusion.store.triple.URIHelper;
 
@@ -420,7 +424,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			Set<String> metadatas = new HashSet<String>();
 			for (String metadata : object.getMetadatas()) {
 				String mid = UUID.randomUUID().toString();
-				systemCloneMetadataObject(mid, metadata, id);
+				systemCloneMetadataObject(mid, metadata, key);
 				metadatas.add(mid);
 			}
 			clone.setMetadatas(metadatas);
@@ -470,7 +474,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			Set<String> metadatas = new HashSet<String>();
 			for (String metadata : object.getMetadatas()) {
 				String mid = UUID.randomUUID().toString();
-				forkMetadataObject(mid, metadata, id);
+				forkMetadataObject(mid, metadata, key);
 				metadatas.add(mid);
 			}
 			clone.setMetadatas(metadatas);
@@ -723,7 +727,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			Set<String> metadatas = new HashSet<String>();
 			for (String metadata : collection.getMetadatas()) {
 				String mid = UUID.randomUUID().toString();
-				systemCloneMetadataObject(mid, metadata, id);
+				systemCloneMetadataObject(mid, metadata, key);
 				metadatas.add(mid);
 			}
 			clone.setMetadatas(metadatas);
@@ -873,7 +877,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			Set<String> metadatas = new HashSet<String>();
 			for (String metadata : collection.getMetadatas()) {
 				String mid = UUID.randomUUID().toString();
-				forkMetadataObject(mid, metadata, id);
+				forkMetadataObject(mid, metadata, key);
 				metadatas.add(mid);
 			}
 			clone.setMetadatas(metadatas);
@@ -1051,7 +1055,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			Set<String> metadatas = new HashSet<String>();
 			for (String metadata : link.getMetadatas()) {
 				String mid = UUID.randomUUID().toString();
-				systemCloneMetadataObject(mid, metadata, id);
+				systemCloneMetadataObject(mid, metadata, key);
 				metadatas.add(mid);
 			}
 			clone.setMetadatas(metadatas);
@@ -1097,7 +1101,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 			Set<String> metadatas = new HashSet<String>();
 			for (String metadata : link.getMetadatas()) {
 				String mid = UUID.randomUUID().toString();
-				forkMetadataObject(mid, metadata, id);
+				forkMetadataObject(mid, metadata, key);
 				metadatas.add(mid);
 			}
 			clone.setMetadatas(metadatas);
@@ -1820,11 +1824,7 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
 				}
 
-				// TODO insert semantic data based on ontology
-				
 				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", object.getName()));
-				
-				//TODO insert semantic data based on ontology
 			}
 
 			if (identifier.getType().equals(Collection.OBJECT_TYPE)) {
@@ -1834,8 +1834,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				}
 
 				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", collection.getName()));
-
-				// TODO insert semantic data based on ontology
 			}
 
 			if (identifier.getType().equals(Link.OBJECT_TYPE)) {
@@ -1845,8 +1843,6 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				}
 
 				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", reference.getName()));
-
-				// TODO insert semantic data based on ontology
 			}
 
 			if (identifier.getType().equals(MetadataObject.OBJECT_TYPE)) {
@@ -1858,16 +1854,24 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				String subj = URIHelper.fromKey(key);
 				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#name", metadata.getName()));
 
-				// TODO wrap internal metadata object semantic information into a node based on ontology
-				// Convert RDF to Triple
+				String log = "";
 				try {
-					String subjForContent = URIHelper.fromKey(metadata.getTarget());
-					Set<Triple> triplesContent = TripleHelper.extractTriples(subjForContent, binarystore.get(metadata.getStream()), metadata.getContentType());
+					//TODO provide a dedicated template service
+					logger.log(Level.FINE, "rendering metadata content using template engine");
+					VelocityContext ctx = new VelocityContext();
+					ctx.put("self", URIHelper.fromKey(key));
+					ctx.put("target", URIHelper.fromKey(metadata.getTarget()));
+					InputStreamReader isr = new InputStreamReader(binarystore.get(metadata.getStream()));
+					StringWriter writer = new StringWriter();
+					Velocity.evaluate(ctx, writer, log, isr);
+					logger.log(Level.FINEST, "rendered metadata : " + writer.toString());
+					StringReader reader = new StringReader(writer.toString());
+					Set<Triple> triplesContent = TripleHelper.extractTriples(reader, metadata.getContentType());
 					for(Triple triple : triplesContent) {
 						content.addTriple(triple);
 					}
 				} catch(TripleStoreServiceException te) {
-					//TODO Warning ?
+					logger.log(Level.WARNING, "unable to parse metadata content for key: " + key);
 				}
 			}
 

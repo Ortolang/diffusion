@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.membership.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -20,7 +21,9 @@ public class Group extends OrtolangObject {
 	@Transient
 	private String key;
 	private String name;
+	@Column(length=2500)
 	private String description;
+	@Column(length=7000)
 	private String membersList;
 
 	public Group() {

@@ -35,8 +35,8 @@ public class CollectionBench {
 
 	private static final String SAMPLE_FILE = "/mnt/space/jerome/Data/sample.txt";
 	private static final String OUTPUT_FILE = "/mnt/space/jerome/Data/collection-bench.csv";
-	private static final int ITERATION_SIZE = 500;
-	private static final int ITERATION = 100;
+	private static final int ITERATION_SIZE = 100;
+	private static final int ITERATION = 10;
 	private static final int CPT = 0;
 	private static final int MIN = 1;
 	private static final int SUM = 2;
@@ -79,7 +79,9 @@ public class CollectionBench {
 			os.write("size,create min, create avg, create max, insert min, insert avg, insert max, read min, read avg, read max\r\n".getBytes());
 			
 			WebTarget profiles = base.path("/membership/profiles");
-			
+			WebTarget collectionsTarget = base.path("/core/collections");
+			WebTarget objectsTarget = base.path("/core/objects");
+
 			Response connectedProfileResponse = profiles.path("connected").request(MediaType.APPLICATION_JSON_TYPE).get();
 			if (connectedProfileResponse.getStatus() == Status.OK.getStatusCode()) {
 				String connectedProfileObject = connectedProfileResponse.readEntity(String.class);
@@ -93,18 +95,15 @@ public class CollectionBench {
 				fail("Unable to get Connected Identifier");
 			}
 
-			WebTarget collectionsTarget = base.path("/core/collections");
-			WebTarget objectsTarget = base.path("/core/objects");
-
 			logger.log(Level.INFO, "Creating collection");
-			Form newcollection = new Form().param("name", "benchmark collection " + System.currentTimeMillis()).param("description", "A collection to perform benchmark test");
-			Response response5 = collectionsTarget.request(MediaType.APPLICATION_FORM_URLENCODED).accept(MediaType.MEDIA_TYPE_WILDCARD)
-					.post(Entity.entity(newcollection, MediaType.APPLICATION_FORM_URLENCODED));
-			if (response5.getStatus() != Status.CREATED.getStatusCode()) {
-				logger.log(Level.WARNING, "Unexpected response code while trying to create collection : " + response5.getStatus());
+			Form newcollectionForm = new Form().param("name", "benchmark collection " + System.currentTimeMillis()).param("description", "A collection to perform benchmark test");
+			Response newcollectionResponse = collectionsTarget.request(MediaType.APPLICATION_FORM_URLENCODED).accept(MediaType.MEDIA_TYPE_WILDCARD)
+					.post(Entity.entity(newcollectionForm, MediaType.APPLICATION_FORM_URLENCODED));
+			if (newcollectionResponse.getStatus() != Status.CREATED.getStatusCode()) {
+				logger.log(Level.WARNING, "Unexpected response code while trying to create collection : " + newcollectionResponse.getStatus());
 				fail("Unable to create collection");
 			}
-			String collectionkey = response5.getLocation().getPath().substring(response5.getLocation().getPath().lastIndexOf("/"));
+			String collectionkey = newcollectionResponse.getLocation().getPath().substring(newcollectionResponse.getLocation().getPath().lastIndexOf("/"));
 			logger.log(Level.INFO, "Created collection key : " + collectionkey);
 
 			for (int j = 1; j <= ITERATION; j++) {
@@ -112,18 +111,19 @@ public class CollectionBench {
 					logger.log(Level.FINE, "Creating sample DataObject to populate collection");
 					File thefile = Paths.get(SAMPLE_FILE).toFile();
 					FileDataBodyPart filePart = new FileDataBodyPart("file", thefile);
-					MultiPart multipart = new FormDataMultiPart().field("name", thefile.getName().toString())
+					@SuppressWarnings("resource")
+					MultiPart newobjectForm = new FormDataMultiPart().field("name", thefile.getName().toString())
 							.field("description", "A data object corresponding to the sample file " + thefile.getName()).bodyPart(filePart);
 
 					long start = System.currentTimeMillis();
-					Response response7 = objectsTarget.request().accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(multipart, multipart.getMediaType()));
+					Response newobjectResponse = objectsTarget.request().accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(newobjectForm, newobjectForm.getMediaType()));
 					long stop = System.currentTimeMillis();
-					if (response7.getStatus() != Status.CREATED.getStatusCode()) {
-						logger.log(Level.WARNING, "Unexpected response code while trying to create dataobject : " + response7.getStatus());
+					if (newobjectResponse.getStatus() != Status.CREATED.getStatusCode()) {
+						logger.log(Level.WARNING, "Unexpected response code while trying to create dataobject : " + newobjectResponse.getStatus());
 						fail("Unable to create dataobject");
 					}
-					String filekey = response7.getLocation().getPath().substring(response7.getLocation().getPath().lastIndexOf("/"));
-					logger.log(Level.FINE, "Created data object key : " + filekey);
+					String objectkey = newobjectResponse.getLocation().getPath().substring(newobjectResponse.getLocation().getPath().lastIndexOf("/"));
+					logger.log(Level.FINE, "Created data object key : " + objectkey);
 					long time = stop - start;
 					createDataObjectStats[CPT]++;
 					if (createDataObjectStats[MIN] <= 0 || time < createDataObjectStats[MIN]) {
@@ -136,11 +136,11 @@ public class CollectionBench {
 
 					logger.log(Level.FINE, "Adding the created dataobject as a collection element");
 					start = System.currentTimeMillis();
-					Response response8 = collectionsTarget.path(collectionkey).path("elements").path(filekey).request().accept(MediaType.MEDIA_TYPE_WILDCARD)
-							.put(Entity.entity(filekey, MediaType.TEXT_PLAIN));
+					Response addobjectResponse = collectionsTarget.path(collectionkey).path("elements").path(objectkey).request().accept(MediaType.MEDIA_TYPE_WILDCARD)
+							.put(Entity.entity(objectkey, MediaType.TEXT_PLAIN));
 					stop = System.currentTimeMillis();
-					if (response8.getStatus() != Status.NO_CONTENT.getStatusCode()) {
-						logger.log(Level.WARNING, "Unexpected response code while trying to add element to collection : " + response8.getStatus());
+					if (addobjectResponse.getStatus() != Status.NO_CONTENT.getStatusCode()) {
+						logger.log(Level.WARNING, "Unexpected response code while trying to add element to collection : " + addobjectResponse.getStatus());
 						fail("Unable to add element to collection");
 					}
 					time = stop - start;
@@ -156,10 +156,10 @@ public class CollectionBench {
 				for (int i = 0; i < 5; i++) {
 					logger.log(Level.FINE, "Reading collection");
 					long start = System.currentTimeMillis();
-					Response response9 = collectionsTarget.path(collectionkey).request().accept(MediaType.MEDIA_TYPE_WILDCARD).get();
+					Response readcollectionResponse = collectionsTarget.path(collectionkey).request().accept(MediaType.MEDIA_TYPE_WILDCARD).get();
 					long stop = System.currentTimeMillis();
-					if (response9.getStatus() != Status.OK.getStatusCode()) {
-						logger.log(Level.WARNING, "Unexpected response code while trying to read collection : " + response9.getStatus());
+					if (readcollectionResponse.getStatus() != Status.OK.getStatusCode()) {
+						logger.log(Level.WARNING, "Unexpected response code while trying to read collection : " + readcollectionResponse.getStatus());
 						fail("Unable to read collection");
 					}
 					long time = stop - start;

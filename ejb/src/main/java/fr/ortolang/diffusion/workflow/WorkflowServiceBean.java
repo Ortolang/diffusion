@@ -138,6 +138,7 @@ public class WorkflowServiceBean implements WorkflowService, WorkflowServiceLoca
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createProcess(String key, String name, String type, Map<String, String> params) throws WorkflowServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		logger.log(Level.FINE, "creating process for key [" + key + "] and type [" + type + "]");
 		try {
@@ -177,6 +178,7 @@ public class WorkflowServiceBean implements WorkflowService, WorkflowServiceLoca
 	}
 	
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Process readProcess(String key) throws WorkflowServiceException, AccessDeniedException, KeyNotFoundException {
 		logger.log(Level.FINE, "reading process for key [" + key + "]");
 		try {
@@ -201,7 +203,7 @@ public class WorkflowServiceBean implements WorkflowService, WorkflowServiceLoca
 	}
 	
 	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public List<String> findProcessForInitier(String initier) throws WorkflowServiceException, AccessDeniedException {
 		logger.log(Level.FINE, "finding processes for initier [" + initier + "]");
 		try {
@@ -224,6 +226,7 @@ public class WorkflowServiceBean implements WorkflowService, WorkflowServiceLoca
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Set<ProcessDefinition> listProcessDefinitions() throws WorkflowServiceException {
 		logger.log(Level.FINE, "listing process definitions");
 		try {
@@ -237,6 +240,7 @@ public class WorkflowServiceBean implements WorkflowService, WorkflowServiceLoca
 	}
 	
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void startProcessExecution(String key) throws WorkflowServiceException {
 		logger.log(Level.FINE, "starting process execution for key [" + key + "]");
 		try {
@@ -260,6 +264,7 @@ public class WorkflowServiceBean implements WorkflowService, WorkflowServiceLoca
 	}
 	
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void stopProcessExecution(String key, int completed) throws WorkflowServiceException {
 		logger.log(Level.FINE, "stopping process execution for key [" + key + "]");
 		try {
@@ -283,6 +288,7 @@ public class WorkflowServiceBean implements WorkflowService, WorkflowServiceLoca
 	}
 	
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void addProcessExecutionLog(String key, String logentry) throws WorkflowServiceException {
 		logger.log(Level.FINE, "stopping process execution for key [" + key + "]");
 		try {

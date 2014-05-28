@@ -1,10 +1,15 @@
 package fr.ortolang.diffusion.rest.core.metadata;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import fr.ortolang.diffusion.core.entity.MetadataObject;
-import fr.ortolang.diffusion.rest.DiffusionRepresentation;
+import fr.ortolang.diffusion.rest.api.OrtolangLinkableRepresentation;
 
-public class MetadataRepresentation extends DiffusionRepresentation { 
+@XmlRootElement(name="metadata")
+public class MetadataRepresentation extends OrtolangLinkableRepresentation {
 
+	@XmlAttribute(name="key")
 	private String key;
 	private String name;
 	private String size;

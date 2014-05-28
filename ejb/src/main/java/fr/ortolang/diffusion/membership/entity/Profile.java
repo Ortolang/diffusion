@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.membership.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Transient;
@@ -20,6 +21,7 @@ public class Profile extends OrtolangObject {
 	private String key;
 	private String fullname;
 	private String email;
+	@Column(length=7000)
 	private String groupsList;
 	private ProfileStatus status;
 	

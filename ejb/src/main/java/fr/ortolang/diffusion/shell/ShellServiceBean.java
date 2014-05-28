@@ -12,6 +12,8 @@ import javax.ejb.Startup;
 import org.crsh.standalone.Bootstrap;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import fr.ortolang.diffusion.OrtolangConfig;
+
 @Startup
 @Singleton(name = ShellService.SERVICE_NAME)
 @SecurityDomain("ortolang")
@@ -20,25 +22,25 @@ public class ShellServiceBean implements ShellService {
 
 	private static Logger logger = Logger.getLogger(ShellServiceBean.class.getName());
 
-	private Bootstrap crash;
+	private ShellPlugin shell;
 	
 	public ShellServiceBean() {
 		logger.log(Level.FINE, "new shell service instance created");
-//		crash = new Bootstrap(this.getClass().getClassLoader());
-//		crash.setConfig(OrtolangConfig.getInstance().getProperties());
+		shell = new ShellPlugin();
+		shell.setConfig(OrtolangConfig.getInstance().getProperties());
 	}
 
 	@PostConstruct
 	public void init() throws Exception {
 		logger.log(Level.INFO, "starting shell service...");
-//		crash.bootstrap();
+		
 		logger.log(Level.INFO, "shell service started");
 	}
 
 	@PreDestroy
 	public void destroy() throws Exception {
 		logger.log(Level.INFO, "stopping shell service...");
-//		crash.shutdown();
+
 		logger.log(Level.INFO, "shell service stopped");
 	}
 

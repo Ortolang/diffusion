@@ -1,10 +1,15 @@
 package fr.ortolang.diffusion.rest.collaboration.project;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import fr.ortolang.diffusion.collaboration.entity.Project;
-import fr.ortolang.diffusion.rest.DiffusionRepresentation;
+import fr.ortolang.diffusion.rest.api.OrtolangLinkableRepresentation;
 
-public class ProjectRepresentation extends DiffusionRepresentation {
+@XmlRootElement(name="project")
+public class ProjectRepresentation extends OrtolangLinkableRepresentation {
 
+	@XmlAttribute
 	private String key;
 	private String name;
 	private String type;

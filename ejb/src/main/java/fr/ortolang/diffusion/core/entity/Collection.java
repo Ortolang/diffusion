@@ -28,6 +28,7 @@ public class Collection extends OrtolangObject {
 	@Transient
 	private String key;
 	private String name;
+	@Column(length=2500)
 	private String description;
 	@ElementCollection(fetch=FetchType.EAGER)
 	@Column(length=7800)

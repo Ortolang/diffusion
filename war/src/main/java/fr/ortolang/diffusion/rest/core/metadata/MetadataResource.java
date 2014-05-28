@@ -21,7 +21,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -43,8 +42,9 @@ import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
-import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
+import fr.ortolang.diffusion.rest.api.OrtolangCollectionRepresentation;
+import fr.ortolang.diffusion.rest.api.OrtolangLinkRepresentation;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
@@ -71,14 +71,19 @@ public class MetadataResource {
 		logger.log(Level.INFO, "listing metadatas for target: " + target);
 		UriBuilder metadatas = DiffusionUriBuilder.getRestUriBuilder().path(MetadataResource.class);
 		
-		KeysRepresentation representation = new KeysRepresentation ();
+		OrtolangCollectionRepresentation representation = new OrtolangCollectionRepresentation ();
+		representation.setStart(0);
+		representation.setSize(0);
+		representation.setTotalSize(0);
 		if ( target != null ) {
 			List<String> keys = core.findMetadataObjectsForTarget(target);
+			representation.setSize(keys.size());
+			representation.setTotalSize(keys.size());
 			for ( String key : keys ) {
-				representation.addEntry(key, javax.ws.rs.core.Link.fromUri(metadatas.clone().path(key).build()).rel("view").build());
+				representation.addEntry(key, OrtolangLinkRepresentation.fromUri(metadatas.clone().path(key).build()).rel("view"));
 			}
 		}
-		representation.addLink(Link.fromUri(metadatas.clone().build()).rel("create").build());
+		representation.addLink(OrtolangLinkRepresentation.fromUri(metadatas.clone().build()).rel("create"));
 		return Response.ok(representation).build();
 	}
     
@@ -128,7 +133,7 @@ public class MetadataResource {
     
     @GET
     @Path("/{key}")
-    @Template( template="core/object.vm", types={MediaType.TEXT_HTML})
+    @Template( template="core/metadata.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response read( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
     	logger.log(Level.INFO, "reading metadataobject with key: " + key);
@@ -136,8 +141,8 @@ public class MetadataResource {
     	UriBuilder metadatas = DiffusionUriBuilder.getRestUriBuilder().path(MetadataResource.class);
     	
     	MetadataRepresentation representation = MetadataRepresentation.fromMetadataObject(meta);
-    	representation.addLink(Link.fromUri(metadatas.clone().path(key).path("target").build()).rel("target").build());
-    	representation.addLink(Link.fromUri(metadatas.clone().path(key).path("content").build()).rel("content").build());
+    	representation.addLink(OrtolangLinkRepresentation.fromUri(metadatas.clone().path(key).path("target").build()).rel("target"));
+    	representation.addLink(OrtolangLinkRepresentation.fromUri(metadatas.clone().path(key).path("content").build()).rel("content"));
     	return Response.ok(representation).build();
     }
     
@@ -206,7 +211,7 @@ public class MetadataResource {
     @GET
     @Path("/{key}/target")
     public Response target( @PathParam(value="key") String key ) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-    	logger.log(Level.INFO, "reading target for link with key: " + key);
+    	logger.log(Level.INFO, "reading target for metadataobject with key: " + key);
     	MetadataObject meta = core.readMetadataObject(key);
     	URI redirect = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class).path(meta.getTarget()).build();
     	return Response.seeOther(redirect).build();

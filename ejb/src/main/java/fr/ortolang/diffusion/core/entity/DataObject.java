@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -31,9 +32,11 @@ public class DataObject extends OrtolangObject {
 	@Transient
 	private String key;
 	private String name;
+	@Column(length=2500)
 	private String description;
 	private long size;
 	private String contentType;
+	@Column(length=7500)
 	private String preview;
 	private long nbReads;
 	@ElementCollection(fetch = FetchType.EAGER)

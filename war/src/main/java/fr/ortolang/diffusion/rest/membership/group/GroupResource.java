@@ -15,7 +15,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -26,8 +25,9 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
-import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
+import fr.ortolang.diffusion.rest.api.OrtolangCollectionRepresentation;
+import fr.ortolang.diffusion.rest.api.OrtolangLinkRepresentation;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
@@ -55,7 +55,7 @@ public class GroupResource {
     	UriBuilder groups = DiffusionUriBuilder.getRestUriBuilder().path(GroupResource.class);
     	
     	GroupRepresentation representation = GroupRepresentation.fromGroup(group);
-    	representation.addLink(Link.fromUri(groups.clone().path(key).path("members").build()).rel("members").build());
+    	representation.addLink(OrtolangLinkRepresentation.fromUri(groups.clone().path(key).path("members").build()).rel("members"));
     	return Response.ok(representation).build();
     }
     
@@ -102,9 +102,12 @@ public class GroupResource {
     	List<String> members = Arrays.asList(group.getMembers());
     	UriBuilder groups = DiffusionUriBuilder.getRestUriBuilder().path(GroupResource.class);
 
-		KeysRepresentation representation = new KeysRepresentation ();
+    	OrtolangCollectionRepresentation representation = new OrtolangCollectionRepresentation ();
+    	representation.setStart(0);
+		representation.setSize(members.size());
+		representation.setTotalSize(members.size());
 		for ( String member : members ) {
-			representation.addEntry(member, Link.fromUri(groups.clone().path(key).path("members").path(member).build()).rel("view").build());
+			representation.addEntry(member, OrtolangLinkRepresentation.fromUri(groups.clone().path(key).path("members").path(member).build()).rel("view"));
 		}
 		return Response.ok(representation).build();
     }

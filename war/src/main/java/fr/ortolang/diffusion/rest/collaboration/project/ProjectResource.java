@@ -17,7 +17,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -30,8 +29,9 @@ import fr.ortolang.diffusion.core.entity.CollectionProperty;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
-import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
+import fr.ortolang.diffusion.rest.api.OrtolangCollectionRepresentation;
+import fr.ortolang.diffusion.rest.api.OrtolangLinkRepresentation;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
@@ -58,11 +58,14 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     	List<String> keys = collaboration.findMyProjects();
     	UriBuilder projects = DiffusionUriBuilder.getRestUriBuilder().path(ProjectResource.class);
 
-		KeysRepresentation representation = new KeysRepresentation ();
+		OrtolangCollectionRepresentation representation = new OrtolangCollectionRepresentation ();
+		representation.setStart(0);
+		representation.setSize(keys.size());
+		representation.setTotalSize(keys.size());
 		for ( String key : keys ) {
-			representation.addEntry(key, Link.fromUri(projects.clone().path(key).build()).rel("view").build());
+			representation.addEntry(key, OrtolangLinkRepresentation.fromUri(projects.clone().path(key).build()).rel("view"));
 		}
-		representation.addLink(Link.fromUri(projects.clone().build()).rel("create").build());
+		representation.addLink(OrtolangLinkRepresentation.fromUri(projects.clone().build()).rel("create"));
 		return Response.ok(representation).build();
     }
     
@@ -86,9 +89,9 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     	UriBuilder projects = DiffusionUriBuilder.getRestUriBuilder().path(ProjectResource.class);
 		
     	ProjectRepresentation representation = ProjectRepresentation.fromProject(project);
-    	representation.addLink(Link.fromUri(projects.clone().path(key).path("root").build()).rel("root").build());
-    	representation.addLink(Link.fromUri(projects.clone().path(key).path("members").build()).rel("members").build());
-    	representation.addLink(Link.fromUri(projects.clone().path(key).path("versions").build()).rel("versions").build());
+    	representation.addLink(OrtolangLinkRepresentation.fromUri(projects.clone().path(key).path("root").build()).rel("root"));
+    	representation.addLink(OrtolangLinkRepresentation.fromUri(projects.clone().path(key).path("members").build()).rel("members"));
+    	representation.addLink(OrtolangLinkRepresentation.fromUri(projects.clone().path(key).path("versions").build()).rel("versions"));
     	return Response.ok(representation).build();
     }
     
@@ -119,11 +122,14 @@ private Logger logger = Logger.getLogger(ProjectResource.class.getName());
     	List<String> versions = project.getHistory();
     	UriBuilder projects = DiffusionUriBuilder.getRestUriBuilder().path(ProjectResource.class);
 		
-    	KeysRepresentation representation = new KeysRepresentation ();
+    	OrtolangCollectionRepresentation representation = new OrtolangCollectionRepresentation ();
+    	representation.setStart(0);
+		representation.setSize(versions.size());
+		representation.setTotalSize(versions.size());
 		for ( String version : versions ) {
-			representation.addEntry(version, Link.fromUri(projects.path(key).path("versions").path(version).build()).rel("view").build());
+			representation.addEntry(version, OrtolangLinkRepresentation.fromUri(projects.path(key).path("versions").path(version).build()).rel("view"));
 		}
-		representation.addLink(Link.fromUri(projects.clone().path(key).path("versions").build()).rel("create").build());
+		representation.addLink(OrtolangLinkRepresentation.fromUri(projects.clone().path(key).path("versions").build()).rel("create"));
 		return Response.ok(representation).build();
     }
     

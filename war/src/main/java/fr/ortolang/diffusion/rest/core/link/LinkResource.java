@@ -30,9 +30,9 @@ import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
-import fr.ortolang.diffusion.rest.KeysPaginatedRepresentation;
-import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
+import fr.ortolang.diffusion.rest.api.OrtolangCollectionRepresentation;
+import fr.ortolang.diffusion.rest.api.OrtolangLinkRepresentation;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
 import fr.ortolang.diffusion.rest.core.collection.CollectionResource;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -57,16 +57,20 @@ public class LinkResource {
 	public Response list(@QueryParam(value = "target") String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "listing links for target : " + target);
 		UriBuilder links = DiffusionUriBuilder.getRestUriBuilder().path(LinkResource.class);
+		OrtolangCollectionRepresentation representation = new OrtolangCollectionRepresentation ();
+		representation.setStart(0);
+		representation.setSize(0);
+		representation.setTotalSize(0);
 		if ( target != null ) {
 			List<String> keys = core.findLinksForTarget(target);
-			KeysPaginatedRepresentation representation = new KeysPaginatedRepresentation ();
+			representation.setSize(keys.size());
+			representation.setTotalSize(keys.size());
 			for ( String key : keys ) {
-				representation.addEntry(key, javax.ws.rs.core.Link.fromUri(links.clone().path(key).build()).rel("view").build());
+				representation.addEntry(key, OrtolangLinkRepresentation.fromUri(links.clone().path(key).build()).rel("view"));
 			}
 		}
 
-		KeysRepresentation representation = new KeysRepresentation ();
-		representation.addLink(javax.ws.rs.core.Link.fromUri(links.clone().build()).rel("create").build());
+		representation.addLink(OrtolangLinkRepresentation.fromUri(links.clone().build()).rel("create"));
 		return Response.ok(representation).build();
 	}
 
@@ -91,8 +95,8 @@ public class LinkResource {
 		UriBuilder links = DiffusionUriBuilder.getRestUriBuilder().path(LinkResource.class);
 		
 		LinkRepresentation representation = LinkRepresentation.fromLink(link);
-		representation.addLink(javax.ws.rs.core.Link.fromUri(links.clone().path(key).path("target").build()).rel("target").build());
-		representation.addLink(javax.ws.rs.core.Link.fromUri(links.clone().path(key).path("metadatas").build()).rel("metadatas").build());
+		representation.addLink(OrtolangLinkRepresentation.fromUri(links.clone().path(key).path("target").build()).rel("target"));
+		representation.addLink(OrtolangLinkRepresentation.fromUri(links.clone().path(key).path("metadatas").build()).rel("metadatas"));
 		return Response.ok(representation).build();
 	}
 
@@ -131,9 +135,12 @@ public class LinkResource {
     	Link link = core.readLink(key);
     	UriBuilder links = DiffusionUriBuilder.getRestUriBuilder().path(CollectionResource.class);
 		
-    	KeysRepresentation representation = new KeysRepresentation ();
+    	OrtolangCollectionRepresentation representation = new OrtolangCollectionRepresentation ();
+    	representation.setStart(0);
+		representation.setSize(link.getMetadatas().size());
+		representation.setTotalSize(link.getMetadatas().size());
 		for ( String metadata : link.getMetadatas() ) {
-			representation.addEntry(metadata, javax.ws.rs.core.Link.fromUri(links.clone().path(key).path("metadatas").path(metadata).build()).rel("view").build());
+			representation.addEntry(metadata, OrtolangLinkRepresentation.fromUri(links.clone().path(key).path("metadatas").path(metadata).build()).rel("view"));
 		}
 		return Response.ok(representation).build();
     }

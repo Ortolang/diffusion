@@ -1,10 +1,15 @@
 package fr.ortolang.diffusion.rest.membership.group;
 
-import fr.ortolang.diffusion.membership.entity.Group;
-import fr.ortolang.diffusion.rest.DiffusionRepresentation;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
-public class GroupRepresentation extends DiffusionRepresentation {
+import fr.ortolang.diffusion.membership.entity.Group;
+import fr.ortolang.diffusion.rest.api.OrtolangLinkableRepresentation;
+
+@XmlRootElement(name="group")
+public class GroupRepresentation extends OrtolangLinkableRepresentation {
 	
+	@XmlAttribute(name="key")
 	private String key;
 	private String name;
 	private String description;

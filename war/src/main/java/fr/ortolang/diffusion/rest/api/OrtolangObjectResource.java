@@ -21,7 +21,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -36,7 +35,6 @@ import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
 import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
-import fr.ortolang.diffusion.rest.KeysPaginatedRepresentation;
 import fr.ortolang.diffusion.rest.Template;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.search.SearchServiceException;
@@ -72,18 +70,18 @@ public class OrtolangObjectResource {
 		long nbentries = browser.count("", "");
 		UriBuilder objects = DiffusionUriBuilder.getRestUriBuilder().path(OrtolangObjectResource.class);
 
-		KeysPaginatedRepresentation representation = new KeysPaginatedRepresentation ();
+		OrtolangCollectionRepresentation representation = new OrtolangCollectionRepresentation ();
 		for ( String key : keys ) {
-			representation.addEntry(key, Link.fromUri(objects.clone().path(key).build()).rel("view").build());
+			representation.addEntry(key, OrtolangLinkRepresentation.fromUri(objects.clone().path(key).build()).rel("view"));
 		}
 		representation.setStart((offset<=0)?1:offset);
 		representation.setSize(keys.size());
 		representation.setTotalSize(nbentries);
-		representation.addLink(Link.fromUri(objects.clone().queryParam("offset", 0).queryParam("limit", limit).build()).rel("first").build());
-		representation.addLink(Link.fromUri(objects.clone().queryParam("offset", Math.max(0, (offset - limit))).queryParam("limit", limit).build()).rel("previous").build());
-		representation.addLink(Link.fromUri(objects.clone().queryParam("offset", offset).queryParam("limit", limit).build()).rel("self").build());
-		representation.addLink(Link.fromUri(objects.clone().queryParam("offset", (nbentries > (offset + limit)) ? (offset + limit) : offset).queryParam("limit", limit).build()).rel("next").build());
-		representation.addLink(Link.fromUri(objects.clone().queryParam("offset", ((nbentries - 1) / limit) * limit).queryParam("limit", limit).build()).rel("last").build());
+		representation.addLink(OrtolangLinkRepresentation.fromUri(objects.clone().queryParam("offset", 0).queryParam("limit", limit).build()).rel("first"));
+		representation.addLink(OrtolangLinkRepresentation.fromUri(objects.clone().queryParam("offset", Math.max(0, (offset - limit))).queryParam("limit", limit).build()).rel("previous"));
+		representation.addLink(OrtolangLinkRepresentation.fromUri(objects.clone().queryParam("offset", offset).queryParam("limit", limit).build()).rel("self"));
+		representation.addLink(OrtolangLinkRepresentation.fromUri(objects.clone().queryParam("offset", (nbentries > (offset + limit)) ? (offset + limit) : offset).queryParam("limit", limit).build()).rel("next"));
+		representation.addLink(OrtolangLinkRepresentation.fromUri(objects.clone().queryParam("offset", ((nbentries - 1) / limit) * limit).queryParam("limit", limit).build()).rel("last"));
 		Response response = Response.ok(representation).build();
 		return response;
 	}
@@ -100,11 +98,11 @@ public class OrtolangObjectResource {
 
 		OrtolangObjectRepresentation representation = OrtolangObjectRepresentation.fromOrtolangObjectIdentifier(identifier);
 		representation.setKey(key);
-		representation.addLink(Link.fromUri(base.path(identifier.getService()).path(identifier.getType().concat("s")).path(key).build()).rel("view").build());
-		representation.addLink(Link.fromUri(objects.clone().path(key).path("properties").build()).rel("properties").build());
-		representation.addLink(Link.fromUri(objects.clone().path(key).path("state").build()).rel("state").build());
-		representation.addLink(Link.fromUri(objects.clone().path(key).path("owner").build()).rel("owner").build());
-		representation.addLink(Link.fromUri(objects.clone().path(key).path("permissions").build()).rel("permissions").build());
+		representation.addLink(OrtolangLinkRepresentation.fromUri(base.path(identifier.getService()).path(identifier.getType().concat("s")).path(key).build()).rel("view"));
+		representation.addLink(OrtolangLinkRepresentation.fromUri(objects.clone().path(key).path("properties").build()).rel("properties"));
+		representation.addLink(OrtolangLinkRepresentation.fromUri(objects.clone().path(key).path("state").build()).rel("state"));
+		representation.addLink(OrtolangLinkRepresentation.fromUri(objects.clone().path(key).path("owner").build()).rel("owner"));
+		representation.addLink(OrtolangLinkRepresentation.fromUri(objects.clone().path(key).path("permissions").build()).rel("permissions"));
 		return Response.ok(representation).build();
 	}
 

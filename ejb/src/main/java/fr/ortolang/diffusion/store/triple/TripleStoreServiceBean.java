@@ -1,14 +1,11 @@
 package fr.ortolang.diffusion.store.triple;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,9 +14,7 @@ import javax.annotation.PreDestroy;
 import javax.ejb.Local;
 import javax.ejb.Singleton;
 
-import org.openrdf.model.Model;
 import org.openrdf.model.Resource;
-import org.openrdf.model.Statement;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
@@ -31,10 +26,6 @@ import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFParseException;
-import org.openrdf.rio.RDFParser;
-import org.openrdf.rio.Rio;
-import org.openrdf.rio.UnsupportedRDFormatException;
 import org.openrdf.rio.rdfxml.RDFXMLWriter;
 import org.openrdf.sail.nativerdf.NativeStore;
 

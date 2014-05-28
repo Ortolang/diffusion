@@ -1,15 +1,20 @@
 package fr.ortolang.diffusion.rest.core.link;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import fr.ortolang.diffusion.core.entity.Link;
-import fr.ortolang.diffusion.rest.DiffusionRepresentation;
+import fr.ortolang.diffusion.rest.api.OrtolangLinkableRepresentation;
 
-public class LinkRepresentation extends DiffusionRepresentation {
+@XmlRootElement(name="link")
+public class LinkRepresentation extends OrtolangLinkableRepresentation {
 
+	@XmlAttribute(name="key")
 	private String key;
 	private String name;
 	private String target;
 	private boolean dynamic;
-	
+
 	public LinkRepresentation() {
 	}
 
@@ -28,7 +33,7 @@ public class LinkRepresentation extends DiffusionRepresentation {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public String getTarget() {
 		return target;
 	}
@@ -44,7 +49,7 @@ public class LinkRepresentation extends DiffusionRepresentation {
 	public void setDynamic(boolean dynamic) {
 		this.dynamic = dynamic;
 	}
-	
+
 	public static LinkRepresentation fromLink(Link reference) {
 		LinkRepresentation representation = new LinkRepresentation();
 		representation.setKey(reference.getKey());

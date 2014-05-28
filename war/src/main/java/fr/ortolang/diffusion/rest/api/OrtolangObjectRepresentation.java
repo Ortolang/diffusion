@@ -1,10 +1,14 @@
 package fr.ortolang.diffusion.rest.api;
 
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.rest.DiffusionRepresentation;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
-public class OrtolangObjectRepresentation extends DiffusionRepresentation {
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+
+@XmlRootElement(name="object")
+public class OrtolangObjectRepresentation extends OrtolangLinkableRepresentation {
 	
+	@XmlAttribute
 	private String key;
 	private String service;
 	private String type;

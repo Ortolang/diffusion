@@ -17,7 +17,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Link;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -29,8 +28,9 @@ import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.rest.DiffusionUriBuilder;
-import fr.ortolang.diffusion.rest.KeysRepresentation;
 import fr.ortolang.diffusion.rest.Template;
+import fr.ortolang.diffusion.rest.api.OrtolangCollectionRepresentation;
+import fr.ortolang.diffusion.rest.api.OrtolangLinkRepresentation;
 import fr.ortolang.diffusion.rest.api.OrtolangObjectResource;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
@@ -55,8 +55,11 @@ public class CollectionResource {
 		logger.log(Level.INFO, "listing all collections");
 		UriBuilder collections = DiffusionUriBuilder.getRestUriBuilder().path(CollectionResource.class);
 
-		KeysRepresentation representation = new KeysRepresentation ();
-		representation.addLink(Link.fromUri(collections.clone().build()).rel("create").build());
+		OrtolangCollectionRepresentation representation = new OrtolangCollectionRepresentation ();
+		representation.setStart(0);
+		representation.setSize(0);
+		representation.setTotalSize(0);
+		representation.addLink(OrtolangLinkRepresentation.fromUri(collections.clone().build()).rel("create"));
 		return Response.ok(representation).build();
 	}
 
@@ -81,8 +84,8 @@ public class CollectionResource {
 		UriBuilder collections = DiffusionUriBuilder.getRestUriBuilder().path(CollectionResource.class);
 		
 		CollectionRepresentation representation = CollectionRepresentation.fromCollection(collection);
-		representation.addLink(Link.fromUri(collections.clone().path(key).path("elements").build()).rel("elements").build());
-		representation.addLink(Link.fromUri(collections.clone().path(key).path("metadatas").build()).rel("metadatas").build());
+		representation.addLink(OrtolangLinkRepresentation.fromUri(collections.clone().path(key).path("elements").build()).rel("elements"));
+		representation.addLink(OrtolangLinkRepresentation.fromUri(collections.clone().path(key).path("metadatas").build()).rel("metadatas"));
     	return Response.ok(representation).build();
 	}
 
@@ -112,9 +115,9 @@ public class CollectionResource {
     	Collection collection = core.readCollection(key);
     	UriBuilder collections = DiffusionUriBuilder.getRestUriBuilder().path(CollectionResource.class);
 		
-    	KeysRepresentation representation = new KeysRepresentation ();
+    	OrtolangCollectionRepresentation representation = new OrtolangCollectionRepresentation ();
 		for ( String element : collection.getElements() ) {
-			representation.addEntry(element, Link.fromUri(collections.clone().path(key).path("elements").path(element).build()).rel("view").build());
+			representation.addEntry(element, OrtolangLinkRepresentation.fromUri(collections.clone().path(key).path("elements").path(element).build()).rel("view"));
 		}
 		return Response.ok(representation).build();
     }
@@ -158,9 +161,12 @@ public class CollectionResource {
     	Collection collection = core.readCollection(key);
     	UriBuilder collections = DiffusionUriBuilder.getRestUriBuilder().path(CollectionResource.class);
 		
-    	KeysRepresentation representation = new KeysRepresentation ();
+    	OrtolangCollectionRepresentation representation = new OrtolangCollectionRepresentation ();
+    	representation.setStart(0);
+		representation.setSize(collection.getMetadatas().size());
+		representation.setTotalSize(collection.getMetadatas().size());
 		for ( String metadata : collection.getMetadatas() ) {
-			representation.addEntry(metadata, Link.fromUri(collections.clone().path(key).path("metadatas").path(metadata).build()).rel("view").build());
+			representation.addEntry(metadata, OrtolangLinkRepresentation.fromUri(collections.clone().path(key).path("metadatas").path(metadata).build()).rel("view"));
 		}
 		return Response.ok(representation).build();
     }

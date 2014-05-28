@@ -1,10 +1,15 @@
 package fr.ortolang.diffusion.rest.core.collection;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.rest.DiffusionRepresentation;
+import fr.ortolang.diffusion.rest.api.OrtolangLinkableRepresentation;
 
-public class CollectionRepresentation extends DiffusionRepresentation {
+@XmlRootElement(name="collection")
+public class CollectionRepresentation extends OrtolangLinkableRepresentation {
 
+	@XmlAttribute(name="key")
 	private String key;
 	private String name;
 	private String description;
