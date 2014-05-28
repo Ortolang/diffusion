@@ -42,7 +42,8 @@ import fr.ortolang.diffusion.test.bench.CookieFilter;
 
 public class WorkAndPublishUseCase {
 	
-	private static final String PROJECT_ROOT_FOLDER = "src/test/resources/usecase/WorkAndPublishUseCase";
+	private static final String PROJECT_ROOT_FOLDER = "src/test/resources/usecase/WorkAndPublishUseCase/frantext";
+	//private static final String PROJECT_ROOT_FOLDER = "/Users/cyril/Diffusion/Corpus/Digulleville";
 
 	private static Logger logger = Logger.getLogger(WorkAndPublishUseCase.class.getName());
 	private static Client client;
@@ -95,8 +96,10 @@ public class WorkAndPublishUseCase {
 			fail("Unable to get Connected Identifier");
 		}
 
+		String projectName = new File(PROJECT_ROOT_FOLDER).getName();
+		
 		logger.log(Level.INFO, "Creating project");
-		Form newProjectForm = new Form().param("name", "benchmark project " + System.currentTimeMillis()).param("type", "corpus");
+		Form newProjectForm = new Form().param("name", "benchmark project " + projectName + System.currentTimeMillis()).param("type", "corpus");
 		Response newProjectResponse = projects.request(MediaType.APPLICATION_JSON_TYPE).post(Entity.entity(newProjectForm, MediaType.APPLICATION_FORM_URLENCODED));
 		if (newProjectResponse.getStatus() != Status.CREATED.getStatusCode()) {
 			logger.log(Level.WARNING, "Unexpected response code while trying to create project : " + newProjectResponse.getStatus());
@@ -121,7 +124,7 @@ public class WorkAndPublishUseCase {
 		listKeyToPublish.add(projectRootKey);
 		
 		// Attach metadata to root collection
-		File metadataProject = new File(PROJECT_ROOT_FOLDER+"/metadata/frantext.rdf");
+		File metadataProject = new File(PROJECT_ROOT_FOLDER+"/"+projectName+"-md.xml");
 		String metadataProjectKey = createMetadata(metadataProject, projectRootKey);
 		assertNotNull("Metadata key is null", metadataProjectKey);
 		listKeyToPublish.add(metadataProjectKey);
@@ -155,10 +158,14 @@ public class WorkAndPublishUseCase {
 					listKeyToPublish.add(objectKey.substring(1));
 					
 					// Create metadata for object
-					File metadataObject = new File(PROJECT_ROOT_FOLDER+"/metadata/"+thefile.getName().substring(0, thefile.getName().indexOf('.'))+".rdf");
-					String metadataObjectKey = createMetadata(metadataObject, objectKey.substring(1)); // objectKey == "/{key}" but needs to remove "/"
-				
-					listKeyToPublish.add(metadataObjectKey);
+					File metadataObject = new File(PROJECT_ROOT_FOLDER+"/metadata/"+thefile.getName()+".xml");
+					if(metadataObject.exists()) {
+						String metadataObjectKey = createMetadata(metadataObject, objectKey.substring(1)); // objectKey == "/{key}" but needs to remove "/"
+					
+						listKeyToPublish.add(metadataObjectKey);
+					} else {
+						logger.log(Level.WARNING, "Metadata file for "+thefile.getName()+" doesn't exists");
+					}
 				}
 			}
 		}
