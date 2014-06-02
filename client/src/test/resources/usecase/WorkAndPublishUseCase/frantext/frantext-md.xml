@@ -3,7 +3,7 @@
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     xmlns:dc="http://purl.org/dc/elements/1.1/"
     xmlns:dcterms="http://purl.org/dc/terms/">
-    <rdf:Description rdf:about="info:hdl/target">
+    <rdf:Description rdf:about="${target}">
         <!-- Nom du projet -->
         <dc:title>Frantext « textes libres de droits »</dc:title>
         <!-- Description du projet (CNRTL) -->
