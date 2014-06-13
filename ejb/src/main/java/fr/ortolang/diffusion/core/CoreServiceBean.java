@@ -1797,6 +1797,12 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 				content.addContentPart(metadata.getContentType());
 				content.addContentPart(metadata.getFormat());
 				content.addContentPart(metadata.getTarget());
+
+				try {
+					content.addContentPart(binarystore.extract(metadata.getStream()));
+				} catch (DataNotFoundException | BinaryStoreServiceException e) {
+					logger.log(Level.WARNING, "unable to extract plain text for key : " + key, e);
+				}
 			}
 
 			return content;
