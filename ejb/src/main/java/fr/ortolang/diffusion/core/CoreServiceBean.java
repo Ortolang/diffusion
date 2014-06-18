@@ -1859,6 +1859,11 @@ public class CoreServiceBean implements CoreService, CoreServiceLocal {
 
 				String subj = URIHelper.fromKey(key);
 				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#name", metadata.getName()));
+				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#contentType", metadata.getContentType()));
+				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#size", String.valueOf(metadata.getSize())));
+				if(metadata.getFormat()!=null)
+					content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#format", metadata.getFormat()));
+				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#target", URIHelper.fromKey(metadata.getTarget())));
 
 				String log = "";
 				try {
