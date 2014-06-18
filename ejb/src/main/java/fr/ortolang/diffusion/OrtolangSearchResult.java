@@ -11,6 +11,7 @@ public class OrtolangSearchResult implements Serializable {
 	private String name;
 	private String service;
 	private String type;
+	private String status;
 	private OrtolangObjectIdentifier identifier;
 
 	public OrtolangSearchResult() {
@@ -74,6 +75,14 @@ public class OrtolangSearchResult implements Serializable {
 
 	public void setIdentifier(String identifier) {
 		this.identifier = OrtolangObjectIdentifier.deserialize(identifier);
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
 	public String toString() {
