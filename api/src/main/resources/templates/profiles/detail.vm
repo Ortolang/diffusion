@@ -1,0 +1,38 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><strong>Showing profile '$entity.key'</strong></h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Fullname</strong></p></div>
+	  <div class="col-md-10">$entity.fullname</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Email</strong></p></div>
+	  <div class="col-md-10">$entity.email</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Status</strong></p></div>
+	  <div class="col-md-10">$entity.status</div>
+    </div>
+    <div class="row">
+		<div class="col-md-12"><p class="text-left"><strong>Groups</strong></p></div>
+	</div>
+	<div class="well well-sm">
+		#if ( $entity.groups.size() > 0 ) 
+			#foreach( $group in $entity.groups )
+				<div class="row">
+					<div class="col-md-1"><p class="text-right"><strong>$foreach.count</strong></p></div>
+					<div class="col-md-9">$group</div>
+					<div class="col-md-2"><div class="btn-group"><a class="btn btn-default btn-xs" href="../objects/$group">browse</a></div></div>
+				</div>
+			#end
+		#else
+			<div class="row">
+				<div class="col-md-1"></div>
+				<div class="col-md-11"><p class="text-left"><em>Profile is not member of any group</em></p></div>
+			</div>
+		#end
+	</div>
+  </div>
+</div>

@@ -1,0 +1,23 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><strong>Specific informations about this group</strong></h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Name</strong></p></div>
+	  <div class="col-md-10">$entity.object.name</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Description</strong></p></div>
+	  <div class="col-md-10">$entity.object.description</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Members</strong></p></div>
+	  #if( $entity.object.members.size() == 0 ) 
+	  <div class="col-md-10">no members in this group</div>
+	  #else
+	  <div class="col-md-10">#foreach( $member in $entity.object.members )$member#if( $foreach.hasNext ), #end#end</div>
+	  #end
+    </div>
+  </div>
+</div>

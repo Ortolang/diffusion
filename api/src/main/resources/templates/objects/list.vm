@@ -1,0 +1,35 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+  	#set( $to = $entity.offset + $entity.limit - 1 )
+	<h3 class="panel-title"><strong>Listing all objects</strong></h3>
+  </div>
+  <table class="table table-condensed table-hover">
+	 <thead>
+	   	<tr>
+	   		<th>#</th>
+	   		<th>Key</th>
+	   		<th>Actions</th>
+	  	</tr>
+	 </thead>
+	 <tbody>
+	 #foreach( $entry in $entity.entries )
+		#set( $count = $foreach.count + $entity.offset - 1 )
+		<tr>
+			<td>$count</td>
+			<td>$entry</td>
+			<td>
+				<div class="btn-group"><a class="btn btn-default btn-xs" href="objects/$entry">view</a></div>
+			</td>
+	   	</tr>
+	 #end
+	 </tbody>
+  </table>
+</div>
+<p>Showing items from $entity.offset to $to on a total of $entity.size</p>
+<ul class="pagination">
+	<li><a href="$entity.first">first</a></li>
+	<li><a href="$entity.previous">previous</a></li>
+	<li><a href="$entity.self">self</a></li>
+	<li><a href="$entity.next">next</a></li>
+	<li><a href="$entity.last">last</a></li> 
+</ul>

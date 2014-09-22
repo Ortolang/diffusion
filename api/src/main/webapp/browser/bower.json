@@ -1,0 +1,17 @@
+{
+    "name": "angular-ortolang",
+    "description": "Ortolang Angular App",
+    "version": "0.0.0",
+    "private": true,
+    "dependencies": {
+        "angular": "1.2.x",
+        "angular-mocks": "~1.2.x",
+        "bootstrap": "~3.2.0",
+        "angular-route": "~1.2.x",
+        "angular-animate": "~1.2.x",
+        "angular-file-upload": "~1.1.x",
+        "angular-strap": "~2.1.x",
+        "highlight": "8.2",
+        "angular-highlightjs": "~0.3.0"
+    }
+}

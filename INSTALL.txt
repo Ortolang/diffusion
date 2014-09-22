@@ -80,8 +80,31 @@ Messaging configuration :
 </subsystem>
 
 
-Security Configuration : 
+Security Configuration :
 
+Create a Realm binded to jaas login configuration : 
+
+<management>
+	[...]
+    <security-realms>
+         <security-realm name="OrtolangRealm">
+             <authentication>
+                 <jaas name="ortolang"/>
+             </authentication>
+         </security-realm>
+    </security-realms>
+    [...]
+</management>
+
+Set the realm for the remoting connector : 
+
+<subsystem xmlns="urn:jboss:domain:remoting:2.0">
+      <endpoint worker="default"/>
+      <http-connector name="http-remoting-connector" connector-ref="default" security-realm="OrtolangRealm"/>
+</subsystem>
+
+Declare the security domain containing jaas login modules : 
+ 
 <subsystem xmlns="urn:jboss:domain:security:1.2">
 	[...]
 	<security-domains>
@@ -104,7 +127,9 @@ Security Configuration :
 	</security-domains>
 </subsystem>
 
-create the two files for users and roles : 
+
+
+create the two files for users and roles in ${jboss.server.config.dir}: 
 
 ortolang-users.properties :
 

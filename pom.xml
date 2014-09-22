@@ -3,9 +3,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.ortolang.diffusion</groupId>
-	<artifactId>diffusion-server</artifactId>
+	<artifactId>server</artifactId>
 	<name>Ortolang Diffusion Server Parent</name>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<url>http://www.ortolang.fr</url>
 
@@ -16,38 +16,46 @@
 	</parent>
 
 	<modules>
-		<module>ejb</module>
-		<module>war</module>
-		<module>ear</module>
-		<module>client</module>
+		<module>comp</module>
+		<module>api</module>
+		<module>admin</module>
+		<module>appli</module>
+		<!-- <module>test</module> -->
 	</modules>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<version.wildfly.maven.plugin>1.0.0.Beta1</version.wildfly.maven.plugin>
-		<version.wildfly>8.0.0.Final</version.wildfly>
+		<version.wildfly.maven.plugin>1.0.2.Final</version.wildfly.maven.plugin>
+		<version.wildfly>8.1.0.Final</version.wildfly>
 		<version.compiler.plugin>3.1</version.compiler.plugin>
 		<version.ear.plugin>2.9</version.ear.plugin>
 		<version.ejb.plugin>2.3</version.ejb.plugin>
 		<version.war.plugin>2.4</version.war.plugin>
 		<maven.compiler.target>1.7</maven.compiler.target>
 		<maven.compiler.source>1.7</maven.compiler.source>
-
-		<drools.version>6.0.0.Final</drools.version>
-		<jbpm.version>6.0.0.Final</jbpm.version>
+		<drools.version>6.1.0.Final</drools.version>
+		<jbpm.version>6.1.0.Final</jbpm.version>
+		<slf4j.version>1.6.4</slf4j.version>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>fr.ortolang.diffusion</groupId>
-				<artifactId>diffusion-server-ejb</artifactId>
+				<artifactId>server-components</artifactId>
 				<version>${project.version}</version>
 				<type>ejb</type>
 			</dependency>
 			<dependency>
 				<groupId>fr.ortolang.diffusion</groupId>
-				<artifactId>diffusion-server-war</artifactId>
+				<artifactId>server-api</artifactId>
+				<version>${project.version}</version>
+				<type>war</type>
+				<scope>compile</scope>
+			</dependency>
+			<dependency>
+				<groupId>fr.ortolang.diffusion</groupId>
+				<artifactId>server-admin</artifactId>
 				<version>${project.version}</version>
 				<type>war</type>
 				<scope>compile</scope>
@@ -62,15 +70,29 @@
 			<dependency>
 				<groupId>org.jboss.shrinkwrap.resolver</groupId>
 				<artifactId>shrinkwrap-resolver-bom</artifactId>
-				<version>2.0.0-alpha-5</version>
+				<version>2.1.1</version>
 				<scope>import</scope>
 				<type>pom</type>
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.arquillian</groupId>
 				<artifactId>arquillian-bom</artifactId>
-				<version>1.1.2.Final</version>
+				<version>1.1.5.Final</version>
 				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.drools</groupId>
+				<artifactId>drools-bom</artifactId>
+				<type>pom</type>
+				<version>${drools.version}</version>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.jbpm</groupId>
+				<artifactId>jbpm-bom</artifactId>
+				<type>pom</type>
+				<version>${jbpm.version}</version>
 				<scope>import</scope>
 			</dependency>
 		</dependencies>
@@ -79,9 +101,35 @@
 	<distributionManagement>
 		<site>
 			<id>dev.ortolang.fr</id>
-			<url>file:///home/jerome/Work/ortolang-site/diffusion</url>
+			<url>file:///tmp/ortolang-site/diffusion</url>
 		</site>
 	</distributionManagement>
+	
+	<repositories>
+		<repository>
+			<id>ortolang-maven-repository</id>
+			<url>http://maven.ortolang.fr/public/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
+	
+	<pluginRepositories>
+		<pluginRepository>
+			<id>ortolang-maven-repository</id>
+			<url>http://maven.ortolang.fr/public/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</pluginRepository>
+	</pluginRepositories>
 
 	<build>
 		<plugins>

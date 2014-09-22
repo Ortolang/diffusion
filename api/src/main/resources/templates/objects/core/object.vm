@@ -1,0 +1,58 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><strong>Specific informations about this object</strong></h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Name</strong></p></div>
+	  <div class="col-md-10">$entity.object.name</div>
+    </div>
+        <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Type</strong></p></div>
+	  <div class="col-md-10">$entity.object.contentType</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Size</strong></p></div>
+	  <div class="col-md-10">$entity.object.size</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Description</strong></p></div>
+	  <div class="col-md-10">$entity.object.description</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Clock</strong></p></div>
+	  <div class="col-md-10">$entity.object.clock</div>
+    </div>
+    #if( $entity.object.metadatas.size() == 0 ) 
+    <div class="row">
+      <div class="col-md-2"><p class="text-right"><strong>Metadatas</strong></p></div>
+      <div class="col-md-10"><em>no metadatas associated with this collection</em></div>
+    </div>
+    #else
+	    #foreach( $metadata in $entity.object.metadatas )
+	    <div class="row">
+	      <div class="col-md-2">#if( $foreach.first )<p class="text-right"><strong>Metadatas</strong></p>#end</div>
+	      <div class="col-md-10">$metadata.name : <a href="./$metadata.key">$metadata.key</a></div>
+	    </div>
+	    #end
+	#end
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Preview</strong></p></div>
+	  #if( ! $entity.object.preview )
+	  	<div class="col-md-10">no preview for this object</div>
+	  #elseif( $entity.object.preview == "" )
+	    <div class="col-md-10">no preview for this object</div>
+	  #else
+	    <div class="col-md-10">$entity.object.preview - <a href="./$entity.key/preview">download file</a></div>
+	  #end
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Content</strong></p></div>
+	  #if( $entity.object.stream == "" )
+	  	<div class="col-md-10">no content or download restricted</div>
+	  #else
+	    <div class="col-md-10">$entity.object.stream - <a href="./$entity.key/download">download file</a></div>
+	  #end
+    </div>
+  </div>
+</div> 

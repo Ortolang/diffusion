@@ -1,0 +1,40 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><strong>Specific informations about this workspace</strong></h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Name</strong></p></div>
+	  <div class="col-md-10">$entity.object.name</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Type</strong></p></div>
+	  <div class="col-md-10">$entity.object.type</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Clock</strong></p></div>
+	  <div class="col-md-10">$entity.object.clock</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Members</strong></p></div>
+	  <div class="col-md-10"><a href="./$entity.object.members">$entity.object.members</a></div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Head</strong></p></div>
+	  <div class="col-md-10"><a href="./$entity.object.head">$entity.object.head</a></div>
+    </div>
+    #if( $entity.object.snapshots.size() == 0 )
+    <div class="row">
+		<div class="col-md-2"><p class="text-right"><strong>Snapshots</strong></p></div>
+		<div class="col-md-10">no snapshots in this workspace</div>
+	</div> 
+    #else
+	    #foreach( $snapshot in $entity.object.snapshots )
+	    <div class="row">
+		  <div class="col-md-2">#if( $foreach.first )<p class="text-right"><strong>Snapshots</strong></p>#end</div>
+		  <div class="col-md-10">$snapshot.name : <a href="./$snapshot.key">$snapshot.key</a></div>
+	    </div>
+	    #end
+	#end
+  </div>
+</div> 

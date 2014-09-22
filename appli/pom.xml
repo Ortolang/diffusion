@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<artifactId>server-application</artifactId>
+	<name>Ortolang Diffusion Server Application Package</name>
+	<packaging>ear</packaging>
+
+	<parent>
+		<groupId>fr.ortolang.diffusion</groupId>
+		<artifactId>server</artifactId>
+		<version>0.2-SNAPSHOT</version>
+	</parent>
+
+	<dependencies>
+		<dependency>
+			<groupId>fr.ortolang.diffusion</groupId>
+			<artifactId>server-components</artifactId>
+			<type>ejb</type>
+		</dependency>
+		<dependency>
+			<groupId>fr.ortolang.diffusion</groupId>
+			<artifactId>server-api</artifactId>
+			<type>war</type>
+		</dependency>
+		<dependency>
+			<groupId>fr.ortolang.diffusion</groupId>
+			<artifactId>server-admin</artifactId>
+			<type>war</type>
+		</dependency>
+		<dependency>
+			<groupId>net.bull.javamelody</groupId>
+			<artifactId>javamelody-core</artifactId>
+			<version>1.51.0</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<finalName>${project.artifactId}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-ear-plugin</artifactId>
+				<version>${version.ear.plugin}</version>
+				<configuration>
+					<version>7</version>
+					<defaultLibBundleDir>lib</defaultLibBundleDir>
+					<modules>
+						<ejbModule>
+               				<groupId>fr.ortolang.diffusion</groupId>
+               				<artifactId>server-components</artifactId>
+               				<bundleFileName>components.jar</bundleFileName>
+             			</ejbModule>
+						<webModule>
+							<groupId>fr.ortolang.diffusion</groupId>
+							<artifactId>server-admin</artifactId>
+							<bundleFileName>admin.war</bundleFileName>
+							<contextRoot>/admin</contextRoot>
+						</webModule>
+						<webModule>
+							<groupId>fr.ortolang.diffusion</groupId>
+							<artifactId>server-api</artifactId>
+							<bundleFileName>api.war</bundleFileName>
+							<contextRoot>/api</contextRoot>
+						</webModule>
+					</modules>
+					<fileNameMapping>no-version</fileNameMapping>
+					<applicationName>server-application</applicationName>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.wildfly.plugins</groupId>
+				<artifactId>wildfly-maven-plugin</artifactId>
+				<version>${version.wildfly.maven.plugin}</version>
+				<configuration>
+					<filename>${project.artifactId}.ear</filename>
+					<skip>false</skip>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

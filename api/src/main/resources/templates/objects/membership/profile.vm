@@ -1,0 +1,19 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><strong>Specific informations about this profile</strong></h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Full Name</strong></p></div>
+	  <div class="col-md-10">$entity.object.fullname</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Email</strong></p></div>
+	  <div class="col-md-10">$entity.object.email</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Status</strong></p></div>
+	  <div class="col-md-10">$entity.object.status</div>
+    </div>
+  </div>
+</div> 
