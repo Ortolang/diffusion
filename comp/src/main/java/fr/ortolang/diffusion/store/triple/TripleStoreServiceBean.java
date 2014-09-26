@@ -67,7 +67,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
             this.importOntology("http://www.w3.org/2000/01/rdf-schema#", "ontology/rdfs.xml");
             this.importOntology("http://xmlns.com/foaf/0.1/", "ontology/foaf.xml");
             this.importOntology("http://www.ortolang.fr/2014/05/diffusion#", "ontology/ortolang.xml");
-            this.importOntology("http://www.ortolang.fr/2014/09/market#", "ontology/ortolang-market.xml");
+            this.importOntology("http://www.ortolang.fr/2014/09/market#", "ontology/ortolang-market2.xml");
 	    } catch (Exception e) {
     		logger.log(Level.SEVERE, "unable to initialize triple store", e);
     	}
