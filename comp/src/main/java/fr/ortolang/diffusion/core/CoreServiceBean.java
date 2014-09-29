@@ -2276,6 +2276,7 @@ public class CoreServiceBean implements CoreService {
 						VelocityContext ctx = new VelocityContext();
 						ctx.put("self", URIHelper.fromKey(key));
 						ctx.put("target", URIHelper.fromKey(metadata.getTarget()));
+						ctx.put("targetKey", metadata.getTarget());
 						
 						InputStreamReader isr = new InputStreamReader(binarystore.get(metadata.getStream()));
 						StringWriter writer = new StringWriter();
