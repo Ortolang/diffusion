@@ -17,7 +17,7 @@ import fr.ortolang.diffusion.api.rest.object.ObjectResource;
 import fr.ortolang.diffusion.api.rest.process.ProcessResource;
 import fr.ortolang.diffusion.api.rest.profile.ProfileResource;
 import fr.ortolang.diffusion.api.rest.template.TemplateFilter;
-import fr.ortolang.diffusion.api.rest.upload.UploadResource;
+import fr.ortolang.diffusion.api.rest.workflow.WorkflowResource;
 import fr.ortolang.diffusion.api.rest.workspace.WorkspaceResource;
 
 @ApplicationPath("/rest/*")
@@ -30,7 +30,7 @@ public class DiffusionApplication extends Application {
 		classes.add(WorkspaceResource.class);
 		classes.add(ProfileResource.class);
 		classes.add(ProcessResource.class);
-		classes.add(UploadResource.class);
+		classes.add(WorkflowResource.class);
 	}
 
 	@Override

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:dcterms="http://purl.org/dc/terms/">
+    <rdf:Description rdf:about="info:hdl/target">
+        <!-- Nom du projet -->
+        <dc:title>Frantext « textes libres de droits »</dc:title>
+        <!-- Description du projet (CNRTL) -->
+        <dc:description>Issu de la base Frantext, le corpus Frantext « textes libres de droits » offre à la communauté scientifique, un large champ d’investigation où sont réunies 500 œuvres de la littérature française couvrant la période du 18e au 20e siècle. Le traitement informatique des données textuelles en format TEI XML a été réalisé par le laboratoire ATILF. L'interface de recherche permet d'effectuer des sélections au sein du corpus par genre de texte, auteur, période…</dc:description>
+        
+        <!-- Contenu -->
+        <dcterms:abstract>500 textes libres de droits issu de la base Frantext, au format XML - TEI P5 (UTF-8)</dcterms:abstract>
+        <!-- ?? Origine de la ressource : "ATILF" ?? -->
+        <!-- ?? Origine des données : "Frantext" ?? -->
+        <!-- ?? Nature des données : "Œuvres de la littérature française libres de droit" ?? -->
+         
+        <!-- Droit d'utilisation des données -->
+        <dcterms:rights rdf:resource="http://www.ortolang.fr/ontology/free"/>
+        <!-- Tout le projet est en francais (Filtre possible) -->
+        <dcterms:language rdf:resource="http://lexvo.org/id/iso639-3/fra"/>
+        <!-- Type de projet ORTOLANG ? Corpus -->
+        <rdf:type rdf:resource="http://www.ortolang.fr/class/Corpus"/>
+        <!-- Type de données Texte -->
+        <dcterms:type rdf:resource="http://purl.org/dc/dcmitype/Text"/>
+        <!-- Periode historique ?? ex. http://data.culture.fr/thesaurus/resource/ark:/67717/T4-45 -->
+        <!-- Provenance ?? -->
+        
+        <!-- Responsables du projet (CNRTL) : Etienne Petitjean -->
+        <dc:contributor>Etienne Petitjean</dc:contributor>
+        <!-- Responsables institutionnel (CNRTL) : ATILF -->
+        <dc:publisher>ATILF</dc:publisher>
+        <!-- Icone (dcterms:description) -->
+        <!-- Preview (dcterms:description) -->
+        <!-- Type discursif selon OLAC (SLDR) -->
+        <!-- Type linguistique de données selon OLAC (SLDR) -->
+        <!-- Discipline linguistique (en partie OLAC) (SLDR) -->
+        <!-- Mots clés (SLDR) -->
+        <!-- BibliographicCitation ?? -->
+        <!-- Relations ?? -->
+        
+    </rdf:Description>
+</rdf:RDF>

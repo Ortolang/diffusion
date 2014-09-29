@@ -1,0 +1,57 @@
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<h3 class="panel-title"><strong>List of workflows definitions</strong></h3>
+	</div>
+	<div class="panel-body">
+		<table class="table table-condensed table-hover">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>ID</th>
+					<th>Key</th>
+					<th>Name</th>
+					<th>Version</th>
+					<th>Suspended</th>
+				</tr>
+			</thead>
+			<tbody>
+			#foreach( $entry in $entity.entries )
+				<tr>
+					<td>$foreach.count</td>
+					<td>$entry.id</td>
+					<td>$entry.key</td>
+					<td>$entry.name</td>
+					<td>$entry.version</td>
+					<td>$entry.suspended</td>
+				</tr>
+			#end
+			</tbody>
+		</table>
+	</div>
+</div>
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<h3 class="panel-title"><strong>Deploy a new workflow definition</strong></h3>
+	</div>
+	<div class="panel-body">
+		<form class="form-horizontal" role="form" action="" method="post" enctype="multipart/form-data">
+			<div class="form-group">
+				<label for="name" class="col-sm-2 control-label">Resource Name</label>
+				<div class="col-sm-4">
+					<input type="text" class="form-control input-sm" id="name" name="name" placeholder="Enter Resource Name"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="content" class="col-sm-2 control-label">Definition</label>
+				<div class="col-sm-8">
+					<input type="file" id="content" name="content"/>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-10">
+					<button type="submit" class="btn btn-default btn-sm">Deploy Workflow Definition</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<definitions id="definitions"
+             targetNamespace="http://activiti.org/bpmn20" 
+             xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:activiti="http://activiti.org/bpmn">
+  
+  <process id="publishRequest" name="Publication Request" isExecutable="true">
+  
+    <startEvent id="request" activiti:initiator="initier">
+      <extensionElements>
+        <activiti:formProperty id="workspace" name="Workspace" type="string" required="true"/>
+      </extensionElements>
+    </startEvent>
+    <sequenceFlow id="flow1" sourceRef="request" targetRef="handleRequest" />
+    
+    <userTask id="handleRequest" name="Handle publication request" >
+      <documentation>
+        ${initier} would like to publish workspace .
+      </documentation> 
+      <extensionElements>
+         <activiti:formProperty id="publicationApproved" name="Do you approve this publication" type="enum" required="true">
+          <activiti:value id="true" name="Approve" />
+          <activiti:value id="false" name="Reject" />
+        </activiti:formProperty>
+        <activiti:formProperty id="moderatorMotivation" name="Motivation" type="string" />
+      </extensionElements>
+      <potentialOwner>
+        <resourceAssignmentExpression>
+          <formalExpression>moderators</formalExpression>
+        </resourceAssignmentExpression>
+      </potentialOwner>         
+    </userTask>
+    <sequenceFlow id="flow2" sourceRef="handleRequest" targetRef="requestApprovedDecision" />
+    
+    <exclusiveGateway id="requestApprovedDecision" name="Request approved?" />
+    <sequenceFlow id="flow3" sourceRef="requestApprovedDecision" targetRef="sendApprovalMail">
+      <conditionExpression xsi:type="tFormalExpression">${publicationApproved == 'true'}</conditionExpression>
+    </sequenceFlow>
+    
+    <task id="sendApprovalMail" name="Send confirmation e-mail" />
+    <sequenceFlow id="flow4" sourceRef="sendApprovalMail" targetRef="theEnd1" />
+    <endEvent id="theEnd1" />
+    
+    <sequenceFlow id="flow5" sourceRef="requestApprovedDecision" targetRef="adjustPublicationRequestTask">
+      <conditionExpression xsi:type="tFormalExpression">${publicationApproved == 'false'}</conditionExpression>
+    </sequenceFlow>
+    
+    <userTask id="adjustPublicationRequestTask" name="Adjust publication request">
+      <documentation>
+        Moderator has disapproved your publication request for workspace ${workspace}.
+        Reason: ${moderatorMotivation}
+      </documentation>
+      <extensionElements>
+        <activiti:formProperty id="workspace" name="Workspace" type="string" required="true"/>
+        <activiti:formProperty id="resendRequest" name="Resend publication request to moderators?" type="enum" required="true">
+          <activiti:value id="true" name="Yes" />
+          <activiti:value id="false" name="No" />
+        </activiti:formProperty>
+      </extensionElements>
+      <humanPerformer>
+        <resourceAssignmentExpression>
+          <formalExpression>${initier}</formalExpression>
+        </resourceAssignmentExpression>
+      </humanPerformer>  
+    </userTask>
+    <sequenceFlow id="flow6" sourceRef="adjustPublicationRequestTask" targetRef="resendRequestDecision" />
+    
+    <exclusiveGateway id="resendRequestDecision" name="Resend request?" />
+    <sequenceFlow id="flow7" sourceRef="resendRequestDecision" targetRef="handleRequest">
+      <conditionExpression xsi:type="tFormalExpression">${resendRequest == 'true'}</conditionExpression>
+    </sequenceFlow>
+    
+     <sequenceFlow id="flow8" sourceRef="resendRequestDecision" targetRef="theEnd2">
+      <conditionExpression xsi:type="tFormalExpression">${resendRequest == 'false'}</conditionExpression>
+    </sequenceFlow>
+    <endEvent id="theEnd2" />
+      
+  </process>
+  
+</definitions>
