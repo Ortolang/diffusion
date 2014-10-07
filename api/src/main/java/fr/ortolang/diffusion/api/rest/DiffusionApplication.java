@@ -14,6 +14,7 @@ import fr.ortolang.diffusion.api.rest.mapper.PropertyNotFoundExceptionMapper;
 import fr.ortolang.diffusion.api.rest.mapper.SearchServiceExceptionMapper;
 import fr.ortolang.diffusion.api.rest.mapper.SecurityServiceExceptionMapper;
 import fr.ortolang.diffusion.api.rest.object.ObjectResource;
+import fr.ortolang.diffusion.api.rest.plugin.PluginResource;
 import fr.ortolang.diffusion.api.rest.process.ProcessResource;
 import fr.ortolang.diffusion.api.rest.profile.ProfileResource;
 import fr.ortolang.diffusion.api.rest.template.TemplateFilter;
@@ -31,6 +32,7 @@ public class DiffusionApplication extends Application {
 		classes.add(ProfileResource.class);
 		classes.add(ProcessResource.class);
 		classes.add(UploadResource.class);
+		classes.add(PluginResource.class);
 	}
 
 	@Override
