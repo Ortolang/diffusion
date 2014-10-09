@@ -1,18 +1,23 @@
 package fr.ortolang.diffusion.workflow.entity;
 
-import java.io.Serializable;
-
 import org.activiti.engine.repository.ProcessDefinition;
 
-@SuppressWarnings("serial")
-public class WorkflowDefinition implements Serializable {
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.workflow.WorkflowService;
 
-	public String id;
-	public String key;
-	public String name;
-	public String description;
-	public boolean suspended;
-	public int version;
+@SuppressWarnings("serial")
+public class WorkflowDefinition extends OrtolangObject {
+	
+	public static final String OBJECT_TYPE = "workflow-definition";
+
+	private String key;
+	private String id;
+	private String name;
+	private String friendlyName;
+	private String description;
+	private boolean suspended;
+	private int version;
 
 	public WorkflowDefinition() {
 		suspended = false;
@@ -50,6 +55,14 @@ public class WorkflowDefinition implements Serializable {
 	public void setDescription(String description) {
 		this.description = description;
 	}
+	
+	public String getFriendlyName() {
+		return friendlyName;
+	}
+
+	public void setFriendlyName(String friendlyName) {
+		this.friendlyName = friendlyName;
+	}
 
 	public boolean isSuspended() {
 		return suspended;
@@ -70,12 +83,27 @@ public class WorkflowDefinition implements Serializable {
 	public static WorkflowDefinition fromProcessDefinition(ProcessDefinition pdef) {
 		WorkflowDefinition instance = new WorkflowDefinition();
 		instance.setId(pdef.getId());
-		instance.setKey(pdef.getKey());
-		instance.setName(pdef.getName());
+		instance.setName(pdef.getKey());
+		instance.setFriendlyName(pdef.getName());
 		instance.setDescription(pdef.getDescription());
 		instance.setVersion(pdef.getVersion());
 		instance.setSuspended(pdef.isSuspended());
 		return instance;
+	}
+
+	@Override
+	public String getObjectName() {
+		return getName();
+	}
+
+	@Override
+	public String getObjectKey() {
+		return getKey();
+	}
+
+	@Override
+	public OrtolangObjectIdentifier getObjectIdentifier() {
+		return new OrtolangObjectIdentifier(WorkflowService.SERVICE_NAME, WorkflowDefinition.OBJECT_TYPE, id);
 	}
 
 }

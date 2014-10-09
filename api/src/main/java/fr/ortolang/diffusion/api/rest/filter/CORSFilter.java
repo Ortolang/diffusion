@@ -22,6 +22,7 @@ public class CORSFilter implements Filter {
 	private static final String ACCESS_CONTROL_ALLOW_METHODS = "Access-Control-Allow-Methods";
 	private static final String ACCESS_CONTROL_ALLOW_HEADERS = "Access-Control-Allow-Headers";
     private static final String AUTHORIZATION_PROPERTY = "Authorization";
+    private static final String CONTENT_TYPE_PROPERTY = "Content-Type";
     private static final String OPTIONS_METHOD = "OPTIONS";
 
 	@Override
@@ -46,7 +47,7 @@ public class CORSFilter implements Filter {
         }
         if (hrequest.getMethod().equals(OPTIONS_METHOD)) {
             ((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ALLOW_METHODS, "DELETE, PUT, HEAD, OPTIONS, TRACE, GET, POST");
-            ((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ALLOW_HEADERS, AUTHORIZATION_PROPERTY);
+            ((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ALLOW_HEADERS, AUTHORIZATION_PROPERTY + ", " + CONTENT_TYPE_PROPERTY);
         }
         chain.doFilter(request, response);
 	}

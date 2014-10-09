@@ -7,12 +7,10 @@
 			<thead>
 				<tr>
 					<th>#</th>
-					<th>ID</th>
+					<th>Key</th>
 					<th>Name</th>
-					<th>Parent ID</th>
-					<th>Activity ID</th>
 					<th>Initier</th>
-					<th>Def ID</th>
+					<th>Activity</th>
 					<th>Suspended</th>
 				</tr>
 			</thead>
@@ -20,12 +18,10 @@
 			#foreach( $entry in $entity.entries )
 				<tr>
 					<td>$foreach.count</td>
-					<td>$entry.id</td>
+					<td>$entry.key</td>
 					<td>$entry.name</td>
-					<td>$entry.parentId</td>
-					<td>$entry.activityId</td>
 					<td>$entry.initier</td>
-					<td>$entry.definitionId</td>
+					<td>$entry.activity</td>
 					<td>$entry.suspended</td>
 				</tr>
 			#end
@@ -38,7 +34,8 @@
 		<h3 class="panel-title"><strong>Create a new Hello World Instance</strong></h3>
 	</div>
 	<div class="panel-body">
-		<form class="form-horizontal" role="form" action="./instances/helloworld" method="post">
+		<form class="form-horizontal" role="form" action="./instances" method="post">
+			<input type="hidden" id="definition" name="definition" value="helloworld"/>
 			<div class="form-group">
 				<label for="name" class="col-sm-2 control-label">Name</label>
 				<div class="col-sm-4">
@@ -53,7 +50,7 @@
 		</form>
 	</div>
 </div>
-
+<!--
 <div class="panel panel-default">
 	<div class="panel-heading">
 		<h3 class="panel-title"><strong>Create a new Publish Request Instance</strong></h3>
@@ -74,3 +71,4 @@
 		</form>
 	</div>
 </div>
+-->

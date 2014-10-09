@@ -391,24 +391,24 @@ public class WorkspaceResource {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
 		}
 
-		String ekey = core.resolveWorkspacePath(wskey, root, path);
-		OrtolangObjectIdentifier identifier = browser.lookup(ekey);
-
-		switch (identifier.getType()) {
-		case DataObject.OBJECT_TYPE:
-			core.deleteDataObject(wskey, path);
-			break;
-		case Collection.OBJECT_TYPE:
-			core.deleteCollection(wskey, path);
-			break;
-		case Link.OBJECT_TYPE:
-			core.deleteLink(wskey, path);
-			break;
-		case MetadataObject.OBJECT_TYPE:
+		if (metadataname != null && metadataname.length() > 0) {
 			core.deleteMetadataObject(wskey, path, metadataname);
-			break;
-		default:
-			return Response.serverError().entity("Unknown type").build();
+		} else {
+			String ekey = core.resolveWorkspacePath(wskey, root, path);
+			OrtolangObjectIdentifier identifier = browser.lookup(ekey);
+			switch (identifier.getType()) {
+			case DataObject.OBJECT_TYPE:
+				core.deleteDataObject(wskey, path);
+				break;
+			case Collection.OBJECT_TYPE:
+				core.deleteCollection(wskey, path);
+				break;
+			case Link.OBJECT_TYPE:
+				core.deleteLink(wskey, path);
+				break;
+			default:
+				return Response.serverError().entity("Unknown type").build();
+			}
 		}
 		return Response.noContent().build();
 	}

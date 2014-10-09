@@ -1,20 +1,36 @@
 package fr.ortolang.diffusion.workflow.entity;
 
+import java.util.Map;
+
 import org.activiti.engine.runtime.ProcessInstance;
 
-public class WorkflowInstance {
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.workflow.WorkflowService;
 
+@SuppressWarnings("serial")
+public class WorkflowInstance extends OrtolangObject {
+
+	public static final String OBJECT_TYPE = "workflow-instance";
+	public static final String INITIER = "initier";
+
+	private String key;
 	private String id;
 	private String name;
-	private String parentId;
-	private String activityId;
-	private String deploymentId;
-	private String initier;
 	private String definitionId;
-	private String definitionKey;
+	private String initier;
+	private Map<String, Object> params;
 	private boolean suspended;
 
 	public WorkflowInstance() {
+	}
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
 	}
 
 	public String getId() {
@@ -33,28 +49,12 @@ public class WorkflowInstance {
 		this.name = name;
 	}
 
-	public String getParentId() {
-		return parentId;
+	public Map<String, Object> getParams() {
+		return params;
 	}
 
-	public void setParentId(String parentId) {
-		this.parentId = parentId;
-	}
-
-	public String getActivityId() {
-		return activityId;
-	}
-
-	public void setActivityId(String activityId) {
-		this.activityId = activityId;
-	}
-
-	public String getDeploymentId() {
-		return deploymentId;
-	}
-
-	public void setDeploymentId(String deploymentId) {
-		this.deploymentId = deploymentId;
+	public void setParams(Map<String, Object> params) {
+		this.params = params;
 	}
 
 	public String getInitier() {
@@ -65,6 +65,14 @@ public class WorkflowInstance {
 		this.initier = initier;
 	}
 
+	public boolean isSuspended() {
+		return suspended;
+	}
+
+	public void setSuspended(boolean suspended) {
+		this.suspended = suspended;
+	}
+	
 	public String getDefinitionId() {
 		return definitionId;
 	}
@@ -73,33 +81,29 @@ public class WorkflowInstance {
 		this.definitionId = definitionId;
 	}
 
-	public String getDefinitionKey() {
-		return definitionKey;
-	}
-
-	public void setDefinitionKey(String definitionKey) {
-		this.definitionKey = definitionKey;
-	}
-
-	public boolean isSuspended() {
-		return suspended;
-	}
-
-	public void setSuspended(boolean suspended) {
-		this.suspended = suspended;
-	}
-
 	public static WorkflowInstance fromProcessInstance(ProcessInstance pins) {
 		WorkflowInstance instance = new WorkflowInstance();
-		instance.setId(pins.getId());
+		instance.setId(pins.getBusinessKey());
 		instance.setName(pins.getName());
-		instance.setParentId(pins.getParentId());
-		instance.setActivityId(pins.getActivityId());
-		instance.setDeploymentId(pins.getDeploymentId());
-		instance.setInitier(pins.getTenantId());
+		instance.setParams(pins.getProcessVariables());
 		instance.setDefinitionId(pins.getProcessDefinitionId());
-		instance.setDefinitionKey(pins.getProcessDefinitionKey());
+		instance.setInitier((String) pins.getProcessVariables().get(WorkflowInstance.INITIER));
 		instance.setSuspended(pins.isSuspended());
 		return instance;
+	}
+
+	@Override
+	public String getObjectName() {
+		return getName();
+	}
+
+	@Override
+	public String getObjectKey() {
+		return getKey();
+	}
+
+	@Override
+	public OrtolangObjectIdentifier getObjectIdentifier() {
+		return new OrtolangObjectIdentifier(WorkflowService.SERVICE_NAME, WorkflowInstance.OBJECT_TYPE, id);
 	}
 }

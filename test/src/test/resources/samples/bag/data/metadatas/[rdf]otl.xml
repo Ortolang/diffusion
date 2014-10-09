@@ -8,7 +8,7 @@
     <rdf:Description rdf:about="${target}">
     
     	<!-- Ortolang system properties -->
-    	<rdf:type rdf:resource="http://www.ortolang.fr/2014/09/market#Carrot"/>
+    	<rdf:type rdf:resource="http://www.ortolang.fr/2014/09/market#FullTextDatabase"/>
     
         <!-- Nom du projet -->
         <dc:title xml:lang="fr">Frantext « textes libres de droits »</dc:title>
@@ -41,7 +41,7 @@
         <dcterms:language>fra</dcterms:language>
         
         <!-- Type de projet ORTOLANG ? Corpus -->
-        <otl:type>corpus</otl:type>
+<!--         <otl:type>corpus</otl:type> -->
 
         <dcterms:spacial>FR</dcterms:spacial>
                 

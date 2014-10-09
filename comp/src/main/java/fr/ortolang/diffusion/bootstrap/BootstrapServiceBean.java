@@ -92,6 +92,7 @@ public class BootstrapServiceBean implements BootstrapService {
 
 				logger.log(Level.FINE, "creating moderators group");
 				membership.createGroup(MembershipService.MODERATOR_GROUP_KEY, "Publication Moderators", "Moderators of the plateform can publish content");
+				membership.addMemberInGroup(MembershipService.MODERATOR_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
 				logger.log(Level.FINE, "set guest read rules");
 				authorisation.setPolicyRules(MembershipService.MODERATOR_GROUP_KEY, guestReadRules);
 
