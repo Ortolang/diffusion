@@ -15,7 +15,8 @@ public class PluginRepresentation {
 	private String detail;
 	private String url;
 	private List<String> formats;
-	
+	private String config;
+
 	public PluginRepresentation() {
 		super();
 	}
@@ -76,5 +77,12 @@ public class PluginRepresentation {
 		this.url = url;
 	}
 
+	
+	public String getConfig() {
+		return config;
+	}
 
+	public void setConfig(String config) {
+		this.config = config;
+	}
 }
