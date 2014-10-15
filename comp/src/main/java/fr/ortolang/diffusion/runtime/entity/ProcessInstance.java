@@ -1,69 +1,27 @@
 package fr.ortolang.diffusion.runtime.entity;
 
-import java.util.HashMap;
 import java.util.Map;
-
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Lob;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-
-import org.hibernate.annotations.Type;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.runtime.RuntimeService;
-import fr.ortolang.diffusion.runtime.process.ProcessState;
 
-@Entity
-@Table(indexes = { @Index(columnList = "initier") })
-@NamedQueries({ 
-	@NamedQuery(name = "findProcessInstancesForInitier", query = "select r from ProcessInstance r where r.initier = :initier"),
-	@NamedQuery(name="findAllProcessInstances", query="select p from ProcessInstance p")
-	})
 @SuppressWarnings("serial")
 public class ProcessInstance extends OrtolangObject {
 
-	public static final String OBJECT_TYPE = "process";
-	
-	public static final String PARAM_START = "start";
-	public static final String PARAM_STOP = "stop";
-	
+	public static final String OBJECT_TYPE = "process-instance";
+	public static final String INITIER = "initier";
 
-	@Id
-	private String id;
-	@Transient
 	private String key;
+	private String id;
 	private String name;
-	private String type;
+	private String activityId;
+	private String definitionId;
 	private String initier;
-	private ProcessState state;
-	private int currentStep;
-	@ElementCollection(fetch=FetchType.EAGER)
-	@Column(length=8000)
-	private Map<String, String> params;
-	@Lob
-	@Type(type = "org.hibernate.type.TextType")
-	private String log;
+	private Map<String, Object> variables;
+	private boolean suspended;
 
 	public ProcessInstance() {
-		params = new HashMap<String, String> ();
-		log = "";
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
 	}
 
 	public String getKey() {
@@ -74,6 +32,14 @@ public class ProcessInstance extends OrtolangObject {
 		this.key = key;
 	}
 
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -82,12 +48,12 @@ public class ProcessInstance extends OrtolangObject {
 		this.name = name;
 	}
 
-	public String getType() {
-		return type;
+	public Map<String, Object> getParams() {
+		return variables;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setParams(Map<String, Object> params) {
+		this.variables = params;
 	}
 
 	public String getInitier() {
@@ -98,67 +64,42 @@ public class ProcessInstance extends OrtolangObject {
 		this.initier = initier;
 	}
 
-	public ProcessState getState() {
-		return state;
+	public boolean isSuspended() {
+		return suspended;
 	}
 
-	public void setState(ProcessState state) {
-		this.state = state;
+	public void setSuspended(boolean suspended) {
+		this.suspended = suspended;
 	}
 
-	public int getCurrentStep() {
-		return currentStep;
+	public String getActivityId() {
+		return activityId;
 	}
 
-	public void setCurrentStep(int step) {
-		this.currentStep = step;
+	public void setActivityId(String activityId) {
+		this.activityId = activityId;
 	}
 
-	public Map<String, String> getParams() {
-		return params;
+	public String getDefinitionId() {
+		return definitionId;
 	}
 
-	public void setParams(Map<String, String> params) {
-		this.params = params;
-	}
-	
-	public void putParam(String key, String value) { 
-		this.params.put(key, value);
-	}
-	
-	public String getParam(String key) { 
-		return this.params.get(key);
-	}
-	
-	public void putAllParams(Map<String, String> params) {
-		this.params.putAll(params);
-	}
-
-	public String getLog() {
-		return log;
-	}
-
-	public void setLog(String log) {
-		this.log = log;
-	}
-
-	public void addLogEntry(String entry) {
-		this.log += entry + "\r\n";
+	public void setDefinitionId(String definitionId) {
+		this.definitionId = definitionId;
 	}
 
 	@Override
 	public String getObjectName() {
-		return name;
+		return getName();
 	}
 
 	@Override
 	public String getObjectKey() {
-		return key;
+		return getKey();
 	}
 
 	@Override
 	public OrtolangObjectIdentifier getObjectIdentifier() {
 		return new OrtolangObjectIdentifier(RuntimeService.SERVICE_NAME, ProcessInstance.OBJECT_TYPE, id);
 	}
-
 }

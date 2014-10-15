@@ -83,7 +83,7 @@ public class WorkspaceResource {
 	@Template(template = "workspaces/list.vm", types = { MediaType.TEXT_HTML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
 	public Response listWorkspaces() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "listing workspaces for connected identifier");
+		logger.log(Level.INFO, "GET /workspaces");
 		String profile = membership.getProfileKeyForConnectedIdentifier();
 
 		List<String> keys = core.findWorkspacesForProfile(profile);
@@ -102,7 +102,7 @@ public class WorkspaceResource {
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	public Response createWorkspace(@FormParam("key") String key, @FormParam("type") @DefaultValue("default") String type,
 			@FormParam("name") @DefaultValue("No Name Provided") String name) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "creating workspace");
+		logger.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
 		if (key == null || key.length() == 0) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
 		}
@@ -114,7 +114,7 @@ public class WorkspaceResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createWorkspace(WorkspaceRepresentation representation) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "creating workspace");
+		logger.log(Level.INFO, "POST(application/json) /workspaces");
 		if (representation.getKey() == null || representation.getKey().length() == 0) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
 		}
@@ -128,7 +128,7 @@ public class WorkspaceResource {
 	@Template(template = "workspaces/detail.vm", types = { MediaType.TEXT_HTML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
 	public Response getWorkspace(@PathParam(value = "wskey") String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "getting workspace " + wskey);
+		logger.log(Level.INFO, "GET /workspaces/" + wskey);
 		Workspace workspace = core.readWorkspace(wskey);
 		WorkspaceRepresentation representation = WorkspaceRepresentation.fromWorkspace(workspace);
 		return Response.ok(representation).build();
@@ -139,7 +139,7 @@ public class WorkspaceResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateWorkspace(@PathParam(value = "wskey") String wskey, WorkspaceRepresentation representation) throws CoreServiceException, KeyAlreadyExistsException,
 			AccessDeniedException, KeyNotFoundException {
-		logger.log(Level.INFO, "updating workspace with key " + wskey);
+		logger.log(Level.INFO, "PUT /workspaces/" + wskey);
 		if (representation.getKey() != null && representation.getKey().length() > 0) {
 			core.updateWorkspace(representation.getKey(), representation.getName());
 			return Response.ok().build();
@@ -155,7 +155,7 @@ public class WorkspaceResource {
 	public Response getWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@QueryParam(value = "metadata") String metadata) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, OrtolangException,
 			BrowserServiceException, PropertyNotFoundException {
-		logger.log(Level.INFO, "get element at path: " + path + " in workspace: " + wskey);
+		logger.log(Level.INFO, "GET /workspaces/" + wskey + "/elements?root=" + root + "&path=" + path + "&metadata=" + metadata);
 		if (path == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
 		}
@@ -195,7 +195,7 @@ public class WorkspaceResource {
 	public void download(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@QueryParam(value = "metadata") String metadata, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException,
 			OrtolangException, DataNotFoundException, IOException, CoreServiceException, InvalidPathException {
-		logger.log(Level.INFO, "download element content at path: " + path + " in workspace: " + wskey);
+		logger.log(Level.INFO, "GET /workspaces/" + wskey + "/download?root=" + root + "&path=" + path + "&metadata=" + metadata);
 		if (path == null) {
 			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "parameter 'path' is mandatory");
 			return;
@@ -245,7 +245,7 @@ public class WorkspaceResource {
 	public void preview(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, DataNotFoundException,
 			IOException, CoreServiceException, InvalidPathException {
-		logger.log(Level.INFO, "preview element content at path: " + path + " in workspace: " + wskey);
+		logger.log(Level.INFO, "GET /workspaces/" + wskey + "/preview?root=" + root + "&path=" + path);
 		if (path == null) {
 			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "parameter 'path' is mandatory");
 			return;
@@ -275,7 +275,7 @@ public class WorkspaceResource {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response writeWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form) throws CoreServiceException,
 			KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException {
-		logger.log(Level.INFO, "write element into workspace " + wskey);
+		logger.log(Level.INFO, "POST /workspaces/" + wskey + "/elements");
 		try {
 			if (form.getPath() == null) {
 				return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
@@ -359,7 +359,7 @@ public class WorkspaceResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response writeWorkspaceElementRepresentation(@PathParam(value = "wskey") String wskey, WorkspaceElementRepresentation representation) throws CoreServiceException,
 			KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException {
-		logger.log(Level.INFO, "write element into workspace " + wskey);
+		logger.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements");
 		PathBuilder npath = PathBuilder.fromPath(representation.getPath());
 		try {
 			core.resolveWorkspacePath(wskey, "head", npath.build());
@@ -386,7 +386,7 @@ public class WorkspaceResource {
 	public Response deleteWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@QueryParam(value = "metadataname") String metadataname) throws CoreServiceException, InvalidPathException, AccessDeniedException, KeyNotFoundException,
 			BrowserServiceException {
-		logger.log(Level.INFO, "delete element at path: " + path + " into workspace: " + wskey);
+		logger.log(Level.INFO, "DELETE /workspaces/" + wskey + "/elements");
 		if (path == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
 		}
@@ -416,13 +416,13 @@ public class WorkspaceResource {
 	@POST
 	@Path("/{wskey}/snapshots")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey, @FormParam(value = "snapshotname") String snapshotName) throws CoreServiceException,
+	public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey, @FormParam(value = "snapshotname") String name) throws CoreServiceException,
 			KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "snapshot workspace: " + wskey + " with snapshotname: " + snapshotName);
-		if (snapshotName == null) {
+		logger.log(Level.INFO, "POST /workspaces/" + wskey + "/snapshots");
+		if (name == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'snapshotname' is mandatory").build();
 		}
-		core.snapshotWorkspace(wskey, snapshotName);
+		core.snapshotWorkspace(wskey, name);
 		return Response.ok().build();
 	}
 

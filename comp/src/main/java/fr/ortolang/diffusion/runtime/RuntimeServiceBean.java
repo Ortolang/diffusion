@@ -1,12 +1,9 @@
 package fr.ortolang.diffusion.runtime;
 
+import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -20,11 +17,11 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.concurrent.ContextService;
 import javax.enterprise.concurrent.ManagedScheduledExecutorService;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 
+import org.activiti.engine.ActivitiObjectNotFoundException;
+import org.activiti.engine.ActivitiTaskAlreadyClaimedException;
 import org.jboss.ejb3.annotation.SecurityDomain;
+import org.jgroups.util.UUID;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
@@ -40,16 +37,9 @@ import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.runtime.entity.ProcessDefinition;
 import fr.ortolang.diffusion.runtime.entity.ProcessInstance;
-import fr.ortolang.diffusion.runtime.process.ProcessDefinition;
-import fr.ortolang.diffusion.runtime.process.ProcessState;
-import fr.ortolang.diffusion.runtime.process.ProcessStep;
-import fr.ortolang.diffusion.runtime.task.GreetTask;
-import fr.ortolang.diffusion.runtime.task.HelloWorldTask;
-import fr.ortolang.diffusion.runtime.task.ImportWorkspaceTask;
-import fr.ortolang.diffusion.runtime.task.PublicationTask;
-import fr.ortolang.diffusion.runtime.task.Task;
-import fr.ortolang.diffusion.runtime.task.TaskState;
+import fr.ortolang.diffusion.runtime.entity.ProcessTask;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
@@ -60,7 +50,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @SecurityDomain("ortolang")
 @RolesAllowed("user")
 public class RuntimeServiceBean implements RuntimeService {
-
+	
 	private Logger logger = Logger.getLogger(RuntimeServiceBean.class.getName());
 	
 	@EJB
@@ -71,8 +61,8 @@ public class RuntimeServiceBean implements RuntimeService {
 	private AuthorisationService authorisation;
 	@EJB
 	private NotificationService notification;
-	@PersistenceContext(unitName = "ortolangPU")
-	private EntityManager em;
+	@EJB
+	private RuntimeEngine engine;
 	@Resource
 	private SessionContext ctx;
 	@Resource
@@ -80,355 +70,313 @@ public class RuntimeServiceBean implements RuntimeService {
 	@Resource
 	private ContextService contextService;
 	
-	private static Set<ProcessDefinition> definitions = new HashSet<ProcessDefinition> ();
-	
-	static {
-		ProcessDefinition publication = new ProcessDefinition();
-		publication.setName("simple-publication");
-		publication.setDescription("A simple process for publish content without moderation (require to be moderator)");
-		publication.addStep(new ProcessStep("publish-keys", PublicationTask.class));
-		
-		ProcessDefinition hello = new ProcessDefinition();
-		hello.setName("helloworld");
-		hello.setDescription("The famous hello world process !!");
-		hello.addStep(new ProcessStep("hello", HelloWorldTask.class));
-		hello.addStep(new ProcessStep("greet", GreetTask.class));
-		
-		ProcessDefinition workspace = new ProcessDefinition();
-		workspace.setName("import-workspace");
-		workspace.setDescription("Import a BagIt file as a complete workspace !!");
-		workspace.addStep(new ProcessStep("import", ImportWorkspaceTask.class));
-		
-		definitions.add(publication);
-		definitions.add(hello);
-		definitions.add(workspace);
-	}
-	
-	public RuntimeServiceBean() {
-	}
-	
-	public RegistryService getRegistryService() {
-		return registry;
-	}
-
-	public void setRegistryService(RegistryService registryService) {
-		this.registry = registryService;
-	}
-
-	public NotificationService getNotificationService() {
-		return notification;
-	}
-
-	public void setNotificationService(NotificationService notificationService) {
-		this.notification = notificationService;
-	}
-
-	public MembershipService getMembershipService() {
-		return membership;
-	}
-
-	public void setMembershipService(MembershipService membership) {
-		this.membership = membership;
-	}
-
-	public AuthorisationService getAuthorisationService() {
-		return authorisation;
-	}
-
-	public void setAuthorisationService(AuthorisationService authorisation) {
-		this.authorisation = authorisation;
-	}
-	
-	public void setSessionContext(SessionContext ctx) {
-		this.ctx = ctx;
-	}
-
-	public SessionContext getSessionContext() {
-		return this.ctx;
-	}
-	
-	public ManagedScheduledExecutorService getExecutor() {
-		return executor;
-	}
-
-	public void setExecutor(ManagedScheduledExecutorService executor) {
-		this.executor = executor;
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public Set<ProcessDefinition> listProcessDefinitions() throws RuntimeServiceException {
-		logger.log(Level.FINE, "listing process definitions");
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			authorisation.checkAuthentified(caller);
-			notification.throwEvent("", caller, ProcessInstance.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessInstance.OBJECT_TYPE, "list-definitions"), "");
-			return definitions;
-		} catch ( AuthorisationServiceException | AccessDeniedException | NotificationServiceException e ) {
-			throw new RuntimeServiceException("unable to list process definitions", e);
-		}
-	}
-	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createProcessInstance(String key, String name, String type, Map<String, String> params) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.FINE, "creating process instance for key [" + key + "] and of type [" + type + "]");
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			authorisation.checkAuthentified(caller);
-			
-			findProcessDefinition(type);
-			
-			ProcessInstance process = new ProcessInstance();
-			process.setId(UUID.randomUUID().toString());
-			process.setName(name);
-			process.setType(type);
-			process.setInitier(caller);
-			process.setState(ProcessState.PENDING);
-			process.setCurrentStep(0);
-			process.setParams(params);
-			process.addLogEntry("Process created");
-			em.persist(process);
-			
-			registry.register(key, process.getObjectIdentifier(), caller);
-			
-			authorisation.createPolicy(key, caller);
-			
-			notification.throwEvent(key, caller, ProcessInstance.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessInstance.OBJECT_TYPE, "create"), "");
-		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException e) {
-			logger.log(Level.WARNING, "an error occured during creating a process", e);
-			ctx.setRollbackOnly();
-			throw new RuntimeServiceException("unable to create process with key [" + key + "]", e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public ProcessInstance readProcessInstance(String key) throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
-		logger.log(Level.FINE, "reading process instance for key [" + key + "]");
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			authorisation.checkPermission(key, subjects, "read");
-
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, ProcessInstance.OBJECT_TYPE);
-			ProcessInstance process = em.find(ProcessInstance.class, identifier.getId());
-			if (process == null) {
-				throw new RuntimeServiceException("unable to find a process for id " + identifier.getId());
-			}
-			process.setKey(key);
-
-			notification.throwEvent(key, caller, ProcessInstance.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessInstance.OBJECT_TYPE, "read"), "");
-			return process;
-		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException e) {
-			logger.log(Level.WARNING, "an error occured during reading a process", e);
-			throw new RuntimeServiceException("unable to read the process with key [" + key + "]", e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public List<String> findProcessInstancesByInitier(String initier) throws RuntimeServiceException, AccessDeniedException {
-		logger.log(Level.FINE, "finding process instances for initier [" + initier + "]");
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			authorisation.checkPermission(initier, subjects, "read");
-			
-			TypedQuery<ProcessInstance> query = em.createNamedQuery("findProcessInstancesForInitier", ProcessInstance.class).setParameter("initier", initier);
-			List<ProcessInstance> processes = query.getResultList();
-			List<String> results = new ArrayList<String> ();
-			for ( ProcessInstance process : processes ) {
-				String key = registry.lookup(process.getObjectIdentifier());
-				results.add(key);
-			}
-			notification.throwEvent("", caller, ProcessInstance.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessInstance.OBJECT_TYPE, "find"), "initier=" + initier);
-			return results;
-		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
-			throw new RuntimeServiceException("unable to find processes instances for initier [" + initier + "]", e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public List<String> findAllProcessInstances() throws RuntimeServiceException, AccessDeniedException {
-		logger.log(Level.FINE, "finding all process instances");
+	public void createProcessDefinition(String key, InputStream definition)  throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException {
+		logger.log(Level.INFO, "Creating process definition with key: " + key);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			authorisation.checkSuperUser(caller);
 			
-			TypedQuery<ProcessInstance> query = em.createNamedQuery("findAllProcessInstances", ProcessInstance.class);
-			List<ProcessInstance> processes = query.getResultList();
-			List<String> results = new ArrayList<String> ();
-			for ( ProcessInstance process : processes ) {
-				String key = registry.lookup(process.getObjectIdentifier());
-				results.add(key);
+			String pdefid = engine.deployProcessDefinition(key + ".bpmn", definition);
+			
+			ProcessDefinition wdef = new ProcessDefinition();
+			wdef.setId(pdefid);
+			
+			registry.register(key, wdef.getObjectIdentifier(), caller);
+			authorisation.createPolicy(key, caller);
+
+			notification.throwEvent(key, caller, ProcessDefinition.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessDefinition.OBJECT_TYPE, "create"), "");
+		} catch (AccessDeniedException e) {
+			throw e;
+		} catch (KeyAlreadyExistsException e) {
+			ctx.setRollbackOnly();
+			throw e;
+		} catch (AuthorisationServiceException | RuntimeEngineException | RegistryServiceException | IdentifierAlreadyRegisteredException | NotificationServiceException e) {
+			ctx.setRollbackOnly();
+			throw new RuntimeServiceException("unable to create process definition", e);
+		} 
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<ProcessDefinition> listProcessDefinitions() throws RuntimeServiceException {
+		logger.log(Level.INFO, "Listing workflow definitions");
+		try {
+			List<ProcessDefinition> pdefs = engine.listProcessDefinitions();
+			List<ProcessDefinition> epdefs = new ArrayList<ProcessDefinition> ();
+			for ( ProcessDefinition pdef: pdefs ) {
+				try {
+					String key = registry.lookup(pdef.getObjectIdentifier());
+					pdef.setKey(key);
+					epdefs.add(pdef);
+				} catch ( IdentifierNotRegisteredException e ) {
+					logger.log(Level.FINE, "unregistered process definition found in storage for id: " + pdef.getId());
+				}
 			}
-			notification.throwEvent("", caller, ProcessInstance.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessInstance.OBJECT_TYPE, "find-all"), "");
-			return results;
-		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | IdentifierNotRegisteredException e) {
-			throw new RuntimeServiceException("unable to find all processe instances", e);
+			
+			return epdefs;
+		} catch ( RuntimeEngineException | RegistryServiceException e ) {
+			throw new RuntimeServiceException("unable to list process defintions", e);
+		} 
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public ProcessDefinition readProcessDefinition(String key)  throws RuntimeServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "Reading process definition with key: " + key);
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, ProcessDefinition.OBJECT_TYPE);
+			ProcessDefinition def = engine.getProcessDefinition(identifier.getId());
+			if ( def == null ) {
+				throw new RuntimeServiceException("unable to find a process definition for id: " + identifier.getId());
+			}
+			def.setKey(key);
+						
+			notification.throwEvent(key, caller, ProcessDefinition.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessDefinition.OBJECT_TYPE, "read"), "");
+			return def;
+		} catch (RegistryServiceException | NotificationServiceException | RuntimeEngineException e) {
+			throw new RuntimeServiceException("unable to get process definition", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public byte[] readProcessDefinitionModel(String key)  throws RuntimeServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "Reading process definition model with key: " + key);
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, ProcessDefinition.OBJECT_TYPE);
+			byte[] model = engine.getProcessDefinitionModel(identifier.getId());
+			notification.throwEvent(key, caller, ProcessDefinition.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessDefinition.OBJECT_TYPE, "read-model"), "");
+			return model;
+		} catch (RegistryServiceException | RuntimeEngineException | NotificationServiceException e) {
+			throw new RuntimeServiceException("unable to get process definition model", e);
 		}
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void startProcessInstance(String key) throws RuntimeServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "starting execution of process instance for key [" + key + "]");
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public byte[] readProcessDefinitionDiagram(String key)  throws RuntimeServiceException, KeyNotFoundException {
+		logger.log(Level.INFO, "reading process definition diagram for key: " + key);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, ProcessInstance.OBJECT_TYPE);
-			ProcessInstance process = em.find(ProcessInstance.class, identifier.getId());
-			if (process == null) {
-				throw new RuntimeServiceException("unable to find a process for id " + identifier.getId());
-			}
-			if (!process.getState().equals(ProcessState.PENDING)) {
-				throw new RuntimeServiceException("unable to start a process that is not in state " + ProcessState.PENDING);
-			}
-			ProcessDefinition definition = findProcessDefinition(process.getType());
-			ProcessStep step = definition.getStep(process.getCurrentStep());
-			if ( step == null ) {
-				throw new RuntimeServiceException("unable to start a process that has no step");
-			}
+			checkObjectType(identifier, ProcessDefinition.OBJECT_TYPE);
+			byte[] diagram = engine.getProcessDefinitionModel(identifier.getId());
+			notification.throwEvent(key, caller, ProcessDefinition.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessDefinition.OBJECT_TYPE, "read-diagram"), "");
+			return diagram;
+		} catch (RegistryServiceException | RuntimeEngineException | NotificationServiceException e) {
+			throw new RuntimeServiceException("unable to get process definition diagram", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void suspendProcessDefinition(String key)  throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "Suspending process definition with key: " + key);
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkPermission(key, subjects, "update");
 			
-			try {
-				String taskKey = UUID.randomUUID().toString(); 
-				Task task = (Task) step.getTaskClass().newInstance();
-				task.setKey(taskKey);
-				task.setParams(process.getParams());
-				task.setProcessKey(key);
-				task.setProcessStep(process.getCurrentStep());
-				Runnable ctxTask = contextService.createContextualProxy(task, Runnable.class);
-				executor.schedule(ctxTask, 10, TimeUnit.SECONDS);
-				
-				process.setState(ProcessState.ACTIVE);
-				process.putParam(ProcessInstance.PARAM_START,System.currentTimeMillis() + "");
-				process.addLogEntry("Task created for step " + process.getCurrentStep() + " with key: " + taskKey);
-			} catch (InstantiationException | IllegalAccessException e) {
-				logger.log(Level.SEVERE, "unable to instanciate task", e);
-				process.setState(ProcessState.ABORTED);
-				process.putParam(ProcessInstance.PARAM_STOP,System.currentTimeMillis() + "");
-				process.addLogEntry("Unable to create task for step " + process.getCurrentStep() + ": " + e.getMessage());
-				process.addLogEntry("Process aborted");
-			}
-			em.merge(process);
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, ProcessDefinition.OBJECT_TYPE);
+			engine.suspendProcessDefinition(identifier.getId());
 			
-			registry.update(key);
+			notification.throwEvent(key, caller, ProcessDefinition.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessDefinition.OBJECT_TYPE, "suspend"), "");
+		} catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | RuntimeEngineException | NotificationServiceException e) {
+			ctx.setRollbackOnly();
+			throw new RuntimeServiceException("unable to suspend process definition", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public ProcessDefinition findProcessDefinitionByName(String name) throws RuntimeServiceException {
+		logger.log(Level.INFO, "Searching process definition with name: " + name);
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
+			ProcessDefinition def = engine.findLatestProcessDefinitionsForName(name);
+			if ( def == null ) {
+				throw new RuntimeServiceException("unable to find a process definition with name: " + name);
+			}
+			String key = registry.lookup(def.getObjectIdentifier());
+			def.setKey(key);
+						
+			notification.throwEvent(key, caller, ProcessDefinition.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessDefinition.OBJECT_TYPE, "findByName"), "");
+			return def;
+		} catch (RegistryServiceException | RuntimeEngineException | IdentifierNotRegisteredException | NotificationServiceException e) {
+			throw new RuntimeServiceException("unable to find process definition", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void startProcessInstance(String key, String definition, Map<String, Object> variables) throws RuntimeServiceException, AccessDeniedException {
+		logger.log(Level.INFO, "Starting process instance with key: " + key);
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			
+			ProcessDefinition def = engine.findLatestProcessDefinitionsForName(definition);
+			if ( def == null ) {
+				throw new RuntimeServiceException("unable to find a process definition with key: " + definition);
+			}
+			String dkey = registry.lookup(def.getObjectIdentifier());
+			authorisation.checkPermission(dkey, subjects, "start");
+			
+			String bkey = UUID.randomUUID().toString();
+			registry.register(key, new OrtolangObjectIdentifier(RuntimeService.SERVICE_NAME, ProcessInstance.OBJECT_TYPE, bkey), caller);
+			authorisation.createPolicy(key, caller);
+
+			variables.put(ProcessInstance.INITIER, caller);
+			engine.startProcessInstance(def.getId(), bkey, variables);
 			
 			notification.throwEvent(key, caller, ProcessInstance.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessInstance.OBJECT_TYPE, "start"), "");
-		} catch (RegistryServiceException | NotificationServiceException e) {
-			logger.log(Level.WARNING, "an error occured during starting process execution", e);
-			throw new RuntimeServiceException("unable to start process execution for key [" + key + "]", e);
+		} catch (Exception e) {
+			throw new RuntimeServiceException("unable to start process Instance ", e);
 		}
 	}
 	
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void abortProcessInstance(String key) throws RuntimeServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "aborting process instance execution for key [" + key + "]");
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<ProcessInstance> listProcessInstances(String initier, boolean active) throws RuntimeServiceException, AccessDeniedException {
+		logger.log(Level.INFO, "Listing " + ((active)?"active":"all") + " process instances with " + ((initier!=null)?initier:"any") + " initier");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
+			if ( initier != null && initier.length() > 0 ) {
+				authorisation.checkSuperUser(caller);
+			} else {
+				initier = caller;
+			}
+			
+			List<ProcessInstance> allinstances = engine.listProcessInstances(initier, active);
+			List<ProcessInstance> instances = new ArrayList<ProcessInstance> ();
+			for (ProcessInstance instance : allinstances) {
+				try {
+					String ikey = registry.lookup(instance.getObjectIdentifier());
+					instance.setKey(ikey);
+					instances.add(instance);
+				} catch ( IdentifierNotRegisteredException e ) {
+					logger.log(Level.FINE, "unregistered process instance found in storage for id: " + instance.getId());
+				}
+			}
+			return instances;
+		} catch ( RuntimeEngineException | RegistryServiceException | AuthorisationServiceException e ) {
+			throw new RuntimeServiceException("unable to list process instances", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public ProcessInstance readProcessInstance(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "Reading process instance with key: " + key);
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkPermission(key, subjects, "read");
 			
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, ProcessInstance.OBJECT_TYPE);
-			ProcessInstance process = em.find(ProcessInstance.class, identifier.getId());
-			if (process == null) {
-				throw new RuntimeServiceException("unable to find a process for id " + identifier.getId());
+			ProcessInstance instance = engine.getProcessInstance(identifier.getId());
+			if ( instance == null )  {
+				throw new RuntimeServiceException("unable to find a process instance with id: " + identifier.getId());
 			}
-			if (process.getState().equals(ProcessState.ABORTED)) {
-				throw new RuntimeServiceException("process is already in state " + ProcessState.ABORTED);
-			}
-			if (process.getState().equals(ProcessState.COMPLETED)) {
-				throw new RuntimeServiceException("unable to abort a process that is in state " + ProcessState.COMPLETED);
-			}
-			process.setState(ProcessState.ABORTED);
-			process.putParam(ProcessInstance.PARAM_STOP,System.currentTimeMillis() + "");
-			process.addLogEntry("Process aborted");
-			em.merge(process);
+			instance.setKey(key);
+						
+			notification.throwEvent(key, caller, ProcessInstance.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessInstance.OBJECT_TYPE, "read"), "");
+			return instance;
+		} catch (Exception e) {
+			throw new RuntimeServiceException("unable to read process instance", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<ProcessTask> listAllProcessTasks() throws RuntimeServiceException, AccessDeniedException {
+		logger.log(Level.INFO, "Listing all process tasks");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			authorisation.checkSuperUser(caller);
 			
-			registry.update(key);
+			//TODO in case of registry mapping of tasks, perform reverse lookup
+			List<ProcessTask> tasks = engine.listAllProcessTasks();
+			return tasks;
+		} catch (AuthorisationServiceException | RuntimeEngineException e) {
+			throw new RuntimeServiceException(e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<ProcessTask> listCandidateProcessTasks() throws RuntimeServiceException {
+		logger.log(Level.INFO, "Listing candidate process tasks for connected user ");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> groups = membership.getProfileGroups(caller);
 			
-			notification.throwEvent(key, caller, ProcessInstance.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessInstance.OBJECT_TYPE, "stop"), "");
-		} catch (RegistryServiceException | NotificationServiceException e) {
-			logger.log(Level.WARNING, "an error occured during stopping process execution", e);
-			throw new RuntimeServiceException("unable to stop process execution for key [" + key + "]", e);
+			//TODO in case of registry mapping of tasks, perform reverse lookup
+			List<ProcessTask> tasks = new ArrayList<ProcessTask> ();
+			tasks.addAll(engine.listCandidateGroupsProcessTasks(groups));
+			tasks.addAll(engine.listCandidateProcessTasks(caller));
+			return tasks;
+		} catch (RuntimeEngineException | MembershipServiceException | KeyNotFoundException | AccessDeniedException e) {
+			throw new RuntimeServiceException(e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<ProcessTask> listAssignedProcessTasks() throws RuntimeServiceException {
+		logger.log(Level.INFO, "Listing assigned process tasks for connected user ");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
+			//TODO in case of registry mapping of tasks, perform reverse lookup
+			List<ProcessTask> tasks = engine.listAssignedProcessTasks(caller);
+			return tasks;
+		} catch (RuntimeEngineException e) {
+			throw new RuntimeServiceException(e);
 		}
 	}
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void notifyTaskExecution(Task task) throws RuntimeServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "notify task execution for process [" + task.getProcessKey() + "]");
+	public void claimProcessTask(String id) throws RuntimeServiceException {
+		logger.log(Level.INFO, "Claiming process task with id: " + id);
+		String caller = membership.getProfileKeyForConnectedIdentifier();
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			OrtolangObjectIdentifier identifier = registry.lookup(task.getProcessKey());
-			checkObjectType(identifier, ProcessInstance.OBJECT_TYPE);
-			ProcessInstance process = em.find(ProcessInstance.class, identifier.getId());
-			if (process == null) {
-				throw new RuntimeServiceException("unable to find a process for id " + identifier.getId());
-			}
-			if (process.getState().equals(ProcessState.ABORTED)) {
-				throw new RuntimeServiceException("unable to notify a process that is in state " + ProcessState.ABORTED);
-			}
-			if (process.getState().equals(ProcessState.COMPLETED)) {
-				throw new RuntimeServiceException("unable to notify a process that is in state " + ProcessState.COMPLETED);
-			}
-			process.addLogEntry("notification received for task with key : " + task.getKey());
-			process.addLogEntry(task.getLog());
-			
-			//TODO manage other task states...
-			if ( task.getState().equals(TaskState.COMPLETED) ) {
-				process.putAllParams(task.getParams());
-				ProcessDefinition definition = findProcessDefinition(process.getType());
-				ProcessStep step = definition.getStep(process.getCurrentStep()+1);
-				if ( step == null ) {
-					process.setState(ProcessState.COMPLETED);
-					process.putParam(ProcessInstance.PARAM_STOP,System.currentTimeMillis() + "");
-					process.addLogEntry("Process completed."); 
-				} else {
-					process.setCurrentStep(process.getCurrentStep()+1);
-					try {
-						String taskKey = UUID.randomUUID().toString(); 
-						Task nextTask = (Task) step.getTaskClass().newInstance();
-						nextTask.setKey(taskKey);
-						nextTask.setParams(process.getParams());
-						nextTask.setProcessKey(task.getProcessKey());
-						nextTask.setProcessStep(process.getCurrentStep());
-						Runnable ctxTask = contextService.createContextualProxy(nextTask, Runnable.class);
-						executor.schedule(ctxTask, 10, TimeUnit.SECONDS);
-						
-						process.setState(ProcessState.ACTIVE);
-						process.putParam(ProcessInstance.PARAM_START,System.currentTimeMillis() + "");
-						process.addLogEntry("Task created for step " + process.getCurrentStep() + " with key: " + taskKey);
-					} catch (InstantiationException | IllegalAccessException e) {
-						logger.log(Level.SEVERE, "unable to instanciate next task", e);
-						process.setState(ProcessState.ABORTED);
-						process.putParam(ProcessInstance.PARAM_STOP,System.currentTimeMillis() + "");
-						process.addLogEntry("Unable to create task for step " + process.getCurrentStep() + ": " + e.getMessage());
-						process.addLogEntry("Process aborted");
-					}
-				}
-			}
-			if ( task.getState().equals(TaskState.ERROR) ) {
-				process.setState(ProcessState.ABORTED);
-				process.putParam(ProcessInstance.PARAM_STOP,System.currentTimeMillis() + "");
-				process.addLogEntry("Task in error, process aborted");
-			}
-			em.merge(process);
-			
-			registry.update(task.getProcessKey());
-			
-			notification.throwEvent(task.getProcessKey(), caller, ProcessInstance.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, ProcessInstance.OBJECT_TYPE, "notify"), "");
-		} catch (RegistryServiceException | NotificationServiceException e) {
-			logger.log(Level.WARNING, "an error occured during notifying process execution", e);
-			throw new RuntimeServiceException("unable to notify process execution of event for task with key [" + task.getKey() + "]", e);
+			engine.claimProcessTask(id, caller);
+		} catch ( ActivitiObjectNotFoundException e ) {
+			throw new RuntimeServiceException("unable to find a task with id: " + id);
+		} catch ( ActivitiTaskAlreadyClaimedException e ) {
+			throw new RuntimeServiceException("unable to claim the task with id: " + id + ", task already claimed by another user");
+		} catch (RuntimeEngineException e) {
+			throw new RuntimeServiceException(e);
 		}
 	}
 	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void completeProcessTask(String id, Map<String, Object> params) throws RuntimeServiceException {
+		logger.log(Level.INFO, "Completing task with id: " + id);
+		try {
+			engine.completeProcessTask(id, params);
+		} catch ( ActivitiObjectNotFoundException e ) {
+			throw new RuntimeServiceException("unable to find a task with id: " + id);
+		} catch (RuntimeEngineException e) {
+			throw new RuntimeServiceException(e);
+		}
+	}
+
 	@Override
 	public String getServiceName() {
 		return RuntimeService.SERVICE_NAME;
@@ -441,12 +389,7 @@ public class RuntimeServiceBean implements RuntimeService {
 
 	@Override
 	public String[] getObjectPermissionsList(String type) throws OrtolangException {
-		for (int i = 0; i < OBJECT_PERMISSIONS_LIST.length; i++) {
-			if (OBJECT_PERMISSIONS_LIST[i][0].equals(type)) {
-				return OBJECT_PERMISSIONS_LIST[i][1].split(",");
-			}
-		}
-		throw new OrtolangException("Unable to find object permissions list for object type : " + type);
+		return new String[] {};
 	}
 
 	@Override
@@ -458,6 +401,10 @@ public class RuntimeServiceBean implements RuntimeService {
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 			}
 
+			if (identifier.getType().equals(ProcessDefinition.OBJECT_TYPE)) {
+				return readProcessDefinition(key);
+			}
+			
 			if (identifier.getType().equals(ProcessInstance.OBJECT_TYPE)) {
 				return readProcessInstance(key);
 			}
@@ -466,15 +413,6 @@ public class RuntimeServiceBean implements RuntimeService {
 		} catch (RuntimeServiceException | RegistryServiceException e) {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
-	}
-	
-	private ProcessDefinition findProcessDefinition(String type) throws RuntimeServiceException {
-		for ( ProcessDefinition definition : definitions ) {
-			if ( definition.getName().equals(type) ) {
-				return definition;
-			}
-		}
-		throw new RuntimeServiceException("Unable to find a process definition for type " + type);
 	}
 	
 	private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws RuntimeServiceException {
