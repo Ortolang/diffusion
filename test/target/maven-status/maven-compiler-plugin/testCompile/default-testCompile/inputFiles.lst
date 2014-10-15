@@ -1,0 +1,12 @@
+/home/jerome/Work/workspace/diffusion-server-workflow/test/src/test/java/fr/ortolang/diffusion/api/bench/WorkspaceBench.java
+/home/jerome/Work/workspace/diffusion-server-workflow/test/src/test/java/fr/ortolang/diffusion/api/client/OrtolangRestClientException.java
+/home/jerome/Work/workspace/diffusion-server-workflow/test/src/test/java/fr/ortolang/diffusion/api/bench/CookieFilter.java
+/home/jerome/Work/workspace/diffusion-server-workflow/test/src/test/java/fr/ortolang/diffusion/api/builder/WorkspaceBuilder.java
+/home/jerome/Work/workspace/diffusion-server-workflow/test/src/test/java/fr/ortolang/diffusion/api/test/WorkspaceTest.java
+/home/jerome/Work/workspace/diffusion-server-workflow/test/src/test/java/fr/ortolang/diffusion/api/bench/BenchSuite.java
+/home/jerome/Work/workspace/diffusion-server-workflow/test/src/test/java/fr/ortolang/diffusion/api/builder/DataBuilder.java
+/home/jerome/Work/workspace/diffusion-server-workflow/test/src/test/java/fr/ortolang/diffusion/api/config/ClientConfig.java
+/home/jerome/Work/workspace/diffusion-server-workflow/test/src/test/java/fr/ortolang/diffusion/api/usecase/ImportBagItAndPublishUseCase.java
+/home/jerome/Work/workspace/diffusion-server-workflow/test/src/test/java/fr/ortolang/diffusion/api/usecase/WorkAndPublishUseCase.java
+/home/jerome/Work/workspace/diffusion-server-workflow/test/src/test/java/fr/ortolang/diffusion/api/client/OrtolangRestClient.java
+/home/jerome/Work/workspace/diffusion-server-workflow/test/src/test/java/fr/ortolang/diffusion/api/bench/PlateformBench.java
