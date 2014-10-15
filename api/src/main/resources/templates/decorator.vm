@@ -28,7 +28,9 @@
           <ul class="nav navbar-nav">
             <li><a href="$base/rest/objects">Objects</a></li>
             <li><a href="$base/rest/workspaces">Workspaces</a></li>
-            <li><a href="$base/rest/processes">Processes</a></li>
+            <li><a href="$base/rest/runtime/definitions">Process Definition</a></li>
+            <li><a href="$base/rest/runtime/instances">Running Processes</a></li>
+            <li><a href="$base/rest/runtime/tasks">Tasks</a></li>
             <li><a href="$base/rest/profiles/connected">Profile</a></li>
             <!--
             <li><a href="$base/rest/objects/index">Plain Text Search</a></li>

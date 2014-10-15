@@ -13,7 +13,6 @@ import org.openrdf.model.impl.StatementImpl;
 import org.openrdf.model.impl.URIImpl;
 
 import fr.ortolang.diffusion.OrtolangIndexableObject;
-import fr.ortolang.diffusion.OrtolangObjectProperty;
 
 public class TripleStoreStatementBuilder {
 	

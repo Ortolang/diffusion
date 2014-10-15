@@ -10,8 +10,6 @@
     	<!-- Ortolang system properties -->
     	<rdf:type rdf:resource="http://www.ortolang.fr/2014/09/market#FullTextDatabase"/>
     
-    	<dc:identifier>${targetKey}</dc:identifier>
-    
         <!-- Nom du projet -->
         <dc:title xml:lang="fr">Frantext « textes libres de droits »</dc:title>
         

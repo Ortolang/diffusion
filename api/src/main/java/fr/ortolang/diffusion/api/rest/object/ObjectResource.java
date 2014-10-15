@@ -77,7 +77,7 @@ public class ObjectResource {
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit)
 			throws BrowserServiceException {
-		logger.log(Level.INFO, "list objects, offset=" + offset + ", limit=" + limit);
+		logger.log(Level.INFO, "GET /objects?offset=" + offset + "&limit=" + limit);
 		List<String> keys = browser.list(offset, limit, "", "");
 		long nbentries = browser.count("", "");
 		UriBuilder objects = DiffusionUriBuilder.getRestUriBuilder().path(ObjectResource.class);
@@ -103,7 +103,7 @@ public class ObjectResource {
 	@Template( template="objects/detail.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response get(@PathParam(value = "key") String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, SecurityServiceException, OrtolangException {
-		logger.log(Level.INFO, "get object for key: " + key);
+		logger.log(Level.INFO, "GET /objects/" + key);
 		OrtolangObject object = browser.findObject(key);
 		OrtolangObjectState state = browser.getState(key);
 		OrtolangObjectInfos infos = browser.getInfos(key);
@@ -153,7 +153,7 @@ public class ObjectResource {
 	@GET
 	@Path("/{key}/download")
 	public void download(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, DataNotFoundException, IOException, CoreServiceException {
-		logger.log(Level.INFO, "downloading object content with key : " + key);
+		logger.log(Level.INFO, "GET /objects/" + key + "/download");
 		OrtolangObject object = browser.findObject(key);
 		if ( object instanceof DataObject ) {
 			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
@@ -176,7 +176,7 @@ public class ObjectResource {
 	@GET
 	@Path("/{key}/preview")
 	public void preview(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, DataNotFoundException, IOException, CoreServiceException {
-		logger.log(Level.INFO, "previewing object content with key : " + key);
+		logger.log(Level.INFO, "GET /objects/" + key + "/preview");
 		OrtolangObject object = browser.findObject(key);
 		if ( object instanceof DataObject ) {
 			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
@@ -197,6 +197,7 @@ public class ObjectResource {
 	@Template( template="semantic/query.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.TEXT_HTML})
 	public Response semanticSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
+		logger.log(Level.INFO, "GET /objects/semantic?query=" + query);
 		if ( query != null && query.length() > 0 ) {
 			String queryEncoded = "";
 			try {

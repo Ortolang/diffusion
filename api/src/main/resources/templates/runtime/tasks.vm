@@ -1,0 +1,42 @@
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<h3 class="panel-title"><strong>List of assigned workflow tasks</strong></h3>
+	</div>
+	<div class="panel-body">
+		<table class="table table-condensed table-hover">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Owner</th>
+					<th>Assignee</th>
+					<th>Priority</th>
+					<th>Creation Date</th>
+					<th>Due Date</th>
+					<th>Suspended</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+			#foreach( $entry in $entity.entries )
+				<tr>
+					<td>$foreach.count</td>
+					<td>$entry.id</td>
+					<td>$entry.name</td>
+					<td>$!entry.owner</td>
+					<td>$!entry.assignee</td>
+					<td>$entry.priority</td>
+					<td>$entry.creationDate</td>
+					<td>$!entry.dueDate</td>
+					<td>$entry.suspended</td>
+					<td>
+						<div class="btn-group"><a class="btn btn-default btn-xs" href="tasks/$entry.id">claim</a></div>
+						<div class="btn-group"><a class="btn btn-default btn-xs" href="tasks/$entry.id">complete</a></div>
+					</td>
+				</tr>
+			#end
+			</tbody>
+		</table>
+	</div>
+</div>

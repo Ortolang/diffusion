@@ -15,10 +15,9 @@ import fr.ortolang.diffusion.api.rest.mapper.SearchServiceExceptionMapper;
 import fr.ortolang.diffusion.api.rest.mapper.SecurityServiceExceptionMapper;
 import fr.ortolang.diffusion.api.rest.object.ObjectResource;
 import fr.ortolang.diffusion.api.rest.plugin.PluginResource;
-import fr.ortolang.diffusion.api.rest.process.ProcessResource;
 import fr.ortolang.diffusion.api.rest.profile.ProfileResource;
+import fr.ortolang.diffusion.api.rest.runtime.RuntimeResource;
 import fr.ortolang.diffusion.api.rest.template.TemplateFilter;
-import fr.ortolang.diffusion.api.rest.upload.UploadResource;
 import fr.ortolang.diffusion.api.rest.workspace.WorkspaceResource;
 
 @ApplicationPath("/rest/*")
@@ -30,8 +29,7 @@ public class DiffusionApplication extends Application {
 		classes.add(ObjectResource.class);
 		classes.add(WorkspaceResource.class);
 		classes.add(ProfileResource.class);
-		classes.add(ProcessResource.class);
-		classes.add(UploadResource.class);
+		classes.add(RuntimeResource.class);
 		classes.add(PluginResource.class);
 	}
 

@@ -39,7 +39,7 @@ public class ProfileResource {
 	@Path("/connected")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
 	public Response getConnected() throws MembershipServiceException, KeyNotFoundException, ProfileAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "reading connected profile");
+		logger.log(Level.INFO, "GET /profiles/connected");
 		String key = membership.getProfileKeyForConnectedIdentifier();
 		if (MembershipService.UNAUTHENTIFIED_IDENTIFIER.equals(key)) {
 			throw new AccessDeniedException(MembershipService.UNAUTHENTIFIED_IDENTIFIER + " is not considered as a connected identifier");
@@ -59,7 +59,7 @@ public class ProfileResource {
 	@Template(template = "profiles/detail.vm", types = { MediaType.TEXT_HTML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
 	public Response getProfile(@PathParam(value = "key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "reading profile for key: " + key);
+		logger.log(Level.INFO, "GET /profiles/" + key);
 		Profile profile = membership.readProfile(key);
 		ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
 		return Response.ok(representation).build();
@@ -70,7 +70,7 @@ public class ProfileResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateProfile(@PathParam(value = "key") String key, ProfileRepresentation representation) throws MembershipServiceException, KeyNotFoundException,
 			AccessDeniedException {
-		logger.log(Level.INFO, "updating profile for key: " + key);
+		logger.log(Level.INFO, "PUT /profiles/" + key);
 		membership.updateProfile(key, representation.getFullname(), representation.getEmail());
 		return Response.noContent().build();
 	}
