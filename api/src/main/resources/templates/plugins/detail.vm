@@ -1,0 +1,29 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><strong>Showing plugin '$entity.key'</strong></h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Name</strong></p></div>
+	  <div class="col-md-10">$entity.name</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Description</strong></p></div>
+	  <div class="col-md-10">$entity.description</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Detail</strong></p></div>
+	  <div class="col-md-10">$entity.detail</div>
+    </div>
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Available for files of type : </strong></p></div>
+	  <div class="col-md-10">
+		<ul class="table table-condensed table-hover">
+	  	#foreach( $entry in $entity.formats )
+			<li>$entry</li>
+		#end
+		</ul>
+	 </div>
+    </div>
+  </div>
+</div>

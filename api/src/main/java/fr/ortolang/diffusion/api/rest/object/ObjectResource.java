@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,8 +38,12 @@ import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.MetadataElement;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
+import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.search.SearchServiceException;
@@ -131,6 +137,20 @@ public class ObjectResource {
 	}
 	
 	@GET
+	@Path("/{key}/keys")
+	public Response listKeys(@PathParam(value = "key") String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "list keys contains in object "+key);
+		
+		List<String> keys = this.listKeys(key, new ArrayList<String>());
+		
+		GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String> ();
+		for ( String keyE : keys ) {
+			representation.addEntry(keyE);
+		}
+		return Response.ok(representation).build();
+	}
+	
+	@GET
 	@Path("/{key}/download")
 	public void download(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, DataNotFoundException, IOException, CoreServiceException {
 		logger.log(Level.INFO, "GET /objects/" + key + "/download");
@@ -193,5 +213,41 @@ public class ObjectResource {
 		}
 	}
 
+
+	/**
+	 * List of keys contains in a object.
+	 * @param client
+	 * @param key
+	 * @param buffer
+	 * @return
+	 * @throws AccessDeniedException 
+	 * @throws KeyNotFoundException 
+	 * @throws OrtolangException 
+	 */
+	protected List<String> listKeys(String key, List<String> keys) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+		
+		OrtolangObject object = browser.findObject(key);
+		String type = object.getObjectIdentifier().getType();
+		
+		keys.add(key);
+		
+		if(type.equals(Collection.OBJECT_TYPE)) {
+			Set<CollectionElement> elements = ((Collection) object).getElements();
+			
+			for(CollectionElement element : elements) {
+				listKeys(element.getKey(), keys);
+			}
+		}
+		
+		if(object instanceof MetadataSource) {
+			Set<MetadataElement> metadatas = ((MetadataSource) object).getMetadatas();
+			
+			for(MetadataElement metadata : metadatas) {
+				keys.add(metadata.getKey());
+			}
+		}
+			
+		return keys;
+	}
 	
 }
