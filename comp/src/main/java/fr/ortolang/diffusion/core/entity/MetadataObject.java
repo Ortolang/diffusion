@@ -7,6 +7,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.persistence.Version;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -30,6 +31,8 @@ public class MetadataObject extends OrtolangObject {
 
 	@Id
 	private String id;
+	@Version
+	private long version;
 	@Transient
 	private String key;
 	private String name;

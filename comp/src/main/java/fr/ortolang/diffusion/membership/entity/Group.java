@@ -5,6 +5,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.persistence.Version;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -16,8 +17,11 @@ import fr.ortolang.diffusion.membership.MembershipService;
 public class Group extends OrtolangObject {
 	
 	public static final String OBJECT_TYPE = "group";
+	
 	@Id
 	private String id;
+	@Version
+	private long version;
 	@Transient
 	private String key;
 	private String name;

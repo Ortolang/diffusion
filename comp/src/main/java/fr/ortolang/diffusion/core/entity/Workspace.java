@@ -12,6 +12,7 @@ import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
+import javax.persistence.Version;
 
 import org.hibernate.annotations.Type;
 
@@ -30,6 +31,8 @@ public class Workspace extends OrtolangObject {
 	
 	@Id
 	private String id;
+	@Version
+	private long version;
 	@Transient
 	private String key;
 	private String type;

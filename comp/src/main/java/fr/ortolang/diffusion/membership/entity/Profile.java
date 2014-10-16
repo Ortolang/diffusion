@@ -4,6 +4,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Transient;
+import javax.persistence.Version;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -17,6 +18,8 @@ public class Profile extends OrtolangObject {
 	
 	@Id
 	private String id;
+	@Version
+	private long version;
 	@Transient
 	private String key;
 	private String fullname;

@@ -14,6 +14,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.persistence.Version;
 
 import org.hibernate.annotations.Type;
 
@@ -29,6 +30,8 @@ public class RegistryEntry implements Serializable {
 
 	@Id
 	private String key;
+	@Version
+	private long version;
 	private boolean hidden;
 	private boolean deleted;
 	private String lock;

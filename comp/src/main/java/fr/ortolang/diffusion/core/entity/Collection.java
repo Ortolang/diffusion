@@ -13,6 +13,7 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Transient;
+import javax.persistence.Version;
 
 import org.hibernate.annotations.Type;
 
@@ -30,6 +31,8 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	
 	@Id
 	private String id;
+	@Version
+	private long version;
 	@Transient
 	private String key;
 	private boolean root;
@@ -45,9 +48,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	private String metadatasContent = "";
 	
 	@Transient
-	private Set<CollectionElement> cacheElements = null;
-	@Transient
-	private boolean cacheValid = false;
+	private Set<CollectionElement> elements = null;
 	
 	public Collection() {
 		segments = new HashSet<String>();
@@ -110,10 +111,10 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	}
 	
 	public Set<CollectionElement> getElements() {
-		if ( cacheValid && cacheElements != null ) {
-			return cacheElements;
+		if ( elements != null ) {
+			return elements;
 		} else {
-			Set<CollectionElement> elements = new HashSet<CollectionElement>();
+			elements = new HashSet<CollectionElement>();
 			for ( String segment : segments ) {
 				if ( segment.length() > 0 ) {
 					for ( String element : Arrays.asList(segment.split("\n")) ) {
@@ -121,19 +122,17 @@ public class Collection extends OrtolangObject implements MetadataSource {
 					}
 				}
 			}
-			cacheElements = elements;
-			cacheValid = true;
 			return elements;
 		}
 	}
 	
 	public void clearElements() {
-		cacheValid = false;
+		elements = null;
 		segments.clear();
 	}
 	
 	public void setElements(Set<CollectionElement> elements) {
-		cacheValid = false;
+		this.elements = elements;
 		segments.clear();
 		StringBuffer newsegment = new StringBuffer();
 		for ( CollectionElement element : elements ) {
@@ -154,7 +153,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	
 	public boolean addElement(CollectionElement element) {
 		if ( !containsElement(element) ) {
-			cacheValid = false;
+			elements = null;
 			String serializedElement = element.serialize();
 			String freesegment = "";
 			for ( String segment : segments ) {
@@ -178,7 +177,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	
 	public boolean removeElement(CollectionElement element) {
 		if ( containsElement(element) ) {
-			cacheValid = false;
+			elements = null;
 			String newsegment = "";
 			for ( String segment : segments ) {
 				if ( segment.indexOf(element.serialize()) != -1 ) {

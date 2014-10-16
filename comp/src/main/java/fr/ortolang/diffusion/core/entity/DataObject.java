@@ -13,6 +13,7 @@ import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Transient;
+import javax.persistence.Version;
 
 import org.hibernate.annotations.Type;
 
@@ -31,6 +32,8 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 
 	@Id
 	private String id;
+	@Version
+	private long version;
 	@Transient
 	private String key;
 	private int clock;
