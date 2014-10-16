@@ -16,6 +16,7 @@ import javax.ejb.Local;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
@@ -37,8 +38,10 @@ import org.openrdf.sail.nativerdf.NativeStore;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
+import fr.ortolang.diffusion.store.DeleteFileVisitor;
 
 @Local(TripleStoreService.class)
+@Startup
 @Singleton(name = TripleStoreService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @RolesAllowed({"system", "user"})
@@ -61,6 +64,10 @@ public class TripleStoreServiceBean implements TripleStoreService {
     public void init() {
     	logger.log(Level.INFO, "Initializing service with base folder: " + base);
     	try {
+    		if ( Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.triple.purge")) ) {
+				logger.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
+				Files.walkFileTree(base, new DeleteFileVisitor());
+			} 
     		Files.createDirectories(base);
     		repository = new SailRepository(new NativeStore(base.toFile()));
             repository.initialize();

@@ -5,8 +5,10 @@ public class PathBuilder {
 	
 	public static final String PATH_SEPARATOR = "/";
 	public static final char PATH_SEPARATOR_CHAR = '/';
-	private static final String VALID_PATH_REGEXP = PATH_SEPARATOR + "|" + PATH_SEPARATOR + "[a-zA-Z0-9\\-_.~=:&+$,]+(" + PATH_SEPARATOR + "[a-zA-Z0-9\\-_.~=:&+$,]+)*";
-
+	//private static final int MAX_PATH_SIZE = 4096;
+	private static final int MAX_PATHPART_SIZE = 255;
+	private static final String VALID_PATH_REGEXP = PATH_SEPARATOR + "|" + PATH_SEPARATOR + "[^\\/?%*:|\"<>~\t]{1," + MAX_PATHPART_SIZE + "}+(" + PATH_SEPARATOR + "[^\\/?%*:|\"<>~\t]{1," + MAX_PATHPART_SIZE + "}+)*";
+	
 	private StringBuffer buffer;
 	
 	private PathBuilder() {

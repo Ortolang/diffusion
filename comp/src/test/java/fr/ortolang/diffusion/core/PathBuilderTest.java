@@ -72,7 +72,16 @@ public class PathBuilderTest {
 	
 	@Test
 	public void testBuildFromInvalidPath() {
-		String[] invalidpaths = new String[] { "/toto|2", "/(aka12)", "/tésté", "/é" };
+		String[] invalidpaths = new String[] { 
+				"/toto|2", 
+				"/tés~té", 
+				"/he\"llo\"/delu", 
+				"/<yop>/enslip", 
+				"/that*is/bullshit", 
+				"/10%", 
+				"/what?",
+				"/abc	def",
+				"/aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjjkkkkkkkkkkllllllllllmmmmmmmmmmnnnnnnnnnnooooooooooppppppppppqqqqqqqqqqrrrrrrrrrrssssssssssttttttttttuuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyyyyzzzzzzzzzz"};
 		
 		for ( String path : invalidpaths ) {
 			try {
@@ -80,6 +89,34 @@ public class PathBuilderTest {
 				fail("Build from path: " + path + " should have raised an InvalidPathException but have produced: " + built);
 			} catch ( InvalidPathException e ) {
 				//
+			}
+		}
+	}
+	
+	@Test
+	public void testBuildFromValidPath() {
+		String[] validpaths = new String[] { 
+				"/(aka12)",
+				"/toto/2 3 4/bidule", 
+				"/é²ùµ$£ø!§;.,n",
+				"/+={zapet}_`",
+				"/[a]{b}#c@d°æ€â",
+				"/$êþÿûîœôöŀïüð¬’↓‘ ëäß«»©ë",
+				"/ˇ¹²³",
+				"/öïüëä",
+				"/abcdefghijklmnopqrstuvwxyz",
+				"/ABCDEFGHIUJKLMNOPQRSTUVWXYZ",
+				"/0123456789",
+				"/↙↓↘←↔→↖↑↗÷×−-+",
+				"/¡×¿ø",
+				"/aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggggggggghhhhhhhhhhiiiiiiiiiijjjjjjjjjjkkkkkkkkkkllllllllllmmmmmmmmmmnnnnnnnnnnooooooooooppppppppppqqqqqqqqqqrrrrrrrrrrssssssssssttttttttttuuuuuuuuuuvvvvvvvvvvwwwwwwwwwwxxxxxxxxxxyyyyyyyyyyyyzzz", 
+		};
+		
+		for ( String path : validpaths ) {
+			try {
+				PathBuilder.fromPath(path).build();
+			} catch ( InvalidPathException e ) {
+				fail("Build from path: " + path + " should not have raised any exception");
 			}
 		}
 	}

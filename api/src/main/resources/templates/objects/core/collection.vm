@@ -50,6 +50,7 @@
 		   		<th>#</th>
 		   		<th>Type</th>
 		   		<th>Name</th>
+		   		<th>MimeType</th>
 		   		<th>Key</th>
 		  	</tr>
 		 </thead>
@@ -59,6 +60,7 @@
 				<td>$foreach.count</td>
 				<td>$element.type</td>
 				<td>$element.name</td>
+				<td>$element.mimeType</td>
 				<td><a href="./$element.key">$element.key</a></td>
 		   	</tr>
 		    #end

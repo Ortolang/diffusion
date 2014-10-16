@@ -210,7 +210,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	
 	public boolean containsElementName(String name) {
 		for ( String segment : segments ) {
-			if ( segment.indexOf("/" + name + "/") != -1 ) {
+			if ( segment.indexOf("\t" + name + "\t") != -1 ) {
 				return true;
 			}
 		}
@@ -219,7 +219,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	
 	public boolean containsElementKey(String key) {
 		for ( String segment : segments ) {
-			if ( segment.indexOf("/" + key) != -1 ) {
+			if ( segment.indexOf("\t" + key) != -1 ) {
 				return true;
 			}
 		}
@@ -227,7 +227,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	}
 	
 	public CollectionElement findElementByName(String name) {
-		Pattern pattern = Pattern.compile("(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")/" + name + "/([0-9]{13})/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
+		Pattern pattern = Pattern.compile("(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\t" + name + "\t([0-9]{13})\t([^\t]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
 		for ( String segment : segments ) {
 			Matcher matcher = pattern.matcher(segment);
 			if ( matcher.matches() ) {

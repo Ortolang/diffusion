@@ -16,6 +16,7 @@ import javax.ejb.Local;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
+import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
@@ -24,6 +25,7 @@ import org.apache.tika.Tika;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.store.DeleteFileVisitor;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStream;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStreamFactory;
 import fr.ortolang.diffusion.store.binary.hash.SHA1FilterInputStreamFactory;
@@ -37,6 +39,7 @@ import fr.ortolang.diffusion.store.binary.hash.SHA1FilterInputStreamFactory;
  * @version 1.0
  */
 @Local(BinaryStoreService.class)
+@Startup
 @Singleton(name = BinaryStoreService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @RolesAllowed({"system", "user"})
@@ -64,6 +67,10 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 		this.factory = new SHA1FilterInputStreamFactory();
 		logger.log(Level.FINEST, "Initializing service with base folder: " + base);
 		try {
+			if ( Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.binary.purge")) ) {
+				logger.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
+				Files.walkFileTree(base, new DeleteFileVisitor());
+			}
 			Files.createDirectories(base);
 			Files.createDirectories(working);
 			Files.createDirectories(collide);

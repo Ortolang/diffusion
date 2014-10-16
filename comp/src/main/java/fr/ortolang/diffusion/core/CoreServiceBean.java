@@ -492,7 +492,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.clonePolicy(key, ws.getHead());
 			logger.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
 
-			parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, collection.getName(), System.currentTimeMillis(), key));
+			parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, collection.getName(), System.currentTimeMillis(), "ortolang/collection", key));
 			em.merge(parent);
 			registry.update(parent.getKey());
 			logger.log(Level.FINEST, "collection [" + key + "] added to parent [" + parent.getKey() + "]");
@@ -678,7 +678,7 @@ public class CoreServiceBean implements CoreService {
 				em.merge(scollection);
 				registry.update(scollection.getKey());
 			}
-			dparent.addElement(new CollectionElement(Collection.OBJECT_TYPE, scollection.getName(), System.currentTimeMillis(), scollection.getKey()));
+			dparent.addElement(new CollectionElement(Collection.OBJECT_TYPE, scollection.getName(), System.currentTimeMillis(), "ortolang/collection", scollection.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
 			logger.log(Level.FINEST, "collection [" + scollection.getKey() + "] added to destination parent [" + dparent.getKey() + "]");
@@ -834,7 +834,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.clonePolicy(key, ws.getHead());
 			logger.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
 
-			parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), key));
+			parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getContentType(), key));
 			em.merge(parent);
 			registry.update(parent.getKey());
 			logger.log(Level.FINEST, "object [" + key + "] added to parent [" + parent.getKey() + "]");
@@ -940,20 +940,6 @@ public class CoreServiceBean implements CoreService {
 					throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 				}
 				object.setKey(element.getKey());
-				if (object.getClock() < ws.getClock()) {
-					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
-					parent.removeElement(element);
-					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getKey());
-					parent.addElement(celement);
-					registry.update(parent.getKey());
-					object = clone;
-				}
-				//TODO code to update last modification date of the parent 
-//				} else {
-//					parent.removeElement(element);
-//					CollectionElement celement = new CollectionElement(CollectionElementType.COLLECTION, object.getName(), System.currentTimeMillis(), object.getKey());
-//					parent.addElement(celement);
-//				}
 				object.setDescription(description);
 				object.setKey(element.getKey());
 				if (hash != null && hash.length() > 0) {
@@ -965,6 +951,19 @@ public class CoreServiceBean implements CoreService {
 					object.setContentType("application/octet-stream");
 					object.setStream("");
 				}
+				if (object.getClock() < ws.getClock()) {
+					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
+					parent.removeElement(element);
+					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getContentType(), clone.getKey());
+					parent.addElement(celement);
+					registry.update(parent.getKey());
+					object = clone;
+				} else {
+					parent.removeElement(element);
+					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getContentType(), object.getKey());
+					parent.addElement(celement);
+				}
+				em.merge(parent);
 				em.merge(object);
 				registry.update(object.getKey());
 				logger.log(Level.FINEST, "object updated");
@@ -1056,7 +1055,7 @@ public class CoreServiceBean implements CoreService {
 				em.merge(sobject);
 				registry.update(sobject.getKey());
 			}
-			dparent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, sobject.getName(), System.currentTimeMillis(), sobject.getKey()));
+			dparent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, sobject.getName(), System.currentTimeMillis(), sobject.getContentType(), sobject.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
 			logger.log(Level.FINEST, "object [" + sobject.getKey() + "] added to destination parent [" + dparent.getKey() + "]");
@@ -1200,7 +1199,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.clonePolicy(key, ws.getHead());
 			logger.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
 
-			parent.addElement(new CollectionElement(Link.OBJECT_TYPE, link.getName(), System.currentTimeMillis(), key));
+			parent.addElement(new CollectionElement(Link.OBJECT_TYPE, link.getName(), System.currentTimeMillis(), "ortolang/link", key));
 			em.merge(parent);
 			registry.update(parent.getKey());
 			logger.log(Level.FINEST, "link [" + key + "] added to parent [" + parent.getKey() + "]");
@@ -1320,7 +1319,7 @@ public class CoreServiceBean implements CoreService {
 				em.merge(slink);
 				registry.update(slink.getKey());
 			}
-			dparent.addElement(new CollectionElement(Link.OBJECT_TYPE, slink.getName(), System.currentTimeMillis(), slink.getKey()));
+			dparent.addElement(new CollectionElement(Link.OBJECT_TYPE, slink.getName(), System.currentTimeMillis(), "ortolang/link", slink.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
 			logger.log(Level.FINEST, "link [" + slink.getKey() + "] added to destination parent [" + dparent.getKey() + "]");
@@ -1523,7 +1522,7 @@ public class CoreServiceBean implements CoreService {
 					Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
 					if (parent != null && element != null) {
 						parent.removeElement(element);
-						parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getKey()));
+						parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), "ortolang/collection", clone.getKey()));
 						em.merge(parent);
 						registry.update(parent.getKey());
 					}
@@ -1547,7 +1546,7 @@ public class CoreServiceBean implements CoreService {
 				if (object.getClock() < ws.getClock()) {
 					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 					parent.removeElement(element);
-					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getKey()));
+					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getContentType(), clone.getKey()));
 					em.merge(parent);
 					registry.update(parent.getKey());
 					object = clone;
@@ -1570,7 +1569,7 @@ public class CoreServiceBean implements CoreService {
 				if (link.getClock() < ws.getClock()) {
 					Link clone = cloneLink(ws.getHead(), link, ws.getClock());
 					parent.removeElement(element);
-					parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getKey()));
+					parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), "ortolang/link", clone.getKey()));
 					em.merge(parent);
 					registry.update(parent.getKey());
 					link = clone;
@@ -1723,7 +1722,7 @@ public class CoreServiceBean implements CoreService {
 					if (collection.getClock() < ws.getClock()) {
 						Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
 						parent.removeElement(element);
-						parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getKey()));
+						parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), "ortolang/collection", clone.getKey()));
 						collection = clone;
 					}
 					mdelement = collection.findMetadataByName(name);
@@ -1739,7 +1738,7 @@ public class CoreServiceBean implements CoreService {
 					if (object.getClock() < ws.getClock()) {
 						DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 						parent.removeElement(element);
-						parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getKey()));
+						parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getContentType(), clone.getKey()));
 						object = clone;
 					}
 					mdelement = object.findMetadataByName(name);
@@ -1755,7 +1754,7 @@ public class CoreServiceBean implements CoreService {
 					if (link.getClock() < ws.getClock()) {
 						Link clone = cloneLink(ws.getHead(), link, ws.getClock());
 						parent.removeElement(element);
-						parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getKey()));
+						parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), "ortolang/link", clone.getKey()));
 						link = clone;
 					}
 					mdelement = link.findMetadataByName(name);
@@ -1856,7 +1855,7 @@ public class CoreServiceBean implements CoreService {
 				if (collection.getClock() < ws.getClock()) {
 					Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
 					parent.removeElement(element);
-					parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getKey()));
+					parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), "ortolang/collection", clone.getKey()));
 					collection = clone;
 				}
 				mdelement = collection.findMetadataByName(name);
@@ -1875,7 +1874,7 @@ public class CoreServiceBean implements CoreService {
 				if (object.getClock() < ws.getClock()) {
 					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 					parent.removeElement(element);
-					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getKey()));
+					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getContentType(), clone.getKey()));
 					object = clone;
 				}
 				mdelement = object.findMetadataByName(name);
@@ -1895,7 +1894,7 @@ public class CoreServiceBean implements CoreService {
 				if (link.getClock() < ws.getClock()) {
 					Link clone = cloneLink(ws.getHead(), link, ws.getClock());
 					parent.removeElement(element);
-					parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getKey()));
+					parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), "ortolang/link", clone.getKey()));
 					link = clone;
 				}
 				mdelement = link.findMetadataByName(name);
@@ -2288,7 +2287,7 @@ public class CoreServiceBean implements CoreService {
 						Velocity.evaluate(ctx, writer, log, isr);
 						logger.log(Level.INFO, "rendered metadata : " + writer.toString());
 						StringReader reader = new StringReader(writer.toString());
-						//Little hack (when tika will recognize N3, we can do with it)
+						//MAXI hack !! (when tika will recognize N3, we can do with it)
 						String contentType = metadata.getContentType();
 						if(metadata.getFormat().equals("market-ortolang-n3"))
 							contentType = "text/n3";
@@ -2412,7 +2411,7 @@ public class CoreServiceBean implements CoreService {
 				if (leaf.getClock() < clock) {
 					Collection clone = cloneCollection(root, leaf, clock);
 					parent.removeElement(element);
-					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getKey());
+					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), "ortolang/collection", clone.getKey());
 					parent.addElement(celement);
 					registry.update(parent.getKey());
 					leaf = clone;
