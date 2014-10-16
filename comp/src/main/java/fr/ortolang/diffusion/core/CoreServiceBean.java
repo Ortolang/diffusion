@@ -2272,7 +2272,12 @@ public class CoreServiceBean implements CoreService {
 					// TODO provide a dedicated template service
 					logger.log(Level.INFO, "rendering metadata content using template engine");
 					//TODO Add others formats compatible with the triplestore
-					if (metadata.getFormat().equals("rdf") && metadata.getStream() != null && metadata.getStream().length() > 0) {
+					List<String> rdfFormatCompatible = new ArrayList<String>();
+					rdfFormatCompatible.add("rdf");
+					rdfFormatCompatible.add("market-ortolang");
+					rdfFormatCompatible.add("market-ortolang-n3");
+					
+					if (rdfFormatCompatible.contains(metadata.getFormat()) && metadata.getStream() != null && metadata.getStream().length() > 0) {
 						VelocityContext ctx = new VelocityContext();
 						ctx.put("self", URIHelper.fromKey(key));
 						ctx.put("target", URIHelper.fromKey(metadata.getTarget()));
@@ -2283,7 +2288,11 @@ public class CoreServiceBean implements CoreService {
 						Velocity.evaluate(ctx, writer, log, isr);
 						logger.log(Level.INFO, "rendered metadata : " + writer.toString());
 						StringReader reader = new StringReader(writer.toString());
-						Set<Triple> triplesContent = TripleHelper.extractTriples(reader, metadata.getContentType());
+						//Little hack (when tika will recognize N3, we can do with it)
+						String contentType = metadata.getContentType();
+						if(metadata.getFormat().equals("market-ortolang-n3"))
+							contentType = "text/n3";
+						Set<Triple> triplesContent = TripleHelper.extractTriples(reader, contentType);
 						for (Triple triple : triplesContent) {
 							content.addTriple(triple);
 							logger.log(Level.INFO, "Add triple : "+triple.getSubject()+":"+triple.getPredicate()+":"+triple.getObject());
