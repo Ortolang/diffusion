@@ -1695,16 +1695,21 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load metadata with id [" + cidentifier.getId() + "] from storage");
 			}
 			if ( !cmeta.equals(format) || !cmeta.equals(hash) ) {
-				Collection parent = loadCollectionAtPath(ws.getHead(), ppath, ws.getClock());
-				logger.log(Level.FINEST, "parent collection loaded for path " + ppath.build());
-
-				CollectionElement element = parent.findElementByName(npath.part());
-				if (element == null) {
-					throw new InvalidPathException("path [" + npath.build() + "] does not exists");
+				String tkey = ws.getHead();
+				Collection parent = null;
+				CollectionElement element = null;
+				if (!npath.isRoot()) {
+					parent = loadCollectionAtPath(ws.getHead(), ppath, ws.getClock());
+					logger.log(Level.FINEST, "parent collection loaded for path " + ppath.build());
+					element = parent.findElementByName(npath.part());
+					if (element == null) {
+						throw new InvalidPathException("path [" + npath.build() + "] does not exists");
+					}
+					logger.log(Level.FINEST, "collection element found for name " + npath.part());
+					tkey = element.getKey();
 				}
-				logger.log(Level.FINEST, "collection element found for name " + npath.part());
-
-				OrtolangObjectIdentifier tidentifier = registry.lookup(element.getKey());
+				
+				OrtolangObjectIdentifier tidentifier = registry.lookup(tkey);
 				if (!tidentifier.getType().equals(Link.OBJECT_TYPE) && !tidentifier.getType().equals(Collection.OBJECT_TYPE) && !tidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
 					throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
 				}
@@ -1721,8 +1726,10 @@ public class CoreServiceBean implements CoreService {
 					}
 					if (collection.getClock() < ws.getClock()) {
 						Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
-						parent.removeElement(element);
-						parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), "ortolang/collection", clone.getKey()));
+						if (parent != null && element != null) {
+							parent.removeElement(element);
+							parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), "ortolang/collection", clone.getKey()));
+						}
 						collection = clone;
 					}
 					mdelement = collection.findMetadataByName(name);
@@ -1788,7 +1795,7 @@ public class CoreServiceBean implements CoreService {
 
 				notification.throwEvent(mdelement.getKey(), caller, MetadataObject.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "update"), "");
-				notification.throwEvent(element.getKey(), caller, tidentifier.getType(),
+				notification.throwEvent(tkey, caller, tidentifier.getType(),
 						OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "update-metadata"), "key=" + mdelement.getKey());
 			} else {
 				logger.log(Level.FINEST, "no changes detected with current metadata object, nothing to do");
