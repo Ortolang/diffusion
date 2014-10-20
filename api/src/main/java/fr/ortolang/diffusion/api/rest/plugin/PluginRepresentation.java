@@ -2,6 +2,8 @@ package fr.ortolang.diffusion.api.rest.plugin;
 
 import java.util.List;
 
+import javax.json.JsonArray;
+import javax.json.JsonObject;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -15,7 +17,8 @@ public class PluginRepresentation {
 	private String detail;
 	private String url;
 	private List<String> formats;
-	private String config;
+	private JsonArray configForm;
+	private JsonObject config;
 
 	public PluginRepresentation() {
 		super();
@@ -76,13 +79,20 @@ public class PluginRepresentation {
 	public void setUrl(String url) {
 		this.url = url;
 	}
-
 	
-	public String getConfig() {
+	public JsonArray getConfigForm() {
+		return configForm;
+	}
+
+	public void setConfigForm(JsonArray configForm) {
+		this.configForm = configForm;
+	}
+
+	public JsonObject getConfig() {
 		return config;
 	}
 
-	public void setConfig(String config) {
-		this.config = config;
+	public void setConfig(JsonObject form) {
+		this.config = form;
 	}
 }
