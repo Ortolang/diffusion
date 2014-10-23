@@ -32,8 +32,8 @@ public class WorkspaceElementRepresentation {
 	private String mimetype;
 	private String format;
 	private String target;
-	private String modification;
-	private String creation;
+	private long modification;
+	private long creation;
 	private Set<CollectionElement> elements;
 	private Set<MetadataElement> metadatas;
 
@@ -121,19 +121,19 @@ public class WorkspaceElementRepresentation {
 		this.description = description;
 	}
 
-	public String getModification() {
+	public long getModification() {
 		return modification;
 	}
 
-	public void setModification(String modification) {
+	public void setModification(long modification) {
 		this.modification = modification;
 	}
 
-	public String getCreation() {
+	public long getCreation() {
 		return creation;
 	}
 
-	public void setCreation(String creation) {
+	public void setCreation(long creation) {
 		this.creation = creation;
 	}
 
