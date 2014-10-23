@@ -46,6 +46,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
+import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectInfos;
@@ -219,7 +220,7 @@ public class PluginResource {
 			}
 			
 			// init parameters for treetagger
-			String treeTaggerLocalPath = "/home/cmoro/Documents/Ortolang/Plugins/TreeTager";
+			String treeTaggerLocalPath = OrtolangConfig.getInstance().getProperty("plugin.treetagger.path");
 			String binPath = treeTaggerLocalPath + "/bin";
 			String cmdPath = treeTaggerLocalPath + "/cmd";
 			String libPath = treeTaggerLocalPath + "/lib";
