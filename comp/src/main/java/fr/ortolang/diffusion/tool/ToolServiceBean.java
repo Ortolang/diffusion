@@ -36,7 +36,6 @@ import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
@@ -94,7 +93,7 @@ public class ToolServiceBean implements ToolService {
 			registry.register(key, new OrtolangObjectIdentifier(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, id), caller);
 			authorisation.createPolicy(key, caller);
 
-			notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "declare"), "");
+			notification.throwEvent(key, caller, Tool.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "declare"), "");
 		} catch (RegistryServiceException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new ToolServiceException("unable to declare tool", e);
