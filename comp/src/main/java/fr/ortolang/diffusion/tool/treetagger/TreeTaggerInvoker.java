@@ -99,10 +99,12 @@ public class TreeTaggerInvoker implements ToolInvoker {
 				ProcessBuilder ptag = new ProcessBuilder(tag);
 				ptag.redirectErrorStream(true);
 				Process p2 = ptag.start(); 
+				result.setLog(result.getLog() + "tagger subprocess called: " + Arrays.deepToString(tag) + "\r\n");
 				if(p2.waitFor() == 0) {
 					result.setLog(result.getLog() + "tagger subprocess finished successfully\r\n");
 					ByteArrayOutputStream baos = new ByteArrayOutputStream();
 					Files.copy(output, baos);
+					result.setOutput(baos.toString());
 					result.setStatus(ToolInvokerResult.Status.SUCCESS);
 					result.setStop(System.currentTimeMillis());
 				} else {

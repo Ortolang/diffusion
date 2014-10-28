@@ -1,24 +1,16 @@
 package fr.ortolang.diffusion.api.rest.plugin;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.lang.ProcessBuilder.Redirect;
-import java.net.URI;
-import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,7 +20,6 @@ import javax.ejb.EJB;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -44,40 +35,25 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
-import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectInfos;
-import fr.ortolang.diffusion.OrtolangObjectProperty;
-import fr.ortolang.diffusion.OrtolangObjectState;
-import fr.ortolang.diffusion.api.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
-import fr.ortolang.diffusion.api.rest.object.ObjectRepresentation;
 import fr.ortolang.diffusion.api.rest.template.Template;
-import fr.ortolang.diffusion.api.rest.workspace.WorkspaceElementFormRepresentation;
-import fr.ortolang.diffusion.api.rest.workspace.WorkspaceResource;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
-import fr.ortolang.diffusion.core.PathBuilder;
-import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.DataObject;
-import fr.ortolang.diffusion.core.entity.Link;
-import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.core.entity.MetadataObject;
-import fr.ortolang.diffusion.core.entity.MetadataSource;
-import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.security.SecurityService;
-import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import fr.ortolang.diffusion.tool.ToolService;
+import fr.ortolang.diffusion.tool.ToolServiceException;
+import fr.ortolang.diffusion.tool.entity.Tool;
 
 @Path("/plugins")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -93,6 +69,9 @@ public class PluginResource {
 	private SecurityService security;
 	@EJB
 	private CoreService core;
+	@EJB
+	private ToolService tool;
+	
 	
 	@Context
 	private UriInfo uriInfo;
@@ -135,8 +114,10 @@ public class PluginResource {
 	@GET
 	@Template( template="plugins/list.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
-	public Response list() {
+	public Response list() throws ToolServiceException {
 		logger.log(Level.INFO, "list availables plugins");
+		
+		List<Tool> tools = tool.listTools();
 		
 		GenericCollectionRepresentation<PluginRepresentation> representation = new GenericCollectionRepresentation<PluginRepresentation> ();
 		for(Entry<String, PluginRepresentation> plugin : plugins.entrySet()) {
@@ -220,6 +201,7 @@ public class PluginResource {
 			}
 			
 			// init parameters for treetagger
+//			String treeTaggerLocalPath = "/home/cmoro/Documents/Ortolang/Plugins/TreeTager";
 			String treeTaggerLocalPath = OrtolangConfig.getInstance().getProperty("plugin.treetagger.path");
 			String binPath = treeTaggerLocalPath + "/bin";
 			String cmdPath = treeTaggerLocalPath + "/cmd";

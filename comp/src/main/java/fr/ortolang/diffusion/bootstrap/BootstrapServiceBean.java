@@ -37,6 +37,8 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
+import fr.ortolang.diffusion.tool.ToolService;
+import fr.ortolang.diffusion.tool.ToolServiceException;
 
 @Startup
 @Singleton(name = BootstrapService.SERVICE_NAME)
@@ -55,6 +57,8 @@ public class BootstrapServiceBean implements BootstrapService {
 	private AuthorisationService authorisation;
 	@EJB
 	private CoreService core;
+	@EJB
+	private ToolService tool;
 	@Resource
 	private SessionContext ctx;
 
@@ -104,10 +108,17 @@ public class BootstrapServiceBean implements BootstrapService {
 				props.setProperty("bootstrap.version", BootstrapService.VERSION);
 				String hash = core.put(new ByteArrayInputStream(props.toString().getBytes()));
 				core.createDataObject(BootstrapService.WORKSPACE_KEY, "/bootstrap.txt", "bootstrap file", hash);
+				
+				logger.log(Level.FINE, "declare tools");
+				tool.declareTool("treetagger", "TreeTagger", 
+				"A language independent part-of-speech tagger\nThe TreeTagger is a tool for annotating text with part-of-speech and lemma information. "
+				+ "It was developed by Helmut Schmid in the TC project at the Institute for Computational Linguistics of the University of Stuttgart. ",
+				"See http://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/ or http://www.tal.univ-paris3.fr/cours/BAO-master/treetagger-win32/README-treetagger.txt", 
+				"fr.ortolang.diffusion.tool.treetagger.TreeTaggerInvokerTest");
 
 				logger.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException
-					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException e1) {
+					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | ToolServiceException e1) {
 				ctx.setRollbackOnly();
 				throw new BootstrapServiceException("unable to bootstrap plateform", e1);
 			}
