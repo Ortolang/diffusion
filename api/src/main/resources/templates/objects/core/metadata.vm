@@ -9,7 +9,7 @@
     </div>
         <div class="row">
 	  <div class="col-md-2"><p class="text-right"><strong>Type</strong></p></div>
-	  <div class="col-md-10">$entity.object.contentType</div>
+	  <div class="col-md-10">$entity.object.mimeType</div>
     </div>
     <div class="row">
 	  <div class="col-md-2"><p class="text-right"><strong>Size</strong></p></div>

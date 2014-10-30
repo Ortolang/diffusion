@@ -122,7 +122,7 @@ public class StoreAndRetrieveFileUseCase {
 		// Retrieve this digital object informations using the key
 		try {
 			DataObject object = core.readDataObject(okey);
-			logger.log(Level.INFO, "Detected mime type : " + object.getContentType());
+			logger.log(Level.INFO, "Detected mime type : " + object.getMimeType());
 			logger.log(Level.INFO, "Detected size : " + object.getSize());
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);

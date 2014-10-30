@@ -34,7 +34,7 @@
 				</div>
 				<div class="row">
 					<div class="col-md-2"><p class="text-right"><strong>Type</strong></p></div>
-					<div class="col-md-10"><em>($entity.mimetype)</em> $entity.type #if ($entity.format) - declared format: $entity.format #end</div>
+					<div class="col-md-10"><em>($entity.mimeType)</em> $entity.type #if ($entity.format) - declared format: $entity.format #end</div>
 				</div>
 				<div class="row">
 					<div class="col-md-2"><p class="text-right"><strong>Description</strong></p></div>

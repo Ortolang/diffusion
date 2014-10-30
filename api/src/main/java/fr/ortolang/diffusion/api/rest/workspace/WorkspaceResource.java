@@ -204,7 +204,7 @@ public class WorkspaceResource {
 			return;
 		} else if (object instanceof DataObject) {
 			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
-			response.setContentType(((DataObject) object).getContentType());
+			response.setContentType(((DataObject) object).getMimeType());
 			response.setContentLength((int) ((DataObject) object).getSize());
 			InputStream input = core.download(ekey);
 			try {
@@ -234,7 +234,7 @@ public class WorkspaceResource {
 
 		if (object instanceof DataObject) {
 			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
-			response.setContentType(((DataObject) object).getContentType());
+			response.setContentType(((DataObject) object).getMimeType());
 			response.setContentLength((int) ((DataObject) object).getSize());
 			InputStream input = core.preview(ekey);
 			try {

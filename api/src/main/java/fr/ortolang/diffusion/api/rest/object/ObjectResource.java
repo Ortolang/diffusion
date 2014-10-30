@@ -157,7 +157,7 @@ public class ObjectResource {
 		OrtolangObject object = browser.findObject(key);
 		if ( object instanceof DataObject ) {
 			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
-			response.setContentType(((DataObject)object).getContentType());
+			response.setContentType(((DataObject)object).getMimeType());
 			response.setContentLength((int) ((DataObject)object).getSize());
 		}
 		if ( object instanceof MetadataObject ) {
@@ -180,7 +180,7 @@ public class ObjectResource {
 		OrtolangObject object = browser.findObject(key);
 		if ( object instanceof DataObject ) {
 			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
-			response.setContentType(((DataObject)object).getContentType());
+			response.setContentType(((DataObject)object).getMimeType());
 			response.setContentLength((int) ((DataObject)object).getSize());
 		}
 		InputStream input = core.preview(key);
@@ -216,9 +216,8 @@ public class ObjectResource {
 
 	/**
 	 * List of keys contains in a object.
-	 * @param client
 	 * @param key
-	 * @param buffer
+	 * @param keys
 	 * @return
 	 * @throws AccessDeniedException 
 	 * @throws KeyNotFoundException 

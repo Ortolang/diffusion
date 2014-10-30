@@ -41,7 +41,7 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 	@Column(length=2500)
 	private String description;
 	private long size;
-	private String contentType;
+	private String mimeType;
 	private String preview;
 	private String stream;
 	@Lob
@@ -101,12 +101,12 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 		this.size = size;
 	}
 
-	public String getContentType() {
-		return contentType;
+	public String getMimeType() {
+		return mimeType;
 	}
 
-	public void setContentType(String contentType) {
-		this.contentType = contentType;
+	public void setMimeType(String mimeType) {
+		this.mimeType = mimeType;
 	}
 
 	public String getPreview() {

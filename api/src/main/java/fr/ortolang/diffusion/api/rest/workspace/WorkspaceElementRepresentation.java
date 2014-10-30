@@ -219,7 +219,7 @@ public class WorkspaceElementRepresentation {
 		representation.setName(dataobject.getName());
 		representation.setSize(dataobject.getSize());
 		representation.setType(DataObject.OBJECT_TYPE);
-		representation.setMimeType(dataobject.getContentType());
+		representation.setMimeType(dataobject.getMimeType());
 		representation.setStream(dataobject.getStream());
 		representation.setMetadatas(dataobject.getMetadatas());
 		representation.setPreview(dataobject.getPreview());

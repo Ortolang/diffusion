@@ -817,11 +817,11 @@ public class CoreServiceBean implements CoreService {
 			object.setDescription(description);
 			if (hash != null && hash.length() > 0) {
 				object.setSize(binarystore.size(hash));
-				object.setContentType(binarystore.type(hash));
+				object.setMimeType(binarystore.type(hash));
 				object.setStream(hash);
 			} else {
 				object.setSize(0);
-				object.setContentType("application/octet-stream");
+				object.setMimeType("application/octet-stream");
 				object.setStream("");
 			}
 			object.setClock(ws.getClock());
@@ -834,7 +834,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.clonePolicy(key, ws.getHead());
 			logger.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
 
-			parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getContentType(), key));
+			parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getMimeType(), key));
 			em.merge(parent);
 			registry.update(parent.getKey());
 			logger.log(Level.FINEST, "object [" + key + "] added to parent [" + parent.getKey() + "]");
@@ -944,23 +944,23 @@ public class CoreServiceBean implements CoreService {
 				object.setKey(element.getKey());
 				if (hash != null && hash.length() > 0) {
 					object.setSize(binarystore.size(hash));
-					object.setContentType(binarystore.type(hash));
+					object.setMimeType(binarystore.type(hash));
 					object.setStream(hash);
 				} else {
 					object.setSize(0);
-					object.setContentType("application/octet-stream");
+					object.setMimeType("application/octet-stream");
 					object.setStream("");
 				}
 				if (object.getClock() < ws.getClock()) {
 					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 					parent.removeElement(element);
-					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getContentType(), clone.getKey());
+					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getMimeType(), clone.getKey());
 					parent.addElement(celement);
 					registry.update(parent.getKey());
 					object = clone;
 				} else {
 					parent.removeElement(element);
-					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getContentType(), object.getKey());
+					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getMimeType(), object.getKey());
 					parent.addElement(celement);
 				}
 				em.merge(parent);
@@ -1055,7 +1055,7 @@ public class CoreServiceBean implements CoreService {
 				em.merge(sobject);
 				registry.update(sobject.getKey());
 			}
-			dparent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, sobject.getName(), System.currentTimeMillis(), sobject.getContentType(), sobject.getKey()));
+			dparent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, sobject.getName(), System.currentTimeMillis(), sobject.getMimeType(), sobject.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
 			logger.log(Level.FINEST, "object [" + sobject.getKey() + "] added to destination parent [" + dparent.getKey() + "]");
@@ -1546,7 +1546,7 @@ public class CoreServiceBean implements CoreService {
 				if (object.getClock() < ws.getClock()) {
 					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 					parent.removeElement(element);
-					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getContentType(), clone.getKey()));
+					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getMimeType(), clone.getKey()));
 					em.merge(parent);
 					registry.update(parent.getKey());
 					object = clone;
@@ -1745,7 +1745,7 @@ public class CoreServiceBean implements CoreService {
 					if (object.getClock() < ws.getClock()) {
 						DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 						parent.removeElement(element);
-						parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getContentType(), clone.getKey()));
+						parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getMimeType(), clone.getKey()));
 						object = clone;
 					}
 					mdelement = object.findMetadataByName(name);
@@ -1881,7 +1881,7 @@ public class CoreServiceBean implements CoreService {
 				if (object.getClock() < ws.getClock()) {
 					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 					parent.removeElement(element);
-					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getContentType(), clone.getKey()));
+					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getMimeType(), clone.getKey()));
 					object = clone;
 				}
 				mdelement = object.findMetadataByName(name);
@@ -2164,8 +2164,8 @@ public class CoreServiceBean implements CoreService {
 				if (object.getDescription() != null) {
 					content.addContentPart(object.getDescription());
 				}
-				if (object.getContentType() != null) {
-					content.addContentPart(object.getContentType());
+				if (object.getMimeType() != null) {
+					content.addContentPart(object.getMimeType());
 				}
 				if (object.getPreview() != null) {
 					content.addContentPart(object.getPreview());
@@ -2475,7 +2475,7 @@ public class CoreServiceBean implements CoreService {
 			clone.setName(origin.getName());
 			clone.setDescription(origin.getDescription());
 			clone.setSize(origin.getSize());
-			clone.setContentType(origin.getContentType());
+			clone.setMimeType(origin.getMimeType());
 			clone.setStream(origin.getStream());
 			clone.setPreview(origin.getPreview());
 			clone.setClock(clock);
