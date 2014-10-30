@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
-  <process id="helloworld" name="My Test Hello World process" isExecutable="true">
+  <process id="test" name="My Test Hello World process" isExecutable="true">
     
     <startEvent id="startevent1" name="Start"></startEvent>
     <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="servicetask1"></sequenceFlow>
     
-    <serviceTask id="servicetask1" name="Say Hello" activiti:class="fr.ortolang.diffusion.runtime.task.HelloWorldTask"></serviceTask>
+    <serviceTask id="servicetask1" name="Say Hello 1" activiti:class="fr.ortolang.diffusion.runtime.task.HelloWorldTask"></serviceTask>
     <sequenceFlow id="flow2" sourceRef="servicetask1" targetRef="servicetask2"></sequenceFlow>
     
     <serviceTask id="servicetask2" name="Say Hello 2" activiti:class="fr.ortolang.diffusion.runtime.task.HelloWorldTask">
@@ -15,14 +15,14 @@
     </serviceTask>
     <sequenceFlow id="flow3" sourceRef="servicetask2" targetRef="servicetask3"></sequenceFlow>
     
-    <serviceTask id="servicetask3" name="Say Hello Async" activiti:class="fr.ortolang.diffusion.runtime.task.HelloWorldTask" activiti:async="true">
+    <serviceTask id="servicetask3" name="Say Hello 3" activiti:class="fr.ortolang.diffusion.runtime.task.HelloWorldTask">
     	<extensionElements>
       		<activiti:field name="delay" stringValue="60000" />
   		</extensionElements>
     </serviceTask>
     <sequenceFlow id="flow4" sourceRef="servicetask3" targetRef="usertask1"></sequenceFlow>
     
-    <userTask id="usertask1" name="Really Say Hello Again">
+    <userTask id="usertask1" name="Confirm Say Hello">
     	<documentation>
              Do me need to say hello again ??
         </documentation>
@@ -46,14 +46,14 @@
   		</conditionExpression>
     </sequenceFlow>
     
-    <serviceTask id="servicetask4" name="Say Hello 12" activiti:class="fr.ortolang.diffusion.runtime.task.HelloWorldTask">
+    <serviceTask id="servicetask4" name="Say Hello 4" activiti:class="fr.ortolang.diffusion.runtime.task.HelloWorldTask">
     	<extensionElements>
       		<activiti:field name="delay" stringValue="10000" />
   		</extensionElements>
     </serviceTask>
     <sequenceFlow id="flow8" sourceRef="servicetask4" targetRef="servicetask5"></sequenceFlow>
     
-    <serviceTask id="servicetask5" name="Say Hello 12 Async" activiti:class="fr.ortolang.diffusion.runtime.task.HelloWorldTask" activiti:async="true">
+    <serviceTask id="servicetask5" name="Say Hello 5" activiti:class="fr.ortolang.diffusion.runtime.task.HelloWorldTask">
     	<extensionElements>
       		<activiti:field name="delay" stringValue="60000" />
   		</extensionElements>

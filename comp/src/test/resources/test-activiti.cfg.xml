@@ -12,9 +12,10 @@
 		<property name="transactionManager" ref="transactionManager" />
 		<property name="transactionsExternallyManaged" value="true" />
 		<property name="dataSourceJndiName" value="java:jboss/datasources/ExampleDS" />
-		<property name="databaseSchemaUpdate" value="true" />
+		<property name="databaseSchemaUpdate" value="create-drop" />
 		<property name="databaseType" value="h2" />
 		<property name="jobExecutorActivate" value="false" />
+		<property name="createDiagramOnDeploy" value="true" />
 	</bean>
 
 </beans>

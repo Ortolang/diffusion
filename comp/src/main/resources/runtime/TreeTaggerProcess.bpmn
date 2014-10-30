@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+  <process id="treetagger" name="TreeTagger" isExecutable="true">
+
+    <startEvent id="start" name="Start">
+
+    </startEvent>
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="tokenized"></sequenceFlow>
+
+    <exclusiveGateway id="isTokenized" name="Is Tokenized"></exclusiveGateway>
+    <sequenceFlow id="flow3" sourceRef="isTokenized" targetRef="tokenize">
+        <conditionExpression xsi:type="tFormalExpression">${tokenized}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow2" sourceRef="isTokenized" targetRef="tag">
+        <conditionExpression xsi:type="tFormalExpression">${tokenized}</conditionExpression>
+    </sequenceFlow>
+
+
+    <serviceTask id="tokenize" name="Tokenize"></serviceTask>
+    <sequenceFlow id="flow5" sourceRef="tokenize" targetRef="tag"></sequenceFlow>
+
+    <serviceTask id="tag" name="Tag"></serviceTask>
+    <sequenceFlow id="flow4" sourceRef="tag" targetRef="end"></sequenceFlow>
+
+    <endEvent id="end" name="End"></endEvent>
+  </process>
+
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_myProcess">
+    <bpmndi:BPMNPlane bpmnElement="myProcess" id="BPMNPlane_myProcess">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="120.0" y="141.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway1" id="BPMNShape_exclusivegateway1">
+        <omgdc:Bounds height="40.0" width="40.0" x="240.0" y="138.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask1" id="BPMNShape_servicetask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="530.0" y="131.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask2" id="BPMNShape_servicetask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="350.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="790.0" y="141.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="155.0" y="158.0"></omgdi:waypoint>
+        <omgdi:waypoint x="240.0" y="158.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+        <omgdi:waypoint x="280.0" y="158.0"></omgdi:waypoint>
+        <omgdi:waypoint x="530.0" y="158.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="260.0" y="178.0"></omgdi:waypoint>
+        <omgdi:waypoint x="402.0" y="220.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+        <omgdi:waypoint x="635.0" y="158.0"></omgdi:waypoint>
+        <omgdi:waypoint x="790.0" y="158.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+        <omgdi:waypoint x="402.0" y="220.0"></omgdi:waypoint>
+        <omgdi:waypoint x="582.0" y="186.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions> 

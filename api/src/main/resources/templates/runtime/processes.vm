@@ -1,6 +1,6 @@
 <div class="panel panel-default">
 	<div class="panel-heading">
-		<h3 class="panel-title"><strong>List of workflows instances</strong></h3>
+		<h3 class="panel-title"><strong>All processes</strong></h3>
 	</div>
 	<div class="panel-body">
 		<table class="table table-condensed table-hover">
@@ -9,9 +9,9 @@
 					<th>#</th>
 					<th>Key</th>
 					<th>Name</th>
+					<th>Type</th>
 					<th>Initier</th>
-					<th>Activity</th>
-					<th>Suspended</th>
+					<th>State</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -20,9 +20,9 @@
 					<td>$foreach.count</td>
 					<td>$entry.key</td>
 					<td>$entry.name</td>
+					<td>$entry.type</td>
 					<td>$entry.initier</td>
-					<td>$entry.activity</td>
-					<td>$entry.suspended</td>
+					<td>$entry.state</td>
 				</tr>
 			#end
 			</tbody>
@@ -31,11 +31,17 @@
 </div>
 <div class="panel panel-default">
 	<div class="panel-heading">
-		<h3 class="panel-title"><strong>Create a new Hello World Instance</strong></h3>
+		<h3 class="panel-title"><strong>Create a new Test Process</strong></h3>
 	</div>
 	<div class="panel-body">
-		<form class="form-horizontal" role="form" action="./instances" method="post">
-			<input type="hidden" id="definition" name="definition" value="helloworld"/>
+		<form class="form-horizontal" role="form" action="./processes" method="post">
+			<input type="hidden" id="process-type" name="process-type" value="test"/>
+			<div class="form-group">
+				<label for="process-name" class="col-sm-2 control-label">Process Name</label>
+				<div class="col-sm-4">
+					<input type="text" class="form-control input-sm" id="process-name" name="process-name" placeholder="Enter Process Name"/>
+				</div>
+			</div>
 			<div class="form-group">
 				<label for="name" class="col-sm-2 control-label">Name</label>
 				<div class="col-sm-4">
@@ -50,6 +56,7 @@
 		</form>
 	</div>
 </div>
+<!--
 <div class="panel panel-default">
 	<div class="panel-heading">
 		<h3 class="panel-title"><strong>Create a new simple-publish process</strong></h3>
@@ -110,3 +117,4 @@
 		</form>
 	</div>
 </div>
+-->

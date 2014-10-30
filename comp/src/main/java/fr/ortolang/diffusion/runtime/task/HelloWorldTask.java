@@ -4,41 +4,20 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
-
 import org.activiti.engine.delegate.DelegateExecution;
-import org.activiti.engine.delegate.JavaDelegate;
 import org.activiti.engine.impl.el.FixedValue;
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangServiceLocator;
-import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
+import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 
-public class HelloWorldTask implements JavaDelegate {
+public class HelloWorldTask extends RuntimeTask {
+	
+	public static final String NAME = "HelloWorld";
 
 	private static final Logger logger = Logger.getLogger(HelloWorldTask.class.getName());
 
-	private MembershipService membership;
-	private FixedValue runas;
-	private FixedValue delay;
+	private FixedValue delay = null;
 
 	public HelloWorldTask() {
-		logger.log(Level.INFO, "New HelloWorldTask class instanciated");
-		delay = null;
-		runas = null;
-	}
-
-	public MembershipService getMembershipService() throws OrtolangException {
-		if (membership == null) {
-			membership = (MembershipService) OrtolangServiceLocator.findService(MembershipService.SERVICE_NAME);
-		}
-		return membership;
-	}
-
-	protected void setMembershipService(MembershipService membership) {
-		this.membership = membership;
 	}
 
 	public FixedValue getDelay() {
@@ -49,19 +28,8 @@ public class HelloWorldTask implements JavaDelegate {
 		this.delay = delay;
 	}
 	
-	public FixedValue getRunas() {
-		return runas;
-	}
-
-	public void setRunas(FixedValue runas) {
-		this.runas = runas;
-	}
-
 	@Override
-	public void execute(DelegateExecution execution) throws LoginException {
-		logger.log(Level.INFO, "Executing HelloWorldTask");
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("activiti", "activiti54");
-		loginContext.login();
+	public void execute(String runas, DelegateExecution execution) throws RuntimeTaskException {
 		try {
 			String name = (String) execution.getVariable("name");
 			if (delay != null) {
@@ -72,14 +40,17 @@ public class HelloWorldTask implements JavaDelegate {
 					logger.log(Level.WARNING, "error while waiting...", e);
 				}
 			}
-			String caller = getMembershipService().getProfileKeyForConnectedIdentifier();
-			logger.log(Level.INFO, caller + " is saying hello to " + name);
+			logger.log(Level.INFO, "Hello " + name);
+			getRuntimeService().appendProcessLog(execution.getProcessBusinessKey(), "Hello " + name);
 			execution.setVariable("greettime", new Date());
-		} catch (OrtolangException e) {
-			logger.log(Level.WARNING, "error while waiting...", e);
-		} finally {
-			loginContext.logout();
-		}
+		} catch (RuntimeServiceException e) {
+			logger.log(Level.WARNING, "error while saying hello...", e);
+		} 
+	}
+
+	@Override
+	public String getTaskName() {
+		return NAME;
 	}
 
 }

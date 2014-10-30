@@ -2,6 +2,7 @@ package fr.ortolang.diffusion.core;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.logging.Level;
@@ -269,6 +270,12 @@ public class CollectionUnitTest {
 		c.addElement(new CollectionElement(Link.OBJECT_TYPE, "myname3", System.currentTimeMillis(), "application/vnd.ms-excel", key3));
 		String key4 = UUID.randomUUID().toString();
 		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", System.currentTimeMillis(), "application/EDI-X12", key4));
+		String key5 = UUID.randomUUID().toString();
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname 5", System.currentTimeMillis(), "application/EDI-X12", key5));
+		String key6 = UUID.randomUUID().toString();
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "w&értþÿû 523 ze", System.currentTimeMillis(), "application/EDI-X12", key6));
+		String key7 = UUID.randomUUID().toString();
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "Bootstrap (1).txt", System.currentTimeMillis(), "application/EDI-X12", key7));
 		
 		String regexp = "(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\tmyname1\t([0-9]{13})\t([^%]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$";
 		
@@ -290,14 +297,25 @@ public class CollectionUnitTest {
 		
 		CollectionElement ce1 = c.findElementByName("myname1");
 		logger.log(Level.INFO, "ce1 : " + ce1);
+		assertNotNull(ce1);
 		CollectionElement ce2 = c.findElementByName("myname2");
 		logger.log(Level.INFO, "ce2 : " + ce2);
+		assertNotNull(ce2);
 		CollectionElement ce3 = c.findElementByName("myname3");
 		logger.log(Level.INFO, "ce3 : " + ce3);
+		assertNotNull(ce3);
 		CollectionElement ce4 = c.findElementByName("myname4");
 		logger.log(Level.INFO, "ce4 : " + ce4);
-		
-		
+		assertNotNull(ce4);
+		CollectionElement ce5 = c.findElementByName("myname 5");
+		logger.log(Level.INFO, "ce5 : " + ce5);
+		assertNotNull(ce5);
+		CollectionElement ce6 = c.findElementByName("w&értþÿû 523 ze");
+		logger.log(Level.INFO, "ce6 : " + ce6);
+		assertNotNull(ce6);
+		CollectionElement ce7 = c.findElementByName("Bootstrap (1).txt");
+		logger.log(Level.INFO, "ce7 : " + ce7);
+		assertNotNull(ce7);
 	}
 	
 }

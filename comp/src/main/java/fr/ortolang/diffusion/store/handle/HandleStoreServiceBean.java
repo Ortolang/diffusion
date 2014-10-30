@@ -85,8 +85,8 @@ public class HandleStoreServiceBean implements HandleStoreService {
 			logger.log(Level.FINE, "auth info: " + auth.toString());
 			logger.log(Level.FINE, "admin record: " + admin.toString());
 
-		} catch (Throwable t) {
-			logger.log(Level.SEVERE, "Unable to initialize Handle Store : " + t, t);
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, "Unable to initialize Handle Store : " + e.getMessage(), e);
 		}
 	}
 

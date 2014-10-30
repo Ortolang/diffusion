@@ -28,13 +28,11 @@
           <ul class="nav navbar-nav">
             <li><a href="$base/rest/objects">Objects</a></li>
             <li><a href="$base/rest/workspaces">Workspaces</a></li>
-            <li><a href="$base/rest/runtime/definitions">Process Definition</a></li>
-            <li><a href="$base/rest/runtime/instances">Running Processes</a></li>
+            <li><a href="$base/rest/runtime/types">Process Types</a></li>
+            <li><a href="$base/rest/runtime/processes">Processes</a></li>
             <li><a href="$base/rest/runtime/tasks">Tasks</a></li>
             <li><a href="$base/rest/profiles/connected">Profile</a></li>
-            <!--
-            <li><a href="$base/rest/objects/index">Plain Text Search</a></li>
-            -->
+            <!-- <li><a href="$base/rest/objects/index">Plain Text Search</a></li> -->
             <li><a href="$base/rest/objects/semantic">Semantic Search</a></li>
             <li><a href="$base/rest/plugins">Plugins</a></li>
           </ul>

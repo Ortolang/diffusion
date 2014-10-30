@@ -33,6 +33,8 @@ import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.runtime.RuntimeService;
+import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
@@ -57,6 +59,8 @@ public class BootstrapServiceBean implements BootstrapService {
 	private AuthorisationService authorisation;
 	@EJB
 	private CoreService core;
+	@EJB
+	private RuntimeService runtime;
 	@EJB
 	private ToolService tool;
 	@Resource
@@ -108,18 +112,21 @@ public class BootstrapServiceBean implements BootstrapService {
 				props.setProperty("bootstrap.version", BootstrapService.VERSION);
 				String hash = core.put(new ByteArrayInputStream(props.toString().getBytes()));
 				core.createDataObject(BootstrapService.WORKSPACE_KEY, "/bootstrap.txt", "bootstrap file", hash);
+
+				logger.log(Level.FINE, "import process types");
+				runtime.importProcessTypes();
 				
 				logger.log(Level.FINE, "declare tools");
 				tool.declareTool("treetagger", "TreeTagger", 
 				"A language independent part-of-speech tagger\nThe TreeTagger is a tool for annotating text with part-of-speech and lemma information. "
 				+ "It was developed by Helmut Schmid in the TC project at the Institute for Computational Linguistics of the University of Stuttgart. ",
 				"See http://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/ or http://www.tal.univ-paris3.fr/cours/BAO-master/treetagger-win32/README-treetagger.txt", 
-				"fr.ortolang.diffusion.tool.treetagger.TreeTaggerInvokerTest");
+				"fr.ortolang.diffusion.tool.treetagger.TreeTaggerInvoker");
 
 				logger.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException
-					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | ToolServiceException e1) {
-				ctx.setRollbackOnly();
+					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | RuntimeServiceException | ToolServiceException e1) {
+				logger.log(Level.SEVERE, "unexpected error occured while bootstraping plateform", e1);
 				throw new BootstrapServiceException("unable to bootstrap plateform", e1);
 			}
 		} catch (RegistryServiceException e) {

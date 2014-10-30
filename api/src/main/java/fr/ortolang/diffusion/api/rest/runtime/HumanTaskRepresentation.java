@@ -5,10 +5,10 @@ import java.util.Date;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import fr.ortolang.diffusion.runtime.entity.ProcessTask;
+import fr.ortolang.diffusion.runtime.entity.HumanTask;
 
-@XmlRootElement(name = "workflow-task")
-public class ProcessTaskRepresentation {
+@XmlRootElement(name = "human-task")
+public class HumanTaskRepresentation {
 
 	@XmlAttribute
 	private String id;
@@ -22,7 +22,7 @@ public class ProcessTaskRepresentation {
 	private int priority;
 	private boolean suspended;
 
-	public ProcessTaskRepresentation() {
+	public HumanTaskRepresentation() {
 	}
 
 	public String getId() {
@@ -105,18 +105,16 @@ public class ProcessTaskRepresentation {
 		this.suspended = suspended;
 	}
 
-	public static ProcessTaskRepresentation fromProcessTask(ProcessTask task) {
-		ProcessTaskRepresentation representation = new ProcessTaskRepresentation();
+	public static HumanTaskRepresentation fromHumanTask(HumanTask task) {
+		HumanTaskRepresentation representation = new HumanTaskRepresentation();
 		representation.setId(task.getId());
 		representation.setName(task.getName());
 		representation.setDescription(task.getDescription());
 		representation.setOwner(task.getOwner());
 		representation.setAssignee(task.getAssignee());
-		representation.setCategory(task.getCategory());
 		representation.setCreationDate(task.getCreationDate());
 		representation.setDueDate(task.getDueDate());
 		representation.setPriority(task.getPriority());
-		representation.setSuspended(task.isSuspended());
 		return representation;
 	}
 

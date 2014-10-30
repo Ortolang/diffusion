@@ -29,7 +29,7 @@ public class WorkspaceElementRepresentation {
 	private String preview;
 	private String stream;
 	private String type;
-	private String mimetype;
+	private String mimeType;
 	private String format;
 	private String target;
 	private long modification;
@@ -105,12 +105,12 @@ public class WorkspaceElementRepresentation {
 		this.type = type;
 	}
 
-	public String getMimetype() {
-		return mimetype;
+	public String getMimeType() {
+		return mimeType;
 	}
 
-	public void setMimetype(String mimetype) {
-		this.mimetype = mimetype;
+	public void setMimeType(String mimetype) {
+		this.mimeType = mimetype;
 	}
 
 	public String getDescription() {
@@ -192,7 +192,7 @@ public class WorkspaceElementRepresentation {
 		representation.setName(collection.getName());
 		representation.setSize(collection.getElements().size());
 		representation.setType(Collection.OBJECT_TYPE);
-		representation.setMimetype("text/directory");
+		representation.setMimeType("ortolang/directory");
 		representation.setElements(collection.getElements());
 		representation.setMetadatas(collection.getMetadatas());
 		representation.setDescription(collection.getDescription());
@@ -205,7 +205,7 @@ public class WorkspaceElementRepresentation {
 		representation.setName(metadata.getName());
 		representation.setSize(metadata.getSize());
 		representation.setType(MetadataObject.OBJECT_TYPE);
-		representation.setMimetype(metadata.getContentType());
+		representation.setMimeType(metadata.getContentType());
 		representation.setFormat(metadata.getFormat());
 		representation.setStream(metadata.getStream());
 		representation.setTarget(metadata.getTarget());
@@ -219,7 +219,7 @@ public class WorkspaceElementRepresentation {
 		representation.setName(dataobject.getName());
 		representation.setSize(dataobject.getSize());
 		representation.setType(DataObject.OBJECT_TYPE);
-		representation.setMimetype(dataobject.getContentType());
+		representation.setMimeType(dataobject.getContentType());
 		representation.setStream(dataobject.getStream());
 		representation.setMetadatas(dataobject.getMetadatas());
 		representation.setPreview(dataobject.getPreview());
@@ -233,7 +233,7 @@ public class WorkspaceElementRepresentation {
 		representation.setClock(link.getClock());
 		representation.setName(link.getName());
 		representation.setType(Link.OBJECT_TYPE);
-		representation.setMimetype("text/link");
+		representation.setMimeType("ortolang/link");
 		representation.setTarget(link.getTarget());
 		representation.setMetadatas(link.getMetadatas());
 		return representation;

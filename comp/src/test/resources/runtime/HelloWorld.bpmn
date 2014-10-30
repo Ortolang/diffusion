@@ -16,12 +16,12 @@
     <startEvent id="startevent1" name="Start"></startEvent>
   	<sequenceFlow id="flow1" sourceRef="startevent1" targetRef="servicetask1"></sequenceFlow>
   
-    <serviceTask id="servicetask1" name="HelloWorldTask" activiti:class="fr.ortolang.diffusion.workflow.task.HelloWorldTask"></serviceTask>
+    <serviceTask id="servicetask1" name="HelloWorldTask" activiti:class="fr.ortolang.diffusion.runtime.task.HelloWorldTask"></serviceTask>
     <sequenceFlow id="flow2" sourceRef="servicetask1" targetRef="servicetask2"></sequenceFlow>
     
-    <serviceTask id="servicetask2" name="HelloWorldTask2" activiti:class="fr.ortolang.diffusion.workflow.task.HelloWorldTask">
+    <serviceTask id="servicetask2" name="HelloWorldTask2" activiti:class="fr.ortolang.diffusion.runtime.task.HelloWorldTask">
     	<extensionElements>
-      		<activiti:field name="delay" stringValue="5000" />
+      		<activiti:field name="delay" stringValue="60000" />
   		</extensionElements>
     </serviceTask>
     <sequenceFlow id="flow3" sourceRef="servicetask2" targetRef="endevent1"></sequenceFlow>

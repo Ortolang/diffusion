@@ -2,24 +2,20 @@ package fr.ortolang.diffusion.runtime.entity;
 
 import java.util.Date;
 
-public class ProcessTask {
+public class HumanTask {
+	
+	public static final String OBJECT_TYPE = "task";
 
 	private String id;
 	private String name;
 	private String description;
 	private String owner;
 	private String assignee;
-	private String category;
 	private Date creationDate;
 	private Date dueDate;
-	private String executionId;
-	private String parentTaskId;
-	private String processDefinitionId;
-	private String processInstanceId;
 	private int priority;
-	private boolean suspended;
 
-	public ProcessTask() {
+	public HumanTask() {
 	}
 
 	public String getId() {
@@ -62,14 +58,6 @@ public class ProcessTask {
 		this.assignee = assignee;
 	}
 
-	public String getCategory() {
-		return category;
-	}
-
-	public void setCategory(String category) {
-		this.category = category;
-	}
-
 	public Date getCreationDate() {
 		return creationDate;
 	}
@@ -86,52 +74,12 @@ public class ProcessTask {
 		this.dueDate = dueDate;
 	}
 
-	public String getExecutionId() {
-		return executionId;
-	}
-
-	public void setExecutionId(String executionId) {
-		this.executionId = executionId;
-	}
-
-	public String getParentTaskId() {
-		return parentTaskId;
-	}
-
-	public void setParentTaskId(String parentTaskId) {
-		this.parentTaskId = parentTaskId;
-	}
-
-	public String getProcessDefinitionId() {
-		return processDefinitionId;
-	}
-
-	public void setProcessDefinitionId(String processDefinitionId) {
-		this.processDefinitionId = processDefinitionId;
-	}
-
-	public String getProcessInstanceId() {
-		return processInstanceId;
-	}
-
-	public void setProcessInstanceId(String processInstanceId) {
-		this.processInstanceId = processInstanceId;
-	}
-
 	public int getPriority() {
 		return priority;
 	}
 
 	public void setPriority(int priority) {
 		this.priority = priority;
-	}
-
-	public boolean isSuspended() {
-		return suspended;
-	}
-
-	public void setSuspended(boolean suspended) {
-		this.suspended = suspended;
 	}
 
 }

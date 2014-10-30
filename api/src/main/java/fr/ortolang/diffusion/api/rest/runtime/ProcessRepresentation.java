@@ -3,19 +3,21 @@ package fr.ortolang.diffusion.api.rest.runtime;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import fr.ortolang.diffusion.runtime.entity.ProcessInstance;
+import fr.ortolang.diffusion.runtime.entity.Process;
 
-@XmlRootElement(name = "workflow-instance")
-public class ProcessInstanceRepresentation {
+@XmlRootElement(name = "process")
+public class ProcessRepresentation {
 
 	@XmlAttribute
 	private String key;
 	private String name;
 	private String initier;
+	private String type;
+	private String log;
+	private String state;
 	private String activity;
-	private boolean suspended;
 	
-	public ProcessInstanceRepresentation() {
+	public ProcessRepresentation() {
 	}
 
 	public String getKey() {
@@ -34,14 +36,6 @@ public class ProcessInstanceRepresentation {
 		this.name = name;
 	}
 
-	public boolean isSuspended() {
-		return suspended;
-	}
-
-	public void setSuspended(boolean suspended) {
-		this.suspended = suspended;
-	}
-	
 	public String getInitier() {
 		return initier;
 	}
@@ -50,6 +44,30 @@ public class ProcessInstanceRepresentation {
 		this.initier = initier;
 	}
 
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getLog() {
+		return log;
+	}
+
+	public void setLog(String log) {
+		this.log = log;
+	}
+
+	public String getState() {
+		return state;
+	}
+
+	public void setState(String state) {
+		this.state = state;
+	}
+	
 	public String getActivity() {
 		return activity;
 	}
@@ -58,13 +76,15 @@ public class ProcessInstanceRepresentation {
 		this.activity = activity;
 	}
 
-	public static ProcessInstanceRepresentation fromProcessDefinition(ProcessInstance instance) {
-		ProcessInstanceRepresentation representation = new ProcessInstanceRepresentation();
+	public static ProcessRepresentation fromProcess(Process instance) {
+		ProcessRepresentation representation = new ProcessRepresentation();
 		representation.setKey(instance.getKey());
 		representation.setName(instance.getName());
 		representation.setInitier(instance.getInitier());
-		representation.setActivity(instance.getActivityId());
-		representation.setSuspended(instance.isSuspended());
+		representation.setLog(instance.getLog());
+		representation.setState(instance.getState().name());
+		representation.setActivity(instance.getActivity());
+		representation.setType(instance.getType());
 		return representation;
 	}
 

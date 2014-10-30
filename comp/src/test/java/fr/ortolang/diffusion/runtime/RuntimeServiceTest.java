@@ -1,13 +1,10 @@
-package fr.ortolang.diffusion.runtime.task;
+package fr.ortolang.diffusion.runtime;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,14 +23,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
-import fr.ortolang.diffusion.runtime.entity.ProcessDefinition;
-import fr.ortolang.diffusion.runtime.entity.ProcessInstance;
+import fr.ortolang.diffusion.runtime.entity.ProcessType;
 import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 @RunWith(Arquillian.class)
 public class RuntimeServiceTest {
@@ -75,8 +68,8 @@ public class RuntimeServiceTest {
 		jar.addAsResource("ontology/foaf.xml");
 		jar.addAsResource("ontology/ortolang.xml");
 		jar.addAsResource("ontology/rdfs.xml");
-		jar.addAsResource("activiti.cfg.xml");
-		jar.addAsResource("workflows/HelloWorldProcess.bpmn");
+		jar.addAsResource("test-activiti.cfg.xml", "activiti.cfg.xml");
+		jar.addAsResource("runtime/HelloWorld.bpmn");
 		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
 		logger.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
 
@@ -125,59 +118,41 @@ public class RuntimeServiceTest {
 		}
 	}
 
-	@Test(expected = AccessDeniedException.class)
-	public void testCreateProcessDefinitionAsUnauthentifiedUser() throws LoginException, KeyAlreadyExistsException, AccessDeniedException, RuntimeServiceException, IOException {
+	@Test
+	public void testListProcessTypes() throws LoginException {
 		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			runtime.createProcessDefinition("K1", new ByteArrayInputStream("".getBytes()));
-			fail("Should have raised an AccessDeniedException");
+			List<ProcessType> types = runtime.listProcessTypes();
+			assertTrue(types.size() > 0);
+		} catch (RuntimeServiceException e) {
+			fail(e.getMessage());
+			logger.log(Level.WARNING, e.getMessage(), e);
 		} finally {
 			loginContext.logout();
 		}
 	}
 	
-	@Test
-	public void testCreateProcessDefinitionAsRootUser() throws LoginException, KeyAlreadyExistsException, AccessDeniedException, RuntimeServiceException, IOException, KeyNotFoundException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("root", "tagada54");
-		loginContext.login();
-		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			runtime.createProcessDefinition("K1", this.getClass().getClassLoader().getResourceAsStream("workflows/HelloWorldProcess.bpmn"));
-			List<ProcessDefinition> defs = runtime.listProcessDefinitions();
-			
-			assertEquals(1, defs.size());
-			assertEquals("K1", defs.get(0).getKey());
-			
-			ProcessDefinition def = runtime.readProcessDefinition("K1");
-			
-			assertEquals(1, def.getVersion());
-			assertEquals("Hello World Process", def.getName());
-		} finally {
-			loginContext.logout();
-		}
-	}
-	
-	@Test
-	public void testCreateProcessInstanceAsRootUser() throws LoginException, KeyAlreadyExistsException, AccessDeniedException, RuntimeServiceException, IOException, KeyNotFoundException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("root", "tagada54");
-		loginContext.login();
-		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			runtime.createProcessDefinition("K2", this.getClass().getClassLoader().getResourceAsStream("workflows/HelloWorldProcess.bpmn"));
-			
-			Map<String, Object> params = new HashMap<String, Object>();
-			params.put("name", "junit");
-			runtime.startProcessInstance("K3", "K2", params);
-			
-			ProcessInstance ins = runtime.readProcessInstance("K3");
-			
-			assertEquals("K3", ins.getKey());
-			assertEquals("root", ins.getInitier());
-		} finally {
-			loginContext.logout();
-		}
-	}
+//	@Test
+//	public void testCreateProcess() throws LoginException, KeyAlreadyExistsException, AccessDeniedException, RuntimeServiceException, IOException, KeyNotFoundException {
+//		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("user1", "tagada");
+//		loginContext.login();
+//		try {
+//			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+//			runtime.createProcess("K2", this.getClass().getClassLoader().getResourceAsStream("workflows/HelloWorldProcess.bpmn"));
+//			
+//			Map<String, Object> params = new HashMap<String, Object>();
+//			params.put("name", "junit");
+//			runtime.startProcessInstance("K3", "K2", params);
+//			
+//			Process ins = runtime.readProcessInstance("K3");
+//			
+//			assertEquals("K3", ins.getKey());
+//			assertEquals("root", ins.getInitier());
+//		} finally {
+//			loginContext.logout();
+//		}
+//	}
 	
 }

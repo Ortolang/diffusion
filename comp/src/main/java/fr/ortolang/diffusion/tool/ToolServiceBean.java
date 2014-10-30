@@ -96,6 +96,7 @@ public class ToolServiceBean implements ToolService {
 			notification.throwEvent(key, caller, Tool.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "declare"), "");
 		} catch (RegistryServiceException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException e) {
 			ctx.setRollbackOnly();
+			logger.log(Level.SEVERE, "unexpected error occured while declaring tool", e);
 			throw new ToolServiceException("unable to declare tool", e);
 		}
 	}
@@ -119,6 +120,7 @@ public class ToolServiceBean implements ToolService {
 			}
 			return rtools;
 		} catch ( RegistryServiceException e ) {
+			logger.log(Level.SEVERE, "unexpected error occured while listing tools", e);
 			throw new ToolServiceException("unable to list tools", e);
 		}
 	}
@@ -144,6 +146,7 @@ public class ToolServiceBean implements ToolService {
 			notification.throwEvent(key, caller, Tool.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "read"), "");
 			return tool;
 		} catch ( RegistryServiceException | MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | NotificationServiceException e ) {
+			logger.log(Level.SEVERE, "unexpected error occured while reading tool", e);
 			throw new ToolServiceException("unable to read tool", e);
 		}
 	}
@@ -172,6 +175,7 @@ public class ToolServiceBean implements ToolService {
 			notification.throwEvent(key, caller, Tool.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "invoke"), "");
 			return result;
 		} catch ( RegistryServiceException | MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | NotificationServiceException | ClassNotFoundException | InstantiationException | IllegalAccessException e ) {
+			logger.log(Level.SEVERE, "unexpected error occured while invoking tool", e);
 			throw new ToolServiceException("unable to invoke tool", e);
 		}
 	}

@@ -3,28 +3,28 @@ package fr.ortolang.diffusion.api.rest.runtime;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import fr.ortolang.diffusion.runtime.entity.ProcessDefinition;
+import fr.ortolang.diffusion.runtime.entity.ProcessType;
 
-@XmlRootElement(name = "process-definition")
-public class ProcessDefinitionRepresentation {
+@XmlRootElement(name = "process-type")
+public class ProcessTypeRepresentation {
 
 	@XmlAttribute
-	private String key;
+	private String id;
 	private String name;
 	private String friendlyName;
 	private String description;
 	private boolean suspended;
 	private int version;
 
-	public ProcessDefinitionRepresentation() {
+	public ProcessTypeRepresentation() {
 	}
 
-	public String getKey() {
-		return key;
+	public String getId() {
+		return id;
 	}
 
-	public void setKey(String key) {
-		this.key = key;
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public String getName() {
@@ -67,14 +67,13 @@ public class ProcessDefinitionRepresentation {
 		this.version = version;
 	}
 
-	public static ProcessDefinitionRepresentation fromProcessDefinition(ProcessDefinition definition) {
-		ProcessDefinitionRepresentation representation = new ProcessDefinitionRepresentation();
-		representation.setKey(definition.getKey());
-		representation.setName(definition.getName());
-		representation.setFriendlyName(definition.getFriendlyName());
-		representation.setDescription(definition.getDescription());
-		representation.setSuspended(definition.isSuspended());
-		representation.setVersion(definition.getVersion());
+	public static ProcessTypeRepresentation fromProcessType(ProcessType type) {
+		ProcessTypeRepresentation representation = new ProcessTypeRepresentation();
+		representation.setId(type.getId());
+		representation.setName(type.getName());
+		representation.setDescription(type.getDescription());
+		representation.setSuspended(type.isSuspended());
+		representation.setVersion(type.getVersion());
 		return representation;
 	}
 
