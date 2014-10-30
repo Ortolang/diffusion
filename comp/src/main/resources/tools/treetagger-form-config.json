@@ -1,0 +1,43 @@
+[
+    {
+        "key": "txt-input",
+        "type": "dataobject",
+        "label": "Fichier à annoter",
+        "placeholder": "Nom du fichier à annoter",
+        "required": true,
+        "description": "Entrez le nom du fichier texte sur lequel vous souhaitez appliquer Tree Tagger."
+    },
+    {
+        "key": "lg-input",
+        "type": "select",
+        "label": "Langue du texte",
+        "required": true,
+        "description": "Selectionnez la langue du fichier à annoter.",
+        "default": {
+            "id": "french",
+            "name": "Français"
+        },
+        "options": [
+            {
+                "id": "french",
+                "name": "Français"
+            },
+            {
+                "id": "english",
+                "name": "Anglais"
+            },
+            {
+                "id": "german",
+                "name": "Allemand"
+            }
+        ]
+    },
+    {
+        "key": "txt-output",
+        "type": "text",
+        "label": "Fichier cible",
+        "placeholder": "Nom du fichier cible",
+        "required": false,
+        "description": "Entrez le nom que vous souhaitez donner au fichier renvoyé par Tree Tagger."
+    }
+]
