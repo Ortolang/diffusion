@@ -37,6 +37,7 @@ public class Tool extends OrtolangObject {
 	@Type(type = "org.hibernate.type.TextType")
 	private String documentation;
 	private String invokerClass;
+	private String formConfig;
 
 	public String getId() {
 		return id;
@@ -94,6 +95,14 @@ public class Tool extends OrtolangObject {
 		this.invokerClass = invokerClass;
 	}
 
+	public String getFormConfig() {
+		return formConfig;
+	}
+
+	public void setFormConfig(String formConfig) {
+		this.formConfig = formConfig;
+	}
+	
 	@Override
 	public String getObjectName() {
 		return name;
@@ -108,5 +117,6 @@ public class Tool extends OrtolangObject {
 	public OrtolangObjectIdentifier getObjectIdentifier() {
 		return new OrtolangObjectIdentifier(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, id);
 	}
+
 
 }

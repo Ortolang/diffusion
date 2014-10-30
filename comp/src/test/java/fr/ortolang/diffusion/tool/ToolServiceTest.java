@@ -40,6 +40,7 @@ public class ToolServiceTest {
 
 	@Deployment
 	public static EnterpriseArchive createDeployment() {
+		logger.log(Level.INFO, "Starting deployment ");
 		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "diffusion-server-ejb.jar");
 		jar.addPackage("fr.ortolang.diffusion");
 		// jar.addPackage("fr.ortolang.diffusion.bootstrap");
@@ -140,7 +141,7 @@ public class ToolServiceTest {
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			tool.declareTool("K1", "treetagger", "This is Tree Tagger", "TreeTagger is a dedicated tool for text treatment et blabla bla...", "fr.ortolang.diffusion.tool.treetagger.TreeTaggerInvoker");
+			tool.declareTool("K1", "treetagger", "This is Tree Tagger", "TreeTagger is a dedicated tool for text treatment et blabla bla...", "fr.ortolang.diffusion.tool.treetagger.TreeTaggerInvoker", "treetagger-form-config.json");
 			
 			assertTrue(tool.listTools().size() == 1);
 			

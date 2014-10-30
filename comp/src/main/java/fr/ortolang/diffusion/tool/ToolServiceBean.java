@@ -1,5 +1,11 @@
 package fr.ortolang.diffusion.tool;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,8 +25,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.SecurityDomain;
 import org.jgroups.util.UUID;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
@@ -66,10 +76,11 @@ public class ToolServiceBean implements ToolService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void declareTool(String key, String name, String description, String documentation, String invokerClass) throws ToolServiceException {
+	public void declareTool(String key, String name, String description, String documentation, String invokerClass, String formConfig) throws ToolServiceException {
 		logger.log(Level.INFO, "Declaring new tool");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
+			authorisation.checkAuthentified(caller);
 			
 			try {
 				@SuppressWarnings("rawtypes")
@@ -78,9 +89,10 @@ public class ToolServiceBean implements ToolService {
 					throw new ToolServiceException("unable to declare tool, invoker class must implement ToolInvoker");
 				}
 			} catch ( ClassNotFoundException e ) {
+				logger.log(Level.INFO, "error : unable to declare tool, invoker class not found "+e);
 				throw new ToolServiceException("unable to declare tool, invoker class not found", e);
 			}
-			
+
 			String id = UUID.randomUUID().toString();
 			Tool tool = new Tool();
 			tool.setId(id);
@@ -88,13 +100,14 @@ public class ToolServiceBean implements ToolService {
 			tool.setDescription(description);
 			tool.setDocumentation(documentation);
 			tool.setInvokerClass(invokerClass);
+			tool.setFormConfig(formConfig);
 			em.persist(tool);
-			
+
 			registry.register(key, new OrtolangObjectIdentifier(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, id), caller);
 			authorisation.createPolicy(key, caller);
 
 			notification.throwEvent(key, caller, Tool.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "declare"), "");
-		} catch (RegistryServiceException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException e) {
+		} catch (RegistryServiceException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | AccessDeniedException e) {
 			ctx.setRollbackOnly();
 			logger.log(Level.SEVERE, "unexpected error occured while declaring tool", e);
 			throw new ToolServiceException("unable to declare tool", e);
@@ -228,6 +241,36 @@ public class ToolServiceBean implements ToolService {
 
 		if (!identifier.getType().equals(objectType)) {
 			throw new ToolServiceException("object identifier " + identifier + " does not refer to an object of type " + objectType);
+		}
+	}
+
+	@Override
+	public String getFormConfig(String key) throws ToolServiceException, AccessDeniedException {
+		logger.log(Level.INFO, "Loading config form");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkPermission(key, subjects, "read");
+			
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, Tool.OBJECT_TYPE);
+			
+			Tool tool = em.find(Tool.class, identifier.getId());
+			if ( tool == null )  {
+				throw new ToolServiceException("unable to find a tool with id: " + identifier.getId());
+			}
+			InputStream is = getClass().getClassLoader().getResourceAsStream("tools/" + tool.getFormConfig());
+			 
+			/*** read from file ***/
+			String jsonData = IOUtils.toString(is);
+			if ( jsonData == null )  {
+				throw new ToolServiceException("unable to find a config form for tool with id: " + identifier.getId());
+			}
+									
+			notification.throwEvent(key, caller, Tool.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "read"), "");
+			return jsonData;
+		} catch ( RegistryServiceException | MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | NotificationServiceException | IOException e ) {
+			throw new ToolServiceException("unable to load config form", e);
 		}
 	}
 

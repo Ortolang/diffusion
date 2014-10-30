@@ -117,11 +117,7 @@ public class BootstrapServiceBean implements BootstrapService {
 				runtime.importProcessTypes();
 				
 				logger.log(Level.FINE, "declare tools");
-				tool.declareTool("treetagger", "TreeTagger", 
-				"A language independent part-of-speech tagger\nThe TreeTagger is a tool for annotating text with part-of-speech and lemma information. "
-				+ "It was developed by Helmut Schmid in the TC project at the Institute for Computational Linguistics of the University of Stuttgart. ",
-				"See http://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/ or http://www.tal.univ-paris3.fr/cours/BAO-master/treetagger-win32/README-treetagger.txt", 
-				"fr.ortolang.diffusion.tool.treetagger.TreeTaggerInvoker");
+				tool.declareTool("treetagger", "TreeTagger", "A language independent part-of-speech tagger : \r\nThe TreeTagger is a tool for annotating text with part-of-speech and lemma information. ", "See <a href=\"http://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/\"> or <a href=\"http://www.tal.univ-paris3.fr/cours/BAO-master/treetagger-win32/README-treetagger.txt\">", "fr.ortolang.diffusion.tool.treetagger.TreeTaggerInvoker", "treetagger-form-config.json");
 
 				logger.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException
