@@ -161,7 +161,7 @@ public class CollectionUnitTest {
 		
 		
 		String key1 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", tsk1, "ortolang/collection", key1));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", tsk1, Collection.MIME_TYPE, key1));
 		
 		assertTrue(c.containsElementName("myname1"));
 		assertTrue(c.containsElementKey(key1));
@@ -171,11 +171,11 @@ public class CollectionUnitTest {
 //		}
 		
 		String key2 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname2", tsk2, "ortolang/collection", key2));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname2", tsk2, Collection.MIME_TYPE, key2));
 		String key3 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname3", tsk3, "ortolang/collection", key3));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname3", tsk3, Collection.MIME_TYPE, key3));
 		String key4 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", tsk4, "ortolang/collection", key4));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", tsk4, Collection.MIME_TYPE, key4));
 		
 		assertTrue(c.containsElementName("myname1"));
 		assertTrue(c.containsElementKey(key1));
@@ -191,7 +191,7 @@ public class CollectionUnitTest {
 //			logger.log(Level.INFO, segment);
 //		}
 		
-		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname2", tsk2, "ortolang/collection", key2));
+		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname2", tsk2, Collection.MIME_TYPE, key2));
 		assertTrue(c.containsElementName("myname1"));
 		assertTrue(c.containsElementKey(key1));
 		assertFalse(c.containsElementName("myname2"));
@@ -206,7 +206,7 @@ public class CollectionUnitTest {
 //			logger.log(Level.INFO, segment);
 //		}
 		
-		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", tsk4, "ortolang/collection", key4));
+		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", tsk4, Collection.MIME_TYPE, key4));
 		assertTrue(c.containsElementName("myname1"));
 		assertTrue(c.containsElementKey(key1));
 		assertFalse(c.containsElementName("myname2"));
@@ -221,7 +221,7 @@ public class CollectionUnitTest {
 //			logger.log(Level.INFO, segment);
 //		}
 		
-		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", tsk1, "ortolang/collection", key1));
+		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", tsk1, Collection.MIME_TYPE, key1));
 		assertFalse(c.containsElementName("myname1"));
 		assertFalse(c.containsElementKey(key1));
 		assertFalse(c.containsElementName("myname2"));
@@ -236,7 +236,7 @@ public class CollectionUnitTest {
 //			logger.log(Level.INFO, segment);
 //		}
 		
-		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname3", tsk3, "ortolang/collection", key3));
+		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname3", tsk3, Collection.MIME_TYPE, key3));
 		assertFalse(c.containsElementName("myname1"));
 		assertFalse(c.containsElementKey(key1));
 		assertFalse(c.containsElementName("myname2"));
@@ -263,7 +263,7 @@ public class CollectionUnitTest {
 		c.setDescription("description");
 		
 		String key1 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", System.currentTimeMillis(), "ortolang/collection", key1));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", System.currentTimeMillis(), Collection.MIME_TYPE, key1));
 		String key2 = UUID.randomUUID().toString();
 		c.addElement(new CollectionElement(Collection.OBJECT_TYPE, "myname2", System.currentTimeMillis(), "image/svg+xml", key2));
 		String key3 = UUID.randomUUID().toString();

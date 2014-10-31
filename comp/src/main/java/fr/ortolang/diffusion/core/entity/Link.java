@@ -31,6 +31,7 @@ import fr.ortolang.diffusion.core.CoreService;
 public class Link extends OrtolangObject implements MetadataSource {
 	
 	public static final String OBJECT_TYPE = "link";
+	public static final String MIME_TYPE = "ortolang/link";
 	
 	@Id
 	private String id;

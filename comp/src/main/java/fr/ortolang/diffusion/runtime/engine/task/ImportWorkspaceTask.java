@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.runtime.task;
+package fr.ortolang.diffusion.runtime.engine.task;
 
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.core.CoreService;

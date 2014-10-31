@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.runtime;
+package fr.ortolang.diffusion.runtime.engine;
 
 import java.util.List;
 import java.util.Map;
@@ -32,5 +32,7 @@ public interface RuntimeEngine {
 	public void claimTask(String id, String user) throws RuntimeEngineException;
 	
 	public void completeTask(String id, Map<String, Object> variables) throws RuntimeEngineException;
+	
+	public void notify(String type) throws RuntimeEngineException;
 	
 }

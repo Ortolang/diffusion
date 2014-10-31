@@ -12,6 +12,7 @@
 					<th>Type</th>
 					<th>Initier</th>
 					<th>State</th>
+					<th>Activity</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -23,6 +24,7 @@
 					<td>$entry.type</td>
 					<td>$entry.initier</td>
 					<td>$entry.state</td>
+					<td>$entry.activity</td>
 				</tr>
 			#end
 			</tbody>

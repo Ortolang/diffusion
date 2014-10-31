@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.runtime.task;
+package fr.ortolang.diffusion.runtime.engine.task;
 
 import java.util.Date;
 import java.util.logging.Level;
@@ -8,8 +8,10 @@ import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.impl.el.FixedValue;
 
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 
-public class HelloWorldTask extends RuntimeTask {
+public class HelloWorldTask extends RuntimeEngineTask {
 	
 	public static final String NAME = "HelloWorld";
 
@@ -29,7 +31,7 @@ public class HelloWorldTask extends RuntimeTask {
 	}
 	
 	@Override
-	public void execute(String runas, DelegateExecution execution) throws RuntimeTaskException {
+	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
 		try {
 			String name = (String) execution.getVariable("name");
 			if (delay != null) {

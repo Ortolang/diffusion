@@ -26,6 +26,7 @@ import fr.ortolang.diffusion.core.CoreService;
 public class Collection extends OrtolangObject implements MetadataSource {
 	
 	public static final String OBJECT_TYPE = "collection";
+	public static final String MIME_TYPE = "ortolang/collection";
 	
 	private static final int MAX_SEGMENT_SIZE = 7500;
 	

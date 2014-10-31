@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.runtime.activiti;
+package fr.ortolang.diffusion.runtime.engine.activiti;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +34,8 @@ import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.runtime.RuntimeEngine;
-import fr.ortolang.diffusion.runtime.RuntimeEngineException;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngine;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineException;
 import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.runtime.entity.ProcessType;
@@ -60,7 +60,6 @@ public class ActivitiEngineBean implements RuntimeEngine {
 	private EntityManagerFactory emf;
 	
 	private ProcessEngine engine;
-	private ActivitiEngineListener listener;
 	
 	public ActivitiEngineBean() {
 	}
@@ -79,8 +78,7 @@ public class ActivitiEngineBean implements RuntimeEngine {
 			config.setJobExecutorActivate(true);
 			config.setProcessEngineName("ortolang");
 			engine = config.buildProcessEngine();
-			listener = new ActivitiEngineListener();
-			engine.getRuntimeService().addEventListener(listener);
+			engine.getRuntimeService().addEventListener(new ActivitiEngineListener());
 			logger.log(Level.INFO, "Activiti Engine created: " + engine.getName());
 		}
 		logger.log(Level.INFO, "EngineServiceBean initialized");
@@ -138,7 +136,7 @@ public class ActivitiEngineBean implements RuntimeEngine {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void startProcess(String type, String key, Map<String, Object> variables) throws RuntimeEngineException {
-		ActivitiProcessRunner runnable = new ActivitiProcessRunner(listener, engine.getRuntimeService(), type, key, variables);
+		ActivitiProcessRunner runnable = new ActivitiProcessRunner(engine.getRuntimeService(), type, key, variables);
 		Runnable ctxRunnable = contextService.createContextualProxy(runnable, Runnable.class);
 		scheduledExecutor.schedule(ctxRunnable, 3, TimeUnit.SECONDS);
 	}
@@ -219,6 +217,12 @@ public class ActivitiEngineBean implements RuntimeEngine {
 		ActivitiTaskRunner runnable = new ActivitiTaskRunner(engine.getTaskService(), id, variables);
 		Runnable ctxRunnable = contextService.createContextualProxy(runnable, Runnable.class);
 		scheduledExecutor.schedule(ctxRunnable, 3, TimeUnit.SECONDS);
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	public void notify(String type) throws RuntimeEngineException {
+		
 	}
 	
 	private ProcessType toProcessType(ProcessDefinition def) {

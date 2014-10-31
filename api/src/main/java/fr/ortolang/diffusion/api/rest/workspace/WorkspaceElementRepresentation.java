@@ -192,7 +192,7 @@ public class WorkspaceElementRepresentation {
 		representation.setName(collection.getName());
 		representation.setSize(collection.getElements().size());
 		representation.setType(Collection.OBJECT_TYPE);
-		representation.setMimeType("ortolang/directory");
+		representation.setMimeType(Collection.MIME_TYPE);
 		representation.setElements(collection.getElements());
 		representation.setMetadatas(collection.getMetadatas());
 		representation.setDescription(collection.getDescription());
@@ -233,7 +233,7 @@ public class WorkspaceElementRepresentation {
 		representation.setClock(link.getClock());
 		representation.setName(link.getName());
 		representation.setType(Link.OBJECT_TYPE);
-		representation.setMimeType("ortolang/link");
+		representation.setMimeType(Link.MIME_TYPE);
 		representation.setTarget(link.getTarget());
 		representation.setMetadatas(link.getMetadatas());
 		return representation;

@@ -39,6 +39,8 @@ import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngine;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineException;
 import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
@@ -227,7 +229,7 @@ public class RuntimeServiceBean implements RuntimeService {
 	
 	@Override
 	@RolesAllowed("system")
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void updateProcessState(String pid, State state) throws RuntimeServiceException {
 		logger.log(Level.INFO, "Updating state of process with pid: " + pid);
 		try {
@@ -249,7 +251,7 @@ public class RuntimeServiceBean implements RuntimeService {
 	
 	@Override
 	@RolesAllowed("system")
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void appendProcessLog(String pid, String log) throws RuntimeServiceException {
 		logger.log(Level.INFO, "Appending log to process with pid: " + pid);
 		try {
@@ -271,7 +273,7 @@ public class RuntimeServiceBean implements RuntimeService {
 
 	@Override
 	@RolesAllowed("system")
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void updateProcessActivity(String pid, String name) throws RuntimeServiceException {
 		logger.log(Level.INFO, "Updating activity of process with pid: " + pid);
 		try {

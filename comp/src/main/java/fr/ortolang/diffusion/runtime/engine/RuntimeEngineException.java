@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.runtime;
+package fr.ortolang.diffusion.runtime.engine;
 
 @SuppressWarnings("serial")
 public class RuntimeEngineException extends Exception {

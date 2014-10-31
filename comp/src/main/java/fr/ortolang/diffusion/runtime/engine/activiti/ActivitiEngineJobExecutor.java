@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.runtime.activiti;
+package fr.ortolang.diffusion.runtime.engine.activiti;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;

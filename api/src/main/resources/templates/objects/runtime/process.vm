@@ -19,12 +19,10 @@
 	  <div class="col-md-2"><p class="text-right"><strong>State</strong></p></div>
 	  <div class="col-md-10">$entity.object.state</div>
     </div>
-    #foreach( $param in $entity.object.params.keySet() )
     <div class="row">
-      <div class="col-md-2"><p class="text-right"><strong>$param</strong></p></div>
-      <div class="col-md-10">$entity.object.params.get($param)</div>
+	  <div class="col-md-2"><p class="text-right"><strong>Activity</strong></p></div>
+	  <div class="col-md-10">$entity.object.activity</div>
     </div>
-    #end
     <div class="row">
 	  <div class="col-md-2"><p class="text-right"><strong>Log</strong></p></div>
 	  <div class="col-md-10"><pre>$entity.object.log</pre></div>
