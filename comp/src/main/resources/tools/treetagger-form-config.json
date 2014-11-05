@@ -1,43 +1,317 @@
 [
     {
-        "key": "txt-input",
-        "type": "dataobject",
-        "label": "Fichier à annoter",
-        "placeholder": "Nom du fichier à annoter",
-        "required": true,
-        "description": "Entrez le nom du fichier texte sur lequel vous souhaitez appliquer Tree Tagger."
-    },
-    {
-        "key": "lg-input",
-        "type": "select",
-        "label": "Langue du texte",
-        "required": true,
-        "description": "Selectionnez la langue du fichier à annoter.",
-        "default": {
-            "id": "french",
-            "name": "Français"
-        },
+        "key": "task",
+        "type": "radio",
+        "label": "Task", 
+        "default": "run-tt",
         "options": [
             {
-                "id": "french",
-                "name": "Français"
+                "name": "Tag text",
+                "value": "run-tt"
             },
             {
-                "id": "english",
-                "name": "Anglais"
+                "name": "Output probability tree only",
+                "value": "print-prob-tree"
             },
             {
-                "id": "german",
-                "name": "Allemand"
+                "name": "Output suffix tree only",
+                "value": "print-suffix-tree"
             }
         ]
     },
     {
+        "type": "label", 
+        "key": "task-label",
+        "label": "Execute POS tagger",
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false
+    },
+    {
+        "type": "label", 
+        "key": "task-label",
+        "label": "Print the transition probability tree",
+        "description": "Print out the decision tree for ngrams for a given language.",
+        "hideExpression": "task!==\"print-prob-tree\"",
+        "hide": true
+    },
+    {
+        "type": "label", 
+        "key": "task-label",
+        "label": "Print the suffix probabilities:",
+        "description": "Print out the suffix lexicon for a given language.",
+        "hideExpression": "task!==\"print-suffix-tree\"",
+        "hide": true
+    },
+    {
+        "key": "lg-input",
+        "type": "select",
+        "label": "Language",
+        "required": true,
+        "description": "Select a language",
+        "default": {
+            "id": "french",
+            "name": "French"
+        },
+        "options": [
+            {
+                "id": "french",
+                "name": "French"
+            },
+            {
+                "id": "english",
+                "name": "English"
+            },
+            {
+                "id": "german",
+                "name": "German"
+            }
+        ]
+    },
+    {
+        "type": "checkbox", 
+        "key": "tokenizer", 
+        "label": "Chunk text", 
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "description": "Execute chunker before tagging.",
+        "default": true 
+    },
+    {
+        "key": "txt-input",
+        "type": "dataobject",
+        "label": "Input file",
+        "placeholder": "Input file name",
+        "required": true,
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "description": "Path of the file with the text to tag."
+    },
+    {
         "key": "txt-output",
         "type": "text",
-        "label": "Fichier cible",
-        "placeholder": "Nom du fichier cible",
+        "label": "Output file",
+        "placeholder": "Not available yet",
         "required": false,
-        "description": "Entrez le nom que vous souhaitez donner au fichier renvoyé par Tree Tagger."
+        "hideExpression": "files",
+        "hide": false,
+        "disabled": true,
+        "description": "Name of the output file."
+    },
+    {
+        "type": "label", 
+        "key": "print-options", 
+        "label": "Output for each token", 
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "description": "Elements to print out in the result.",
+        "required": false
+    },
+    {
+        "type": "checkbox", 
+        "key": "token", 
+        "label": "Tokens", 
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "default": true 
+    },
+    {
+        "type": "checkbox", 
+        "key": "lemma", 
+        "label": "Lemma", 
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "default": true 
+    },
+    {
+        "type": "checkbox", 
+        "key": "threshold", 
+        "label": "Probability threshold",
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "description": "Print all tags of a word with a probability higher than p times the largest probability", 
+        "default": false 
+    },
+    {
+        "key": "p",
+        "type": "decimal",
+        "label": "Value of the probability p",
+        "default": 0.1,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "hideExpression": "!threshold",
+        "hide": true
+    },
+    {
+        "key": "prob",
+        "type": "checkbox",
+        "label": "Print tag probabilities",
+        "hideExpression": "!threshold",
+        "hide": true
+    },
+    {
+        "key": "info-lex",
+        "type": "radio",
+        "label": "Lexical information",
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "description": "Format of lexical informations",
+        "default": "none",
+        "options": [
+            {
+                "name": "None",
+                "value": "none"
+            },
+            {
+                "name": "Proto format",
+                "value": "proto"
+            },
+            {
+                "name": "Gramotron format",
+                "value": "gramotron"
+            },
+            {
+                "name": "Proto format with probabilities",
+                "value": "proto-with-prob"
+            }
+        ]
+    },    
+    {
+        "type": "label", 
+        "key": "input-options", 
+        "label": "Input options", 
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "required": false
+    },
+    {
+        "type": "checkbox", 
+        "key": "pt-with-prob", 
+        "label": "Manual tag have probability", 
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "default": false 
+    },
+    {
+        "type": "checkbox", 
+        "key": "pt-with-lemma", 
+        "label": "Manual tag have lemma", 
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "default": false 
+    },
+    {
+        "type": "checkbox", 
+        "key": "sgml", 
+        "label": "SGML annotations present", 
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "default": false 
+    },
+    {
+        "type": "text", 
+        "key": "eos-tag", 
+        "label": "SGML tag that signals the end of a sentence : ", 
+        "hideExpression": "!sgml",
+        "hide": true,
+        "placeholder": "SENT"
+    },    
+    {
+        "type": "label", 
+        "key": "tag-options", 
+        "label": "Tagging options", 
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "required": false
+    },
+    {
+        "type": "checkbox", 
+        "key": "cap-heuristics", 
+        "label": "Use capital heuristics", 
+        "description": "Look up unknown capitalized words in the list of lower-case words.",
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "default": false 
+    },
+    {
+        "type": "checkbox", 
+        "key": "hyphen-heuristics", 
+        "label": "Use hyphen heuristics", 
+        "description": "Turn on the heuristics for guessing the parts of speech of unknown hyphenated words.",
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "default": false 
+    },
+    {
+    	"type": "checkbox", 
+        "key": "base", 
+        "label": "Use only lexical probabilities", 
+        "description": "Use only lexical probabilities for tagging.",
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "default": false 
+    },
+    {
+    	"type": "checkbox", 
+        "key": "ignore-prefix", 
+        "label": "Ignore prefix tree", 
+        "description": "Ignore prefix when guessing pos for unknown words.",
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "default": false 
+    },
+    {
+    	"type": "checkbox", 
+        "key": "lex", 
+        "label": "Use auxiliary lexicon", 
+        "description": "Read auxiliary lexicon entries from a file.",
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "default": false 
+    },
+    {
+        "key": "lex-input",
+        "type": "dataobject",
+        "label": "Auxiliary lexicon",
+        "required": true,
+        "hideExpression": "!lex",
+        "hide": true
+    },
+    {
+    	"type": "checkbox", 
+        "key": "wc", 
+        "label": "Use a word-class automaton", 
+        "description": "Read a word-class automaton from a file.",
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "default": false 
+    },
+    {
+        "key": "wc-input",
+        "type": "dataobject",
+        "label": "Auxiliary lexicon",
+        "required": true,
+        "hideExpression": "!wc",
+        "hide": true
+    },
+    {
+    	"type": "checkbox", 
+        "key": "eps", 
+        "label": "Replace zero lexical frequencies by epsilon", 
+        "description": "Set minimal tag frequency to epsilon.",
+        "hideExpression": "task!==\"run-tt\"",
+        "hide": false,
+        "default": false 
+    },
+    {
+        "key": "epsilon",
+        "type": "decimal",
+        "label": "Value of epsilon",
+        "default": 0.1,
+        "min": 0,
+        "max": 1,
+        "step": 0.01,
+        "hideExpression": "!eps",
+        "hide": true
     }
 ]
