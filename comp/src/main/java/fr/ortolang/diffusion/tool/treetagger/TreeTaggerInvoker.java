@@ -286,6 +286,7 @@ public class TreeTaggerInvoker implements ToolInvoker {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			Files.copy(output, baos);
 			result.setOutput(baos.toString());
+			result.setOutputFilePath(output.toString());
 			result.setStatus(ToolInvokerResult.Status.SUCCESS);
 			result.setStop(System.currentTimeMillis());
 			p2.destroy();

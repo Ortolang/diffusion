@@ -117,8 +117,24 @@ public class BootstrapServiceBean implements BootstrapService {
 				runtime.importProcessTypes();
 				
 				logger.log(Level.FINE, "declare tools");
-				tool.declareTool("dumb", "Dumb tool", "Tool for testing purpose.", "N/A", "fr.ortolang.diffusion.tool.dumbtool.DumbToolInvoker", "dumb-form-config.json");
-				tool.declareTool("treetagger", "TreeTagger", "A language independent part-of-speech tagger : \r\nThe TreeTagger is a tool for annotating text with part-of-speech and lemma information. ", "See <a href=\"http://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/\">http://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/</a> or <a href=\"http://www.tal.univ-paris3.fr/cours/BAO-master/treetagger-win32/README-treetagger.txt\">http://www.tal.univ-paris3.fr/cours/BAO-master/treetagger-win32/README-treetagger.txt</a>", "fr.ortolang.diffusion.tool.treetagger.TreeTaggerInvoker", "treetagger-form-config.json");
+				tool.declareTool("dumb", 
+						"Dumb tool", 
+						"Tool for testing purpose.", 
+						"N/A", 
+						"fr.ortolang.diffusion.tool.dumbtool.DumbToolInvoker", 
+						"dumb-form-config.json");
+				tool.declareTool("treetagger", 
+						"TreeTagger", 
+						"A language independent part-of-speech tagger : \r\nThe TreeTagger is a tool for annotating text with part-of-speech and lemma information. ", 
+						"See <a href=\"http://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/\">http://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/</a> or <a href=\"http://www.tal.univ-paris3.fr/cours/BAO-master/treetagger-win32/README-treetagger.txt\">http://www.tal.univ-paris3.fr/cours/BAO-master/treetagger-win32/README-treetagger.txt</a>", 
+						"fr.ortolang.diffusion.tool.treetagger.TreeTaggerInvoker", 
+						"treetagger-form-config.json");
+				tool.declareTool("marsatag", 
+						"MarsaTag", 
+						"MarsaTag is a French language tagger develloped at the LPL by Stéphane Rauzy.", 
+						"You can download MarsaTag in the SLDR site, that you can reach with its unique handler : <a href=\"http://hdl.handle.net/11041/sldr000841\">hdl:11041/sldr000841</a>.", 
+						"fr.ortolang.diffusion.tool.marsatag.MarsaTagInvoker", 
+						"marsatag-form-config.json");
 
 				logger.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException

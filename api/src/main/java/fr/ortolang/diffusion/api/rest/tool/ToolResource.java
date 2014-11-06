@@ -1,35 +1,50 @@
 package fr.ortolang.diffusion.api.rest.tool;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.ejb.EJB;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.io.IOUtils;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.rest.template.Template;
 import fr.ortolang.diffusion.browser.BrowserService;
+import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.InvalidPathException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.tool.ToolService;
 import fr.ortolang.diffusion.tool.ToolServiceException;
 import fr.ortolang.diffusion.tool.entity.Tool;
@@ -118,5 +133,28 @@ public class ToolResource {
 		return response.build();
 	}
 	
-
+	@GET
+	@Path("/{key}/download")
+	public void download(@PathParam(value = "key") String key, @QueryParam(value = "path") String path, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException,
+			OrtolangException, DataNotFoundException, IOException, CoreServiceException, InvalidPathException {
+		logger.log(Level.INFO, "GET /tools/" + key + "/download?path=" + path );
+		if (path == null) {
+			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "parameter 'path' is mandatory");
+			return;
+		}
+		
+		File fileResult = new File(path);		
+		response.setHeader("Content-Disposition", "attachment; filename=" + fileResult.getName());		
+		FileInputStream fis = new FileInputStream(fileResult);
+        InputStreamReader isr = new InputStreamReader(fis);
+		response.setCharacterEncoding(isr.getEncoding());
+		response.setContentType(new MimetypesFileTypeMap().getContentType(fileResult));
+		response.setContentLength((int) fileResult.length());
+		InputStream input = new FileInputStream(path);
+		try {
+			IOUtils.copy(input, response.getOutputStream());
+		} finally {
+			IOUtils.closeQuietly(input);
+		}
+	}
 }

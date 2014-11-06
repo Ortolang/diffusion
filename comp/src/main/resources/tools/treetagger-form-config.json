@@ -84,7 +84,7 @@
         "required": true,
         "hideExpression": "task!==\"run-tt\"",
         "hide": false,
-        "description": "Path of the file with the text to tag."
+        "description": "File with the text to tag."
     },
     {
         "key": "txt-output",

@@ -249,6 +249,7 @@ public class MarsaTagInvoker implements ToolInvoker {
 			Path output = Paths.get(input + ".out");
 			Files.copy(output, baos);
 			result.setOutput(baos.toString());
+			result.setOutputFilePath(output.toString());
 			result.setStatus(ToolInvokerResult.Status.SUCCESS);
 			result.setStop(System.currentTimeMillis());
 			p2.destroy();

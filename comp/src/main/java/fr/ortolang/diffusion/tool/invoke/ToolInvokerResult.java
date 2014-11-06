@@ -9,6 +9,7 @@ public class ToolInvokerResult {
 	private long start;
 	private long stop;
 	private String output;
+	private String outputFilePath;
 	private String log;
 	private Status status;
 	
@@ -53,6 +54,14 @@ public class ToolInvokerResult {
 
 	public void setStatus(Status status) {
 		this.status = status;
+	}
+
+	public String getOutputFilePath() {
+		return outputFilePath;
+	}
+
+	public void setOutputFilePath(String outputFilePath) {
+		this.outputFilePath = outputFilePath;
 	}
 
 }
