@@ -5,6 +5,7 @@ import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.api.rest.DiffusionUriBuilder;
+import fr.ortolang.diffusion.api.rest.filter.CORSFilter;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.rest.template.Template;
 import fr.ortolang.diffusion.browser.BrowserService;
@@ -21,6 +22,7 @@ import fr.ortolang.diffusion.registry.PropertyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+
 import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
@@ -28,12 +30,16 @@ import javax.ejb.EJB;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -250,10 +256,18 @@ public class WorkspaceResource {
 	@POST
 	@Path("/{wskey}/elements")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	public Response writeWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form) throws CoreServiceException,
+	public Response writeWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form, @Context HttpHeaders headers) throws CoreServiceException,
 			KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException {
 		logger.log(Level.INFO, "POST /workspaces/" + wskey + "/elements");
 		try {
+			String contentTransferEncoding = "UTF-8";
+			if (headers != null) {
+				if(headers.getRequestHeader(CORSFilter.CONTENT_TRANSFER_ENCODING) != null &&
+						!headers.getRequestHeader(CORSFilter.CONTENT_TRANSFER_ENCODING).isEmpty()) {
+					contentTransferEncoding = headers.getRequestHeader(CORSFilter.CONTENT_TRANSFER_ENCODING).get(0);
+				}
+			}
+			
 			if (form.getPath() == null) {
 				return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
 			}
@@ -284,20 +298,21 @@ public class WorkspaceResource {
 					return Response.ok().build();
 				case MetadataObject.OBJECT_TYPE:
 					boolean mdexists = false;
+					String name = URLDecoder.decode(form.getName(), contentTransferEncoding);
 					for (MetadataElement element : ((MetadataSource) object).getMetadatas()) {
-						if (element.getName().equals(form.getName())) {
+						if (element.getName().equals(name)) {
 							logger.log(Level.FINE, "element metadata key found, need to update");
 							mdexists = true;
 							break;
 						}
 					}
 					if (mdexists) {
-						core.updateMetadataObject(wskey, npath.build(), form.getName(), form.getFormat(), form.getStreamHash());
+						core.updateMetadataObject(wskey, npath.build(), name, form.getFormat(), form.getStreamHash());
 						return Response.ok().build();
 					} else {
-						core.createMetadataObject(wskey, npath.build(), form.getName(), form.getFormat(), form.getStreamHash());
+						core.createMetadataObject(wskey, npath.build(), name, form.getFormat(), form.getStreamHash());
 						URI newly = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build())
-								.queryParam("metadataname", form.getName()).build();
+								.queryParam("metadataname", name).build();
 						return Response.created(newly).build();
 					}
 				default:
@@ -325,7 +340,7 @@ public class WorkspaceResource {
 					return Response.created(newly).build();
 				}
 			}
-		} catch (DataCollisionException e) {
+		} catch (DataCollisionException | UnsupportedEncodingException e) {
 			logger.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
 			return Response.serverError().entity(e.getMessage()).build();
 		}
