@@ -1,0 +1,182 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0.0
+xmax = 0.0
+tiers? <exists>
+size = 5
+item []:
+    item [1]:
+        class = "IntervalTier"
+        name = "S-token"
+        xmin = 0.0
+        xmax = 0.0
+        intervals: size = 9
+        intervals [1]:
+            xmin = 0.0
+            xmax = 0.0
+            text = "Léo"
+        intervals [2]:
+            xmin = 0.0
+            xmax = 0.0
+            text = "part"
+        intervals [3]:
+            xmin = 0.0
+            xmax = 0.0
+            text = "."
+        intervals [4]:
+            xmin = 0.0
+            xmax = 0.0
+            text = "Il"
+        intervals [5]:
+            xmin = 0.0
+            xmax = 0.0
+            text = "lui"
+        intervals [6]:
+            xmin = 0.0
+            xmax = 0.0
+            text = "donne"
+        intervals [7]:
+            xmin = 0.0
+            xmax = 0.0
+            text = "une"
+        intervals [8]:
+            xmin = 0.0
+            xmax = 0.0
+            text = "lettre"
+        intervals [9]:
+            xmin = 0.0
+            xmax = 0.0
+            text = "."
+    item [2]:
+        class = "TextTier"
+        name = "S-punctuation"
+        xmin = 0.0
+        xmax = 0.0
+        points: size = 0
+    item [3]:
+        class = "IntervalTier"
+        name = "S-morphosyntax"
+        xmin = 0.0
+        xmax = 0.0
+        intervals: size = 9
+        intervals [1]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [2]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [3]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [4]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [5]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [6]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [7]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [8]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [9]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+    item [4]:
+        class = "IntervalTier"
+        name = "S-category"
+        xmin = 0.0
+        xmax = 0.0
+        intervals: size = 9
+        intervals [1]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [2]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [3]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [4]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [5]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [6]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [7]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [8]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [9]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+    item [5]:
+        class = "IntervalTier"
+        name = "S-lemma"
+        xmin = 0.0
+        xmax = 0.0
+        intervals: size = 9
+        intervals [1]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [2]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [3]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [4]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [5]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [6]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [7]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [8]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""
+        intervals [9]:
+            xmin = 0.0
+            xmax = 0.0
+            text = ""

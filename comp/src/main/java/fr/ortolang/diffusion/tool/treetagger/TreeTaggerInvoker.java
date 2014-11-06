@@ -74,9 +74,6 @@ public class TreeTaggerInvoker implements ToolInvoker {
 			String lg = null;
 			String key = null;
 			Boolean tokenizeInput = true;
-			ArrayList<String> options = new ArrayList<String>();
-			options.add("-no-unknown");
-			options.add("-quiet");
 			
 			// validate params
 			if ( !params.containsKey("lg-input") || params.get("lg-input").length() == 0 ) {
@@ -96,13 +93,12 @@ public class TreeTaggerInvoker implements ToolInvoker {
 				}
 			}
 
-			options = prepareCmd(params);
+			ArrayList<String> options = prepareCmd(params);
 			
 		    // create temporary files
 			Path tagger = Paths.get(base, "bin", "tree-tagger");
 			Path par = Paths.get(base, "lib", lg + "-utf8.par");
 			Path output = Files.createTempFile("ttout.", ".tmp");
-			
 			
 			if (params.containsKey("task") && params.get("task").equals("run-tt") ) {
 				
@@ -131,18 +127,21 @@ public class TreeTaggerInvoker implements ToolInvoker {
 					} else {
 						throw new Exception("tokenizer subprocess failed.");
 					}
-					p1.destroy();				
+					p1.destroy();			
+					inter.toFile().deleteOnExit();
 					
 				// Sans pre-processing
 				} else {
 					result = invokeTreeTagger(result, tagger, options, par, input, output);
 				} 
-				
+
+				input.toFile().deleteOnExit();
 				//logger.log(Level.INFO, result.getOutput());
 				
 			}else {
 				result = invokeTreeTagger(result, tagger, options, par, null, output);
 			}
+			output.toFile().deleteOnExit();
 			
 		} catch ( Exception e ) {
 			//e.printStackTrace();
@@ -210,6 +209,7 @@ public class TreeTaggerInvoker implements ToolInvoker {
 								InputStream is = getCoreService().download(params.get("wc-input"));
 								Files.copy(is, wcInput, StandardCopyOption.REPLACE_EXISTING);
 								options.add(wcInput.toString());
+								wcInput.toFile().deleteOnExit();
 							}
 						}
 					}else if( entry.getKey().equals("lex")){
@@ -220,6 +220,7 @@ public class TreeTaggerInvoker implements ToolInvoker {
 								InputStream is = getCoreService().download(params.get("lex-input"));
 								Files.copy(is, lexInput, StandardCopyOption.REPLACE_EXISTING);
 								options.add(lexInput.toString());
+								lexInput.toFile().deleteOnExit();
 							}
 						}
 					}else {
