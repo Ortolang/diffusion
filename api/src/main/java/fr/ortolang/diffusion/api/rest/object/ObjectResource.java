@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.ejb.EJB;
 import javax.servlet.http.HttpServletResponse;
@@ -38,6 +40,8 @@ import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.InvalidPathException;
+import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
@@ -165,12 +169,27 @@ public class ObjectResource {
 			response.setContentType(((MetadataObject)object).getContentType());
 			response.setContentLength((int) ((MetadataObject)object).getSize());
 		}
-		InputStream input = core.download(key);
-		try {
-		    IOUtils.copy(input, response.getOutputStream());
-		} finally {
-            IOUtils.closeQuietly(input);
-        }
+		
+		if ( object instanceof Collection ) {
+			
+			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName() + ".zip");
+			response.setContentType("application/zip");
+//			response.setContentLength((int) ((MetadataObject)object).getSize());
+
+			ZipOutputStream zos = exportToZip(key, new ZipOutputStream(response.getOutputStream()), PathBuilder.newInstance());
+			zos.finish();
+			zos.close();
+			logger.log(Level.INFO, "End of zipping");
+		} else {
+			InputStream input = core.download(key);
+
+			try {
+			    IOUtils.copy(input, response.getOutputStream());
+			} finally {
+	            IOUtils.closeQuietly(input);
+	        }
+		}
+		
 	}
 	
 	@GET
@@ -248,5 +267,72 @@ public class ObjectResource {
 			
 		return keys;
 	}
-	
+
+	/**
+	 * List of keys contains in a object.
+	 * @param key
+	 * @param keys
+	 * @return
+	 * @throws AccessDeniedException 
+	 * @throws KeyNotFoundException 
+	 * @throws OrtolangException 
+	 * @throws IOException 
+	 */
+	protected ZipOutputStream exportToZip(String key, ZipOutputStream zos, PathBuilder path) throws OrtolangException, KeyNotFoundException, AccessDeniedException, IOException {
+		
+		OrtolangObject object = browser.findObject(key);
+		String type = object.getObjectIdentifier().getType();
+		
+		logger.log(Level.INFO, "export collection to zip : "+path.build()+" ("+key+")");
+
+		ZipEntry ze = new ZipEntry(path.build() + PathBuilder.PATH_SEPARATOR);
+		
+		zos.putNextEntry(ze);
+		zos.closeEntry();
+		
+		if(type.equals(Collection.OBJECT_TYPE)) {
+			Set<CollectionElement> elements = ((Collection) object).getElements();
+			
+			for(CollectionElement element : elements) {
+				
+				try {
+					PathBuilder pathElement = path.clone().path(element.getName());
+					if(element.getType().equals(Collection.OBJECT_TYPE)) {
+					
+							exportToZip(element.getKey(), zos, pathElement);
+						
+					} else if(element.getType().equals(DataObject.OBJECT_TYPE)) {
+						try {
+							
+							DataObject dataObject = (DataObject) browser.findObject(element.getKey());
+							
+							logger.log(Level.INFO, "export dataobject to zip : "+pathElement.build()+" ("+element.getKey()+")");
+							ZipEntry entry = new ZipEntry(pathElement.build());
+							entry.setTime(element.getModification());
+							entry.setSize(dataObject.getSize());
+							zos.putNextEntry(entry);
+							InputStream input = core.download(element.getKey());
+							try {
+								IOUtils.copy(input, zos);
+							} catch(IOException e) {
+								
+							} finally {
+								IOUtils.closeQuietly(input);
+								zos.closeEntry();
+							}
+						} catch (CoreServiceException | DataNotFoundException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
+				} catch (InvalidPathException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		}
+		
+		return zos;
+	}
 }
