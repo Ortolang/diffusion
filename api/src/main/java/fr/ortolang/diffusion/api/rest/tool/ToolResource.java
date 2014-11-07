@@ -135,6 +135,7 @@ public class ToolResource {
 	
 	@GET
 	@Path("/{key}/download")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public void download(@PathParam(value = "key") String key, @QueryParam(value = "path") String path, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException,
 			OrtolangException, DataNotFoundException, IOException, CoreServiceException, InvalidPathException {
 		logger.log(Level.INFO, "GET /tools/" + key + "/download?path=" + path );
