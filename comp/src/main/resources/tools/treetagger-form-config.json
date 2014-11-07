@@ -81,21 +81,10 @@
         "type": "dataobject",
         "label": "Input file",
         "placeholder": "Input file name",
-        "required": true,
+        "requiredExpression": "task===\"run-tt\"",
         "hideExpression": "task!==\"run-tt\"",
         "hide": false,
         "description": "File with the text to tag."
-    },
-    {
-        "key": "txt-output",
-        "type": "text",
-        "label": "Output file",
-        "placeholder": "Not available yet",
-        "required": false,
-        "hideExpression": "files",
-        "hide": false,
-        "disabled": true,
-        "description": "Name of the output file."
     },
     {
         "type": "label", 
@@ -133,20 +122,20 @@
     },
     {
         "key": "p",
-        "type": "decimal",
+        "type": "number",
         "label": "Value of the probability p",
         "default": 0.1,
         "min": 0,
         "max": 1,
         "step": 0.01,
-        "hideExpression": "!threshold",
+        "hideExpression": "!threshold || task!==\"run-tt\"",
         "hide": true
     },
     {
         "key": "prob",
         "type": "checkbox",
         "label": "Print tag probabilities",
-        "hideExpression": "!threshold",
+        "hideExpression": "!threshold || task!==\"run-tt\"",
         "hide": true
     },
     {
@@ -212,7 +201,7 @@
         "type": "text", 
         "key": "eos-tag", 
         "label": "SGML tag that signals the end of a sentence : ", 
-        "hideExpression": "!sgml",
+        "hideExpression": "!sgml || task!==\"run-tt\"",
         "hide": true,
         "placeholder": "SENT"
     },    
@@ -273,8 +262,8 @@
         "key": "lex-input",
         "type": "dataobject",
         "label": "Auxiliary lexicon",
-        "required": true,
-        "hideExpression": "!lex",
+        "requiredExpression": "lex && task===\"run-tt\"",
+        "hideExpression": "!lex || task!==\"run-tt\"",
         "hide": true
     },
     {
@@ -290,8 +279,8 @@
         "key": "wc-input",
         "type": "dataobject",
         "label": "Word-class automaton",
-        "required": true,
-        "hideExpression": "!wc",
+        "requiredExpression": "wc && task===\"run-tt\"",
+        "hideExpression": "!wc || task!==\"run-tt\"",
         "hide": true
     },
     {
@@ -311,7 +300,7 @@
         "min": 0,
         "max": 1,
         "step": 0.01,
-        "hideExpression": "!eps",
+        "hideExpression": "!eps || task!==\"run-tt\"",
         "hide": true
     }
 ]

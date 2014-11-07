@@ -128,7 +128,7 @@ public class ToolResource {
 	    logger.log(Level.INFO, "invoking tool " + key + " with params : " + params);
 		ToolInvokerResult invokeResult = tool.invokeTool(key, params);
 		
-		logger.log(Level.INFO, "result of tool " + key + " : " + invokeResult.getOutput());
+		logger.log(Level.INFO, "result of tool " + key + " : " + invokeResult.getLog());
 		final ResponseBuilder response = Response.ok(invokeResult);
 		return response.build();
 	}
@@ -136,16 +136,20 @@ public class ToolResource {
 	@GET
 	@Path("/{key}/download")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public void download(@PathParam(value = "key") String key, @QueryParam(value = "path") String path, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException,
+	public void download(@PathParam(value = "key") String key, @QueryParam(value = "path") String path, @QueryParam(value = "name") String name,@Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException,
 			OrtolangException, DataNotFoundException, IOException, CoreServiceException, InvalidPathException {
-		logger.log(Level.INFO, "GET /tools/" + key + "/download?path=" + path );
+		logger.log(Level.INFO, "GET /tools/" + key + "/download?path=" + path + "&name=" + name);
 		if (path == null) {
 			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "parameter 'path' is mandatory");
 			return;
 		}
 		
 		File fileResult = new File(path);		
-		response.setHeader("Content-Disposition", "attachment; filename=" + fileResult.getName());		
+		if (name == null) {
+			response.setHeader("Content-Disposition", "attachment; filename=" + fileResult.getName());					
+		} else {
+			response.setHeader("Content-Disposition", "attachment; filename=" + name);					
+		}		
 		FileInputStream fis = new FileInputStream(fileResult);
         InputStreamReader isr = new InputStreamReader(fis);
 		response.setCharacterEncoding(isr.getEncoding());

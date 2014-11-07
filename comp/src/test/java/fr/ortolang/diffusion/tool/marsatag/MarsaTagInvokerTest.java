@@ -8,6 +8,7 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -25,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -36,6 +38,7 @@ public class MarsaTagInvokerTest {
 	private MarsaTagInvoker invoker;
 	private Mockery context;
 	private CoreService core;
+	private DataObject dataObject;
 	private static final String DEFAULT_FILES_FOLDER = "src/test/resources/tool/";
 
 	@Before
@@ -43,6 +46,7 @@ public class MarsaTagInvokerTest {
 		try {
 			context = new Mockery();
 			core = context.mock(CoreService.class);
+			dataObject = new DataObject();
 			
 			invoker = new MarsaTagInvoker();
 			invoker.setCoreService(core);
@@ -52,11 +56,15 @@ public class MarsaTagInvokerTest {
 	}
 		
 	@Test
-	public void testInvokeTokenizer() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
-		System.out.println("Correct usage of marsatag's tokenizer.");    
+	public void testInvokeTokenizer() throws Exception {
+		System.out.println("Correct usage of marsatag's tokenizer.");  
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); will(returnValue(new ByteArrayInputStream("Il lui donne une lettre.".getBytes())));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
+	    
 		
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("txt-input", "K1");
@@ -85,8 +93,11 @@ public class MarsaTagInvokerTest {
 	@Test
 	public void testInvokeReaderRaw() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of marsatag with reader raw.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); will(returnValue(new ByteArrayInputStream("Il lui donne une lettre.".getBytes())));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -109,8 +120,11 @@ public class MarsaTagInvokerTest {
 	@Test
 	public void testInvokeReaderTokens() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of marsatag with reader tokens.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); will(returnValue(new ByteArrayInputStream("Il\nlui\ndonne\nune\nlettre\n.\n".getBytes())));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -133,9 +147,12 @@ public class MarsaTagInvokerTest {
 	@Test
 	public void testInvokeReaderColumns() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException, IOException {
 		System.out.println("Call of marsatag with reader columns (.csv).");    
+		dataObject.setName("reader-test-columns.csv");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); 
 		    will(returnValue(new BufferedInputStream(new FileInputStream(Paths.get(DEFAULT_FILES_FOLDER + "reader-test-columns.csv").toFile()))));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -158,9 +175,12 @@ public class MarsaTagInvokerTest {
 	@Test
 	public void testInvokeReaderMARS() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException, IOException {
 		System.out.println("Call of marsatag with reader MARS (.xml).");    
+		dataObject.setName("reader-test-mars.xml");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); 
 		    will(returnValue(new BufferedInputStream(new FileInputStream(Paths.get(DEFAULT_FILES_FOLDER + "reader-test-mars.xml").toFile()))));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -183,9 +203,12 @@ public class MarsaTagInvokerTest {
 	@Test
 	public void testInvokeReaderSYNT() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException, IOException {
 		System.out.println("Call of marsatag with reader SYNT (.xml).");    
+		dataObject.setName("reader-test-synt.xml");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); 
 		    will(returnValue(new BufferedInputStream(new FileInputStream(Paths.get(DEFAULT_FILES_FOLDER + "reader-test-synt.xml").toFile()))));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -208,9 +231,12 @@ public class MarsaTagInvokerTest {
 	@Test
 	public void testInvokeReaderPraatTextGrid() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException, IOException {
 		System.out.println("Call of marsatag with reader praat-textgrid.");    
+		dataObject.setName("reader-test-praat.TextGrid");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); 
 		    will(returnValue(new BufferedInputStream(new FileInputStream(Paths.get(DEFAULT_FILES_FOLDER + "reader-test-praat.TextGrid").toFile()))));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -234,9 +260,12 @@ public class MarsaTagInvokerTest {
 	@Test
 	public void testInvokeReaderPraatTextGridText() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException, IOException {
 		System.out.println("Call of marsatag with reader praat-textgrid-text.");    
+		dataObject.setName("reader-test-praat.TextGrid");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); 
 		    will(returnValue(new BufferedInputStream(new FileInputStream(Paths.get(DEFAULT_FILES_FOLDER + "reader-test-praat.TextGrid").toFile()))));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -260,9 +289,12 @@ public class MarsaTagInvokerTest {
 	@Test
 	public void testInvokeReaderStAX() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException, IOException {
 		System.out.println("Call of marsatag with reader StAx (universal reader for xml formats - TEI ).");    
+		dataObject.setName("reader-test-stax.xml");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); 
 		    will(returnValue(new BufferedInputStream(new FileInputStream(Paths.get(DEFAULT_FILES_FOLDER + "reader-test-stax.xml").toFile()))));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -286,9 +318,12 @@ public class MarsaTagInvokerTest {
 	@Test
 	public void testInvokeReaderTikaRaw() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException, IOException {
 		System.out.println("Call of marsatag with reader tika raw (here a .doc).");    
+		dataObject.setName("reader-test-tika.doc");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); 
 		    will(returnValue(new BufferedInputStream(new FileInputStream(Paths.get(DEFAULT_FILES_FOLDER + "reader-test-tika.doc").toFile()))));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -312,9 +347,12 @@ public class MarsaTagInvokerTest {
 	@Test
 	public void testInvokeReaderTikaXHTML() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException, IOException {
 		System.out.println("Call of marsatag with reader tika tika-xhtml (here a .pdf).");    
+		dataObject.setName("reader-test-tika.pdf");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); 
 		    will(returnValue(new BufferedInputStream(new FileInputStream(Paths.get(DEFAULT_FILES_FOLDER + "reader-test-tika.pdf").toFile()))));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();

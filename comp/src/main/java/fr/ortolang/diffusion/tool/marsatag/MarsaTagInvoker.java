@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -35,6 +36,10 @@ public class MarsaTagInvoker implements ToolInvoker {
 	private CoreService core;
 	private String base;
 	private boolean initialized = false;
+
+	private String outExtension;
+
+	private String outputFileName;
 	
 	public MarsaTagInvoker() {
 	}
@@ -72,6 +77,7 @@ public class MarsaTagInvoker implements ToolInvoker {
 			}
 			
 			String key = null;
+			outExtension = ".out";
 			ArrayList<String> options = prepareCmd(params);
 			
 			// validate params
@@ -88,6 +94,7 @@ public class MarsaTagInvoker implements ToolInvoker {
 			Path input = Files.createTempFile("ttin.", ".tmp");
 			
 			InputStream is = getCoreService().download(key);
+			outputFileName = getCoreService().readDataObject(key).getObjectName();
 			Files.copy(is, input, StandardCopyOption.REPLACE_EXISTING);
 			
 			result = invokeMarsaTag(result, program, options, input);
@@ -148,6 +155,15 @@ public class MarsaTagInvoker implements ToolInvoker {
 			if( params.containsKey("out-encoding") && !params.get("out-encoding").isEmpty() ){
 				options.add("--out-encoding");
 				options.add(params.get("out-encoding"));
+			}
+			if(params.get("writer").equals("pos")){
+				outExtension = ".txt";
+			} else if(params.get("writer").equals("columns")){
+				outExtension = ".csv";
+			} else if(params.get("writer").equals("MARS") || params.get("writer").equals("SYNT") || params.get("writer").startsWith("StAX")){
+				outExtension = ".xml";
+			} else if(params.get("writer").equals("praat-textgrid")){
+				outExtension = ".TextGrid";
 			}
 		}
 		
@@ -249,7 +265,8 @@ public class MarsaTagInvoker implements ToolInvoker {
 			Path output = Paths.get(input + ".out");
 			Files.copy(output, baos);
 			result.setOutput(baos.toString());
-			List<String> listFileResult = Arrays.asList(output.toString());
+			Map<String, String> listFileResult = new HashMap<String,String>();
+			listFileResult.put(outputFileName + ".out" + outExtension, output.toString());
 			result.setOutputFilePath(listFileResult);
 			result.setLog(processOutput);
 			result.setStatus(ToolInvokerResult.Status.SUCCESS);

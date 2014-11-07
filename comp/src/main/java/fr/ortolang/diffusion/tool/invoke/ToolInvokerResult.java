@@ -1,6 +1,7 @@
 package fr.ortolang.diffusion.tool.invoke;
 
 import java.util.List;
+import java.util.Map;
 
 public class ToolInvokerResult {
 
@@ -11,7 +12,7 @@ public class ToolInvokerResult {
 	private long start;
 	private long stop;
 	private String output;
-	private List<String> outputFilePath;
+	private Map<String, String> outputFilePath;
 	private String log;
 	private Status status;
 	
@@ -58,13 +59,13 @@ public class ToolInvokerResult {
 		this.status = status;
 	}
 
-	public List<String> getOutputFilePath() {
+	public Map<String, String> getOutputFilePath() {
 		return outputFilePath;
 	}
 
-	public void setOutputFilePath(List<String> outputFilePath) {
+	public void setOutputFilePath(Map<String, String> outputFilePath) {
 		this.outputFilePath = outputFilePath;
 	}
 
-
+	
 }

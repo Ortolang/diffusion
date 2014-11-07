@@ -18,6 +18,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.matchers.JUnitMatchers.containsString;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -29,12 +30,14 @@ public class TreeTaggerInvokerTest {
 	private TreeTaggerInvoker invoker;
 	private Mockery context;
 	private CoreService core;
+	private DataObject dataObject;
 
 	@Before
 	public void setup() {
 		try {
 			context = new Mockery();
 			core = context.mock(CoreService.class);
+			dataObject = new DataObject();
 			
 			invoker = new TreeTaggerInvoker();
 			invoker.setCoreService(core);
@@ -46,8 +49,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvoke() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Correct usage of treetagger.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); will(returnValue(new ByteArrayInputStream("Il lui donne une lettre.".getBytes())));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -72,8 +78,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokeNoChunker() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with an input not chunked.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); will(returnValue(new ByteArrayInputStream("Il lui donne une lettre.".getBytes())));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -94,8 +103,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokeToken() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with -token option.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); will(returnValue(new ByteArrayInputStream("Il lui donne une lettre.".getBytes())));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -121,8 +133,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokeLemma() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with -lemma option.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K1"); will(returnValue(new ByteArrayInputStream("Il lui donne une lettre.".getBytes())));
+		    oneOf (core).readDataObject("K1");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -148,8 +163,12 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokeSGML() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with an input with SGML annotation.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
-		    oneOf (core).download("K2"); will(returnValue(new ByteArrayInputStream("<SENTENCE><W TAG=\"PPS\">He</W><W TAG=\"VBZ\">books</W><W TAG=\"NNS\">tickets</W></SENTENCE>".getBytes())));
+		    oneOf (core).download("K2"); 
+		    will(returnValue(new ByteArrayInputStream("<SENTENCE><W TAG=\"PPS\">He</W><W TAG=\"VBZ\">books</W><W TAG=\"NNS\">tickets</W></SENTENCE>".getBytes())));
+		    oneOf (core).readDataObject("K2");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -170,8 +189,12 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokeEosTag() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with an input with SGML annotation and eos tag option.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
-		    oneOf (core).download("K2"); will(returnValue(new ByteArrayInputStream("<SENTENCE><W TAG=\"PPS\">He</W><W TAG=\"VBZ\">books</W><W TAG=\"NNS\">tickets</W></SENTENCE>".getBytes())));
+		    oneOf (core).download("K2"); 
+		    will(returnValue(new ByteArrayInputStream("<SENTENCE><W TAG=\"PPS\">He</W><W TAG=\"VBZ\">books</W><W TAG=\"NNS\">tickets</W></SENTENCE>".getBytes())));
+		    oneOf (core).readDataObject("K2");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -193,8 +216,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokeNoLg() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger without a language specified.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K3"); will(returnValue(new ByteArrayInputStream("Ceci est une phrase clé.".getBytes())));
+		    oneOf (core).readDataObject("K3");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -225,8 +251,12 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokeThreshold1() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with threshold option : p = 0.1.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
-		    oneOf (core).download("K4"); will(returnValue(new ByteArrayInputStream("Léo part. Il lui donne une lettre.".getBytes())));
+		    oneOf (core).download("K4"); 
+		    will(returnValue(new ByteArrayInputStream("Léo part. Il lui donne une lettre.".getBytes())));
+		    oneOf (core).readDataObject("K4");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -248,8 +278,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokeThreshold2() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with threshold option : p = 0.5.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K4"); will(returnValue(new ByteArrayInputStream("Léo part. Il lui donne une lettre.".getBytes())));
+		    oneOf (core).readDataObject("K4");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -271,8 +304,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokeThreshold3() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with threshold option and prob option.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K4"); will(returnValue(new ByteArrayInputStream("Léo part. Il lui donne une lettre.".getBytes())));
+		    oneOf (core).readDataObject("K4");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -303,8 +339,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokeLexicalInfo1() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with lexical information option : proto.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K4"); will(returnValue(new ByteArrayInputStream("Léo part. Il lui donne une lettre.".getBytes())));
+		    oneOf (core).readDataObject("K4");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -333,8 +372,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokeLexicalInfo2() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with lexical information option : gramotron.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K4"); will(returnValue(new ByteArrayInputStream("Léo part. Il lui donne une lettre.".getBytes())));
+		    oneOf (core).readDataObject("K4");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -363,8 +405,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokeLexicalInfo3() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with lexical information option : proto-with-prob.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K4"); will(returnValue(new ByteArrayInputStream("Léo part. Il lui donne une lettre.".getBytes())));
+		    oneOf (core).readDataObject("K4");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -393,8 +438,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokePretagging() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with pre-tagging input.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K5"); will(returnValue(new ByteArrayInputStream("He\nmoved\nto\nNew York City	NP\n.\n".getBytes())));
+		    oneOf (core).readDataObject("K5");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -419,8 +467,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokePretagging2() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with pre-tagging input, with -pt-with-lemma.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K5"); will(returnValue(new ByteArrayInputStream("He\nmoved\nto\nNew York City	NP	NYC\n.\n".getBytes())));
+		    oneOf (core).readDataObject("K5");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -447,8 +498,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokePretagging3() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with pre-tagging input, with -pt-with-prob.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K5"); will(returnValue(new ByteArrayInputStream("He\nmoved\nto\nNew York City	NP	0.01\n.\n".getBytes())));
+		    oneOf (core).readDataObject("K5");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -477,8 +531,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokePretagging4() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with pre-tagging input, with -pt-with-prob and -pt-with-lemma.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K5"); will(returnValue(new ByteArrayInputStream("He\nmoved\nto\nNew York City	NP	0.01	NYC\n.\n".getBytes())));
+		    oneOf (core).readDataObject("K5");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -509,8 +566,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokePretaggingError1() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger without pre-tagging input, with -pt-with-lemma.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K5"); will(returnValue(new ByteArrayInputStream("He\nmoved\nto\nNew York City	NP\n.\n".getBytes())));
+		    oneOf (core).readDataObject("K5");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -531,8 +591,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokePretaggingError2() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with pre-tagging input, without -pt-with-lemma.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K5"); will(returnValue(new ByteArrayInputStream("He\nmoved\nto\nNew York City	NP	NYC\n.\n".getBytes())));
+		    oneOf (core).readDataObject("K5");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -552,8 +615,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokePretaggingError3() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger without pre-tagging input, with -pt-with-prob.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K5"); will(returnValue(new ByteArrayInputStream("He\nmoved\nto\nNew York City	NP\n.\n".getBytes())));
+		    oneOf (core).readDataObject("K5");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();
@@ -574,8 +640,11 @@ public class TreeTaggerInvokerTest {
 	@Test
 	public void testInvokePretaggingError4() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException {
 		System.out.println("Call of treetagger with pre-tagging input, without -pt-with-prob.");    
+		dataObject.setName("test.txt");
 		context.checking(new Expectations() {{
 		    oneOf (core).download("K5"); will(returnValue(new ByteArrayInputStream("He\nmoved\nto\nNew York City	NP	0.01\n.\n".getBytes())));
+		    oneOf (core).readDataObject("K5");
+		    will(returnValue(dataObject));
 		}});
 		
 		Map<String, String> params = new HashMap<String, String>();

@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -35,6 +36,8 @@ public class TreeTaggerInvoker implements ToolInvoker {
 	private CoreService core;
 	private String base;
 	private boolean initialized = false;
+
+	private String outputFileName;
 	
 	public TreeTaggerInvoker() {
 	}
@@ -106,6 +109,7 @@ public class TreeTaggerInvoker implements ToolInvoker {
 				Path input = Files.createTempFile("ttin.", ".tmp");
 				
 				InputStream is = getCoreService().download(key);
+				outputFileName = getCoreService().readDataObject(key).getObjectName();
 				Files.copy(is, input, StandardCopyOption.REPLACE_EXISTING);
 				
 				// Avec pre-processing : tokenizer
@@ -138,7 +142,7 @@ public class TreeTaggerInvoker implements ToolInvoker {
 				input.toFile().deleteOnExit();
 				//logger.log(Level.INFO, result.getOutput());
 				
-			}else {
+			} else {
 				result = invokeTreeTagger(result, tagger, options, par, null, output);
 			}
 			output.toFile().deleteOnExit();
@@ -233,6 +237,7 @@ public class TreeTaggerInvoker implements ToolInvoker {
 			
 		} else if ( params.containsKey("task") && (params.get("task").equals("print-prob-tree") || params.get("task").equals("print-suffix-tree")) ) {
 			options.add("-"+params.get("task"));
+			outputFileName = params.get("task");
 		}
 		return options;
 	}
@@ -286,7 +291,8 @@ public class TreeTaggerInvoker implements ToolInvoker {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			Files.copy(output, baos);
 			result.setOutput(baos.toString());
-			List<String> listFileResult = Arrays.asList(output.toString());
+			Map<String, String> listFileResult = new HashMap<String,String>();
+			listFileResult.put(outputFileName + ".out.txt", output.toString());
 			result.setOutputFilePath(listFileResult);
 			result.setLog(processOutput);
 			result.setStatus(ToolInvokerResult.Status.SUCCESS);
