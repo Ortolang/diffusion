@@ -123,6 +123,12 @@ public class BootstrapServiceBean implements BootstrapService {
 						"N/A", 
 						"fr.ortolang.diffusion.tool.dumbtool.DumbToolInvoker", 
 						"dumb-form-config.json");
+				tool.declareTool("tika", 
+						"Tika", 
+						"Detects and extracts metadata and text content.", 
+						"Tika detects and extracts metadata and text content from various documents - from PPT to CSV to PDF - using existing parser libraries.", 
+						"fr.ortolang.diffusion.tool.tika.TikaInvoker", 
+						"tika-form-config.json");
 				tool.declareTool("treetagger", 
 						"TreeTagger", 
 						"A language independent part-of-speech tagger : \r\nThe TreeTagger is a tool for annotating text with part-of-speech and lemma information. ", 
