@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<AutomatedInstallation langpack="eng">
+<com.izforge.izpack.panels.HTMLHelloPanel id="UNKNOWN (com.izforge.izpack.panels.HTMLHelloPanel)"/>
+<com.izforge.izpack.panels.HTMLLicencePanel id="UNKNOWN (com.izforge.izpack.panels.HTMLLicencePanel)"/>
+<com.izforge.izpack.panels.TargetPanel id="UNKNOWN (com.izforge.izpack.panels.TargetPanel)">
+<installpath>/home/cmoro/MarsaTag</installpath>
+</com.izforge.izpack.panels.TargetPanel>
+<com.izforge.izpack.panels.PacksPanel id="UNKNOWN (com.izforge.izpack.panels.PacksPanel)">
+<pack index="0" name="GUI" selected="true"/>
+<pack index="1" name="Documentation" selected="true"/>
+<pack index="2" name="GATE plugin" selected="false"/>
+</com.izforge.izpack.panels.PacksPanel>
+<com.izforge.izpack.panels.InstallPanel id="UNKNOWN (com.izforge.izpack.panels.InstallPanel)"/>
+<com.izforge.izpack.panels.ShortcutPanel id="UNKNOWN (com.izforge.izpack.panels.ShortcutPanel)">
+<programGroup name="MarsaTag"/>
+<shortcut KdeSubstUID="false" categories="" commandLine="" createForAll="false" description="Run the MarsaTag GUI 0.8" encoding="UTF-8" group="true" icon="/opt/MarsaTag/icons/MarsaTag-logo.64x64.png" iconIndex="0" initialState="1" mimetype="" name="MarsaTag GUI" target="/opt/MarsaTag/MarsaTag-UI.sh" terminal="false" terminalOptions="" tryexec="" type="Application" url="" usertype="0" workingDirectory="/opt/MarsaTag"/>
+<shortcut KdeSubstUID="false" categories="" commandLine="" createForAll="false" description="Open the MarsaTag-UI HTML documentation" encoding="UTF-8" group="true" icon="/opt/MarsaTag/icons/MarsaTag-logo.64x64.png" iconIndex="0" initialState="1" mimetype="" name="MarsaTag Documentation (html)" target="/opt/MarsaTag/docs/index.html" terminal="false" terminalOptions="" tryexec="" type="Link" url="/opt/MarsaTag/docs/index.html" usertype="0" workingDirectory="/opt/MarsaTag"/>
+<shortcut KdeSubstUID="false" categories="" commandLine="" createForAll="false" description="Open the MarsaTag-UI PDF documentation" encoding="UTF-8" group="true" icon="/opt/MarsaTag/icons/MarsaTag-logo.64x64.png" iconIndex="0" initialState="1" mimetype="" name="MarsaTag Documentation (pdf)" target="/opt/MarsaTag/docs/MarsaTag-UI.pdf" terminal="false" terminalOptions="" tryexec="" type="Link" url="/opt/MarsaTag/docs/MarsaTag-UI.pdf" usertype="0" workingDirectory="/opt/MarsaTag"/>
+</com.izforge.izpack.panels.ShortcutPanel>
+<com.izforge.izpack.panels.FinishPanel id="UNKNOWN (com.izforge.izpack.panels.FinishPanel)"/>
+</AutomatedInstallation>
