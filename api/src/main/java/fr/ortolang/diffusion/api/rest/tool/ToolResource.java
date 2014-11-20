@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,14 +34,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.rest.template.Template;
-import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
-import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.search.SearchService;
-import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.tool.ToolService;
@@ -57,17 +52,7 @@ public class ToolResource {
 	private Logger logger = Logger.getLogger(ToolResource.class.getName());
 
 	@EJB
-	private BrowserService browser;
-	@EJB
-	private SearchService search;
-	@EJB
-	private SecurityService security;
-	@EJB
-	private CoreService core;
-	@EJB
 	private ToolService tool;
-	
-	
 	@Context
 	private UriInfo uriInfo;
 	
@@ -149,10 +134,11 @@ public class ToolResource {
 			response.setHeader("Content-Disposition", "attachment; filename=" + fileResult.getName());					
 		} else {
 			response.setHeader("Content-Disposition", "attachment; filename=" + name);					
-		}		
-		FileInputStream fis = new FileInputStream(fileResult);
-        InputStreamReader isr = new InputStreamReader(fis);
-		response.setCharacterEncoding(isr.getEncoding());
+		}	
+		//TODO this seems to be unusefull...
+//		FileInputStream fis = new FileInputStream(fileResult);
+//        InputStreamReader isr = new InputStreamReader(fis);
+//		response.setCharacterEncoding(isr.getEncoding());
 		response.setContentType(new MimetypesFileTypeMap().getContentType(fileResult));
 		response.setContentLength((int) fileResult.length());
 		InputStream input = new FileInputStream(path);

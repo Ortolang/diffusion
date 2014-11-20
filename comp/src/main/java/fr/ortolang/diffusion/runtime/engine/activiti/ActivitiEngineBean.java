@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.Local;
 import javax.ejb.Lock;
@@ -27,6 +28,14 @@ import javax.persistence.PersistenceUnit;
 import org.activiti.engine.ActivitiException;
 import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngineConfiguration;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.delegate.event.ActivitiEntityEvent;
+import org.activiti.engine.delegate.event.ActivitiEvent;
+import org.activiti.engine.delegate.event.ActivitiEventListener;
+import org.activiti.engine.delegate.event.ActivitiEventType;
+import org.activiti.engine.impl.persistence.entity.ExecutionEntity;
+import org.activiti.engine.impl.persistence.entity.TaskEntity;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.DeploymentBuilder;
 import org.activiti.engine.repository.ProcessDefinition;
@@ -35,7 +44,9 @@ import org.activiti.engine.task.Task;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngine;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineException;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineListener;
 import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.runtime.entity.ProcessType;
@@ -46,7 +57,7 @@ import fr.ortolang.diffusion.runtime.entity.ProcessType;
 @SecurityDomain("ortolang")
 @RolesAllowed({ "system", "user" })
 @Lock(LockType.READ)
-public class ActivitiEngineBean implements RuntimeEngine {
+public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener {
 
 	private Logger logger = Logger.getLogger(ActivitiEngineBean.class.getName());
 
@@ -60,6 +71,7 @@ public class ActivitiEngineBean implements RuntimeEngine {
 	private EntityManagerFactory emf;
 	
 	private ProcessEngine engine;
+	private RuntimeEngineListener listener;
 	
 	public ActivitiEngineBean() {
 	}
@@ -78,7 +90,8 @@ public class ActivitiEngineBean implements RuntimeEngine {
 			config.setJobExecutorActivate(true);
 			config.setProcessEngineName("ortolang");
 			engine = config.buildProcessEngine();
-			engine.getRuntimeService().addEventListener(new ActivitiEngineListener());
+			engine.getRuntimeService().addEventListener(this);
+			listener = new RuntimeEngineListener();
 			logger.log(Level.INFO, "Activiti Engine created: " + engine.getName());
 		}
 		logger.log(Level.INFO, "EngineServiceBean initialized");
@@ -91,6 +104,14 @@ public class ActivitiEngineBean implements RuntimeEngine {
 			engine.close();
 		}
 		logger.log(Level.INFO, "EngineServiceBean stopped");
+	}
+	
+	protected RuntimeService getActivitiRuntimeService() {
+		return engine.getRuntimeService();
+	}
+	
+	protected TaskService getActivitiTaskService() {
+		return engine.getTaskService();
 	}
 	
 	@Override
@@ -136,7 +157,7 @@ public class ActivitiEngineBean implements RuntimeEngine {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void startProcess(String type, String key, Map<String, Object> variables) throws RuntimeEngineException {
-		ActivitiProcessRunner runnable = new ActivitiProcessRunner(engine.getRuntimeService(), type, key, variables);
+		ActivitiProcessRunner runnable = new ActivitiProcessRunner(this, type, key, variables);
 		Runnable ctxRunnable = contextService.createContextualProxy(runnable, Runnable.class);
 		scheduledExecutor.schedule(ctxRunnable, 3, TimeUnit.SECONDS);
 	}
@@ -214,15 +235,41 @@ public class ActivitiEngineBean implements RuntimeEngine {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void completeTask(String id, Map<String, Object> variables) throws RuntimeEngineException {
-		ActivitiTaskRunner runnable = new ActivitiTaskRunner(engine.getTaskService(), id, variables);
+		ActivitiTaskRunner runnable = new ActivitiTaskRunner(this, id, variables);
 		Runnable ctxRunnable = contextService.createContextualProxy(runnable, Runnable.class);
 		scheduledExecutor.schedule(ctxRunnable, 3, TimeUnit.SECONDS);
 	}
 	
 	@Override
+	@PermitAll
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-	public void notify(String type) throws RuntimeEngineException {
-		
+	public void notify(RuntimeEngineEvent event) throws RuntimeEngineException {
+		listener.onEvent(event);                   
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void onEvent(ActivitiEvent event) {
+		try {
+			if (event.getType().equals(ActivitiEventType.PROCESS_COMPLETED)) {
+				logger.log(Level.INFO, "Activiti process completed event received");
+				String pid = ((ExecutionEntity)((ActivitiEntityEvent)event).getEntity()).getBusinessKey();
+				notify(RuntimeEngineEvent.createProcessCompleteEvent(pid));
+			}
+			if (event.getType().equals(ActivitiEventType.TASK_CREATED)) {
+				logger.log(Level.INFO, "Activiti task created event received");
+				TaskEntity task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
+				String pid = task.getExecution().getBusinessKey();
+				notify(RuntimeEngineEvent.createProcessActivityStartEvent(pid, task.getName(), "human task: " + task.getName() + " created"));
+			}
+		} catch ( RuntimeEngineException e ) {
+			logger.log(Level.WARNING, "unexpected error during treating activiti event", e);
+		}
+	}
+
+	@Override
+	public boolean isFailOnException() {
+		return false;
 	}
 	
 	private ProcessType toProcessType(ProcessDefinition def) {

@@ -128,8 +128,9 @@ public class MembershipServiceBean implements MembershipService {
 			}
 
 			String[] groups = profile.getGroups();
-			List<String> subjects = new ArrayList<String>(groups.length + 1);
+			List<String> subjects = new ArrayList<String>(groups.length + 2);
 			subjects.add(caller);
+			subjects.add(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY);
 			subjects.addAll(Arrays.asList(groups));
 
 			return subjects;
@@ -359,7 +360,7 @@ public class MembershipServiceBean implements MembershipService {
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
-			authorisation.checkPermission(key, subjects, "update");
+			authorisation.checkPermission(key, subjects, "delete");
 
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Group.OBJECT_TYPE);

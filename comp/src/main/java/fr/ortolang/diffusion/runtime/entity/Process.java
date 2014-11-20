@@ -8,6 +8,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.persistence.Version;
 
 import org.hibernate.annotations.Type;
 
@@ -27,11 +28,13 @@ public class Process extends OrtolangObject {
 	public static final String OBJECT_TYPE = "process";
 
 	public static enum State {
-		PENDING, SUBMITED, RUNNING, SUSPENDED, ABORTED, COMPLETED
+		PENDING, SUBMITTED, RUNNING, SUSPENDED, ABORTED, COMPLETED
 	}
 
 	@Id
 	private String id;
+	@Version
+	private long version;
 	@Transient
 	private String key;
 	private String name;

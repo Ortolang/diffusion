@@ -18,7 +18,7 @@
 	<modules>
 		<module>comp</module>
 		<module>api</module>
-		<module>admin</module>
+		<!-- <module>admin</module> -->
 		<module>appli</module>
 		<!-- <module>test</module> -->
 	</modules>

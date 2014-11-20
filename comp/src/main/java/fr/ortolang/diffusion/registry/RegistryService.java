@@ -58,6 +58,10 @@ public interface RegistryService {
 	
 	public boolean hasChildren(String key) throws RegistryServiceException, KeyNotFoundException;
 	
+	public String getChildren(String key) throws RegistryServiceException, KeyNotFoundException;
+	
+	public String getParent(String key) throws RegistryServiceException, KeyNotFoundException;
+	
 	public void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException;
 	
 	public String getProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException;

@@ -33,6 +33,6 @@ public interface RuntimeEngine {
 	
 	public void completeTask(String id, Map<String, Object> variables) throws RuntimeEngineException;
 	
-	public void notify(String type) throws RuntimeEngineException;
+	public void notify(RuntimeEngineEvent event) throws RuntimeEngineException;
 	
 }

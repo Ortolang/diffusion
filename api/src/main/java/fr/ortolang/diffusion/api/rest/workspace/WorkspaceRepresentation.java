@@ -19,6 +19,7 @@ public class WorkspaceRepresentation {
 	private int clock;
 	private String members;
 	private String head;
+	private boolean changed;
 	private Set<SnapshotElement> snapshots;
 
 	public WorkspaceRepresentation() {
@@ -80,6 +81,14 @@ public class WorkspaceRepresentation {
 	public void setSnapshots(Set<SnapshotElement> snapshots) {
 		this.snapshots = snapshots;
 	}
+	
+	public boolean isChanged() {
+		return changed;
+	}
+
+	public void setChanged(boolean changed) {
+		this.changed = changed;
+	}
 
 	public static WorkspaceRepresentation fromWorkspace(Workspace workspace) {
 		WorkspaceRepresentation representation = new WorkspaceRepresentation();
@@ -89,6 +98,7 @@ public class WorkspaceRepresentation {
 		representation.setClock(workspace.getClock());
 		representation.setHead(workspace.getHead());
 		representation.setMembers(workspace.getMembers());
+		representation.setChanged(workspace.hasChanged());
 		representation.setSnapshots(workspace.getSnapshots());
 		return representation;
 	}

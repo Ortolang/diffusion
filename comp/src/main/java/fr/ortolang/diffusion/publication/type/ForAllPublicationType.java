@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.publication;
+package fr.ortolang.diffusion.publication.type;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,11 +9,17 @@ import fr.ortolang.diffusion.membership.MembershipService;
 
 public class ForAllPublicationType extends PublicationType {
 
-	private static final String NAME = "Read & download for all";
+	public static final String NAME = "forall";
+	public static final String DESCRIPTION = "read & download permission for all users";
 	
 	@Override
 	public String getName() {
 		return NAME;
+	}
+	
+	@Override
+	public String getDescription() {
+		return DESCRIPTION;
 	}
 
 	@Override

@@ -16,6 +16,10 @@
 	  <div class="col-md-10">$entity.clock</div>
     </div>
     <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Changed</strong></p></div>
+	  <div class="col-md-10">$entity.changed</div>
+    </div>
+    <div class="row">
 	  <div class="col-md-2"><p class="text-right"><strong>Member's group</strong></p></div>
 	  <div class="col-md-10">$entity.members</div>
     </div>

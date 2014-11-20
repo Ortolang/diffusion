@@ -1,5 +1,37 @@
 package fr.ortolang.diffusion.api.rest.workspace;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URLDecoder;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ejb.EJB;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
+import org.apache.commons.io.IOUtils;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
+import org.jgroups.util.UUID;
+
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -14,7 +46,13 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
-import fr.ortolang.diffusion.core.entity.*;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.Link;
+import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
+import fr.ortolang.diffusion.core.entity.MetadataSource;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -22,27 +60,6 @@ import fr.ortolang.diffusion.registry.PropertyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
-
-import org.apache.commons.io.IOUtils;
-import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
-
-import javax.ejb.EJB;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URLDecoder;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Path("/workspaces")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -83,12 +100,10 @@ public class WorkspaceResource {
 
 	@POST
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response createWorkspace(@FormParam("key") String key, @FormParam("type") @DefaultValue("default") String type,
-			@FormParam("name") @DefaultValue("No Name Provided") String name) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
+	public Response createWorkspace(@FormParam("type") @DefaultValue("default") String type, @FormParam("name") @DefaultValue("No Name Provided") String name)
+			throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		logger.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
-		if (key == null || key.length() == 0) {
-			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
-		}
+		String key = UUID.randomUUID().toString();
 		core.createWorkspace(key, name, type);
 		URI location = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(key).build();
 		return Response.created(location).build();
@@ -98,11 +113,9 @@ public class WorkspaceResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createWorkspace(WorkspaceRepresentation representation) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		logger.log(Level.INFO, "POST(application/json) /workspaces");
-		if (representation.getKey() == null || representation.getKey().length() == 0) {
-			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
-		}
-		core.createWorkspace(representation.getKey(), representation.getName(), representation.getType());
-		URI location = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(representation.getKey()).build();
+		String key = UUID.randomUUID().toString();
+		core.createWorkspace(key, representation.getName(), representation.getType());
+		URI location = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(key).build();
 		return Response.created(location).build();
 	}
 
@@ -256,18 +269,17 @@ public class WorkspaceResource {
 	@POST
 	@Path("/{wskey}/elements")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	public Response writeWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form, @Context HttpHeaders headers) throws CoreServiceException,
-			KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException {
+	public Response writeWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form, @Context HttpHeaders headers)
+			throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException {
 		logger.log(Level.INFO, "POST /workspaces/" + wskey + "/elements");
 		try {
 			String contentTransferEncoding = "UTF-8";
 			if (headers != null) {
-				if(headers.getRequestHeader(CORSFilter.CONTENT_TRANSFER_ENCODING) != null &&
-						!headers.getRequestHeader(CORSFilter.CONTENT_TRANSFER_ENCODING).isEmpty()) {
+				if (headers.getRequestHeader(CORSFilter.CONTENT_TRANSFER_ENCODING) != null && !headers.getRequestHeader(CORSFilter.CONTENT_TRANSFER_ENCODING).isEmpty()) {
 					contentTransferEncoding = headers.getRequestHeader(CORSFilter.CONTENT_TRANSFER_ENCODING).get(0);
 				}
 			}
-			
+
 			if (form.getPath() == null) {
 				return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
 			}
@@ -408,8 +420,8 @@ public class WorkspaceResource {
 	@POST
 	@Path("/{wskey}/snapshots")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey, @FormParam(value = "snapshotname") String name) throws CoreServiceException,
-			KeyNotFoundException, AccessDeniedException {
+	public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey, @FormParam(value = "snapshotname") String name) throws CoreServiceException, KeyNotFoundException,
+			AccessDeniedException {
 		logger.log(Level.INFO, "POST /workspaces/" + wskey + "/snapshots");
 		if (name == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'snapshotname' is mandatory").build();

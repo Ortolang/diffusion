@@ -33,11 +33,11 @@
 </div>
 <div class="panel panel-default">
 	<div class="panel-heading">
-		<h3 class="panel-title"><strong>Create a new Test Process</strong></h3>
+		<h3 class="panel-title"><strong>Start Publish Workspace Process</strong></h3>
 	</div>
 	<div class="panel-body">
 		<form class="form-horizontal" role="form" action="./processes" method="post">
-			<input type="hidden" id="process-type" name="process-type" value="test"/>
+			<input type="hidden" id="process-type" name="process-type" value="publish-workspace"/>
 			<div class="form-group">
 				<label for="process-name" class="col-sm-2 control-label">Process Name</label>
 				<div class="col-sm-4">
@@ -45,14 +45,14 @@
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="name" class="col-sm-2 control-label">Name</label>
+				<label for="name" class="col-sm-2 control-label">Workspace Key</label>
 				<div class="col-sm-4">
-					<input type="text" class="form-control input-sm" id="name" name="name" placeholder="Enter Greeter Name"/>
+					<input type="text" class="form-control input-sm" id="workspace-key" name="workspace-key" placeholder="Enter Workspace Key"/>
 				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-10">
-					<button type="submit" class="btn btn-default btn-sm">Start HelloWorld Workflow</button>
+					<button type="submit" class="btn btn-default btn-sm">Start Process</button>
 				</div>
 			</div>
 		</form>

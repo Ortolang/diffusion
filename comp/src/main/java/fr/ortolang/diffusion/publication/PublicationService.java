@@ -1,6 +1,7 @@
 package fr.ortolang.diffusion.publication;
 
 import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.publication.type.PublicationType;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface PublicationService extends OrtolangService {

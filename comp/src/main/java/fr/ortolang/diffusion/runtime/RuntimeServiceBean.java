@@ -155,8 +155,8 @@ public class RuntimeServiceBean implements RuntimeService {
 				throw new RuntimeServiceException("unable to start process, state is not " + State.PENDING);
 			}
 			process.setKey(key);
-			process.appendLog("Process start submitted to engine by " + caller + " on " + new Date());
-			process.setState(State.SUBMITED);
+			process.appendLog("Process state changed to " + State.SUBMITTED + " by " + caller + " on " + new Date());
+			process.setState(State.SUBMITTED);
 			em.persist(process);
 			
 			engine.startProcess(process.getType(), process.getId(), variables);
@@ -229,7 +229,7 @@ public class RuntimeServiceBean implements RuntimeService {
 	
 	@Override
 	@RolesAllowed("system")
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateProcessState(String pid, State state) throws RuntimeServiceException {
 		logger.log(Level.INFO, "Updating state of process with pid: " + pid);
 		try {
@@ -238,6 +238,7 @@ public class RuntimeServiceBean implements RuntimeService {
 				throw new RuntimeServiceException("unable to find a process with id: " + pid);
 			}
 			process.setState(state);
+			process.appendLog("Process state changed to " + state + " on " + new Date());
 			em.merge(process);
 			
 			String key = registry.lookup(process.getObjectIdentifier());
@@ -251,7 +252,7 @@ public class RuntimeServiceBean implements RuntimeService {
 	
 	@Override
 	@RolesAllowed("system")
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void appendProcessLog(String pid, String log) throws RuntimeServiceException {
 		logger.log(Level.INFO, "Appending log to process with pid: " + pid);
 		try {
@@ -273,7 +274,7 @@ public class RuntimeServiceBean implements RuntimeService {
 
 	@Override
 	@RolesAllowed("system")
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateProcessActivity(String pid, String name) throws RuntimeServiceException {
 		logger.log(Level.INFO, "Updating activity of process with pid: " + pid);
 		try {

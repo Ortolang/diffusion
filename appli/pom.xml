@@ -23,11 +23,11 @@
 			<artifactId>server-api</artifactId>
 			<type>war</type>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>fr.ortolang.diffusion</groupId>
 			<artifactId>server-admin</artifactId>
 			<type>war</type>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>net.bull.javamelody</groupId>
 			<artifactId>javamelody-core</artifactId>
@@ -51,12 +51,12 @@
                				<artifactId>server-components</artifactId>
                				<bundleFileName>components.jar</bundleFileName>
              			</ejbModule>
-						<webModule>
+						<!-- <webModule>
 							<groupId>fr.ortolang.diffusion</groupId>
 							<artifactId>server-admin</artifactId>
 							<bundleFileName>admin.war</bundleFileName>
 							<contextRoot>/admin</contextRoot>
-						</webModule>
+						</webModule> -->
 						<webModule>
 							<groupId>fr.ortolang.diffusion</groupId>
 							<artifactId>server-api</artifactId>

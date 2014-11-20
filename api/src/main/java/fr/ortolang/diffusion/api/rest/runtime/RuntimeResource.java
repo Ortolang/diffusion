@@ -13,11 +13,6 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -142,17 +137,10 @@ public class RuntimeResource {
 		}
 		
 		try {
-//			if ( userTx.getStatus() == javax.transaction.Status.STATUS_NO_TRANSACTION ) {
-//				userTx.begin();
-//			}
 			runtime.createProcess(key, definition, name);
-//			userTx.commit();
-//			userTx.begin();
 			runtime.startProcess(key, mparams);
-//			userTx.commit();
 			URI newly = DiffusionUriBuilder.getRestUriBuilder().path(RuntimeResource.class).path("processes").path(key).build();
 			return Response.created(newly).build();
-		//} catch (SystemException | NotSupportedException | SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException e) {
 		} catch (SecurityException | IllegalStateException e) {
 			throw new RuntimeServiceException(e);
 		}

@@ -185,6 +185,7 @@ public class CoreServiceBean implements CoreService {
 			workspace.setName(name);
 			workspace.setType(type);
 			workspace.setHead(head);
+			workspace.setChanged(true);
 			workspace.setMembers(members);
 			em.persist(workspace);
 
@@ -225,7 +226,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
 			workspace.setKey(key);
-			em.detach(workspace);
+			//em.detach(workspace);
 
 			notification.throwEvent(key, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "read"), "");
 			return workspace;
@@ -276,7 +277,21 @@ public class CoreServiceBean implements CoreService {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 
-			if (name.equals("head")) {
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, Workspace.OBJECT_TYPE);
+			authorisation.checkPermission(key, subjects, "update");
+			
+			Workspace workspace = em.find(Workspace.class, identifier.getId());
+			if (workspace == null) {
+				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+			}
+			if (!workspace.hasChanged()) {
+				throw new CoreServiceException("unable to snapshot because workspace has no pending modifications since last snapshot");
+			}
+			workspace.setKey(key);
+			workspace.incrementClock();
+
+			if ( name.equals("head") ) {
 				throw new CoreServiceException("head is reserved and cannot be used as snapshot name");
 			}
 			try {
@@ -287,24 +302,10 @@ public class CoreServiceBean implements CoreService {
 			} catch (InvalidPathException e) {
 				throw new CoreServiceException("snapshot name is invalid");
 			}
-
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, Workspace.OBJECT_TYPE);
-			authorisation.checkPermission(key, subjects, "update");
-
-			Workspace workspace = em.find(Workspace.class, identifier.getId());
-			if (workspace == null) {
-				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
-			}
-			if (!workspace.hasChanged()) {
-				throw new CoreServiceException("unable to snapshot because workspace has no pending modifications since last snapshot");
-			}
 			if (workspace.findSnapshotByName(name) != null) {
 				throw new CoreServiceException("the snapshot name '" + name + "' is already used in this workspace");
 			}
-			workspace.setKey(key);
-			workspace.incrementClock();
-
+			
 			OrtolangObjectIdentifier hidentifier = registry.lookup(workspace.getHead());
 			checkObjectType(hidentifier, Collection.OBJECT_TYPE);
 			Collection collection = em.find(Collection.class, hidentifier.getId());
@@ -319,7 +320,7 @@ public class CoreServiceBean implements CoreService {
 			workspace.setHead(clone.getKey());
 			workspace.setChanged(false);
 			em.merge(workspace);
-
+			
 			registry.update(key);
 
 			notification.throwEvent(key, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "snapshot"), "");
@@ -528,7 +529,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
 			}
 			collection.setKey(key);
-			em.detach(collection);
+			//em.detach(collection);
 
 			notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "read"), "");
 			return collection;
@@ -870,7 +871,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 			}
 			object.setKey(key);
-			em.detach(object);
+			//em.detach(object);
 
 			notification.throwEvent(key, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "read"), "");
 			return object;
@@ -1609,7 +1610,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
 			}
 			meta.setKey(key);
-			em.detach(meta);
+			//em.detach(meta);
 
 			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "read"), "");
 			return meta;

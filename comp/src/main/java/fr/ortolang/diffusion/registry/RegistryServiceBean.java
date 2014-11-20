@@ -142,6 +142,22 @@ public class RegistryServiceBean implements RegistryService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public String getChildren(String key) throws RegistryServiceException, KeyNotFoundException {
+		logger.log(Level.FINE, "getting children for key [" + key + "]");
+		RegistryEntry entry = findEntryByKey(key);
+		return entry.getChildren();
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public String getParent(String key) throws RegistryServiceException, KeyNotFoundException {
+		logger.log(Level.FINE, "getting parent for key [" + key + "]");
+		RegistryEntry entry = findEntryByKey(key);
+		return entry.getParent();
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public boolean isHidden(String key) throws RegistryServiceException, KeyNotFoundException {
 		logger.log(Level.FINE, "checking visibility state for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);

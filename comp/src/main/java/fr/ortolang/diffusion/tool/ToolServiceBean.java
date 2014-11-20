@@ -1,11 +1,7 @@
 package fr.ortolang.diffusion.tool;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,9 +24,6 @@ import javax.persistence.TypedQuery;
 import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.SecurityDomain;
 import org.jgroups.util.UUID;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
@@ -144,8 +137,6 @@ public class ToolServiceBean implements ToolService {
 		logger.log(Level.INFO, "Reading tool");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			authorisation.checkPermission(key, subjects, "read");
 			
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Tool.OBJECT_TYPE);
@@ -158,7 +149,7 @@ public class ToolServiceBean implements ToolService {
 						
 			notification.throwEvent(key, caller, Tool.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "read"), "");
 			return tool;
-		} catch ( RegistryServiceException | MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | NotificationServiceException e ) {
+		} catch ( RegistryServiceException | KeyNotFoundException | NotificationServiceException e ) {
 			logger.log(Level.SEVERE, "unexpected error occured while reading tool", e);
 			throw new ToolServiceException("unable to read tool", e);
 		}

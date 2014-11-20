@@ -1,0 +1,15 @@
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><strong>Specific informations about this form object</strong></h3>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Name</strong></p></div>
+	  <div class="col-md-10">$entity.object.name</div>
+    </div>
+        <div class="row">
+	  <div class="col-md-2"><p class="text-right"><strong>Definition</strong></p></div>
+	  <div class="col-md-10">$entity.object.definition</div>
+    </div>
+  </div>
+</div> 
