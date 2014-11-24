@@ -6,18 +6,16 @@ import java.io.Serializable;
 public class OrtolangObjectVersion implements Serializable {
 
 	private String key;
-	private String name;
 	private String author;
-	private String date;
+	private long date;
 	private String parent;
 	private String children;
 	
 	public OrtolangObjectVersion() {
 	}
 	
-	public OrtolangObjectVersion(String key, String name, String author, String date, String parent, String children) {
+	public OrtolangObjectVersion(String key, String author, long date, String parent, String children) {
 		this.key = key;
-		this.name = name;
 		this.author = author;
 		this.date = date;
 		this.parent = parent;
@@ -32,14 +30,6 @@ public class OrtolangObjectVersion implements Serializable {
 		this.key = key;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	public String getAuthor() {
 		return author;
 	}
@@ -48,11 +38,11 @@ public class OrtolangObjectVersion implements Serializable {
 		this.author = author;
 	}
 
-	public String getDate() {
+	public long getDate() {
 		return date;
 	}
 
-	public void setDate(String date) {
+	public void setDate(long date) {
 		this.date = date;
 	}
 

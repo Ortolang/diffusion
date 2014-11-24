@@ -35,6 +35,7 @@ import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.OrtolangObjectVersion;
 import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.api.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.api.rest.template.Template;
@@ -144,6 +145,20 @@ public class ObjectResource {
 	}
 	
 	@GET
+	@Path("/{key}/history")
+	public Response history(@PathParam(value = "key") String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "get history of object "+key);
+		
+		List<OrtolangObjectVersion> versions = browser.getHistory(key);
+		
+		GenericCollectionRepresentation<OrtolangObjectVersion> representation = new GenericCollectionRepresentation<OrtolangObjectVersion> ();
+		for ( OrtolangObjectVersion version : versions ) {
+			representation.addEntry(version);
+		}
+		return Response.ok(representation).build();
+	}
+	
+	@GET
 	@Path("/{key}/keys")
 	public Response listKeys(@PathParam(value = "key") String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "list keys contains in object "+key);
@@ -172,9 +187,7 @@ public class ObjectResource {
 			response.setContentType(((MetadataObject)object).getContentType());
 			response.setContentLength((int) ((MetadataObject)object).getSize());
 		}
-		
 		if ( object instanceof Collection ) {
-			
 			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName() + ".zip");
 			response.setContentType("application/zip");
 //			response.setContentLength((int) ((MetadataObject)object).getSize());
@@ -192,7 +205,6 @@ public class ObjectResource {
 	            IOUtils.closeQuietly(input);
 	        }
 		}
-		
 	}
 	
 	@GET
@@ -212,7 +224,6 @@ public class ObjectResource {
             IOUtils.closeQuietly(input);
         }
 	}
-	
 
 	@GET
 	@Path("/semantic")
@@ -235,7 +246,6 @@ public class ObjectResource {
 		}
 	}
 
-
 	@GET
 	@Path("/index")
 	@Template( template="index/query.vm", types={MediaType.TEXT_HTML})
@@ -251,17 +261,6 @@ public class ObjectResource {
 		return Response.ok(results).build();
 	}
 	
-
-
-	/**
-	 * List of keys contains in a object.
-	 * @param key
-	 * @param keys
-	 * @return
-	 * @throws AccessDeniedException 
-	 * @throws KeyNotFoundException 
-	 * @throws OrtolangException 
-	 */
 	protected List<String> listKeys(String key, List<String> keys) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
 		
 		OrtolangObject object = browser.findObject(key);
@@ -288,16 +287,6 @@ public class ObjectResource {
 		return keys;
 	}
 
-	/**
-	 * List of keys contains in a object.
-	 * @param key
-	 * @param keys
-	 * @return
-	 * @throws AccessDeniedException 
-	 * @throws KeyNotFoundException 
-	 * @throws OrtolangException 
-	 * @throws IOException 
-	 */
 	protected ZipOutputStream exportToZip(String key, ZipOutputStream zos, PathBuilder path) throws OrtolangException, KeyNotFoundException, AccessDeniedException, IOException {
 		
 		OrtolangObject object = browser.findObject(key);

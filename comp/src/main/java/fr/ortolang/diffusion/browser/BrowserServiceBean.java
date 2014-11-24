@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.browser;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,6 +21,7 @@ import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.OrtolangObjectVersion;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -205,37 +207,41 @@ public class BrowserServiceBean implements BrowserService {
 		}
 	}
 	
-//	@Override
-//	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-//	public OrtolangObjectVersion getVersion(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-//		logger.log(Level.FINE, "getting version for key [" + key + "]");
-//		try {
-//			List<String> subjects = membership.getConnectedIdentifierSubjects();
-//			authorisation.checkPermission(key, subjects, "read");
-//			
-//			OrtolangObjectVersion version = new OrtolangObjectVersion();
-//			version.setAuthor(author);
-//			version.set
-//			
-//		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
-//			throw new BrowserServiceException("error during getting infos", e);
-//		}
-//	}
-//	
-//	@Override
-//	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-//	public List<OrtolangObjectVersion> getHistory(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-//		logger.log(Level.FINE, "getting history for key [" + key + "]");
-//		try {
-//			List<String> subjects = membership.getConnectedIdentifierSubjects();
-//			authorisation.checkPermission(key, subjects, "read");
-//			
-//			List<OrtolangObjectVersion> versions = new ArrayList<OrtolangObjectVersion> ();
-//			
-//		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
-//			throw new BrowserServiceException("error during getting infos", e);
-//		}
-//	}
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public OrtolangObjectVersion getVersion(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.FINE, "getting version for key [" + key + "]");
+		try {
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkPermission(key, subjects, "read");
+			
+			OrtolangObjectVersion version = new OrtolangObjectVersion();
+			version.setAuthor(registry.getAuthor(key));
+			version.setDate(registry.getLastModificationDate(key));
+			version.setParent(registry.getParent(key));
+			version.setChildren(registry.getChildren(key));
+			version.setKey(key);
+			
+			return version;
+		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+			throw new BrowserServiceException("error during getting version", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<OrtolangObjectVersion> getHistory(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.FINE, "getting history for key [" + key + "]");
+		
+		List<OrtolangObjectVersion> versions = new ArrayList<OrtolangObjectVersion> ();
+		String parent = key;
+		while ( parent != null ) {
+			OrtolangObjectVersion version = getVersion(parent);
+			versions.add(version);
+			parent = version.getParent();
+		}
+		return versions;
+	}
 
 	@Override
 	public String getServiceName() {
