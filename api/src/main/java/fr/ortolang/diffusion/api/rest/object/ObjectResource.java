@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +35,7 @@ import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.api.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.api.rest.template.Template;
 import fr.ortolang.diffusion.browser.BrowserService;
@@ -232,6 +234,23 @@ public class ObjectResource {
 			return Response.ok("").build();
 		}
 	}
+
+
+	@GET
+	@Path("/index")
+	@Template( template="index/query.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
+		logger.log(Level.INFO, "searching objects with plain text query: " + query);
+		List<OrtolangSearchResult> results;
+		if ( query != null && query.length() > 0 ) {
+			results = search.indexSearch(query);
+		} else {
+			results = Collections.emptyList();
+		}
+		return Response.ok(results).build();
+	}
+	
 
 
 	/**
