@@ -22,6 +22,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
+import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 
 @Local(RegistryService.class)
@@ -119,6 +120,7 @@ public class RegistryServiceBean implements RegistryService {
 			entry.setIdentifier(identifier.serialize());
 			entry.setParent(parent);
 			entry.setAuthor(pentry.getAuthor());
+			entry.setItem(pentry.isItem());
 			entry.setCreationDate(pentry.getCreationDate());
 			entry.setLastModificationDate(System.currentTimeMillis());
 			if ( inherit ) {
@@ -162,6 +164,14 @@ public class RegistryServiceBean implements RegistryService {
 		logger.log(Level.FINE, "checking visibility state for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.isHidden();
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public boolean isItem(String key) throws RegistryServiceException, KeyNotFoundException {
+		logger.log(Level.FINE, "checking if key [" + key + "] is an item");
+		RegistryEntry entry = findEntryByKey(key);
+		return entry.isItem();
 	}
 	
 	@Override
@@ -265,6 +275,21 @@ public class RegistryServiceBean implements RegistryService {
 	}
 	
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void itemify(String key) throws RegistryServiceException, KeyNotFoundException {
+		logger.log(Level.FINE, "itemify key [" + key + "]");
+		RegistryEntry entry = findEntryByKey(key);
+		try {
+			entry.setItem(true);
+			em.merge(entry);
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			ctx.setRollbackOnly();
+			throw new RegistryServiceException(e);
+		}
+	}
+	
+	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException {
 		logger.log(Level.FINE, "getting state for key [" + key + "]");
@@ -320,38 +345,62 @@ public class RegistryServiceBean implements RegistryService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> list(int offset, int limit, String filter) throws RegistryServiceException {
-		logger.log(Level.FINE, "listing keys with offset:" + offset + " and limit:" + limit + " and filter:" + filter);
+	public List<String> list(int offset, int limit, String identifierFilter, OrtolangObjectState.Status statusFilter, boolean itemFilter) throws RegistryServiceException {
+		logger.log(Level.FINE, "listing keys with offset:" + offset + " and limit:" + limit + " and identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter + " and itemFilter:" + itemFilter);
 		if (offset < 0) {
 			throw new RegistryServiceException("offset MUST be >= 0");
 		}
 		if (limit < 1) {
 			throw new RegistryServiceException("limit MUST be >= 1");
 		}
-		StringBuffer pfilter = new StringBuffer();
-		if ( filter !=  null && filter.length() > 0 ) {
-			 pfilter.append(pfilter);
+		StringBuffer ifilter = new StringBuffer();
+		if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
+			 ifilter.append(identifierFilter);
 		} 
-		pfilter.append("%");
-		TypedQuery<String> query = em.createNamedQuery("listVisibleKeys", String.class).setParameter("filter", pfilter.toString()).setFirstResult(offset).setMaxResults(limit);
+		ifilter.append("%");
+		StringBuffer sfilter = new StringBuffer();
+		if ( statusFilter != null ) {
+			sfilter.append(statusFilter.value());
+		} else {
+			sfilter.append("%");
+		}
+		TypedQuery<String> query;
+		if ( itemFilter ) {
+			logger.log(Level.FINE, "listing items only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
+			query = em.createNamedQuery("listVisibleItems", String.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString()).setFirstResult(offset).setMaxResults(limit);
+		} else {
+			logger.log(Level.FINE, "listing all keys only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
+			query = em.createNamedQuery("listVisibleKeys", String.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString()).setFirstResult(offset).setMaxResults(limit);
+		}
 		List<String> entries = query.getResultList();
 		return entries;
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public long count(String filter) throws RegistryServiceException {
-		logger.log(Level.FINE, "counting keys and filter:" + filter);
-		StringBuffer pfilter = new StringBuffer();
-		if ( filter !=  null && filter.length() > 0 ) {
-			 pfilter.append(pfilter);
+	public long count(String identifierFilter, OrtolangObjectState.Status statusFilter, boolean itemFilter) throws RegistryServiceException {
+		logger.log(Level.FINE, "counting keys with identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter + " and itemFilter:" + itemFilter);
+		StringBuffer ifilter = new StringBuffer();
+		if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
+			 ifilter.append(identifierFilter);
 		} 
-		pfilter.append("%");
-		TypedQuery<Long> query = em.createNamedQuery("countVisibleKeys", Long.class).setParameter("filter", pfilter.toString());
+		ifilter.append("%");
+		StringBuffer sfilter = new StringBuffer();
+		if ( statusFilter != null ) {
+			sfilter.append(statusFilter.value());
+		} else {
+			sfilter.append("%");
+		}
+		TypedQuery<Long> query;
+		if ( itemFilter ) {
+			query = em.createNamedQuery("countVisibleItems", Long.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString());
+		} else {
+			query = em.createNamedQuery("countVisibleKeys", Long.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString());
+		}
 		long cpt = query.getSingleResult().longValue();
 		return cpt;
 	}
-
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException {

@@ -57,6 +57,20 @@ public class OrtolangObjectIdentifier implements Serializable {
 		pattern.append("/.*");
 		return pattern.toString();
 	}
+	
+	public static String buildJPQLFilterPattern(String service, String type) {
+		StringBuffer pattern = new StringBuffer();
+		pattern.append("/");
+		if ( service != null && service.length() > 0 ) {
+			pattern.append(service.toLowerCase());
+			pattern.append("/");
+		} 
+		if ( type != null && type.length() > 0 ) {
+			pattern.append(type.toLowerCase());
+			pattern.append("/");
+		}
+		return pattern.toString();
+	}
 
 	public String serialize() {
 		return "/" + this.getService() + "/" + this.getType() + "/" + this.getId();

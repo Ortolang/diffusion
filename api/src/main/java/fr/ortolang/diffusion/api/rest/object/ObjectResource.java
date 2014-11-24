@@ -79,11 +79,12 @@ public class ObjectResource {
 	@GET
 	@Template( template="objects/list.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
-	public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit)
+	public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit,
+			@DefaultValue(value = "false") @QueryParam(value = "items") boolean itemsOnly, @QueryParam(value = "status") String status)
 			throws BrowserServiceException {
-		logger.log(Level.INFO, "GET /objects?offset=" + offset + "&limit=" + limit);
-		List<String> keys = browser.list(offset, limit, "", "");
-		long nbentries = browser.count("", "");
+		logger.log(Level.INFO, "GET /objects?offset=" + offset + "&limit=" + limit + "&items-only=" + itemsOnly + "&status=" + status);
+		List<String> keys = browser.list(offset, limit, "", "", (status != null && status.length() > 0)?OrtolangObjectState.Status.valueOf(status):null, itemsOnly);
+		long nbentries = browser.count("", "", (status != null && status.length() > 0)?OrtolangObjectState.Status.valueOf(status):null, itemsOnly);
 		UriBuilder objects = DiffusionUriBuilder.getRestUriBuilder().path(ObjectResource.class);
 
 		GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String> ();

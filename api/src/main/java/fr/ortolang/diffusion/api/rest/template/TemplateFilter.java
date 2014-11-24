@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,9 +14,6 @@ import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.ext.Provider;
 
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
-import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.apache.velocity.tools.generic.EscapeTool;
 
 import fr.ortolang.diffusion.api.rest.DiffusionUriBuilder;
@@ -29,9 +28,7 @@ public class TemplateFilter implements ContainerResponseFilter {
 	private static Logger logger = Logger.getLogger(TemplateFilter.class.getName());
 	
 	public TemplateFilter() {
-		Velocity.setProperty(Velocity.RESOURCE_LOADER, "classpath");
-		Velocity.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
-		Velocity.init();
+		
 	}
  
 	@Override
@@ -43,7 +40,7 @@ public class TemplateFilter implements ContainerResponseFilter {
 					if ( Arrays.asList(((Template) a).types()).contains(responseContext.getMediaType().toString()) ) {
 						logger.log(Level.FINE, "Compatible Template annotation found, applying template");
 						EscapeTool escape = new EscapeTool();
-						VelocityContext ctx = new VelocityContext();
+						Map<String, Object> ctx = new HashMap<String, Object> ();
 						ctx.put("template", TEMPLATES_BASE + "/" + ((Template) a).template());
 						ctx.put("params", requestContext.getUriInfo().getQueryParameters());
 						ctx.put("mediatype", responseContext.getMediaType().toString());
@@ -51,7 +48,7 @@ public class TemplateFilter implements ContainerResponseFilter {
 						ctx.put("entity", responseContext.getEntity());
 						ctx.put("esc", escape);
 						StringWriter writer = new StringWriter();
-						Velocity.getTemplate(TEMPLATES_BASE + "/" + DECORATOR).merge(ctx, writer);
+						TemplateEngine.mergeTemplate(TEMPLATES_BASE + "/" + DECORATOR, ctx, writer);
 						responseContext.setEntity(writer.toString());
 						break;
 					};

@@ -288,32 +288,32 @@ public class RegistryServiceTest {
 		    registry.register(key3, doi3, author);
 		    registry.register(key4, doi4, author);
 		    registry.register(key5, doi5, author);
-		    List<String> entries = registry.list(0, 10, "");
-		    long size = registry.count("");
+		    List<String> entries = registry.list(0, 10, "", null, false);
+		    long size = registry.count("", null, false);
 		    assertEquals(5,entries.size());
 		    assertEquals(5,size);
 		    
 		    registry.hide(key2);
-		    entries = registry.list(0, 10, "");
-		    size = registry.count("");
+		    entries = registry.list(0, 10, "", null, false);
+		    size = registry.count("", null, false);
 		    assertEquals(4,entries.size());
 		    assertEquals(4,size);
 		    
 		    registry.delete(key4);
-		    entries = registry.list(0, 10, "");
-		    size = registry.count("");
+		    entries = registry.list(0, 10, "", null, false);
+		    size = registry.count("", null, false);
 		    assertEquals(3,entries.size());
 		    assertEquals(3,size);
 		    
 		    registry.lock(key5, lock);
-		    entries = registry.list(0, 10, "");
-		    size = registry.count("");
+		    entries = registry.list(0, 10, "", null, false);
+		    size = registry.count("", null, false);
 		    assertEquals(3,entries.size());
 		    assertEquals(3,size);
 		    
 		    registry.show(key2);
-		    entries = registry.list(0, 10, "");
-		    size = registry.count("");
+		    entries = registry.list(0, 10, "", null, false);
+		    size = registry.count("", null, false);
 		    assertEquals(4,entries.size());
 		    assertEquals(4,size);
 		    

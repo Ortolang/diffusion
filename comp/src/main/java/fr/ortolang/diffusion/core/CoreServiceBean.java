@@ -28,8 +28,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
@@ -67,6 +65,7 @@ import fr.ortolang.diffusion.store.triple.Triple;
 import fr.ortolang.diffusion.store.triple.TripleHelper;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 import fr.ortolang.diffusion.store.triple.URIHelper;
+import fr.ortolang.diffusion.template.TemplateEngine;
 
 @Local(CoreService.class)
 @Stateless(name = CoreService.SERVICE_NAME)
@@ -174,6 +173,7 @@ public class CoreServiceBean implements CoreService {
 			em.persist(collection);
 
 			registry.register(head, collection.getObjectIdentifier(), caller);
+			registry.itemify(head);
 			
 			Map<String, List<String>> rules = new HashMap<String, List<String>>();
 			rules.put(members, Arrays.asList("read", "create", "update", "delete", "download"));
@@ -2285,14 +2285,14 @@ public class CoreServiceBean implements CoreService {
 					rdfFormatCompatible.add("market-ortolang-n3");
 					
 					if (rdfFormatCompatible.contains(metadata.getFormat()) && metadata.getStream() != null && metadata.getStream().length() > 0) {
-						VelocityContext ctx = new VelocityContext();
+						Map<String, Object> ctx = new HashMap<String, Object> ();
 						ctx.put("self", URIHelper.fromKey(key));
 						ctx.put("target", URIHelper.fromKey(metadata.getTarget()));
 						ctx.put("targetKey", metadata.getTarget());
 						
 						InputStreamReader isr = new InputStreamReader(binarystore.get(metadata.getStream()));
 						StringWriter writer = new StringWriter();
-						Velocity.evaluate(ctx, writer, log, isr);
+						TemplateEngine.evaluate(ctx, writer, log, isr);
 						logger.log(Level.INFO, "rendered metadata : " + writer.toString());
 						StringReader reader = new StringReader(writer.toString());
 						//MAXI hack !! (when tika will recognize N3, we can do with it)

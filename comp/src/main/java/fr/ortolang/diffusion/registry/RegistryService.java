@@ -4,6 +4,7 @@ import java.util.List;
 
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
+import fr.ortolang.diffusion.OrtolangObjectState;
 
 
 /**
@@ -52,6 +53,10 @@ public interface RegistryService {
 	
 	public String getLock(String key) throws RegistryServiceException, KeyNotFoundException;
 	
+	public void itemify(String key) throws RegistryServiceException, KeyNotFoundException;
+	
+	public boolean isItem(String key) throws RegistryServiceException, KeyNotFoundException;
+	
 	public void setPublicationStatus(String key, String status) throws RegistryServiceException, KeyNotFoundException;
 	
 	public String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException;
@@ -72,8 +77,8 @@ public interface RegistryService {
 	
 	public String lookup(OrtolangObjectIdentifier identifier) throws RegistryServiceException, IdentifierNotRegisteredException;
 	
-	public List<String> list(int offset, int limit, String filter) throws RegistryServiceException;
+	public List<String> list(int offset, int limit, String identifierFilter, OrtolangObjectState.Status statusFilter, boolean itemFilter) throws RegistryServiceException;
 	
-	public long count(String filter) throws RegistryServiceException;
+	public long count(String identifierFilter, OrtolangObjectState.Status statusFilter, boolean itemFilter) throws RegistryServiceException;
 	
 }

@@ -104,44 +104,36 @@ public class BrowserServiceBean implements BrowserService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> list(int offset, int limit, String service, String type) throws BrowserServiceException {
+	public List<String> list(int offset, int limit, String service, String type, OrtolangObjectState.Status status, boolean itemsOnly) throws BrowserServiceException {
 		logger.log(Level.FINE, "listing keys");
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			List<String> keys = registry.list(offset, limit, OrtolangObjectIdentifier.buildFilterPattern(service, type));
-			notification.throwEvent("666", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "list"), "");
-			return keys;
-		} catch (RegistryServiceException | NotificationServiceException e) {
+			return registry.list(offset, limit, OrtolangObjectIdentifier.buildJPQLFilterPattern(service, type), status, itemsOnly);
+		} catch (RegistryServiceException e) {
 			throw new BrowserServiceException("error during listing keys", e);
 		}
 	}
-
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public long count(String service, String type) throws BrowserServiceException {
+	public long count(String service, String type, OrtolangObjectState.Status status, boolean itemsOnly) throws BrowserServiceException {
 		logger.log(Level.FINE, "counting keys");
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			long num = registry.count(OrtolangObjectIdentifier.buildFilterPattern(service, type));
-			notification.throwEvent("666", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "count"), "");
-			return num;
-		} catch (RegistryServiceException | NotificationServiceException e) {
-			throw new BrowserServiceException("error during couting identifiers", e);
+			return registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(service, type), status, itemsOnly);
+		} catch (RegistryServiceException e) {
+			throw new BrowserServiceException("error during couting keys", e);
 		}
 	}
-
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<OrtolangObjectProperty> listProperties(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.FINE, "listing properties for key [" + key + "]");
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 			List<OrtolangObjectProperty> properties = registry.getProperties(key); 
-			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "list-properties"), "");
 			return properties;
-		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException | NotificationServiceException e) {
+		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
 			throw new BrowserServiceException("error during listing entries", e);
 		}
 	}
@@ -151,14 +143,12 @@ public class BrowserServiceBean implements BrowserService {
 	public OrtolangObjectProperty getProperty(String key, String name) throws BrowserServiceException, KeyNotFoundException, PropertyNotFoundException, AccessDeniedException {
 		logger.log(Level.FINE, "getting property with name [" + name + "] for key [" + key + "]");
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 			String value = registry.getProperty(key, name);
 			OrtolangObjectProperty property = new OrtolangObjectProperty(name, value);
-			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "get-property"), "name=" + name);
 			return property;
-		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException | NotificationServiceException e) {
+		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
 			throw new BrowserServiceException("error during getting property", e);
 		}
 	}
@@ -186,16 +176,14 @@ public class BrowserServiceBean implements BrowserService {
 	public OrtolangObjectState getState(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.FINE, "getting state for key [" + key + "]");
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 			boolean hidden = registry.isHidden(key);
 			String lock = registry.getLock(key);
 			String status = registry.getPublicationStatus(key);
 			OrtolangObjectState state = new OrtolangObjectState(hidden, lock, status);
-			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "get-state"), "");
 			return state;
-		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException | NotificationServiceException e) {
+		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
 			throw new BrowserServiceException("error during getting state", e);
 		}
 	}
@@ -205,19 +193,49 @@ public class BrowserServiceBean implements BrowserService {
 	public OrtolangObjectInfos getInfos(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.FINE, "getting infos for key [" + key + "]");
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 			String author = registry.getAuthor(key);
 			long creationDate = registry.getCreationDate(key);
 			long lastModificationDate = registry.getLastModificationDate(key);
 			OrtolangObjectInfos infos = new OrtolangObjectInfos(author, creationDate, lastModificationDate);
-			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "get-infos"), "");
 			return infos;
-		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException | NotificationServiceException e) {
+		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
 			throw new BrowserServiceException("error during getting infos", e);
 		}
 	}
+	
+//	@Override
+//	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+//	public OrtolangObjectVersion getVersion(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+//		logger.log(Level.FINE, "getting version for key [" + key + "]");
+//		try {
+//			List<String> subjects = membership.getConnectedIdentifierSubjects();
+//			authorisation.checkPermission(key, subjects, "read");
+//			
+//			OrtolangObjectVersion version = new OrtolangObjectVersion();
+//			version.setAuthor(author);
+//			version.set
+//			
+//		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+//			throw new BrowserServiceException("error during getting infos", e);
+//		}
+//	}
+//	
+//	@Override
+//	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+//	public List<OrtolangObjectVersion> getHistory(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+//		logger.log(Level.FINE, "getting history for key [" + key + "]");
+//		try {
+//			List<String> subjects = membership.getConnectedIdentifierSubjects();
+//			authorisation.checkPermission(key, subjects, "read");
+//			
+//			List<OrtolangObjectVersion> versions = new ArrayList<OrtolangObjectVersion> ();
+//			
+//		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+//			throw new BrowserServiceException("error during getting infos", e);
+//		}
+//	}
 
 	@Override
 	public String getServiceName() {

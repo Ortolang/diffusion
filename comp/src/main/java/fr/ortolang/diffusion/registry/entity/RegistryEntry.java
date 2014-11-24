@@ -22,9 +22,12 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 
 @Entity
 @Table(indexes = { @Index(columnList = "identifier") })
-@NamedQueries({ @NamedQuery(name = "findEntryByIdentifier", query = "select e from RegistryEntry e where e.identifier = :identifier"),
-		@NamedQuery(name = "listVisibleKeys", query = "select e.key from RegistryEntry e where e.hidden = false and e.deleted = false and e.identifier like :filter"),
-		@NamedQuery(name = "countVisibleKeys", query = "select count(e) from RegistryEntry e where e.hidden = false and e.deleted = false and e.identifier like :filter") })
+@NamedQueries({ @NamedQuery(name = "findEntryByIdentifier", query = "SELECT e FROM RegistryEntry e WHERE e.identifier = :identifier"),
+		@NamedQuery(name = "listVisibleKeys", query = "SELECT e.key FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter ORDER BY e.lastModificationDate DESC"),
+		@NamedQuery(name = "countVisibleKeys", query = "SELECT count(e) FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter"),
+		@NamedQuery(name = "listVisibleItems", query = "SELECT e.key FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.item = true AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter ORDER BY e.lastModificationDate DESC"),
+		@NamedQuery(name = "countVisibleItems", query = "SELECT count(e) FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.item = true AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter")
+		})
 @SuppressWarnings("serial")
 public class RegistryEntry implements Serializable {
 
@@ -34,6 +37,7 @@ public class RegistryEntry implements Serializable {
 	private long version;
 	private boolean hidden;
 	private boolean deleted;
+	private boolean item;
 	private String lock;
 	private String publicationStatus;
 	private String identifier;
@@ -51,6 +55,7 @@ public class RegistryEntry implements Serializable {
 	public RegistryEntry() {
 		hidden = false;
 		deleted = false;
+		item = false;
 		lock = "";
 		publicationStatus = OrtolangObjectState.Status.DRAFT.value();
 		author = null;
@@ -142,6 +147,14 @@ public class RegistryEntry implements Serializable {
 	public void setAuthor(String author) {
 		this.author = author;
 	}
+	
+	public boolean isItem() {
+		return item;
+	}
+
+	public void setItem(boolean item) {
+		this.item = item;
+	}
 
 	public long getCreationDate() {
 		return creationDate;
@@ -196,6 +209,7 @@ public class RegistryEntry implements Serializable {
 		buffer.append("{key:").append(getKey());
 		buffer.append(", locked:").append(isLocked());
 		buffer.append(", hidden:").append(isHidden());
+		buffer.append(", item:").append(isItem());
 		buffer.append(", deleted:").append(isDeleted());
 		buffer.append(", parent:").append(getParent());
 		buffer.append(", identifier:").append(getIdentifier());

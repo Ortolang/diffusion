@@ -17,9 +17,9 @@ public interface BrowserService extends OrtolangService {
 	public static final String[] OBJECT_TYPE_LIST = new String[] { };
 	public static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { };
 	
-	public List<String> list(int limit, int offset, String service, String type) throws BrowserServiceException;
+	public List<String> list(int limit, int offset, String service, String type, OrtolangObjectState.Status status, boolean itemsOnly) throws BrowserServiceException;
 	
-	public long count(String service, String type) throws BrowserServiceException;
+	public long count(String service, String type, OrtolangObjectState.Status status, boolean itemOnly) throws BrowserServiceException;
 	
 	public OrtolangObjectIdentifier lookup(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
 	
@@ -32,7 +32,9 @@ public interface BrowserService extends OrtolangService {
 	public OrtolangObjectState getState(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public OrtolangObjectInfos getInfos(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
-	 
-	//public List<OrtolangObjectVersion> getHistory(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+	
+//	public OrtolangObjectVersion getVersion(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+//	 
+//	public List<OrtolangObjectVersion> getHistory(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
 	
 }

@@ -56,7 +56,7 @@ public class OrtolangServiceLookupSample {
 					OrtolangService service = (OrtolangService) jndi.lookup("diffusion-server/components/" + name);
 					logger.log(Level.INFO, service.getServiceName());
 					BrowserService browser = (BrowserService) service;
-					logger.log(Level.INFO, "nb keys : " + browser.count("", ""));
+					logger.log(Level.INFO, "nb keys : " + browser.count("", "", null, false));
 				}
 			}
 		}
