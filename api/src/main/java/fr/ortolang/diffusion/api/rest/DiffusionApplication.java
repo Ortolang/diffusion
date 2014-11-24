@@ -6,13 +6,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
-import fr.ortolang.diffusion.api.rest.mapper.AccessDeniedExceptionMapper;
-import fr.ortolang.diffusion.api.rest.mapper.BrowserServiceExceptionMapper;
-import fr.ortolang.diffusion.api.rest.mapper.KeyAlreadyExistsExceptionMapper;
-import fr.ortolang.diffusion.api.rest.mapper.KeyNotFoundExceptionMapper;
-import fr.ortolang.diffusion.api.rest.mapper.PropertyNotFoundExceptionMapper;
-import fr.ortolang.diffusion.api.rest.mapper.SearchServiceExceptionMapper;
-import fr.ortolang.diffusion.api.rest.mapper.SecurityServiceExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.*;
 import fr.ortolang.diffusion.api.rest.object.ObjectResource;
 import fr.ortolang.diffusion.api.rest.profile.ProfileResource;
 import fr.ortolang.diffusion.api.rest.runtime.RuntimeResource;
@@ -46,6 +40,7 @@ public class DiffusionApplication extends Application {
 		set.add(new BrowserServiceExceptionMapper());
 		set.add(new KeyAlreadyExistsExceptionMapper());
 		set.add(new KeyNotFoundExceptionMapper());
+		set.add(new InvalidPathExceptionMapper());
 		set.add(new PropertyNotFoundExceptionMapper());
 		set.add(new SearchServiceExceptionMapper());
 		set.add(new SecurityServiceExceptionMapper());
