@@ -2227,6 +2227,23 @@ public class CoreServiceBean implements CoreService {
 //				} catch (DataNotFoundException | BinaryStoreServiceException e) {
 //					logger.log(Level.WARNING, "unable to extract plain text for key : " + key, e);
 //				}
+				
+				for(MetadataElement mde : object.getMetadatas()) {
+					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
+					
+					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
+					if (metadata == null) {
+						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
+					}
+
+					try {
+						if (metadata.getStream() != null && metadata.getStream().length() > 0) {
+							content.addContentPart(binarystore.extract(metadata.getStream()));
+						}
+					} catch (DataNotFoundException | BinaryStoreServiceException e) {
+						logger.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
+					}
+				}
 			}
 
 			if (identifier.getType().equals(Collection.OBJECT_TYPE)) {
@@ -2236,6 +2253,23 @@ public class CoreServiceBean implements CoreService {
 				}
 				content.addContentPart(collection.getName());
 				content.addContentPart(collection.getDescription());
+				
+				for(MetadataElement mde : collection.getMetadatas()) {
+					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
+					
+					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
+					if (metadata == null) {
+						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
+					}
+
+					try {
+						if (metadata.getStream() != null && metadata.getStream().length() > 0) {
+							content.addContentPart(binarystore.extract(metadata.getStream()));
+						}
+					} catch (DataNotFoundException | BinaryStoreServiceException e) {
+						logger.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
+					}
+				}
 			}
 
 			if (identifier.getType().equals(Link.OBJECT_TYPE)) {
@@ -2244,6 +2278,23 @@ public class CoreServiceBean implements CoreService {
 					throw new OrtolangException("unable to load reference with id [" + identifier.getId() + "] from storage");
 				}
 				content.addContentPart(reference.getName());
+
+				for(MetadataElement mde : reference.getMetadatas()) {
+					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
+					
+					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
+					if (metadata == null) {
+						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
+					}
+
+					try {
+						if (metadata.getStream() != null && metadata.getStream().length() > 0) {
+							content.addContentPart(binarystore.extract(metadata.getStream()));
+						}
+					} catch (DataNotFoundException | BinaryStoreServiceException e) {
+						logger.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
+					}
+				}
 			}
 
 //			if (identifier.getType().equals(MetadataObject.OBJECT_TYPE)) {
