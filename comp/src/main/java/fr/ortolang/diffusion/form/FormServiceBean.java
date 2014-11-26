@@ -20,7 +20,6 @@ import javax.persistence.TypedQuery;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
@@ -45,9 +44,9 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @SecurityDomain("ortolang")
 @RolesAllowed("user")
 public class FormServiceBean implements FormService {
-	
+
 	private Logger logger = Logger.getLogger(FormServiceBean.class.getName());
-	
+
 	@EJB
 	private RegistryService registry;
 	@EJB
@@ -60,7 +59,7 @@ public class FormServiceBean implements FormService {
 	private EntityManager em;
 	@Resource
 	private SessionContext ctx;
-	
+
 	public FormServiceBean() {
 	}
 
@@ -95,16 +94,6 @@ public class FormServiceBean implements FormService {
 	public void setAuthorisationService(AuthorisationService authorisation) {
 		this.authorisation = authorisation;
 	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void importForms() throws FormServiceException {
-		logger.log(Level.INFO, "Importing configured forms");
-		String[] forms = OrtolangConfig.getInstance().getProperty("form.formslist").split(",");
-		for (String form : forms) {
-			//TODO
-		}
-	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -119,12 +108,12 @@ public class FormServiceBean implements FormService {
 					String ikey = registry.lookup(form.getObjectIdentifier());
 					form.setKey(ikey);
 					rforms.add(form);
-				} catch ( IdentifierNotRegisteredException e ) {
+				} catch (IdentifierNotRegisteredException e) {
 					logger.log(Level.FINE, "unregistered form found in storage for id: " + form.getId());
 				}
 			}
 			return rforms;
-		} catch ( RegistryServiceException e ) {
+		} catch (RegistryServiceException e) {
 			logger.log(Level.SEVERE, "unexpected error occured while listing forms", e);
 			throw new FormServiceException("unable to list forms", e);
 		}
@@ -145,7 +134,7 @@ public class FormServiceBean implements FormService {
 			em.persist(form);
 
 			registry.register(key, form.getObjectIdentifier(), caller);
-			
+
 			authorisation.createPolicy(key, caller);
 
 			notification.throwEvent(key, caller, Form.OBJECT_TYPE, OrtolangEvent.buildEventType(FormService.SERVICE_NAME, Form.OBJECT_TYPE, "create"), "");
@@ -154,14 +143,14 @@ public class FormServiceBean implements FormService {
 			throw new FormServiceException("unable to create form with key [" + key + "]", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Form readForm(String key) throws FormServiceException, KeyNotFoundException {
 		logger.log(Level.FINE, "reading form for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
+
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Form.OBJECT_TYPE);
 			Form form = em.find(Form.class, identifier.getId());
@@ -223,7 +212,7 @@ public class FormServiceBean implements FormService {
 			throw new FormServiceException("unable to delete form with key [" + key + "]", e);
 		}
 	}
-	
+
 	@Override
 	public String getServiceName() {
 		return SERVICE_NAME;
