@@ -8,6 +8,7 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 import javax.transaction.UserTransaction;
 
+import org.activiti.engine.delegate.BpmnError;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.JavaDelegate;
 
@@ -154,8 +155,8 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 						executeTask(execution);
 						logger.log(Level.FINE, "Task executed");
 					} catch ( RuntimeEngineTaskException e ) {
-						logger.log(Level.SEVERE, "Task execution error", e);
 						throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " IN ERROR: " + e.getMessage()));
+						throw e;
 					}
 					
 					logger.log(Level.FINE, "Sending events of process evolution");
@@ -171,7 +172,8 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " IN ERROR: " + e.getMessage()));
 			}
 		} catch ( RuntimeEngineTaskException e ) {
-			logger.log(Level.SEVERE, "Abstract Runtime Task error", e);
+			logger.log(Level.SEVERE, "Runtime Task error", e);
+			throw new BpmnError("RuntimeTaskExecutionError", e.getMessage());
 		}
 	}
 	
