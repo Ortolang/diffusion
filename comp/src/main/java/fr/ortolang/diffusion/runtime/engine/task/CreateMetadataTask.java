@@ -35,6 +35,8 @@ public class CreateMetadataTask extends RuntimeEngineTask {
 		Map<String, String> entries = execution.getVariable(METADATA_ENTRIES_PARAM_NAME, Map.class);
 		
 		logger.log(Level.INFO, "Starting metadata objects import for provided entries");
+		long start = System.currentTimeMillis();
+		int cpt = 0;
 		for (Entry<String, String> entry : entries.entrySet()) {
 			logger.log(Level.FINE, "treating metadata entry: " + entry.getKey());
 			int lastPathIndex = entry.getKey().lastIndexOf("/");
@@ -53,11 +55,14 @@ public class CreateMetadataTask extends RuntimeEngineTask {
 			try {
 				logger.log(Level.FINE, "creating metadata object for path: " + mdpath + " with name: " + mdname + " and format: " + mdformat);
 				getCoreService().createMetadataObject(wskey, mdpath, mdname, mdformat, entry.getValue());
+				cpt++;
 			} catch (Exception e) {
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Error creating metadata object for path [" + mdpath + "] and name [" + mdname + "]"));
 				logger.log(Level.SEVERE, "- error creating metadata for path: " + mdpath + " and name: " + mdname, e);
 			}
 		}
+		long stop = System.currentTimeMillis();
+		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), cpt + " metadata objects created successfully in " + (stop - start) + " ms"));
 	}
 
 	@Override

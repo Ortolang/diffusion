@@ -39,6 +39,8 @@ public class CreateObjectsTask extends RuntimeEngineTask {
 		
 		logger.log(Level.INFO, "Starting data objects import for provided entries");
 		List<String> collections = new ArrayList<String>();
+		long start = System.currentTimeMillis();
+		int cpt = 0;
 		for (Entry<String, String> entry : entries.entrySet()) {
 			logger.log(Level.FINE, "treating imported entry: " + entry.getKey());
 			try {
@@ -56,7 +58,8 @@ public class CreateObjectsTask extends RuntimeEngineTask {
 								//TODO treat the case of already existing collection...
 								collections.add(current);
 							} catch (Exception e) {
-								logger.log(Level.SEVERE, "- error creating collection at path: " + current + ", should result in data object creation error", e);
+								throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Error creating collection at path [" + current + "]"));
+								logger.log(Level.SEVERE, "error creating collection at path: " + current + ", should result in data object creation error", e);
 							}
 						}
 					}
@@ -65,6 +68,7 @@ public class CreateObjectsTask extends RuntimeEngineTask {
 				try {
 					logger.log(Level.FINE, "creating data object for path: " + current);
 					getCoreService().createDataObject(wskey, current, "no description provided", entry.getValue());
+					cpt++;
 					//TODO treat the case of already existing dataobject...
 				} catch (Exception e) {
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Error creating data object at path [" + current + "]"));
@@ -76,6 +80,8 @@ public class CreateObjectsTask extends RuntimeEngineTask {
 				logger.log(Level.SEVERE, "Error creating data object with path: " + entry.getKey() + ", invalid path");
 			}
 		}
+		long stop = System.currentTimeMillis();
+		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), cpt + " data objects created successfully in " + (stop - start) + " ms"));
 	}
 
 	@Override

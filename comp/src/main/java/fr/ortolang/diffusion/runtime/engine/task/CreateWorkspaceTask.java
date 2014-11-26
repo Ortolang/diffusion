@@ -53,6 +53,7 @@ public class CreateWorkspaceTask extends RuntimeEngineTask {
 				getCoreService().createWorkspace(wskey, wsname, wstype);
 			} catch ( Exception e2 ) {
 				logger.log(Level.SEVERE, "unable to create workspace", e2);
+				throw new RuntimeEngineTaskException("unable to create workspace", e2);
 			}
 		} catch (RegistryServiceException e) {
 			throw new RuntimeEngineTaskException("unable to create workspace", e);

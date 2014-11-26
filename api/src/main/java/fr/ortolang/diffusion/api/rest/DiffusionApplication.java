@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import fr.ortolang.diffusion.api.rest.filter.ContentTypeSetterPreProcessorInterceptor;
 import fr.ortolang.diffusion.api.rest.mapper.*;
 import fr.ortolang.diffusion.api.rest.object.ObjectResource;
 import fr.ortolang.diffusion.api.rest.profile.ProfileResource;
@@ -36,6 +37,7 @@ public class DiffusionApplication extends Application {
 	public Set<Object> getSingletons() {
 		HashSet<Object> set = new HashSet<Object>();
 		set.add(new TemplateFilter());
+		set.add(new ContentTypeSetterPreProcessorInterceptor());
 		set.add(new AccessDeniedExceptionMapper());
 		set.add(new BrowserServiceExceptionMapper());
 		set.add(new KeyAlreadyExistsExceptionMapper());
