@@ -27,6 +27,7 @@ import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangSearchResult;
+import fr.ortolang.diffusion.indexing.IndexingContext;
 
 public class IndexStoreServiceTest {
 	
@@ -110,6 +111,7 @@ public class IndexStoreServiceTest {
 		object.setStatus("draft");
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
 		object.setPlainTextContent(content);
+		object.setContext(new IndexingContext("root", "/path"));
 		
 		try {
 			service.index(object);
@@ -144,6 +146,7 @@ public class IndexStoreServiceTest {
 		object.setStatus("DRAFT");
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
 		object.setPlainTextContent(content);
+		object.setContext(new IndexingContext("root", "/path"));
 		
 		try {
 			service.index(object);
@@ -183,6 +186,7 @@ public class IndexStoreServiceTest {
 		object.setStatus("DRAFT");
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
 		object.setPlainTextContent(content);
+		object.setContext(new IndexingContext("root", "/path"));
 		
 		try {
 			service.index(object);
