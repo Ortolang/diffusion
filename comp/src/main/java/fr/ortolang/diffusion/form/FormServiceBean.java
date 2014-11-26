@@ -20,6 +20,7 @@ import javax.persistence.TypedQuery;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
@@ -93,6 +94,16 @@ public class FormServiceBean implements FormService {
 
 	public void setAuthorisationService(AuthorisationService authorisation) {
 		this.authorisation = authorisation;
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void importForms() throws FormServiceException {
+		logger.log(Level.INFO, "Importing configured forms");
+		String[] forms = OrtolangConfig.getInstance().getProperty("form.formslist").split(",");
+		for (String form : forms) {
+			//TODO
+		}
 	}
 
 	@Override

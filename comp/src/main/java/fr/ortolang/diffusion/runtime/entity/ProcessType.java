@@ -1,13 +1,13 @@
 package fr.ortolang.diffusion.runtime.entity;
 
-
 public class ProcessType {
-	
+
 	private String id;
 	private String name;
 	private String description;
 	private boolean suspended;
 	private int version;
+	private String startForm;
 
 	public ProcessType() {
 		suspended = false;
@@ -37,7 +37,7 @@ public class ProcessType {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	
+
 	public boolean isSuspended() {
 		return suspended;
 	}
@@ -52,6 +52,14 @@ public class ProcessType {
 
 	public void setVersion(int version) {
 		this.version = version;
+	}
+
+	public String getStartForm() {
+		return startForm;
+	}
+
+	public void setStartForm(String startForm) {
+		this.startForm = startForm;
 	}
 
 }

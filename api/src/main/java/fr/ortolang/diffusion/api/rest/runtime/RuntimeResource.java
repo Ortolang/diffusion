@@ -3,6 +3,8 @@ package fr.ortolang.diffusion.api.rest.runtime;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -176,8 +178,9 @@ public class RuntimeResource {
 					if ( value.getHeaders().containsKey("Content-Disposition") && value.getHeaders().getFirst("Content-Disposition").contains("filename=") ) {
 						logger.log(Level.FINE, "seems this part [" + entry.getKey() + "] is a file");
 						InputStream is = value.getBody(InputStream.class, null);
-						String hash = core.put(is);
-						values.append(hash).append(",");
+						java.nio.file.Path file = Files.createTempFile("process-file", ".tmp");
+						Files.copy(is, file, StandardCopyOption.REPLACE_EXISTING);
+						values.append(file).append(",");
 					} else {
 						logger.log(Level.FINE, "seems this part  [" + entry.getKey() + "] is a simple text value");
 						values.append(value.getBodyAsString()).append(",");

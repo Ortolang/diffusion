@@ -3,7 +3,7 @@ package fr.ortolang.diffusion.runtime.entity;
 import java.util.Date;
 
 public class HumanTask {
-	
+
 	public static final String OBJECT_TYPE = "task";
 
 	private String id;
@@ -14,6 +14,7 @@ public class HumanTask {
 	private Date creationDate;
 	private Date dueDate;
 	private int priority;
+	private String form;
 
 	public HumanTask() {
 	}
@@ -80,6 +81,14 @@ public class HumanTask {
 
 	public void setPriority(int priority) {
 		this.priority = priority;
+	}
+
+	public String getForm() {
+		return form;
+	}
+
+	public void setForm(String form) {
+		this.form = form;
 	}
 
 }

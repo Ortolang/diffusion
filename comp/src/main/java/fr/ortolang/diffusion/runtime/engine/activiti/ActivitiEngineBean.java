@@ -135,7 +135,8 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		List<ProcessDefinition> apdefs = engine.getRepositoryService().createProcessDefinitionQuery().latestVersion().list();
 		List<ProcessType> defs = new ArrayList<ProcessType>();
 		for (ProcessDefinition apdef : apdefs) {
-			defs.add(toProcessType(apdef));
+			String form = engine.getFormService().getStartFormKey(apdef.getId());
+			defs.add(toProcessType(apdef, form));
 		}
 		return defs;
 	}
@@ -144,14 +145,16 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public ProcessType getProcessTypeById(String id) throws RuntimeEngineException {
 		ProcessDefinition apdef = engine.getRepositoryService().createProcessDefinitionQuery().processDefinitionId(id).singleResult();
-		return toProcessType(apdef);
+		String form = engine.getFormService().getStartFormKey(apdef.getId());
+		return toProcessType(apdef, form);
 	}
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public ProcessType getProcessTypeByKey(String key) throws RuntimeEngineException {
 		ProcessDefinition apdef = engine.getRepositoryService().createProcessDefinitionQuery().processDefinitionKey(key).singleResult();
-		return toProcessType(apdef);
+		String form = engine.getFormService().getStartFormKey(apdef.getId());
+		return toProcessType(apdef, form);
 	}
 	
 	@Override
@@ -178,7 +181,8 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	public HumanTask getTask(String id) throws RuntimeEngineException {
 		try {
 			Task task = engine.getTaskService().createTaskQuery().taskId(id).singleResult();
-			return toHumanTask(task);
+			String form = engine.getFormService().getTaskFormKey(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
+			return toHumanTask(task, form);
 		} catch (ActivitiException e) {
 			throw new RuntimeEngineException("unexpected error while getting task", e);
 		}
@@ -192,12 +196,14 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 			
 			List<Task> cutasks = engine.getTaskService().createTaskQuery().taskCandidateUser(user).list();
 			for (Task task : cutasks) {
-				ctasks.add(toHumanTask(task));
+				String form = engine.getFormService().getTaskFormKey(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
+				ctasks.add(toHumanTask(task, form));
 			}
 			if ( groups != null && groups.size() > 0 ) {
 				List<Task> cgtasks = engine.getTaskService().createTaskQuery().taskCandidateGroupIn(groups).list();
 				for (Task task : cgtasks) {
-					ctasks.add(toHumanTask(task));
+					String form = engine.getFormService().getTaskFormKey(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
+					ctasks.add(toHumanTask(task, form));
 				}
 			}
 			
@@ -214,7 +220,8 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 			List<HumanTask> atasks = new ArrayList<HumanTask>();
 			List<Task> autasks = engine.getTaskService().createTaskQuery().taskAssignee(user).list();
 			for (Task task : autasks) {
-				atasks.add(toHumanTask(task));
+				String form = engine.getFormService().getTaskFormKey(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
+				atasks.add(toHumanTask(task, form));
 			}
 			return atasks;
 		} catch (ActivitiException e) {
@@ -272,13 +279,14 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		return false;
 	}
 	
-	private ProcessType toProcessType(ProcessDefinition def) {
+	private ProcessType toProcessType(ProcessDefinition def, String startform) {
 		ProcessType instance = new ProcessType();
 		instance.setId(def.getId());
 		instance.setName(def.getKey());
 		instance.setDescription(def.getDescription());
 		instance.setVersion(def.getVersion());
 		instance.setSuspended(def.isSuspended());
+		instance.setStartForm(startform);
 		return instance;
 	}
 
@@ -290,7 +298,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		return instance;
 	}
 
-	private HumanTask toHumanTask(Task task) {
+	private HumanTask toHumanTask(Task task, String form) {
 		HumanTask instance = new HumanTask();
 		instance.setId(task.getId());
 		instance.setName(task.getName());
@@ -300,6 +308,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		instance.setCreationDate(task.getCreateTime());
 		instance.setDueDate(task.getDueDate());
 		instance.setPriority(task.getPriority());
+		instance.setForm(form);
 		return instance;
 	}
 

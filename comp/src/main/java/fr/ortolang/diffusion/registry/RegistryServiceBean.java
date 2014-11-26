@@ -177,7 +177,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void update(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "hidding key [" + key + "]");
+		logger.log(Level.FINE, "updating key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		try {
 			entry.setLastModificationDate(System.currentTimeMillis());

@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.runtime.engine.task;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,7 +19,7 @@ import gov.loc.repository.bagit.utilities.SimpleResult;
 public class CheckBagTask extends RuntimeEngineTask {
 	
 	public static final String NAME = "Check Bag Integrity";
-	public static final String BAG_FILE_PARAM_NAME = "bagfile";
+	public static final String BAG_PATH_PARAM_NAME = "bagpath";
 
 	private static final Logger logger = Logger.getLogger(CheckBagTask.class.getName());
 
@@ -27,15 +28,13 @@ public class CheckBagTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		if ( !execution.hasVariable(BAG_FILE_PARAM_NAME) ) {
-			throw new RuntimeEngineTaskException("execution variable " + BAG_FILE_PARAM_NAME + " is not set");
+		if ( !execution.hasVariable(BAG_PATH_PARAM_NAME) ) {
+			throw new RuntimeEngineTaskException("execution variable " + BAG_PATH_PARAM_NAME + " is not set");
 		}
 		
-		Path bagpath = Paths.get(execution.getVariable(BAG_FILE_PARAM_NAME, String.class));
-		logger.log(Level.FINE, BAG_FILE_PARAM_NAME + " parameter found: " + bagpath);
-
+		Path bagpath = Paths.get(execution.getVariable(BAG_PATH_PARAM_NAME, String.class));
 		if ( !Files.exists(bagpath) ) {
-			throw new RuntimeEngineTaskException("file " + bagpath + " does not exists");
+			throw new RuntimeEngineTaskException("bag file " + bagpath + " does not exists");
 		}
 		
 		logger.log(Level.FINE, "loading bag from file: " + bagpath);
@@ -52,7 +51,13 @@ public class CheckBagTask extends RuntimeEngineTask {
 			throw new RuntimeEngineTaskException("bag verification failed: " + result.messagesToString());
 		}
 		long stop = System.currentTimeMillis();
+		try {
+			bag.close();
+		} catch (IOException e) {
+			logger.log(Level.WARNING, "unable to close bag", e);
+		}
 		logger.log(Level.FINE, "bag verification success done in " + (stop - start) + " ms");
+		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Bag integrity checked successfully from local file: " + bagpath + " in " + (stop - start) + " ms"));
 	}
 
 	@Override

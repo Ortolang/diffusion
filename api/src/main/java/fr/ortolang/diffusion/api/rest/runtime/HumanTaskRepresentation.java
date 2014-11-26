@@ -21,6 +21,7 @@ public class HumanTaskRepresentation {
 	private Date dueDate;
 	private int priority;
 	private boolean suspended;
+	private String form;
 
 	public HumanTaskRepresentation() {
 	}
@@ -104,6 +105,14 @@ public class HumanTaskRepresentation {
 	public void setSuspended(boolean suspended) {
 		this.suspended = suspended;
 	}
+	
+	public String getForm() {
+		return form;
+	}
+
+	public void setForm(String form) {
+		this.form = form;
+	}
 
 	public static HumanTaskRepresentation fromHumanTask(HumanTask task) {
 		HumanTaskRepresentation representation = new HumanTaskRepresentation();
@@ -115,6 +124,7 @@ public class HumanTaskRepresentation {
 		representation.setCreationDate(task.getCreationDate());
 		representation.setDueDate(task.getDueDate());
 		representation.setPriority(task.getPriority());
+		representation.setForm(task.getForm());
 		return representation;
 	}
 

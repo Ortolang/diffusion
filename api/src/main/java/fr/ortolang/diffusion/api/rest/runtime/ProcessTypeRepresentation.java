@@ -15,6 +15,7 @@ public class ProcessTypeRepresentation {
 	private String description;
 	private boolean suspended;
 	private int version;
+	private String form;
 
 	public ProcessTypeRepresentation() {
 	}
@@ -67,6 +68,14 @@ public class ProcessTypeRepresentation {
 		this.version = version;
 	}
 
+	public String getForm() {
+		return form;
+	}
+
+	public void setForm(String form) {
+		this.form = form;
+	}
+
 	public static ProcessTypeRepresentation fromProcessType(ProcessType type) {
 		ProcessTypeRepresentation representation = new ProcessTypeRepresentation();
 		representation.setId(type.getId());
@@ -74,6 +83,7 @@ public class ProcessTypeRepresentation {
 		representation.setDescription(type.getDescription());
 		representation.setSuspended(type.isSuspended());
 		representation.setVersion(type.getVersion());
+		representation.setForm(type.getStartForm());
 		return representation;
 	}
 

@@ -1,75 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
   <process id="test" name="My Test Hello World process" isExecutable="true">
-    
-    <startEvent id="startevent1" name="Start"></startEvent>
+    <startEvent id="startevent1" name="Start" activiti:formKey="test-process-start-form.json"></startEvent>
     <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="servicetask1"></sequenceFlow>
-    
     <serviceTask id="servicetask1" name="Say Hello 1" activiti:class="fr.ortolang.diffusion.runtime.engine.task.HelloWorldTask"></serviceTask>
     <sequenceFlow id="flow2" sourceRef="servicetask1" targetRef="servicetask2"></sequenceFlow>
-    
-    <serviceTask id="servicetask2" name="Say Hello 2" activiti:class="fr.ortolang.diffusion.runtime.engine.task.HelloWorldTask" activiti:async="true">
-    	<extensionElements>
-      		<activiti:field name="delay" stringValue="60000" />
-  		</extensionElements>
+    <serviceTask id="servicetask2" name="Say Hello 2" activiti:async="true" activiti:class="fr.ortolang.diffusion.runtime.engine.task.HelloWorldTask">
+      <extensionElements>
+        <activiti:field name="delay">
+          <activiti:string><![CDATA[60000]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
     </serviceTask>
     <sequenceFlow id="flow3" sourceRef="servicetask2" targetRef="servicetask3"></sequenceFlow>
-    
-    <serviceTask id="servicetask3" name="Say Hello 3" activiti:class="fr.ortolang.diffusion.runtime.engine.task.HelloWorldTask" activiti:async="true">
-    	<extensionElements>
-      		<activiti:field name="delay" stringValue="60000" />
-  		</extensionElements>
+    <serviceTask id="servicetask3" name="Say Hello 3" activiti:async="true" activiti:class="fr.ortolang.diffusion.runtime.engine.task.HelloWorldTask">
+      <extensionElements>
+        <activiti:field name="delay">
+          <activiti:string><![CDATA[60000]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
     </serviceTask>
     <sequenceFlow id="flow4" sourceRef="servicetask3" targetRef="usertask1"></sequenceFlow>
-    
-    <userTask id="usertask1" name="Confirm Say Hello">
-    	<documentation>
-             Do me need to say hello again ??
-        </documentation>
-        <potentialOwner>
-           <resourceAssignmentExpression>
-              <formalExpression>moderators</formalExpression>
-           </resourceAssignmentExpression>
-        </potentialOwner>
+    <userTask id="usertask1" name="Confirm Say Hello" activiti:candidateGroups="moderators" activiti:formKey="test-process-confirm-form.json">
+      <documentation>Do me need to say hello again ??</documentation>
     </userTask>
     <sequenceFlow id="flow5" sourceRef="usertask1" targetRef="exclusivegateway1"></sequenceFlow>
-    
     <exclusiveGateway id="exclusivegateway1" name="Exclusive Gateway"></exclusiveGateway>
     <sequenceFlow id="flow6" sourceRef="exclusivegateway1" targetRef="servicetask4">
-    	<conditionExpression xsi:type="tFormalExpression">
-    		<![CDATA[${helloAgain}]]>
-  		</conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${helloAgain}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="flow7" sourceRef="exclusivegateway1" targetRef="terminateendevent1">
-    	<conditionExpression xsi:type="tFormalExpression">
-    		<![CDATA[${!helloAgain}]]>
-  		</conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!helloAgain}]]></conditionExpression>
     </sequenceFlow>
-    
-    <serviceTask id="servicetask4" name="Say Hello 4" activiti:class="fr.ortolang.diffusion.runtime.engine.task.HelloWorldTask" activiti:async="true">
-    	<extensionElements>
-      		<activiti:field name="delay" stringValue="60000" />
-  		</extensionElements>
+    <serviceTask id="servicetask4" name="Say Hello 4" activiti:async="true" activiti:class="fr.ortolang.diffusion.runtime.engine.task.HelloWorldTask">
+      <extensionElements>
+        <activiti:field name="delay">
+          <activiti:string><![CDATA[60000]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
     </serviceTask>
     <sequenceFlow id="flow8" sourceRef="servicetask4" targetRef="servicetask5"></sequenceFlow>
-    
-    <serviceTask id="servicetask5" name="Say Hello 5" activiti:class="fr.ortolang.diffusion.runtime.engine.task.HelloWorldTask" activiti:async="true">
-    	<extensionElements>
-      		<activiti:field name="delay" stringValue="60000" />
-  		</extensionElements>
+    <serviceTask id="servicetask5" name="Say Hello 5" activiti:async="true" activiti:class="fr.ortolang.diffusion.runtime.engine.task.HelloWorldTask">
+      <extensionElements>
+        <activiti:field name="delay">
+          <activiti:string><![CDATA[60000]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
     </serviceTask>
     <sequenceFlow id="flow9" sourceRef="servicetask5" targetRef="terminateendevent1"></sequenceFlow>
-    
     <endEvent id="terminateendevent1" name="TerminateEndEvent">
       <terminateEventDefinition></terminateEventDefinition>
     </endEvent>
-    
   </process>
-  
-  
-  
-  <bpmndi:BPMNDiagram id="BPMNDiagram_myProcess">
-    <bpmndi:BPMNPlane bpmnElement="myProcess" id="BPMNPlane_myProcess">
+  <bpmndi:BPMNDiagram id="BPMNDiagram_test">
+    <bpmndi:BPMNPlane bpmnElement="test" id="BPMNPlane_test">
       <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
         <omgdc:Bounds height="35.0" width="35.0" x="40.0" y="130.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
@@ -122,16 +106,16 @@
         <omgdi:waypoint x="485.0" y="390.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+        <omgdi:waypoint x="610.0" y="410.0"></omgdi:waypoint>
+        <omgdi:waypoint x="611.0" y="490.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
         <omgdi:waypoint x="432.0" y="418.0"></omgdi:waypoint>
         <omgdi:waypoint x="432.0" y="480.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
+      <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
         <omgdi:waypoint x="485.0" y="507.0"></omgdi:waypoint>
         <omgdi:waypoint x="594.0" y="507.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
-        <omgdi:waypoint x="610.0" y="410.0"></omgdi:waypoint>
-        <omgdi:waypoint x="611.0" y="490.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

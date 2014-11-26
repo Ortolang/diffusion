@@ -147,7 +147,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 				}
 				try {
 					logger.log(Level.FINE, "Loggin ok, sending events of process evolution");
-					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityStartEvent(execution.getProcessBusinessKey(), getTaskName(), "service task: " + execution.getCurrentActivityName() + " started"));
+					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityStartEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " STARTED"));
 					
 					try {
 						logger.log(Level.FINE, "Executing task");
@@ -155,11 +155,11 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 						logger.log(Level.FINE, "Task executed");
 					} catch ( RuntimeEngineTaskException e ) {
 						logger.log(Level.SEVERE, "Task execution error", e);
-						throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "service task: " + execution.getCurrentActivityName() + " error " + e.getMessage()));
+						throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " IN ERROR: " + e.getMessage()));
 					}
 					
 					logger.log(Level.FINE, "Sending events of process evolution");
-					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityCompleteEvent(execution.getProcessBusinessKey(), getTaskName(), "service task: " + execution.getCurrentActivityName() + " completed"));
+					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityCompleteEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " COMPLETED"));
 				} finally {
 					if ( needEngineAuth() ) {
 						logger.log(Level.FINE, "Engine authenticated, trying to logout");
@@ -168,7 +168,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 				}
 			} catch ( LoginException e ) {
 				logger.log(Level.SEVERE, "Abstract Runtime Task login error", e);
-				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "service task: " + execution.getCurrentActivityName() + " error" + e.getMessage()));
+				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " IN ERROR: " + e.getMessage()));
 			}
 		} catch ( RuntimeEngineTaskException e ) {
 			logger.log(Level.SEVERE, "Abstract Runtime Task error", e);

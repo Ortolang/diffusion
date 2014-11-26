@@ -15,6 +15,8 @@ public interface FormService extends OrtolangService {
 	public static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
 		{ Form.OBJECT_TYPE, "read,update,delete" }};
 	
+	public void importForms() throws FormServiceException;
+	
 	public List<Form> listForms() throws FormServiceException;
 	
 	public void createForm(String key, String name, String definition) throws FormServiceException, KeyAlreadyExistsException, AccessDeniedException;

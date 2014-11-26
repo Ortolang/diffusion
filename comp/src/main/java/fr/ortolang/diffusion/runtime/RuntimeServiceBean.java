@@ -122,7 +122,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			process.setName(name);
 			process.setType(type);
 			process.setState(State.PENDING);
-			process.appendLog("Process created by " + caller + " on " + new Date());
+			process.appendLog("## PROCESS CREATED BY " + caller + " ON " + new Date());
 			em.persist(process);
 			
 			registry.register(key, new OrtolangObjectIdentifier(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, id), caller);
@@ -155,7 +155,7 @@ public class RuntimeServiceBean implements RuntimeService {
 				throw new RuntimeServiceException("unable to start process, state is not " + State.PENDING);
 			}
 			process.setKey(key);
-			process.appendLog("Process state changed to " + State.SUBMITTED + " by " + caller + " on " + new Date());
+			process.appendLog("## PROCESS STATE CHANGED TO " + State.SUBMITTED + " BY " + caller + " ON " + new Date());
 			process.setState(State.SUBMITTED);
 			em.persist(process);
 			
@@ -238,7 +238,7 @@ public class RuntimeServiceBean implements RuntimeService {
 				throw new RuntimeServiceException("unable to find a process with id: " + pid);
 			}
 			process.setState(state);
-			process.appendLog("Process state changed to " + state + " on " + new Date());
+			process.appendLog("## PROCESS STATE CHANGED TO " + State.SUBMITTED + " ON " + new Date());
 			em.merge(process);
 			
 			String key = registry.lookup(process.getObjectIdentifier());
@@ -352,7 +352,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			throw new RuntimeServiceException("unable to complete task with id: " + id, e);
 		}
 	}
-
+	
 	@Override
 	public String getServiceName() {
 		return RuntimeService.SERVICE_NAME;
