@@ -17,9 +17,11 @@
   	#if( $entity.size() > 0 ) 
 	  	<p>$entity.size() result#if($entity.size() > 1)s#end found</p>
 	  	#foreach ( $result in $entity )
-	  		#set ($url = $base + "/rest/" + $result.service + "/" + $result.type + "s/" + $result.key )
+	  		#set ($url = $base + "/rest/objects/" + $result.key )
 	  		<h4>$result.name <small>$result.type</small></h4>
 		  	<small><a href="$url">$url</a></small>
+		  	<p>$result.root</p>
+		  	<p>$result.path</p>
 		  	<p>$result.explain</p>
 	  	#end
 	#end

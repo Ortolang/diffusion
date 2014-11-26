@@ -168,6 +168,9 @@ public class IndexStoreServiceBean implements IndexStoreService {
 				String service = doc.get("SERVICE");
 				String type = doc.get("TYPE");
 				String key = doc.get("KEY");
+				String root = doc.get("ROOT");
+				String path = doc.get("PATH");
+				
 				OrtolangSearchResult result = new OrtolangSearchResult();
 				result.setScore(score);
 				result.setName(name);
@@ -176,6 +179,8 @@ public class IndexStoreServiceBean implements IndexStoreService {
 				result.setType(type);
 				result.setKey(key);
 				result.setExplain(higlightedText);
+				result.setRoot(root);
+				result.setPath(path);
 				results.add(result);
 			}
 			return results;

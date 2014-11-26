@@ -20,6 +20,8 @@ public class IndexStoreDocumentBuilder {
 	public static final String STATUS_FIELD = "STATUS";
 	public static final String CONTENT_FIELD = "CONTENT";
 	public static final String PROPERTY_FIELD_PREFIX = "PROPERTY.";
+	public static final String CONTEXT_ROOT_FIELD = "ROOT";
+	public static final String CONTEXT_PATH_FIELD = "PATH";
 	
 	public static Document buildDocument(OrtolangIndexableObject object) {
 		Document document = new Document();
@@ -43,6 +45,8 @@ public class IndexStoreDocumentBuilder {
 		}
 		document.add(new Field(STATUS_FIELD, object.getStatus().toLowerCase(), StringField.TYPE_STORED));
 		document.add(new Field(CONTENT_FIELD, object.getPlainTextContent().toString(), TextField.TYPE_STORED));
+		document.add(new Field(CONTEXT_ROOT_FIELD, object.getContext().getRoot(), StringField.TYPE_STORED));
+		document.add(new Field(CONTEXT_PATH_FIELD, object.getContext().getPath(), StringField.TYPE_STORED));
 		return document;
 	}
 

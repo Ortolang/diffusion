@@ -2,6 +2,8 @@ package fr.ortolang.diffusion;
 
 import java.util.List;
 
+import fr.ortolang.diffusion.indexing.IndexingContext;
+
 public class OrtolangIndexableObject {
 
 	private OrtolangObjectIdentifier identifier;
@@ -18,6 +20,7 @@ public class OrtolangIndexableObject {
 	private List<OrtolangObjectProperty> properties;
 	private OrtolangIndexablePlainTextContent plainTextContent;
 	private OrtolangIndexableSemanticContent semanticContent;
+	private IndexingContext context;
 
 	public OrtolangIndexableObject() {
 	}
@@ -132,6 +135,14 @@ public class OrtolangIndexableObject {
 
 	public void setLastModificationDate(long lastModificationDate) {
 		this.lastModificationDate = lastModificationDate;
+	}
+
+	public IndexingContext getContext() {
+		return context;
+	}
+
+	public void setContext(IndexingContext context) {
+		this.context = context;
 	}
 
 }

@@ -19,6 +19,7 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.indexing.IndexingContext;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -107,7 +108,7 @@ public class PublicationServiceBean implements PublicationService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void publish(String key, PublicationType type) throws PublicationServiceException, AccessDeniedException {
+	public void publish(String key, PublicationContext context) throws PublicationServiceException, AccessDeniedException {
 		logger.log(Level.FINE, "publishing key : " + key);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -120,14 +121,14 @@ public class PublicationServiceBean implements PublicationService {
 				logger.log(Level.WARNING, "key [" + key + "] is already published, nothing to do !!");
 			} else {
 				authorisation.updatePolicyOwner(key, MembershipService.SUPERUSER_IDENTIFIER);
-				authorisation.setPolicyRules(key, type.getSecurityRules());
+				authorisation.setPolicyRules(key, context.getType().getSecurityRules());
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
 				registry.update(key);
-				indexing.index(key);
+				indexing.index(key, new IndexingContext(context.getRoot(), context.getPath()));
 				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "status"), "status=publish");
 			}
-		} catch (AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IndexingServiceException | MembershipServiceException e ) {
+		} catch (AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException | IndexingServiceException e ) {
 			logger.log(Level.SEVERE, "error during publication of key", e);
 			ctx.setRollbackOnly();
 			throw new PublicationServiceException("error during publishing key : " + e);

@@ -31,25 +31,27 @@ public class IndexingServiceBean implements IndexingService {
 	}
 
 	@Override
-	public void index(String key) throws IndexingServiceException {
-		sendMessage("index", key);
+	public void index(String key, IndexingContext indexingContext) throws IndexingServiceException {
+		sendMessage("index", key, indexingContext);
 	}
 
 	@Override
-	public void reindex(String key) throws IndexingServiceException {
-		sendMessage("reindex", key);
+	public void reindex(String key, IndexingContext indexingContext) throws IndexingServiceException {
+		sendMessage("reindex", key, indexingContext);
 	}
 
 	@Override
-	public void remove(String key) throws IndexingServiceException {
-		sendMessage("remove", key);
+	public void remove(String key, IndexingContext indexingContext) throws IndexingServiceException {
+		sendMessage("remove", key, indexingContext);
 	}
 
-	private void sendMessage(String action, String key) throws IndexingServiceException {
+	private void sendMessage(String action, String key, IndexingContext indexingContext) throws IndexingServiceException {
 		try {
 			Message message = context.createMessage();
 			message.setStringProperty("action", action);
 			message.setStringProperty("key", key);
+			message.setStringProperty("root", indexingContext.getRoot());
+			message.setStringProperty("path", indexingContext.getPath());
 			context.createProducer().send(indexingTopic, message);                   
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "unable to send indexing message", e);

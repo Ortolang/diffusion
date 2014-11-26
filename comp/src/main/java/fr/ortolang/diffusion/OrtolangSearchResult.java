@@ -12,6 +12,8 @@ public class OrtolangSearchResult implements Serializable {
 	private String service;
 	private String type;
 	private OrtolangObjectIdentifier identifier;
+	private String root;
+	private String path;
 
 	public OrtolangSearchResult() {
 	}
@@ -74,6 +76,22 @@ public class OrtolangSearchResult implements Serializable {
 
 	public void setIdentifier(String identifier) {
 		this.identifier = OrtolangObjectIdentifier.deserialize(identifier);
+	}
+
+	public String getRoot() {
+		return root;
+	}
+
+	public void setRoot(String root) {
+		this.root = root;
+	}
+
+	public String getPath() {
+		return path;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
 	}
 
 	public String toString() {

@@ -71,14 +71,17 @@ public class IndexingListenerBean implements MessageListener {
 		try {
 			String action = message.getStringProperty("action");
 			String key = message.getStringProperty("key");
+			String root = message.getStringProperty("root");
+			String path = message.getStringProperty("path");
+			IndexingContext context = new IndexingContext(root, path);
 			logger.log(Level.FINE, action + " action called on key: " + key);
 			try {
 				if (action.equals("index"))
-					this.addToStore(key);
+					this.addToStore(key, context);
 				if (action.equals("reindex"))
-					this.updateStore(key);
+					this.updateStore(key, context);
 				if (action.equals("remove"))
-					this.removeFromStore(key);
+					this.removeFromStore(key, context);
 			} catch (Exception e) {
 				logger.log(Level.WARNING, "error during indexation of key " + key, e);
 			}
@@ -87,9 +90,9 @@ public class IndexingListenerBean implements MessageListener {
 		}
 	}
 
-	private void addToStore(String key) throws IndexingServiceException {
+	private void addToStore(String key, IndexingContext context) throws IndexingServiceException {
 		try {
-			OrtolangIndexableObject object = buildIndexableObject(key);
+			OrtolangIndexableObject object = buildIndexableObject(key, context);
 			indexStore.index(object);
 			tripleStore.index(object);
 		} catch (IndexStoreServiceException | TripleStoreServiceException e) {
@@ -97,9 +100,9 @@ public class IndexingListenerBean implements MessageListener {
 		}
 	}
 
-	private void updateStore(String key) throws IndexingServiceException {
+	private void updateStore(String key, IndexingContext context) throws IndexingServiceException {
 		try {
-			OrtolangIndexableObject object = buildIndexableObject(key);
+			OrtolangIndexableObject object = buildIndexableObject(key, context);
 			indexStore.reindex(object);
 			tripleStore.reindex(object);
 		} catch (IndexStoreServiceException | TripleStoreServiceException e) {
@@ -107,7 +110,7 @@ public class IndexingListenerBean implements MessageListener {
 		}
 	}
 
-	private void removeFromStore(String key) throws IndexingServiceException {
+	private void removeFromStore(String key, IndexingContext context) throws IndexingServiceException {
 		try {
 			indexStore.remove(key);
 			tripleStore.remove(key);
@@ -116,11 +119,12 @@ public class IndexingListenerBean implements MessageListener {
 		}
 	}
 
-	private OrtolangIndexableObject buildIndexableObject(String key) throws IndexingServiceException {
+	private OrtolangIndexableObject buildIndexableObject(String key, IndexingContext context) throws IndexingServiceException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
 			OrtolangIndexablePlainTextContent content = service.getIndexablePlainTextContent(key);
+			logger.info("indexing content : "+content);
 			OrtolangIndexableSemanticContent scontent = service.getIndexableSemanticContent(key);
 			OrtolangIndexableObject iobject = new OrtolangIndexableObject();
 			iobject.setKey(key);
@@ -136,6 +140,7 @@ public class IndexingListenerBean implements MessageListener {
 			iobject.setName(key);
 			iobject.setPlainTextContent(content);
 			iobject.setSemanticContent(scontent);
+			iobject.setContext(context);
 			return iobject;
 		} catch (Exception e) {
 			throw new IndexingServiceException("unable to get indexable content for object ", e);
