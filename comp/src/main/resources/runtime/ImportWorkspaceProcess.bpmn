@@ -19,7 +19,7 @@
       </serviceTask>
       <sequenceFlow id="flow5" sourceRef="create-metadata" targetRef="end-import"></sequenceFlow>
       <endEvent id="end-import" name="End"></endEvent>
-      <serviceTask id="create-metadata" name="Create Metadata"></serviceTask>
+      <serviceTask id="create-metadata" name="Create Metadata" activiti:class="fr.ortolang.diffusion.runtime.engine.task.CreateMetadataTask"></serviceTask>
       <sequenceFlow id="flow13" sourceRef="create-objects" targetRef="create-metadata"></sequenceFlow>
     </subProcess>
     <endEvent id="end" name="End"></endEvent>
