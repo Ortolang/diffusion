@@ -1,0 +1,15 @@
+[{
+    "key": "helloAgain",
+    "type": "select",
+    "label": "Do we need to say hello again ?",
+    "options": [
+        {
+            "name": "Yes, please.",
+            "id": "yes"
+        },
+        {
+            "name": "No, thanks.",
+            "id": "no"
+        }
+     ]
+}]

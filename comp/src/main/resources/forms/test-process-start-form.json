@@ -1,0 +1,8 @@
+[
+    {
+        "key": "name",
+        "type": "text",
+        "label": "Name to greet",
+        "description": "The name of the person you want to greet !!"
+    }
+]
