@@ -111,7 +111,7 @@ public class IndexStoreServiceTest {
 		object.setStatus("draft");
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
 		object.setPlainTextContent(content);
-		object.setContext(new IndexingContext("root", "/path"));
+		object.setContext(new IndexingContext("root", "/path", "the name"));
 		
 		try {
 			service.index(object);
@@ -146,7 +146,7 @@ public class IndexStoreServiceTest {
 		object.setStatus("DRAFT");
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
 		object.setPlainTextContent(content);
-		object.setContext(new IndexingContext("root", "/path"));
+		object.setContext(new IndexingContext("root", "/path", "the name"));
 		
 		try {
 			service.index(object);
@@ -186,7 +186,7 @@ public class IndexStoreServiceTest {
 		object.setStatus("DRAFT");
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
 		object.setPlainTextContent(content);
-		object.setContext(new IndexingContext("root", "/path"));
+		object.setContext(new IndexingContext("root", "/path", "the name"));
 		
 		try {
 			service.index(object);

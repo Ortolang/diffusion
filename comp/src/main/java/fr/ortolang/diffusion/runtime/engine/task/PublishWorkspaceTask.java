@@ -80,11 +80,11 @@ public class PublishWorkspaceTask extends RuntimeEngineTask {
 	private void builtPublicationMap(String key, Map<String, PublicationContext> map, String root, PathBuilder path) throws RuntimeEngineTaskException {
 		try {
 			OrtolangObject object = getCoreService().findObject(key);
-			map.put(key, new PublicationContext(PublicationType.getType(ForAllPublicationType.NAME), root, path.build()));
+			map.put(key, new PublicationContext(PublicationType.getType(ForAllPublicationType.NAME), root, path.build(), object.getObjectName()));
 			
 			Set<MetadataElement> mde = ((MetadataSource)object).getMetadatas();
 			for ( MetadataElement element : mde) {
-				map.put(element.getKey(), new PublicationContext(PublicationType.getType(ForAllPublicationType.NAME), root, path.build()));
+				map.put(element.getKey(), new PublicationContext(PublicationType.getType(ForAllPublicationType.NAME), root, path.build(), object.getObjectName()));
 			}
 			
 			if (object instanceof Collection) {

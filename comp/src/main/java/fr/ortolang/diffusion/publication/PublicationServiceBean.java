@@ -125,7 +125,7 @@ public class PublicationServiceBean implements PublicationService {
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
 				registry.update(key);
-				indexing.index(key, new IndexingContext(context.getRoot(), context.getPath()));
+				indexing.index(key, new IndexingContext(context.getRoot(), context.getPath(), context.getName()));
 				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "status"), "status=publish");
 			}
 		} catch (AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException | IndexingServiceException e ) {

@@ -73,7 +73,8 @@ public class IndexingListenerBean implements MessageListener {
 			String key = message.getStringProperty("key");
 			String root = message.getStringProperty("root");
 			String path = message.getStringProperty("path");
-			IndexingContext context = new IndexingContext(root, path);
+			String name = message.getStringProperty("name");
+			IndexingContext context = new IndexingContext(root, path, name);
 			logger.log(Level.FINE, action + " action called on key: " + key);
 			try {
 				if (action.equals("index"))

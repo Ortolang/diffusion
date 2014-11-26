@@ -52,6 +52,7 @@ public class IndexingServiceBean implements IndexingService {
 			message.setStringProperty("key", key);
 			message.setStringProperty("root", indexingContext.getRoot());
 			message.setStringProperty("path", indexingContext.getPath());
+			message.setStringProperty("name", indexingContext.getName());
 			context.createProducer().send(indexingTopic, message);                   
 		} catch (Exception e) {
 			logger.log(Level.WARNING, "unable to send indexing message", e);

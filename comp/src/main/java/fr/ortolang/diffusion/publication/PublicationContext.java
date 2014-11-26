@@ -7,11 +7,13 @@ public class PublicationContext {
 	private PublicationType type;
 	private String root;
 	private String path;
+	private String name;
 	
-	public PublicationContext(PublicationType type, String root, String path) {
+	public PublicationContext(PublicationType type, String root, String path, String name) {
 		this.type = type;
 		this.root = root;
 		this.path = path;
+		this.name = name;
 	}
 	
 	public String getRoot() {
@@ -33,5 +35,13 @@ public class PublicationContext {
 
 	public void setType(PublicationType type) {
 		this.type = type;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

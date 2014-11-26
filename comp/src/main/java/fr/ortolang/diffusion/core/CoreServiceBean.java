@@ -44,8 +44,6 @@ import fr.ortolang.diffusion.core.entity.MetadataElement;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
-import fr.ortolang.diffusion.indexing.IndexingService;
-import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -87,8 +85,6 @@ public class CoreServiceBean implements CoreService {
 	private AuthorisationService authorisation;
 	@EJB
 	private NotificationService notification;
-	@EJB
-	private IndexingService indexing;
 	@PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;
 	@Resource
