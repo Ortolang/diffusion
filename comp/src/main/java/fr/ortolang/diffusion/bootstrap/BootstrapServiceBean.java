@@ -1,6 +1,8 @@
 package fr.ortolang.diffusion.bootstrap;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,7 @@ import javax.ejb.TransactionAttributeType;
 
 import fr.ortolang.diffusion.form.FormService;
 import fr.ortolang.diffusion.form.FormServiceException;
+import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.RunAsPrincipal;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -121,8 +124,14 @@ public class BootstrapServiceBean implements BootstrapService {
 				runtime.importProcessTypes();
 
 				logger.log(Level.FINE, "import forms");
-				form.createForm("test-process-start-form", "Test Process Start Form", "test-process-start-form.json");
-				form.createForm("test-process-confirm-form", "Test Process Confirm Form", "test-process-confirm-form.json");
+				logger.log(Level.FINE, "import form : test-process-start-form");
+				InputStream is = getClass().getClassLoader().getResourceAsStream("forms/test-process-start-form.json");
+				String jsonDefinition = IOUtils.toString(is);
+				form.createForm("test-process-start-form", "Test Process Start Form", jsonDefinition);
+				logger.log(Level.FINE, "import form : test-process-start-form");
+				InputStream is2 = getClass().getClassLoader().getResourceAsStream("forms/test-process-start-form.json");
+				String jsonDefinition2 = IOUtils.toString(is2);
+				form.createForm("test-process-confirm-form", "Test Process Confirm Form", jsonDefinition2);
 
 				logger.log(Level.FINE, "declare tools");
 				tool.declareTool("dumb", 
@@ -151,7 +160,7 @@ public class BootstrapServiceBean implements BootstrapService {
 						"marsatag-form-config.json");
 
 				logger.log(Level.INFO, "bootstrap done.");
-			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException
+			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException
 					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | RuntimeServiceException | FormServiceException | ToolServiceException e1) {
 				logger.log(Level.SEVERE, "unexpected error occured while bootstraping plateform", e1);
 				throw new BootstrapServiceException("unable to bootstrap plateform", e1);
