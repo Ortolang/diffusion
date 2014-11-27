@@ -19,6 +19,8 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import fr.ortolang.diffusion.form.FormService;
+import fr.ortolang.diffusion.form.FormServiceException;
 import org.jboss.ejb3.annotation.RunAsPrincipal;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -63,6 +65,8 @@ public class BootstrapServiceBean implements BootstrapService {
 	private RuntimeService runtime;
 	@EJB
 	private ToolService tool;
+	@EJB
+	private FormService form;
 	@Resource
 	private SessionContext ctx;
 
@@ -115,7 +119,11 @@ public class BootstrapServiceBean implements BootstrapService {
 
 				logger.log(Level.FINE, "import process types");
 				runtime.importProcessTypes();
-				
+
+				logger.log(Level.FINE, "import forms");
+				form.createForm("test-process-start-form", "Test Process Start Form", "test-process-start-form.json");
+				form.createForm("test-process-confirm-form", "Test Process Confirm Form", "test-process-confirm-form.json");
+
 				logger.log(Level.FINE, "declare tools");
 				tool.declareTool("dumb", 
 						"Dumb tool", 
@@ -144,7 +152,7 @@ public class BootstrapServiceBean implements BootstrapService {
 
 				logger.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException
-					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | RuntimeServiceException | ToolServiceException e1) {
+					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | RuntimeServiceException | FormServiceException | ToolServiceException e1) {
 				logger.log(Level.SEVERE, "unexpected error occured while bootstraping plateform", e1);
 				throw new BootstrapServiceException("unable to bootstrap plateform", e1);
 			}

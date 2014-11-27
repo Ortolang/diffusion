@@ -48,7 +48,8 @@ public class CORSFilter implements Filter {
         }
         if (hrequest.getMethod().equals(OPTIONS_METHOD)) {
             ((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ALLOW_METHODS, "DELETE, PUT, HEAD, OPTIONS, TRACE, GET, POST");
-            ((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ALLOW_HEADERS, AUTHORIZATION_PROPERTY + ", " + CONTENT_TYPE_PROPERTY + ", " + CONTENT_TRANSFER_ENCODING);
+            ((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ALLOW_HEADERS, AUTHORIZATION_PROPERTY + ", " + CONTENT_TYPE_PROPERTY + ", " + CONTENT_TRANSFER_ENCODING + ", Range");
+            ((HttpServletResponse)response).setHeader("Access-Control-Expose-Headers", "Accept-Ranges, Content-Encoding, Content-Length, Content-Range");
         }
         chain.doFilter(request, response);
 	}

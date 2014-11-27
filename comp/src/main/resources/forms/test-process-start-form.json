@@ -1,7 +1,18 @@
 [
     {
+        "key": "process-name",
+        "type": "hidden",
+        "default": "Hello World test process"
+    },
+    {
+        "key": "process-type",
+        "type": "hidden",
+        "default": "test"
+    },
+    {
         "key": "name",
         "type": "text",
+        "required": true,
         "label": "Name to greet",
         "description": "The name of the person you want to greet !!"
     }

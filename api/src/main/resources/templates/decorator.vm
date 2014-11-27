@@ -35,6 +35,7 @@
             <li><a href="$base/rest/objects/index">Plain Text Search</a></li>
             <li><a href="$base/rest/objects/semantic">Semantic Search</a></li>
             <li><a href="$base/rest/tools">Tools</a></li>
+            <li><a href="$base/rest/forms">Forms</a></li>
           </ul>
         </div>
       </div>

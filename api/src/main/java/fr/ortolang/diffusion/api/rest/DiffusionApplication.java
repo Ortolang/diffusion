@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import fr.ortolang.diffusion.api.rest.form.FormResource;
 import fr.ortolang.diffusion.api.rest.filter.ContentTypeSetterPreProcessorInterceptor;
 import fr.ortolang.diffusion.api.rest.mapper.*;
 import fr.ortolang.diffusion.api.rest.object.ObjectResource;
@@ -26,6 +27,7 @@ public class DiffusionApplication extends Application {
 		classes.add(ProfileResource.class);
 		classes.add(RuntimeResource.class);
 		classes.add(ToolResource.class);
+		classes.add(FormResource.class);
 	}
 
 	@Override

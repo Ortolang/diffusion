@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.form;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +20,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
@@ -130,7 +133,13 @@ public class FormServiceBean implements FormService {
 			Form form = new Form();
 			form.setId(UUID.randomUUID().toString());
 			form.setName(name);
-			form.setDefinition(definition);
+
+			InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + definition);
+			String jsonDefinition = IOUtils.toString(is);
+			if ( jsonDefinition == null )  {
+				throw new FormServiceException("unable to find a definition for form with key: " + key);
+			}
+			form.setDefinition(jsonDefinition);
 			em.persist(form);
 
 			registry.register(key, form.getObjectIdentifier(), caller);
@@ -138,7 +147,7 @@ public class FormServiceBean implements FormService {
 			authorisation.createPolicy(key, caller);
 
 			notification.throwEvent(key, caller, Form.OBJECT_TYPE, OrtolangEvent.buildEventType(FormService.SERVICE_NAME, Form.OBJECT_TYPE, "create"), "");
-		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException e) {
+		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | IOException e) {
 			ctx.setRollbackOnly();
 			throw new FormServiceException("unable to create form with key [" + key + "]", e);
 		}

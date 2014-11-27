@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
   <process id="test" name="My Test Hello World process" isExecutable="true">
-    <startEvent id="startevent1" name="Start" activiti:formKey="test-process-start-form.json"></startEvent>
+    <startEvent id="startevent1" name="Start" activiti:formKey="test-process-start-form"></startEvent>
     <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="servicetask1"></sequenceFlow>
     <serviceTask id="servicetask1" name="Say Hello 1" activiti:class="fr.ortolang.diffusion.runtime.engine.task.HelloWorldTask"></serviceTask>
     <sequenceFlow id="flow2" sourceRef="servicetask1" targetRef="servicetask2"></sequenceFlow>
@@ -21,7 +21,7 @@
       </extensionElements>
     </serviceTask>
     <sequenceFlow id="flow4" sourceRef="servicetask3" targetRef="usertask1"></sequenceFlow>
-    <userTask id="usertask1" name="Confirm Say Hello" activiti:candidateGroups="moderators" activiti:formKey="test-process-confirm-form.json">
+    <userTask id="usertask1" name="Confirm Say Hello" activiti:candidateGroups="moderators" activiti:formKey="test-process-confirm-form">
       <documentation>Do me need to say hello again ??</documentation>
     </userTask>
     <sequenceFlow id="flow5" sourceRef="usertask1" targetRef="exclusivegateway1"></sequenceFlow>
