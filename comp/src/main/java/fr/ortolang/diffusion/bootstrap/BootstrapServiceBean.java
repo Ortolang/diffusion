@@ -128,8 +128,8 @@ public class BootstrapServiceBean implements BootstrapService {
 				InputStream is = getClass().getClassLoader().getResourceAsStream("forms/test-process-start-form.json");
 				String jsonDefinition = IOUtils.toString(is);
 				form.createForm("test-process-start-form", "Test Process Start Form", jsonDefinition);
-				logger.log(Level.FINE, "import form : test-process-start-form");
-				InputStream is2 = getClass().getClassLoader().getResourceAsStream("forms/test-process-start-form.json");
+				logger.log(Level.FINE, "import form : test-process-confirm-form");
+				InputStream is2 = getClass().getClassLoader().getResourceAsStream("forms/test-process-confirm-form.json");
 				String jsonDefinition2 = IOUtils.toString(is2);
 				form.createForm("test-process-confirm-form", "Test Process Confirm Form", jsonDefinition2);
 
