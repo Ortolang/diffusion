@@ -2627,6 +2627,7 @@ public class CoreServiceBean implements CoreService {
 			clone.setName(meta.getName());
 			clone.setTarget(target);
 			clone.setSize(meta.getSize());
+			clone.setFormat(meta.getFormat());
 			clone.setContentType(meta.getContentType());
 			clone.setStream(meta.getStream());
 			clone.setKey(key);
