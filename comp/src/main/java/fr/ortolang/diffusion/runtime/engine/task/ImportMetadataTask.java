@@ -7,27 +7,27 @@ import java.util.logging.Logger;
 
 import org.activiti.engine.delegate.DelegateExecution;
 
+import fr.ortolang.diffusion.core.InvalidPathException;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 
-public class CreateMetadataTask extends RuntimeEngineTask {
+public class ImportMetadataTask extends RuntimeEngineTask {
 	
-	public static final String NAME = "Create Bag Objects";
-	public static final String WSKEY_PARAM_NAME = "wskey";
-	public static final String METADATA_ENTRIES_PARAM_NAME = "metadataentries";
+	public static final String NAME = "Import Metadata";
 
-	private static final Logger logger = Logger.getLogger(CreateMetadataTask.class.getName());
+	private static final Logger logger = Logger.getLogger(ImportMetadataTask.class.getName());
 
-	public CreateMetadataTask() {
+	public ImportMetadataTask() {
 	}
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		if ( !execution.hasVariable(WSKEY_PARAM_NAME) ) {
-			throw new RuntimeEngineTaskException("execution variable " + WSKEY_PARAM_NAME + " is not set");
+		if ( !execution.hasVariable(WORKSPACE_KEY_PARAM_NAME) ) {
+			throw new RuntimeEngineTaskException("execution variable " + WORKSPACE_KEY_PARAM_NAME + " is not set");
 		}
-		String wskey = execution.getVariable(WSKEY_PARAM_NAME, String.class);
+		String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
 		if ( !execution.hasVariable(METADATA_ENTRIES_PARAM_NAME) ) {
 			throw new RuntimeEngineTaskException("execution variable " + METADATA_ENTRIES_PARAM_NAME + " is not set");
 		}
@@ -53,9 +53,15 @@ public class CreateMetadataTask extends RuntimeEngineTask {
 				mdname = mdfullname.substring(mdfullname.indexOf("]") + 1).trim();
 			}
 			try {
-				logger.log(Level.FINE, "creating metadata object for path: " + mdpath + " with name: " + mdname + " and format: " + mdformat);
-				getCoreService().createMetadataObject(wskey, mdpath, mdname, mdformat, entry.getValue());
-				cpt++;
+				try {
+					getCoreService().resolveWorkspaceMetadata(wskey, Workspace.HEAD, mdpath, mdname);
+					logger.log(Level.FINE, "updating metadata object for path: " + mdpath + " and name: " + mdname);
+					getCoreService().updateMetadataObject(wskey, mdpath, mdname, mdformat, entry.getValue());
+				} catch ( InvalidPathException e ) {
+					logger.log(Level.FINE, "creating metadata object for path: " + mdpath + " and name: " + mdname);
+					getCoreService().createMetadataObject(wskey, mdpath, mdname, mdformat, entry.getValue());
+					cpt++;
+				}
 			} catch (Exception e) {
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Error creating metadata object for path [" + mdpath + "] and name [" + mdname + "]"));
 				logger.log(Level.SEVERE, "- error creating metadata for path: " + mdpath + " and name: " + mdname, e);
@@ -63,6 +69,10 @@ public class CreateMetadataTask extends RuntimeEngineTask {
 		}
 		long stop = System.currentTimeMillis();
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), cpt + " metadata objects created successfully in " + (stop - start) + " ms"));
+		
+
+		//TODO crawl the workspace head in order to delete objects that are not in the entry map....
+		//TODO crawl the workspace head in order to delete empty collections
 	}
 
 	@Override

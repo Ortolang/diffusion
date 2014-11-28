@@ -21,20 +21,17 @@ import gov.loc.repository.bagit.Bag;
 import gov.loc.repository.bagit.BagFactory;
 import gov.loc.repository.bagit.BagFile;
 
-public class CreateBinaryContentTask extends RuntimeEngineTask {
+public class ImportBinaryContentTask extends RuntimeEngineTask {
 	
-	public static final String NAME = "Import Bag Binary Content";
-	public static final String BAG_PATH_PARAM_NAME = "bagpath";
-	public static final String BAG_VERSION_PARAM_NAME = "bagversion";
+	public static final String NAME = "Import Binary Content";
+	
 	public static final String DATA_PREFIX = "data/";
 	public static final String OBJECTS_PREFIX = "objects/";
 	public static final String METADATA_PREFIX = "metadata/";
-	public static final String OBJECT_ENTRIES_PARAM_NAME = "objectentries";
-	public static final String METADATA_ENTRIES_PARAM_NAME = "metadataentries";
 	
-	private static final Logger logger = Logger.getLogger(CreateBinaryContentTask.class.getName());
+	private static final Logger logger = Logger.getLogger(ImportBinaryContentTask.class.getName());
 
-	public CreateBinaryContentTask() {
+	public ImportBinaryContentTask() {
 	}
 
 	@Override

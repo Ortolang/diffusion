@@ -29,8 +29,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 public class PublishWorkspaceTask extends RuntimeEngineTask {
 
 	public static final String NAME = "Publish Workspace";
-	public static final String ROOT = "root";
-
+	
 	private static final Logger logger = Logger.getLogger(PublishWorkspaceTask.class.getName());
 
 	public PublishWorkspaceTask() {
@@ -38,10 +37,10 @@ public class PublishWorkspaceTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		if (!execution.hasVariable(ROOT)) {
-			throw new RuntimeEngineTaskException("execution variable " + ROOT + " is not set");
+		if (!execution.hasVariable(ROOT_COLLECTION_PARAM_NAME)) {
+			throw new RuntimeEngineTaskException("execution variable " + ROOT_COLLECTION_PARAM_NAME + " is not set");
 		}
-		String root = execution.getVariable(ROOT, String.class);
+		String root = execution.getVariable(ROOT_COLLECTION_PARAM_NAME, String.class);
 
 		Map<String, PublicationContext> map = new HashMap<String, PublicationContext>();
 		logger.log(Level.INFO, "starting building publication map...");

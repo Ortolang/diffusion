@@ -19,8 +19,7 @@ import gov.loc.repository.bagit.utilities.SimpleResult;
 public class CheckBagTask extends RuntimeEngineTask {
 	
 	public static final String NAME = "Check Bag Integrity";
-	public static final String BAG_PATH_PARAM_NAME = "bagpath";
-
+	
 	private static final Logger logger = Logger.getLogger(CheckBagTask.class.getName());
 
 	public CheckBagTask() {

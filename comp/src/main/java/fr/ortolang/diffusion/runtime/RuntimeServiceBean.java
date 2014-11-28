@@ -238,7 +238,7 @@ public class RuntimeServiceBean implements RuntimeService {
 				throw new RuntimeServiceException("unable to find a process with id: " + pid);
 			}
 			process.setState(state);
-			process.appendLog("## PROCESS STATE CHANGED TO " + State.SUBMITTED + " ON " + new Date());
+			process.appendLog("## PROCESS STATE CHANGED TO " + state + " ON " + new Date());
 			em.merge(process);
 			
 			String key = registry.lookup(process.getObjectIdentifier());

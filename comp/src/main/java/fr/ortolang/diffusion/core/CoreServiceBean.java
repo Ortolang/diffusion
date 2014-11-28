@@ -291,16 +291,16 @@ public class CoreServiceBean implements CoreService {
 			workspace.setKey(key);
 			workspace.incrementClock();
 
-			if ( name.equals("head") ) {
+			if ( name.equals(Workspace.HEAD) ) {
 				throw new CoreServiceException("head is reserved and cannot be used as snapshot name");
 			}
 			try {
 				PathBuilder pname = PathBuilder.newInstance().path(name);
 				if (pname.depth() > 1) {
-					throw new CoreServiceException("snapshot name is invalid");
+					throw new CoreServiceException("snapshot name is invalid: " + name);
 				}
 			} catch (InvalidPathException e) {
-				throw new CoreServiceException("snapshot name is invalid");
+				throw new CoreServiceException("snapshot name is invalid: " + name);
 			}
 			if (workspace.findSnapshotByName(name) != null) {
 				throw new CoreServiceException("the snapshot name '" + name + "' is already used in this workspace");
@@ -410,7 +410,7 @@ public class CoreServiceBean implements CoreService {
 			logger.log(Level.FINEST, "user [" + caller + "] has 'read' permission on the head collection of this workspace");
 
 			String rroot = ws.getHead();
-			if (root != null && root.length() > 0 && !root.equals("head")) {
+			if (root != null && root.length() > 0 && !root.equals(Workspace.HEAD)) {
 				SnapshotElement element = ws.findSnapshotByName(root);
 				if (element == null) {
 					throw new InvalidPathException("root [" + root + "] does not exists");
@@ -434,8 +434,53 @@ public class CoreServiceBean implements CoreService {
 			return element.getKey();
 		} catch (KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | TreeBuilderException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during resolving path", e);
-			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to resolve into workspace [" + workspace + "] path [" + path + "]", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public String resolveWorkspaceMetadata(String workspace, String root, String path, String name) throws CoreServiceException, InvalidPathException, AccessDeniedException {
+		logger.log(Level.FINE, "resolving into workspace [" + workspace + "] and root [" + root + "] metadata with name [" + name + "] at path [" + path + "]");
+		try {
+			PathBuilder npath = PathBuilder.fromPath(path);
+			
+			String key = resolveWorkspacePath(workspace, root, path);
+			OrtolangObjectIdentifier ctidentifier = registry.lookup(key);
+			if (!ctidentifier.getType().equals(Link.OBJECT_TYPE) && !ctidentifier.getType().equals(Collection.OBJECT_TYPE) && !ctidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
+				throw new InvalidPathException("path [" + npath.build() + "] does not exists");
+			}
+			MetadataElement cmdelement = null;
+			switch (ctidentifier.getType()) {
+				case Collection.OBJECT_TYPE:
+					Collection collection = em.find(Collection.class, ctidentifier.getId());
+					if (collection == null) {
+						throw new CoreServiceException("unable to load collection with id [" + ctidentifier.getId() + "] from storage");
+					}
+					cmdelement = collection.findMetadataByName(name);
+					break;
+				case DataObject.OBJECT_TYPE:
+					DataObject object = em.find(DataObject.class, ctidentifier.getId());
+					if (object == null) {
+						throw new CoreServiceException("unable to load object with id [" + ctidentifier.getId() + "] from storage");
+					}
+					cmdelement = object.findMetadataByName(name);
+					break;
+				case Link.OBJECT_TYPE:
+					Link link = em.find(Link.class, ctidentifier.getId());
+					if (link == null) {
+						throw new CoreServiceException("unable to load link with id [" + ctidentifier.getId() + "] from storage");
+					}
+					cmdelement = link.findMetadataByName(name);
+					break;
+			}
+			if (cmdelement == null) {
+				throw new InvalidPathException("path [" + npath.build() + "] does not exists");
+			}
+			return cmdelement.getKey();
+		} catch (KeyNotFoundException | RegistryServiceException e) {
+			logger.log(Level.SEVERE, "unexpected error occured during resolving metadata", e);
+			throw new CoreServiceException("unable to resolve into workspace [" + workspace + "] metadata name [" + name + "] at [" + path + "]", e);
 		}
 	}
 
@@ -570,7 +615,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.checkPermission(ws.getHead(), subjects, "update");
 			logger.log(Level.FINEST, "user [" + caller + "] has 'update' permission on the head collection of this workspace");
 			
-			String current = resolveWorkspacePath(workspace, "head", npath.build());
+			String current = resolveWorkspacePath(workspace, Workspace.HEAD, npath.build());
 			OrtolangObjectIdentifier cidentifier = registry.lookup(current);
 			checkObjectType(cidentifier, Collection.OBJECT_TYPE);
 			Collection ccollection = em.find(Collection.class, cidentifier.getId());
@@ -921,7 +966,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.checkPermission(ws.getHead(), subjects, "update");
 			logger.log(Level.FINEST, "user [" + caller + "] has 'update' permission on the head collection of this workspace");
 			
-			String current = resolveWorkspacePath(workspace, "head", npath.build());
+			String current = resolveWorkspacePath(workspace, Workspace.HEAD, npath.build());
 			OrtolangObjectIdentifier cidentifier = registry.lookup(current);
 			checkObjectType(cidentifier, DataObject.OBJECT_TYPE);
 			DataObject cobject = em.find(DataObject.class, cidentifier.getId());
@@ -1672,7 +1717,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.checkPermission(ws.getHead(), subjects, "update");
 			logger.log(Level.FINEST, "user [" + caller + "] has 'update' permission on the head collection of this workspace");
 			
-			String current = resolveWorkspacePath(workspace, "head", npath.build());
+			String current = resolveWorkspacePath(workspace, Workspace.HEAD, npath.build());
 			OrtolangObjectIdentifier ctidentifier = registry.lookup(current);
 			if (!ctidentifier.getType().equals(Link.OBJECT_TYPE) && !ctidentifier.getType().equals(Collection.OBJECT_TYPE) && !ctidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
 				throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");

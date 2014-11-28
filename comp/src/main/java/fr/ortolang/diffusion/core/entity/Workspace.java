@@ -28,6 +28,7 @@ import fr.ortolang.diffusion.core.CoreService;
 public class Workspace extends OrtolangObject {
 
 	public static final String OBJECT_TYPE = "workspace";
+	public static final String HEAD = "head";
 	
 	@Id
 	private String id;

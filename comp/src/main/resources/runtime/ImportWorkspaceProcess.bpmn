@@ -9,25 +9,27 @@
     <subProcess id="import-version" name="Import Version">
       <multiInstanceLoopCharacteristics isSequential="true" activiti:collection="${bagversions}" activiti:elementVariable="bagversion"></multiInstanceLoopCharacteristics>
       <startEvent id="start-import" name="Start"></startEvent>
-      <serviceTask id="import" name="Import Content" activiti:class="fr.ortolang.diffusion.runtime.engine.task.CreateBinaryContentTask">
+      <serviceTask id="import" name="Import Content" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportBinaryContentTask">
         <documentation>Import binary content of current working branch (head by default).</documentation>
       </serviceTask>
-      <sequenceFlow id="flow4" sourceRef="import" targetRef="create-objects"></sequenceFlow>
+      <sequenceFlow id="flow4" sourceRef="import" targetRef="import-objects"></sequenceFlow>
       <sequenceFlow id="flow7" sourceRef="start-import" targetRef="import"></sequenceFlow>
-      <serviceTask id="create-objects" name="Create Objects" activiti:class="fr.ortolang.diffusion.runtime.engine.task.CreateObjectsTask">
+      <serviceTask id="import-objects" name="Import Objects" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportObjectsTask">
         <documentation>Create all data objects of  the current working branch (head by default).</documentation>
       </serviceTask>
       <endEvent id="end-import" name="End"></endEvent>
-      <serviceTask id="create-metadata" name="Create Metadata" activiti:class="fr.ortolang.diffusion.runtime.engine.task.CreateMetadataTask"></serviceTask>
-      <sequenceFlow id="flow13" sourceRef="create-objects" targetRef="create-metadata"></sequenceFlow>
-      <exclusiveGateway id="issnapshot" name="IsSnapshot"></exclusiveGateway>
-      <sequenceFlow id="flow14" sourceRef="create-metadata" targetRef="issnapshot"></sequenceFlow>
-      <sequenceFlow id="flow15" sourceRef="issnapshot" targetRef="end-import"></sequenceFlow>
+      <serviceTask id="import-metadata" name="Import Metadata" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportMetadataTask"></serviceTask>
+      <sequenceFlow id="flow13" sourceRef="import-objects" targetRef="import-metadata"></sequenceFlow>
+      <exclusiveGateway id="issnapshot" name="IsSnapshot" default="flow16"></exclusiveGateway>
+      <sequenceFlow id="flow15" sourceRef="issnapshot" targetRef="end-import">
+        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${bagversion.equals("head")}]]></conditionExpression>
+      </sequenceFlow>
       <serviceTask id="snapshot" name="Snapshot" activiti:class="fr.ortolang.diffusion.runtime.engine.task.SnapshotWorkspaceTask"></serviceTask>
       <sequenceFlow id="flow16" sourceRef="issnapshot" targetRef="snapshot"></sequenceFlow>
       <serviceTask id="publish" name="Publish" activiti:class="fr.ortolang.diffusion.runtime.engine.task.PublishWorkspaceTask"></serviceTask>
-      <sequenceFlow id="flow17" sourceRef="snapshot" targetRef="publish"></sequenceFlow>
       <sequenceFlow id="flow18" sourceRef="publish" targetRef="end-import"></sequenceFlow>
+      <sequenceFlow id="flow24" sourceRef="import-metadata" targetRef="issnapshot"></sequenceFlow>
+      <sequenceFlow id="flow25" sourceRef="snapshot" targetRef="publish"></sequenceFlow>
     </subProcess>
     <endEvent id="end" name="End"></endEvent>
     <sequenceFlow id="flow9" sourceRef="import-version" targetRef="end"></sequenceFlow>
@@ -40,13 +42,13 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_import-workspace">
     <bpmndi:BPMNPlane bpmnElement="import-workspace" id="BPMNPlane_import-workspace">
       <bpmndi:BPMNShape bpmnElement="start" id="BPMNShape_start">
-        <omgdc:Bounds height="35.0" width="35.0" x="291.0" y="60.0"></omgdc:Bounds>
+        <omgdc:Bounds height="35.0" width="35.0" x="164.0" y="57.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="check" id="BPMNShape_check">
-        <omgdc:Bounds height="55.0" width="105.0" x="403.0" y="50.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="105.0" x="278.0" y="47.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="import-version" id="BPMNShape_import-version">
-        <omgdc:Bounds height="201.0" width="790.0" x="61.0" y="340.0"></omgdc:Bounds>
+        <omgdc:Bounds height="281.0" width="540.0" x="61.0" y="340.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="start-import" id="BPMNShape_start-import">
         <omgdc:Bounds height="35.0" width="35.0" x="94.0" y="380.0"></omgdc:Bounds>
@@ -54,36 +56,36 @@
       <bpmndi:BPMNShape bpmnElement="import" id="BPMNShape_import">
         <omgdc:Bounds height="55.0" width="105.0" x="154.0" y="370.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="create-objects" id="BPMNShape_create-objects">
+      <bpmndi:BPMNShape bpmnElement="import-objects" id="BPMNShape_import-objects">
         <omgdc:Bounds height="55.0" width="105.0" x="304.0" y="370.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="end-import" id="BPMNShape_end-import">
-        <omgdc:Bounds height="35.0" width="35.0" x="613.0" y="480.0"></omgdc:Bounds>
+        <omgdc:Bounds height="35.0" width="35.0" x="345.0" y="463.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="create-metadata" id="BPMNShape_create-metadata">
+      <bpmndi:BPMNShape bpmnElement="import-metadata" id="BPMNShape_import-metadata">
         <omgdc:Bounds height="55.0" width="105.0" x="454.0" y="370.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="issnapshot" id="BPMNShape_issnapshot">
-        <omgdc:Bounds height="40.0" width="40.0" x="610.0" y="377.0"></omgdc:Bounds>
+        <omgdc:Bounds height="40.0" width="40.0" x="486.0" y="460.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="snapshot" id="BPMNShape_snapshot">
-        <omgdc:Bounds height="55.0" width="105.0" x="690.0" y="370.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="105.0" x="454.0" y="530.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="publish" id="BPMNShape_publish">
-        <omgdc:Bounds height="55.0" width="105.0" x="690.0" y="470.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="105.0" x="310.0" y="530.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="end" id="BPMNShape_end">
-        <omgdc:Bounds height="35.0" width="35.0" x="438.0" y="640.0"></omgdc:Bounds>
+        <omgdc:Bounds height="35.0" width="35.0" x="313.0" y="670.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="list-versions" id="BPMNShape_list-versions">
-        <omgdc:Bounds height="55.0" width="105.0" x="403.0" y="150.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="105.0" x="278.0" y="141.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="create-workspace" id="BPMNShape_create-workspace">
-        <omgdc:Bounds height="55.0" width="105.0" x="403.0" y="240.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="105.0" x="278.0" y="237.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
-        <omgdi:waypoint x="326.0" y="77.0"></omgdi:waypoint>
-        <omgdi:waypoint x="403.0" y="77.0"></omgdi:waypoint>
+        <omgdi:waypoint x="199.0" y="74.0"></omgdi:waypoint>
+        <omgdi:waypoint x="278.0" y="74.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
         <omgdi:waypoint x="259.0" y="397.0"></omgdi:waypoint>
@@ -97,41 +99,41 @@
         <omgdi:waypoint x="409.0" y="397.0"></omgdi:waypoint>
         <omgdi:waypoint x="454.0" y="397.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow14" id="BPMNEdge_flow14">
-        <omgdi:waypoint x="559.0" y="397.0"></omgdi:waypoint>
-        <omgdi:waypoint x="610.0" y="397.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow15" id="BPMNEdge_flow15">
-        <omgdi:waypoint x="630.0" y="417.0"></omgdi:waypoint>
-        <omgdi:waypoint x="630.0" y="480.0"></omgdi:waypoint>
+        <omgdi:waypoint x="486.0" y="480.0"></omgdi:waypoint>
+        <omgdi:waypoint x="380.0" y="480.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow16" id="BPMNEdge_flow16">
-        <omgdi:waypoint x="650.0" y="397.0"></omgdi:waypoint>
-        <omgdi:waypoint x="690.0" y="397.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow17" id="BPMNEdge_flow17">
-        <omgdi:waypoint x="742.0" y="425.0"></omgdi:waypoint>
-        <omgdi:waypoint x="742.0" y="470.0"></omgdi:waypoint>
+        <omgdi:waypoint x="506.0" y="500.0"></omgdi:waypoint>
+        <omgdi:waypoint x="506.0" y="530.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow18" id="BPMNEdge_flow18">
-        <omgdi:waypoint x="690.0" y="497.0"></omgdi:waypoint>
-        <omgdi:waypoint x="648.0" y="497.0"></omgdi:waypoint>
+        <omgdi:waypoint x="362.0" y="530.0"></omgdi:waypoint>
+        <omgdi:waypoint x="362.0" y="498.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow24" id="BPMNEdge_flow24">
+        <omgdi:waypoint x="506.0" y="425.0"></omgdi:waypoint>
+        <omgdi:waypoint x="506.0" y="460.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow25" id="BPMNEdge_flow25">
+        <omgdi:waypoint x="454.0" y="557.0"></omgdi:waypoint>
+        <omgdi:waypoint x="415.0" y="557.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
-        <omgdi:waypoint x="456.0" y="541.0"></omgdi:waypoint>
-        <omgdi:waypoint x="455.0" y="640.0"></omgdi:waypoint>
+        <omgdi:waypoint x="331.0" y="621.0"></omgdi:waypoint>
+        <omgdi:waypoint x="330.0" y="670.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow10" id="BPMNEdge_flow10">
-        <omgdi:waypoint x="455.0" y="105.0"></omgdi:waypoint>
-        <omgdi:waypoint x="455.0" y="150.0"></omgdi:waypoint>
+        <omgdi:waypoint x="330.0" y="102.0"></omgdi:waypoint>
+        <omgdi:waypoint x="330.0" y="141.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow11" id="BPMNEdge_flow11">
-        <omgdi:waypoint x="455.0" y="295.0"></omgdi:waypoint>
-        <omgdi:waypoint x="456.0" y="340.0"></omgdi:waypoint>
+        <omgdi:waypoint x="330.0" y="292.0"></omgdi:waypoint>
+        <omgdi:waypoint x="331.0" y="340.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow12" id="BPMNEdge_flow12">
-        <omgdi:waypoint x="455.0" y="205.0"></omgdi:waypoint>
-        <omgdi:waypoint x="455.0" y="240.0"></omgdi:waypoint>
+        <omgdi:waypoint x="330.0" y="196.0"></omgdi:waypoint>
+        <omgdi:waypoint x="330.0" y="237.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

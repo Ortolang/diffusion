@@ -25,6 +25,20 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 
 public abstract class RuntimeEngineTask implements JavaDelegate {
 	
+	public static final String BAG_PATH_PARAM_NAME = "bagpath";
+	public static final String BAG_VERSIONS_PARAM_NAME = "bagversions";
+	public static final String BAG_VERSION_PARAM_NAME = "bagversion";
+	
+	public static final String METADATA_ENTRIES_PARAM_NAME = "metadataentries";
+	public static final String OBJECT_ENTRIES_PARAM_NAME = "objectentries";
+	
+	public static final String ROOT_COLLECTION_PARAM_NAME = "root";
+	public static final String SNAPSHOT_NAME_PARAM_NAME = "snapshot";
+	
+	public static final String WORKSPACE_KEY_PARAM_NAME = "wskey";
+	public static final String WORKSPACE_NAME_PARAM_NAME = "wsname";
+	public static final String WORKSPACE_TYPE_PARAM_NAME = "wstype";
+	
 	private static final Logger logger = Logger.getLogger(RuntimeEngineTask.class.getName());
 	
 	private UserTransaction userTx;
@@ -156,6 +170,8 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 						logger.log(Level.FINE, "Task executed");
 					} catch ( RuntimeEngineTaskException e ) {
 						throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " IN ERROR: " + e.getMessage()));
+						//TODO provide capability for task to say if it's needed to abort process on error ( task.abortProcessOnError():boolean )
+						throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessAbortEvent(execution.getProcessBusinessKey(), e.getMessage()));
 						throw e;
 					}
 					
@@ -172,7 +188,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " IN ERROR: " + e.getMessage()));
 			}
 		} catch ( RuntimeEngineTaskException e ) {
-			logger.log(Level.SEVERE, "Runtime Task error", e);
+			logger.log(Level.SEVERE, "Unexpected runtime task error, should result in inconsistent state of the workflow", e);
 			throw new BpmnError("RuntimeTaskExecutionError", e.getMessage());
 		}
 	}
@@ -188,6 +204,8 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public abstract String getTaskName();
 	
 	public abstract boolean needEngineAuth();
+	
+	//public abstract boolean abortProcessOnError();
 	
 	public abstract void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException ;
 

@@ -17,9 +17,6 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 public class CreateWorkspaceTask extends RuntimeEngineTask {
 	
 	public static final String NAME = "Create Workspace";
-	public static final String WSKEY_PARAM_NAME = "wskey";
-	public static final String WSNAME_PARAM_NAME = "wsname";
-	public static final String WSTYPE_PARAM_NAME = "wstype";
 	
 	private static final Logger logger = Logger.getLogger(CreateWorkspaceTask.class.getName());
 
@@ -28,18 +25,18 @@ public class CreateWorkspaceTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		if ( !execution.hasVariable(WSKEY_PARAM_NAME) ) {
-			throw new RuntimeEngineTaskException("execution variable " + WSKEY_PARAM_NAME + " is not set");
+		if ( !execution.hasVariable(WORKSPACE_KEY_PARAM_NAME) ) {
+			throw new RuntimeEngineTaskException("execution variable " + WORKSPACE_KEY_PARAM_NAME + " is not set");
 		}
-		String wskey = execution.getVariable(WSKEY_PARAM_NAME, String.class);
-		if ( !execution.hasVariable(WSNAME_PARAM_NAME) ) {
-			execution.setVariable(WSNAME_PARAM_NAME, wskey);
+		String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
+		if ( !execution.hasVariable(WORKSPACE_NAME_PARAM_NAME) ) {
+			execution.setVariable(WORKSPACE_NAME_PARAM_NAME, wskey);
 		}
-		String wsname = execution.getVariable(WSNAME_PARAM_NAME, String.class);
-		if ( !execution.hasVariable(WSTYPE_PARAM_NAME) ) {
-			execution.setVariable(WSTYPE_PARAM_NAME, "unknown");
+		String wsname = execution.getVariable(WORKSPACE_NAME_PARAM_NAME, String.class);
+		if ( !execution.hasVariable(WORKSPACE_TYPE_PARAM_NAME) ) {
+			execution.setVariable(WORKSPACE_TYPE_PARAM_NAME, "unknown");
 		}
-		String wstype = execution.getVariable(WSTYPE_PARAM_NAME, String.class);
+		String wstype = execution.getVariable(WORKSPACE_TYPE_PARAM_NAME, String.class);
 		
 		logger.log(Level.INFO, "Creating workspace");
 		try {

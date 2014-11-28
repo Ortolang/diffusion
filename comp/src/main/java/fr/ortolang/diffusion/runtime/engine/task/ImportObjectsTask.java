@@ -9,28 +9,28 @@ import java.util.logging.Logger;
 
 import org.activiti.engine.delegate.DelegateExecution;
 
+import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 
-public class CreateObjectsTask extends RuntimeEngineTask {
+public class ImportObjectsTask extends RuntimeEngineTask {
 	
-	public static final String NAME = "Create Bag Objects";
-	public static final String WSKEY_PARAM_NAME = "wskey";
-	public static final String OBJECT_ENTRIES_PARAM_NAME = "objectentries";
+	public static final String NAME = "Import Data Objects";
+	
+	private static final Logger logger = Logger.getLogger(ImportObjectsTask.class.getName());
 
-	private static final Logger logger = Logger.getLogger(CreateObjectsTask.class.getName());
-
-	public CreateObjectsTask() {
+	public ImportObjectsTask() {
 	}
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		if ( !execution.hasVariable(WSKEY_PARAM_NAME) ) {
-			throw new RuntimeEngineTaskException("execution variable " + WSKEY_PARAM_NAME + " is not set");
+		if ( !execution.hasVariable(WORKSPACE_KEY_PARAM_NAME) ) {
+			throw new RuntimeEngineTaskException("execution variable " + WORKSPACE_KEY_PARAM_NAME + " is not set");
 		}
-		String wskey = execution.getVariable(WSKEY_PARAM_NAME, String.class);
+		String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
 		if ( !execution.hasVariable(OBJECT_ENTRIES_PARAM_NAME) ) {
 			throw new RuntimeEngineTaskException("execution variable " + OBJECT_ENTRIES_PARAM_NAME + " is not set");
 		}
@@ -53,9 +53,13 @@ public class CreateObjectsTask extends RuntimeEngineTask {
 						current += "/" + parents[i];
 						if (!collections.contains(current)) {
 							try {
-								logger.log(Level.FINE, "creating collection for path: " + current);
-								getCoreService().createCollection(wskey, current, "no description provided");
-								//TODO treat the case of already existing collection...
+								try {
+									getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, current);
+									logger.log(Level.FINE, "collection already exists for path: " + current);
+								} catch ( InvalidPathException e ) {
+									logger.log(Level.FINE, "creating collection for path: " + current);
+									getCoreService().createCollection(wskey, current, "");
+								}
 								collections.add(current);
 							} catch (Exception e) {
 								throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Error creating collection at path [" + current + "]"));
@@ -66,10 +70,15 @@ public class CreateObjectsTask extends RuntimeEngineTask {
 				}
 				String current = opath.build();
 				try {
-					logger.log(Level.FINE, "creating data object for path: " + current);
-					getCoreService().createDataObject(wskey, current, "no description provided", entry.getValue());
-					cpt++;
-					//TODO treat the case of already existing dataobject...
+					try {
+						getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, current);
+						logger.log(Level.FINE, "updating data object for path: " + current);
+						getCoreService().updateDataObject(wskey, current, "", entry.getValue());
+					} catch ( InvalidPathException e ) {
+						logger.log(Level.FINE, "creating data object for path: " + current);
+						getCoreService().createDataObject(wskey, current, "", entry.getValue());
+						cpt++;
+					}
 				} catch (Exception e) {
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Error creating data object at path [" + current + "]"));
 					logger.log(Level.SEVERE, "Error creating data object at path: " + current, e);
@@ -82,6 +91,10 @@ public class CreateObjectsTask extends RuntimeEngineTask {
 		}
 		long stop = System.currentTimeMillis();
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), cpt + " data objects created successfully in " + (stop - start) + " ms"));
+		
+		
+		//TODO crawl the workspace head in order to delete objects that are not in the entry map....
+		//TODO crawl the workspace head in order to delete empty collections
 	}
 
 	@Override
