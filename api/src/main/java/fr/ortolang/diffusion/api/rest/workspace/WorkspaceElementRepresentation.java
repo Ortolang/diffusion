@@ -23,6 +23,7 @@ public class WorkspaceElementRepresentation {
 	private String key;
 	private String workspace;
 	private String name;
+	private String author;
 	private int clock;
 	private long size;
 	private String description;
@@ -87,6 +88,14 @@ public class WorkspaceElementRepresentation {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getAuthor() {
+		return author;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
 	}
 
 	public long getSize() {

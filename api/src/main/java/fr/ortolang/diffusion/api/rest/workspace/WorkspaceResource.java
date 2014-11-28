@@ -176,6 +176,7 @@ public class WorkspaceResource {
 			}
 			OrtolangObjectInfos infos = browser.getInfos(ekey);
 			representation.setCreation(infos.getCreationDate());
+			representation.setAuthor(infos.getAuthor());
 			representation.setModification(infos.getLastModificationDate());
 			representation.setPath(npath.build());
 			representation.setPathParts(npath.buildParts());
