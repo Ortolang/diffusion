@@ -22,7 +22,7 @@
 		<module>appli</module>
 		<!-- <module>test</module> -->
 		<!-- <module>idp</module> -->
-		<module>tools-archetype</module>
+		<!-- <module>tools-archetype</module> -->
 	</modules>
 
 	<properties>
