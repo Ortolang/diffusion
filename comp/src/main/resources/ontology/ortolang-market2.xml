@@ -69,4 +69,42 @@
 	  <!--  See description in wikipedia Full_text_database -->
 	</rdfs:Class>
 	
+	<!-- 
+	**** 
+	* Conditions of use 
+	****
+	-->
+	
+	<rdfs:Class rdf:about="http://www.ortolang.fr/2014/09/market#ConditionsOfUse">
+	  <rdfs:isDefinedBy rdf:resource="http://www.ortolang.fr/2014/09/market#"/>
+	  <rdfs:label>Terms and conditions of use</rdfs:label>
+	  <rdfs:label xml:lang="fr">Droit d'utilisation</rdfs:label>
+	  <rdfs:comment>in order to use a resource it presupposes acceptance of the terms and conditions of use</rdfs:comment>
+	</rdfs:Class>
+	
+	<rdfs:Class rdf:about="http://www.ortolang.fr/2014/09/market#FreeToUse">
+	  <rdfs:isDefinedBy rdf:resource="http://www.ortolang.fr/2014/09/market#"/>
+	  <rdfs:subClassOf rdf:resource="http://www.ortolang.fr/2014/09/market#ConditionsOfUse"/>
+	  <rdfs:label>Free to use</rdfs:label>
+	  <rdfs:label xml:lang="fr">Libre</rdfs:label>
+	  <rdfs:comment>the use of the resource needs any specific acceptance </rdfs:comment>
+	</rdfs:Class>
+	
+	<rdfs:Class rdf:about="http://www.ortolang.fr/2014/09/market#FreeNonCommercial">
+	  <rdfs:isDefinedBy rdf:resource="http://www.ortolang.fr/2014/09/market#"/>
+	  <rdfs:subClassOf rdf:resource="http://www.ortolang.fr/2014/09/market#ConditionsOfUse"/>
+	  <rdfs:label>Non Commercial</rdfs:label>
+	  <rdfs:label xml:lang="fr">Libre sans utilisation commerciale</rdfs:label>
+	  <rdfs:comment>You may not use the resource for commercial purposes</rdfs:comment>
+	</rdfs:Class>
+	
+	<rdfs:Class rdf:about="http://www.ortolang.fr/2014/09/market#RestrictedUse">
+	  <rdfs:isDefinedBy rdf:resource="http://www.ortolang.fr/2014/09/market#"/>
+	  <rdfs:subClassOf rdf:resource="http://www.ortolang.fr/2014/09/market#ConditionsOfUse"/>
+	  <rdfs:label>Restricted use</rdfs:label>
+	  <rdfs:label xml:lang="fr">Négociation nécessaire</rdfs:label>
+	  <rdfs:comment>the resource is for restricted use</rdfs:comment>
+	</rdfs:Class>
+	
+	
 </rdf:RDF>
