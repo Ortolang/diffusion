@@ -21,12 +21,15 @@
 		<!-- <module>admin</module> -->
 		<module>appli</module>
 		<!-- <module>test</module> -->
+		<!-- <module>idp</module> -->
+		<module>tools-archetype</module>
 	</modules>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<version.wildfly.maven.plugin>1.0.2.Final</version.wildfly.maven.plugin>
 		<version.wildfly>8.1.0.Final</version.wildfly>
+		<version.picketlink.javaee.bom>2.7.0.CR2</version.picketlink.javaee.bom>
 		<version.compiler.plugin>3.1</version.compiler.plugin>
 		<version.ear.plugin>2.9</version.ear.plugin>
 		<version.ejb.plugin>2.3</version.ejb.plugin>
@@ -94,6 +97,13 @@
 				<type>pom</type>
 				<version>${jbpm.version}</version>
 				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.picketlink</groupId>
+				<artifactId>picketlink-javaee-6.0</artifactId>
+				<version>${version.picketlink.javaee.bom}</version>
+				<scope>import</scope>
+				<type>pom</type>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
