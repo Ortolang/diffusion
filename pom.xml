@@ -21,8 +21,8 @@
 		<!-- <module>admin</module> -->
 		<module>appli</module>
 		<!-- <module>test</module> -->
-		<!-- <module>idp</module> -->
-		<!-- <module>tools-archetype</module> -->
+		<module>tool-archetype</module>
+		<module>tool-tika</module>
 	</modules>
 
 	<properties>

@@ -1,0 +1,9 @@
+[
+    {
+        "key": "log",
+        "type": "text",
+        "label": "Execution Log",
+        "placeholder": "",
+        "required": false
+    }
+]

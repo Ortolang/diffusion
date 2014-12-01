@@ -1,0 +1,42 @@
+[
+    {
+        "key": "txt-input",
+        "type": "dataobject",
+        "label": "Input file",
+        "placeholder": "Input file name",
+        "required": true
+    },
+    {
+        "key": "output",
+        "type": "select",
+        "label": "Output",
+        "required": false,
+        "description": "Choose which output you want tika to return.",
+        "default": {
+            "id": "extract",
+            "name": "Extract raw text from file."
+        },
+        "options": [
+            {
+	            "id": "extract",
+	            "name": "Extract raw text from file."
+            },
+            {
+	            "id": "metadata",
+	            "name": "Extract metadatas from file."
+            },
+            {
+                "id": "detect",
+	            "name": "Extract content type of the input file."
+            },
+            {                
+	            "id": "language",
+	            "name": "Extract language of the text from file."
+            },
+            {
+                "id": "encoding",
+	            "name": "Extract encoding of the text from file."
+            }
+        ]
+    }
+]
