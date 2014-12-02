@@ -1009,13 +1009,13 @@ public class CoreServiceBean implements CoreService {
 				if (object.getClock() < ws.getClock()) {
 					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 					parent.removeElement(element);
-					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getMimeType(), clone.getKey());
+					CollectionElement celement = new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getMimeType(), clone.getKey());
 					parent.addElement(celement);
 					registry.update(parent.getKey());
 					object = clone;
 				} else {
 					parent.removeElement(element);
-					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getMimeType(), object.getKey());
+					CollectionElement celement = new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getMimeType(), object.getKey());
 					parent.addElement(celement);
 				}
 				em.merge(parent);
@@ -1023,6 +1023,10 @@ public class CoreServiceBean implements CoreService {
 				registry.update(object.getKey());
 				logger.log(Level.FINEST, "object updated");
 
+				ws.setChanged(true);
+				em.merge(ws);
+				registry.update(ws.getKey());
+				logger.log(Level.FINEST, "workspace set changed");
 
 				notification.throwEvent(object.getKey(), caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "update"), "");
 			} else {
@@ -1650,6 +1654,11 @@ public class CoreServiceBean implements CoreService {
 
 			registry.update(tkey);
 
+			ws.setChanged(true);
+			em.merge(ws);
+			registry.update(ws.getKey());
+			logger.log(Level.FINEST, "workspace set changed");
+
 			notification.throwEvent(tkey, caller, tidentifier.getType(), OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "add-metadata"), "key="
 					+ key);
 			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "create"), "");
@@ -1865,6 +1874,11 @@ public class CoreServiceBean implements CoreService {
 				em.merge(meta);
 
 				registry.update(mdelement.getKey());
+
+				ws.setChanged(true);
+				em.merge(ws);
+				registry.update(ws.getKey());
+				logger.log(Level.FINEST, "workspace set changed");
 
 				notification.throwEvent(mdelement.getKey(), caller, MetadataObject.OBJECT_TYPE,
 						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "update"), "");

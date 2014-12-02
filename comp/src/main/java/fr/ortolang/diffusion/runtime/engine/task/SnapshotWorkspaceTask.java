@@ -53,7 +53,7 @@ public class SnapshotWorkspaceTask extends RuntimeEngineTask {
 				} else {
 					logger.log(Level.INFO, "Snapshot name NOT provided and workspace has not changed since last snapshot, loading latest snapshot");
 					String head = workspace.getHead();
-					rootCollection = getRegistryService().getChildren(head);
+					rootCollection = getRegistryService().getParent(head);
 					if ( rootCollection == null ) {
 						throw new RuntimeEngineTaskException("unable to find an existing snapshot.");
 					}
