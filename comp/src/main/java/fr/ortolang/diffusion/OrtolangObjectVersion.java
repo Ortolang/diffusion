@@ -10,16 +10,18 @@ public class OrtolangObjectVersion implements Serializable {
 	private long date;
 	private String parent;
 	private String children;
+	private String publicationStatus;
 	
 	public OrtolangObjectVersion() {
 	}
 	
-	public OrtolangObjectVersion(String key, String author, long date, String parent, String children) {
+	public OrtolangObjectVersion(String key, String author, long date, String parent, String children, String publicationStatus) {
 		this.key = key;
 		this.author = author;
 		this.date = date;
 		this.parent = parent;
 		this.children = children;
+		this.publicationStatus = publicationStatus;
 	}
 
 	public String getKey() {
@@ -62,4 +64,11 @@ public class OrtolangObjectVersion implements Serializable {
 		this.children = children;
 	}
 
+	public String getPublicationStatus() {
+		return publicationStatus;
+	}
+
+	public void setPublicationStatus(String publicationStatus) {
+		this.publicationStatus = publicationStatus;
+	}
 }

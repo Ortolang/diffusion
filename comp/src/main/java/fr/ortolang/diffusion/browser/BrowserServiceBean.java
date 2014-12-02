@@ -220,6 +220,7 @@ public class BrowserServiceBean implements BrowserService {
 			version.setDate(registry.getLastModificationDate(key));
 			version.setParent(registry.getParent(key));
 			version.setChildren(registry.getChildren(key));
+			version.setPublicationStatus(registry.getPublicationStatus(key));
 			version.setKey(key);
 			
 			return version;
