@@ -7,7 +7,7 @@
 		<artifactId>server</artifactId>
 		<version>0.2-SNAPSHOT</version>
 	</parent>
-	
+
 	<artifactId>tool-tika</artifactId>
 	<packaging>war</packaging>
 
@@ -19,20 +19,87 @@
 			<groupId>javax</groupId>
 			<artifactId>javaee-api</artifactId>
 			<version>7.0</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
 			<artifactId>resteasy-multipart-provider</artifactId>
-			<version>3.0.8.Final</version>
+			<version>3.0.10.Final</version>
+			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>resteasy-client</artifactId>
+					<groupId>org.jboss.resteasy</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	    <dependency>
+	        <groupId>org.jboss.resteasy</groupId>
+	        <artifactId>resteasy-jackson-provider</artifactId>
+	        <version>3.0.6.Final</version>
+	    </dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>4.3.5.Final</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+	  		<groupId>commons-io</groupId>
+	  		<artifactId>commons-io</artifactId>
+	  		<version>2.4</version>
+	  	</dependency>
+	  	
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-core</artifactId>
+			<version>1.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-parsers</artifactId>
+			<version>1.4</version>
+		</dependency>
+		
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+		<dependency>
+	  		<groupId>org.glassfish.jersey.core</groupId>
+	  		<artifactId>jersey-client</artifactId>
+	  		<version>2.7</version>
+	  		<scope>test</scope>
+	  	</dependency>
+	  	<dependency>
+	  		<groupId>org.glassfish.jersey.media</groupId>
+	  		<artifactId>jersey-media-multipart</artifactId>
+	  		<version>2.7</version>
+	  		<scope>test</scope>
+	  	</dependency>
+	  	<dependency>
+	  		<groupId>org.glassfish.jersey.core</groupId>
+	  		<artifactId>jersey-common</artifactId>
+	  		<version>2.7</version>
+	  		<scope>test</scope>
+	  	</dependency> 
+	  	<dependency>  
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.json</artifactId>
+            <version>1.0.4</version>
+            <type>jar</type>
+	  		<scope>test</scope>
+        </dependency>
+	  	<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.7</version>
+			<scope>test</scope>
+		</dependency>
 
+	  
+	</dependencies>
 	<build>
 		<finalName>${artifactId}</finalName>
 		<plugins>

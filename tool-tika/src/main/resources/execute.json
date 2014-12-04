@@ -1,6 +1,6 @@
 [
     {
-        "key": "txt-input",
+        "key": "input",
         "type": "dataobject",
         "label": "Input file",
         "placeholder": "Input file name",

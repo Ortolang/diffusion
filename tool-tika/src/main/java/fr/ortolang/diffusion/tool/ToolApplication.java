@@ -12,7 +12,7 @@ import fr.ortolang.diffusion.tool.resource.ToolResource;
 public class ToolApplication extends Application {
 	
 	private HashSet<Class<?>> classes = new HashSet<Class<?>>();
-
+	
 	public ToolApplication() {
 		classes.add(ToolResource.class);
 	}

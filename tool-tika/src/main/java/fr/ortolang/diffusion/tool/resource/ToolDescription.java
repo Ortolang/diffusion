@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.tool.resource;
 
+
 public class ToolDescription {
 
 	private String name;
