@@ -34,7 +34,7 @@ public class ToolJob implements Serializable {
 	@ElementCollection(fetch=FetchType.EAGER)
     @MapKeyColumn(name="key")
     @Column(name="value")
-    @CollectionTable(name="parameters")
+    @CollectionTable(name="job_parameters")
     Map<String, String> parameters = new HashMap<String, String>();
 	private int priority;
 	@Lob

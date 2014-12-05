@@ -14,14 +14,14 @@ import java.util.logging.Logger;
 
 import javax.json.Json;
 import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import fr.ortolang.diffusion.tool.ToolConfig;
+import fr.ortolang.diffusion.tool.client.OrtolangDiffusionRestClient;
 import fr.ortolang.diffusion.tool.job.client.ToolJobRestClient;
 import fr.ortolang.diffusion.tool.job.entity.ToolJob;
 import fr.ortolang.diffusion.tool.resource.ToolDescription;
@@ -29,20 +29,24 @@ import fr.ortolang.diffusion.tool.resource.ToolDescription;
 public class ToolJobServiceTest {	
  	
 	static final String ROOT_URL = "http://localhost:8080/tool-tika/tika/"; 
+	//static final String DIFFUSION_URL = "http://localhost:8080/api/rest/"; 
 
 	private static Logger logger = Logger.getLogger(ToolJobServiceTest.class.getName());
 	private static ResourceBundle bundle;
 	private static ToolJobRestClient client;
+	//private static OrtolangDiffusionRestClient clientDiffusion;
 
 	@BeforeClass
 	public static void init() {
 		client = new ToolJobRestClient(ROOT_URL);
+		//clientDiffusion = new OrtolangDiffusionRestClient(DIFFUSION_URL);
 		bundle = ResourceBundle.getBundle("description", Locale.forLanguageTag("fr"));  
 	}
 
 	@AfterClass
 	public static void shutdown() {
 		client.close();
+		//clientDiffusion.close();
 	}
    		
 	@Test
@@ -95,12 +99,20 @@ public class ToolJobServiceTest {
 		logger.log(Level.INFO, "Testing post and get /jobs");		
 		try {
 			Map<String,String> params = new HashMap<String,String>();
-			params.put( "input", new String( "8b07e3c4-d58e-4ddf-82d0-5e1b26327c1d" ));
-			params.put( "output", new String( "metadata" ));
-			client.postExecutions("test-tika", 1, params);
+			String input = new String( "35d3a030-f1c5-4a89-9008-960563276eb3" );
+			String output = new String( "metadata" );
+			params.put( "input", input);
+			params.put( "output", output);
+			String name = "test-tika";
+			int p = 1;
+			client.postExecutions(name, p, params);
 			List<ToolJob> object = client.getExecutions();
 			for (ToolJob toolJob : object) {
-				System.out.println("job : " + object.toString());
+				System.out.println("job : " + toolJob.getName() + " - " + toolJob.getStatus());
+				assertEquals(name, toolJob.getName());
+				assertEquals(p, toolJob.getPriority());
+				assertEquals(input, toolJob.getParameter("input"));
+				assertEquals(output, toolJob.getParameter("output"));
 			}
 			
 		} catch ( Exception e ) {

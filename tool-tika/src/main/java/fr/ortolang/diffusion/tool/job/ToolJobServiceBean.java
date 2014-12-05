@@ -55,9 +55,7 @@ public class ToolJobServiceBean implements ToolJobService {
 		logger.log(Level.INFO, "Listing tool jobs");
 		try {
 			TypedQuery<ToolJob> query = em.createNamedQuery("findAllJobs", ToolJob.class);
-			logger.log(Level.INFO, query.toString());
 			List<ToolJob> jobs = query.getResultList();
-			logger.log(Level.INFO, jobs.toString());
 			return jobs;
 		} catch ( Exception e ) {
 			logger.log(Level.SEVERE, "unexpected error occured while listing jobs", e);
@@ -99,7 +97,7 @@ public class ToolJobServiceBean implements ToolJobService {
 				String base = ToolConfig.getInstance().getProperty("tool.working.space.path");
 				File directory = new File(base + "/" + id);
 				directory.mkdir();
-				logger.log(Level.INFO, "Base working space path set to: " + base + "/" + id);
+				logger.log(Level.INFO, "base working space path set to: " + base + "/" + id);
 			} else {
 				throw new ToolJobException("base working space path not found in configuration");
 			}
@@ -108,7 +106,7 @@ public class ToolJobServiceBean implements ToolJobService {
 			send(job);
 			em.persist(job);
 					
-		} catch (Exception e) {
+		} catch (SecurityException e) {
 			ctx.setRollbackOnly();
 			delete(id);
 			logger.log(Level.SEVERE, "unexpected error occured while submitting tool job", e);

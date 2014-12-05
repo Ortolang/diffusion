@@ -13,9 +13,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -24,9 +22,6 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.jboss.logging.Logger.Level;
-import org.jboss.resteasy.logging.Logger;
-
 import fr.ortolang.diffusion.tool.job.entity.ToolJob;
 import fr.ortolang.diffusion.tool.resource.ToolDescription;
 
