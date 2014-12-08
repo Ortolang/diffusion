@@ -10,6 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import fr.ortolang.diffusion.api.client.OrtolangRestClient;
+import fr.ortolang.diffusion.api.client.OrtolangRestClientException;
 
 public class BagItImporter {
 
@@ -18,19 +19,21 @@ public class BagItImporter {
 	private static Logger logger = Logger.getLogger(BagItImporter.class.getName());
 	
 	private File bagsFolder;
+	private OrtolangRestClient client;
 	
-	public BagItImporter(File bagsFolder) {
+	public BagItImporter(OrtolangRestClient client, File bagsFolder) {
+		this.client = client;
 		this.bagsFolder = bagsFolder;
 	}
 	
-	public void perform() throws IOException {
+	public void perform() throws IOException, OrtolangRestClientException {
 		
 		if(bagsFolder==null) {
 			throw new IOException("Parameter bagsFolder is mandatory");
 		}
 		
-		logger.log(Level.INFO, "Starting importing bags folder: " + bagsFolder.getAbsolutePath());
-		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://localhost:8080/api/rest");
+		logger.log(Level.INFO, "Starting import bags folder: " + bagsFolder.getAbsolutePath());
+//		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://localhost:8080/api/rest");
 		
 		List<File> files = Arrays.asList(bagsFolder.listFiles());
 		
@@ -46,7 +49,7 @@ public class BagItImporter {
 				Map<String, File> attachments = null;
 //				Map<String, File> attachments = new HashMap<String, File> ();
 //				attachments.put("bagpath", bag);
-				try {
+//				try {
 					String pkey = client.createProcess("import-workspace", "Workspace import for bag " + bag.getName(), params, attachments);
 					logger.log(Level.INFO, "process created with key : " + pkey);
 //					boolean finished = false;
@@ -66,11 +69,11 @@ public class BagItImporter {
 //							logger.log(Level.INFO, "process in progress, waiting...");
 //						}
 //					}
-				} catch ( Exception e ) {
-					e.printStackTrace();
-					logger.log(Level.WARNING, "unable to create process for bag " + bag.getName());
-					continue;
-				}
+//				} catch ( Exception e ) {
+//					e.printStackTrace();
+//					logger.log(Level.WARNING, "unable to create process for bag " + bag.getName());
+//					continue;
+//				}
 				
 				
 			}
@@ -78,14 +81,14 @@ public class BagItImporter {
 	}
 	
 	
-	public static void main(String[] argv) throws IOException {
+	public static void main(String[] argv) throws IOException, OrtolangRestClientException {
 		
 		String bagsFolder = DEFAULT_BAGS_FOLDER;
 		if(argv.length>0) {
 			bagsFolder = argv[0];
 		}
-		
-		BagItImporter importer = new BagItImporter(new File(bagsFolder));
+		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://localhost:8080/api/rest");
+		BagItImporter importer = new BagItImporter(client, new File(bagsFolder));
 		importer.perform();
 	}
 }
