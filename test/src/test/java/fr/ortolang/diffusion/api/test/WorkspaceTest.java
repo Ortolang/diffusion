@@ -12,6 +12,7 @@ import javax.json.JsonValue;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import fr.ortolang.diffusion.api.client.OrtolangRestClient;
@@ -32,6 +33,7 @@ public class WorkspaceTest {
 		client.close();
 	}
 	
+	@Ignore
 	@Test
 	public void crud() throws IOException {
 		logger.log(Level.INFO, "Checking CRUD on workspace");

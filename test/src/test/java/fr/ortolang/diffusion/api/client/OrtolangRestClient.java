@@ -175,14 +175,16 @@ public class OrtolangRestClient {
 	
 	@SuppressWarnings("resource")
 	public String createProcess(String type, String name, Map<String, String> params, Map<String, File> attachments) throws OrtolangRestClientException {
-		WebTarget target = base.path("/processes");
-		FormDataMultiPart form = new FormDataMultiPart().field("type", type).field("name", name);
+		WebTarget target = base.path("runtime/processes");
+		FormDataMultiPart form = new FormDataMultiPart().field("process-type", type).field("process-name", name);
 		for (Entry<String, String> param : params.entrySet()) {
 			form.field(param.getKey(), param.getValue());
 		}
-		for (Entry<String, File> attachment : attachments.entrySet()) {
-			FileDataBodyPart contentPart = new FileDataBodyPart(attachment.getKey(), attachment.getValue());
-			form.bodyPart(contentPart);
+		if(attachments!=null) {
+			for (Entry<String, File> attachment : attachments.entrySet()) {
+				FileDataBodyPart contentPart = new FileDataBodyPart(attachment.getKey(), attachment.getValue());
+				form.bodyPart(contentPart);
+			}
 		}
 		Response response = target.request().accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(form, form.getMediaType()));
 		if (response.getStatus() != Status.CREATED.getStatusCode()) {
@@ -194,7 +196,7 @@ public class OrtolangRestClient {
 	}
 	
 	public JsonObject getProcess(String key) throws OrtolangRestClientException {
-		WebTarget target = base.path("processes").path(key);
+		WebTarget target = base.path("runtime/processes").path(key);
 		Response response = target.request().accept(MediaType.APPLICATION_JSON_TYPE).get();
 		if (response.getStatus() == Status.OK.getStatusCode()) {
 			String object = response.readEntity(String.class);
