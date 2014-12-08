@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.StringReader;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -26,6 +28,8 @@ import fr.ortolang.diffusion.api.bench.CookieFilter;
 
 public class OrtolangRestClient {
 
+	private static Logger logger = Logger.getLogger(OrtolangRestClient.class.getName());
+	
 	private String username;
 	private String password;
 	private String url;
@@ -175,7 +179,8 @@ public class OrtolangRestClient {
 	
 	@SuppressWarnings("resource")
 	public String createProcess(String type, String name, Map<String, String> params, Map<String, File> attachments) throws OrtolangRestClientException {
-		WebTarget target = base.path("runtime/processes");
+		logger.log(Level.INFO, "Creating process on "+url+" with parameters ("+type+","+name+")");
+		WebTarget target = base.path("/runtime/processes");
 		FormDataMultiPart form = new FormDataMultiPart().field("process-type", type).field("process-name", name);
 		for (Entry<String, String> param : params.entrySet()) {
 			form.field(param.getKey(), param.getValue());
@@ -196,7 +201,7 @@ public class OrtolangRestClient {
 	}
 	
 	public JsonObject getProcess(String key) throws OrtolangRestClientException {
-		WebTarget target = base.path("runtime/processes").path(key);
+		WebTarget target = base.path("/runtime/processes").path(key);
 		Response response = target.request().accept(MediaType.APPLICATION_JSON_TYPE).get();
 		if (response.getStatus() == Status.OK.getStatusCode()) {
 			String object = response.readEntity(String.class);
