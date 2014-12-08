@@ -22,7 +22,7 @@ public class ImportBagItTest {
 	public void bench() throws IOException, OrtolangRestClientException {
 		File bagsFolder = getBagsFolder();
 //		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://localhost:8080/api/rest");
-		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://192.168.32.2/api/rest");
+		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://192.168.32.6/api/rest");
 		
 		BagItImporter importer = new BagItImporter(client, bagsFolder);
 		importer.perform();
