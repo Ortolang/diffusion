@@ -1,6 +1,8 @@
 package fr.ortolang.diffusion.api.test;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.Test;
 
@@ -14,7 +16,8 @@ import fr.ortolang.diffusion.api.client.OrtolangRestClientException;
  *
  */
 public class ImportBagItTest {
-
+	private static Logger logger = Logger.getLogger(ImportBagItTest.class.getName());
+	
 	@Test
 	public void bench() throws IOException, OrtolangRestClientException {
 		String bagsList = getBagsList();
@@ -29,7 +32,9 @@ public class ImportBagItTest {
 	private String getBagsList() {
 		String list = BagItImporter.DEFAULT_BAGS_FOLDER;
 		String property = System.getProperty("bags.list");
+		logger.log(Level.INFO,"Property bags.list : "+property);
 		if (property != null && property.length() != 0) {
+			logger.log(Level.INFO,"Sets list to "+property);
 			list = property;
 		} 
 		return list;
