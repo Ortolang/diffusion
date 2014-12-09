@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
@@ -39,7 +40,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @Local(BrowserService.class)
 @Stateless(name = BrowserService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed("user")
+@PermitAll
 public class BrowserServiceBean implements BrowserService {
 
 	private Logger logger = Logger.getLogger(BrowserServiceBean.class.getName());

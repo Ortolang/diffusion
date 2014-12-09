@@ -19,7 +19,7 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 		{ Profile.OBJECT_TYPE, "read,update,delete" },
 		{ Group.OBJECT_TYPE, "read,update,delete" }};
 	
-	public static final String UNAUTHENTIFIED_IDENTIFIER = "guest";
+	public static final String UNAUTHENTIFIED_IDENTIFIER = "anonymous";
 	public static final String SUPERUSER_IDENTIFIER = "root";
 	
 	public static final String ALL_AUTHENTIFIED_GROUP_KEY = "authentified";

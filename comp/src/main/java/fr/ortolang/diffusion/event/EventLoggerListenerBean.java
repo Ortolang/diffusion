@@ -4,7 +4,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.security.PermitAll;
-import javax.annotation.security.RunAs;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
 import javax.jms.Message;
@@ -19,7 +18,6 @@ import fr.ortolang.diffusion.event.entity.Event;
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/notification"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @SecurityDomain("ortolang")
-@RunAs("system")
 public class EventLoggerListenerBean implements MessageListener {
 	
 	private Logger logger = Logger.getLogger(EventLoggerListenerBean.class.getName());

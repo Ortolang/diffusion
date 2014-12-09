@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.annotation.security.RolesAllowed;
+import javax.annotation.security.PermitAll;
 import javax.ejb.Local;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -49,8 +49,8 @@ import fr.ortolang.diffusion.store.DeleteFileVisitor;
 @Startup
 @Singleton(name = IndexStoreService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed({"system", "user"})
 @Lock(LockType.READ)
+@PermitAll
 public class IndexStoreServiceBean implements IndexStoreService {
 
 	public static final String DEFAULT_INDEX_HOME = "/index-store";

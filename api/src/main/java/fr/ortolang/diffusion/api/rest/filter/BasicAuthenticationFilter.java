@@ -47,10 +47,10 @@ public class BasicAuthenticationFilter implements Filter {
 			hrequest.logout();
 		}
         if(authorization == null || authorization.isEmpty()) {
-        	logger.log(Level.FINEST, "No authentication found in headers : guest login");
-        	hrequest.login("guest", "tagada");
+        	logger.log(Level.FINEST, "No authentication found in headers : anonymous login");
+        	//hrequest.login("guest", "tagada");
         	chain.doFilter(request, response);
-        	hrequest.logout();
+        	//hrequest.logout();
         } else {
         	logger.log(Level.FINEST, "Authentication headers founds : parsing credentials and performing user login");
 			String encodedUserPassword = authorization.replaceFirst(AUTHENTICATION_SCHEME + " ", "");

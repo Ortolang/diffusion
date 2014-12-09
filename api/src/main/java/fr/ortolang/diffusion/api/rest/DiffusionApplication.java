@@ -8,6 +8,7 @@ import javax.ws.rs.core.Application;
 
 import fr.ortolang.diffusion.api.rest.form.FormResource;
 import fr.ortolang.diffusion.api.rest.filter.ContentTypeSetterPreProcessorInterceptor;
+import fr.ortolang.diffusion.api.rest.filter.OAuthAuthenticationFilter;
 import fr.ortolang.diffusion.api.rest.mapper.*;
 import fr.ortolang.diffusion.api.rest.object.ObjectResource;
 import fr.ortolang.diffusion.api.rest.profile.ProfileResource;
@@ -39,6 +40,9 @@ public class DiffusionApplication extends Application {
 	public Set<Object> getSingletons() {
 		HashSet<Object> set = new HashSet<Object>();
 		set.add(new TemplateFilter());
+		OAuthAuthenticationFilter oauthFilter = new OAuthAuthenticationFilter();
+		oauthFilter.setKeycloakConfigFile("classpath:keycloak.json");
+		set.add(oauthFilter);
 		set.add(new ContentTypeSetterPreProcessorInterceptor());
 		set.add(new AccessDeniedExceptionMapper());
 		set.add(new BrowserServiceExceptionMapper());

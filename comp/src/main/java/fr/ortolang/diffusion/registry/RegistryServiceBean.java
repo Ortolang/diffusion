@@ -8,7 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
-import javax.annotation.security.RolesAllowed;
+import javax.annotation.security.PermitAll;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
@@ -28,7 +28,7 @@ import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 @Local(RegistryService.class)
 @Stateless(name = RegistryService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed({"system", "user"})
+@PermitAll
 public class RegistryServiceBean implements RegistryService {
 
 	private Logger logger = Logger.getLogger(RegistryServiceBean.class.getName());

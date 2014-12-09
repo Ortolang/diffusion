@@ -48,7 +48,7 @@ import fr.ortolang.diffusion.store.triple.URIHelper;
 @Local(MembershipService.class)
 @Stateless(name = MembershipService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed("user")
+@PermitAll
 public class MembershipServiceBean implements MembershipService {
 
 	private Logger logger = Logger.getLogger(MembershipServiceBean.class.getName());
@@ -659,7 +659,6 @@ public class MembershipServiceBean implements MembershipService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	@RolesAllowed("system")
 	public OrtolangIndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -696,7 +695,6 @@ public class MembershipServiceBean implements MembershipService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	@RolesAllowed("system")
 	public OrtolangIndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);

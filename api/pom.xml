@@ -45,27 +45,57 @@
 			<artifactId>velocity-tools</artifactId>
 			<version>2.0</version>
 		</dependency>
-	  	<dependency>
-	  		<groupId>com.lyncode</groupId>
-	  		<artifactId>xoai-common</artifactId>
-	  		<version>4.1.0</version>
-	  		<exclusions>
-		        <exclusion>  <!-- declare the exclusion here -->
-		          <groupId>commons-codec</groupId>
-		          <artifactId>commons-codec</artifactId>
-		        </exclusion>
-		      </exclusions>
-	  	</dependency>
-	  	<dependency>
-	  		<groupId>com.lyncode</groupId>
-	  		<artifactId>xoai-data-provider</artifactId>
-	  		<version>4.1.0</version>
-	  	</dependency>
-	  	<dependency>
-	  		<groupId>org.json</groupId>
-	  		<artifactId>json</artifactId>
-	  		<version>20090211</version>
-	  	</dependency>
+		<dependency>
+			<groupId>com.lyncode</groupId>
+			<artifactId>xoai-common</artifactId>
+			<version>4.1.0</version>
+			<exclusions>
+				<exclusion>  <!-- declare the exclusion here -->
+					<groupId>commons-codec</groupId>
+					<artifactId>commons-codec</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.lyncode</groupId>
+			<artifactId>xoai-data-provider</artifactId>
+			<version>4.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20090211</version>
+		</dependency>
+		<dependency>
+			<groupId>com.thetransactioncompany</groupId>
+			<artifactId>cors-filter</artifactId>
+			<version>2.1.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-core</artifactId>
+			<version>1.1.0.Final-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-adapter-core</artifactId>
+			<version>1.1.0.Final-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-jaxrs-oauth-client</artifactId>
+			<version>1.1.0.Final-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-core-asl</artifactId>
+			<version>1.9.9</version>			
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-asl</artifactId>
+			<version>1.9.9</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -78,15 +108,6 @@
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 				</configuration>
 			</plugin>
-			<!-- <plugin> <groupId>org.codehaus.enunciate</groupId> <artifactId>maven-enunciate-plugin</artifactId> 
-				<version>1.28</version> <configuration> </configuration> <executions> <execution> 
-				<goals> <goal>assemble</goal> </goals> </execution> </executions> <dependencies> 
-				<dependency> <groupId>org.codehaus.enunciate</groupId> <artifactId>enunciate-amf</artifactId> 
-				<version>1.28</version> </dependency> </dependencies> </plugin> -->
-			<!-- <plugin> <groupId>com.qmino</groupId> <artifactId>miredot-maven-plugin</artifactId> 
-				<version>1.4</version> <executions> <execution> <goals> <goal>restdoc</goal> 
-				</goals> </execution> </executions> <configuration> <licence>UHJvamVjdHxmci5vcnRvbGFuZy5kaWZmdXNpb24uZGlmZnVzaW9uLXNlcnZlci13YXJ8MjAxOS0wMy0yOHxmYWxzZSNNQ3dDRkJNYkRzcHlLcktDTFkwNTZXZzF2ZFFjbnRHNUFoUlp6R09XV1A4dmIvNWxOaXU5K2NsVTQ2RExGUT09</licence> 
-				</configuration> </plugin> -->
 		</plugins>
 	</build>
 

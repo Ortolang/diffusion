@@ -12,7 +12,7 @@ public class AccessDeniedExceptionMapper implements ExceptionMapper<AccessDenied
 
 	public Response toResponse(AccessDeniedException ex) {
 		return Response.status(Status.UNAUTHORIZED)
-				.header("WWW-Authenticate", "Basic")
+				//.header("WWW-Authenticate", "Basic")
 				.entity("Access denied").type("text/plain")
 				.build();
 	}

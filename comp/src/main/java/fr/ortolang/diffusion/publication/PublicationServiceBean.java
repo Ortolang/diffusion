@@ -5,7 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
-import javax.annotation.security.RolesAllowed;
+import javax.annotation.security.PermitAll;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -26,7 +26,6 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.publication.type.PublicationType;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
@@ -37,7 +36,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @Local(PublicationService.class)
 @Stateless(name = PublicationService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed("user")
+@PermitAll
 public class PublicationServiceBean implements PublicationService {
 
 	private Logger logger = Logger.getLogger(PublicationServiceBean.class.getName());

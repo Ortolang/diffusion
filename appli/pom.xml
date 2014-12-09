@@ -23,11 +23,6 @@
 			<artifactId>server-api</artifactId>
 			<type>war</type>
 		</dependency>
-		<!-- <dependency>
-			<groupId>fr.ortolang.diffusion</groupId>
-			<artifactId>server-admin</artifactId>
-			<type>war</type>
-		</dependency> -->
 		<dependency>
 			<groupId>net.bull.javamelody</groupId>
 			<artifactId>javamelody-core</artifactId>
@@ -47,16 +42,10 @@
 					<defaultLibBundleDir>lib</defaultLibBundleDir>
 					<modules>
 						<ejbModule>
-               				<groupId>fr.ortolang.diffusion</groupId>
-               				<artifactId>server-components</artifactId>
-               				<bundleFileName>components.jar</bundleFileName>
-             			</ejbModule>
-						<!-- <webModule>
 							<groupId>fr.ortolang.diffusion</groupId>
-							<artifactId>server-admin</artifactId>
-							<bundleFileName>admin.war</bundleFileName>
-							<contextRoot>/admin</contextRoot>
-						</webModule> -->
+							<artifactId>server-components</artifactId>
+							<bundleFileName>components.jar</bundleFileName>
+						</ejbModule>
 						<webModule>
 							<groupId>fr.ortolang.diffusion</groupId>
 							<artifactId>server-api</artifactId>

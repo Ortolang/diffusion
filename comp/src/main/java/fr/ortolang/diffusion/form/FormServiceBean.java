@@ -7,7 +7,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
-import javax.annotation.security.RolesAllowed;
+import javax.annotation.security.PermitAll;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -42,7 +42,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @Local(FormService.class)
 @Stateless(name = FormService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed("user")
+@PermitAll
 public class FormServiceBean implements FormService {
 
 	private Logger logger = Logger.getLogger(FormServiceBean.class.getName());

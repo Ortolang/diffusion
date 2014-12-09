@@ -23,6 +23,7 @@
 		<!-- <module>test</module> -->
 		<module>tool-archetype</module>
 		<module>tool-tika</module>
+		<module>client</module>
 	</modules>
 
 	<properties>

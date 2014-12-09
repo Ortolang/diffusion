@@ -4,7 +4,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.Local;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
@@ -17,7 +16,6 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 @Local(IndexingService.class)
 @Stateless(name = IndexingService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed("user")
 public class IndexingServiceBean implements IndexingService {
 	
 	private Logger logger = Logger.getLogger(IndexingServiceBean.class.getName());

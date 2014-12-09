@@ -10,7 +10,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
-import javax.annotation.security.RolesAllowed;
+import javax.annotation.security.PermitAll;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -49,7 +49,7 @@ import fr.ortolang.diffusion.tool.invoke.ToolInvokerResult;
 @Local(ToolService.class)
 @Stateless(name = ToolService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed("user")
+@PermitAll
 public class ToolServiceBean implements ToolService {
 
 	private Logger logger = Logger.getLogger(ToolServiceBean.class.getName());
