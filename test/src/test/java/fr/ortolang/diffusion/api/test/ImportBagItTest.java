@@ -1,15 +1,12 @@
 package fr.ortolang.diffusion.api.test;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
 
 import org.junit.Test;
 
 import fr.ortolang.diffusion.api.bagit.BagItImporter;
 import fr.ortolang.diffusion.api.client.OrtolangRestClient;
 import fr.ortolang.diffusion.api.client.OrtolangRestClientException;
-import fr.ortolang.diffusion.api.config.ClientConfig;
 
 /**
  * Tests when imports a bagit archive.
@@ -20,21 +17,22 @@ public class ImportBagItTest {
 
 	@Test
 	public void bench() throws IOException, OrtolangRestClientException {
-		File bagsFolder = getBagsFolder();
+		String bagsList = getBagsList();
 //		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://localhost:8080/api/rest");
 		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://192.168.32.6/api/rest");
+//		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://diffusion.ortolang.fr/api/rest");
 		
-		BagItImporter importer = new BagItImporter(client, bagsFolder);
+		BagItImporter importer = new BagItImporter(client, bagsList);
 		importer.perform();
 	}
 	
-	private File getBagsFolder() {
-		File folder = Paths.get(BagItImporter.DEFAULT_BAGS_FOLDER).toFile();
-		String property = System.getProperty("bags.folder");
+	private String getBagsList() {
+		String list = BagItImporter.DEFAULT_BAGS_FOLDER;
+		String property = System.getProperty("bags.list");
 		if (property != null && property.length() != 0) {
-			folder = Paths.get(property).toFile();
+			list = property;
 		} 
-		return folder;
+		return list;
 	}
 
 //	private String getHostname() {
