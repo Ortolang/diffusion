@@ -8,9 +8,6 @@ import fr.ortolang.diffusion.tool.job.entity.ToolJob;
 
 public interface ToolJobService {
 
-	public static final String SERVICE_NAME = "tool job";
-	public static final String[] OBJECT_TYPE_LIST = new String[] { ToolJob.OBJECT_TYPE };
-		
 	/**
 	 * Return the list of jobs
 	 * @return List<ToolJob>
@@ -28,12 +25,12 @@ public interface ToolJobService {
 	
 	/**
 	 * Submit a new tool job to the queue
-	 * @param name	String Name of the new tool job
+	 * @param owner	String Name of the owner of the new tool job
 	 * @param priority	int	Priority to set to the job
 	 * @throws ToolJobException
 	 * @throws IOException 
 	 */
-	public void submit(String name, int priority, Map<String, String> parameters) throws ToolJobException, IOException;
+	public void submit(String owner, int priority, Map<String, String> parameters) throws ToolJobException, IOException;
 	
 	/**
 	 * Abort a tool job

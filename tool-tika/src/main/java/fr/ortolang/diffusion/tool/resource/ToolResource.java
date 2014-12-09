@@ -107,7 +107,7 @@ public class ToolResource {
 	@POST
 	@Path("/jobs")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response executions(@QueryParam(value = "name") String name, @QueryParam(value = "priority") int priority, MultivaluedMap<String, String> form) 
+	public Response executions(@QueryParam(value = "name") String owner, @QueryParam(value = "priority") int priority, MultivaluedMap<String, String> form) 
 			throws ToolJobException, JsonParseException, JsonMappingException, IOException {
 		logger.log(Level.INFO, "POST /jobs");
 
@@ -118,8 +118,8 @@ public class ToolResource {
 			parameters.put(theKey,form.getFirst(theKey));
 		}
 		
-	    logger.log(Level.INFO, "sumbitting new job " + name + " in queue with priority " + priority + " and with params : " + parameters);
-	    tjob.submit(name, priority, parameters);
+	    logger.log(Level.INFO, "sumbitting new job from " + owner + " in queue with priority " + priority + " and with params : " + parameters);
+	    tjob.submit(owner, priority, parameters);
 		
 		List<ToolJob> jobs = tjob.list();
 		return Response.ok(jobs).build();

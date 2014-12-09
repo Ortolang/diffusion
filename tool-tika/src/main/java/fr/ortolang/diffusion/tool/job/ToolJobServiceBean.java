@@ -14,6 +14,8 @@ import javax.annotation.Resource;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.jms.JMSContext;
 import javax.jms.Message;
@@ -29,8 +31,8 @@ import fr.ortolang.diffusion.tool.job.entity.ToolJob;
 import fr.ortolang.diffusion.tool.job.entity.ToolJobStatus;
 import fr.ortolang.diffusion.tool.job.ToolJobService;
 
+@Stateless
 @Local(ToolJobService.class)
-@Stateless(name = ToolJobService.SERVICE_NAME)
 public class ToolJobServiceBean implements ToolJobService {
 
 	private Logger logger = Logger.getLogger(ToolJobServiceBean.class.getName());
@@ -39,18 +41,17 @@ public class ToolJobServiceBean implements ToolJobService {
 	private Queue toolJobQueue;
 	@Inject
 	private JMSContext context;
-	@PersistenceContext(unitName = "ortolangPU")
+	@PersistenceContext(unitName = "ortolangToolPU")
 	private EntityManager em;
 	@Resource
 	private SessionContext ctx;
 	
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 	
-	public ToolJobServiceBean() {
-		// TODO Auto-generated constructor stub
-	}
+	public ToolJobServiceBean() {	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<ToolJob> list() throws ToolJobException {
 		logger.log(Level.INFO, "Listing tool jobs");
 		try {
@@ -64,6 +65,7 @@ public class ToolJobServiceBean implements ToolJobService {
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public ToolJob read(String id) throws ToolJobException {
 		logger.log(Level.INFO, "Reading tool job");
 		try {
@@ -79,7 +81,8 @@ public class ToolJobServiceBean implements ToolJobService {
 	}
 
 	@Override
-	public void submit(String name, int priority, Map<String, String> parameters) throws ToolJobException, IOException {
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void submit(String owner, int priority, Map<String, String> parameters) throws ToolJobException, IOException {
 		logger.log(Level.INFO, "Submitting new tool job");
 		String id = java.util.UUID.randomUUID().toString();
 		
@@ -87,34 +90,40 @@ public class ToolJobServiceBean implements ToolJobService {
 			// Instantiate a new job
 			ToolJob job = new ToolJob();
 			job.setId(id);
-			job.setName(name);
+			job.setOwner(owner);
 			job.setParameters(parameters);
 			job.setPriority(priority);
 			job.setStatus(ToolJobStatus.PENDING);
 			
-			// Create a directory
+			// Create directories
 			if ( ToolConfig.getInstance().getProperty("tool.working.space.path") != null ) {
 				String base = ToolConfig.getInstance().getProperty("tool.working.space.path");
 				File directory = new File(base + "/" + id);
-				directory.mkdir();
-				logger.log(Level.INFO, "base working space path set to: " + base + "/" + id);
+				if(directory.mkdirs()) {
+					logger.log(Level.INFO, "base working space path set to: " + base + "/" + id);
+				} else {
+					throw new ToolJobException("Unable to create a working directory on " + ToolConfig.getInstance().getProperty("tool.working.space.path"));
+				}
 			} else {
 				throw new ToolJobException("base working space path not found in configuration");
 			}
 			
-			// Send the job, and persist it
-			send(job);
+			logger.log(Level.INFO, "Persisting job in storage");
 			em.persist(job);
+			logger.log(Level.INFO, "Sending job to queue");
+			send(job);
 					
 		} catch (SecurityException e) {
 			ctx.setRollbackOnly();
-			delete(id);
 			logger.log(Level.SEVERE, "unexpected error occured while submitting tool job", e);
+			//Purge local folder
+			delete(id);
 			throw new ToolJobException("unable to submit tool job", e);
 		}
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void abort(String id) throws ToolJobException {
 		logger.log(Level.INFO, "Aborting tool job");
 		
@@ -133,6 +142,7 @@ public class ToolJobServiceBean implements ToolJobService {
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void complete(String id, String log) throws ToolJobException {
 		logger.log(Level.INFO, "Completing execution of a tool job");
 		
@@ -170,6 +180,7 @@ public class ToolJobServiceBean implements ToolJobService {
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void error(String id, String log) throws ToolJobException {
 		logger.log(Level.INFO, "Error during execution of a tool job");
 		
@@ -188,6 +199,7 @@ public class ToolJobServiceBean implements ToolJobService {
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void delete(String id) throws IOException, ToolJobException {		 
         if ( ToolConfig.getInstance().getProperty("tool.working.space.path") != null ) {
 			String base = ToolConfig.getInstance().getProperty("tool.working.space.path");
@@ -213,6 +225,7 @@ public class ToolJobServiceBean implements ToolJobService {
 	}
 
 	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void extend(String id) {
 		// TODO update scheduler
 		
@@ -223,12 +236,13 @@ public class ToolJobServiceBean implements ToolJobService {
 	 * @param job
 	 * @throws ToolJobException
 	 */
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void send(ToolJob job) throws ToolJobException {
 		try {
 			if ( job != null ) {
 				Message message = context.createMessage();
 				message.setStringProperty("id", job.getId());   
-				message.setJMSPriority(job.getPriority());
+				message.setJMSPriority(job.getPriority());        
 				context.createProducer().send(toolJobQueue, message);    
 			}  
 		} catch (Exception e) {

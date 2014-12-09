@@ -20,12 +20,13 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import fr.ortolang.diffusion.tool.ToolConfig;
-import fr.ortolang.diffusion.tool.client.OrtolangDiffusionRestClient;
 import fr.ortolang.diffusion.tool.job.client.ToolJobRestClient;
 import fr.ortolang.diffusion.tool.job.entity.ToolJob;
 import fr.ortolang.diffusion.tool.resource.ToolDescription;
 
+/**
+ * Test class for {@link fr.ortolang.diffusion.tool.resource.ToolResource} and {@link fr.ortolang.diffusion.tool.invoke.ToolJobService}.
+ */
 public class ToolJobServiceTest {	
  	
 	static final String ROOT_URL = "http://localhost:8080/tool-tika/tika/"; 
@@ -49,6 +50,9 @@ public class ToolJobServiceTest {
 		//clientDiffusion.close();
 	}
    		
+	/**
+	 * Test method for {@link fr.ortolang.diffusion.tool.resource.ToolResource#description(String)}.
+	 */
 	@Test
     public void testDescription() {
 		logger.log(Level.INFO, "Testing get /description");		
@@ -64,6 +68,9 @@ public class ToolJobServiceTest {
 		}
     }
 	
+	/**
+	 * Test method for {@link fr.ortolang.diffusion.tool.resource.ToolResource#executionForm()}.
+	 */
 	@Test
     public void testExecutionForm() {
 		logger.log(Level.INFO, "Testing get /execution-form");		
@@ -79,6 +86,9 @@ public class ToolJobServiceTest {
 		}
     }
 	
+	/**
+	 * Test method for {@link fr.ortolang.diffusion.tool.resource.ToolResource#resultForm()}.
+	 */
 	@Test
     public void testResultForm() {
 		logger.log(Level.INFO, "Testing get /result-form");		
@@ -94,12 +104,15 @@ public class ToolJobServiceTest {
 		}
     }
 	
+	/**
+	 * Test method for {@link fr.ortolang.diffusion.tool.resource.ToolResource#executions()}.
+	 */
 	@Test
     public void testExecutions() {
 		logger.log(Level.INFO, "Testing post and get /jobs");		
 		try {
 			Map<String,String> params = new HashMap<String,String>();
-			String input = new String( "35d3a030-f1c5-4a89-9008-960563276eb3" );
+			String input = new String( "d97001cd-530a-4dc2-855f-75fe5a7abb5a" );
 			String output = new String( "metadata" );
 			params.put( "input", input);
 			params.put( "output", output);

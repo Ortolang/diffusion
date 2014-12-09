@@ -30,7 +30,7 @@ public class ToolJob implements Serializable {
 	private String id;
 	@Version
 	private long version;
-	private String name;	
+	private String owner;	
 	@ElementCollection(fetch=FetchType.EAGER)
     @MapKeyColumn(name="key")
     @Column(name="value")
@@ -41,6 +41,9 @@ public class ToolJob implements Serializable {
 	@Type(type = "org.hibernate.type.TextType")
 	private String log;
 	private ToolJobStatus status;
+	private long start;
+	private long stop;
+	
 
 	public static final String OBJECT_TYPE = "tool job";	
 	
@@ -61,14 +64,6 @@ public class ToolJob implements Serializable {
 
 	public void setVersion(long version) {
 		this.version = version;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public int getPriority() {
@@ -105,6 +100,30 @@ public class ToolJob implements Serializable {
 
 	public void setParameters(Map<String, String> parameters) {
 		this.parameters = parameters;
+	}
+
+	public String getOwner() {
+		return owner;
+	}
+
+	public void setOwner(String owner) {
+		this.owner = owner;
+	}
+
+	public long getStart() {
+		return start;
+	}
+
+	public void setStart(long start) {
+		this.start = start;
+	}
+
+	public long getStop() {
+		return stop;
+	}
+
+	public void setStop(long stop) {
+		this.stop = stop;
 	}
 
 }
