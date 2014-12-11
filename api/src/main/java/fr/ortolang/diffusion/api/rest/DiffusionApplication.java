@@ -40,9 +40,9 @@ public class DiffusionApplication extends Application {
 	public Set<Object> getSingletons() {
 		HashSet<Object> set = new HashSet<Object>();
 		set.add(new TemplateFilter());
-		OAuthAuthenticationFilter oauthFilter = new OAuthAuthenticationFilter();
-		oauthFilter.setKeycloakConfigFile("classpath:keycloak.json");
-		set.add(oauthFilter);
+//		OAuthAuthenticationFilter oauthFilter = new OAuthAuthenticationFilter();
+//		oauthFilter.setKeycloakConfigFile("classpath:keycloak.json");
+//		set.add(oauthFilter);
 		set.add(new ContentTypeSetterPreProcessorInterceptor());
 		set.add(new AccessDeniedExceptionMapper());
 		set.add(new BrowserServiceExceptionMapper());

@@ -2,7 +2,7 @@
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
-	<filter>
+	<!-- <filter>
 		<filter-name>CORS</filter-name>
 		<filter-class>com.thetransactioncompany.cors.CORSFilter</filter-class>
 		<init-param>
@@ -15,11 +15,11 @@
 		</init-param>
 		<init-param>
 			<param-name>cors.allowSubdomains</param-name>
-			<param-value>false</param-value>
+			<param-value>true</param-value>
 		</init-param>
 		<init-param>
 			<param-name>cors.supportedMethods</param-name>
-			<param-value>GET, HEAD, POST, OPTIONS</param-value>
+			<param-value>GET, HEAD, POST, OPTIONS, PUT, DELETE</param-value>
 		</init-param>
 		<init-param>
 			<param-name>cors.supportedHeaders</param-name>
@@ -37,6 +37,10 @@
 			<param-name>cors.maxAge</param-name>
 			<param-value>3600</param-value>
 		</init-param>
+	</filter> -->
+	<filter>
+		<filter-name>CORS</filter-name>
+		<filter-class>fr.ortolang.diffusion.api.rest.filter.CORSFilter</filter-class>
 	</filter>
 	<filter>
 		<filter-name>monitoring</filter-name>
@@ -97,4 +101,7 @@
 			<transport-guarantee>NONE</transport-guarantee>
 		</user-data-constraint>
 	</security-constraint>
+	<login-config>
+        <auth-method>KEYCLOAK</auth-method>
+    </login-config>
 </web-app>

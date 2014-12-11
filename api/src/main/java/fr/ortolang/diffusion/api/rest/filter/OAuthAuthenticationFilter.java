@@ -4,9 +4,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Priority;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.Context;
 
 import org.keycloak.adapters.AuthChallenge;
 import org.keycloak.adapters.AuthOutcome;
@@ -21,6 +23,9 @@ import org.keycloak.jaxrs.JaxrsHttpFacade;
 public class OAuthAuthenticationFilter extends JaxrsBearerTokenFilterImpl {
 
 	private Logger logger = Logger.getLogger(OAuthAuthenticationFilter.class.getName());
+	
+	@Context
+	private HttpServletRequest httpServletRequest;
 	
 	@Override
 	protected void bearerAuthentication(JaxrsHttpFacade facade, ContainerRequestContext request, KeycloakDeployment resolvedDeployment) {
@@ -50,9 +55,26 @@ public class OAuthAuthenticationFilter extends JaxrsBearerTokenFilterImpl {
                 return;
             }
         }
-
+        logger.log(Level.FINE, "1. httpServletRequest.getAuthType(): " + httpServletRequest.getAuthType());
+        if ( httpServletRequest.getUserPrincipal() != null ) {
+        	logger.log(Level.FINE, "1. httpServletRequest.getUserPrincipal(): " + httpServletRequest.getUserPrincipal().getName());
+        } else {
+        	logger.log(Level.FINE, "1. httpServletRequest.getUserPrincipal(): null");
+        }
         propagateSecurityContext(facade, request, resolvedDeployment, authenticator);
+        logger.log(Level.FINE, "2. httpServletRequest.getAuthType(): " + httpServletRequest.getAuthType());
+        if ( httpServletRequest.getUserPrincipal() != null ) {
+        	logger.log(Level.FINE, "2. httpServletRequest.getUserPrincipal(): " + httpServletRequest.getUserPrincipal().getName());
+        } else {
+        	logger.log(Level.FINE, "2. httpServletRequest.getUserPrincipal(): null");
+        }
         handleAuthActions(facade, resolvedDeployment);
+        logger.log(Level.FINE, "3. httpServletRequest.getAuthType(): " + httpServletRequest.getAuthType());
+        if ( httpServletRequest.getUserPrincipal() != null ) {
+        	logger.log(Level.FINE, "3. httpServletRequest.getUserPrincipal(): " + httpServletRequest.getUserPrincipal().getName());
+        } else {
+        	logger.log(Level.FINE, "3. httpServletRequest.getUserPrincipal(): null");
+        }
     }
 
 }

@@ -110,6 +110,7 @@ public class BrowserServiceBean implements BrowserService {
 	public List<String> list(int offset, int limit, String service, String type, OrtolangObjectState.Status status, boolean itemsOnly) throws BrowserServiceException {
 		logger.log(Level.FINE, "listing keys");
 		try {
+			logger.log(Level.FINE, "auth user: " + membership.getProfileKeyForConnectedIdentifier());
 			return registry.list(offset, limit, OrtolangObjectIdentifier.buildJPQLFilterPattern(service, type), status, itemsOnly);
 		} catch (RegistryServiceException e) {
 			throw new BrowserServiceException("error during listing keys", e);
