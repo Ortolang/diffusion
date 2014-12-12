@@ -145,6 +145,15 @@ public class ObjectResource {
 	}
 	
 	@GET
+	@Path("/{key}/element")
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+	public Response resolve(@PathParam(value = "key") String key, @QueryParam(value = "path") String relativePath) throws OrtolangException, KeyNotFoundException, AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException {
+		logger.log(Level.INFO, "GET /objects/"+key+"?path="+relativePath);
+		
+		return get(core.resolvePathFromCollection(key, relativePath));
+	}
+	
+	@GET
 	@Path("/{key}/history")
 	public Response history(@PathParam(value = "key") String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "get history of object "+key);

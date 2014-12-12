@@ -588,6 +588,44 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public String resolvePathFromCollection(String key, String path) throws KeyNotFoundException, CoreServiceException, AccessDeniedException, InvalidPathException {
+		logger.log(Level.FINE, "reading collection with key [" + key + "]");
+		try {
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+
+			OrtolangObjectIdentifier cidentifier = registry.lookup(key);
+			checkObjectType(cidentifier, Collection.OBJECT_TYPE);
+			authorisation.checkPermission(key, subjects, "read");
+
+			Collection collection = em.find(Collection.class, cidentifier.getId());
+			if (collection == null) {
+				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
+			}
+			collection.setKey(key);
+			//em.detach(collection);
+
+			PathBuilder pathTarget = PathBuilder.fromPath(path);
+			PathBuilder parentTarget = pathTarget.clone().parent();
+			
+			Collection parent = readCollectionAtPath(key, parentTarget);
+			
+			String partTarget = pathTarget.part();
+			
+			CollectionElement element = parent.findElementByName(partTarget);
+			if (element == null) {
+				throw new TreeBuilderException("unable to load path " + path + ", parent collection " + parent.getName() + " with key [" + parent.getKey()
+						+ " does not old an element named " + partTarget);
+			}
+						
+			return element.getKey();
+		} catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException | TreeBuilderException e) {
+			logger.log(Level.SEVERE, "unexpected error while reading collection", e);
+			throw new CoreServiceException("unable to resolve path "+path+" from collection with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateCollection(String workspace, String path, String description) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException {
 		logger.log(Level.FINE, "updating collection into workspace [" + workspace + "] at path [" + path + "]");
 		try {

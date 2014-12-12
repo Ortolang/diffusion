@@ -7,6 +7,7 @@ import fr.ortolang.diffusion.OrtolangBinaryService;
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
@@ -58,6 +59,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	public void deleteCollection(String workspace, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
 
+	public String resolvePathFromCollection(String key, String path) throws KeyNotFoundException, CoreServiceException, AccessDeniedException, InvalidPathException;
+	
 	/*DataObject*/
 	
 	public void createDataObject(String workspace, String path, String description, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
