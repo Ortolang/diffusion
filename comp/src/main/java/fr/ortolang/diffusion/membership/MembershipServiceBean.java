@@ -141,7 +141,7 @@ public class MembershipServiceBean implements MembershipService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createProfile(String fullname, String email) throws MembershipServiceException, ProfileAlreadyExistsException {
+	public Profile createProfile(String fullname, String email) throws MembershipServiceException, ProfileAlreadyExistsException {
 		logger.log(Level.FINE, "creating profile for connected identifier");
 
 		String connectedIdentifier = authentication.getConnectedIdentifier();
@@ -166,6 +166,7 @@ public class MembershipServiceBean implements MembershipService {
 			authorisation.createPolicy(key, key);
 
 			notification.throwEvent(key, key, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
+			return profile;
 		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to create profile with key [" + key + "]", e);
