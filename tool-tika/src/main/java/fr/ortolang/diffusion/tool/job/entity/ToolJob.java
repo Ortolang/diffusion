@@ -28,18 +28,24 @@ public class ToolJob implements Serializable {
 	
 	@Id
 	private String id;
+	
 	@Version
 	private long version;
+	
 	private String owner;	
+	
 	@ElementCollection(fetch=FetchType.EAGER)
     @MapKeyColumn(name="key")
     @Column(name="value")
     @CollectionTable(name="job_parameters")
     Map<String, String> parameters = new HashMap<String, String>();
+	
 	private int priority;
+	
 	@Lob
 	@Type(type = "org.hibernate.type.TextType")
 	private String log;
+	
 	private ToolJobStatus status;
 	private long start;
 	private long stop;

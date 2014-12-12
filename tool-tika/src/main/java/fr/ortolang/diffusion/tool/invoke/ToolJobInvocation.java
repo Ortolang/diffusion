@@ -3,10 +3,6 @@ package fr.ortolang.diffusion.tool.invoke;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import org.apache.tika.exception.TikaException;
-import org.xml.sax.SAXException;
-
-import fr.ortolang.diffusion.tool.job.ToolJobException;
 import fr.ortolang.diffusion.tool.job.entity.ToolJob;
 
 

@@ -2,7 +2,6 @@ package fr.ortolang.diffusion.tool.resource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -30,9 +29,6 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.io.*;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
-
 import fr.ortolang.diffusion.tool.job.ToolJobException;
 import fr.ortolang.diffusion.tool.job.ToolJobService;
 import fr.ortolang.diffusion.tool.job.entity.ToolJob;

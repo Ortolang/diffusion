@@ -82,7 +82,6 @@ public class ToolJobInvocationListener implements MessageListener {
 			ToolJobInvocationResult result = invoker.invoke(job, logFile);
 			logger.log(Level.INFO, "Invocation finished");
 			job.setStop(System.currentTimeMillis());
-			File f;
 	        String str = "";
 			switch(result.getStatus()){
 	        case SUCCESS :

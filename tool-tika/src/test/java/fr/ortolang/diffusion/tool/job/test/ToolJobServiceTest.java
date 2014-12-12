@@ -112,7 +112,7 @@ public class ToolJobServiceTest {
 		logger.log(Level.INFO, "Testing post and get /jobs");		
 		try {
 			Map<String,String> params = new HashMap<String,String>();
-			String input = new String( "d97001cd-530a-4dc2-855f-75fe5a7abb5a" );
+			String input = new String( "7b80df5b-3628-4a1c-a802-ba065c5d1220" );
 			String output = new String( "metadata" );
 			params.put( "input", input);
 			params.put( "output", output);
@@ -121,8 +121,8 @@ public class ToolJobServiceTest {
 			client.postExecutions(name, p, params);
 			List<ToolJob> object = client.getExecutions();
 			for (ToolJob toolJob : object) {
-				System.out.println("job : " + toolJob.getName() + " - " + toolJob.getStatus());
-				assertEquals(name, toolJob.getName());
+				System.out.println("job : " + toolJob.getOwner() + " - " + toolJob.getStatus());
+				assertEquals(name, toolJob.getOwner());
 				assertEquals(p, toolJob.getPriority());
 				assertEquals(input, toolJob.getParameter("input"));
 				assertEquals(output, toolJob.getParameter("output"));
