@@ -33,9 +33,6 @@ public class ProfileResource {
 	public Response getConnected() throws MembershipServiceException, KeyNotFoundException, ProfileAlreadyExistsException, AccessDeniedException {
 		logger.log(Level.INFO, "GET /profiles/connected");
 		String key = membership.getProfileKeyForConnectedIdentifier();
-		if (MembershipService.UNAUTHENTIFIED_IDENTIFIER.equals(key)) {
-			throw new AccessDeniedException(MembershipService.UNAUTHENTIFIED_IDENTIFIER + " is not considered as a connected identifier");
-		}
 		Profile profile;
 		try {
 			profile = membership.readProfile(key);

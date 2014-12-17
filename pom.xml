@@ -24,6 +24,7 @@
 		<module>tool-archetype</module>
 		<module>tool-tika</module>
 		<module>client</module>
+		<module>delivry</module>
 	</modules>
 
 	<properties>

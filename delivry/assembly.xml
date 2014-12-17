@@ -1,0 +1,33 @@
+<assembly>
+    <id>delivry</id>
+
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <fileSets>
+        <fileSet>
+            <directory>src/main/resources</directory>
+            <outputDirectory>config</outputDirectory>
+        </fileSet>
+    </fileSets>
+    <dependencySets>
+        <dependencySet>
+            <unpack>false</unpack>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <includes>
+                <include>fr.ortolang.diffusion:server-application:ear</include>
+            </includes>
+            <outputDirectory>applications</outputDirectory>
+        </dependencySet>
+        <dependencySet>
+            <unpack>false</unpack>
+            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <includes>
+                <include>org.keycloak:keycloak-server:war</include>
+            </includes>
+            <outputDirectory>applications</outputDirectory>
+        </dependencySet>
+    </dependencySets>
+</assembly>
