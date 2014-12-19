@@ -1,7 +1,0 @@
-JBOSS_HOME=/applis/wildfly
-JBOSS_USER=wildfly
-JBOSS_CONFIG=ortolang.xml
-STARTUP_WAIT=240
-SHUTDOWN_WAIT=30
-LANG=fr_FR.UTF-8
-
