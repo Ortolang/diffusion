@@ -20,7 +20,7 @@ import org.xnio.channels.UnsupportedOptionException;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
+import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public class ProfileSshFile implements SshFile {
@@ -41,7 +41,7 @@ public class ProfileSshFile implements SshFile {
 	private void load() throws OrtolangException {
 		logger.log(Level.INFO, "loading profile : " + view.getConnectedUser());
 		try {
-			LoginContext lc = AuthenticationLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
+			LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 			lc.login();
 			workspaces = view.getCore().findWorkspacesForProfile(view.getConnectedUser());
 			exists = true;

@@ -71,11 +71,6 @@ public class PublishWorkspaceTask extends RuntimeEngineTask {
 		return NAME;
 	}
 
-	@Override
-	public boolean needEngineAuth() {
-		return false;
-	}
-
 	private void builtPublicationMap(String key, Map<String, PublicationContext> map, String root, PathBuilder path) throws RuntimeEngineTaskException {
 		try {
 			OrtolangObject object = getCoreService().findObject(key);

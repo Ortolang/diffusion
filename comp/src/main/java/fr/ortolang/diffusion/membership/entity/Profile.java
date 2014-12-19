@@ -1,6 +1,10 @@
 package fr.ortolang.diffusion.membership.entity;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Transient;
@@ -27,9 +31,12 @@ public class Profile extends OrtolangObject {
 	@Column(length=7000)
 	private String groupsList;
 	private ProfileStatus status;
+	@ElementCollection
+	private Set<ProfileKey> keys;
 	
 	public Profile() {
 		groupsList = "";
+		keys = new HashSet<ProfileKey> ();
 	}
 
 	public String getId() {
@@ -87,6 +94,36 @@ public class Profile extends OrtolangObject {
 		}
 
 		return false;
+	}
+
+	public void addPublicKey(String pubkey) {
+		keys.add(new ProfileKey(pubkey, pubkey.split(" ")[1]));
+	}
+
+	public void removePublicKey(String pubkey) {
+		keys.remove(new ProfileKey(pubkey, pubkey.split(" ")[1]));
+	}
+
+	public Set<String> getPublicKeys() {
+		Set<String> pkeys = new HashSet<String> ();
+		for ( ProfileKey pkey : keys ) {
+			pkeys.add(pkey.getKey());
+		}
+		return pkeys;
+	}
+	
+	public void setPublicKeys(Set<String> keys) {
+		for ( String key : keys ) {
+			addPublicKey(key);
+		}
+	}
+	
+	public Set<ProfileKey> getKeys() {
+		return keys;
+	}
+
+	public void setKeys(Set<ProfileKey> keys) {
+		this.keys = keys;
 	}
 
 	public void addGroup(String group) {

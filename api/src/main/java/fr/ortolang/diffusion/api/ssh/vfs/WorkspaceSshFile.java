@@ -25,7 +25,7 @@ import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
+import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public class WorkspaceSshFile implements SshFile {
@@ -50,7 +50,7 @@ public class WorkspaceSshFile implements SshFile {
 	private void load() throws OrtolangException {
 		logger.log(Level.INFO, "loading workspace : " + path.part());
 		try {
-			LoginContext lc = AuthenticationLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
+			LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 			lc.login();
 			ws = view.getCore().readWorkspace(path.part());
 			head = view.getCore().readCollection(ws.getHead());

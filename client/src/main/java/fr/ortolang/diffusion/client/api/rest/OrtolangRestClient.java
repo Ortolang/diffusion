@@ -2,6 +2,7 @@ package fr.ortolang.diffusion.client.api.rest;
 
 import java.io.File;
 import java.io.StringReader;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
@@ -39,7 +40,7 @@ public class OrtolangRestClient {
 	private WebTarget base;
 	private Client client;
 	private String authorisation;
-	private Map<String, String> authCache;
+	private Map<String, String> authCache = new HashMap<String, String> ();
 
 	public OrtolangRestClient() {
 		ClientBuilder builder = ClientBuilder.newBuilder();
@@ -243,8 +244,8 @@ public class OrtolangRestClient {
 
 	@SuppressWarnings("resource")
 	public String createProcess(String type, String name, Map<String, String> params, Map<String, File> attachments) throws OrtolangRestClientException {
-		WebTarget target = base.path("/processes");
-		FormDataMultiPart form = new FormDataMultiPart().field("type", type).field("name", name);
+		WebTarget target = base.path("/runtime/processes");
+		FormDataMultiPart form = new FormDataMultiPart().field("process-type", type).field("process-name", name);
 		for (Entry<String, String> param : params.entrySet()) {
 			form.field(param.getKey(), param.getValue());
 		}
@@ -262,7 +263,7 @@ public class OrtolangRestClient {
 	}
 
 	public JsonObject getProcess(String key) throws OrtolangRestClientException {
-		WebTarget target = base.path("processes").path(key);
+		WebTarget target = base.path("/runtime/processes").path(key);
 		Response response = injectAuthorisation(target.request()).accept(MediaType.APPLICATION_JSON_TYPE).get();
 		if (response.getStatus() == Status.OK.getStatusCode()) {
 			String object = response.readEntity(String.class);

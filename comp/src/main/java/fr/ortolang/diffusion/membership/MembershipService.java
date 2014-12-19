@@ -41,6 +41,10 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	public void updateProfile(String key, String fullname, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void addProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void removeProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void createGroup(String key, String name, String description) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException;
 

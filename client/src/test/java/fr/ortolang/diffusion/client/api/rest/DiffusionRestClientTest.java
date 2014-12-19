@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.client.app.rest.test;
+package fr.ortolang.diffusion.client.api.rest;
 
 import static org.junit.Assert.assertEquals;
 
@@ -15,9 +15,9 @@ import fr.ortolang.diffusion.client.api.rest.OrtolangRestClient;
 import fr.ortolang.diffusion.client.api.rest.OrtolangRestClientException;
 import fr.ortolang.diffusion.membership.MembershipService;
 
-public class OrtolangRestClientTest {
+public class DiffusionRestClientTest {
 	
-	private static Logger logger = Logger.getLogger(OrtolangRestClientTest.class.getName());
+	private static Logger logger = Logger.getLogger(DiffusionRestClientTest.class.getName());
 	
 	@Test
 	public void testAuthentication() throws OrtolangRestClientException {

@@ -6,10 +6,16 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
-import fr.ortolang.diffusion.api.rest.form.FormResource;
 import fr.ortolang.diffusion.api.rest.filter.ContentTypeSetterPreProcessorInterceptor;
-import fr.ortolang.diffusion.api.rest.filter.OAuthAuthenticationFilter;
-import fr.ortolang.diffusion.api.rest.mapper.*;
+import fr.ortolang.diffusion.api.rest.form.FormResource;
+import fr.ortolang.diffusion.api.rest.mapper.AccessDeniedExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.BrowserServiceExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.InvalidPathExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.KeyAlreadyExistsExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.KeyNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.PropertyNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.SearchServiceExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.SecurityServiceExceptionMapper;
 import fr.ortolang.diffusion.api.rest.object.ObjectResource;
 import fr.ortolang.diffusion.api.rest.profile.ProfileResource;
 import fr.ortolang.diffusion.api.rest.runtime.RuntimeResource;
@@ -40,9 +46,6 @@ public class DiffusionApplication extends Application {
 	public Set<Object> getSingletons() {
 		HashSet<Object> set = new HashSet<Object>();
 		set.add(new TemplateFilter());
-//		OAuthAuthenticationFilter oauthFilter = new OAuthAuthenticationFilter();
-//		oauthFilter.setKeycloakConfigFile("classpath:keycloak.json");
-//		set.add(oauthFilter);
 		set.add(new ContentTypeSetterPreProcessorInterceptor());
 		set.add(new AccessDeniedExceptionMapper());
 		set.add(new BrowserServiceExceptionMapper());

@@ -198,7 +198,6 @@ public class ObjectResource {
 			logger.log(Level.INFO, "End of zipping");
 		} else {
 			InputStream input = core.download(key);
-
 			try {
 			    IOUtils.copy(input, response.getOutputStream());
 			} finally {

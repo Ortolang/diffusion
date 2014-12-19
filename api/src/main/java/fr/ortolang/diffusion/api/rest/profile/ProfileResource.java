@@ -63,5 +63,33 @@ public class ProfileResource {
 		membership.updateProfile(key, representation.getFullname(), representation.getEmail());
 		return Response.noContent().build();
 	}
+	
+	@GET
+	@Path("/{key}/keys")
+	@Template(template = "profiles/keys.vm", types = { MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	public Response getProfilePublicKeys(@PathParam(value = "key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "GET /profiles/" + key + "/keys");
+		Profile profile = membership.readProfile(key);
+		return Response.ok(profile.getPublicKeys()).build();
+	}
+	
+	@POST
+	@Path("/{key}/keys")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	public Response addProfilePublicKey(@PathParam(value = "key") String key, ProfileKeyRepresentation pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "POST /profiles/" + key + "/keys");
+		membership.addProfilePublicKey(key, pubkey.getPublicKey());
+		return Response.ok().build();
+	}
+	
+	@DELETE
+	@Path("/{key}/keys")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	public Response removeProfilePublicKey(@PathParam(value = "key") String key, ProfileKeyRepresentation pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "POST /profiles/" + key + "/keys");
+		membership.removeProfilePublicKey(key, pubkey.getPublicKey());
+		return Response.ok().build();
+	}
 
 }
