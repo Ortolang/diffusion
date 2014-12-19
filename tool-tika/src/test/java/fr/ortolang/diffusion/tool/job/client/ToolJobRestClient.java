@@ -2,7 +2,6 @@ package fr.ortolang.diffusion.tool.job.client;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -23,6 +22,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import fr.ortolang.diffusion.tool.job.entity.ToolJob;
+import fr.ortolang.diffusion.tool.resource.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.tool.resource.ToolDescription;
 
 /**
@@ -132,19 +132,19 @@ public class ToolJobRestClient {
 
 	/**
 	 * Get execution's jobs of the tool from REST API
-	 * @return List<ToolJob>
+	 * @return GenericCollectionRepresentation<ToolJob>
 	 * @throws ToolJobRestClientException
 	 * @throws IOException 
 	 * @throws JsonMappingException 
 	 * @throws JsonParseException 
 	 */
-	public List<ToolJob> getExecutions() throws ToolJobRestClientException, JsonParseException, JsonMappingException, IOException {
+	public GenericCollectionRepresentation<ToolJob> getExecutions() throws ToolJobRestClientException, JsonParseException, JsonMappingException, IOException {
 		WebTarget target = base.path("/jobs");
 		Response response = target.request(MediaType.APPLICATION_JSON_TYPE).get();
 		if (response.getStatus() == Status.OK.getStatusCode()) {
 			String json = response.readEntity(String.class);
 			ObjectMapper mapper = new ObjectMapper();
-			return mapper.readValue(json,new TypeReference<List<ToolJob>>() { });	
+			return mapper.readValue(json,new TypeReference<GenericCollectionRepresentation<ToolJob>>() { });	
 			
 		} else {
 			throw new ToolJobRestClientException("unexpected response code: " + response.getStatus());

@@ -3,7 +3,10 @@ package fr.ortolang.diffusion.tool.invoke;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,7 +24,10 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.json.JsonObject;
+import javax.json.JsonValue;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.IOUtils;
 import org.apache.tika.Tika;
 import org.apache.tika.detect.DefaultDetector;
 import org.apache.tika.exception.TikaException;
@@ -101,6 +107,7 @@ public class TikaInvocation implements ToolJobInvocation {
 			logger.log(Level.INFO, "Getting input file...");
 			String key;
 			Path pathInput;
+			
 			if ( !currentJob.getParameters().containsKey("input") || currentJob.getParameter("input").length() == 0 ) {
 				throw new ToolJobException("parameter input is mandatory");
 			} else {
@@ -108,9 +115,9 @@ public class TikaInvocation implements ToolJobInvocation {
 			}
 			
 			// init
-			logger.log(Level.INFO, "Trying to retreive job data object on remote diffusion server...");
-			// pathInput = getDataObject(key);
-			pathInput = getLocalDataObject(key); // For testing purpose
+			logger.log(Level.INFO, "Trying to retrieve job data object on remote diffusion server...");
+			pathInput = getDataObject(key);
+			//pathInput = getLocalDataObject(key); // For testing purpose
 			String fileName = pathInput.getFileName().toString();
 						
 			logger.log(Level.INFO, "Input file downloaded");			
@@ -133,10 +140,12 @@ public class TikaInvocation implements ToolJobInvocation {
 				case "detect": //-d  or --detect        Detect document type
 					logger.log(Level.INFO, "detecting document type...");				
 					String filetype = tika.detect(is);
-					result.setOutput("Document type detected : " + filetype);
-					logger.log(Level.INFO, "saving document type detected : " + filetype + "...");				
+					result.setPreview("Document type detected : " + filetype);
+					logger.log(Level.INFO, "saving document type detected : " + filetype + "...");	
+			        JsonValue files = null ;
 					resultPath = Paths.get(jobFolder.toString(), fileName + ".filetype.txt");
 					Files.write(resultPath, output.getBytes());
+					result.setFile(fileName + ".filetype.txt", resultPath.toString());
 					break;
 					
 				case "metadata": //-m  or --metadata      Output only metadata
@@ -153,19 +162,22 @@ public class TikaInvocation implements ToolJobInvocation {
 			                 output += name + ":\t" + value + "\n";
 				    	}
 		            }
-					result.setOutput(output);
-					logger.log(Level.INFO, "saving metadata...");			
-					resultPath = Paths.get(jobFolder.toString(), fileName + ".metadata.txt");	
-					Files.write(resultPath, output.getBytes());
+					result.setPreview(output);
+					logger.log(Level.INFO, "saving metadata...");	
+					resultPath = Paths.get(jobFolder.toString(), fileName + ".metadata.txt");
+					Files.write(resultPath, output.getBytes());					
+					result.setFile(fileName + ".metadata.txt", resultPath.toString());
 					break;
 					
 				case "language": //-l  or --language      Output only language
 					logger.log(Level.INFO, "detecting language...");				
 					LanguageIdentifier identifier = new LanguageIdentifier(tika.parseToString(is));
 					String language = identifier.getLanguage();
+					result.setPreview("language detected : " + language);
 					logger.log(Level.INFO, "saving language detected : " + language + "...");				
 					resultPath = Paths.get(jobFolder.toString(), fileName + ".language.txt");
 					Files.write(resultPath, output.getBytes());			
+					result.setFile(fileName + ".language.txt", resultPath.toString());
 					break;
 					
 				case "encoding": //return file encoding
@@ -178,9 +190,11 @@ public class TikaInvocation implements ToolJobInvocation {
 						try
 			            {
 							Charset inputEncoding = Charset.forName(match.getName());
+							result.setPreview("charset detected : " + inputEncoding.toString());
 							logger.log(Level.INFO, "saving charset detected : " + inputEncoding.toString() + "...");				
 							resultPath = Paths.get(jobFolder.toString(), fileName + ".charset.txt");
-							Files.write(resultPath, output.getBytes());				
+							Files.write(resultPath, output.getBytes());			
+							result.setFile(fileName + ".charset.txt", resultPath.toString());	
 			            }
 			            catch(UnsupportedCharsetException e)
 			            {
@@ -197,29 +211,32 @@ public class TikaInvocation implements ToolJobInvocation {
 				case "extract" :
 					logger.log(Level.INFO, "extracting file content...");				
 					output = tika.parseToString(is).trim();
-					result.setOutput(output);
+					result.setPreview(output);
 					resultPath = Paths.get(jobFolder.toString(), fileName + ".content.txt");
 					logger.log(Level.INFO, "saving file content in a file...");				
 					Files.write(resultPath, output.getBytes());
+					result.setFile(fileName + ".content.txt", resultPath.toString());
 					break;
 	
 				default: // by default parse file
 					logger.log(Level.INFO, "extracting file content...");				
 					output = tika.parseToString(is).trim();
-					result.setOutput(output);
+					result.setPreview(output);
 					resultPath = Paths.get(jobFolder.toString(), fileName + ".content.txt");
 					logger.log(Level.INFO, "saving file content in a file...");				
 					Files.write(resultPath, output.getBytes());
+					result.setFile(fileName + ".content.txt", resultPath.toString());
 					break;
 				}
 			} else{
 				// by default parse file
 				logger.log(Level.INFO, "extracting file content...");				
 				output = tika.parseToString(is).trim();
-				result.setOutput(output);
+				result.setPreview(output);
 				resultPath = Paths.get(jobFolder.toString(), fileName + ".content.txt");
 				logger.log(Level.INFO, "saving file content in a file...");				
 				Files.write(resultPath, output.getBytes());
+				result.setFile(fileName + ".content.txt", resultPath.toString());
 			}
 			
 			logger.log(Level.INFO, "tika subprocess finished successfully\r\n");
@@ -243,30 +260,47 @@ public class TikaInvocation implements ToolJobInvocation {
 	 * @throws ToolJobException
 	 */
 	private Path getDataObject(String key) throws IOException, ToolJobException {
-		String url = ToolConfig.getInstance().getProperty("ortolang.diffusion.host.url") 
-				+ ToolConfig.getInstance().getProperty("ortolang.diffusion.rest.url");
+		String urlstr = ToolConfig.getInstance().getProperty( "ortolang.diffusion.host.url")
+				+ ToolConfig.getInstance().getProperty( "ortolang.diffusion.rest.url");
+		URL url = new URL(urlstr + "/objects/" + key + "/download");
+		
 		// Temporary hack
-		String username = ToolConfig.getInstance().getProperty("ortolang.diffusion.username");
-		String password = ToolConfig.getInstance().getProperty("ortolang.diffusion.password");
+		String username = ToolConfig.getInstance().getProperty( "ortolang.diffusion.username");
+		String password = ToolConfig.getInstance().getProperty( "ortolang.diffusion.password");
+		String token = username + ":" + password;
+        String base64Token = new String(Base64.encodeBase64(token.getBytes(StandardCharsets.UTF_8)));
+		
+		try {
+			OrtolangDiffusionRestClient client = new OrtolangDiffusionRestClient( urlstr, username, password);
 
-		OrtolangDiffusionRestClient client = new OrtolangDiffusionRestClient(
-				url, username, password);
-
-		if (client.objectExists(key)) {
-			JsonObject object = client.getObject(key);
-			String fileName = object.getJsonObject("object").getString("name");
-			logger.log(Level.INFO, fileName + "retrieved from remote diffusion server");
-			InputStream input = client.downloadObject(key);
-			Path path = Paths.get(jobFolder.toString(), fileName);
-			Files.copy(input, path, StandardCopyOption.REPLACE_EXISTING);
-			logger.log(Level.INFO, fileName + "copied into working job folder.");			
-			return path;
-		} else {
-			logger.log(Level.SEVERE, "unable to get dataobject with key " + key);			
-			throw new ToolJobException("unable to get dataobject with key " + key);
+			if (client.objectExists(key)) {
+				JsonObject object = client.getObject(key);
+				String fileName = object.getJsonObject("object").getString( "name");
+				logger.log(Level.INFO, "Retrieving " + fileName + " from remote diffusion server...");
+				HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+				connection.setRequestProperty ("Authorization", "Basic " + base64Token);
+			    connection.setRequestMethod("GET");
+			    InputStream input = (InputStream) connection.getInputStream();
+				logger.log(Level.INFO, "Copying " + fileName + " into working job folder...");
+				Path path = Paths.get(jobFolder.toString(), fileName);
+				try{
+					Files.copy(input, path, StandardCopyOption.REPLACE_EXISTING);
+					logger.log(Level.INFO, fileName + " retrieved.");
+				} finally {
+					IOUtils.closeQuietly(input);
+				}
+				return path;
+			} else {
+				logger.log(Level.SEVERE, "unable to find dataobject with key " + key);
+				throw new ToolJobException("unable to find dataobject with key " + key);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			logger.log(Level.SEVERE, "exception raised : " + e.getLocalizedMessage());
+			throw new ToolJobException("exception raised : " + e.getLocalizedMessage());
 		}
 	}
-
+	
 	// For testing purpose
 	private Path getLocalDataObject(String key) throws IOException,
 			ToolJobException {

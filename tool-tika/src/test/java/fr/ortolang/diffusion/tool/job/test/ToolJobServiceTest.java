@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -22,6 +21,7 @@ import org.junit.Test;
 
 import fr.ortolang.diffusion.tool.job.client.ToolJobRestClient;
 import fr.ortolang.diffusion.tool.job.entity.ToolJob;
+import fr.ortolang.diffusion.tool.resource.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.tool.resource.ToolDescription;
 
 /**
@@ -85,25 +85,7 @@ public class ToolJobServiceTest {
 			fail("Get tool execution form of " + bundle.getString("name") + " failed: " + e.getMessage());
 		}
     }
-	
-	/**
-	 * Test method for {@link fr.ortolang.diffusion.tool.resource.ToolResource#resultForm()}.
-	 */
-	@Test
-    public void testResultForm() {
-		logger.log(Level.INFO, "Testing get /result-form");		
-		try {
-			JsonArray object = client.getResultForm();
-			InputStream is = getClass().getClassLoader().getResourceAsStream("result.json");
-			JsonArray config = Json.createReader(new StringReader(IOUtils.toString(is))).readArray();
-			assertEquals(config, object);		
-			
-		} catch ( Exception e ) {
-			logger.log(Level.SEVERE, "Get tool result form of " + bundle.getString("name") + " failed: " + e.getMessage(), e);
-			fail("Get tool result form of " + bundle.getString("name") + " failed: " + e.getMessage());
-		}
-    }
-	
+		
 	/**
 	 * Test method for {@link fr.ortolang.diffusion.tool.resource.ToolResource#executions()}.
 	 */
@@ -112,17 +94,17 @@ public class ToolJobServiceTest {
 		logger.log(Level.INFO, "Testing post and get /jobs");		
 		try {
 			Map<String,String> params = new HashMap<String,String>();
-			String input = new String( "7b80df5b-3628-4a1c-a802-ba065c5d1220" );
+			String input = new String( "0f83ac49-b6dd-4363-b2e2-26c839cae023");
 			String output = new String( "metadata" );
 			params.put( "input", input);
 			params.put( "output", output);
-			String name = "test-tika";
+			String name = "Tika";
 			int p = 1;
 			client.postExecutions(name, p, params);
-			List<ToolJob> object = client.getExecutions();
-			for (ToolJob toolJob : object) {
-				System.out.println("job : " + toolJob.getOwner() + " - " + toolJob.getStatus());
-				assertEquals(name, toolJob.getOwner());
+			GenericCollectionRepresentation<ToolJob> object = client.getExecutions();
+			for (ToolJob toolJob : object.getEntries()) {
+				System.out.println("job : " + toolJob.getName() + " - " + toolJob.getStatus());
+				assertEquals(name, toolJob.getName());
 				assertEquals(p, toolJob.getPriority());
 				assertEquals(input, toolJob.getParameter("input"));
 				assertEquals(output, toolJob.getParameter("output"));

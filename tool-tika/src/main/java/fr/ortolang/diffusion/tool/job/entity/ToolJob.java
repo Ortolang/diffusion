@@ -18,6 +18,8 @@ import javax.persistence.Version;
 
 import org.hibernate.annotations.Type;
 
+import fr.ortolang.diffusion.tool.invoke.ToolJobInvocationResult;
+
 
 @Entity
 @NamedQueries({ 
@@ -32,6 +34,8 @@ public class ToolJob implements Serializable {
 	@Version
 	private long version;
 	
+	private String name;
+
 	private String owner;	
 	
 	@ElementCollection(fetch=FetchType.EAGER)
@@ -47,9 +51,12 @@ public class ToolJob implements Serializable {
 	private String log;
 	
 	private ToolJobStatus status;
+	
 	private long start;
 	private long stop;
 	
+	@Column(name="delete_date")
+	private long deleteDate;
 
 	public static final String OBJECT_TYPE = "tool job";	
 	
@@ -62,6 +69,14 @@ public class ToolJob implements Serializable {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+	
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public long getVersion() {
@@ -130,6 +145,13 @@ public class ToolJob implements Serializable {
 
 	public void setStop(long stop) {
 		this.stop = stop;
+	}	
+
+	public long getDeleteDate() {
+		return deleteDate;
 	}
 
+	public void setDeleteDate(long deleteDate) {
+		this.deleteDate = deleteDate;
+	}
 }

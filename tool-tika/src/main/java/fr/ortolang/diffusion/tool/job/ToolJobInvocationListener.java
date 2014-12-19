@@ -65,7 +65,9 @@ public class ToolJobInvocationListener implements MessageListener {
 		// Start logging job execution
 		String base = ToolConfig.getInstance().getProperty("tool.working.space.path");
 		String logFileName = ToolConfig.getInstance().getProperty("tool.log.filename");
+		String resultFileName = ToolConfig.getInstance().getProperty("tool.result.filename");
 		Path logFile = Paths.get(base, id, logFileName);
+		Path resFile = Paths.get(base, id, resultFileName);
 
 		logger.log(Level.INFO, "Starting job process for id : " + id);
 		ToolJob job = tjob.read(id);
@@ -88,6 +90,7 @@ public class ToolJobInvocationListener implements MessageListener {
 		        logger.log(Level.INFO, "Invocation successful : setting job as completed");
 		        str = new String(Files.readAllBytes(logFile));
 		        System.out.println(str);
+		        result.saveResult(resFile);
 	            tjob.complete(id, str);
 	        	break;
 	        case ERROR : 

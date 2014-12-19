@@ -1,16 +1,24 @@
 package fr.ortolang.diffusion.tool.client;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
+import org.jboss.resteasy.client.ClientResponse;
 
 import fr.ortolang.diffusion.tool.job.ToolJobException;
 
@@ -101,26 +109,43 @@ public class OrtolangDiffusionRestClient {
 	/**
 	 * Download a dataobject from ortolang diffusion
 	 * @param key of the dataobject
-	 * @return InputStream of the dataobject
+	 * @return FileInputStream of the dataobject
 	 * @throws ToolJobException
 	 */
-	public InputStream downloadObject(String key) throws ToolJobException{
-		try{   
-			init();
-			WebTarget target = base.path("/objects").path(key).path("/download");
-	        Response response = target.request().get();     
-	        if (response.getStatus() == Status.OK.getStatusCode()) {
-				InputStream input =  response.readEntity(InputStream.class);
-				close();
-				return input;
-	        } else {
-	        	throw new ToolJobException("unexpected response code: " + response.getStatus());
-	        }
-		}
-		 finally {
-			client.close();
-		}
-	}
+//	public synchronized FileInputStream downloadObject(String key) throws ToolJobException{
+//		InputStream input = null;
+//		try{   
+//			init();
+//			WebTarget target = base.path("/objects").path(key).path("/download");
+//	        Response response = target.request().get();     
+//	        if (response.getStatus() == Status.OK.getStatusCode()) {
+//	        	Iterator it = response.getHeaders().entrySet().iterator();
+//	            while (it.hasNext()) {
+//	                Map.Entry pairs = (Map.Entry)it.next();
+//	                System.out.println(pairs.getKey() + " = " + pairs.getValue());
+//	                it.remove();
+//	            }
+//	            if (response.getHeaders().containsKey("Content-Type"))
+//	            {
+//	               GenericType<byte[]> gt = new GenericType<byte[]>()
+//	               {
+//	               };
+//	               byte[] bytes = (byte[]) response.readEntity(gt);
+//	               input = new ByteArrayInputStream(bytes);
+//	            }
+//	            if(input == null){
+//	            	System.out.println("NULL !");
+//	            }
+//				//FileInputStream input =  response.readEntity(FileInputStream.class);
+//	        	return (FileInputStream) input;
+//	        } else {
+//	        	throw new ToolJobException("unexpected response code: " + response.getStatus());
+//	        }
+//		} finally {
+//			close();
+//		}
+//	}
+	
 	
 	
 	/**

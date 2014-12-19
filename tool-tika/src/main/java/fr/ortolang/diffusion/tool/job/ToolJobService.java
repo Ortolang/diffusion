@@ -25,12 +25,11 @@ public interface ToolJobService {
 	
 	/**
 	 * Submit a new tool job to the queue
-	 * @param owner	String Name of the owner of the new tool job
 	 * @param priority	int	Priority to set to the job
 	 * @throws ToolJobException
 	 * @throws IOException 
 	 */
-	public void submit(String owner, int priority, Map<String, String> parameters) throws ToolJobException, IOException;
+	public void submit(int priority, Map<String, String> parameters) throws ToolJobException, IOException;
 	
 	/**
 	 * Abort a tool job

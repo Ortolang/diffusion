@@ -1,7 +1,10 @@
 package fr.ortolang.diffusion.tool.resource;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -11,7 +14,9 @@ import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.ejb.EJB;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -29,6 +34,8 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.io.*;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
+
+import fr.ortolang.diffusion.tool.ToolConfig;
 import fr.ortolang.diffusion.tool.job.ToolJobException;
 import fr.ortolang.diffusion.tool.job.ToolJobService;
 import fr.ortolang.diffusion.tool.job.entity.ToolJob;
@@ -86,6 +93,7 @@ public class ToolResource {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response resultForm() throws IOException {
 		logger.log(Level.INFO, "GET /result-form");
+		
 		InputStream is = getClass().getClassLoader().getResourceAsStream("result.json");
 		String config;
 		config = IOUtils.toString(is);
@@ -97,13 +105,20 @@ public class ToolResource {
 	public Response executions() throws ToolJobException {
 		logger.log(Level.INFO, "GET /jobs");
 		List<ToolJob> jobs = tjob.list();
-		return Response.ok(jobs).build();
+		GenericCollectionRepresentation<ToolJob> representation = new GenericCollectionRepresentation<ToolJob>();
+		for (ToolJob job : jobs) {
+			representation.addEntry(job);
+		}
+		representation.setOffset(0);
+		representation.setSize(jobs.size());
+		representation.setLimit(jobs.size());
+		return Response.ok(representation).build();
 	}
 	
 	@POST
 	@Path("/jobs")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response executions(@QueryParam(value = "name") String owner, @QueryParam(value = "priority") int priority, MultivaluedMap<String, String> form) 
+	public Response executions(@QueryParam(value = "priority") int priority, MultivaluedMap<String, String> form) 
 			throws ToolJobException, JsonParseException, JsonMappingException, IOException {
 		logger.log(Level.INFO, "POST /jobs");
 
@@ -114,11 +129,18 @@ public class ToolResource {
 			parameters.put(theKey,form.getFirst(theKey));
 		}
 		
-	    logger.log(Level.INFO, "sumbitting new job from " + owner + " in queue with priority " + priority + " and with params : " + parameters);
-	    tjob.submit(owner, priority, parameters);
+	    logger.log(Level.INFO, "sumbitting new job in queue with priority " + priority + " and with params : " + parameters);
+	    tjob.submit(priority, parameters);
 		
 		List<ToolJob> jobs = tjob.list();
-		return Response.ok(jobs).build();
+		GenericCollectionRepresentation<ToolJob> representation = new GenericCollectionRepresentation<ToolJob>();
+		for (ToolJob job : jobs) {
+			representation.addEntry(job);
+		}
+		representation.setOffset(0);
+		representation.setSize(jobs.size());
+		representation.setLimit(jobs.size());
+		return Response.ok(representation).build();
 	}
 	
 	@GET
@@ -129,5 +151,44 @@ public class ToolResource {
 		return Response.ok(job).build();
 	}
 	
-
+	@GET
+	@Path("/jobs/{id}/result")
+	public Response result(@PathParam("id") String id) throws ToolJobException, IOException {
+		logger.log(Level.INFO, "GET /jobs/" + id + "/result");
+		String base = ToolConfig.getInstance().getProperty("tool.working.space.path");
+		String resultFileName = ToolConfig.getInstance().getProperty("tool.result.filename");
+		String resFile = Paths.get(base, id, resultFileName).toString();
+		
+		InputStream is = new FileInputStream(resFile);
+		String result;
+		result = IOUtils.toString(is);
+		return Response.ok(result).build();
+	}
+	
+	@GET
+	@Path("/jobs/download")
+	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+	public void download(@QueryParam(value = "path") String path, @Context HttpServletResponse response) throws IOException {
+		logger.log(Level.INFO, "GET /jobs/download?path=" + path);
+		if (path == null) {
+			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "parameter 'path' is mandatory");
+			return;
+		}
+		
+		File fileResult = new File(path);	
+		if(!fileResult.exists()){
+			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "file " + path + " has been removed");
+			return;
+		}
+		response.setHeader("Content-Disposition", "attachment; filename=" + fileResult.getName());	
+		
+		response.setContentType(new MimetypesFileTypeMap().getContentType(fileResult));
+		response.setContentLength((int) fileResult.length());
+		InputStream input = new FileInputStream(path);
+		try {
+			IOUtils.copy(input, response.getOutputStream());
+		} finally {
+			IOUtils.closeQuietly(input);
+		}
+	}
 }

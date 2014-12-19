@@ -3,7 +3,9 @@ package fr.ortolang.diffusion.tool.job;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -82,15 +84,16 @@ public class ToolJobServiceBean implements ToolJobService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void submit(String owner, int priority, Map<String, String> parameters) throws ToolJobException, IOException {
+	public void submit(int priority, Map<String, String> parameters) throws ToolJobException, IOException {
 		logger.log(Level.INFO, "Submitting new tool job");
 		String id = java.util.UUID.randomUUID().toString();
 		
 		try {
 			// Instantiate a new job
 			ToolJob job = new ToolJob();
+			ResourceBundle bundle = ResourceBundle.getBundle("description");
 			job.setId(id);
-			job.setOwner(owner);
+			job.setName(bundle.getString("name"));
 			job.setParameters(parameters);
 			job.setPriority(priority);
 			job.setStatus(ToolJobStatus.PENDING);
@@ -162,14 +165,19 @@ public class ToolJobServiceBean implements ToolJobService {
 					}
 		        }
 		    };
-		    if ( ToolConfig.getInstance().getProperty("tool.deletion.delay.days") != null ) {
-		    	long delay =  Long.parseLong(ToolConfig.getInstance().getProperty("tool.deletion.delay.days"));
-				scheduler.schedule(scheduleDelete, delay, TimeUnit.DAYS);		    	
+		    long deleteDate;
+			if ( ToolConfig.getInstance().getProperty("tool.deletion.delay.value") != null && ToolConfig.getInstance().getProperty("tool.deletion.delay.unit") != null) {
+		    	long delay =  Long.parseLong(ToolConfig.getInstance().getProperty("tool.deletion.delay.value"));
+		    	TimeUnit unit =  TimeUnit.valueOf(ToolConfig.getInstance().getProperty("tool.deletion.delay.unit"));
+				scheduler.schedule(scheduleDelete, delay, unit);
+				deleteDate = System.currentTimeMillis() + TimeUnit.MILLISECONDS.convert(delay, unit);
 		    } else {
 		    	// 5 days by default
 				scheduler.schedule(scheduleDelete, 5, TimeUnit.DAYS);
+				deleteDate = System.currentTimeMillis() + TimeUnit.MILLISECONDS.convert(5, TimeUnit.DAYS);;
 		    }
-
+		    job.setDeleteDate(deleteDate);
+		    
 			em.persist(job);
 					
 		} catch (Exception e) {
