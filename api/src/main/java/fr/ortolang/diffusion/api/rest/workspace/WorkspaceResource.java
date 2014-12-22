@@ -6,6 +6,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -30,7 +31,6 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
-import org.jgroups.util.UUID;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
@@ -103,7 +103,7 @@ public class WorkspaceResource {
 	public Response createWorkspace(@FormParam("type") @DefaultValue("default") String type, @FormParam("name") @DefaultValue("No Name Provided") String name)
 			throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		logger.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
-		String key = UUID.randomUUID().toString();
+		String key = java.util.UUID.randomUUID().toString();
 		core.createWorkspace(key, name, type);
 		URI location = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(key).build();
 		return Response.created(location).build();

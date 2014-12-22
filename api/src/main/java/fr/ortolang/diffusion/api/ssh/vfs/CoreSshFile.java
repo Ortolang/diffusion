@@ -20,7 +20,6 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.apache.sshd.common.file.SshFile;
-import org.xnio.channels.UnsupportedOptionException;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
@@ -31,7 +30,7 @@ import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
+import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
@@ -68,7 +67,7 @@ public class CoreSshFile implements SshFile {
 	private void load() throws OrtolangException {
 		logger.log(Level.INFO, "loading element : " + path.part());
 		try {
-			LoginContext lc = AuthenticationLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
+			LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 			lc.login();
 			absolutePath = path.clone();
 			workspace = path.buildParts()[0];
@@ -197,7 +196,7 @@ public class CoreSshFile implements SshFile {
 		logger.log(Level.FINE, "mkdir called");
 		if ( !exists ) {
 			try {
-				LoginContext lc = AuthenticationLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
+				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();
 				view.getCore().createCollection(workspace, path.build(), "pas de description");
 				//TODO maybe reload informations...
@@ -215,7 +214,7 @@ public class CoreSshFile implements SshFile {
 		logger.log(Level.FINE, "delete called");
 		if ( exists ) {
 			try {
-				LoginContext lc = AuthenticationLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
+				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();
 				if ( type.equals(Collection.OBJECT_TYPE) ) {
 					view.getCore().deleteCollection(workspace, path.build());
@@ -238,7 +237,7 @@ public class CoreSshFile implements SshFile {
 		logger.log(Level.FINE, "create called");
 		if ( !exists ) {
 			try {
-				LoginContext lc = AuthenticationLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
+				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();
 				view.getCore().createDataObject(workspace, path.build(), "pas de description", "");
 				//TODO maybe reload informations...
@@ -256,7 +255,7 @@ public class CoreSshFile implements SshFile {
 		logger.log(Level.FINE, "truncate called");
 		if ( exists ) {
 			try {
-				LoginContext lc = AuthenticationLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
+				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();
 				view.getCore().updateDataObject(workspace, path.build(), "pas de description", "");
 				//TODO maybe reload informations...
@@ -307,7 +306,7 @@ public class CoreSshFile implements SshFile {
 			throw new IOException("No read permission for DataObject");
 		}
 		try {
-			LoginContext lc = AuthenticationLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
+			LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 			lc.login();
 			String hash = view.getCore().readDataObject(key).getStream();
 			InputStream input = new ByteArrayInputStream("".getBytes());  
@@ -328,7 +327,7 @@ public class CoreSshFile implements SshFile {
 		if ( temp != null ) {
 			logger.log(Level.INFO, "we have a temp file uploaded, maybe update data object according to this !!");
 			try {
-				LoginContext lc = AuthenticationLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
+				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();
 				String hash = view.getBinaryStore().put(Files.newInputStream(temp));
 				view.getCore().updateDataObject(workspace, path.build(), "pas de description", hash);
@@ -398,13 +397,13 @@ public class CoreSshFile implements SshFile {
 	@Override
 	public String readSymbolicLink() throws IOException {
 		logger.log(Level.FINE, "trying to read symlink ");
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 	@Override
 	public void createSymbolicLink(SshFile destination) throws IOException {
 		logger.log(Level.FINE, "trying to create symlink for destination : " + destination.getAbsolutePath());
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 }

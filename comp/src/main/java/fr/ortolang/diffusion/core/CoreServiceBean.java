@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
-import javax.annotation.security.RolesAllowed;
+import javax.annotation.security.PermitAll;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -70,7 +70,7 @@ import fr.ortolang.diffusion.template.TemplateEngine;
 @Local(CoreService.class)
 @Stateless(name = CoreService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed("user")
+@PermitAll
 public class CoreServiceBean implements CoreService {
 
 	private Logger logger = Logger.getLogger(CoreServiceBean.class.getName());
@@ -2261,7 +2261,6 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	@RolesAllowed("system")
 	public OrtolangIndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -2394,7 +2393,6 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	@RolesAllowed("system")
 	public OrtolangIndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);

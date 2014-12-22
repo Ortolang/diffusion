@@ -11,7 +11,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.Local;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -55,8 +54,8 @@ import fr.ortolang.diffusion.runtime.entity.ProcessType;
 @Local(RuntimeEngine.class)
 @Singleton(name = RuntimeEngine.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed({ "system", "user" })
 @Lock(LockType.READ)
+@PermitAll
 public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener {
 
 	private Logger logger = Logger.getLogger(ActivitiEngineBean.class.getName());

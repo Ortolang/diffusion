@@ -20,7 +20,7 @@ import org.apache.sshd.server.command.ScpCommandFactory;
 import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.api.ssh.auth.DiffusionPasswordAuthenticator;
+import fr.ortolang.diffusion.api.ssh.auth.DiffusionPublicKeyAuthenticator;
 import fr.ortolang.diffusion.api.ssh.session.SSHSessionFactory;
 import fr.ortolang.diffusion.api.ssh.shell.SSHShellFactory;
 import fr.ortolang.diffusion.api.ssh.vfs.DiffusionFileSystemFactory;
@@ -64,8 +64,10 @@ public class SSHServlet extends HttpServlet {
 				sshd.setHost(OrtolangConfig.getInstance().getProperty("transport.ssh.host"));
 				sshd.setPort(Integer.parseInt(OrtolangConfig.getInstance().getProperty("transport.ssh.port")));
 	
-				DiffusionPasswordAuthenticator authenticator = new DiffusionPasswordAuthenticator();
-				sshd.setPasswordAuthenticator(authenticator);
+//				DiffusionPasswordAuthenticator authenticator = new DiffusionPasswordAuthenticator();
+//				sshd.setPasswordAuthenticator(authenticator);
+				DiffusionPublicKeyAuthenticator pkauthenticator = new DiffusionPublicKeyAuthenticator();
+				sshd.setPublickeyAuthenticator(pkauthenticator);
 				sshd.start();
 			}
 			started = true;

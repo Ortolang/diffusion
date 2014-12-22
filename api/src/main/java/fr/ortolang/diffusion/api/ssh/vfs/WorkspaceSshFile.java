@@ -15,7 +15,6 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.apache.sshd.common.file.SshFile;
-import org.xnio.channels.UnsupportedOptionException;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
@@ -25,7 +24,7 @@ import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
+import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public class WorkspaceSshFile implements SshFile {
@@ -50,7 +49,7 @@ public class WorkspaceSshFile implements SshFile {
 	private void load() throws OrtolangException {
 		logger.log(Level.INFO, "loading workspace : " + path.part());
 		try {
-			LoginContext lc = AuthenticationLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
+			LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 			lc.login();
 			ws = view.getCore().readWorkspace(path.part());
 			head = view.getCore().readCollection(ws.getHead());
@@ -196,13 +195,13 @@ public class WorkspaceSshFile implements SshFile {
 	@Override
 	public OutputStream createOutputStream(long offset) throws IOException {
 		logger.log(Level.INFO, "create ouput stream called with offset : " + offset);
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 	@Override
 	public InputStream createInputStream(long offset) throws IOException {
 		logger.log(Level.INFO, "create input stream called with offset : " + offset);
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 	@Override
@@ -247,7 +246,7 @@ public class WorkspaceSshFile implements SshFile {
 	public void setAttributes(Map<Attribute, Object> attributes) throws IOException {
 		logger.log(Level.INFO, "trying to set attributes ");
 		if ( !attributes.isEmpty() ) {
-			throw new UnsupportedOptionException();
+			throw new IOException();
 		}
 	}
 
@@ -268,13 +267,13 @@ public class WorkspaceSshFile implements SshFile {
 	@Override
 	public String readSymbolicLink() throws IOException {
 		logger.log(Level.INFO, "trying to read symlink ");
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 	@Override
 	public void createSymbolicLink(SshFile destination) throws IOException {
 		logger.log(Level.INFO, "trying to create symlink for destination : " + destination.getAbsolutePath());
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 }

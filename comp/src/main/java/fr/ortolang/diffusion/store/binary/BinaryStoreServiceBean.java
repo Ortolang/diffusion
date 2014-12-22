@@ -11,7 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.security.RolesAllowed;
+import javax.annotation.security.PermitAll;
 import javax.ejb.Local;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -42,8 +42,8 @@ import fr.ortolang.diffusion.store.binary.hash.SHA1FilterInputStreamFactory;
 @Startup
 @Singleton(name = BinaryStoreService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed({"system", "user"})
 @Lock(LockType.READ)
+@PermitAll
 public class BinaryStoreServiceBean implements BinaryStoreService {
 
 	public static final String DEFAULT_BINARY_HOME = "binary-store";

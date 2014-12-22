@@ -13,6 +13,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
 import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
 import javax.ejb.SessionContext;
@@ -21,8 +22,6 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
-import fr.ortolang.diffusion.form.FormService;
-import fr.ortolang.diffusion.form.FormServiceException;
 import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.RunAsPrincipal;
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -30,6 +29,8 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
+import fr.ortolang.diffusion.form.FormService;
+import fr.ortolang.diffusion.form.FormServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
@@ -50,6 +51,7 @@ import fr.ortolang.diffusion.tool.ToolServiceException;
 @Startup
 @Singleton(name = BootstrapService.SERVICE_NAME)
 @SecurityDomain("ortolang")
+@PermitAll
 @RunAs("user")
 @RunAsPrincipal(value = MembershipService.SUPERUSER_IDENTIFIER)
 public class BootstrapServiceBean implements BootstrapService {
@@ -93,23 +95,24 @@ public class BootstrapServiceBean implements BootstrapService {
 			try {
 				logger.log(Level.INFO, "bootstrap key not found, bootstraping plateform...");
 
-				Map<String, List<String>> guestReadRules = new HashMap<String, List<String>>();
-				guestReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] { "read" }));
+				Map<String, List<String>> anonReadRules = new HashMap<String, List<String>>();
+				anonReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] { "read" }));
 
 				logger.log(Level.FINE, "creating root profile");
 				membership.createProfile(MembershipService.SUPERUSER_IDENTIFIER, "Super User", "root@ortolang.org", ProfileStatus.ACTIVATED);
+				membership.addProfilePublicKey(MembershipService.SUPERUSER_IDENTIFIER, "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDqv8kWdXIgWbFJfOiu9fQYiazwfnpZogatgo3278PIAQ4eaj6p+sjQMQX0hew+rHXCqvi6FaG6Lql7fkJv/NJpSyhyCKYNCxmYKwUvaViOuRLDmnpziEX39WDmiWBE0Q+DNuKIZMx3yZNX/BeBp0FfooKkCnZWEDo4pzcYVp2RlwZuEDZQcQ6KP2S9+z2WQPmsE9tcyPNL12hp8tiG8J/XsPXxnn1mgJxyiwQmEYDxXZTAazeewqftz4GU3Xc9qWOa4GXK/2l0GB/XVuFLoyrXve+hnsiFpeIslJuGl0+AAX+lCULjDcA72r4aT30Z4HV+wxiQxk/j+2CtCw/vfeit achile-laptop");
 
-				logger.log(Level.FINE, "creating guest profile");
-				membership.createProfile(MembershipService.UNAUTHENTIFIED_IDENTIFIER, "Guest", "guest@ortolang.org", ProfileStatus.ACTIVATED);
-				logger.log(Level.FINE, "change owner of guest profile to root and set guest read rules");
+				logger.log(Level.FINE, "creating anonymous profile");
+				membership.createProfile(MembershipService.UNAUTHENTIFIED_IDENTIFIER, "Anonymous", "anon@ortolang.org", ProfileStatus.ACTIVATED);
+				logger.log(Level.FINE, "change owner of anonymous profile to root and set anon read rules");
 				authorisation.updatePolicyOwner(MembershipService.UNAUTHENTIFIED_IDENTIFIER, MembershipService.SUPERUSER_IDENTIFIER);
-				authorisation.setPolicyRules(MembershipService.UNAUTHENTIFIED_IDENTIFIER, guestReadRules);
+				authorisation.setPolicyRules(MembershipService.UNAUTHENTIFIED_IDENTIFIER, anonReadRules);
 
 				logger.log(Level.FINE, "creating moderators group");
 				membership.createGroup(MembershipService.MODERATOR_GROUP_KEY, "Publication Moderators", "Moderators of the plateform can publish content");
 				membership.addMemberInGroup(MembershipService.MODERATOR_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
-				logger.log(Level.FINE, "set guest read rules");
-				authorisation.setPolicyRules(MembershipService.MODERATOR_GROUP_KEY, guestReadRules);
+				logger.log(Level.FINE, "set anon read rules");
+				authorisation.setPolicyRules(MembershipService.MODERATOR_GROUP_KEY, anonReadRules);
 
 				logger.log(Level.FINE, "create system workspace");
 				core.createWorkspace(BootstrapService.WORKSPACE_KEY, "System Workspace", "system");

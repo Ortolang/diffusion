@@ -58,7 +58,7 @@ public class ProfileRepresentation {
 	public void setGroups(String[] groups) {
 		this.groups = groups;
 	}
-
+	
 	public static ProfileRepresentation fromProfile(Profile profile) {
 		ProfileRepresentation representation = new ProfileRepresentation();
 		representation.setKey(profile.getKey());

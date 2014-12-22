@@ -85,9 +85,4 @@ public class SnapshotWorkspaceTask extends RuntimeEngineTask {
 		return NAME;
 	}
 
-	@Override
-	public boolean needEngineAuth() {
-		return false;
-	}
-
 }

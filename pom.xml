@@ -18,26 +18,20 @@
 	<modules>
 		<module>comp</module>
 		<module>api</module>
-		<!-- <module>admin</module> -->
 		<module>appli</module>
-		<!-- <module>test</module> -->
-		<module>tool-archetype</module>
-		<module>tool-tika</module>
+		<module>client</module>
 	</modules>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<version.wildfly.maven.plugin>1.0.2.Final</version.wildfly.maven.plugin>
 		<version.wildfly>8.1.0.Final</version.wildfly>
-		<version.picketlink.javaee.bom>2.7.0.CR2</version.picketlink.javaee.bom>
 		<version.compiler.plugin>3.1</version.compiler.plugin>
 		<version.ear.plugin>2.9</version.ear.plugin>
 		<version.ejb.plugin>2.3</version.ejb.plugin>
 		<version.war.plugin>2.4</version.war.plugin>
 		<maven.compiler.target>1.7</maven.compiler.target>
 		<maven.compiler.source>1.7</maven.compiler.source>
-		<drools.version>6.1.0.Final</drools.version>
-		<jbpm.version>6.1.0.Final</jbpm.version>
 		<slf4j.version>1.6.4</slf4j.version>
 	</properties>
 
@@ -85,25 +79,11 @@
 				<scope>import</scope>
 			</dependency>
 			<dependency>
-				<groupId>org.drools</groupId>
-				<artifactId>drools-bom</artifactId>
+				<groupId>org.apache.sshd</groupId>
+				<artifactId>apache-sshd</artifactId>
+				<version>0.11.0</version>
 				<type>pom</type>
-				<version>${drools.version}</version>
 				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.jbpm</groupId>
-				<artifactId>jbpm-bom</artifactId>
-				<type>pom</type>
-				<version>${jbpm.version}</version>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.picketlink</groupId>
-				<artifactId>picketlink-javaee-6.0</artifactId>
-				<version>${version.picketlink.javaee.bom}</version>
-				<scope>import</scope>
-				<type>pom</type>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -114,7 +94,7 @@
 			<url>file:///tmp/ortolang-site/diffusion</url>
 		</site>
 	</distributionManagement>
-	
+
 	<repositories>
 		<repository>
 			<id>ortolang-maven-repository</id>
@@ -127,7 +107,7 @@
 			</snapshots>
 		</repository>
 	</repositories>
-	
+
 	<pluginRepositories>
 		<pluginRepository>
 			<id>ortolang-maven-repository</id>

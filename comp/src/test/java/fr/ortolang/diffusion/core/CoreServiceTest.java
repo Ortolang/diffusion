@@ -39,7 +39,7 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
+import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 @RunWith(Arquillian.class)
@@ -127,7 +127,7 @@ public class CoreServiceTest {
 
 	@Test
 	public void testLogin() throws LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
@@ -140,20 +140,14 @@ public class CoreServiceTest {
 
 	@Test(expected = AccessDeniedException.class)
 	public void testCreateWorkspaceAsUnauthentifiedUser() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
-		loginContext.login();
-		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			core.createWorkspace("K1", "Blabla", "test");
-			fail("Should have raised an AccessDeniedException");
-		} finally {
-			loginContext.logout();
-		}
+		logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+		core.createWorkspace("K1", "Blabla", "test");
+		fail("Should have raised an AccessDeniedException");
 	}
 
 	@Test(expected = KeyAlreadyExistsException.class)
 	public void testCreateWorkspaceWithExistingKey() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("user1", "tagada");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
@@ -173,7 +167,7 @@ public class CoreServiceTest {
 	@Test(expected = KeyNotFoundException.class)
 	public void testReadUnexistingWorkspace() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException,
 			KeyNotFoundException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("user1", "tagada");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
@@ -196,7 +190,7 @@ public class CoreServiceTest {
 		final String WORKSPACE_NAME = "WorkspaceProtected";
 		final String WORKSPACE_TYPE = "test";
 
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("user1", "tagada");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
@@ -210,7 +204,7 @@ public class CoreServiceTest {
 			loginContext.logout();
 		}
 
-		loginContext = AuthenticationLoginContextFactory.createLoginContext("user2", "tagada");
+		loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user2", "tagada");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
@@ -234,7 +228,7 @@ public class CoreServiceTest {
 		final String WORKSPACE_NAME_UPDATE = "Workspace1.update";
 		final String WORKSPACE_TYPE = "test";
 
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("user1", "tagada");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
@@ -276,7 +270,7 @@ public class CoreServiceTest {
 	@Test
 	public void testCRUDCollection() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException,
 			KeyNotFoundException, InvalidPathException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("user1", "tagada");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
@@ -388,7 +382,7 @@ public class CoreServiceTest {
 	@Test
 	public void testDeleteCollectionElementConcurrently() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException,
 			MembershipServiceException, KeyNotFoundException, InvalidPathException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("user1", "tagada");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
@@ -485,7 +479,7 @@ public class CoreServiceTest {
 
 		public void run() {
 			try {
-				LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("user1", "tagada");
+				LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 				loginContext.login();
 				try {
 					logger.log(Level.INFO, "Deleting collection at path: " + path);

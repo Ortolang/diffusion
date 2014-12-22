@@ -6,7 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
-import javax.annotation.security.RolesAllowed;
+import javax.annotation.security.PermitAll;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -34,7 +34,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @Local(SecurityService.class)
 @Stateless(name = SecurityService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed("user")
+@PermitAll
 public class SecurityServiceBean implements SecurityService {
 
 	private Logger logger = Logger.getLogger(SecurityServiceBean.class.getName());

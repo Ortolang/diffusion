@@ -6,6 +6,6 @@
     <version>0.2-SNAPSHOT</version>
   </parent>
   <artifactId>tool-archetype</artifactId>
-  <name>tool-archetype</name>
+  <name>Ortolang Diffusion Tool Archetype</name>
   <description>Maven archetype to create REST exposed ortolang tool</description>
 </project>
