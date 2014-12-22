@@ -28,8 +28,8 @@ import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;

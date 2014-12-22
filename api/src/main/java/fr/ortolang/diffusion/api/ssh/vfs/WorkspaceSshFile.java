@@ -15,7 +15,6 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.apache.sshd.common.file.SshFile;
-import org.xnio.channels.UnsupportedOptionException;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
@@ -196,13 +195,13 @@ public class WorkspaceSshFile implements SshFile {
 	@Override
 	public OutputStream createOutputStream(long offset) throws IOException {
 		logger.log(Level.INFO, "create ouput stream called with offset : " + offset);
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 	@Override
 	public InputStream createInputStream(long offset) throws IOException {
 		logger.log(Level.INFO, "create input stream called with offset : " + offset);
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 	@Override
@@ -247,7 +246,7 @@ public class WorkspaceSshFile implements SshFile {
 	public void setAttributes(Map<Attribute, Object> attributes) throws IOException {
 		logger.log(Level.INFO, "trying to set attributes ");
 		if ( !attributes.isEmpty() ) {
-			throw new UnsupportedOptionException();
+			throw new IOException();
 		}
 	}
 
@@ -268,13 +267,13 @@ public class WorkspaceSshFile implements SshFile {
 	@Override
 	public String readSymbolicLink() throws IOException {
 		logger.log(Level.INFO, "trying to read symlink ");
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 	@Override
 	public void createSymbolicLink(SshFile destination) throws IOException {
 		logger.log(Level.INFO, "trying to create symlink for destination : " + destination.getAbsolutePath());
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 }
