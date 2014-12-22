@@ -8,7 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
-import javax.annotation.security.RolesAllowed;
+import javax.annotation.security.PermitAll;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -53,7 +53,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @Local(RuntimeService.class)
 @Stateless(name = RuntimeService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed("user")
+@PermitAll
 public class RuntimeServiceBean implements RuntimeService {
 	
 	private Logger logger = Logger.getLogger(RuntimeServiceBean.class.getName());
@@ -228,7 +228,6 @@ public class RuntimeServiceBean implements RuntimeService {
 	}
 	
 	@Override
-	@RolesAllowed("system")
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateProcessState(String pid, State state) throws RuntimeServiceException {
 		logger.log(Level.INFO, "Updating state of process with pid: " + pid);
@@ -251,7 +250,6 @@ public class RuntimeServiceBean implements RuntimeService {
 	}
 	
 	@Override
-	@RolesAllowed("system")
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void appendProcessLog(String pid, String log) throws RuntimeServiceException {
 		logger.log(Level.INFO, "Appending log to process with pid: " + pid);
@@ -273,7 +271,6 @@ public class RuntimeServiceBean implements RuntimeService {
 	}
 
 	@Override
-	@RolesAllowed("system")
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateProcessActivity(String pid, String name) throws RuntimeServiceException {
 		logger.log(Level.INFO, "Updating activity of process with pid: " + pid);

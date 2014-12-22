@@ -19,9 +19,9 @@ public class DiffusionUriBuilder {
 			}
 			URI uri;
 			if ( OrtolangConfig.getInstance().getProperty("server.port") != null && OrtolangConfig.getInstance().getProperty("server.port").length() > 0 ) {
-				uri = new URI("http", null, OrtolangConfig.getInstance().getProperty("server.host"), Integer.parseInt(OrtolangConfig.getInstance().getProperty("server.port")), path.toString(), null, null);
+				uri = new URI(OrtolangConfig.getInstance().getProperty("server.protocol"), null, OrtolangConfig.getInstance().getProperty("server.host"), Integer.parseInt(OrtolangConfig.getInstance().getProperty("server.port")), path.toString(), null, null);
 			} else {
-				uri = new URI("http", OrtolangConfig.getInstance().getProperty("server.host"), path.toString(), null);
+				uri = new URI(OrtolangConfig.getInstance().getProperty("server.protocol"), OrtolangConfig.getInstance().getProperty("server.host"), path.toString(), null);
 			}
 			return UriBuilder.fromUri(uri);
 		} catch (Exception e) {
@@ -37,9 +37,9 @@ public class DiffusionUriBuilder {
 			}
 			URI uri;
 			if ( OrtolangConfig.getInstance().getProperty("server.port") != null && OrtolangConfig.getInstance().getProperty("server.port").length() > 0 ) {
-				uri = new URI("http", null, OrtolangConfig.getInstance().getProperty("server.host"), Integer.parseInt(OrtolangConfig.getInstance().getProperty("server.port")), path.toString(), null, null);
+				uri = new URI(OrtolangConfig.getInstance().getProperty("server.protocol"), null, OrtolangConfig.getInstance().getProperty("server.host"), Integer.parseInt(OrtolangConfig.getInstance().getProperty("server.port")), path.toString(), null, null);
 			} else {
-				uri = new URI("http", OrtolangConfig.getInstance().getProperty("server.host"), path.toString(), null);
+				uri = new URI(OrtolangConfig.getInstance().getProperty("server.protocol"), OrtolangConfig.getInstance().getProperty("server.host"), path.toString(), null);
 			}
 			return UriBuilder.fromUri(uri);
 		} catch (Exception e) {

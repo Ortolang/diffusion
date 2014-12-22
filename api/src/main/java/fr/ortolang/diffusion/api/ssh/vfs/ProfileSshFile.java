@@ -15,12 +15,11 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import org.apache.sshd.common.file.SshFile;
-import org.xnio.channels.UnsupportedOptionException;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
+import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public class ProfileSshFile implements SshFile {
@@ -41,7 +40,7 @@ public class ProfileSshFile implements SshFile {
 	private void load() throws OrtolangException {
 		logger.log(Level.INFO, "loading profile : " + view.getConnectedUser());
 		try {
-			LoginContext lc = AuthenticationLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
+			LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 			lc.login();
 			workspaces = view.getCore().findWorkspacesForProfile(view.getConnectedUser());
 			exists = true;
@@ -185,13 +184,13 @@ public class ProfileSshFile implements SshFile {
 	@Override
 	public OutputStream createOutputStream(long offset) throws IOException {
 		logger.log(Level.INFO, "create ouput stream called with offset : " + offset);
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 	@Override
 	public InputStream createInputStream(long offset) throws IOException {
 		logger.log(Level.INFO, "create input stream called with offset : " + offset);
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 	@Override
@@ -236,7 +235,7 @@ public class ProfileSshFile implements SshFile {
 	public void setAttributes(Map<Attribute, Object> attributes) throws IOException {
 		logger.log(Level.INFO, "trying to set attributes ");
 		if ( !attributes.isEmpty() ) {
-			throw new UnsupportedOptionException();
+			throw new IOException();
 		}
 	}
 
@@ -257,13 +256,13 @@ public class ProfileSshFile implements SshFile {
 	@Override
 	public String readSymbolicLink() throws IOException {
 		logger.log(Level.INFO, "trying to read symlink ");
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 	@Override
 	public void createSymbolicLink(SshFile destination) throws IOException {
 		logger.log(Level.INFO, "trying to create symlink for destination : " + destination.getAbsolutePath());
-		throw new UnsupportedOptionException();
+		throw new IOException();
 	}
 
 }

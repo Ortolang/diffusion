@@ -15,7 +15,6 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 @Local(AuthenticationService.class)
 @Stateless(name = AuthenticationService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-//@RolesAllowed("user")
 @PermitAll
 public class AuthenticationServiceBean implements AuthenticationService {
 	

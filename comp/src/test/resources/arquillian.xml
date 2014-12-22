@@ -6,7 +6,7 @@
     <container qualifier="wildfly-managed" default="true">
         <configuration>
             <!-- <property name="jbossHome">${wildfly-home}</property>  -->
-            <property name="serverConfig">standalone-full.xml</property>
+            <property name="serverConfig">ortolang-test.xml</property>
         </configuration>
     </container>
 </arquillian>

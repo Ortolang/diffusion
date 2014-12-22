@@ -15,7 +15,7 @@ import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-public class AuthenticationLoginContextFactory {
+public class UsernamePasswordLoginContextFactory {
 
 	static class NamePasswordCallbackHandler implements CallbackHandler {
 		private final String username;
@@ -67,7 +67,7 @@ public class AuthenticationLoginContextFactory {
 	public static LoginContext createLoginContext(final String username, final String password) throws LoginException {
 		final String configurationName = "ortolang";
 		
-		CallbackHandler cbh = new AuthenticationLoginContextFactory.NamePasswordCallbackHandler(username, password);
+		CallbackHandler cbh = new UsernamePasswordLoginContextFactory.NamePasswordCallbackHandler(username, password);
         Configuration config = new JBossJaasConfiguration(configurationName);
 
         return new LoginContext(configurationName, new Subject(), cbh, config);

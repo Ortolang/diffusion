@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
+import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 
 @RunWith(Arquillian.class)
 public class RegistryServiceTest {
@@ -77,7 +77,7 @@ public class RegistryServiceTest {
 
 	@Test
 	public void testLookup() throws LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		String key = "mytestkey";
 		String author = "moi";
@@ -95,7 +95,7 @@ public class RegistryServiceTest {
 	
 	@Test(expected = KeyNotFoundException.class)
 	public void testLookupUnexistingKey() throws KeyNotFoundException, LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		String key = "unexistingkey";
 		try {
@@ -110,7 +110,7 @@ public class RegistryServiceTest {
 	
 	@Test(expected = KeyAlreadyExistsException.class)
 	public void testBindExistingKey() throws KeyAlreadyExistsException, LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		String key = "existingkey";
 		String author = "moi";
@@ -129,7 +129,7 @@ public class RegistryServiceTest {
 	
 	@Test(expected = IdentifierAlreadyRegisteredException.class)
 	public void testBindExistingIdentifier() throws IdentifierAlreadyRegisteredException, LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		String key1 = "key1";
 		String key2 = "key2";
@@ -148,7 +148,7 @@ public class RegistryServiceTest {
 	
 	@Test
 	public void testHide() throws LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		String key = "hidekey";
 		String author = "moi";
@@ -173,7 +173,7 @@ public class RegistryServiceTest {
 	
 	@Test (expected = KeyNotFoundException.class)
 	public void testHideUnexisting() throws KeyNotFoundException, LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		String key = "hideunexistingkey";
 		try {
@@ -188,7 +188,7 @@ public class RegistryServiceTest {
 	
 	@Test
 	public void testLock() throws LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		String key = "lockkey";
 		String lock = "lockowner";
@@ -214,7 +214,7 @@ public class RegistryServiceTest {
 	
 	@Test (expected = KeyNotFoundException.class)
 	public void testLockUnexisting() throws KeyNotFoundException, LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		String key = "lockunexistingkey";
 		String lock = "lockowner";
@@ -230,7 +230,7 @@ public class RegistryServiceTest {
 	
 	@Test (expected = KeyNotFoundException.class)
 	public void testDelete() throws KeyNotFoundException, LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		String key = "deletekey";
 		String author = "moi";
@@ -255,7 +255,7 @@ public class RegistryServiceTest {
 	
 	@Test (expected = KeyNotFoundException.class)
 	public void testDeleteUnexisting() throws KeyNotFoundException, LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		String key = "deleteunexistingkey";
 		try {
@@ -268,7 +268,7 @@ public class RegistryServiceTest {
 	
 	@Test
 	public void testList() throws LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		String key1 = "key1";
 		String key2 = "key2";

@@ -9,7 +9,6 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -48,7 +47,7 @@ import fr.ortolang.diffusion.store.triple.URIHelper;
 @Local(MembershipService.class)
 @Stateless(name = MembershipService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed("user")
+@PermitAll
 public class MembershipServiceBean implements MembershipService {
 
 	private Logger logger = Logger.getLogger(MembershipServiceBean.class.getName());
@@ -130,7 +129,9 @@ public class MembershipServiceBean implements MembershipService {
 			String[] groups = profile.getGroups();
 			List<String> subjects = new ArrayList<String>(groups.length + 2);
 			subjects.add(caller);
-			subjects.add(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY);
+			if ( !caller.equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
+				subjects.add(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY);
+			}
 			subjects.addAll(Arrays.asList(groups));
 
 			return subjects;
@@ -141,7 +142,7 @@ public class MembershipServiceBean implements MembershipService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createProfile(String fullname, String email) throws MembershipServiceException, ProfileAlreadyExistsException {
+	public Profile createProfile(String fullname, String email) throws MembershipServiceException, ProfileAlreadyExistsException {
 		logger.log(Level.FINE, "creating profile for connected identifier");
 
 		String connectedIdentifier = authentication.getConnectedIdentifier();
@@ -166,6 +167,7 @@ public class MembershipServiceBean implements MembershipService {
 			authorisation.createPolicy(key, key);
 
 			notification.throwEvent(key, key, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
+			return profile;
 		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to create profile with key [" + key + "]", e);
@@ -273,6 +275,60 @@ public class MembershipServiceBean implements MembershipService {
 		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to delete object with key [" + key + "]", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void addProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.FINE, "adding public key to profile with key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			List<String> subjects = getConnectedIdentifierSubjects();
+			authorisation.checkPermission(key, subjects, "update");
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, Profile.OBJECT_TYPE);
+			Profile profile = em.find(Profile.class, identifier.getId());
+			if (profile == null) {
+				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
+			}
+			profile.addPublicKey(pubkey);
+			em.merge(profile);
+
+			registry.update(key);
+
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "add-key"), "");
+		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
+			ctx.setRollbackOnly();
+			throw new MembershipServiceException("error while trying to add public key to profile with key [" + key + "]");
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void removeProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.FINE, "removing public key to profile with key [" + key + "]");
+		try {
+			String caller = getProfileKeyForConnectedIdentifier();
+			List<String> subjects = getConnectedIdentifierSubjects();
+			authorisation.checkPermission(key, subjects, "update");
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, Profile.OBJECT_TYPE);
+			Profile profile = em.find(Profile.class, identifier.getId());
+			if (profile == null) {
+				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
+			}
+			profile.removePublicKey(pubkey);
+			em.merge(profile);
+
+			registry.update(key);
+
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "remove-key"), "");
+		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
+			ctx.setRollbackOnly();
+			throw new MembershipServiceException("error while trying to remove public key to profile with key [" + key + "]");
 		}
 	}
 	
@@ -659,7 +715,6 @@ public class MembershipServiceBean implements MembershipService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	@RolesAllowed("system")
 	public OrtolangIndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -696,7 +751,6 @@ public class MembershipServiceBean implements MembershipService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	@RolesAllowed("system")
 	public OrtolangIndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);

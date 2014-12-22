@@ -4,7 +4,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.security.PermitAll;
-import javax.annotation.security.RunAs;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.EJB;
 import javax.ejb.MessageDriven;
@@ -29,7 +28,6 @@ import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 		@ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
 		@ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @SecurityDomain("ortolang")
-@RunAs("system")
 public class IndexingListenerBean implements MessageListener {
 
 	private Logger logger = Logger.getLogger(IndexingListenerBean.class.getName());

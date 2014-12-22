@@ -25,7 +25,7 @@ import org.junit.runner.RunWith;
 
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
-import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
+import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 @RunWith(Arquillian.class)
@@ -124,7 +124,7 @@ public class ToolServiceTest {
 
 	@Test
 	public void testLogin() throws LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
@@ -137,7 +137,7 @@ public class ToolServiceTest {
 
 	@Test
 	public void testDeclareTool() throws LoginException, ToolServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());

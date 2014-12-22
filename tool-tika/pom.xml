@@ -11,7 +11,7 @@
 	<artifactId>tool-tika</artifactId>
 	<packaging>war</packaging>
 
-	<name>Ortolang tool project</name>
+	<name>Ortolang Diffusion Tool TIKA</name>
 	<url>http://www.ortolang.fr</url>
 
 	<dependencies>

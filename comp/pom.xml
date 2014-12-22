@@ -206,7 +206,7 @@
 			<artifactId>spring-context</artifactId>
 			<version>4.0.6.RELEASE</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.picketlink</groupId>
 			<artifactId>picketlink</artifactId>
 			<scope>compile</scope>
@@ -220,7 +220,7 @@
 			<groupId>org.picketlink</groupId>
 			<artifactId>picketlink-json</artifactId>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> -->
 	</dependencies>
 
 	<build>

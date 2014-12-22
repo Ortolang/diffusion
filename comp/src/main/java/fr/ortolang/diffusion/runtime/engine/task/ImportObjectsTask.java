@@ -102,10 +102,5 @@ public class ImportObjectsTask extends RuntimeEngineTask {
 		return NAME;
 	}
 
-	@Override
-	public boolean needEngineAuth() {
-		return false;
-	}
-
 }
 

@@ -6,7 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.Resource;
-import javax.annotation.security.RolesAllowed;
+import javax.annotation.security.PermitAll;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -34,7 +34,7 @@ import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 @Local(SearchService.class)
 @Stateless(name = SearchService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@RolesAllowed("user")
+@PermitAll
 public class SearchServiceBean implements SearchService {
 
 	private Logger logger = Logger.getLogger(SearchServiceBean.class.getName());

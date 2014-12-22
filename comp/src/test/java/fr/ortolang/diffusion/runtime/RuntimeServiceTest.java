@@ -26,7 +26,7 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.ProcessType;
-import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
+import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 
 @RunWith(Arquillian.class)
 public class RuntimeServiceTest {
@@ -107,7 +107,7 @@ public class RuntimeServiceTest {
 
 	@Test
 	public void testLogin() throws LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
@@ -120,7 +120,7 @@ public class RuntimeServiceTest {
 
 	@Test
 	public void testListProcessTypes() throws LoginException {
-		LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());

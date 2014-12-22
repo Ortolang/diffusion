@@ -11,7 +11,7 @@ import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
-import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
+import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 
 public class RuntimeEngineListener {
 
@@ -31,47 +31,38 @@ public class RuntimeEngineListener {
 	}
 
 	public void onEvent(RuntimeEngineEvent event) {
+		logger.log(Level.FINE, "RuntimeEngineEvent type: " + event.getType());
 		try {
-			logger.log(Level.FINE, "RuntimeEngineEvent type: " + event.getType());
-			LoginContext loginContext = AuthenticationLoginContextFactory.createLoginContext(OrtolangConfig.getInstance().getProperty("runtime.engine.login"), OrtolangConfig
-					.getInstance().getProperty("runtime.engine.password"));
-			loginContext.login();
-			try {
-				if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_START)) {
-					getRuntimeService().updateProcessState(event.getPid(), State.RUNNING);
-				}
-				if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ABORT)) {
-					getRuntimeService().updateProcessState(event.getPid(), State.ABORTED);
-				}
-				if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_COMPLETE)) {
-					getRuntimeService().updateProcessState(event.getPid(), State.COMPLETED);
-				}
-				if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_LOG)) {
-					getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
-				}
-				if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ACTIVITY_STARTED)) {
-					getRuntimeService().updateProcessActivity(event.getPid(), event.getActivityName());
-					getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
-				}
-				if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ACTIVITY_ERROR)) {
-					getRuntimeService().updateProcessActivity(event.getPid(), "");
-					getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
-				}
-				if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ACTIVITY_PROGRESS)) {
-					// TODO Increase RuntimeService Process model to include activity progression field
-					getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
-				}
-				if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ACTIVITY_COMPLETED)) {
-					getRuntimeService().updateProcessActivity(event.getPid(), "");
-					getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
-				}
-			} catch (RuntimeServiceException | RuntimeEngineException e) {
-				logger.log(Level.SEVERE, "unexpected error while trying to treat runtime  event", e);
-			} finally {
-				loginContext.logout();
+			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_START)) {
+				getRuntimeService().updateProcessState(event.getPid(), State.RUNNING);
 			}
-		} catch (LoginException e) {
-			logger.log(Level.SEVERE, "RuntimeEventListener login error", e);
+			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ABORT)) {
+				getRuntimeService().updateProcessState(event.getPid(), State.ABORTED);
+			}
+			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_COMPLETE)) {
+				getRuntimeService().updateProcessState(event.getPid(), State.COMPLETED);
+			}
+			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_LOG)) {
+				getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+			}
+			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ACTIVITY_STARTED)) {
+				getRuntimeService().updateProcessActivity(event.getPid(), event.getActivityName());
+				getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+			}
+			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ACTIVITY_ERROR)) {
+				getRuntimeService().updateProcessActivity(event.getPid(), "");
+				getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+			}
+			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ACTIVITY_PROGRESS)) {
+				// TODO Increase RuntimeService Process model to include activity progression field
+				getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+			}
+			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ACTIVITY_COMPLETED)) {
+				getRuntimeService().updateProcessActivity(event.getPid(), "");
+				getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+			}
+		} catch (RuntimeServiceException | RuntimeEngineException e) {
+			logger.log(Level.SEVERE, "unexpected error while trying to treat runtime  event", e);
 		}
 	}
 

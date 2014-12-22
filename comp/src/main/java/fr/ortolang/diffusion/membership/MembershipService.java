@@ -19,7 +19,7 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 		{ Profile.OBJECT_TYPE, "read,update,delete" },
 		{ Group.OBJECT_TYPE, "read,update,delete" }};
 	
-	public static final String UNAUTHENTIFIED_IDENTIFIER = "guest";
+	public static final String UNAUTHENTIFIED_IDENTIFIER = "anonymous";
 	public static final String SUPERUSER_IDENTIFIER = "root";
 	
 	public static final String ALL_AUTHENTIFIED_GROUP_KEY = "authentified";
@@ -34,13 +34,17 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
 	
-	public void createProfile(String fullname, String email) throws MembershipServiceException, ProfileAlreadyExistsException;
+	public Profile createProfile(String fullname, String email) throws MembershipServiceException, ProfileAlreadyExistsException;
 
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public void updateProfile(String key, String fullname, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void addProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void removeProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void createGroup(String key, String name, String description) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException;
 

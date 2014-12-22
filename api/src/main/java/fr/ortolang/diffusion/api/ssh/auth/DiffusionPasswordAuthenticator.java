@@ -12,7 +12,7 @@ import org.apache.sshd.server.session.ServerSession;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.api.ssh.session.SSHSession;
 import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory;
+import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 
 public class DiffusionPasswordAuthenticator implements PasswordAuthenticator {
 	
@@ -22,7 +22,7 @@ public class DiffusionPasswordAuthenticator implements PasswordAuthenticator {
     public boolean authenticate(final String username, final String password, final ServerSession session) {
         try {
         	logger.log(Level.INFO, "performing jaas authentication...");
-        	LoginContext lc = AuthenticationLoginContextFactory.createLoginContext(username, password);
+        	LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(username, password);
             lc.login();
             logger.log(Level.INFO, "try a call to membreship service to validate credentials");
             MembershipService membership = (MembershipService)OrtolangServiceLocator.findService("membership");
