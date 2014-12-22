@@ -20,12 +20,10 @@ public interface ToolService extends OrtolangService {
 	 * @param key String
 	 * @param name String
 	 * @param description String
-	 * @param documentation String
-	 * @param invokerClass String
-	 * @param formConfig String
+	 * @param url String
 	 * @throws ToolServiceException
 	 */
-	public void declareTool(String key, String name, String description, String documentation, String invokerClass, String formConfig) throws ToolServiceException;
+	public void declareTool(String key, String name, String description, String url) throws ToolServiceException;
 	
 	/**
 	 * Return a list of available tools
@@ -61,5 +59,19 @@ public interface ToolService extends OrtolangService {
 	 * @throws AccessDeniedException
 	 */
 	public ToolInvokerResult invokeTool(String key, Map<String, String> params) throws ToolServiceException, AccessDeniedException;
+
+	/**
+	 * Temporary method to declare tool with invoker - (all tools are to be externalize, this method will disappear)
+	 * @param key
+	 * @param name
+	 * @param description
+	 * @param documentation
+	 * @param invokerClass
+	 * @param formConfig
+	 * @throws ToolServiceException
+	 */
+	public void declareToolPlugin(String key, String name, String description,
+			String documentation, String invokerClass, String formConfig)
+			throws ToolServiceException;
 
 }

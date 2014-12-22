@@ -33,6 +33,7 @@ public class Tool extends OrtolangObject {
 	private String name;
 	@Column(length = 2500)
 	private String description;
+	private String url;
 	@Lob
 	@Type(type = "org.hibernate.type.TextType")
 	private String documentation;
@@ -116,6 +117,14 @@ public class Tool extends OrtolangObject {
 	@Override
 	public OrtolangObjectIdentifier getObjectIdentifier() {
 		return new OrtolangObjectIdentifier(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, id);
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 

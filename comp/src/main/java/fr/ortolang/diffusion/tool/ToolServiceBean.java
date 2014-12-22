@@ -69,7 +69,7 @@ public class ToolServiceBean implements ToolService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void declareTool(String key, String name, String description, String documentation, String invokerClass, String formConfig) throws ToolServiceException {
+	public void declareToolPlugin(String key, String name, String description, String documentation, String invokerClass, String formConfig) throws ToolServiceException {
 		logger.log(Level.INFO, "Declaring new tool");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -94,6 +94,33 @@ public class ToolServiceBean implements ToolService {
 			tool.setDocumentation(documentation);
 			tool.setInvokerClass(invokerClass);
 			tool.setFormConfig(formConfig);
+			em.persist(tool);
+
+			registry.register(key, new OrtolangObjectIdentifier(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, id), caller);
+			authorisation.createPolicy(key, caller);
+
+			notification.throwEvent(key, caller, Tool.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "declare"), "");
+		} catch (RegistryServiceException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | AccessDeniedException e) {
+			ctx.setRollbackOnly();
+			logger.log(Level.SEVERE, "unexpected error occured while declaring tool", e);
+			throw new ToolServiceException("unable to declare tool", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void declareTool(String key, String name, String description, String url) throws ToolServiceException {
+		logger.log(Level.INFO, "Declaring new tool");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			authorisation.checkAuthentified(caller);
+
+			String id = UUID.randomUUID().toString();
+			Tool tool = new Tool();
+			tool.setId(id);
+			tool.setName(name);
+			tool.setDescription(description);
+			tool.setUrl(url);
 			em.persist(tool);
 
 			registry.register(key, new OrtolangObjectIdentifier(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, id), caller);
