@@ -49,7 +49,7 @@ public class RegistryServiceTest {
 		jar.addPackage("fr.ortolang.diffusion");
 		jar.addPackage("fr.ortolang.diffusion.registry");
 		jar.addPackage("fr.ortolang.diffusion.registry.entity");
-		jar.addClass("fr.ortolang.diffusion.security.authentication.AuthenticationLoginContextFactory");
+		jar.addClass("fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory");
 		jar.addAsResource("config.properties");
 		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
         logger.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
