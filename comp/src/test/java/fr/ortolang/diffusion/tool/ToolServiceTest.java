@@ -141,7 +141,7 @@ public class ToolServiceTest {
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			tool.declareTool("K1", "treetagger", "This is Tree Tagger", "TreeTagger is a dedicated tool for text treatment et blabla bla...", "fr.ortolang.diffusion.tool.treetagger.TreeTaggerInvoker", "treetagger-form-config.json");
+			tool.declareToolPlugin("K1", "treetagger", "This is Tree Tagger", "TreeTagger is a dedicated tool for text treatment et blabla bla...", "fr.ortolang.diffusion.tool.treetagger.TreeTaggerInvoker", "treetagger-form-config.json");
 			
 			assertTrue(tool.listTools().size() == 1);
 			
