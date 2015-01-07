@@ -67,7 +67,7 @@
 				<artifactId>wildfly-maven-plugin</artifactId>
 				<version>${version.wildfly.maven.plugin}</version>
 				<configuration>
-					<filename>${project.artifactId}.ear</filename>
+					<filename>${project.build.finalName}.${project.packaging}</filename>
 					<skip>false</skip>
 				</configuration>
 			</plugin>
