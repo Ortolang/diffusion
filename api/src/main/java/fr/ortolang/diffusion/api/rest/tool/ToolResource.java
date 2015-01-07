@@ -27,7 +27,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
-
 import org.codehaus.jackson.type.TypeReference;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -43,6 +42,7 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.tool.ToolService;
 import fr.ortolang.diffusion.tool.ToolServiceException;
 import fr.ortolang.diffusion.tool.entity.Tool;
+import fr.ortolang.diffusion.tool.entity.ToolPlugin;
 import fr.ortolang.diffusion.tool.invoke.ToolInvokerResult;
 
 @Path("/tools")
@@ -62,13 +62,35 @@ public class ToolResource {
 	@GET
 	@Template( template="tools/list.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	public Response listPlugin() throws ToolServiceException {
+		logger.log(Level.INFO, "list availables tool plugins : ");
+		
+		List<ToolPlugin> toolplugins = tool.listToolPlugins();
+		
+		GenericCollectionRepresentation<ToolPlugin> representation = new GenericCollectionRepresentation<ToolPlugin> ();
+		for(ToolPlugin tool: toolplugins) {
+			logger.log(Level.INFO, tool.getName());
+		    representation.addEntry(tool);
+		}
+		representation.setOffset(0);
+		representation.setSize(toolplugins.size());
+		representation.setLimit(toolplugins.size());
+		
+		Response response = Response.ok(representation).build();
+		return response;
+	}
+	
+	@GET
+	@Path("/list")	
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response list() throws ToolServiceException {
-		logger.log(Level.INFO, "list availables tools");
+		logger.log(Level.INFO, "list availables tools from servers : ");
 		
 		List<Tool> tools = tool.listTools();
 		
 		GenericCollectionRepresentation<Tool> representation = new GenericCollectionRepresentation<Tool> ();
 		for(Tool tool: tools) {
+			logger.log(Level.INFO, tool.getName());
 		    representation.addEntry(tool);
 		}
 		representation.setOffset(0);
@@ -86,7 +108,7 @@ public class ToolResource {
 	public Response get(@PathParam(value = "key") String key) throws ToolServiceException, AccessDeniedException {
 		logger.log(Level.INFO, "read tool for key: " + key);
 				
-		Tool representation = tool.readTool(key);
+		ToolPlugin representation = tool.readTool(key);
 		
 		return Response.ok(representation).build();
 	}
