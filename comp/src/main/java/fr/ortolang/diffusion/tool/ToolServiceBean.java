@@ -230,7 +230,7 @@ public class ToolServiceBean implements ToolService {
 			
 			notification.throwEvent(key, caller, ToolPlugin.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, ToolPlugin.OBJECT_TYPE, "invoke"), "");
 			return result;
-		} catch ( RegistryServiceException | MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | NotificationServiceException | ClassNotFoundException | InstantiationException | IllegalAccessException e ) {
+		} catch ( RegistryServiceException | MembershipServiceException | KeyNotFoundException | NotificationServiceException | ClassNotFoundException | InstantiationException | IllegalAccessException | AuthorisationServiceException e ) {
 			logger.log(Level.SEVERE, "unexpected error occured while invoking tool", e);
 			throw new ToolServiceException("unable to invoke tool", e);
 		}
@@ -293,7 +293,7 @@ public class ToolServiceBean implements ToolService {
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			//authorisation.checkPermission(key, subjects, "read");
+			authorisation.checkPermission(key, subjects, "read");
 			
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, ToolPlugin.OBJECT_TYPE);
@@ -312,7 +312,7 @@ public class ToolServiceBean implements ToolService {
 									
 			notification.throwEvent(key, caller, ToolPlugin.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, ToolPlugin.OBJECT_TYPE, "read"), "");
 			return jsonData;
-		} catch ( RegistryServiceException | MembershipServiceException | KeyNotFoundException | NotificationServiceException | IOException e ) {
+		} catch ( RegistryServiceException | MembershipServiceException | KeyNotFoundException | NotificationServiceException | IOException | AuthorisationServiceException e ) {
 			throw new ToolServiceException("unable to load config form", e);
 		}
 	}
