@@ -17,12 +17,12 @@ import fr.ortolang.diffusion.tool.ToolService;
 
 @Entity
 @NamedQueries({ 
-	@NamedQuery(name = "findAllTools", query = "select t from Tool t") }
+	@NamedQuery(name = "findAllToolPlugins", query = "select t from ToolPlugin t") }
 )
 @SuppressWarnings("serial")
-public class Tool extends OrtolangObject {
+public class ToolPlugin extends OrtolangObject {
 
-	public static final String OBJECT_TYPE = "tool";
+	public static final String OBJECT_TYPE = "tool-plugin";
 	
 	@Id
 	private String id;
@@ -33,7 +33,11 @@ public class Tool extends OrtolangObject {
 	private String name;
 	@Column(length = 2500)
 	private String description;
-	private String url;
+	@Lob
+	@Type(type = "org.hibernate.type.TextType")
+	private String documentation;
+	private String invokerClass;
+	private String formConfig;
 
 	public String getId() {
 		return id;
@@ -75,14 +79,30 @@ public class Tool extends OrtolangObject {
 		this.description = description;
 	}
 
-	public String getUrl() {
-		return url;
+	public String getDocumentation() {
+		return documentation;
 	}
 
-	public void setUrl(String url) {
-		this.url = url;
+	public void setDocumentation(String documentation) {
+		this.documentation = documentation;
 	}
 
+	public String getInvokerClass() {
+		return invokerClass;
+	}
+
+	public void setInvokerClass(String invokerClass) {
+		this.invokerClass = invokerClass;
+	}
+
+	public String getFormConfig() {
+		return formConfig;
+	}
+
+	public void setFormConfig(String formConfig) {
+		this.formConfig = formConfig;
+	}
+	
 	@Override
 	public String getObjectName() {
 		return name;
@@ -95,8 +115,7 @@ public class Tool extends OrtolangObject {
 
 	@Override
 	public OrtolangObjectIdentifier getObjectIdentifier() {
-		return new OrtolangObjectIdentifier(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, id);
+		return new OrtolangObjectIdentifier(ToolService.SERVICE_NAME, ToolPlugin.OBJECT_TYPE, id);
 	}
-
 
 }

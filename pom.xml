@@ -18,8 +18,8 @@
 	<modules>
 		<module>comp</module>
 		<module>api</module>
-		<module>appli</module>
 		<module>client</module>
+		<module>appli</module>
 	</modules>
 
 	<properties>
