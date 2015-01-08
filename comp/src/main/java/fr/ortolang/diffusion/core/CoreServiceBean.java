@@ -2294,16 +2294,6 @@ public class CoreServiceBean implements CoreService {
 				if (object.getMimeType() != null) {
 					content.addContentPart(object.getMimeType());
 				}
-//				if (object.getPreview() != null) {
-//					content.addContentPart(object.getPreview());
-//				}
-//				try {
-//					if (object.getStream() != null && object.getStream().length() > 0) {
-//						content.addContentPart(binarystore.extract(object.getStream()));
-//					}
-//				} catch (DataNotFoundException | BinaryStoreServiceException e) {
-//					logger.log(Level.WARNING, "unable to extract plain text for key : " + key, e);
-//				}
 				
 				for(MetadataElement mde : object.getMetadatas()) {
 					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
@@ -2374,17 +2364,6 @@ public class CoreServiceBean implements CoreService {
 				}
 			}
 
-//			if (identifier.getType().equals(MetadataObject.OBJECT_TYPE)) {
-//				MetadataObject metadata = em.find(MetadataObject.class, identifier.getId());
-//				if (metadata == null) {
-//					throw new OrtolangException("unable to load metadata with id [" + identifier.getId() + "] from storage");
-//				}
-//				content.addContentPart(metadata.getName());
-//				content.addContentPart(metadata.getContentType());
-//				content.addContentPart(metadata.getFormat());
-//				content.addContentPart(metadata.getTarget());
-//			}
-
 			return content;
 		} catch (KeyNotFoundException | RegistryServiceException e) {
 			throw new OrtolangException("unable to find an object for key " + key);
@@ -2450,44 +2429,10 @@ public class CoreServiceBean implements CoreService {
 				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#name", metadata.getName()));
 				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#metadataFormat", metadata.getFormat()));
 				
-				String log = "";
-				try {
-					// TODO provide a dedicated template service
-					logger.log(Level.INFO, "rendering metadata content using template engine");
-					//TODO Add others formats compatible with the triplestore
-					List<String> rdfFormatCompatible = new ArrayList<String>();
-					rdfFormatCompatible.add("rdf");
-					rdfFormatCompatible.add("market-ortolang");
-					rdfFormatCompatible.add("market-ortolang-n3");
-					
-					if (rdfFormatCompatible.contains(metadata.getFormat()) && metadata.getStream() != null && metadata.getStream().length() > 0) {
-						Map<String, Object> ctx = new HashMap<String, Object> ();
-						ctx.put("self", URIHelper.fromKey(key));
-						ctx.put("target", URIHelper.fromKey(metadata.getTarget()));
-						ctx.put("targetKey", metadata.getTarget());
-						
-						InputStreamReader isr = new InputStreamReader(binarystore.get(metadata.getStream()));
-						StringWriter writer = new StringWriter();
-						TemplateEngine.evaluate(ctx, writer, log, isr);
-						logger.log(Level.INFO, "rendered metadata : " + writer.toString());
-						StringReader reader = new StringReader(writer.toString());
-						//MAXI hack !! (when tika will recognize N3, we can do with it)
-						String contentType = metadata.getContentType();
-						if(metadata.getFormat().equals("market-ortolang-n3"))
-							contentType = "text/n3";
-						Set<Triple> triplesContent = TripleHelper.extractTriples(reader, contentType);
-						for (Triple triple : triplesContent) {
-							content.addTriple(triple);
-							logger.log(Level.INFO, "Add triple : "+triple.getSubject()+":"+triple.getPredicate()+":"+triple.getObject());
-						}
-					}
-				} catch (TripleStoreServiceException te) {
-					logger.log(Level.WARNING, "unable to parse metadata content for key: " + key);
-				}
 			}
 
 			return content;
-		} catch (KeyNotFoundException | RegistryServiceException | TripleStoreServiceException | BinaryStoreServiceException | DataNotFoundException e) {
+		} catch (KeyNotFoundException | RegistryServiceException | TripleStoreServiceException e) {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}
