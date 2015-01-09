@@ -6,6 +6,7 @@ import java.util.Map;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.tool.entity.Tool;
+import fr.ortolang.diffusion.tool.entity.ToolJobStatus;
 import fr.ortolang.diffusion.tool.entity.ToolPlugin;
 import fr.ortolang.diffusion.tool.invoke.ToolInvokerResult;
 
@@ -28,7 +29,7 @@ public interface ToolService extends OrtolangService {
 	
 	/**
 	 * Return a list of available tools
-	 * @return List<Tool>
+	 * @return List<ToolPlugin>
 	 * @throws ToolServiceException
 	 */
 	public List<ToolPlugin> listToolPlugins() throws ToolServiceException;
@@ -40,6 +41,17 @@ public interface ToolService extends OrtolangService {
 	 */
 	public List<Tool> listTools() throws ToolServiceException;
 	
+
+	/**
+	 * Read a tool from a key
+	 * @param key String
+	 * @return ToolPlugin
+	 * @throws ToolServiceException
+	 * @throws AccessDeniedException
+	 */
+	public ToolPlugin readToolPlugin(String key) throws ToolServiceException,AccessDeniedException;
+
+	
 	/**
 	 * Read a tool from a key
 	 * @param key String
@@ -47,7 +59,7 @@ public interface ToolService extends OrtolangService {
 	 * @throws ToolServiceException
 	 * @throws AccessDeniedException
 	 */
-	public ToolPlugin readTool(String key) throws ToolServiceException, AccessDeniedException; 
+	public Tool readTool(String key) throws ToolServiceException, AccessDeniedException; 
 	
 	/**
 	 * Return the JSON form from a key
@@ -81,6 +93,15 @@ public interface ToolService extends OrtolangService {
 	public void declareToolPlugin(String key, String name, String description,
 			String documentation, String invokerClass, String formConfig)
 			throws ToolServiceException;
+
+	/**
+	 * Declare a new tool job
+	 * @param key
+	 * @param name
+	 * @param status
+	 * @throws ToolServiceException
+	 */
+	public void declareToolJob(String key, String name, ToolJobStatus status) throws ToolServiceException;
 
 
 }
