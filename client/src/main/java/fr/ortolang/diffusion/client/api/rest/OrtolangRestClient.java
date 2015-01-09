@@ -37,14 +37,25 @@ public class OrtolangRestClient {
 
 	private static Logger logger = Logger.getLogger(OrtolangRestClient.class.getName());
 
+	static {
+		javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(new javax.net.ssl.HostnameVerifier() {
+			public boolean verify(String hostname, javax.net.ssl.SSLSession sslSession) {
+				if (hostname.equals("localhost")) {
+					return true;
+				}
+				return false;
+			}
+		});
+	}
+
 	private WebTarget base;
 	private Client client;
 	private String authorisation;
-	private Map<String, String> authCache = new HashMap<String, String> ();
+	private Map<String, String> authCache = new HashMap<String, String>();
 
 	public OrtolangRestClient() {
 		ClientBuilder builder = ClientBuilder.newBuilder();
-		
+
 		ClientConfig clientConfig = new ClientConfig();
 		clientConfig.register(MultiPartFeature.class);
 		clientConfig.register(CookieFilter.class);
@@ -73,33 +84,33 @@ public class OrtolangRestClient {
 	public void close() {
 		client.close();
 	}
-	
+
 	public void login(String username, String password) throws OrtolangRestClientException {
-		if ( authCache.containsKey(username) ) {
+		if (authCache.containsKey(username)) {
 			authorisation = authCache.get(username);
 		}
-		
+
 		if (OrtolangClientConfig.getInstance().getProperty("api.rest.auth.method").equals("basic")) {
 			String credentials = username + ":" + password;
 			authorisation = "Basic " + Base64.encodeBytes(credentials.getBytes());
 		}
 
 		if (OrtolangClientConfig.getInstance().getProperty("api.rest.auth.method").equals("oauth")) {
-			String url =  OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.server.url");
+			String url = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.server.url");
 			String realm = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.realm");
-			String appname =  OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.app.name");
-			String appsecret =  OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.app.secret");
-			
+			String appname = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.app.name");
+			String appsecret = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.app.secret");
+
 			WebTarget target = client.target(url).path("realms").path(realm).path("protocol/openid-connect/grants/access");
-			
+
 			Form form = new Form().param("username", username).param("password", password);
-			
+
 			String authorization = BasicAuthHelper.createHeader(appname, appsecret);
-			
+
 			Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON_TYPE);
 			invocationBuilder.header("Authorization", authorization);
-			Response response = invocationBuilder.post(Entity.entity(form,MediaType.APPLICATION_FORM_URLENCODED));
-			
+			Response response = invocationBuilder.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
+
 			if (response.getStatus() == Status.OK.getStatusCode()) {
 				String tokenResponse = response.readEntity(String.class);
 				JsonObject object = Json.createReader(new StringReader(tokenResponse)).readObject();
@@ -110,18 +121,18 @@ public class OrtolangRestClient {
 			}
 		}
 	}
-	
+
 	public void logout() throws OrtolangRestClientException {
 		authorisation = null;
 	}
-	
+
 	private Invocation.Builder injectAuthorisation(Invocation.Builder builder) {
-		if ( authorisation != null ) {
+		if (authorisation != null) {
 			builder.header("Authorization", authorisation);
-		} 
+		}
 		return builder;
 	}
-	
+
 	public String connectedProfile() throws OrtolangRestClientException {
 		WebTarget target = base.path("/profiles/connected");
 		Response response = injectAuthorisation(target.request(MediaType.APPLICATION_JSON_TYPE)).get();
@@ -161,7 +172,8 @@ public class OrtolangRestClient {
 	public void createWorkspace(String key, String type, String name) throws OrtolangRestClientException {
 		WebTarget target = base.path("/workspaces");
 		Form form = new Form().param("key", key).param("type", type).param("name", name);
-		Response response = injectAuthorisation(target.request(MediaType.APPLICATION_FORM_URLENCODED)).accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
+		Response response = injectAuthorisation(target.request(MediaType.APPLICATION_FORM_URLENCODED)).accept(MediaType.MEDIA_TYPE_WILDCARD).post(
+				Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
 		if (response.getStatus() != Status.CREATED.getStatusCode()) {
 			throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
 		}
@@ -236,7 +248,8 @@ public class OrtolangRestClient {
 	public void snapshotWorkspace(String workspace, String name) throws OrtolangRestClientException {
 		WebTarget target = base.path("workspaces").path(workspace).path("snapshots");
 		Form form = new Form().param("snapshotname", name);
-		Response response = injectAuthorisation(target.request(MediaType.APPLICATION_FORM_URLENCODED)).accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
+		Response response = injectAuthorisation(target.request(MediaType.APPLICATION_FORM_URLENCODED)).accept(MediaType.MEDIA_TYPE_WILDCARD).post(
+				Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
 		if (response.getStatus() != Status.OK.getStatusCode()) {
 			throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
 		}
