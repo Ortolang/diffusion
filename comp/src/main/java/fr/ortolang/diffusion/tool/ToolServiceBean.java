@@ -43,6 +43,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.tool.entity.Tool;
+import fr.ortolang.diffusion.tool.entity.ToolPlugin;
 import fr.ortolang.diffusion.tool.invoke.ToolInvoker;
 import fr.ortolang.diffusion.tool.invoke.ToolInvokerResult;
 
@@ -87,7 +88,7 @@ public class ToolServiceBean implements ToolService {
 			}
 
 			String id = UUID.randomUUID().toString();
-			Tool tool = new Tool();
+			ToolPlugin tool = new ToolPlugin();
 			tool.setId(id);
 			tool.setName(name);
 			tool.setDescription(description);
@@ -96,10 +97,10 @@ public class ToolServiceBean implements ToolService {
 			tool.setFormConfig(formConfig);
 			em.persist(tool);
 
-			registry.register(key, new OrtolangObjectIdentifier(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, id), caller);
+			registry.register(key, new OrtolangObjectIdentifier(ToolService.SERVICE_NAME, ToolPlugin.OBJECT_TYPE, id), caller);
 			authorisation.createPolicy(key, caller);
 
-			notification.throwEvent(key, caller, Tool.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "declare"), "");
+			notification.throwEvent(key, caller, ToolPlugin.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, ToolPlugin.OBJECT_TYPE, "declare"), "");
 		} catch (RegistryServiceException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | AccessDeniedException e) {
 			ctx.setRollbackOnly();
 			logger.log(Level.SEVERE, "unexpected error occured while declaring tool", e);
@@ -136,8 +137,32 @@ public class ToolServiceBean implements ToolService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<Tool> listTools() throws ToolServiceException {
+	public List<ToolPlugin> listToolPlugins() throws ToolServiceException {
 		logger.log(Level.INFO, "Listing tools");
+		try {
+			TypedQuery<ToolPlugin> query = em.createNamedQuery("findAllToolPlugins", ToolPlugin.class);
+			List<ToolPlugin> tools = query.getResultList();
+			List<ToolPlugin> rtools = new ArrayList<ToolPlugin>();
+			for (ToolPlugin tool : tools) {
+				try {
+					String ikey = registry.lookup(tool.getObjectIdentifier());
+					tool.setKey(ikey);
+					rtools.add(tool);
+				} catch ( IdentifierNotRegisteredException e ) {
+					logger.log(Level.FINE, "unregistered tool found in storage for id: " + tool.getId());
+				}
+			}
+			return rtools;
+		} catch ( RegistryServiceException e ) {
+			logger.log(Level.SEVERE, "unexpected error occured while listing tools", e);
+			throw new ToolServiceException("unable to list tools", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<Tool> listTools() throws ToolServiceException {
+		logger.log(Level.INFO, "Listing tools from tool servers");
 		try {
 			TypedQuery<Tool> query = em.createNamedQuery("findAllTools", Tool.class);
 			List<Tool> tools = query.getResultList();
@@ -160,21 +185,21 @@ public class ToolServiceBean implements ToolService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public Tool readTool(String key) throws ToolServiceException, AccessDeniedException {
+	public ToolPlugin readTool(String key) throws ToolServiceException, AccessDeniedException {
 		logger.log(Level.INFO, "Reading tool");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, Tool.OBJECT_TYPE);
+			checkObjectType(identifier, ToolPlugin.OBJECT_TYPE);
 			
-			Tool tool = em.find(Tool.class, identifier.getId());
+			ToolPlugin tool = em.find(ToolPlugin.class, identifier.getId());
 			if ( tool == null )  {
 				throw new ToolServiceException("unable to find a tool with id: " + identifier.getId());
 			}
 			tool.setKey(key);
 						
-			notification.throwEvent(key, caller, Tool.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "read"), "");
+			notification.throwEvent(key, caller, ToolPlugin.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, ToolPlugin.OBJECT_TYPE, "read"), "");
 			return tool;
 		} catch ( RegistryServiceException | KeyNotFoundException | NotificationServiceException e ) {
 			logger.log(Level.SEVERE, "unexpected error occured while reading tool", e);
@@ -192,9 +217,9 @@ public class ToolServiceBean implements ToolService {
 			authorisation.checkPermission(key, subjects, "invoke");
 			
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, Tool.OBJECT_TYPE);
+			checkObjectType(identifier, ToolPlugin.OBJECT_TYPE);
 			
-			Tool tool = em.find(Tool.class, identifier.getId());
+			ToolPlugin tool = em.find(ToolPlugin.class, identifier.getId());
 			if ( tool == null )  {
 				throw new ToolServiceException("unable to find a tool with id: " + identifier.getId());
 			}
@@ -203,9 +228,9 @@ public class ToolServiceBean implements ToolService {
 			ToolInvoker iinvoker = (ToolInvoker) invoker.newInstance();
 			ToolInvokerResult result = iinvoker.invoke(params);
 			
-			notification.throwEvent(key, caller, Tool.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "invoke"), "");
+			notification.throwEvent(key, caller, ToolPlugin.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, ToolPlugin.OBJECT_TYPE, "invoke"), "");
 			return result;
-		} catch ( RegistryServiceException | MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | NotificationServiceException | ClassNotFoundException | InstantiationException | IllegalAccessException e ) {
+		} catch ( RegistryServiceException | MembershipServiceException | KeyNotFoundException | NotificationServiceException | ClassNotFoundException | InstantiationException | IllegalAccessException | AuthorisationServiceException e ) {
 			logger.log(Level.SEVERE, "unexpected error occured while invoking tool", e);
 			throw new ToolServiceException("unable to invoke tool", e);
 		}
@@ -242,7 +267,7 @@ public class ToolServiceBean implements ToolService {
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 			}
 
-			if (identifier.getType().equals(Tool.OBJECT_TYPE)) {
+			if (identifier.getType().equals(ToolPlugin.OBJECT_TYPE)) {
 				return readTool(key);
 			}
 
@@ -271,9 +296,9 @@ public class ToolServiceBean implements ToolService {
 			authorisation.checkPermission(key, subjects, "read");
 			
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, Tool.OBJECT_TYPE);
+			checkObjectType(identifier, ToolPlugin.OBJECT_TYPE);
 			
-			Tool tool = em.find(Tool.class, identifier.getId());
+			ToolPlugin tool = em.find(ToolPlugin.class, identifier.getId());
 			if ( tool == null )  {
 				throw new ToolServiceException("unable to find a tool with id: " + identifier.getId());
 			}
@@ -285,9 +310,9 @@ public class ToolServiceBean implements ToolService {
 				throw new ToolServiceException("unable to find a config form for tool with id: " + identifier.getId());
 			}
 									
-			notification.throwEvent(key, caller, Tool.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, Tool.OBJECT_TYPE, "read"), "");
+			notification.throwEvent(key, caller, ToolPlugin.OBJECT_TYPE, OrtolangEvent.buildEventType(ToolService.SERVICE_NAME, ToolPlugin.OBJECT_TYPE, "read"), "");
 			return jsonData;
-		} catch ( RegistryServiceException | MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | NotificationServiceException | IOException e ) {
+		} catch ( RegistryServiceException | MembershipServiceException | KeyNotFoundException | NotificationServiceException | IOException | AuthorisationServiceException e ) {
 			throw new ToolServiceException("unable to load config form", e);
 		}
 	}

@@ -162,6 +162,7 @@ public class BootstrapServiceBean implements BootstrapService {
 						"fr.ortolang.diffusion.tool.marsatag.MarsaTagInvoker", 
 						"marsatag-form-config.json");
 				tool.declareTool("tika", "Tika", "Detects and extracts metadata and text content.", "http://localhost:8080/tool-tika/tika");
+				tool.declareTool("sample", "Sample tool", "Dumb tool for demonstration purpose.", "http://localhost:8080/sample-tool/sample");
 
 				logger.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException

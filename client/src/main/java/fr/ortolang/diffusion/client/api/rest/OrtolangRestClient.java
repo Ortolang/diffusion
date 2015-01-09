@@ -61,12 +61,14 @@ public class OrtolangRestClient {
 		clientConfig.register(CookieFilter.class);
 
 		StringBuffer url = new StringBuffer();
-		if (Boolean.getBoolean(OrtolangClientConfig.getInstance().getProperty("api.rest.ssl.enabled"))) {
+		if (Boolean.valueOf(OrtolangClientConfig.getInstance().getProperty("api.rest.ssl.enabled"))) {
+			logger.log(Level.INFO, "SSL Client config");
 			SslConfigurator sslConfig = SslConfigurator.newInstance();
 			SSLContext sslContext = sslConfig.createSSLContext();
 			builder.sslContext(sslContext);
 			url.append("https://");
 		} else {
+			logger.log(Level.INFO, "No-SSL Client config");
 			url.append("http://");
 		}
 
@@ -117,6 +119,8 @@ public class OrtolangRestClient {
 				authorisation = "Bearer " + object.getString("access_token");
 			} else {
 				authorisation = null;
+				logger.log(Level.SEVERE, "unexpected response code ("+response.getStatus()+") : "+response.getStatusInfo().getReasonPhrase());
+				logger.log(Level.SEVERE, response.readEntity(String.class));
 				throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
 			}
 		}
