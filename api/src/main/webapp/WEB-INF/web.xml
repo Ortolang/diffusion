@@ -112,7 +112,4 @@
 			<transport-guarantee>NONE</transport-guarantee>
 		</user-data-constraint>
 	</security-constraint>
-	<login-config>
-        <auth-method>KEYCLOAK</auth-method>
-    </login-config>
 </web-app>
