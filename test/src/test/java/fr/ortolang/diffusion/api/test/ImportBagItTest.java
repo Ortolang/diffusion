@@ -7,8 +7,8 @@ import java.util.logging.Logger;
 import org.junit.Test;
 
 import fr.ortolang.diffusion.api.bagit.BagItImporter;
-import fr.ortolang.diffusion.api.client.OrtolangRestClient;
-import fr.ortolang.diffusion.api.client.OrtolangRestClientException;
+import fr.ortolang.diffusion.client.api.rest.OrtolangRestClient;
+import fr.ortolang.diffusion.client.api.rest.OrtolangRestClientException;
 
 /**
  * Tests when imports a bagit archive.
@@ -21,9 +21,7 @@ public class ImportBagItTest {
 	@Test
 	public void bench() throws IOException, OrtolangRestClientException {
 		String bagsList = getBagsList();
-//		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://localhost:8080/api/rest");
-		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://192.168.32.6/api/rest");
-//		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://diffusion.ortolang.fr/api/rest");
+		OrtolangRestClient client = new OrtolangRestClient();
 		
 		BagItImporter importer = new BagItImporter(client, bagsList);
 		importer.perform();

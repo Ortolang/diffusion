@@ -3,14 +3,16 @@ package fr.ortolang.diffusion.api.bagit;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import fr.ortolang.diffusion.api.client.OrtolangRestClient;
-import fr.ortolang.diffusion.api.client.OrtolangRestClientException;
+import fr.ortolang.diffusion.client.api.rest.OrtolangRestClient;
+import fr.ortolang.diffusion.client.api.rest.OrtolangRestClientException;
+
 
 public class BagItImporter {
 
@@ -32,9 +34,10 @@ public class BagItImporter {
 			throw new IOException("Parameter bagsFolder is mandatory");
 		}
 		
-//		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://localhost:8080/api/rest");
+		client.login("root", "tagada54");
+		String profile = client.connectedProfile();
+		logger.log(Level.INFO, "connected profile: {0}", profile);
 		
-//		List<File> files = Arrays.asList(bagsList.listFiles());
 		String[] bagsListSplit = bagsList.split(",");
 		for ( String bag : bagsListSplit) {
 			logger.log(Level.INFO, "Starting import a bag at "+bag);
@@ -47,9 +50,8 @@ public class BagItImporter {
 			params.put("wsname", "Workspace of bag " + bagName);
 			params.put("wstype", "benchmark");
 			params.put("bagpath", bag);
-			Map<String, File> attachments = null;
 
-			String pkey = client.createProcess("import-workspace", "Workspace import for bag " + bagName, params, attachments);
+			String pkey = client.createProcess("import-workspace", "Workspace import for bag " + bagName, params, Collections.<String, File> emptyMap());
 			logger.log(Level.INFO, "process created with key : " + pkey);
 			
 		}
@@ -62,7 +64,7 @@ public class BagItImporter {
 		if(argv.length>0) {
 			bagsList = argv[0];
 		}
-		OrtolangRestClient client = new OrtolangRestClient("root", "tagada54", "http://localhost:8080/api/rest");
+		OrtolangRestClient client = new OrtolangRestClient();
 		BagItImporter importer = new BagItImporter(client, bagsList);
 		importer.perform();
 	}
