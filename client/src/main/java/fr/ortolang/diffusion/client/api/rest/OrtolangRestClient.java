@@ -1,7 +1,12 @@
 package fr.ortolang.diffusion.client.api.rest;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -37,17 +42,6 @@ public class OrtolangRestClient {
 
 	private static Logger logger = Logger.getLogger(OrtolangRestClient.class.getName());
 
-	static {
-		javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier(new javax.net.ssl.HostnameVerifier() {
-			public boolean verify(String hostname, javax.net.ssl.SSLSession sslSession) {
-				if (hostname.equals("localhost")) {
-					return true;
-				}
-				return false;
-			}
-		});
-	}
-
 	private WebTarget base;
 	private Client client;
 	private String authorisation;
@@ -64,9 +58,17 @@ public class OrtolangRestClient {
 		if (Boolean.valueOf(OrtolangClientConfig.getInstance().getProperty("api.rest.ssl.enabled"))) {
 			logger.log(Level.INFO, "SSL Client config");
 			SslConfigurator sslConfig = SslConfigurator.newInstance();
-			SSLContext sslContext = sslConfig.createSSLContext();
-			builder.sslContext(sslContext);
-			url.append("https://");
+			try {
+				Path trustStore = Paths.get(OrtolangRestClient.class.getClassLoader().getResource("cacerts.ts").toURI());
+				sslConfig.trustStoreBytes(Files.readAllBytes(trustStore));
+				sslConfig.trustStorePassword("tagada");
+				SSLContext sslContext = sslConfig.createSSLContext();
+				builder.sslContext(sslContext);
+				url.append("https://");
+			} catch (URISyntaxException | IOException e) {
+				logger.log(Level.WARNING, "Unable to load SSL config, falling back to No-SSL config !!", e);
+				url.append("http://");
+			}
 		} else {
 			logger.log(Level.INFO, "No-SSL Client config");
 			url.append("http://");
