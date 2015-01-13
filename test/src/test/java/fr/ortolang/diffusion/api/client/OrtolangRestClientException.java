@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.api.client;
 
+@Deprecated
 @SuppressWarnings("serial")
 public class OrtolangRestClientException  extends Exception {
 

@@ -21,6 +21,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -29,10 +30,13 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.io.IOUtils;
 import org.codehaus.jackson.type.TypeReference;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.api.rest.filter.CORSFilter;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.rest.template.Template;
+import fr.ortolang.diffusion.api.rest.workspace.WorkspaceElementFormRepresentation;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
@@ -42,6 +46,7 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.tool.ToolService;
 import fr.ortolang.diffusion.tool.ToolServiceException;
 import fr.ortolang.diffusion.tool.entity.Tool;
+import fr.ortolang.diffusion.tool.entity.ToolJobStatus;
 import fr.ortolang.diffusion.tool.entity.ToolPlugin;
 import fr.ortolang.diffusion.tool.invoke.ToolInvokerResult;
 
@@ -102,13 +107,26 @@ public class ToolResource {
 	}
 	
 	@GET
+	@Path("/plugin/{key}")
+	@Template( template="tools/detail.vm", types={MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	public Response getPlugin(@PathParam(value = "key") String key) throws ToolServiceException, AccessDeniedException {
+		logger.log(Level.INFO, "read tool for key: " + key);
+				
+		ToolPlugin representation = tool.readToolPlugin(key);
+		
+		return Response.ok(representation).build();
+	}
+	
+
+	@GET
 	@Path("/{key}")
 	@Template( template="tools/detail.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
 	public Response get(@PathParam(value = "key") String key) throws ToolServiceException, AccessDeniedException {
 		logger.log(Level.INFO, "read tool for key: " + key);
 				
-		ToolPlugin representation = tool.readTool(key);
+		Tool representation = tool.readTool(key);
 		
 		return Response.ok(representation).build();
 	}
@@ -157,10 +175,7 @@ public class ToolResource {
 		} else {
 			response.setHeader("Content-Disposition", "attachment; filename=" + name);					
 		}	
-		//TODO this seems to be unusefull...
-//		FileInputStream fis = new FileInputStream(fileResult);
-//        InputStreamReader isr = new InputStreamReader(fis);
-//		response.setCharacterEncoding(isr.getEncoding());
+		
 		response.setContentType(new MimetypesFileTypeMap().getContentType(fileResult));
 		response.setContentLength((int) fileResult.length());
 		InputStream input = new FileInputStream(path);
@@ -169,5 +184,23 @@ public class ToolResource {
 		} finally {
 			IOUtils.closeQuietly(input);
 		}
+	}
+	
+	@POST
+	@Path("/{key}/job-new")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	public Response addJob(@PathParam(value = "key") String key, @MultipartForm ToolJobsRepresentation form) throws IOException, ToolServiceException, AccessDeniedException {
+		logger.log(Level.INFO, "POST /tools/" + key + "/job-new");		
+		if (form.getName() == null) {
+			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'name' is mandatory").build();
+		}
+		if (form.getStatus() == null) {
+			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'status' is mandatory").build();
+		}
+		
+		logger.log(Level.INFO, "new job submitted for tool " + form.getName() + " with key: " + key + " and status : " + form.getStatus().toString());		
+		tool.declareToolJob(key, form.getName(), form.getStatus());
+		return Response.ok().build();
+		
 	}
 }

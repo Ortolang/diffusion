@@ -292,5 +292,14 @@ public class OrtolangRestClient {
 			throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
 		}
 	}
+	
+	public void submitToolJob(String key, String name, String status) throws OrtolangRestClientException {
+		WebTarget target = base.path("/tools/" + key + "/job-new");
+		Form form = new Form().param("key", key).param("status", status).param("name", name);
+		Response response = injectAuthorisation(target.request(MediaType.APPLICATION_FORM_URLENCODED)).accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
+		if (response.getStatus() != Status.CREATED.getStatusCode()) {
+			throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
+		}
+	}
 
 }

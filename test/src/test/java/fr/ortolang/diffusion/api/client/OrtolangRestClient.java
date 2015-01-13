@@ -26,6 +26,7 @@ import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 
 import fr.ortolang.diffusion.api.bench.CookieFilter;
 
+@Deprecated
 public class OrtolangRestClient {
 
 	private static Logger logger = Logger.getLogger(OrtolangRestClient.class.getName());

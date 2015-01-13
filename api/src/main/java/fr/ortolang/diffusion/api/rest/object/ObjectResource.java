@@ -178,7 +178,7 @@ public class ObjectResource {
 			response.setContentLength((int) ((MetadataObject)object).getSize());
 		}
 		if ( object instanceof Collection ) {
-			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName() + ".zip");
+			response.setHeader("Content-Disposition", "attachment; filename=" + key + ".zip");
 			response.setContentType("application/zip");
 //			response.setContentLength((int) ((MetadataObject)object).getSize());
 

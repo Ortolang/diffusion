@@ -161,8 +161,8 @@ public class BootstrapServiceBean implements BootstrapService {
 						"You can download MarsaTag in the SLDR site, that you can reach with its unique handler : <a href=\"http://hdl.handle.net/11041/sldr000841\">hdl:11041/sldr000841</a>.", 
 						"fr.ortolang.diffusion.tool.marsatag.MarsaTagInvoker", 
 						"marsatag-form-config.json");
-				tool.declareTool("tika", "Tika", "Detects and extracts metadata and text content.", "http://localhost:8080/tool-tika/tika");
-				tool.declareTool("sample", "Sample tool", "Dumb tool for demonstration purpose.", "http://localhost:8080/sample-tool/sample");
+				tool.declareTool("tika", "Tika", "Detects and extracts metadata and text content.", "https://localhost:8443/tool-tika/tika");
+				tool.declareTool("sample", "Sample tool", "Dumb tool for demonstration purpose.", "https://localhost:8443/sample-tool/sample");
 
 				logger.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException
