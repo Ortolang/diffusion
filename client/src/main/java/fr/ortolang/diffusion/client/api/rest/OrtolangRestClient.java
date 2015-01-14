@@ -3,7 +3,10 @@ package fr.ortolang.diffusion.client.api.rest;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -59,7 +62,18 @@ public class OrtolangRestClient {
 			logger.log(Level.INFO, "SSL Client config");
 			SslConfigurator sslConfig = SslConfigurator.newInstance();
 			try {
-				Path trustStore = Paths.get(OrtolangRestClient.class.getClassLoader().getResource("cacerts.ts").toURI());
+				URI uri = OrtolangRestClient.class.getClassLoader().getResource("cacerts.ts").toURI();
+				
+				logger.log(Level.INFO, "Uri to the certificate : "+uri.toString());
+				Path trustStore = null;
+				if(uri.toString().startsWith("file:")) {
+					trustStore = Paths.get(uri);
+				} else {
+					final Map<String, String> env = new HashMap<>();
+					final String[] array = uri.toString().split("!");
+					final FileSystem fs = FileSystems.newFileSystem(URI.create(array[0]), env);
+					trustStore = fs.getPath(array[1]);
+				}
 				sslConfig.trustStoreBytes(Files.readAllBytes(trustStore));
 				sslConfig.trustStorePassword("tagada");
 				SSLContext sslContext = sslConfig.createSSLContext();
