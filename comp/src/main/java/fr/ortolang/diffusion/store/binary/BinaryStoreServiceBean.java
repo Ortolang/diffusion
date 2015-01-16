@@ -94,7 +94,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public boolean contains(String identifier) throws BinaryStoreServiceException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
+		Path path = getPathForIdentifier(identifier);
 		if (Files.exists(path)) {
 			return true;
 		}
@@ -104,7 +104,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public InputStream get(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
+		Path path = getPathForIdentifier(identifier);
 		if (!Files.exists(path)) {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
@@ -118,7 +118,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public File getFile(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
+		Path path = getPathForIdentifier(identifier);
 		if (!Files.exists(path)) {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
@@ -132,7 +132,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public long size(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
+		Path path = getPathForIdentifier(identifier);
 		if (!Files.exists(path)) {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
@@ -146,7 +146,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String type(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
+		Path path = getPathForIdentifier(identifier);
 		if (!Files.exists(path)) {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
@@ -161,7 +161,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String extract(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
+		Path path = getPathForIdentifier(identifier);
 		if (!Files.exists(path)) {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
@@ -188,8 +188,13 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 				String hash = input.getHash();
 				logger.log(Level.FINE, "content based generated sha1 hash: " + hash);
 				
-				Path parent = Paths.get(base.toString(), hash.substring(0, DISTINGUISH_SIZE));
-				Path file = Paths.get(base.toString(), hash.substring(0, DISTINGUISH_SIZE), hash);
+				String digit = hash.substring(0, DISTINGUISH_SIZE);
+				Path volume = Paths.get(base.toString(), BinaryStoreVolumeMapper.getVolume(digit));
+				Path parent = Paths.get(base.toString(), BinaryStoreVolumeMapper.getVolume(digit), digit);
+				Path file = Paths.get(base.toString(), BinaryStoreVolumeMapper.getVolume(digit), digit, hash);
+				if (!Files.exists(volume)) {
+					Files.createDirectory(volume);
+				}
 				if (!Files.exists(parent)) {
 					Files.createDirectory(parent);
 				}
@@ -224,7 +229,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void check(String identifier) throws BinaryStoreServiceException, DataNotFoundException, DataCorruptedException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
+		Path path = getPathForIdentifier(identifier);
 		if (!Files.exists(path)) {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
@@ -243,7 +248,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void delete(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
-		Path path = Paths.get(base.toString(), identifier.substring(0, DISTINGUISH_SIZE), identifier);
+		Path path = getPathForIdentifier(identifier);
 		if (!Files.exists(path)) {
 			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
 		}
@@ -268,4 +273,8 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 		}
 	}
 
+	private Path getPathForIdentifier(String identifier) {
+		String digit = identifier.substring(0, DISTINGUISH_SIZE);
+		return Paths.get(base.toString(), BinaryStoreVolumeMapper.getVolume(digit), digit, identifier);
+	}
 }
