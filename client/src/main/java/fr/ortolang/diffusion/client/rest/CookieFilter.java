@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.client.api.rest;
+package fr.ortolang.diffusion.client.rest;
 
 import java.io.IOException;
 import java.util.ArrayList;

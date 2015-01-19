@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.client.api.rest;
+package fr.ortolang.diffusion.client.rest;
 
 @SuppressWarnings("serial")
 public class OrtolangRestClientException  extends Exception {
