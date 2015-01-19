@@ -7,8 +7,8 @@ import java.util.logging.Logger;
 import org.junit.Test;
 
 import fr.ortolang.diffusion.api.bagit.BagItImporter;
-import fr.ortolang.diffusion.client.rest.OrtolangRestClient;
-import fr.ortolang.diffusion.client.rest.OrtolangRestClientException;
+import fr.ortolang.diffusion.client.api.rest.OrtolangRestClient;
+import fr.ortolang.diffusion.client.api.rest.OrtolangRestClientException;
 
 /**
  * Tests when imports a bagit archive.

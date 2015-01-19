@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.client.rest;
+package fr.ortolang.diffusion.client.api.rest;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,12 +9,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import net.iharder.Base64;
-
 import org.junit.Test;
 
-import fr.ortolang.diffusion.client.rest.OrtolangRestClient;
-import fr.ortolang.diffusion.client.rest.OrtolangRestClientException;
+import fr.ortolang.diffusion.client.api.rest.OrtolangRestClient;
+import fr.ortolang.diffusion.client.api.rest.OrtolangRestClientException;
 import fr.ortolang.diffusion.membership.MembershipService;
 
 public class DiffusionRestClientTest {
@@ -24,7 +22,6 @@ public class DiffusionRestClientTest {
 	@Test
 	public void testAuthentication() throws OrtolangRestClientException {
 		OrtolangRestClient client = new OrtolangRestClient();
-		client.setAutorisationHeader("fake");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
 		assertEquals(MembershipService.UNAUTHENTIFIED_IDENTIFIER, profile);
@@ -33,10 +30,7 @@ public class DiffusionRestClientTest {
 	@Test
 	public void testAuthenticationLogged() throws OrtolangRestClientException {
 		OrtolangRestClient client = new OrtolangRestClient();
-		client.setAutorisationHeader("fake");
-		String credentials = MembershipService.SUPERUSER_IDENTIFIER + ":tagada54";
-		String authorisation = "Basic " + Base64.encodeBytes(credentials.getBytes());
-		client.setAutorisationHeader(authorisation);
+		client.login(MembershipService.SUPERUSER_IDENTIFIER, "tagada54");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
 		assertEquals(MembershipService.SUPERUSER_IDENTIFIER, profile);
@@ -45,10 +39,7 @@ public class DiffusionRestClientTest {
 	@Test
 	public void testImportWorkspace() throws OrtolangRestClientException {
 		OrtolangRestClient client = new OrtolangRestClient();
-		client.setAutorisationHeader("fake");
-		String credentials = MembershipService.SUPERUSER_IDENTIFIER + ":tagada54";
-		String authorisation = "Basic " + Base64.encodeBytes(credentials.getBytes());
-		client.setAutorisationHeader(authorisation);
+		client.login(MembershipService.SUPERUSER_IDENTIFIER, "tagada54");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
 		assertEquals(MembershipService.SUPERUSER_IDENTIFIER, profile);

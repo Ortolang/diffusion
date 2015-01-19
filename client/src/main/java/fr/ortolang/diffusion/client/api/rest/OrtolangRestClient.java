@@ -1,10 +1,16 @@
-package fr.ortolang.diffusion.client.rest;
+package fr.ortolang.diffusion.client.api.rest;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
@@ -12,20 +18,26 @@ import java.util.logging.Logger;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
-import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import net.iharder.Base64;
 
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
+import org.glassfish.jersey.SslConfigurator;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
+import org.keycloak.util.BasicAuthHelper;
 
 import fr.ortolang.diffusion.client.OrtolangClientConfig;
 
@@ -36,18 +48,40 @@ public class OrtolangRestClient {
 	private WebTarget base;
 	private Client client;
 	private String authorisation;
+	private Map<String, String> authCache = new HashMap<String, String>();
 
 	public OrtolangRestClient() {
-		ResteasyClientBuilder builder = new ResteasyClientBuilder();
-		//builder.register(CookieFilter.class);
+		ClientBuilder builder = ClientBuilder.newBuilder();
+
+		ClientConfig clientConfig = new ClientConfig();
+		clientConfig.register(MultiPartFeature.class);
+		clientConfig.register(CookieFilter.class);
 
 		StringBuffer url = new StringBuffer();
 		if (Boolean.valueOf(OrtolangClientConfig.getInstance().getProperty("api.rest.ssl.enabled"))) {
 			logger.log(Level.INFO, "SSL Client config");
-			url.append("https://");
-			
-			if (!Boolean.valueOf(OrtolangClientConfig.getInstance().getProperty("api.rest.ssl.trustmanager.enabled"))) {
-				builder.disableTrustManager();
+			SslConfigurator sslConfig = SslConfigurator.newInstance();
+			try {
+				URI uri = OrtolangRestClient.class.getClassLoader().getResource("cacerts.ts").toURI();
+				
+				logger.log(Level.INFO, "Uri to the certificate : "+uri.toString());
+				Path trustStore = null;
+				if(uri.toString().startsWith("file:")) {
+					trustStore = Paths.get(uri);
+				} else {
+					final Map<String, String> env = new HashMap<>();
+					final String[] array = uri.toString().split("!");
+					final FileSystem fs = FileSystems.newFileSystem(URI.create(array[0]), env);
+					trustStore = fs.getPath(array[1]);
+				}
+				sslConfig.trustStoreBytes(Files.readAllBytes(trustStore));
+				sslConfig.trustStorePassword("tagada");
+				SSLContext sslContext = sslConfig.createSSLContext();
+				builder.sslContext(sslContext);
+				url.append("https://");
+			} catch (URISyntaxException | IOException e) {
+				logger.log(Level.WARNING, "Unable to load SSL config, falling back to No-SSL config !!", e);
+				url.append("http://");
 			}
 		} else {
 			logger.log(Level.INFO, "No-SSL Client config");
@@ -59,7 +93,7 @@ public class OrtolangRestClient {
 		url.append(OrtolangClientConfig.getInstance().getProperty("api.rest.port"));
 		url.append(OrtolangClientConfig.getInstance().getProperty("api.rest.url"));
 
-		client = builder.build();
+		client = builder.withConfig(clientConfig).build();
 		base = client.target(url.toString());
 
 		logger.log(Level.INFO, "Client created");
@@ -69,9 +103,16 @@ public class OrtolangRestClient {
 		client.close();
 	}
 
-	public void setAutorisationHeader(String authorisation) throws OrtolangRestClientException {
-		this.authorisation = authorisation;
-		
+	public void login(String username, String password) throws OrtolangRestClientException {
+		if (authCache.containsKey(username)) {
+			authorisation = authCache.get(username);
+		}
+
+		if (OrtolangClientConfig.getInstance().getProperty("api.rest.auth.method").equals("basic")) {
+			String credentials = username + ":" + password;
+			authorisation = "Basic " + Base64.encodeBytes(credentials.getBytes());
+		}
+
 		if (OrtolangClientConfig.getInstance().getProperty("api.rest.auth.method").equals("oauth")) {
 			String url = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.server.url");
 			String realm = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.realm");
@@ -80,9 +121,9 @@ public class OrtolangRestClient {
 
 			WebTarget target = client.target(url).path("realms").path(realm).path("protocol/openid-connect/grants/access");
 
-			Form form = new Form().param("username", "root").param("password", "tagada54");
+			Form form = new Form().param("username", username).param("password", password);
 
-			String authorization = Base64.encodeBytes((appname + ":" + appsecret).getBytes());
+			String authorization = BasicAuthHelper.createHeader(appname, appsecret);
 
 			Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON_TYPE);
 			invocationBuilder.header("Authorization", authorization);
@@ -91,9 +132,9 @@ public class OrtolangRestClient {
 			if (response.getStatus() == Status.OK.getStatusCode()) {
 				String tokenResponse = response.readEntity(String.class);
 				JsonObject object = Json.createReader(new StringReader(tokenResponse)).readObject();
-				this.authorisation = "Bearer " + object.getString("access_token");
+				authorisation = "Bearer " + object.getString("access_token");
 			} else {
-				this.authorisation = null;
+				authorisation = null;
 				logger.log(Level.SEVERE, "unexpected response code ("+response.getStatus()+") : "+response.getStatusInfo().getReasonPhrase());
 				logger.log(Level.SEVERE, response.readEntity(String.class));
 				throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
@@ -170,58 +211,43 @@ public class OrtolangRestClient {
 		}
 	}
 
+	@SuppressWarnings("resource")
 	public void writeCollection(String workspace, String path, String description) throws OrtolangRestClientException {
 		WebTarget target = base.path("/workspaces/" + workspace + "/elements");
-		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
-		mdo.addFormData("path", new ByteArrayInputStream(path.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("type", new ByteArrayInputStream("collection".getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("description", new ByteArrayInputStream(description.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) { };
-		Response response = injectAuthorisation(target.request()).accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
+		MultiPart form = new FormDataMultiPart().field("path", path).field("type", "collection").field("description", description);
+		Response response = injectAuthorisation(target.request()).accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(form, form.getMediaType()));
 		if (response.getStatus() != Status.CREATED.getStatusCode() && response.getStatus() != Status.OK.getStatusCode()) {
 			throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
 		}
 	}
 
+	@SuppressWarnings("resource")
 	public void writeDataObject(String workspace, String path, String description, File content, File preview) throws OrtolangRestClientException {
 		WebTarget target = base.path("/workspaces/" + workspace + "/elements");
-		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
-		mdo.addFormData("path", new ByteArrayInputStream(path.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("type", new ByteArrayInputStream("object".getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("description", new ByteArrayInputStream(description.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		try {
-			if (content != null) {
-				mdo.addFormData("stream", new FileInputStream(content), MediaType.APPLICATION_OCTET_STREAM_TYPE);
-	    	}
-			if (preview != null) {
-				mdo.addFormData("preview", new FileInputStream(preview), MediaType.APPLICATION_OCTET_STREAM_TYPE);
-			}
-		} catch ( FileNotFoundException e ) {
-			throw new OrtolangRestClientException("unable to read file " + e.getMessage(), e);
+		MultiPart form = new FormDataMultiPart().field("path", path).field("type", "object").field("description", description);
+		if (content != null) {
+			FileDataBodyPart contentPart = new FileDataBodyPart("stream", content);
+			form.bodyPart(contentPart);
 		}
-		GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) { };
-		Response response = injectAuthorisation(target.request()).accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
+		if (preview != null) {
+			FileDataBodyPart previewPart = new FileDataBodyPart("preview", preview);
+			form.bodyPart(previewPart);
+		}
+		Response response = injectAuthorisation(target.request()).accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(form, form.getMediaType()));
 		if (response.getStatus() != Status.CREATED.getStatusCode() && response.getStatus() != Status.OK.getStatusCode()) {
 			throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
 		}
 	}
 
+	@SuppressWarnings("resource")
 	public void writeMetaData(String workspace, String path, String name, String format, File content) throws OrtolangRestClientException {
 		WebTarget target = base.path("/workspaces/" + workspace + "/elements");
-		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
-		mdo.addFormData("path", new ByteArrayInputStream(path.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("type", new ByteArrayInputStream("metadata".getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("format", new ByteArrayInputStream(format.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		try {
-			if (content != null) {
-				mdo.addFormData("stream", new FileInputStream(content), MediaType.APPLICATION_OCTET_STREAM_TYPE);
-	    	}
-    	} catch ( FileNotFoundException e ) {
-			throw new OrtolangRestClientException("unable to read file " + e.getMessage(), e);
+		MultiPart form = new FormDataMultiPart().field("path", path).field("type", "metadata").field("name", name).field("format", format);
+		if (content != null) {
+			FileDataBodyPart contentPart = new FileDataBodyPart("stream", content);
+			form.bodyPart(contentPart);
 		}
-		GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) { };
-		Response response = injectAuthorisation(target.request()).accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
+		Response response = injectAuthorisation(target.request()).accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(form, form.getMediaType()));
 		if (response.getStatus() != Status.CREATED.getStatusCode() && response.getStatus() != Status.OK.getStatusCode()) {
 			throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
 		}
@@ -249,24 +275,18 @@ public class OrtolangRestClient {
 		}
 	}
 
+	@SuppressWarnings("resource")
 	public String createProcess(String type, String name, Map<String, String> params, Map<String, File> attachments) throws OrtolangRestClientException {
 		WebTarget target = base.path("/runtime/processes");
-		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
-		mdo.addFormData("process-type", new ByteArrayInputStream(type.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("process-name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+		FormDataMultiPart form = new FormDataMultiPart().field("process-type", type).field("process-name", name);
 		for (Entry<String, String> param : params.entrySet()) {
-			mdo.addFormData(param.getKey(), new ByteArrayInputStream(param.getValue().getBytes()), MediaType.TEXT_PLAIN_TYPE);
+			form.field(param.getKey(), param.getValue());
 		}
-		try {
-			for (Entry<String, File> attachment : attachments.entrySet()) {
-				mdo.addFormData(attachment.getKey(), new FileInputStream(attachment.getValue()), MediaType.APPLICATION_OCTET_STREAM_TYPE);
-			}
-		} catch ( FileNotFoundException e ) {
-			throw new OrtolangRestClientException("unable to read file " + e.getMessage(), e);
+		for (Entry<String, File> attachment : attachments.entrySet()) {
+			FileDataBodyPart contentPart = new FileDataBodyPart(attachment.getKey(), attachment.getValue());
+			form.bodyPart(contentPart);
 		}
-		GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) { };
-		Response response = injectAuthorisation(target.request()).accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
+		Response response = injectAuthorisation(target.request()).accept(MediaType.MEDIA_TYPE_WILDCARD).post(Entity.entity(form, form.getMediaType()));
 		if (response.getStatus() != Status.CREATED.getStatusCode()) {
 			throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
 		} else {
