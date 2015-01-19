@@ -24,6 +24,7 @@ public class DiffusionRestClientTest {
 	@Test
 	public void testAuthentication() throws OrtolangRestClientException {
 		OrtolangRestClient client = new OrtolangRestClient();
+		client.setAutorisationHeader("fake");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
 		assertEquals(MembershipService.UNAUTHENTIFIED_IDENTIFIER, profile);
@@ -32,6 +33,7 @@ public class DiffusionRestClientTest {
 	@Test
 	public void testAuthenticationLogged() throws OrtolangRestClientException {
 		OrtolangRestClient client = new OrtolangRestClient();
+		client.setAutorisationHeader("fake");
 		String credentials = MembershipService.SUPERUSER_IDENTIFIER + ":tagada54";
 		String authorisation = "Basic " + Base64.encodeBytes(credentials.getBytes());
 		client.setAutorisationHeader(authorisation);
@@ -43,6 +45,7 @@ public class DiffusionRestClientTest {
 	@Test
 	public void testImportWorkspace() throws OrtolangRestClientException {
 		OrtolangRestClient client = new OrtolangRestClient();
+		client.setAutorisationHeader("fake");
 		String credentials = MembershipService.SUPERUSER_IDENTIFIER + ":tagada54";
 		String authorisation = "Basic " + Base64.encodeBytes(credentials.getBytes());
 		client.setAutorisationHeader(authorisation);

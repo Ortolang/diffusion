@@ -91,9 +91,9 @@ public class OrtolangRestClient {
 			if (response.getStatus() == Status.OK.getStatusCode()) {
 				String tokenResponse = response.readEntity(String.class);
 				JsonObject object = Json.createReader(new StringReader(tokenResponse)).readObject();
-				authorisation = "Bearer " + object.getString("access_token");
+				this.authorisation = "Bearer " + object.getString("access_token");
 			} else {
-				authorisation = null;
+				this.authorisation = null;
 				logger.log(Level.SEVERE, "unexpected response code ("+response.getStatus()+") : "+response.getStatusInfo().getReasonPhrase());
 				logger.log(Level.SEVERE, response.readEntity(String.class));
 				throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
