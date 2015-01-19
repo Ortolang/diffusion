@@ -2,16 +2,14 @@ package fr.ortolang.diffusion.api.bagit;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import fr.ortolang.diffusion.client.api.rest.OrtolangRestClient;
-import fr.ortolang.diffusion.client.api.rest.OrtolangRestClientException;
+import fr.ortolang.diffusion.client.rest.OrtolangRestClient;
+import fr.ortolang.diffusion.client.rest.OrtolangRestClientException;
 
 
 public class BagItImporter {
@@ -34,7 +32,7 @@ public class BagItImporter {
 			throw new IOException("Parameter bagsFolder is mandatory");
 		}
 		
-		client.login("root", "tagada54");
+		client.setAutorisationHeader("fake");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
 		

@@ -22,6 +22,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import net.iharder.Base64;
+
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 
@@ -70,33 +72,33 @@ public class OrtolangRestClient {
 	public void setAutorisationHeader(String authorisation) throws OrtolangRestClientException {
 		this.authorisation = authorisation;
 		
-//		if (OrtolangClientConfig.getInstance().getProperty("api.rest.auth.method").equals("oauth")) {
-//			String url = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.server.url");
-//			String realm = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.realm");
-//			String appname = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.app.name");
-//			String appsecret = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.app.secret");
-//
-//			WebTarget target = client.target(url).path("realms").path(realm).path("protocol/openid-connect/grants/access");
-//
-//			Form form = new Form().param("username", username).param("password", password);
-//
-//			String authorization = BasicAuthHelper.createHeader(appname, appsecret);
-//
-//			Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON_TYPE);
-//			invocationBuilder.header("Authorization", authorization);
-//			Response response = invocationBuilder.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
-//
-//			if (response.getStatus() == Status.OK.getStatusCode()) {
-//				String tokenResponse = response.readEntity(String.class);
-//				JsonObject object = Json.createReader(new StringReader(tokenResponse)).readObject();
-//				authorisation = "Bearer " + object.getString("access_token");
-//			} else {
-//				authorisation = null;
-//				logger.log(Level.SEVERE, "unexpected response code ("+response.getStatus()+") : "+response.getStatusInfo().getReasonPhrase());
-//				logger.log(Level.SEVERE, response.readEntity(String.class));
-//				throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
-//			}
-//		}
+		if (OrtolangClientConfig.getInstance().getProperty("api.rest.auth.method").equals("oauth")) {
+			String url = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.server.url");
+			String realm = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.realm");
+			String appname = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.app.name");
+			String appsecret = OrtolangClientConfig.getInstance().getProperty("api.rest.oauth.app.secret");
+
+			WebTarget target = client.target(url).path("realms").path(realm).path("protocol/openid-connect/grants/access");
+
+			Form form = new Form().param("username", "root").param("password", "tagada54");
+
+			String authorization = Base64.encodeBytes((appname + ":" + appsecret).getBytes());
+
+			Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON_TYPE);
+			invocationBuilder.header("Authorization", authorization);
+			Response response = invocationBuilder.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
+
+			if (response.getStatus() == Status.OK.getStatusCode()) {
+				String tokenResponse = response.readEntity(String.class);
+				JsonObject object = Json.createReader(new StringReader(tokenResponse)).readObject();
+				authorisation = "Bearer " + object.getString("access_token");
+			} else {
+				authorisation = null;
+				logger.log(Level.SEVERE, "unexpected response code ("+response.getStatus()+") : "+response.getStatusInfo().getReasonPhrase());
+				logger.log(Level.SEVERE, response.readEntity(String.class));
+				throw new OrtolangRestClientException("unexpected response code: " + response.getStatus());
+			}
+		}
 	}
 
 	public void logout() throws OrtolangRestClientException {
