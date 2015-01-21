@@ -14,8 +14,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import fr.ortolang.diffusion.client.OrtolangClientConfig;
+import fr.ortolang.diffusion.client.auth.AuthenticationException;
 import fr.ortolang.diffusion.client.auth.AuthenticationManager;
 
 @Path("/client")
@@ -25,11 +27,11 @@ public class AuthenticationResource {
 	private static Logger logger = Logger.getLogger(AuthenticationResource.class.getName());
 	
 	private static AuthenticationManager manager = AuthenticationManager.getInstance();
+	private static Map<String, String> states = new HashMap<String, String> ();
 	private String authUrl;
 	private String authRealm;
 	private String appname;
 	private String callbackUrl;
-	private Map<String, String> states = new HashMap<String, String> ();
 	
 	public AuthenticationResource() {
 		authUrl = OrtolangClientConfig.getInstance().getProperty("api.rest.auth.server.url");
@@ -41,17 +43,17 @@ public class AuthenticationResource {
 	@GET
 	@Path("/auth")
 	public Response getAuthStatus(@Context HttpServletRequest request) {
-		logger.log(Level.INFO, "Checking authentication status");
+		logger.log(Level.INFO, "Checking grant status");
 		String user = null;
 		if ( request.getUserPrincipal() != null ) {
 			user = request.getUserPrincipal().getName();
-		} 
-		user = "root";
-		if ( user == null || !manager.exists(user) ) {
+		} else {
+			return Response.status(Status.UNAUTHORIZED).build();
+		}
+		if ( !manager.exists(user) ) {
 			logger.log(Level.FINE, "Generating authentication url");
 			String state = UUID.randomUUID().toString();
 			states.put(state, user);
-			//TODO we should store the state in the manager in order to be able to associate the code to the good user
 			StringBuffer url = new StringBuffer();
 			url.append(authUrl).append("/realms/").append(authRealm);
 			url.append("/tokens/login?client_id=").append(appname);
@@ -67,8 +69,31 @@ public class AuthenticationResource {
 	@GET
 	@Path("/code")
 	public Response setAuthCode(@Context HttpServletRequest request, @QueryParam("code") String code, @QueryParam("state") String state) {
-		logger.log(Level.INFO, "Setting authentication code");
-		return Response.ok("code received").build();
+		logger.log(Level.INFO, "Setting grant code");
+		if ( states.containsKey(state) ) {
+			try {
+				manager.setAuthorisationCode(states.get(state), code);
+			} catch (AuthenticationException e) {
+				return Response.serverError().entity(e.getMessage()).build();
+			}
+			return Response.ok().build();
+		} else {
+			return Response.status(Status.UNAUTHORIZED).build();
+		}
+	}
+	
+	@GET
+	@Path("/revoke")
+	public Response revoke(@Context HttpServletRequest request) {
+		logger.log(Level.INFO, "Revoking grant");
+		String user = null;
+		if ( request.getUserPrincipal() != null ) {
+			user = request.getUserPrincipal().getName();
+		} else {
+			return Response.status(Status.UNAUTHORIZED).build();
+		}
+		//TODO make something !!
+		return Response.ok().build();
 	}
 	
 }
