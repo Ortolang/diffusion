@@ -6,6 +6,8 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -59,7 +61,8 @@ public class AuthenticationResource {
 			url.append("&state=").append(state);
 			url.append("&response_type=code");
 			url.append("&redirect_uri=").append(callbackUrl);
-	        return Response.ok(url.toString()).build();
+			JsonObject jsonObject = Json.createObjectBuilder().add("url", url.toString()).build();
+			return Response.ok(jsonObject).build();
 		} else {
 			return Response.ok().build();
 		}
@@ -67,6 +70,7 @@ public class AuthenticationResource {
 	
 	@GET
 	@Path("/code")
+	@Produces(MediaType.TEXT_HTML)
 	public Response setAuthCode(@QueryParam("code") String code, @QueryParam("state") String state) {
 		logger.log(Level.INFO, "Setting grant code");
 		if ( states.containsKey(state) ) {
@@ -75,7 +79,7 @@ public class AuthenticationResource {
 			} catch (AuthenticationException e) {
 				return Response.serverError().entity(e.getMessage()).build();
 			}
-			return Response.ok().build();
+			return Response.ok("<HTML><HEAD></HEAD><BODY onload=\"javascript:window.close();\"></BODY></HTML>").build();
 		} else {
 			return Response.status(Status.UNAUTHORIZED).build();
 		}
