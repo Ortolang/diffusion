@@ -38,6 +38,9 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+/**
+ * @resourceDescription Operations on Objects
+ */
 @Path("/objects")
 @Produces({ MediaType.APPLICATION_JSON })
 public class ObjectResource {
@@ -60,6 +63,17 @@ public class ObjectResource {
 	public ObjectResource() {
 	}
 
+	/**
+	 * List objects
+	 * @responseType fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation
+	 * @param offset Offset of the first row to return
+	 * @param limit Maximum number of rows to return
+	 * @param itemsOnly Only get top items (items displayed in market home)
+	 * @param status {@link fr.ortolang.diffusion.OrtolangObjectState.Status}
+	 * @return {@link fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation}
+	 * @throws BrowserServiceException
+	 */
+	@SuppressWarnings("javadoc")
 	@GET
 	@Template( template="objects/list.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
@@ -87,6 +101,18 @@ public class ObjectResource {
 		return response;
 	}
 
+	/**
+	 * Get Object by key
+	 * @responseType fr.ortolang.diffusion.api.rest.object.ObjectRepresentation
+	 * @param key The object key
+	 * @return ObjectRepresentation
+	 * @throws BrowserServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 * @throws SecurityServiceException
+	 * @throws OrtolangException
+	 */
+	@SuppressWarnings("javadoc")
 	@GET
 	@Path("/{key}")
 	@Template( template="objects/detail.vm", types={MediaType.TEXT_HTML})
@@ -161,7 +187,19 @@ public class ObjectResource {
 		}
 		return Response.ok(representation).build();
 	}
-	
+
+	/**
+	 * Download Object by key
+	 * @param key
+	 * @param response
+	 * @throws BrowserServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 * @throws OrtolangException
+	 * @throws DataNotFoundException
+	 * @throws IOException
+	 * @throws CoreServiceException
+	 */
 	@GET
 	@Path("/{key}/download")
 	public void download(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, DataNotFoundException, IOException, CoreServiceException {

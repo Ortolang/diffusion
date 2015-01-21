@@ -16,7 +16,8 @@ public class TripleHelper {
 	
 	/**
 	 * Extracts triples from RDF string.
-	 * @param rdf a string representation of the RDF
+	 * @param reader A Reader from which RDF data can be read.
+	 * @param contentType A MIME type, e.g. "application/rdf+xml".
 	 * @return the list of triples extracted from RDF
 	 */
 	public static Set<Triple> extractTriples(Reader reader, String contentType) throws TripleStoreServiceException {

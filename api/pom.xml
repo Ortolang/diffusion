@@ -107,6 +107,44 @@
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.9.1</version>
+				<configuration>
+					<tags>
+						<tag>
+							<name>responseType</name>
+							<placement>X</placement>
+						</tag>
+						<tag>
+							<name>resourceDescription</name>
+							<placement>X</placement>
+						</tag>
+					</tags>
+				</configuration>
+				<executions>
+					<execution>
+						<id>generate-service-docs</id>
+						<phase>generate-resources</phase>
+						<configuration>
+							<doclet>com.carma.swagger.doclet.ServiceDoclet</doclet>
+							<docletArtifact>
+								<groupId>com.carma</groupId>
+								<artifactId>swagger-doclet</artifactId>
+								<version>1.0.3</version>
+							</docletArtifact>
+							<destDir>swagger</destDir>
+							<reportOutputDirectory>${project.reporting.outputDirectory}</reportOutputDirectory>
+							<useStandardDocletOptions>false</useStandardDocletOptions>
+							<additionalparam>-apiVersion ${project.version} -docBasePath http://localhost/~fpierre/api/ -apiBasePath /</additionalparam>
+						</configuration>
+						<goals>
+							<goal>javadoc</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
