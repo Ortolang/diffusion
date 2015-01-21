@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.client.api.rest;
+package fr.ortolang.diffusion.client;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,37 +9,45 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-import fr.ortolang.diffusion.client.api.rest.OrtolangRestClient;
-import fr.ortolang.diffusion.client.api.rest.OrtolangRestClientException;
+import fr.ortolang.diffusion.client.auth.AuthenticationException;
+import fr.ortolang.diffusion.client.auth.AuthenticationManager;
 import fr.ortolang.diffusion.membership.MembershipService;
 
-public class DiffusionRestClientTest {
+public class OrtolangClientTest {
 	
-	private static Logger logger = Logger.getLogger(DiffusionRestClientTest.class.getName());
+	private static Logger logger = Logger.getLogger(OrtolangClientTest.class.getName());
+	
+	@BeforeClass
+	public static void init() throws AuthenticationException {
+		AuthenticationManager.getInstance().setCredentials("root", "tagada54");
+	}
 	
 	@Test
-	public void testAuthentication() throws OrtolangRestClientException {
-		OrtolangRestClient client = new OrtolangRestClient();
+	public void testAnonnymousAuthentication() throws OrtolangClientException, AuthenticationException {
+		OrtolangClient client = new OrtolangClient();
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
 		assertEquals(MembershipService.UNAUTHENTIFIED_IDENTIFIER, profile);
+		client.close();
 	}
 	
 	@Test
-	public void testAuthenticationLogged() throws OrtolangRestClientException {
-		OrtolangRestClient client = new OrtolangRestClient();
-		client.login(MembershipService.SUPERUSER_IDENTIFIER, "tagada54");
+	public void testRootAuthentication() throws OrtolangClientException, AuthenticationException {
+		OrtolangClient client = new OrtolangClient();
+		client.login("root");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
 		assertEquals(MembershipService.SUPERUSER_IDENTIFIER, profile);
+		client.close();
 	}
 	
 	@Test
-	public void testImportWorkspace() throws OrtolangRestClientException {
-		OrtolangRestClient client = new OrtolangRestClient();
-		client.login(MembershipService.SUPERUSER_IDENTIFIER, "tagada54");
+	public void testImportWorkspace() throws OrtolangClientException, AuthenticationException {
+		OrtolangClient client = new OrtolangClient();
+		client.login("root");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
 		assertEquals(MembershipService.SUPERUSER_IDENTIFIER, profile);
@@ -48,8 +56,8 @@ public class DiffusionRestClientTest {
 		params.put("wstype", "test");
 		params.put("wsname", "SLDR 000 745");
 		params.put("bagpath", "/media/space/jerome/Data/newbags/sldr000745");
-		
 		client.createProcess("import-workspace", "Import SLDR 745", params, Collections.<String, File> emptyMap());
+		client.close();
 	}
 
 }

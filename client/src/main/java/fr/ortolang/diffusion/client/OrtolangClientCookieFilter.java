@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.client.api.rest;
+package fr.ortolang.diffusion.client;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -16,12 +16,12 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class CookieFilter implements ClientRequestFilter, ClientResponseFilter {
+public class OrtolangClientCookieFilter implements ClientRequestFilter, ClientResponseFilter {
 
-	private static final Logger logger = Logger.getLogger(CookieFilter.class.getName());
+	private static final Logger logger = Logger.getLogger(OrtolangClientCookieFilter.class.getName());
 	private static List<Object> cookies = new ArrayList<Object>();
 
-	public CookieFilter() {
+	public OrtolangClientCookieFilter() {
 	}
 
 	@Override
