@@ -6,7 +6,6 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -15,6 +14,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.SecurityContext;
 
 import fr.ortolang.diffusion.client.OrtolangClientConfig;
 import fr.ortolang.diffusion.client.auth.AuthenticationException;
@@ -27,26 +27,25 @@ public class AuthenticationResource {
 	private static Logger logger = Logger.getLogger(AuthenticationResource.class.getName());
 	
 	private static AuthenticationManager manager = AuthenticationManager.getInstance();
+	private static String authUrl = OrtolangClientConfig.getInstance().getProperty("api.rest.auth.server.url");
+	private static String authRealm = OrtolangClientConfig.getInstance().getProperty("api.rest.auth.realm"); 
+	private static String appname = OrtolangClientConfig.getInstance().getProperty("api.rest.auth.app.name"); 
+	private static String callbackUrl = OrtolangClientConfig.getInstance().getProperty("api.rest.auth.callback.url"); 
 	private static Map<String, String> states = new HashMap<String, String> ();
-	private String authUrl;
-	private String authRealm;
-	private String appname;
-	private String callbackUrl;
+	
+	@Context 
+	private SecurityContext ctx;
 	
 	public AuthenticationResource() {
-		authUrl = OrtolangClientConfig.getInstance().getProperty("api.rest.auth.server.url");
-		authRealm = OrtolangClientConfig.getInstance().getProperty("api.rest.auth.realm");
-		appname = OrtolangClientConfig.getInstance().getProperty("api.rest.auth.app.name");
-		callbackUrl = OrtolangClientConfig.getInstance().getProperty("api.rest.auth.callback.url");
 	}
 	
 	@GET
-	@Path("/auth")
-	public Response getAuthStatus(@Context HttpServletRequest request) {
+	@Path("/grant")
+	public Response getAuthStatus() {
 		logger.log(Level.INFO, "Checking grant status");
 		String user = null;
-		if ( request.getUserPrincipal() != null ) {
-			user = request.getUserPrincipal().getName();
+		if ( ctx.getUserPrincipal() != null ) {
+			user = ctx.getUserPrincipal().getName();
 		} else {
 			return Response.status(Status.UNAUTHORIZED).build();
 		}
@@ -68,7 +67,7 @@ public class AuthenticationResource {
 	
 	@GET
 	@Path("/code")
-	public Response setAuthCode(@Context HttpServletRequest request, @QueryParam("code") String code, @QueryParam("state") String state) {
+	public Response setAuthCode(@QueryParam("code") String code, @QueryParam("state") String state) {
 		logger.log(Level.INFO, "Setting grant code");
 		if ( states.containsKey(state) ) {
 			try {
@@ -84,11 +83,11 @@ public class AuthenticationResource {
 	
 	@GET
 	@Path("/revoke")
-	public Response revoke(@Context HttpServletRequest request) {
+	public Response revoke() {
 		logger.log(Level.INFO, "Revoking grant");
 		String user = null;
-		if ( request.getUserPrincipal() != null ) {
-			user = request.getUserPrincipal().getName();
+		if ( ctx.getUserPrincipal() != null ) {
+			user = ctx.getUserPrincipal().getName();
 		} else {
 			return Response.status(Status.UNAUTHORIZED).build();
 		}

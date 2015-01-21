@@ -139,7 +139,7 @@ public class AuthenticationManager {
 			AuthenticationAccount account = accounts.get(user);
 			if (account.getExpires() < System.currentTimeMillis()) {
 				logger.log(Level.FINE, "AccessToken expired for user: " + user);
-				this.refresh(user);
+				this.refresh(account);
 				account = accounts.get(user);
 			}
 			return "Bearer " + account.getAccessToken();
@@ -148,9 +148,34 @@ public class AuthenticationManager {
 		}
 	}
 	
-	private void refresh(String user) throws AuthenticationException {
-		logger.log(Level.INFO, "Refreshing AccessToken for user: " + user);
-		//TODO
+	private void refresh(AuthenticationAccount account) throws AuthenticationException {
+		logger.log(Level.INFO, "Refreshing AccessToken for user: " + account.getUsername());
+		
+		WebTarget target = client.target(authUrl).path("realms").path(authRealm).path("protocol/openid-connect/refresh");
+		Form form = new Form().param("refresh_token", account.getRefreshToken());
+		Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON_TYPE);
+		if ( appsecret != null && appsecret.length() > 0 ) {
+			String authz = Base64.encodeBytes((appname + ":" + appsecret).getBytes());
+			invocationBuilder.header("Authorization", authz);
+		} else {
+			form.param("client_id", appname);
+		}
+		Response response = invocationBuilder.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
+		if (response.getStatus() == Status.OK.getStatusCode()) {
+			String tokenResponse = response.readEntity(String.class);
+			JsonObject object = Json.createReader(new StringReader(tokenResponse)).readObject();
+			logger.log(Level.FINE, "Received refresh response: " + object.toString());
+			account.setIdToken(object.getString("id_token"));
+			account.setAccessToken(object.getString("access_token"));
+			account.setRefreshToken(object.getString("refresh_token"));
+			account.setSessionState(object.getString("session-state"));
+			account.setExpires(System.currentTimeMillis() + ((object.getInt("expires_in") - 5) * 1000));
+			logger.log(Level.FINE, "AccessToken refreshed for user: " + account.getUsername());
+		} else {
+			logger.log(Level.SEVERE, "unexpected response code ("+response.getStatus()+") : "+response.getStatusInfo().getReasonPhrase());
+			logger.log(Level.SEVERE, response.readEntity(String.class));
+			throw new AuthenticationException("unexpected credential grant response code: " + response.getStatus());
+		}
 	}
 
 }
