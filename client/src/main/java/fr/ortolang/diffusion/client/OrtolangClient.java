@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.naming.AuthenticationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
@@ -25,55 +26,43 @@ import javax.ws.rs.core.Response.Status;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataOutput;
 
-import fr.ortolang.diffusion.client.auth.AuthenticationException;
-import fr.ortolang.diffusion.client.auth.AuthenticationManager;
+import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
+import fr.ortolang.diffusion.client.account.OrtolangClientAccountManager;
 
 public class OrtolangClient {
 
 	private static Logger logger = Logger.getLogger(OrtolangClient.class.getName());
 
+	private OrtolangClientAccountManager accountManager;
 	private WebTarget base;
 	private Client client;
-	private AuthenticationManager auth;
 	private String currentUser = null;
 	
-	public OrtolangClient() {
+	public OrtolangClient(String id) {
+		logger.log(Level.INFO, "Creating new OrtolangClient with id " + id);
 		ResteasyClientBuilder builder = new ResteasyClientBuilder();
 		builder.register(OrtolangClientCookieFilter.class);
-
-		StringBuffer url = new StringBuffer();
-		if (Boolean.valueOf(OrtolangClientConfig.getInstance().getProperty("api.rest.ssl.enabled"))) {
-			logger.log(Level.INFO, "SSL Client config");
-			url.append("https://");
-			if (!Boolean.valueOf(OrtolangClientConfig.getInstance().getProperty("api.rest.ssl.trustmanager.enabled"))) {
-				builder.disableTrustManager();
-			}
-		} else {
-			logger.log(Level.INFO, "No-SSL Client config");
-			url.append("http://");
+		if (Boolean.valueOf(OrtolangClientConfig.getInstance().getProperty("trustmanager.disabled"))) {
+			builder.disableTrustManager();
 		}
-
-		url.append(OrtolangClientConfig.getInstance().getProperty("api.rest.hostname")).append(":");
-		url.append(OrtolangClientConfig.getInstance().getProperty("api.rest.port"));
-		url.append(OrtolangClientConfig.getInstance().getProperty("api.rest.url"));
-
 		client = builder.build();
-		base = client.target(url.toString());
-		auth = AuthenticationManager.getInstance();
-
+		
+		base = client.target(OrtolangClientConfig.getInstance().getProperty("diffusion.api.url"));
+		accountManager = OrtolangClientAccountManager.getInstance(id);
+		
 		logger.log(Level.INFO, "Client created");
 	}
-
+	
 	public void close() {
 		client.close();
 	}
 
-	public void login(String user) throws AuthenticationException {
-		if (auth.exists(user)) {
+	public void login(String user) throws OrtolangClientException {
+		if (accountManager.exists(user)) {
 			currentUser = user;
 			return;
 		}
-		throw new AuthenticationException("user is unknown, use OrtolangClientAuthManager to register user authentication information");
+		throw new OrtolangClientException("user is unknown, use OrtolangClientAccountManager to set user authentication information");
 	}
 
 	public void logout() {
@@ -83,10 +72,10 @@ public class OrtolangClient {
 	private Invocation.Builder injectAuthHeader(Invocation.Builder builder) throws OrtolangClientException {
 		try {
 			if (currentUser != null) {
-				builder.header("Authorization", auth.getHttpAuthorisationHeader(currentUser));
+				builder.header("Authorization", accountManager.getHttpAuthorisationHeader(currentUser));
 			}
 			return builder;
-		} catch (AuthenticationException e) {
+		} catch (OrtolangClientAccountException e) {
 			throw new OrtolangClientException("unable to inject authentication header", e);
 		}
 	}

@@ -12,22 +12,23 @@ import java.util.logging.Logger;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import fr.ortolang.diffusion.client.auth.AuthenticationException;
-import fr.ortolang.diffusion.client.auth.AuthenticationManager;
+import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
+import fr.ortolang.diffusion.client.account.OrtolangClientAccountManager;
 import fr.ortolang.diffusion.membership.MembershipService;
 
 public class OrtolangClientTest {
 	
 	private static Logger logger = Logger.getLogger(OrtolangClientTest.class.getName());
+	private static String clientId = "client";
 	
 	@BeforeClass
-	public static void init() throws AuthenticationException {
-		AuthenticationManager.getInstance().setCredentials("root", "tagada54");
+	public static void init() throws OrtolangClientAccountException {
+		OrtolangClientAccountManager.getInstance(clientId).setCredentials("root", "tagada54");
 	}
 	
 	@Test
-	public void testAnonnymousAuthentication() throws OrtolangClientException, AuthenticationException {
-		OrtolangClient client = new OrtolangClient();
+	public void testAnonnymousAuthentication() throws OrtolangClientException {
+		OrtolangClient client = new OrtolangClient(clientId);
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
 		assertEquals(MembershipService.UNAUTHENTIFIED_IDENTIFIER, profile);
@@ -35,8 +36,8 @@ public class OrtolangClientTest {
 	}
 	
 	@Test
-	public void testRootAuthentication() throws OrtolangClientException, AuthenticationException {
-		OrtolangClient client = new OrtolangClient();
+	public void testRootAuthentication() throws OrtolangClientException {
+		OrtolangClient client = new OrtolangClient(clientId);
 		client.login("root");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
@@ -45,8 +46,8 @@ public class OrtolangClientTest {
 	}
 	
 	@Test
-	public void testImportWorkspace() throws OrtolangClientException, AuthenticationException {
-		OrtolangClient client = new OrtolangClient();
+	public void testImportWorkspace() throws OrtolangClientException {
+		OrtolangClient client = new OrtolangClient(clientId);
 		client.login("root");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);

@@ -20,7 +20,6 @@ import fr.ortolang.diffusion.form.FormService;
 import fr.ortolang.diffusion.form.FormServiceException;
 import fr.ortolang.diffusion.form.entity.Form;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.tool.ToolServiceException;
 
 @Path("/forms")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -60,7 +59,7 @@ public class FormResource {
 	@Path("/{key}")
 	@Template( template="forms/detail.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
-	public Response get(@PathParam(value = "key") String key) throws ToolServiceException, FormServiceException, KeyNotFoundException {
+	public Response get(@PathParam(value = "key") String key) throws FormServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "read form for key: " + key);
 				
 		Form representation = form.readForm(key);
