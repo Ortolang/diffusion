@@ -26,11 +26,6 @@ public class AuthenticationServiceBean implements AuthenticationService {
 	@Override
 	public String getConnectedIdentifier() {
 		logger.log(Level.FINE, "Connected identifier " + ctx.getCallerPrincipal().getName());
-		if ( ctx.isCallerInRole("tool") ) {
-			logger.log(Level.INFO, "User is in role tool");
-		} else {
-			logger.log(Level.INFO, "User is NOT NOT in role tool");
-		}
 		return ctx.getCallerPrincipal().getName();
 	}
 
