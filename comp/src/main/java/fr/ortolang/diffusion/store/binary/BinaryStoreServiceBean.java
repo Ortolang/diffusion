@@ -94,11 +94,15 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public boolean contains(String identifier) throws BinaryStoreServiceException {
-		Path path = getPathForIdentifier(identifier);
-		if (Files.exists(path)) {
-			return true;
+		try {
+			Path path = getPathForIdentifier(identifier);
+			if (Files.exists(path)) {
+				return true;
+			}
+			return false;
+		} catch (DataNotFoundException e) {
+			return false;
 		}
-		return false;
 	}
 
 	@Override
@@ -216,7 +220,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 					} 
 				}
 				return hash;
-			} catch ( IOException e) {
+			} catch ( IOException | VolumeNotFoundException e) {
 				throw new BinaryStoreServiceException(e);
 			} finally {
 				IOUtils.closeQuietly(input);
@@ -273,8 +277,12 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 		}
 	}
 
-	private Path getPathForIdentifier(String identifier) {
+	private Path getPathForIdentifier(String identifier) throws DataNotFoundException {
 		String digit = identifier.substring(0, DISTINGUISH_SIZE);
-		return Paths.get(base.toString(), BinaryStoreVolumeMapper.getVolume(digit), digit, identifier);
+		try {
+			return Paths.get(base.toString(), BinaryStoreVolumeMapper.getVolume(digit), digit, identifier);
+		} catch ( VolumeNotFoundException e ) {
+			throw new DataNotFoundException(e);
+		}
 	}
 }

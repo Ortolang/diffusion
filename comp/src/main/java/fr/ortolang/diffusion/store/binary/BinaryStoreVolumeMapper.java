@@ -27,15 +27,19 @@ public class BinaryStoreVolumeMapper {
 		}
 	}
 	
-	public static String getVolume(String digit) {
-		return mapping.get(digit);
+	public static String getVolume(String digit) throws VolumeNotFoundException {
+		if ( mapping.containsKey(digit) ) {
+			return mapping.get(digit);
+		} else {
+			throw new VolumeNotFoundException("No volume mapped for digit: " + digit);
+		}
 	}
 	
 	public static List<String> listVolumes() {
 		return volumes;
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws VolumeNotFoundException {
 		System.out.println(BinaryStoreVolumeMapper.getVolume("98"));
 	}
 
