@@ -21,7 +21,7 @@ public class ImportBagItTest {
 	@Test
 	public void bench() throws IOException, OrtolangClientException, OrtolangClientAccountException {
 		String bagsList = getBagsList();
-		OrtolangClient client = new OrtolangClient("client");
+		OrtolangClient client = new OrtolangClient("import");
 		
 		BagItImporter importer = new BagItImporter(client, bagsList);
 		importer.perform();
