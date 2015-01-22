@@ -12,9 +12,9 @@ import java.util.StringTokenizer;
 public class FormatHandleFile {
 	
 	public static void main(String args[]) {
-		Path input = Paths.get("/home/jerome/comere2.txt");
-		Path output = Paths.get("/home/jerome/comere2-out.txt");
-		Path log = Paths.get("/home/jerome/comere2-out.log");
+		Path input = Paths.get("/home/jerome/handle.txt");
+		Path output = Paths.get("/home/jerome/handle-out.txt");
+		Path log = Paths.get("/home/jerome/handle-out.log");
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		byte[] buf = new byte[1024];

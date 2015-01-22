@@ -22,7 +22,6 @@ import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.store.index.IndexStoreService;
 import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
 import fr.ortolang.diffusion.store.triple.TripleStoreService;
-import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 
 @MessageDriven(name = "IndexingTopicMDB", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
 		@ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),

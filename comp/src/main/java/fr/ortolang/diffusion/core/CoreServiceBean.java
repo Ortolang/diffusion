@@ -1,9 +1,6 @@
 package fr.ortolang.diffusion.core;
 
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -62,10 +59,8 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.triple.Triple;
-import fr.ortolang.diffusion.store.triple.TripleHelper;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 import fr.ortolang.diffusion.store.triple.URIHelper;
-import fr.ortolang.diffusion.template.TemplateEngine;
 
 @Local(CoreService.class)
 @Stateless(name = CoreService.SERVICE_NAME)

@@ -45,8 +45,6 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
-import fr.ortolang.diffusion.tool.ToolService;
-import fr.ortolang.diffusion.tool.ToolServiceException;
 
 @Startup
 @Singleton(name = BootstrapService.SERVICE_NAME)
@@ -68,8 +66,6 @@ public class BootstrapServiceBean implements BootstrapService {
 	private CoreService core;
 	@EJB
 	private RuntimeService runtime;
-	@EJB
-	private ToolService tool;
 	@EJB
 	private FormService form;
 	@Resource
@@ -136,37 +132,9 @@ public class BootstrapServiceBean implements BootstrapService {
 				String jsonDefinition2 = IOUtils.toString(is2);
 				form.createForm("test-process-confirm-form", "Test Process Confirm Form", jsonDefinition2);
 
-				logger.log(Level.FINE, "declare tools");
-				tool.declareToolPlugin("dumb", 
-						"Dumb tool", 
-						"Tool for testing purpose.", 
-						"N/A", 
-						"fr.ortolang.diffusion.tool.dumbtool.DumbToolInvoker", 
-						"dumb-form-config.json");
-//				tool.declareToolPlugin("tika", 
-//						"Tika", 
-//						"Detects and extracts metadata and text content.", 
-//						"Tika detects and extracts metadata and text content from various documents - from PPT to CSV to PDF - using existing parser libraries.", 
-//						"fr.ortolang.diffusion.tool.tika.TikaInvoker", 
-//						"tika-form-config.json");
-				tool.declareToolPlugin("treetagger", 
-						"TreeTagger", 
-						"A language independent part-of-speech tagger : \r\nThe TreeTagger is a tool for annotating text with part-of-speech and lemma information. ", 
-						"See <a href=\"http://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/\">http://www.cis.uni-muenchen.de/~schmid/tools/TreeTagger/</a> or <a href=\"http://www.tal.univ-paris3.fr/cours/BAO-master/treetagger-win32/README-treetagger.txt\">http://www.tal.univ-paris3.fr/cours/BAO-master/treetagger-win32/README-treetagger.txt</a>", 
-						"fr.ortolang.diffusion.tool.treetagger.TreeTaggerInvoker", 
-						"treetagger-form-config.json");
-				tool.declareToolPlugin("marsatag", 
-						"MarsaTag", 
-						"MarsaTag is a French language tagger develloped at the LPL by Stéphane Rauzy.", 
-						"You can download MarsaTag in the SLDR site, that you can reach with its unique handler : <a href=\"http://hdl.handle.net/11041/sldr000841\">hdl:11041/sldr000841</a>.", 
-						"fr.ortolang.diffusion.tool.marsatag.MarsaTagInvoker", 
-						"marsatag-form-config.json");
-				tool.declareTool("tika", "Tika", "Detects and extracts metadata and text content.", "https://localhost:8443/tika");
-				tool.declareTool("sample", "Sample tool", "Dumb tool for demonstration purpose.", "https://localhost:8443/sample");
-
 				logger.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException
-					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | RuntimeServiceException | FormServiceException | ToolServiceException e1) {
+					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | RuntimeServiceException | FormServiceException e1) {
 				logger.log(Level.SEVERE, "unexpected error occured while bootstraping plateform", e1);
 				throw new BootstrapServiceException("unable to bootstrap plateform", e1);
 			}
