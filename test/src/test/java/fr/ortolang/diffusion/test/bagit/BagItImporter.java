@@ -34,7 +34,7 @@ public class BagItImporter {
 			throw new IOException("Parameter bagsFolder is mandatory");
 		}
 		
-		OrtolangClientAccountManager.getInstance("import").setCredentials("root", "tagada54");
+		OrtolangClientAccountManager.getInstance("client").setCredentials("root", "tagada54");
 		client.login("root");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
