@@ -142,7 +142,7 @@ public class MembershipServiceBean implements MembershipService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public Profile createProfile(String fullname, String email) throws MembershipServiceException, ProfileAlreadyExistsException {
+	public Profile createProfile(String givenName, String familyName, String email) throws MembershipServiceException, ProfileAlreadyExistsException {
 		logger.log(Level.FINE, "creating profile for connected identifier");
 
 		String connectedIdentifier = authentication.getConnectedIdentifier();
@@ -157,7 +157,8 @@ public class MembershipServiceBean implements MembershipService {
 			
 			Profile profile = new Profile();
 			profile.setId(connectedIdentifier);
-			profile.setFullname(fullname);
+			profile.setGivenName(givenName);
+			profile.setFamilyName(familyName);
 			profile.setEmail(email);
 			profile.setStatus(ProfileStatus.ACTIVATED);
 			em.persist(profile);
@@ -176,7 +177,7 @@ public class MembershipServiceBean implements MembershipService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException {
+	public void createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException {
 		logger.log(Level.FINE, "creating profile for identifier [" + identifier + "] and email [" + email + "]");
 
 		String key = getProfileKeyForIdentifier(identifier);
@@ -188,7 +189,8 @@ public class MembershipServiceBean implements MembershipService {
 
 			Profile profile = new Profile();
 			profile.setId(identifier);
-			profile.setFullname(fullname);
+			profile.setGivenName(givenName);
+			profile.setFamilyName(familyName);
 			profile.setEmail(email);
 			profile.setStatus(ProfileStatus.ACTIVATED);
 			em.persist(profile);
@@ -233,7 +235,7 @@ public class MembershipServiceBean implements MembershipService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateProfile(String key, String fullname, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+	public void updateProfile(String key, String givenName, String familyName, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.FINE, "updating profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
@@ -246,7 +248,8 @@ public class MembershipServiceBean implements MembershipService {
 			if (profile == null) {
 				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
 			}
-			profile.setFullname(fullname);
+			profile.setGivenName(givenName);
+			profile.setFamilyName(familyName);
 			profile.setEmail(email);
 			em.merge(profile);
 
@@ -728,7 +731,7 @@ public class MembershipServiceBean implements MembershipService {
 			if (identifier.getType().equals(Profile.OBJECT_TYPE)) {
 				Profile profile = em.find(Profile.class, identifier.getId());
 				if (profile != null) {
-					content.addContentPart(profile.getFullname());
+					content.addContentPart(profile.getFullName());
 					content.addContentPart(profile.getEmail());
 					content.addContentPart(profile.getGroupsList());
 				}
@@ -765,7 +768,8 @@ public class MembershipServiceBean implements MembershipService {
 				Profile profile = em.find(Profile.class, identifier.getId());
 				if (profile != null) {
 					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "http://xmlns.com/foaf/0.1/Person"));
-					content.addTriple(new Triple(URIHelper.fromKey(key), "http://xmlns.com/foaf/0.1/givenName", profile.getFullname()));
+					content.addTriple(new Triple(URIHelper.fromKey(key), "http://xmlns.com/foaf/0.1/givenName", profile.getGivenName()));
+					content.addTriple(new Triple(URIHelper.fromKey(key), "http://xmlns.com/foaf/0.1/familyName", profile.getFamilyName()));
 					content.addTriple(new Triple(URIHelper.fromKey(key), "http://xmlns.com/foaf/0.1/mbox", profile.getEmail()));
 					for ( String group : profile.getGroups() ) {
 						content.addTriple(new Triple(URIHelper.fromKey(key), "http://xmlns.com/foaf/0.1/member", URIHelper.fromKey(group)));

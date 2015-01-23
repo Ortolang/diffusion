@@ -15,6 +15,9 @@ import javax.ws.rs.core.Response;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * @resourceDescription Operations on Profiles
+ */
 @Path("/profiles")
 @Produces({ MediaType.APPLICATION_JSON })
 public class ProfileResource {
@@ -27,6 +30,14 @@ public class ProfileResource {
 	public ProfileResource() {
 	}
 
+	/**
+	 * @responseType fr.ortolang.diffusion.api.rest.profile.ProfileRepresentation
+	 * @return {@link fr.ortolang.diffusion.api.rest.profile.ProfileRepresentation}
+	 * @throws MembershipServiceException
+	 * @throws KeyNotFoundException
+	 * @throws ProfileAlreadyExistsException
+	 * @throws AccessDeniedException
+	 */
 	@GET
 	@Path("/connected")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
@@ -37,7 +48,7 @@ public class ProfileResource {
 		try {
 			profile = membership.readProfile(key);
 		} catch (KeyNotFoundException e) {
-			profile = membership.createProfile("no name provided", "no email provided");
+			profile = membership.createProfile("", "", "");
 		}
 		ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
 		return Response.ok(representation).build();
@@ -60,7 +71,7 @@ public class ProfileResource {
 	public Response updateProfile(@PathParam(value = "key") String key, ProfileRepresentation representation) throws MembershipServiceException, KeyNotFoundException,
 			AccessDeniedException {
 		logger.log(Level.INFO, "PUT /profiles/" + key);
-		membership.updateProfile(key, representation.getFullname(), representation.getEmail());
+		membership.updateProfile(key, representation.getGivenName(), representation.getFamilyName(), representation.getEmail());
 		return Response.noContent().build();
 	}
 	

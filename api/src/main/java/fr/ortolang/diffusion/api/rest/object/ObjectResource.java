@@ -73,7 +73,6 @@ public class ObjectResource {
 	 * @return {@link fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation}
 	 * @throws BrowserServiceException
 	 */
-	@SuppressWarnings("javadoc")
 	@GET
 	@Template( template="objects/list.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
@@ -81,8 +80,8 @@ public class ObjectResource {
 			@DefaultValue(value = "false") @QueryParam(value = "items") boolean itemsOnly, @QueryParam(value = "status") String status)
 			throws BrowserServiceException {
 		logger.log(Level.INFO, "GET /objects?offset=" + offset + "&limit=" + limit + "&items-only=" + itemsOnly + "&status=" + status);
-		List<String> keys = browser.list(offset, limit, "", "", (status != null && status.length() > 0)?OrtolangObjectState.Status.valueOf(status):null, itemsOnly);
-		long nbentries = browser.count("", "", (status != null && status.length() > 0)?OrtolangObjectState.Status.valueOf(status):null, itemsOnly);
+		List<String> keys = browser.list(offset, limit, "", "", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
+		long nbentries = browser.count("", "", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
 		UriBuilder objects = DiffusionUriBuilder.getRestUriBuilder().path(ObjectResource.class);
 
 		GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String> ();
@@ -112,7 +111,6 @@ public class ObjectResource {
 	 * @throws SecurityServiceException
 	 * @throws OrtolangException
 	 */
-	@SuppressWarnings("javadoc")
 	@GET
 	@Path("/{key}")
 	@Template( template="objects/detail.vm", types={MediaType.TEXT_HTML})
@@ -159,7 +157,16 @@ public class ObjectResource {
 		
 		return get(core.resolvePathFromCollection(key, relativePath));
 	}
-	
+
+	/**
+	 * Get Object history by key
+	 * @responseType fr.ortolang.diffusion.api.rest.object.ObjectRepresentation
+	 * @param key The object key
+	 * @return ObjectRepresentation
+	 * @throws BrowserServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 */
 	@GET
 	@Path("/{key}/history")
 	public Response history(@PathParam(value = "key") String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
@@ -190,7 +197,7 @@ public class ObjectResource {
 
 	/**
 	 * Download Object by key
-	 * @param key
+	 * @param key The object key
 	 * @param response
 	 * @throws BrowserServiceException
 	 * @throws KeyNotFoundException
