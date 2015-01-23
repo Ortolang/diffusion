@@ -62,7 +62,7 @@ public class DownloadServlet extends HttpServlet {
                 IOUtils.closeQuietly(input);
             }
         } catch (BinaryStoreServiceException | DataNotFoundException e) {
-            logger.log(Level.SEVERE, "An error occured when trying to download " + filename, e);
+            logger.log(Level.SEVERE, "An error occurred when trying to download " + filename, e);
         }
     }
 }

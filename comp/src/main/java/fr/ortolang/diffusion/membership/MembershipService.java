@@ -32,13 +32,13 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	public List<String> getConnectedIdentifierSubjects() throws MembershipServiceException, KeyNotFoundException;
 
-	public void createProfile(String identifier, String fullname, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
+	public void createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
 	
-	public Profile createProfile(String fullname, String email) throws MembershipServiceException, ProfileAlreadyExistsException;
+	public Profile createProfile(String givenName, String familyName, String email) throws MembershipServiceException, ProfileAlreadyExistsException;
 
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateProfile(String key, String fullname, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	public void updateProfile(String key, String givenName, String familyName, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 	

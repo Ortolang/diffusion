@@ -5,7 +5,7 @@
   <div class="panel-body">
     <div class="row">
 	  <div class="col-md-2"><p class="text-right"><strong>Full Name</strong></p></div>
-	  <div class="col-md-10">$entity.object.fullname</div>
+	  <div class="col-md-10">$entity.object.fullName</div>
     </div>
     <div class="row">
 	  <div class="col-md-2"><p class="text-right"><strong>Email</strong></p></div>

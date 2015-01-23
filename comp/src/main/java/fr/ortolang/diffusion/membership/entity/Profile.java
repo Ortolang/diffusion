@@ -26,8 +26,10 @@ public class Profile extends OrtolangObject {
 	private long version;
 	@Transient
 	private String key;
-	private String fullname;
+	private String givenName;
+	private String familyName;
 	private String email;
+	private boolean emailVerified;
 	@Column(length=7000)
 	private String groupsList;
 	private ProfileStatus status;
@@ -56,6 +58,22 @@ public class Profile extends OrtolangObject {
 		this.key = key;
 	}
 
+	public String getGivenName() {
+		return givenName;
+	}
+
+	public void setGivenName(String givenName) {
+		this.givenName = givenName;
+	}
+
+	public String getFamilyName() {
+		return familyName;
+	}
+
+	public void setFamilyName(String familyName) {
+		this.familyName = familyName;
+	}
+
 	public String getEmail() {
 		return email;
 	}
@@ -64,14 +82,18 @@ public class Profile extends OrtolangObject {
 		this.email = email;
 	}
 
-	public String getFullname() {
-		return fullname;
+	public boolean isEmailVerified() {
+		return emailVerified;
 	}
 
-	public void setFullname(String fullname) {
-		this.fullname = fullname;
+	public void setEmailVerified(boolean emailVerified) {
+		this.emailVerified = emailVerified;
 	}
-	
+
+	public String getFullName() {
+		return givenName + " " + familyName;
+	}
+
 	public ProfileStatus getStatus() {
 		return status;
 	}
@@ -94,6 +116,12 @@ public class Profile extends OrtolangObject {
 		}
 
 		return false;
+	}
+
+	public boolean isComplete() {
+		return givenName != null && !givenName.isEmpty()
+				&& familyName != null && !familyName.isEmpty()
+				&& email != null && !email.isEmpty();
 	}
 
 	public void addPublicKey(String pubkey) {
@@ -157,7 +185,7 @@ public class Profile extends OrtolangObject {
 	
 	@Override
 	public String getObjectName() {
-		return getFullname();
+		return getFullName();
 	}
 
 	@Override

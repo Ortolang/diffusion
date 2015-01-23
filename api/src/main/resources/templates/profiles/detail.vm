@@ -4,9 +4,13 @@
   </div>
   <div class="panel-body">
     <div class="row">
-	  <div class="col-md-2"><p class="text-right"><strong>Fullname</strong></p></div>
-	  <div class="col-md-10">$entity.fullname</div>
+	  <div class="col-md-2"><p class="text-right"><strong>Given Name</strong></p></div>
+	  <div class="col-md-10">$entity.givenName</div>
     </div>
+      <div class="row">
+          <div class="col-md-2"><p class="text-right"><strong>Family Name</strong></p></div>
+          <div class="col-md-10">$entity.familyName</div>
+      </div>
     <div class="row">
 	  <div class="col-md-2"><p class="text-right"><strong>Email</strong></p></div>
 	  <div class="col-md-10">$entity.email</div>

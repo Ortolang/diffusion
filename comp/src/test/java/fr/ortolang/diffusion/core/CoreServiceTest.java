@@ -152,7 +152,7 @@ public class CoreServiceTest {
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
-				membership.createProfile("User ONE", "user.one@ortolang.fr");
+				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
 				logger.log(Level.INFO, "Profile user1 already exists !!");
 			}
@@ -172,7 +172,7 @@ public class CoreServiceTest {
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
-				membership.createProfile("User ONE", "user.one@ortolang.fr");
+				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
 				logger.log(Level.INFO, "Profile user1 already exists !!");
 			}
@@ -195,7 +195,7 @@ public class CoreServiceTest {
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
-				membership.createProfile("User ONE", "user.one@ortolang.fr");
+				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
 				logger.log(Level.INFO, "Profile user1 already exists !!");
 			}
@@ -209,7 +209,7 @@ public class CoreServiceTest {
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
-				membership.createProfile("User TWO", "user.two@ortolang.fr");
+				membership.createProfile("User", "TWO", "user.two@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
 				logger.log(Level.INFO, "Profile user2 already exists !!");
 			}
@@ -233,7 +233,7 @@ public class CoreServiceTest {
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
-				membership.createProfile("User ONE", "user.one@ortolang.fr");
+				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
 				logger.log(Level.INFO, "Profile user1 already exists !!");
 			}
@@ -275,7 +275,7 @@ public class CoreServiceTest {
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
-				membership.createProfile("User ONE", "user.one@ortolang.fr");
+				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
 				logger.log(Level.INFO, "Profile user1 already exists !!");
 			}
@@ -387,7 +387,7 @@ public class CoreServiceTest {
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
-				membership.createProfile("User ONE", "user.one@ortolang.fr");
+				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
 				logger.log(Level.INFO, "Profile user1 already exists !!");
 			}
