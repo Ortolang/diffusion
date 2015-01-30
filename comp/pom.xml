@@ -178,7 +178,7 @@
 		<dependency>
 			<groupId>org.apache.sshd</groupId>
 			<artifactId>sshd-sftp</artifactId>
-			</dependency>
+		</dependency>
 		<dependency>
 			<groupId>net.handle</groupId>
 			<artifactId>hdlnet-hclj</artifactId>
@@ -226,7 +226,76 @@
 					</includes>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>de.juplo</groupId>
+				<artifactId>hibernate4-maven-plugin</artifactId>
+				<version>1.0.5</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>export</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<hibernateProperties>${project.build.directory}/classes/hibernate.hbm2ddl.properties</hibernateProperties>
+					<target>SCRIPT</target>
+				</configuration>
+			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.codehaus.mojo
+										</groupId>
+										<artifactId>
+											hibernate3-maven-plugin
+										</artifactId>
+										<versionRange>
+											[3.0,)
+										</versionRange>
+										<goals>
+											<goal>hbm2ddl</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>de.juplo</groupId>
+										<artifactId>
+											hibernate4-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.0.5,)
+										</versionRange>
+										<goals>
+											<goal>export</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 	<dependencyManagement>
 		<dependencies>

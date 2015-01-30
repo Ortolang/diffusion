@@ -534,7 +534,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.clonePolicy(key, ws.getHead());
 			logger.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
 
-			parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, collection.getName(), System.currentTimeMillis(), Collection.MIME_TYPE, key));
+			parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, collection.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, key));
 			em.merge(parent);
 			registry.update(parent.getKey());
 			logger.log(Level.FINEST, "collection [" + key + "] added to parent [" + parent.getKey() + "]");
@@ -761,7 +761,7 @@ public class CoreServiceBean implements CoreService {
 				registry.update(scollection.getKey());
 
 			}
-			dparent.addElement(new CollectionElement(Collection.OBJECT_TYPE, scollection.getName(), System.currentTimeMillis(), Collection.MIME_TYPE, scollection.getKey()));
+			dparent.addElement(new CollectionElement(Collection.OBJECT_TYPE, scollection.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, scollection.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
 
@@ -920,7 +920,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.clonePolicy(key, ws.getHead());
 			logger.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
 
-			parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getMimeType(), key));
+			parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getSize(), object.getMimeType(), key));
 			em.merge(parent);
 			registry.update(parent.getKey());
 
@@ -1042,13 +1042,13 @@ public class CoreServiceBean implements CoreService {
 				if (object.getClock() < ws.getClock()) {
 					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 					parent.removeElement(element);
-					CollectionElement celement = new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getMimeType(), clone.getKey());
+					CollectionElement celement = new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey());
 					parent.addElement(celement);
 					registry.update(parent.getKey());
 					object = clone;
 				} else {
 					parent.removeElement(element);
-					CollectionElement celement = new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getMimeType(), object.getKey());
+					CollectionElement celement = new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getSize(), object.getMimeType(), object.getKey());
 					parent.addElement(celement);
 				}
 				em.merge(parent);
@@ -1150,7 +1150,7 @@ public class CoreServiceBean implements CoreService {
 				registry.update(sobject.getKey());
 
 			}
-			dparent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, sobject.getName(), System.currentTimeMillis(), sobject.getMimeType(), sobject.getKey()));
+			dparent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, sobject.getName(), System.currentTimeMillis(), sobject.getSize(), sobject.getMimeType(), sobject.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
 
@@ -1297,7 +1297,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.clonePolicy(key, ws.getHead());
 			logger.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
 
-			parent.addElement(new CollectionElement(Link.OBJECT_TYPE, link.getName(), System.currentTimeMillis(), Link.MIME_TYPE, key));
+			parent.addElement(new CollectionElement(Link.OBJECT_TYPE, link.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, key));
 			em.merge(parent);
 			registry.update(parent.getKey());
 			logger.log(Level.FINEST, "link [" + key + "] added to parent [" + parent.getKey() + "]");
@@ -1419,7 +1419,7 @@ public class CoreServiceBean implements CoreService {
 				registry.update(slink.getKey());
 
 			}
-			dparent.addElement(new CollectionElement(Link.OBJECT_TYPE, slink.getName(), System.currentTimeMillis(), Link.MIME_TYPE, slink.getKey()));
+			dparent.addElement(new CollectionElement(Link.OBJECT_TYPE, slink.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, slink.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
 
@@ -1625,7 +1625,7 @@ public class CoreServiceBean implements CoreService {
 					Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
 					if (parent != null && element != null) {
 						parent.removeElement(element);
-						parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), Collection.MIME_TYPE, clone.getKey()));
+						parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, clone.getKey()));
 						em.merge(parent);
 						registry.update(parent.getKey());
 
@@ -1650,7 +1650,7 @@ public class CoreServiceBean implements CoreService {
 				if (object.getClock() < ws.getClock()) {
 					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 					parent.removeElement(element);
-					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getMimeType(), clone.getKey()));
+					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey()));
 					em.merge(parent);
 					registry.update(parent.getKey());
 
@@ -1674,7 +1674,7 @@ public class CoreServiceBean implements CoreService {
 				if (link.getClock() < ws.getClock()) {
 					Link clone = cloneLink(ws.getHead(), link, ws.getClock());
 					parent.removeElement(element);
-					parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), Link.MIME_TYPE, clone.getKey()));
+					parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, clone.getKey()));
 					em.merge(parent);
 					registry.update(parent.getKey());
 
@@ -1840,7 +1840,7 @@ public class CoreServiceBean implements CoreService {
 						Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
 						if (parent != null && element != null) {
 							parent.removeElement(element);
-							parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), Collection.MIME_TYPE, clone.getKey()));
+							parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, clone.getKey()));
 							
 						}
 						collection = clone;
@@ -1858,7 +1858,7 @@ public class CoreServiceBean implements CoreService {
 					if (object.getClock() < ws.getClock()) {
 						DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 						parent.removeElement(element);
-						parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getMimeType(), clone.getKey()));
+						parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey()));
 						
 						object = clone;
 					}
@@ -1875,7 +1875,7 @@ public class CoreServiceBean implements CoreService {
 					if (link.getClock() < ws.getClock()) {
 						Link clone = cloneLink(ws.getHead(), link, ws.getClock());
 						parent.removeElement(element);
-						parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), Link.MIME_TYPE, clone.getKey()));
+						parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, clone.getKey()));
 						
 						link = clone;
 					}
@@ -1982,7 +1982,7 @@ public class CoreServiceBean implements CoreService {
 				if (collection.getClock() < ws.getClock()) {
 					Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
 					parent.removeElement(element);
-					parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), Collection.MIME_TYPE, clone.getKey()));
+					parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, clone.getKey()));
 					
 					collection = clone;
 				}
@@ -2002,7 +2002,7 @@ public class CoreServiceBean implements CoreService {
 				if (object.getClock() < ws.getClock()) {
 					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 					parent.removeElement(element);
-					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getMimeType(), clone.getKey()));
+					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey()));
 					
 					object = clone;
 				}
@@ -2023,7 +2023,7 @@ public class CoreServiceBean implements CoreService {
 				if (link.getClock() < ws.getClock()) {
 					Link clone = cloneLink(ws.getHead(), link, ws.getClock());
 					parent.removeElement(element);
-					parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), Link.MIME_TYPE, clone.getKey()));
+					parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, clone.getKey()));
 					
 					link = clone;
 				}
@@ -2535,7 +2535,7 @@ public class CoreServiceBean implements CoreService {
 				if (leaf.getClock() < clock) {
 					Collection clone = cloneCollection(root, leaf, clock);
 					parent.removeElement(element);
-					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), Collection.MIME_TYPE, clone.getKey());
+					CollectionElement celement = new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, clone.getKey());
 					parent.addElement(celement);
 					registry.update(parent.getKey());
 					leaf = clone;

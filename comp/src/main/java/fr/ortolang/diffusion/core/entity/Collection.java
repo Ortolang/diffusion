@@ -230,7 +230,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	public CollectionElement findElementByName(String name) {
 		Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
 		String nname = SPECIAL_REGEX_CHARS.matcher(name).replaceAll("\\\\$0");
-		Pattern pattern = Pattern.compile("(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\t" + nname + "\t([0-9]{13})\t([^\t]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
+		Pattern pattern = Pattern.compile("(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\t" + nname + "\t([0-9]{13})\t([0-9]+)\t([^\t]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
 		for ( String segment : segments ) {
 			Matcher matcher = pattern.matcher(segment);
 			if ( matcher.matches() ) {

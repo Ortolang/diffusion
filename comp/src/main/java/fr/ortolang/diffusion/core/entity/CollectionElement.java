@@ -9,16 +9,18 @@ public class CollectionElement implements Serializable {
 	private String type;
 	private String name;
 	private long modification;
+	private long size;
 	private String mimeType;
 	private String key;
 
 	public CollectionElement() {
 	}
 
-	public CollectionElement(String type, String name, long modification, String mimeType, String key) {
+	public CollectionElement(String type, String name, long modification, long size, String mimeType, String key) {
 		this.type = type;
 		this.name = name;
 		this.modification = modification;
+		this.size = size;
 		this.mimeType = mimeType;
 		this.key = key;
 	}
@@ -46,6 +48,14 @@ public class CollectionElement implements Serializable {
 	public void setModification(long modification) {
 		this.modification = modification;
 	}
+	
+	public long getSize() {
+		return size;
+	}
+
+	public void setSize(long size) {
+		this.size = size;
+	}
 
 	public String getMimeType() {
 		return mimeType;
@@ -64,7 +74,7 @@ public class CollectionElement implements Serializable {
 	}
 
 	public String serialize() {
-		return this.getType() + "\t" + this.getName() + "\t" + this.getModification() + "\t" + this.getMimeType() + "\t" + this.getKey();
+		return this.getType() + "\t" + this.getName() + "\t" + this.getModification() + "\t" + this.getSize() + "\t" + this.getMimeType() + "\t" + this.getKey();
 	}
 
 	public static CollectionElement deserialize(String serializedElement) {
@@ -72,7 +82,7 @@ public class CollectionElement implements Serializable {
 			return null;
 		}
 		StringTokenizer tokenizer = new StringTokenizer(serializedElement, "\t");
-		return new CollectionElement(tokenizer.nextToken(), tokenizer.nextToken(), Long.parseLong(tokenizer.nextToken()), tokenizer.nextToken(), tokenizer.nextToken());
+		return new CollectionElement(tokenizer.nextToken(), tokenizer.nextToken(), Long.parseLong(tokenizer.nextToken()), Long.parseLong(tokenizer.nextToken()), tokenizer.nextToken(), tokenizer.nextToken());
 	}
 
 	@Override
@@ -81,6 +91,7 @@ public class CollectionElement implements Serializable {
 		buffer.append("{Type:").append(getType());
 		buffer.append(",Name:").append(getName());
 		buffer.append(",Modification:").append(getModification());
+		buffer.append(",Size:").append(getSize());
 		buffer.append(",MimeType:").append(getMimeType());
 		buffer.append(",Key:").append(getKey()).append("}");
 		return buffer.toString();
@@ -93,6 +104,7 @@ public class CollectionElement implements Serializable {
 		result = prime * result + ((key == null) ? 0 : key.hashCode());
 		result = prime * result + ((mimeType == null) ? 0 : mimeType.hashCode());
 		result = prime * result + (int) (modification ^ (modification >>> 32));
+		result = prime * result + (int) (size ^ (size >>> 32));
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		result = prime * result + ((type == null) ? 0 : type.hashCode());
 		return result;
@@ -118,6 +130,8 @@ public class CollectionElement implements Serializable {
 		} else if (!mimeType.equals(other.mimeType))
 			return false;
 		if (modification != other.modification)
+			return false;
+		if (size != other.size)
 			return false;
 		if (name == null) {
 			if (other.name != null)

@@ -18,13 +18,4 @@
 		<property name="createDiagramOnDeploy" value="true" />
 	</bean>
 	
-	<!-- <bean id="processEngineConfiguration" class="org.activiti.engine.impl.cfg.StandaloneProcessEngineConfiguration">
-		<property name="transactionsExternallyManaged" value="false" />
-		<property name="dataSourceJndiName" value="java:jboss/datasources/ActivitiDS" />
-		<property name="databaseSchemaUpdate" value="create-drop" />
-		<property name="databaseType" value="postgres" />
-		<property name="jobExecutorActivate" value="true" />
-		<property name="createDiagramOnDeploy" value="true" />
-	</bean> -->
-	
 </beans>

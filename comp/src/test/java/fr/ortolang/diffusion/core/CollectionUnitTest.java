@@ -161,7 +161,7 @@ public class CollectionUnitTest {
 		
 		
 		String key1 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", tsk1, Collection.MIME_TYPE, key1));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", tsk1, 12, Collection.MIME_TYPE, key1));
 		
 		assertTrue(c.containsElementName("myname1"));
 		assertTrue(c.containsElementKey(key1));
@@ -171,11 +171,11 @@ public class CollectionUnitTest {
 //		}
 		
 		String key2 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname2", tsk2, Collection.MIME_TYPE, key2));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname2", tsk2, 124521, Collection.MIME_TYPE, key2));
 		String key3 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname3", tsk3, Collection.MIME_TYPE, key3));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname3", tsk3, 548754, Collection.MIME_TYPE, key3));
 		String key4 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", tsk4, Collection.MIME_TYPE, key4));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", tsk4, 1024, Collection.MIME_TYPE, key4));
 		
 		assertTrue(c.containsElementName("myname1"));
 		assertTrue(c.containsElementKey(key1));
@@ -191,7 +191,7 @@ public class CollectionUnitTest {
 //			logger.log(Level.INFO, segment);
 //		}
 		
-		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname2", tsk2, Collection.MIME_TYPE, key2));
+		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname2", tsk2, 124521, Collection.MIME_TYPE, key2));
 		assertTrue(c.containsElementName("myname1"));
 		assertTrue(c.containsElementKey(key1));
 		assertFalse(c.containsElementName("myname2"));
@@ -206,7 +206,7 @@ public class CollectionUnitTest {
 //			logger.log(Level.INFO, segment);
 //		}
 		
-		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", tsk4, Collection.MIME_TYPE, key4));
+		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", tsk4, 1024, Collection.MIME_TYPE, key4));
 		assertTrue(c.containsElementName("myname1"));
 		assertTrue(c.containsElementKey(key1));
 		assertFalse(c.containsElementName("myname2"));
@@ -221,7 +221,7 @@ public class CollectionUnitTest {
 //			logger.log(Level.INFO, segment);
 //		}
 		
-		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", tsk1, Collection.MIME_TYPE, key1));
+		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", tsk1, 12, Collection.MIME_TYPE, key1));
 		assertFalse(c.containsElementName("myname1"));
 		assertFalse(c.containsElementKey(key1));
 		assertFalse(c.containsElementName("myname2"));
@@ -236,7 +236,7 @@ public class CollectionUnitTest {
 //			logger.log(Level.INFO, segment);
 //		}
 		
-		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname3", tsk3, Collection.MIME_TYPE, key3));
+		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname3", tsk3, 548754, Collection.MIME_TYPE, key3));
 		assertFalse(c.containsElementName("myname1"));
 		assertFalse(c.containsElementKey(key1));
 		assertFalse(c.containsElementName("myname2"));
@@ -263,21 +263,21 @@ public class CollectionUnitTest {
 		c.setDescription("description");
 		
 		String key1 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", System.currentTimeMillis(), Collection.MIME_TYPE, key1));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", System.currentTimeMillis(), 1024, Collection.MIME_TYPE, key1));
 		String key2 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(Collection.OBJECT_TYPE, "myname2", System.currentTimeMillis(), "image/svg+xml", key2));
+		c.addElement(new CollectionElement(Collection.OBJECT_TYPE, "myname2", System.currentTimeMillis(), 0, "image/svg+xml", key2));
 		String key3 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(Link.OBJECT_TYPE, "myname3", System.currentTimeMillis(), "application/vnd.ms-excel", key3));
+		c.addElement(new CollectionElement(Link.OBJECT_TYPE, "myname3", System.currentTimeMillis(), 0, "application/vnd.ms-excel", key3));
 		String key4 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", System.currentTimeMillis(), "application/EDI-X12", key4));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", System.currentTimeMillis(), 1024, "application/EDI-X12", key4));
 		String key5 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname 5", System.currentTimeMillis(), "application/EDI-X12", key5));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname 5", System.currentTimeMillis(), 1024, "application/EDI-X12", key5));
 		String key6 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "w&értþÿû 523 ze", System.currentTimeMillis(), "application/EDI-X12", key6));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "w&értþÿû 523 ze", System.currentTimeMillis(), 1024, "application/EDI-X12", key6));
 		String key7 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "Bootstrap (1).txt", System.currentTimeMillis(), "application/EDI-X12", key7));
+		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "Bootstrap (1).txt", System.currentTimeMillis(), 1024, "application/EDI-X12", key7));
 		
-		String regexp = "(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\tmyname1\t([0-9]{13})\t([^%]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$";
+		String regexp = "(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\tmyname1\t([0-9]{13})\t([0-9]+)\t([^%]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$";
 		
 		for ( String segment : c.getSegments() ) {
 			logger.log(Level.INFO, segment);
