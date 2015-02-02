@@ -21,9 +21,8 @@ public class ImportBagItTest {
 	@Test
 	public void bench() throws IOException, OrtolangClientException, OrtolangClientAccountException {
 		String bagsList = getBagsList();
-		OrtolangClient client = new OrtolangClient("client");
 		
-		BagItImporter importer = new BagItImporter(client, bagsList);
+		BagItImporter importer = new BagItImporter(bagsList);
 		importer.perform();
 	}
 	
@@ -37,13 +36,4 @@ public class ImportBagItTest {
 		} 
 		return list;
 	}
-
-//	private String getHostname() {
-//		String server_address = ClientConfig.SERVER_ADDRESS;
-//		String property = System.getProperty("server.address");
-//		if (property != null && property.length() != 0) {
-//			folder = Paths.get(property).toFile();
-//		} 
-//		return folder;
-//	}
 }

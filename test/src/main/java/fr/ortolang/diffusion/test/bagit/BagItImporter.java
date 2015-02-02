@@ -21,10 +21,8 @@ public class BagItImporter {
 	private static Logger logger = Logger.getLogger(BagItImporter.class.getName());
 	
 	private String bagsList;
-	private OrtolangClient client;
 	
-	public BagItImporter(OrtolangClient client, String bagsList) {
-		this.client = client;
+	public BagItImporter(String bagsList) {
 		this.bagsList = bagsList;
 	}
 	
@@ -35,12 +33,14 @@ public class BagItImporter {
 		}
 		
 		OrtolangClientAccountManager.getInstance("client").setCredentials("root", "tagada54");
-		client.login("root");
-		String profile = client.connectedProfile();
-		logger.log(Level.INFO, "connected profile: {0}", profile);
 		
 		String[] bagsListSplit = bagsList.split(",");
 		for ( String bag : bagsListSplit) {
+			OrtolangClient client = new OrtolangClient("client");
+			client.login("root");
+			String profile = client.connectedProfile();
+			logger.log(Level.INFO, "connected profile: {0}", profile);
+			
 			logger.log(Level.INFO, "Starting import a bag at "+bag);
 			String bagName = bag.substring(bag.lastIndexOf('/')+1);
 			
@@ -54,10 +54,10 @@ public class BagItImporter {
 
 			String pkey = client.createProcess("import-workspace", "Workspace import for bag " + bagName, params, Collections.<String, File> emptyMap());
 			logger.log(Level.INFO, "process created with key : " + pkey);
-			
+
+			client.logout();
+			client.close();
 		}
-		client.logout();
-		client.close();
 	}
 	
 	
@@ -67,9 +67,8 @@ public class BagItImporter {
 		if(argv.length>0) {
 			bagsList = argv[0];
 		}
-		OrtolangClient client = new OrtolangClient("client");
 		OrtolangClientAccountManager.getInstance("client").setCredentials("root", "tagada54");
-		BagItImporter importer = new BagItImporter(client, bagsList);
+		BagItImporter importer = new BagItImporter(bagsList);
 		importer.perform();
 	}
 }
