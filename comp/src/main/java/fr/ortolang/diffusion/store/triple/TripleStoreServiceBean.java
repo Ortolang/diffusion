@@ -76,7 +76,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
             this.importOntology("http://lexvo.org/ontology", "ontology/lexvo-ontology.xml");
             this.importOntology("http://lexvo.org/dump", "ontology/lexvo_2013-02-09.rdf");
             this.importOntology("http://www.ortolang.fr/2014/05/diffusion#", "ontology/ortolang.xml");
-            this.importOntology("http://www.ortolang.fr/2014/09/market#", "ontology/ortolang-market2.xml");
+            this.importOntology("http://www.ortolang.fr/2014/09/market#", "ontology/ortolang-market.xml");
 	    } catch (Exception e) {
     		logger.log(Level.SEVERE, "unable to initialize triple store", e);
     	}
