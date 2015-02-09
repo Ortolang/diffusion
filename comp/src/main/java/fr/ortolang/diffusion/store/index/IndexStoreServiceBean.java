@@ -65,7 +65,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 	
 	public IndexStoreServiceBean() {
 		logger.log(Level.INFO, "Instanciating service");
-		this.base = Paths.get(OrtolangConfig.getInstance().getProperty("home"), DEFAULT_INDEX_HOME);
+		this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_INDEX_HOME);
 	}
 
 	@PostConstruct

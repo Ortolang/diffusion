@@ -60,7 +60,7 @@ public class SSHServlet extends HttpServlet {
 	
 				sshd.setShellFactory(new SSHShellFactory(threadFactory));
 	
-				sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(OrtolangConfig.getInstance().getProperty("home") + "/hostkey.ser"));
+				sshd.setKeyPairProvider(new SimpleGeneratorHostKeyProvider(OrtolangConfig.getInstance().getHome() + "/hostkey.ser"));
 				sshd.setHost(OrtolangConfig.getInstance().getProperty("transport.ssh.host"));
 				sshd.setPort(Integer.parseInt(OrtolangConfig.getInstance().getProperty("transport.ssh.port")));
 	

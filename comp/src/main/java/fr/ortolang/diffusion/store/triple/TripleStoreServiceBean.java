@@ -57,7 +57,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
     
     public TripleStoreServiceBean() {
     	logger.log(Level.FINE, "Instanciating service");
-    	this.base = Paths.get(OrtolangConfig.getInstance().getProperty("home"), DEFAULT_TRIPLE_HOME);
+    	this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_TRIPLE_HOME);
     }
 
     @PostConstruct

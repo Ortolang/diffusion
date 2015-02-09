@@ -60,6 +60,17 @@ public class OrtolangConfig {
         }
         return null;
     }
+    
+    public String getHome() {
+    	String home = this.getProperty("home");
+		if ( home.startsWith("~") ) {
+			home = System.getProperty("user.home") + home.substring(1);
+		}
+		if ( home.startsWith("$HOME") ) {
+			home = System.getProperty("user.home") + home.substring(5);
+		}
+		return home;
+    }
 
 	public String getProperty(String name) {
 		return props.getProperty(name);

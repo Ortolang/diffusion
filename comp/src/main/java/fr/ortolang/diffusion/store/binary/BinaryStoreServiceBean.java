@@ -61,7 +61,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	
 	@PostConstruct
 	public void init() {
-		this.base = Paths.get(OrtolangConfig.getInstance().getProperty("home"), DEFAULT_BINARY_HOME);
+		this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_BINARY_HOME);
 		this.working = Paths.get(base.toString(), "work");
 		this.collide = Paths.get(base.toString(), "collide");
 		this.factory = new SHA1FilterInputStreamFactory();
