@@ -8,7 +8,6 @@ import java.util.logging.Logger;
 
 import javax.json.Json;
 import javax.json.JsonObject;
-import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -39,16 +38,11 @@ public class ClientResource {
 	
 	@Context 
 	private SecurityContext ctx;
-	@Context
-	private ServletContext servletCtx;
 	
 	public ClientResource() {
 		logger.log(Level.INFO, "Creating new ClientResource");
 		if ( !initialized ) {
 			String id = "client";
-			if ( servletCtx.getInitParameter("client-id") != null ) {
-				id = servletCtx.getInitParameter("client-id");
-			}
 			manager = OrtolangClientAccountManager.getInstance(id);
 			authUrl = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.url");
 			authRealm = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.realm");
