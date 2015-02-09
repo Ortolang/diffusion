@@ -1,4 +1,4 @@
-create table AuthorisationPolicy (
+	create table AuthorisationPolicy (
         id varchar(255) not null,
         owner varchar(255),
         rulesContent text,
