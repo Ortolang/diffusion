@@ -40,7 +40,7 @@ public class BinaryStoreVolumeMapper {
 	}
 	
 	public static void main(String[] args) throws VolumeNotFoundException {
-		System.out.println(BinaryStoreVolumeMapper.getVolume("98"));
+		System.out.println(BinaryStoreVolumeMapper.getVolume("69"));
 	}
 
 }

@@ -12,7 +12,7 @@
 		<property name="transactionManager" ref="transactionManager" />
 		<property name="transactionsExternallyManaged" value="true" />
 		<property name="dataSourceJndiName" value="java:jboss/datasources/OrtolangDS" />
-		<property name="databaseSchemaUpdate" value="create-drop" />
+		<property name="databaseSchemaUpdate" value="validate" />
 		<property name="databaseType" value="postgres" />
 		<property name="jobExecutorActivate" value="true" />
 		<property name="createDiagramOnDeploy" value="true" />

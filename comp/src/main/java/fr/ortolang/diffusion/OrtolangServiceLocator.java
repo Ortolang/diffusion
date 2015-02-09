@@ -13,9 +13,7 @@ import javax.naming.NamingEnumeration;
 
 public class OrtolangServiceLocator {
 	
-	private static final String NAMESPACE = "java:global";
-	private static final String APPLICATION_NAME = "server-application";
-	private static final String MODULE_NAME = "components";
+	private static final String NAMESPACE = "java:module";
 	private static final String SERVICE_SUFFIX = "Service";
 	
 	private static Logger logger = Logger.getLogger(OrtolangServiceLocator.class.getName());
@@ -36,7 +34,7 @@ public class OrtolangServiceLocator {
 	
 	public static List<String> listServices() throws OrtolangException {
 		try {
-			NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/" + APPLICATION_NAME + "/" + MODULE_NAME);
+			NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/");
 			List<String> results = new ArrayList<String>();
 			while (enumeration.hasMoreElements()) {
 				String name = ((NameClassPair) enumeration.next()).getName();
@@ -54,12 +52,12 @@ public class OrtolangServiceLocator {
 	public static OrtolangService findService(String serviceName) throws OrtolangException {
 		try {
 			if ( !services.containsKey(serviceName) ) {
-				NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/" + APPLICATION_NAME + "/" + MODULE_NAME);
+				NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/");
 				while (enumeration.hasMoreElements()) {
 					String name = ((NameClassPair) enumeration.next()).getName();
 					if (name.endsWith(OrtolangServiceLocator.SERVICE_SUFFIX)) {
 						if (name.substring(0, name.indexOf("!")).equals(serviceName)) {
-							services.put(serviceName, (OrtolangService)getJndiContext().lookup(NAMESPACE + "/" + APPLICATION_NAME + "/" + MODULE_NAME + "/" + name));
+							services.put(serviceName, (OrtolangService)getJndiContext().lookup(NAMESPACE + "/" + name));
 							return services.get(serviceName);
 						}
 					}
@@ -74,7 +72,7 @@ public class OrtolangServiceLocator {
 	
 	public static Object lookup(String name) throws OrtolangException {
 		try {
-			return getJndiContext().lookup(NAMESPACE + "/" + APPLICATION_NAME + "/" + MODULE_NAME + "/" + name);
+			return getJndiContext().lookup(NAMESPACE + "/" + name);
 		} catch (Exception e) {
 			throw new OrtolangException(e);
 		}
@@ -83,12 +81,12 @@ public class OrtolangServiceLocator {
 	public static OrtolangIndexableService findIndexableService(String serviceName) throws OrtolangException {
 		try {
 			if ( !indexableServices.containsKey(serviceName) ) {
-				NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/" + APPLICATION_NAME + "/" + MODULE_NAME);
+				NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/");
 				while (enumeration.hasMoreElements()) {
 					String name = ((NameClassPair) enumeration.next()).getName();
 					if (name.endsWith(OrtolangServiceLocator.SERVICE_SUFFIX)) {
 						if (name.substring(0, name.indexOf("!")).equals(serviceName)) {
-							indexableServices.put(serviceName, (OrtolangIndexableService)getJndiContext().lookup(NAMESPACE + "/" + APPLICATION_NAME + "/" + MODULE_NAME + "/" + name));
+							indexableServices.put(serviceName, (OrtolangIndexableService)getJndiContext().lookup(NAMESPACE + "/" + name));
 							return indexableServices.get(serviceName);
 						}
 					}

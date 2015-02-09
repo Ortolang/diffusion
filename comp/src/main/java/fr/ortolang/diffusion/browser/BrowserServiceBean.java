@@ -103,7 +103,7 @@ public class BrowserServiceBean implements BrowserService {
 			throw new BrowserServiceException("unable to lookup identifier for key [" + key + "]", e);
 		}
 	}
-
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> list(int offset, int limit, String service, String type, OrtolangObjectState.Status status, boolean itemsOnly) throws BrowserServiceException {
@@ -184,7 +184,8 @@ public class BrowserServiceBean implements BrowserService {
 			boolean hidden = registry.isHidden(key);
 			String lock = registry.getLock(key);
 			String status = registry.getPublicationStatus(key);
-			OrtolangObjectState state = new OrtolangObjectState(hidden, lock, status);
+			long lastModification = registry.getLastModificationDate(key);
+			OrtolangObjectState state = new OrtolangObjectState(hidden, lock, status, lastModification);
 			return state;
 		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
 			throw new BrowserServiceException("error during getting state", e);

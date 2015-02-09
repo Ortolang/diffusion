@@ -22,12 +22,12 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 
 @Entity
 @Table(indexes = { @Index(columnList = "identifier") })
-@NamedQueries({ @NamedQuery(name = "findEntryByIdentifier", query = "SELECT e FROM RegistryEntry e WHERE e.identifier = :identifier"),
+@NamedQueries({
+		@NamedQuery(name = "findEntryByIdentifier", query = "SELECT e FROM RegistryEntry e WHERE e.identifier = :identifier"),
 		@NamedQuery(name = "listVisibleKeys", query = "SELECT e.key FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter ORDER BY e.lastModificationDate DESC"),
 		@NamedQuery(name = "countVisibleKeys", query = "SELECT count(e) FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter"),
 		@NamedQuery(name = "listVisibleItems", query = "SELECT e.key FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.item = true AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter ORDER BY e.lastModificationDate DESC"),
-		@NamedQuery(name = "countVisibleItems", query = "SELECT count(e) FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.item = true AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter")
-		})
+		@NamedQuery(name = "countVisibleItems", query = "SELECT count(e) FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.item = true AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter") })
 @SuppressWarnings("serial")
 public class RegistryEntry implements Serializable {
 
@@ -51,7 +51,7 @@ public class RegistryEntry implements Serializable {
 	private String propertiesContent = "";
 	@Transient
 	private Properties properties;
-	
+
 	public RegistryEntry() {
 		hidden = false;
 		deleted = false;
@@ -147,7 +147,7 @@ public class RegistryEntry implements Serializable {
 	public void setAuthor(String author) {
 		this.author = author;
 	}
-	
+
 	public boolean isItem() {
 		return item;
 	}
@@ -175,34 +175,34 @@ public class RegistryEntry implements Serializable {
 	public void setPropertiesContent(String propertiesContent) {
 		this.propertiesContent = propertiesContent;
 	}
-	
+
 	public String getPropertiesContent() {
 		return propertiesContent;
 	}
-	
+
 	public void setProperty(String name, String value) throws IOException {
 		getProperties().setProperty(name, value);
 		saveProperties();
 	}
-	
+
 	public Properties getProperties() throws IOException {
-		if ( properties == null ) {
+		if (properties == null) {
 			properties = new Properties();
-			if ( propertiesContent.length() > 0 ) {
+			if (propertiesContent.length() > 0) {
 				properties.load(new StringReader(propertiesContent));
 			}
 		}
 		return properties;
 	}
-	
+
 	private void saveProperties() throws IOException {
-		if ( properties != null && !properties.isEmpty() ) {
+		if (properties != null && !properties.isEmpty()) {
 			StringWriter output = new StringWriter();
 			properties.store(output, null);
 			propertiesContent = output.toString();
 		}
 	}
-	
+
 	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
