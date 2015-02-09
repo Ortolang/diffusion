@@ -20,6 +20,7 @@ import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authentication.TicketHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+
 import org.apache.commons.io.IOUtils;
 
 import javax.ejb.EJB;
@@ -28,6 +29,8 @@ import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response.ResponseBuilder;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -115,47 +118,68 @@ public class ObjectResource {
 	@Path("/{key}")
 	@Template( template="objects/detail.vm", types={MediaType.TEXT_HTML})
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
-	public Response get(@PathParam(value = "key") String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, SecurityServiceException, OrtolangException {
+	public Response get(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, SecurityServiceException, OrtolangException {
 		logger.log(Level.INFO, "GET /objects/" + key);
-		OrtolangObject object = browser.findObject(key);
-		OrtolangObjectState state = browser.getState(key);
-		OrtolangObjectInfos infos = browser.getInfos(key);
-		List<OrtolangObjectProperty> properties = browser.listProperties(key);
-		String owner = security.getOwner(key);
-		Map<String, List<String>> permissions = security.listRules(key);
-		//TODO add history of object into representation
 		
-		ObjectRepresentation representation = new ObjectRepresentation();
-		representation.setKey(key);
-		representation.setService(object.getObjectIdentifier().getService());
-		representation.setType(object.getObjectIdentifier().getType());
-		representation.setId(object.getObjectIdentifier().getId());
-		representation.setStatus(state.getStatus());
-		representation.setLock(state.getLock());
-		if ( state.isHidden() ) {
-			representation.setVisibility("hidden");
+		OrtolangObjectState state = browser.getState(key);
+		CacheControl cc = new CacheControl();
+		cc.setPrivate(true);
+		if ( state.isLocked() ) {
+			cc.setMaxAge(31536000);
+			cc.setMustRevalidate(false);
 		} else {
-			representation.setVisibility("visible");
+			cc.setMaxAge(0);
+			cc.setMustRevalidate(true);
 		}
-		representation.setOwner(owner);
-		representation.setPermissions(permissions);
-		representation.setObject(object);
-		representation.setAuthor(infos.getAuthor());
-		representation.setCreationDate(infos.getCreationDate() + "");
-		representation.setLastModificationDate(infos.getLastModificationDate() + "");
-		for ( OrtolangObjectProperty property : properties ) {
-			representation.getProperties().put(property.getName(), property.getValue());
-		}
-		return Response.ok(representation).build();
+		Date lmd = new Date((state.getLastModification()/1000)*1000);
+		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+
+        if(builder == null){
+        	OrtolangObject object = browser.findObject(key);
+    		OrtolangObjectInfos infos = browser.getInfos(key);
+    		List<OrtolangObjectProperty> properties = browser.listProperties(key);
+    		String owner = security.getOwner(key);
+    		Map<String, List<String>> permissions = security.listRules(key);
+    		//TODO add history of object into representation
+    		
+    		ObjectRepresentation representation = new ObjectRepresentation();
+    		representation.setKey(key);
+    		representation.setService(object.getObjectIdentifier().getService());
+    		representation.setType(object.getObjectIdentifier().getType());
+    		representation.setId(object.getObjectIdentifier().getId());
+    		representation.setStatus(state.getStatus());
+    		representation.setLock(state.getLock());
+    		if ( state.isHidden() ) {
+    			representation.setVisibility("hidden");
+    		} else {
+    			representation.setVisibility("visible");
+    		}
+    		representation.setOwner(owner);
+    		representation.setPermissions(permissions);
+    		representation.setObject(object);
+    		representation.setAuthor(infos.getAuthor());
+    		representation.setCreationDate(infos.getCreationDate() + "");
+    		representation.setLastModificationDate(infos.getLastModificationDate() + "");
+    		for ( OrtolangObjectProperty property : properties ) {
+    			representation.getProperties().put(property.getName(), property.getValue());
+    		}
+    		
+    		builder = Response.ok(representation);
+    		builder.lastModified(lmd);
+        }
+
+        builder.cacheControl(cc);
+        Response response = builder.build();
+        return response;
 	}
 	
 	@GET
 	@Path("/{key}/element")
 	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-	public Response resolve(@PathParam(value = "key") String key, @QueryParam(value = "path") String relativePath) throws OrtolangException, KeyNotFoundException, AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException {
+	public Response resolve(@PathParam(value = "key") String key, @QueryParam(value = "path") String relativePath, @Context Request request) throws OrtolangException, KeyNotFoundException, AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException {
 		logger.log(Level.INFO, "GET /objects/"+key+"?path="+relativePath);
 		
-		return get(core.resolvePathFromCollection(key, relativePath));
+		return get(core.resolvePathFromCollection(key, relativePath), request);
 	}
 
 	/**
@@ -169,16 +193,37 @@ public class ObjectResource {
 	 */
 	@GET
 	@Path("/{key}/history")
-	public Response history(@PathParam(value = "key") String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+	public Response history(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "get history of object "+key);
 		
-		List<OrtolangObjectVersion> versions = browser.getHistory(key);
-		
-		GenericCollectionRepresentation<OrtolangObjectVersion> representation = new GenericCollectionRepresentation<OrtolangObjectVersion> ();
-		for ( OrtolangObjectVersion version : versions ) {
-			representation.addEntry(version);
+		OrtolangObjectState state = browser.getState(key);
+		CacheControl cc = new CacheControl();
+		cc.setPrivate(true);
+		if ( state.isLocked() ) {
+			cc.setMaxAge(31536000);
+			cc.setMustRevalidate(false);
+		} else {
+			cc.setMaxAge(0);
+			cc.setMustRevalidate(true);
 		}
-		return Response.ok(representation).build();
+		Date lmd = new Date((state.getLastModification()/1000)*1000);
+		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		
+		if(builder == null){
+			List<OrtolangObjectVersion> versions = browser.getHistory(key);
+			
+			GenericCollectionRepresentation<OrtolangObjectVersion> representation = new GenericCollectionRepresentation<OrtolangObjectVersion> ();
+			for ( OrtolangObjectVersion version : versions ) {
+				representation.addEntry(version);
+			}
+			
+			builder = Response.ok(representation);
+    		builder.lastModified(lmd);
+        }
+
+        builder.cacheControl(cc);
+        Response response = builder.build();
+        return response;		
 	}
 	
 	@GET

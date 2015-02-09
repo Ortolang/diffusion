@@ -59,7 +59,7 @@
 						</webModule>
 					</modules>
 					<fileNameMapping>no-version</fileNameMapping>
-					<applicationName>server-application</applicationName>
+					<applicationName>diffusion-${project.version}</applicationName>
 				</configuration>
 			</plugin>
 			<plugin>

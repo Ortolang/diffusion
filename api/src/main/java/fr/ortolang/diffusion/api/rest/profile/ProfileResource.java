@@ -1,6 +1,9 @@
 package fr.ortolang.diffusion.api.rest.profile;
 
+import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.api.rest.template.Template;
+import fr.ortolang.diffusion.browser.BrowserService;
+import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
@@ -10,8 +13,14 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 import javax.ejb.EJB;
 import javax.ws.rs.*;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +33,8 @@ public class ProfileResource {
 
 	private Logger logger = Logger.getLogger(ProfileResource.class.getName());
 
+	@EJB
+	private BrowserService browser;
 	@EJB
 	private MembershipService membership;
 
@@ -58,11 +69,32 @@ public class ProfileResource {
 	@Path("/{key}")
 	@Template(template = "profiles/detail.vm", types = { MediaType.TEXT_HTML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
-	public Response getProfile(@PathParam(value = "key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+	public Response getProfile(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "GET /profiles/" + key);
-		Profile profile = membership.readProfile(key);
-		ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
-		return Response.ok(representation).build();
+		
+		OrtolangObjectState state = browser.getState(key);
+		CacheControl cc = new CacheControl();
+		cc.setPrivate(true);
+		if ( state.isLocked() ) {
+			cc.setMaxAge(31536000);
+			cc.setMustRevalidate(false);
+		} else {
+			cc.setMaxAge(0);
+			cc.setMustRevalidate(true);
+		}
+		Date lmd = new Date((state.getLastModification()/1000)*1000);
+		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		
+		if(builder == null){
+			Profile profile = membership.readProfile(key);
+			ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
+			builder = Response.ok(representation);
+    		builder.lastModified(lmd);
+        }
+
+        builder.cacheControl(cc);
+        Response response = builder.build();
+        return response;
 	}
 
 	@PUT

@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
 import org.apache.velocity.tools.generic.EscapeTool;
@@ -34,7 +35,7 @@ public class TemplateFilter implements ContainerResponseFilter {
 	@Override
 	public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
 		//TODO apply a dedicated template for error codes...
-		if ( responseContext.getEntityAnnotations() != null ) {
+		if ( responseContext.getStatus() == Response.Status.OK.getStatusCode() && responseContext.getEntityAnnotations() != null ) {
 			for (Annotation a : responseContext.getEntityAnnotations()) {
 				if (a.annotationType() == Template.class) {
 					if ( Arrays.asList(((Template) a).types()).contains(responseContext.getMediaType().toString()) ) {

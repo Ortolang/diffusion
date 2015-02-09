@@ -239,9 +239,26 @@
 				</executions>
 				<configuration>
 					<hibernateProperties>${project.build.directory}/classes/hibernate.hbm2ddl.properties</hibernateProperties>
-					<target>SCRIPT</target>
+					<target>NONE</target>
 				</configuration>
 			</plugin>
+			<plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <url>jdbc:postgresql://localhost:5432/ortolang</url>
+                    <user>ortolang</user>
+                    <password>tagada54</password>
+                </configuration>
+                <dependencies>
+                    <dependency>
+						<groupId>postgresql</groupId>
+						<artifactId>postgresql</artifactId>
+						<version>9.1-901-1.jdbc4</version>
+					</dependency>
+                </dependencies>
+            </plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -254,25 +271,6 @@
 					<configuration>
 						<lifecycleMappingMetadata>
 							<pluginExecutions>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>
-											org.codehaus.mojo
-										</groupId>
-										<artifactId>
-											hibernate3-maven-plugin
-										</artifactId>
-										<versionRange>
-											[3.0,)
-										</versionRange>
-										<goals>
-											<goal>hbm2ddl</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<ignore></ignore>
-									</action>
-								</pluginExecution>
 								<pluginExecution>
 									<pluginExecutionFilter>
 										<groupId>de.juplo</groupId>

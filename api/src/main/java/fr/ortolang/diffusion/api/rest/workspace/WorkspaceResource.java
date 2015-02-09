@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -23,11 +24,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
@@ -36,6 +40,7 @@ import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectInfos;
+import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.api.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.api.rest.filter.CORSFilter;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
@@ -123,11 +128,32 @@ public class WorkspaceResource {
 	@Path("/{wskey}")
 	@Template(template = "workspaces/detail.vm", types = { MediaType.TEXT_HTML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
-	public Response getWorkspace(@PathParam(value = "wskey") String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	public Response getWorkspace(@PathParam(value = "wskey") String wskey, @Context Request request) throws CoreServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "GET /workspaces/" + wskey);
-		Workspace workspace = core.readWorkspace(wskey);
-		WorkspaceRepresentation representation = WorkspaceRepresentation.fromWorkspace(workspace);
-		return Response.ok(representation).build();
+		
+		OrtolangObjectState state = browser.getState(wskey);
+		CacheControl cc = new CacheControl();
+		cc.setPrivate(true);
+		if ( state.isLocked() ) {
+			cc.setMaxAge(31536000);
+			cc.setMustRevalidate(false);
+		} else {
+			cc.setMaxAge(0);
+			cc.setMustRevalidate(true);
+		}
+		Date lmd = new Date((state.getLastModification()/1000)*1000);
+		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		
+		if(builder == null){
+			Workspace workspace = core.readWorkspace(wskey);
+			WorkspaceRepresentation representation = WorkspaceRepresentation.fromWorkspace(workspace);
+			builder = Response.ok(representation);
+    		builder.lastModified(lmd);
+        }
+
+        builder.cacheControl(cc);
+        Response response = builder.build();
+        return response;
 	}
 
 	@PUT
@@ -149,7 +175,7 @@ public class WorkspaceResource {
 	@Template(template = "workspaces/browse.vm", types = { MediaType.TEXT_HTML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
 	public Response getWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
-			@QueryParam(value = "metadata") String metadata) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, OrtolangException,
+			@QueryParam(value = "metadata") String metadata, @Context Request request) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, OrtolangException,
 			BrowserServiceException, PropertyNotFoundException {
 		logger.log(Level.INFO, "GET /workspaces/" + wskey + "/elements?root=" + root + "&path=" + path + "&metadata=" + metadata);
 		if (path == null) {
@@ -158,33 +184,54 @@ public class WorkspaceResource {
 
 		PathBuilder npath = PathBuilder.fromPath(path);
 		String ekey = core.resolveWorkspacePath(wskey, root, npath.build());
-		OrtolangObject object = browser.findObject(ekey);
-		WorkspaceElementRepresentation representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
-
-		if (representation != null) {
-			if (metadata != null && metadata.length() > 0) {
-				logger.log(Level.INFO, "searching element metadata: " + metadata);
-				for (MetadataElement element : representation.getMetadatas()) {
-					if (element.getName().equals(metadata)) {
-						logger.log(Level.FINE, "element metadata key found, loading...");
-						ekey = element.getKey();
-						object = browser.findObject(ekey);
-						representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
-						break;
+		
+		OrtolangObjectState state = browser.getState(ekey);
+		CacheControl cc = new CacheControl();
+		cc.setPrivate(true);
+		if ( state.isLocked() ) {
+			cc.setMaxAge(31536000);
+			cc.setMustRevalidate(false);
+		} else {
+			cc.setMaxAge(0);
+			cc.setMustRevalidate(true);
+		}
+		Date lmd = new Date((state.getLastModification()/1000)*1000);
+		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		
+		if(builder == null){
+			OrtolangObject object = browser.findObject(ekey);
+			WorkspaceElementRepresentation representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
+			if (representation != null) {
+				if (metadata != null && metadata.length() > 0) {
+					logger.log(Level.INFO, "searching element metadata: " + metadata);
+					for (MetadataElement element : representation.getMetadatas()) {
+						if (element.getName().equals(metadata)) {
+							logger.log(Level.FINE, "element metadata key found, loading...");
+							ekey = element.getKey();
+							object = browser.findObject(ekey);
+							representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
+							break;
+						}
 					}
 				}
+				OrtolangObjectInfos infos = browser.getInfos(ekey);
+				representation.setCreation(infos.getCreationDate());
+				representation.setAuthor(infos.getAuthor());
+				representation.setModification(infos.getLastModificationDate());
+				representation.setPath(npath.build());
+				representation.setPathParts(npath.buildParts());
+				representation.setWorkspace(wskey);
+				builder = Response.ok(representation);
+	    		builder.lastModified(lmd);
+			} else {
+				logger.log(Level.FINE, "unable to find a workspace element at path: " + path);
+				return Response.status(Response.Status.NOT_FOUND).build();
 			}
-			OrtolangObjectInfos infos = browser.getInfos(ekey);
-			representation.setCreation(infos.getCreationDate());
-			representation.setAuthor(infos.getAuthor());
-			representation.setModification(infos.getLastModificationDate());
-			representation.setPath(npath.build());
-			representation.setPathParts(npath.buildParts());
-			representation.setWorkspace(wskey);
-			return Response.ok(representation).build();
 		}
-		logger.log(Level.FINE, "unable to find a workspace element at path: " + path);
-		return Response.status(Response.Status.NOT_FOUND).build();
+		
+		builder.cacheControl(cc);
+        Response response = builder.build();
+        return response;
 	}
 
 	@GET
