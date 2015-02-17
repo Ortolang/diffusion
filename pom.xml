@@ -14,6 +14,13 @@
 		<artifactId>ortolang</artifactId>
 		<version>1.4.0</version>
 	</parent>
+	
+	<scm>
+		<connection>scm:git:git@forge.ortolang.fr:ortolang-diffusion.git</connection>
+		<developerConnection>scm:git:git@forge.ortolang.fr:ortolang-diffusion.git</developerConnection>
+		<url>http://git.ortolang.fr/ortolang-diffusion.git/</url>
+		<tag>HEAD</tag>
+	</scm>
 
 	<modules>
 		<module>comp</module>
