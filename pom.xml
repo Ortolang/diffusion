@@ -203,7 +203,10 @@
 		</plugins>
 	</reporting>
 
-  <scm>
-    <tag>server-1.4.0</tag>
-  </scm>
+    <scm>
+		<connection>scm:git:git@forge.ortolang.fr:ortolang-diffusion.git</connection>
+		<developerConnection>scm:git:git@forge.ortolang.fr:ortolang-diffusion.git</developerConnection>
+		<url>http://git.ortolang.fr/ortolang-diffusion.git/</url>
+		<tag>server-1.4.0</tag>
+	</scm>
 </project>
