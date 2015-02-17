@@ -59,7 +59,17 @@
 						</webModule>
 					</modules>
 					<fileNameMapping>no-version</fileNameMapping>
-					<applicationName>diffusion-${project.version}</applicationName>
+					<finalName>ortolang-diffusion</finalName>
+					<applicationName>diffusion</applicationName>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                			<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+						</manifest>
+						<manifestEntries>
+        					<Artefact-Version>${project.version}</Artefact-Version>
+      					</manifestEntries>
+    				</archive>
 				</configuration>
 			</plugin>
 			<plugin>
