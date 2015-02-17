@@ -77,7 +77,7 @@
 				<artifactId>wildfly-maven-plugin</artifactId>
 				<version>${version.wildfly.maven.plugin}</version>
 				<configuration>
-					<filename>${project.build.finalName}.${project.packaging}</filename>
+					<filename>ortolang-diffusion.${project.packaging}</filename>
 					<skip>false</skip>
 				</configuration>
 			</plugin>
