@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>fr.ortolang.diffusion</groupId>
 		<artifactId>server</artifactId>
-		<version>0.2-SNAPSHOT</version>
+		<version>Fen.1-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
