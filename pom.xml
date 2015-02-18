@@ -1,19 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.ortolang.diffusion</groupId>
 	<artifactId>server</artifactId>
 	<name>Ortolang Diffusion Server Parent</name>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.5.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<url>http://www.ortolang.fr</url>
 
 	<parent>
 		<groupId>fr.ortolang</groupId>
 		<artifactId>ortolang</artifactId>
-		<version>0.2</version>
+		<version>1.4.0</version>
 	</parent>
+	
+	<scm>
+		<connection>scm:git:git@forge.ortolang.fr:ortolang-diffusion.git</connection>
+		<developerConnection>scm:git:git@forge.ortolang.fr:ortolang-diffusion.git</developerConnection>
+		<url>http://git.ortolang.fr/ortolang-diffusion.git/</url>
+		<tag>HEAD</tag>
+	</scm>
 
 	<modules>
 		<module>comp</module>
@@ -33,6 +39,7 @@
 		<maven.compiler.target>1.7</maven.compiler.target>
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<slf4j.version>1.6.4</slf4j.version>
+		<project.inceptionYear>2013</project.inceptionYear>		
 	</properties>
 
 	<dependencyManagement>
@@ -142,7 +149,18 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>license-maven-plugin</artifactId>
-				<version>1.7</version>
+				<version>1.8</version>
+				<configuration>
+					<licenseName>lgpl_v3</licenseName>
+					<header>src/etc/header.txt</header>
+					<strictChecking>true</strictChecking>
+					<encoding>UTF-8</encoding>
+					<includes>
+						<include>**/*.java</include>
+					</includes>
+					<descriptionTemplate>${basedir}/src/etc/header.ftl</descriptionTemplate>
+					<offline>true</offline>
+				</configuration>
 				<executions>
 					<execution>
 						<id>download-licenses</id>
@@ -151,9 +169,6 @@
 						</goals>
 					</execution>
 				</executions>
-				<configuration>
-					<offline>true</offline>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

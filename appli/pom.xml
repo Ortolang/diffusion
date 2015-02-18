@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>server-application</artifactId>
 	<name>Ortolang Diffusion Server Application Package</name>
@@ -9,7 +8,7 @@
 	<parent>
 		<groupId>fr.ortolang.diffusion</groupId>
 		<artifactId>server</artifactId>
-		<version>0.2-SNAPSHOT</version>
+		<version>1.4.1-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -59,7 +58,17 @@
 						</webModule>
 					</modules>
 					<fileNameMapping>no-version</fileNameMapping>
-					<applicationName>diffusion-${project.version}</applicationName>
+					<finalName>ortolang-diffusion</finalName>
+					<applicationName>diffusion</applicationName>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                			<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+						</manifest>
+						<manifestEntries>
+        					<Artefact-Version>${project.version}</Artefact-Version>
+      					</manifestEntries>
+    				</archive>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -67,7 +76,7 @@
 				<artifactId>wildfly-maven-plugin</artifactId>
 				<version>${version.wildfly.maven.plugin}</version>
 				<configuration>
-					<filename>${project.build.finalName}.${project.packaging}</filename>
+					<filename>ortolang-diffusion.${project.packaging}</filename>
 					<skip>false</skip>
 				</configuration>
 			</plugin>
