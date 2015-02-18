@@ -58,7 +58,8 @@ import fr.ortolang.diffusion.core.CoreService;
 
 @Entity
 @NamedQueries(value= {
-		@NamedQuery(name="findWorkspaceByMember", query="select w from Workspace w where w.members IN :groups")
+		@NamedQuery(name="findWorkspaceByMember", query="select w from Workspace w where w.members IN :groups"),
+		@NamedQuery(name="findWorkspaceById", query="select w from Workspace w where w.id = :id")
 })
 @SuppressWarnings("serial")
 public class Workspace extends OrtolangObject {

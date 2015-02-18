@@ -66,6 +66,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	/* Workspace */
 	
+	public void createWorkspace(String workspace, String id, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	
 	public void createWorkspace(String workspace, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
 
 	public Workspace readWorkspace(String workspace) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;

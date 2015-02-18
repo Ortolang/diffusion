@@ -77,6 +77,7 @@ import fr.ortolang.diffusion.core.entity.MetadataElement;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.core.entity.WorkspaceId;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -181,17 +182,25 @@ public class CoreServiceBean implements CoreService {
 	}
 
 	/* Workspace */
-
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createWorkspace(String key, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
+		WorkspaceId wsid = new WorkspaceId();
+		em.persist(wsid);
+		createWorkspace(key, wsid.getValue(), name, type);
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void createWorkspace(String key, String id, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		logger.log(Level.FINE, "creating new workspace for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			authorisation.checkAuthentified(caller);
 
-			String members = key + "-members";
-			membership.createGroup(members, "Members of workspace " + name + "", "Members of a workspace have all permissions on workspace content");
+			String members = UUID.randomUUID().toString();
+			membership.createGroup(members, name + "'s Members", "Members of a workspace have all permissions on workspace content");
 			membership.addMemberInGroup(members, caller);
 
 			String head = UUID.randomUUID().toString();
@@ -212,7 +221,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.setPolicyRules(head, rules);
 
 			Workspace workspace = new Workspace();
-			workspace.setId(UUID.randomUUID().toString());
+			workspace.setId(id);
 			workspace.setName(name);
 			workspace.setType(type);
 			workspace.setHead(head);
@@ -239,7 +248,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to create workspace with key [" + key + "]", e);
 		}
 	}
-
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Workspace readWorkspace(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
