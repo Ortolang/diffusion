@@ -36,15 +36,20 @@ package fr.ortolang.diffusion.membership.entity;
  * #L%
  */
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Transient;
 import javax.persistence.Version;
+
+import org.hibernate.annotations.Type;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -66,13 +71,17 @@ public class Profile extends OrtolangObject {
 	private String familyName;
 	private String email;
 	private boolean emailVerified;
-	@Column(length=7000)
+		
+	@Lob
+	@Type(type = "org.hibernate.type.TextType")	
 	private String groupsList;
+	private String friends;
 	private ProfileStatus status;
 	@ElementCollection
 	private Set<ProfileKey> keys;
-//	private ProfileData infos;
-//	private ProfileData friends;
+	@ElementCollection
+	private Map<String, ProfileData> infos = new HashMap<String, ProfileData> ();
+//	private ProfileData contributions;
 	
 	public Profile() {
 		groupsList = "";
@@ -147,9 +156,25 @@ public class Profile extends OrtolangObject {
 	public void setGroupsList(String groupsList) {
 		this.groupsList = groupsList;
 	}
+	
+	public String getFriends() {
+		return friends;
+	}
+
+	public void setFriends(String friendsGroupKey) {
+		this.friends = friendsGroupKey;
+	}
 
 	public boolean isMemberOf(String group) {
 		if (groupsList.indexOf(group) != -1) {
+			return true;
+		}
+
+		return false;
+	}
+	
+	public boolean isFriendOf() {
+		if (isMemberOf(friends)) {
 			return true;
 		}
 
@@ -216,6 +241,43 @@ public class Profile extends OrtolangObject {
 		return groupsList.split(",");
 	}
 	
+
+	public void addFriend(String friendKey) {
+//		if (!isFriendOf(friendKey)) {
+//			if (friendsList.length() > 0) {
+//				friendsList += ("," + friendKey);
+//			} else {
+//				friendsList += friendKey;
+//			}
+//		}
+	}
+
+	public void removeFriend(String friendKey) {
+//		if (isFriendOf(friendKey)) {
+//			friendsList = friendsList.replaceAll("(" + friendKey + "){1},?", "");
+//		}
+	}
+	
+	public Map<String,ProfileData> getInfos() {
+		return infos;
+	}
+	
+	public Map<String,ProfileData> getInfos(ProfileDataVisibility visibility) {
+		Map<String, ProfileData> infosVisibles = new HashMap<String, ProfileData>();
+		for(Entry<String, ProfileData> entry : infos.entrySet()) {
+	    	ProfileDataVisibility dataVisibility = entry.getValue().getVisibility();
+		    if(visibility == ProfileDataVisibility.NOBODY){
+		    	infosVisibles.put(entry.getKey(), entry.getValue());
+		    } else if(visibility == ProfileDataVisibility.FRIENDS && 
+		    		(dataVisibility == ProfileDataVisibility.FRIENDS || dataVisibility == ProfileDataVisibility.EVERYBODY)){
+		    	infosVisibles.put(entry.getKey(), entry.getValue());
+		    } else if(visibility == ProfileDataVisibility.EVERYBODY && dataVisibility == ProfileDataVisibility.EVERYBODY){
+		    	infosVisibles.put(entry.getKey(), entry.getValue());
+		    }
+		}
+		return infosVisibles;
+	}
+		
 	@Override
 	public String getObjectKey() {
 		return getKey();
@@ -230,4 +292,7 @@ public class Profile extends OrtolangObject {
 	public OrtolangObjectIdentifier getObjectIdentifier() {
 		return new OrtolangObjectIdentifier(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, id);
 	}
+
+
+	
 }

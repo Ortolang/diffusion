@@ -37,15 +37,19 @@ package fr.ortolang.diffusion.membership;
  */
 
 import java.util.List;
+import java.util.Map;
 
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.membership.entity.ProfileData;
+import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
 import fr.ortolang.diffusion.membership.entity.ProfileStatus;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 
 public interface MembershipService extends OrtolangService, OrtolangIndexableService {
 	
@@ -73,7 +77,9 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	public Profile createProfile(String givenName, String familyName, String email) throws MembershipServiceException, ProfileAlreadyExistsException;
 
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
-	
+
+	public Map<String, ProfileData> listInfos(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+
 	public void updateProfile(String key, String givenName, String familyName, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
@@ -103,5 +109,9 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	public List<String> getProfileGroups(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+
+	public void addFriend(String key) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException;
+
+	public ProfileData readInfo(String key, String name) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 }

@@ -36,19 +36,18 @@ package fr.ortolang.diffusion.membership.entity;
  * #L%
  */
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.persistence.ElementCollection;
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 @Embeddable
 public class ProfileData {
-
+		
 	private String name;
-	@ElementCollection
-	private List<ProfileDataEntry> entries = new ArrayList<ProfileDataEntry> ();
-	private boolean visible;
+	@Column(length = 7500)
+	private String value;
+	private ProfileDataVisibility visibility;
+	private ProfileDataType type;
+	private String source;
 
 	public ProfileData() {
 	}
@@ -61,20 +60,36 @@ public class ProfileData {
 		this.name = name;
 	}
 
-	public boolean isVisible() {
-		return visible;
+	public String getValue() {
+		return value;
 	}
 
-	public void setVisible(boolean visible) {
-		this.visible = visible;
+	public void setValue(String value) {
+		this.value = value;
 	}
 
-	public List<ProfileDataEntry> getEntries() {
-		return entries;
+	public ProfileDataVisibility getVisibility() {
+		return visibility;
 	}
 
-	public void setEntries(List<ProfileDataEntry> entries) {
-		this.entries = entries;
+	public void setVisibility(ProfileDataVisibility visibility) {
+		this.visibility = visibility;
+	}
+
+	public ProfileDataType getType() {
+		return type;
+	}
+
+	public void setType(ProfileDataType type) {
+		this.type = type;
+	}
+
+	public String getSource() {
+		return source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
 	}
 	
 }
