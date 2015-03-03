@@ -39,9 +39,12 @@ package fr.ortolang.diffusion.membership.entity;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.Version;
+
+import org.hibernate.annotations.Type;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -63,7 +66,8 @@ public class Group extends OrtolangObject {
 	private String name;
 	@Column(length=2500)
 	private String description;
-	@Column(length=7000)
+	@Lob
+	@Type(type = "org.hibernate.type.TextType")
 	private String membersList;
 
 	public Group() {
