@@ -287,6 +287,34 @@ public class CollectionUnitTest {
 //			logger.log(Level.INFO, segment);
 //		}
 	}
+
+    @Test
+    public void testCollectionElementWithSpecialChars() {
+        Collection c = new Collection();
+        c.setId("1");
+        c.setClock(1);
+        c.setKey("K1");
+        c.setRoot(false);
+        c.setName("collection");
+        c.setDescription("description");
+        long tsk1 = System.currentTimeMillis();
+        long tsk2 = System.currentTimeMillis();
+
+
+        String key1 = UUID.randomUUID().toString();
+        CollectionElement collectionElement1 = new CollectionElement(DataObject.OBJECT_TYPE, "myname1(foo)", tsk1, 12, Collection.MIME_TYPE, key1);
+        c.addElement(collectionElement1);
+        String key2 = UUID.randomUUID().toString();
+        CollectionElement collectionElement2 = new CollectionElement(DataObject.OBJECT_TYPE, "myname1[foo]", tsk2, 12, Collection.MIME_TYPE, key2);
+        c.addElement(collectionElement2);
+
+        assertTrue(c.containsElementName(collectionElement1.getName()));
+        assertTrue(c.containsElementName(collectionElement2.getName()));
+        c.removeElement(collectionElement1);
+        assertFalse(c.containsElementKey(key1));
+        c.removeElement(collectionElement2);
+        assertFalse(c.containsElementKey(key2));
+    }
 	
 	@Test
 	public void testFindCollectionElement() {
