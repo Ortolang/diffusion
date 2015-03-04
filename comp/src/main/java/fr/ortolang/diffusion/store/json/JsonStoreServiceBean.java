@@ -22,7 +22,6 @@ import javax.ejb.TransactionAttributeType;
 import nl.renarj.jasdb.LocalDBSession;
 import nl.renarj.jasdb.api.DBSession;
 import nl.renarj.jasdb.api.SimpleEntity;
-import nl.renarj.jasdb.api.metadata.Instance;
 import nl.renarj.jasdb.api.model.EntityBag;
 import nl.renarj.jasdb.core.SimpleKernel;
 import nl.renarj.jasdb.core.exceptions.JasDBStorageException;
@@ -57,6 +56,10 @@ public class JsonStoreServiceBean implements JsonStoreService {
     	this.session = null;
     	this.bag = null;
     }
+    
+    public Path getBase() {
+    	return base;
+    }
 
     @PostConstruct
     public void init() {
@@ -73,10 +76,12 @@ public class JsonStoreServiceBean implements JsonStoreService {
 			
 			session = new LocalDBSession();
 			
-			Instance instance = session.getInstance(DEFAULT_ORTOLANG_INSTANCE);
-			if(instance==null)
+			try {
+				session.getInstance(DEFAULT_ORTOLANG_INSTANCE);
+			} catch(Exception e) {
+				logger.log(Level.WARNING, "unable to get instance of json-store named "+DEFAULT_ORTOLANG_INSTANCE);
 				session.addInstance(DEFAULT_ORTOLANG_INSTANCE, base.toFile().getAbsolutePath());
-			
+			}
 			bag = session.createOrGetBag(DEFAULT_ORTOLANG_BAG);
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, "unable to initialize json store", e);

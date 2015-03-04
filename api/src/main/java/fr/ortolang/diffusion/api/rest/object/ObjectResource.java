@@ -464,6 +464,21 @@ public class ObjectResource {
 		return Response.ok(results).build();
 	}
 
+	@GET
+	@Path("/json")
+	@Template(template = "json/query.vm", types = { MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	public Response jsonSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
+		logger.log(Level.INFO, "searching objects with json query: " + query);
+		List<String> results;
+		if (query != null && query.length() > 0) {
+			results = search.jsonSearch(query);
+		} else {
+			results = Collections.emptyList();
+		}
+		return Response.ok(results).build();
+	}
+
 	protected List<String> listKeys(String key, List<String> keys) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
 
 		OrtolangObject object = browser.findObject(key);
