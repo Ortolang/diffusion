@@ -21,6 +21,8 @@ import javax.ejb.TransactionAttributeType;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
+import com.orientechnologies.orient.core.record.impl.ODocument;
 import com.orientechnologies.orient.server.OServer;
 import com.orientechnologies.orient.server.OServerMain;
 
@@ -44,6 +46,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 
     private Path base;
     private OServer server;
+    private ODatabaseDocumentTx db;
 
     public JsonStoreServiceBean() {
     	logger.log(Level.FINE, "Instanciating json store service");
@@ -93,7 +96,15 @@ public class JsonStoreServiceBean implements JsonStoreService {
     				   + "<entry name=\"plugin.dynamic\" value=\"false\"/>"
     				   + "</properties>" + "</orient-server>");
     	    server.activate();
+    	    
+    	    db = new ODatabaseDocumentTx("plocal:"+this.base.toFile().getAbsolutePath());
 
+    	    if(db.exists()) {
+    	    	db.open("admin","admin"); //TODO set user pass
+    	    } else {
+    	    	db.create();
+    	    }
+    	    
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, "unable to initialize json store", e);
 		}
@@ -115,12 +126,15 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	public void index(OrtolangIndexableObject object)
 			throws JsonStoreServiceException {
 		
-//		try {
-//			bag.addEntity(JsonStoreEntityBuilder.buildEntity(object));
-//		} catch (JasDBStorageException e) {
-//			logger.log(Level.WARNING, "unable to index json of object " + object, e);
-//			throw new JsonStoreServiceException("Can't index the json of an object", e);
-//		}
+		try {
+			db.begin();
+			
+			db.save(JsonStoreDocumentBuilder.buildDocument(object));
+		} catch(Exception e) {
+			db.rollback();
+		} finally {
+			db.close();
+		}
 	}
 
 	@Override
@@ -128,24 +142,32 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	public void reindex(OrtolangIndexableObject object)
 			throws JsonStoreServiceException {
 		logger.log(Level.FINE, "Reindexing object: " + object.getKey());
-//		try {
-//			bag.updateEntity(JsonStoreEntityBuilder.buildEntity(object));
-//		} catch (JasDBStorageException e) {
-//			logger.log(Level.WARNING, "unable to reindex json of object " + object, e);
-//			throw new JsonStoreServiceException("Can't reindex the json of an object", e);
-//		}
+
+		try {
+			db.begin();
+			
+			db.save(JsonStoreDocumentBuilder.buildDocument(object));
+		} catch(Exception e) {
+			db.rollback();
+		} finally {
+			db.close();
+		}
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void remove(String key) throws JsonStoreServiceException {
 		logger.log(Level.FINE, "Removing key: " + key);
-//		try {
-//			bag.removeEntity(key);
-//		} catch (JasDBStorageException e) {
-//			logger.log(Level.WARNING, "unable to remove json of object " + key, e);
-//			throw new JsonStoreServiceException("Can't remove the json of an object", e);
-//		}
+		
+		try {
+			db.begin();
+			
+//			db.delete(JsonStoreDocumentBuilder.buildDocument(object));
+		} catch(Exception e) {
+			db.rollback();
+		} finally {
+			db.close();
+		}
 	}
 
 	@Override
