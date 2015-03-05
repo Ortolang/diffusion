@@ -47,6 +47,7 @@
               <ul class="dropdown-menu" role="menu">
                 <li><a href="$base/rest/objects/index">Plain Text Search</a></li>
             	<li><a href="$base/rest/objects/semantic">Semantic Search</a></li>
+            	<li><a href="$base/rest/objects/json">Json Search</a></li>
               </ul>
             </li>
             <li><a href="$base/rest/tools">Tools</a></li>

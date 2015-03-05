@@ -49,6 +49,10 @@ public class JsonStoreServiceBean implements JsonStoreService {
     	logger.log(Level.FINE, "Instanciating json store service");
     	this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_JSON_HOME);
     }
+    
+    public Path getBase() {
+    	return base;
+    }
 
     @PostConstruct
     public void init() {
@@ -89,6 +93,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
     				   + "<entry name=\"plugin.dynamic\" value=\"false\"/>"
     				   + "</properties>" + "</orient-server>");
     	    server.activate();
+
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, "unable to initialize json store", e);
 		}

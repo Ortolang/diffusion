@@ -57,6 +57,8 @@ import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.store.index.IndexStoreService;
 import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
+import fr.ortolang.diffusion.store.json.JsonStoreService;
+import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.store.triple.TripleStoreService;
 
 @MessageDriven(name = "IndexingTopicMDB", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
@@ -71,6 +73,8 @@ public class IndexingListenerBean implements MessageListener {
 	private IndexStoreService indexStore;
 	@EJB
 	private TripleStoreService tripleStore;
+	@EJB
+	private JsonStoreService jsonStore;
 	@EJB
 	private RegistryService registry;
 
@@ -88,6 +92,14 @@ public class IndexingListenerBean implements MessageListener {
 
 	public void setTripleStoreService(TripleStoreService triple) {
 		this.tripleStore = triple;
+	}
+
+	public JsonStoreService getJsonStoreService() {
+		return jsonStore;
+	}
+
+	public void setJsonStoreService(JsonStoreService jsonStore) {
+		this.jsonStore = jsonStore;
 	}
 
 	public RegistryService getRegistry() {
@@ -128,7 +140,8 @@ public class IndexingListenerBean implements MessageListener {
 		try {
 			OrtolangIndexableObject object = buildIndexableObject(key, context);
 			indexStore.index(object);
-		} catch (IndexStoreServiceException e) {
+			jsonStore.index(object);
+		} catch (IndexStoreServiceException | JsonStoreServiceException e) {
 			throw new IndexingServiceException("unable to insert object in store", e);
 		}
 	}
@@ -137,7 +150,8 @@ public class IndexingListenerBean implements MessageListener {
 		try {
 			OrtolangIndexableObject object = buildIndexableObject(key, context);
 			indexStore.reindex(object);
-		} catch (IndexStoreServiceException e) {
+			jsonStore.reindex(object);
+		} catch (IndexStoreServiceException | JsonStoreServiceException e) {
 			throw new IndexingServiceException("unable to update object in store", e);
 		}
 	}
@@ -145,7 +159,8 @@ public class IndexingListenerBean implements MessageListener {
 	private void removeFromStore(String key, IndexingContext context) throws IndexingServiceException {
 		try {
 			indexStore.remove(key);
-		} catch (IndexStoreServiceException e) {
+			jsonStore.remove(key);
+		} catch (IndexStoreServiceException | JsonStoreServiceException e) {
 			throw new IndexingServiceException("unable to remove object from store", e);
 		}
 	}
