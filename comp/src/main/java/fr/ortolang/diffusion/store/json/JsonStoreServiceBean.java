@@ -19,15 +19,10 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
-import nl.renarj.jasdb.LocalDBSession;
-import nl.renarj.jasdb.api.DBSession;
-import nl.renarj.jasdb.api.SimpleEntity;
-import nl.renarj.jasdb.api.metadata.Instance;
-import nl.renarj.jasdb.api.model.EntityBag;
-import nl.renarj.jasdb.core.SimpleKernel;
-import nl.renarj.jasdb.core.exceptions.JasDBStorageException;
-
 import org.jboss.ejb3.annotation.SecurityDomain;
+
+import com.orientechnologies.orient.server.OServer;
+import com.orientechnologies.orient.server.OServerMain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
@@ -48,14 +43,11 @@ public class JsonStoreServiceBean implements JsonStoreService {
     private Logger logger = Logger.getLogger(JsonStoreServiceBean.class.getName());
 
     private Path base;
-    private DBSession session;
-    private EntityBag bag;
+    private OServer server;
 
     public JsonStoreServiceBean() {
     	logger.log(Level.FINE, "Instanciating json store service");
     	this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_JSON_HOME);
-    	this.session = null;
-    	this.bag = null;
     }
 
     @PostConstruct
@@ -69,15 +61,34 @@ public class JsonStoreServiceBean implements JsonStoreService {
 			} 
     		Files.createDirectories(base);
     		
-			SimpleKernel.initializeKernel();
-			
-			session = new LocalDBSession();
-			
-			Instance instance = session.getInstance(DEFAULT_ORTOLANG_INSTANCE);
-			if(instance==null)
-				session.addInstance(DEFAULT_ORTOLANG_INSTANCE, base.toFile().getAbsolutePath());
-			
-			bag = session.createOrGetBag(DEFAULT_ORTOLANG_BAG);
+    		server = OServerMain.create();
+//    	    server.startup(server.getClass().getResourceAsStream("orientdb-config.xml"));
+    		server.startup(
+    				   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+    				   + "<orient-server>"
+    				   + "<network>"
+    				   + "<protocols>"
+    				   + "<protocol name=\"binary\" implementation=\"com.orientechnologies.orient.server.network.protocol.binary.ONetworkProtocolBinary\"/>"
+    				   + "<protocol name=\"http\" implementation=\"com.orientechnologies.orient.server.network.protocol.http.ONetworkProtocolHttpDb\"/>"
+    				   + "</protocols>"
+    				   + "<listeners>"
+    				   + "<listener ip-address=\"0.0.0.0\" port-range=\"2424-2430\" protocol=\"binary\"/>"
+    				   + "<listener ip-address=\"0.0.0.0\" port-range=\"2480-2490\" protocol=\"http\"/>"
+    				   + "</listeners>"
+    				   + "</network>"
+    				   + "<users>"
+    				   + "<user name=\"root\" password=\"ThisIsA_TEST\" resources=\"*\"/>"
+    				   + "</users>"
+    				   + "<properties>"
+    				   + "<entry name=\"orientdb.www.path\" value=\"C:/work/dev/orientechnologies/orientdb/releases/1.0rc1-SNAPSHOT/www/\"/>"
+    				   + "<entry name=\"orientdb.config.file\" value=\"C:/work/dev/orientechnologies/orientdb/releases/1.0rc1-SNAPSHOT/config/orientdb-server-config.xml\"/>"
+    				   + "<entry name=\"server.cache.staticResources\" value=\"false\"/>"
+    				   + "<entry name=\"log.console.level\" value=\"info\"/>"
+    				   + "<entry name=\"log.file.level\" value=\"fine\"/>"
+    				   //The following is required to eliminate an error or warning "Error on resolving property: ORIENTDB_HOME"
+    				   + "<entry name=\"plugin.dynamic\" value=\"false\"/>"
+    				   + "</properties>" + "</orient-server>");
+    	    server.activate();
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, "unable to initialize json store", e);
 		}
@@ -88,8 +99,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
     public void shutdown() {
     	logger.log(Level.INFO, "Shuting down json store");
     	try {
-    		session.closeSession();
-    		SimpleKernel.shutdown();
+    		server.shutdown();
         } catch (Exception e) {
     		logger.log(Level.SEVERE, "unable to shutdown json store", e);
     	}
@@ -100,12 +110,12 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	public void index(OrtolangIndexableObject object)
 			throws JsonStoreServiceException {
 		
-		try {
-			bag.addEntity(JsonStoreEntityBuilder.buildEntity(object));
-		} catch (JasDBStorageException e) {
-			logger.log(Level.WARNING, "unable to index json of object " + object, e);
-			throw new JsonStoreServiceException("Can't index the json of an object", e);
-		}
+//		try {
+//			bag.addEntity(JsonStoreEntityBuilder.buildEntity(object));
+//		} catch (JasDBStorageException e) {
+//			logger.log(Level.WARNING, "unable to index json of object " + object, e);
+//			throw new JsonStoreServiceException("Can't index the json of an object", e);
+//		}
 	}
 
 	@Override
@@ -113,24 +123,24 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	public void reindex(OrtolangIndexableObject object)
 			throws JsonStoreServiceException {
 		logger.log(Level.FINE, "Reindexing object: " + object.getKey());
-		try {
-			bag.updateEntity(JsonStoreEntityBuilder.buildEntity(object));
-		} catch (JasDBStorageException e) {
-			logger.log(Level.WARNING, "unable to reindex json of object " + object, e);
-			throw new JsonStoreServiceException("Can't reindex the json of an object", e);
-		}
+//		try {
+//			bag.updateEntity(JsonStoreEntityBuilder.buildEntity(object));
+//		} catch (JasDBStorageException e) {
+//			logger.log(Level.WARNING, "unable to reindex json of object " + object, e);
+//			throw new JsonStoreServiceException("Can't reindex the json of an object", e);
+//		}
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void remove(String key) throws JsonStoreServiceException {
 		logger.log(Level.FINE, "Removing key: " + key);
-		try {
-			bag.removeEntity(key);
-		} catch (JasDBStorageException e) {
-			logger.log(Level.WARNING, "unable to remove json of object " + key, e);
-			throw new JsonStoreServiceException("Can't remove the json of an object", e);
-		}
+//		try {
+//			bag.removeEntity(key);
+//		} catch (JasDBStorageException e) {
+//			logger.log(Level.WARNING, "unable to remove json of object " + key, e);
+//			throw new JsonStoreServiceException("Can't remove the json of an object", e);
+//		}
 	}
 
 	@Override
@@ -142,14 +152,14 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		// ex. field1:value1 AND field2:value2
 
 		List<String> jsonResults = new ArrayList<String>();
-		try {
-			for(SimpleEntity entity : bag.getEntities()) {
-				jsonResults.add(SimpleEntity.toJson(entity));
-			}
-		} catch (JasDBStorageException e) {
-			logger.log(Level.WARNING, "unable search in json-store using query : " + query, e);
-			throw new JsonStoreServiceException("Can't search in json-store using query : '" + query + "'\n", e);
-		}
+//		try {
+//			for(SimpleEntity entity : bag.getEntities()) {
+//				jsonResults.add(SimpleEntity.toJson(entity));
+//			}
+//		} catch (JasDBStorageException e) {
+//			logger.log(Level.WARNING, "unable search in json-store using query : " + query, e);
+//			throw new JsonStoreServiceException("Can't search in json-store using query : '" + query + "'\n", e);
+//		}
 		return jsonResults;
 	}
 

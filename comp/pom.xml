@@ -205,20 +205,10 @@
 			<version>4.0.6.RELEASE</version>
 		</dependency>
 		<dependency>
-			<groupId>com.oberasoftware</groupId>
-			<artifactId>jasdb_localservice</artifactId>
-			<version>1.0</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>guice-assistedinject</artifactId>
-					<groupId>com.google.inject.extensions</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>spring-security-core</artifactId>
-					<groupId>org.springframework.security</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+	  		<groupId>com.orientechnologies</groupId>
+	  		<artifactId>orientdb-graphdb</artifactId>
+	  		<version>2.0.4</version>
+	  	</dependency>
 	</dependencies>
 
 	<build>
