@@ -21,8 +21,10 @@ import javax.ejb.TransactionAttributeType;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import com.orientechnologies.orient.core.db.OPartitionedDatabasePool;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
 import com.orientechnologies.orient.core.record.impl.ODocument;
+import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.orientechnologies.orient.server.OServer;
 import com.orientechnologies.orient.server.OServerMain;
 
@@ -46,7 +48,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 
     private Path base;
     private OServer server;
-    private ODatabaseDocumentTx db;
+    private OPartitionedDatabasePool pool;
 
     public JsonStoreServiceBean() {
     	logger.log(Level.FINE, "Instanciating json store service");
@@ -97,13 +99,16 @@ public class JsonStoreServiceBean implements JsonStoreService {
     				   + "</properties>" + "</orient-server>");
     	    server.activate();
     	    
-    	    db = new ODatabaseDocumentTx("plocal:"+this.base.toFile().getAbsolutePath());
+    	    ODatabaseDocumentTx db = new ODatabaseDocumentTx("plocal:"+this.base.toFile().getAbsolutePath());
 
-    	    if(db.exists()) {
-    	    	db.open("admin","admin"); //TODO set user pass
-    	    } else {
-    	    	db.create();
-    	    }
+    	    try {
+	    	    if(!db.exists())
+	    	    	db.create();
+	    	} finally {
+	    		db.close();
+	    	}
+    	    
+    	    pool = new OPartitionedDatabasePool("plocal:"+this.base.toFile().getAbsolutePath(), "admin", "admin");
     	    
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, "unable to initialize json store", e);
@@ -115,6 +120,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
     public void shutdown() {
     	logger.log(Level.INFO, "Shuting down json store");
     	try {
+    		pool.close();
     		server.shutdown();
         } catch (Exception e) {
     		logger.log(Level.SEVERE, "unable to shutdown json store", e);
@@ -125,13 +131,16 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void index(OrtolangIndexableObject object)
 			throws JsonStoreServiceException {
+		logger.log(Level.INFO, "Indexing object: " + object.getKey());
 		
+		ODatabaseDocumentTx db = pool.acquire();
 		try {
-			db.begin();
-			
-			db.save(JsonStoreDocumentBuilder.buildDocument(object));
+			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
+			logger.log(Level.INFO, "doc class = "+doc.getClassName());
+			logger.log(Level.INFO, "doc name = "+doc.field("name"));
+			db.save(doc);
 		} catch(Exception e) {
-			db.rollback();
+			logger.log(Level.SEVERE, "unable to index json ",e);
 		} finally {
 			db.close();
 		}
@@ -143,12 +152,14 @@ public class JsonStoreServiceBean implements JsonStoreService {
 			throws JsonStoreServiceException {
 		logger.log(Level.FINE, "Reindexing object: " + object.getKey());
 
+		ODatabaseDocumentTx db = pool.acquire();
 		try {
-			db.begin();
-			
-			db.save(JsonStoreDocumentBuilder.buildDocument(object));
+			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
+			logger.log(Level.INFO, "doc class = "+doc.getClassName());
+			logger.log(Level.INFO, "doc name = "+doc.field("name"));
+			db.save(doc);
 		} catch(Exception e) {
-			db.rollback();
+			logger.log(Level.SEVERE, "unable to index json ",e);
 		} finally {
 			db.close();
 		}
@@ -159,34 +170,33 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	public void remove(String key) throws JsonStoreServiceException {
 		logger.log(Level.FINE, "Removing key: " + key);
 		
-		try {
-			db.begin();
+//		try {
+//			db.begin();
 			
 //			db.delete(JsonStoreDocumentBuilder.buildDocument(object));
-		} catch(Exception e) {
-			db.rollback();
-		} finally {
-			db.close();
-		}
+//		} catch(Exception e) {
+//			db.rollback();
+//		} finally {
+//			db.commit();
+//		}
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> search(String query)
 			throws JsonStoreServiceException {
-		
-		//TODO Parse query
-		// ex. field1:value1 AND field2:value2
 
 		List<String> jsonResults = new ArrayList<String>();
-//		try {
-//			for(SimpleEntity entity : bag.getEntities()) {
-//				jsonResults.add(SimpleEntity.toJson(entity));
-//			}
-//		} catch (JasDBStorageException e) {
-//			logger.log(Level.WARNING, "unable search in json-store using query : " + query, e);
-//			throw new JsonStoreServiceException("Can't search in json-store using query : '" + query + "'\n", e);
-//		}
+
+		ODatabaseDocumentTx db = pool.acquire();
+		try {
+			List<ODocument> results = db.query(new OSQLSynchQuery<ODocument>(query));
+			for(ODocument doc : results) {
+				jsonResults.add(doc.toJSON());
+		    }
+		} finally {
+			db.close();
+		}
 		return jsonResults;
 	}
 
