@@ -65,6 +65,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangIndexableJsonContent;
 import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
 import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangObject;
@@ -95,6 +96,7 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.store.triple.Triple;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 import fr.ortolang.diffusion.store.triple.URIHelper;
@@ -2477,6 +2479,74 @@ public class CoreServiceBean implements CoreService {
 		}
 	}
 
+	public OrtolangIndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException {
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+
+			if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
+				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+			}
+
+			OrtolangIndexableJsonContent content = new OrtolangIndexableJsonContent();
+
+			if (identifier.getType().equals(Workspace.OBJECT_TYPE)) {
+				
+			}
+			
+			if (identifier.getType().equals(Collection.OBJECT_TYPE)) {
+				Collection collection = em.find(Collection.class, identifier.getId());
+				if (collection == null) {
+					throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
+				}
+				
+				for(MetadataElement mde : collection.getMetadatas()) {
+					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
+					
+					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
+					if (metadata == null) {
+						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
+					}
+
+					try {
+						if (metadata.getStream() != null && metadata.getStream().length() > 0 && metadata.getFormat().equals("ortolang-item-json")) {
+							content.setStream(binarystore.get(metadata.getStream()));
+						}
+					} catch (DataNotFoundException | BinaryStoreServiceException e) {
+						logger.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
+					}
+				}
+			}
+			
+			if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
+				DataObject object = em.find(DataObject.class, identifier.getId());
+				if (object == null) {
+					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
+				}
+				
+				for(MetadataElement mde : object.getMetadatas()) {
+					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
+					
+					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
+					if (metadata == null) {
+						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
+					}
+
+					try {
+						if (metadata.getStream() != null && metadata.getStream().length() > 0 && metadata.getFormat().equals("ortolang-item-json")) {
+							content.setStream(binarystore.get(metadata.getStream()));
+						}
+					} catch (DataNotFoundException | BinaryStoreServiceException e) {
+						logger.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
+					}
+				}
+			}
+
+			return content;
+		} catch (RegistryServiceException | KeyNotFoundException e) {
+			throw new OrtolangException("unable to find an object for key " + key);
+		}
+	}
+	
 	private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws CoreServiceException {
 		if (!identifier.getService().equals(getServiceName())) {
 			throw new CoreServiceException("object identifier " + identifier + " does not refer to service " + getServiceName());

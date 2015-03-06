@@ -137,7 +137,8 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		try {
 			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
 			logger.log(Level.INFO, "doc class = "+doc.getClassName());
-			logger.log(Level.INFO, "doc name = "+doc.field("name"));
+			logger.log(Level.INFO, "ortolang_key = "+doc.field("ortolang_key"));
+			logger.log(Level.INFO, "ortolang_status = "+doc.field("ortolang_status"));
 			db.save(doc);
 		} catch(Exception e) {
 			logger.log(Level.SEVERE, "unable to index json ",e);
@@ -156,7 +157,8 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		try {
 			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
 			logger.log(Level.INFO, "doc class = "+doc.getClassName());
-			logger.log(Level.INFO, "doc name = "+doc.field("name"));
+			logger.log(Level.INFO, "ortolang_key = "+doc.field("ortolang_key"));
+			logger.log(Level.INFO, "ortolang_status = "+doc.field("ortolang_status"));
 			db.save(doc);
 		} catch(Exception e) {
 			logger.log(Level.SEVERE, "unable to index json ",e);

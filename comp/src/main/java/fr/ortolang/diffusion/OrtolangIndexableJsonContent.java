@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion;
 
+import java.io.InputStream;
+
 /*
  * #%L
  * ORTOLANG
@@ -36,12 +38,20 @@ package fr.ortolang.diffusion;
  * #L%
  */
 
-public interface OrtolangIndexableService {
+public class OrtolangIndexableJsonContent {
 	
-	public abstract OrtolangIndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException;
-	
-	public abstract OrtolangIndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException;
-	
-	public abstract OrtolangIndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException;
-	
+	private InputStream stream;
+
+    public OrtolangIndexableJsonContent() {
+        
+    }
+
+     public void setStream(InputStream stream) {
+        this.stream = stream;
+    }
+
+	public InputStream getStream() {
+		return stream;
+	}
+    
 }
