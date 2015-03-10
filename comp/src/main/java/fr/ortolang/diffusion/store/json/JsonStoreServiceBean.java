@@ -41,8 +41,6 @@ import fr.ortolang.diffusion.store.DeleteFileVisitor;
 public class JsonStoreServiceBean implements JsonStoreService {
 
 	public static final String DEFAULT_JSON_HOME = "/json-store";
-	public static final String DEFAULT_ORTOLANG_INSTANCE = "ortolang";
-	public static final String DEFAULT_ORTOLANG_BAG = "ortolang";
 
     private Logger logger = Logger.getLogger(JsonStoreServiceBean.class.getName());
 
@@ -62,7 +60,6 @@ public class JsonStoreServiceBean implements JsonStoreService {
     @PostConstruct
     public void init() {
     	logger.log(Level.INFO, "Initializing service with base folder: " + base);
-    	//Forcible initialize JasDB, can also be lazy loaded on first session created
     	try {
     		if ( Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.json.purge")) ) {
 				logger.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
@@ -71,32 +68,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
     		Files.createDirectories(base);
     		
     		server = OServerMain.create();
-//    	    server.startup(server.getClass().getResourceAsStream("orientdb-config.xml"));
-    		server.startup(
-    				   "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-    				   + "<orient-server>"
-    				   + "<network>"
-    				   + "<protocols>"
-    				   + "<protocol name=\"binary\" implementation=\"com.orientechnologies.orient.server.network.protocol.binary.ONetworkProtocolBinary\"/>"
-    				   + "<protocol name=\"http\" implementation=\"com.orientechnologies.orient.server.network.protocol.http.ONetworkProtocolHttpDb\"/>"
-    				   + "</protocols>"
-    				   + "<listeners>"
-    				   + "<listener ip-address=\"0.0.0.0\" port-range=\"2424-2430\" protocol=\"binary\"/>"
-    				   + "<listener ip-address=\"0.0.0.0\" port-range=\"2480-2490\" protocol=\"http\"/>"
-    				   + "</listeners>"
-    				   + "</network>"
-    				   + "<users>"
-    				   + "<user name=\"root\" password=\"ThisIsA_TEST\" resources=\"*\"/>"
-    				   + "</users>"
-    				   + "<properties>"
-    				   + "<entry name=\"orientdb.www.path\" value=\"C:/work/dev/orientechnologies/orientdb/releases/1.0rc1-SNAPSHOT/www/\"/>"
-    				   + "<entry name=\"orientdb.config.file\" value=\"C:/work/dev/orientechnologies/orientdb/releases/1.0rc1-SNAPSHOT/config/orientdb-server-config.xml\"/>"
-    				   + "<entry name=\"server.cache.staticResources\" value=\"false\"/>"
-    				   + "<entry name=\"log.console.level\" value=\"info\"/>"
-    				   + "<entry name=\"log.file.level\" value=\"fine\"/>"
-    				   //The following is required to eliminate an error or warning "Error on resolving property: ORIENTDB_HOME"
-    				   + "<entry name=\"plugin.dynamic\" value=\"false\"/>"
-    				   + "</properties>" + "</orient-server>");
+    	    server.startup(this.getClass().getResourceAsStream("/orientdb-config.xml"));
     	    server.activate();
     	    
     	    ODatabaseDocumentTx db = new ODatabaseDocumentTx("plocal:"+this.base.toFile().getAbsolutePath());
@@ -136,9 +108,6 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
-			logger.log(Level.INFO, "doc class = "+doc.getClassName());
-			logger.log(Level.INFO, "ortolang_key = "+doc.field("ortolang_key"));
-			logger.log(Level.INFO, "ortolang_status = "+doc.field("ortolang_status"));
 			db.save(doc);
 		} catch(Exception e) {
 			logger.log(Level.SEVERE, "unable to index json ",e);
@@ -156,9 +125,6 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
-			logger.log(Level.INFO, "doc class = "+doc.getClassName());
-			logger.log(Level.INFO, "ortolang_key = "+doc.field("ortolang_key"));
-			logger.log(Level.INFO, "ortolang_status = "+doc.field("ortolang_status"));
 			db.save(doc);
 		} catch(Exception e) {
 			logger.log(Level.SEVERE, "unable to index json ",e);

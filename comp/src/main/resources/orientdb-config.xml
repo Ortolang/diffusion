@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<orient-server>
+	<network>
+		<protocols>
+			<protocol name="binary" implementation="com.orientechnologies.orient.server.network.protocol.binary.ONetworkProtocolBinary"/>
+		</protocols>
+		<listeners>
+			<listener ip-address="0.0.0.0" port-range="2424-2430" protocol="binary"/>
+		</listeners>
+	</network>
+	<users>
+		<user name="root" password="ThisIsA_TEST" resources="*"/>
+	</users>
+	<properties>
+		<entry name="server.cache.staticResources" value="false"/>
+		<entry name="log.console.level" value="info"/>
+		<entry name="log.file.level" value="fine"/>
+		<entry name="plugin.dynamic" value="false"/>
+	</properties>
+</orient-server>

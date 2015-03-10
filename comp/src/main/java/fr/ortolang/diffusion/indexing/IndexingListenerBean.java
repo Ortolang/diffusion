@@ -185,7 +185,6 @@ public class IndexingListenerBean implements MessageListener {
 			iobject.setName(key);
 			iobject.setPlainTextContent(content);
 			iobject.setSemanticContent(scontent);
-			logger.log(Level.INFO, "Get indexable json Content : "+service.getIndexableJsonContent(key));
 			iobject.setJsonContent(service.getIndexableJsonContent(key));
 			iobject.setContext(context);
 			return iobject;

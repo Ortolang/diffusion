@@ -5,24 +5,24 @@ import java.io.IOException;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 
 import fr.ortolang.diffusion.OrtolangIndexableObject;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
 
 public class JsonStoreDocumentBuilder {
 
 	public static final String KEY_PROPERTY = "key";
-	public static final String TYPE_PROPERTY = "type";
 	public static final String STATUS_PROPERTY = "status";
-	public static final String NAME_PROPERTY = "name";
+	public static final String META_PROPERTY = "meta";
 
 	public static ODocument buildDocument(OrtolangIndexableObject object) {
 		
-		ODocument doc = new ODocument("OrtolangObject");
-
-		doc.field("ortolang_key", object.getKey());
-		doc.field("ortolang_status", object.getStatus());
+		ODocument doc = new ODocument(object.getType());
+		
+		doc.field(KEY_PROPERTY, object.getKey());
+		doc.field(STATUS_PROPERTY, object.getStatus());
 		
 		if(object.getJsonContent()!=null && object.getJsonContent().getStream()!=null) {
 			try {
-				doc.field("ortolang_meta", new ODocument("MetadataObject").fromJSON(object.getJsonContent().getStream()));
+				doc.field(META_PROPERTY, new ODocument(MetadataObject.OBJECT_TYPE).fromJSON(object.getJsonContent().getStream()));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
