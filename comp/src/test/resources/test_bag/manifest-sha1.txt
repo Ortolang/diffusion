@@ -1,0 +1,24 @@
+da39a3ee5e6b4b0d3255bfef95601890afd80709  data/workspace.properties
+ba0a915ac26fe9814bf5c89450ae07b95fe1e592  data/snapshots/1/Version 1/metadata/md1.txt
+a03668e8147a8d25c6fb78af65399ffa9b89a6c9  data/head/metadata/md1.txt
+ba0a915ac26fe9814bf5c89450ae07b95fe1e592  data/snapshots/2/Version 2/metadata/md1.txt
+a03668e8147a8d25c6fb78af65399ffa9b89a6c9  data/snapshots/3/Version 3/metadata/md1.txt
+74d2094a1cae027e58ad48349efacf1bb5c7776a  data/snapshots/3/Version 3/metadata/a/oa1.txt/md1.txt
+eb599ec83d383f0f25691c184f656d40384f9435  data/snapshots/3/Version 3/objects/a/oa1.txt
+964bc67ade85531675e9c3b999ad0d15a4522801  data/snapshots/3/Version 3/objects/a/oa2.txt
+7dfac70c9d61453d1506c6104338c28449d14b6f  data/snapshots/1/Version 1/objects/a/b/oab1.txt
+964bc67ade85531675e9c3b999ad0d15a4522801  data/snapshots/2/Version 2/objects/a/oa1.txt
+6f70ce2a783986fe58c0cc370e0c7114c812e04d  data/snapshots/3/Version 3/objects/o2.txt
+964bc67ade85531675e9c3b999ad0d15a4522801  data/snapshots/1/Version 1/objects/a/oa1.txt
+4ad279e6ec016823e1186210afa37ba37d9d236b  data/snapshots/3/Version 3/objects/b/cece/d/obcd1.txt
+7dfac70c9d61453d1506c6104338c28449d14b6f  data/snapshots/2/Version 2/objects/a/b/oab1.txt
+4ad279e6ec016823e1186210afa37ba37d9d236b  data/snapshots/2/Version 2/objects/b/c/d/obcd1.txt
+2b141ff6e12af000c045d5cb05a8ebd2d4e62e41  data/snapshots/1/Version 1/objects/o1.txt
+2b141ff6e12af000c045d5cb05a8ebd2d4e62e41  data/snapshots/2/Version 2/objects/o1.txt
+85d55c09649c78ea612c488e77e1ef164b2e15ec  data/snapshots/3/Version 3/objects/a/b/oab2.txt
+964bc67ade85531675e9c3b999ad0d15a4522801  data/head/objects/a/oa1.txt
+85d55c09649c78ea612c488e77e1ef164b2e15ec  data/head/objects/a/b/oab2.txt
+2b141ff6e12af000c045d5cb05a8ebd2d4e62e41  data/head/objects/o1.txt
+74d2094a1cae027e58ad48349efacf1bb5c7776a  data/head/metadata/a/oa1.txt/md1.txt
+4ad279e6ec016823e1186210afa37ba37d9d236b  data/head/objects/b/cece/d/obcd1.txt
+6f70ce2a783986fe58c0cc370e0c7114c812e04d  data/head/objects/o2.txt

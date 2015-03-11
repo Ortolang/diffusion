@@ -194,7 +194,7 @@ public class RegistryServiceTest {
 		    OrtolangObjectIdentifier doi = registry.lookup(key);
 			assertTrue(doi1.equals(doi));
 			registry.hide(key);
-		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
+		} catch (KeyLockedException | RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
 		}	
 		try {
@@ -215,7 +215,7 @@ public class RegistryServiceTest {
 		try {
 		    registry.hide(key);
 		    fail("the hide should have raised an exception");
-		} catch (RegistryServiceException e ) {
+		} catch (KeyLockedException | RegistryServiceException e ) {
 			fail(e.getMessage());
 		} finally {
 			loginContext.logout();
@@ -235,7 +235,7 @@ public class RegistryServiceTest {
 		    OrtolangObjectIdentifier doi = registry.lookup(key);
 			assertTrue(doi1.equals(doi));
 			registry.lock(key, lock);
-		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
+		} catch (KeyLockedException | RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
 		}	
 		try {
@@ -257,7 +257,7 @@ public class RegistryServiceTest {
 		try {
 		    registry.lock(key, lock);
 		    fail("the lock should have raised an exception");
-		} catch (RegistryServiceException e ) {
+		} catch (KeyLockedException | RegistryServiceException e ) {
 			fail(e.getMessage());
 		} finally {
 			loginContext.logout();
@@ -276,7 +276,7 @@ public class RegistryServiceTest {
 		    OrtolangObjectIdentifier doi = registry.lookup(key);
 			assertTrue(doi1.equals(doi));
 			registry.delete(key);
-		} catch (RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
+		} catch (KeyLockedException | RegistryServiceException | KeyNotFoundException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
 		}	
 		try {
@@ -297,7 +297,7 @@ public class RegistryServiceTest {
 		try {
 		    registry.delete(key);
 		    fail("the delete should have raised an exception");
-		} catch (RegistryServiceException e ) {
+		} catch (KeyLockedException | RegistryServiceException e ) {
 			fail(e.getMessage());
 		}
 	}
@@ -353,7 +353,7 @@ public class RegistryServiceTest {
 		    assertEquals(4,entries.size());
 		    assertEquals(4,size);
 		    
-		} catch (RegistryServiceException | KeyAlreadyExistsException | KeyNotFoundException | IdentifierAlreadyRegisteredException e ) {
+		} catch (KeyLockedException | RegistryServiceException | KeyAlreadyExistsException | KeyNotFoundException | IdentifierAlreadyRegisteredException e ) {
 			fail(e.getMessage());
 		} finally {
 			loginContext.logout();

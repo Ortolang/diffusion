@@ -386,8 +386,13 @@ public class MembershipServiceBean implements MembershipService {
 		logger.log(Level.FINE, "creating group for key [" + key + "] and name [" + name + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
-			authorisation.checkAuthentified(caller);
+			List<String> subjects = getConnectedIdentifierSubjects();
+			authorisation.checkAuthentified(subjects);
 
+			if ( key.equals(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY ) ) {
+				throw new MembershipServiceException("key [" + key + "] is reserved for all authentified users and cannot be used for a group");
+			}
+			
 			Group group = new Group();
 			group.setId(UUID.randomUUID().toString());
 			group.setName(name);
@@ -399,7 +404,7 @@ public class MembershipServiceBean implements MembershipService {
 			authorisation.createPolicy(key, caller);
 
 			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "create"), "");
-		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException e) {
+		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | KeyNotFoundException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to create group with key [" + key + "]", e);
 		}

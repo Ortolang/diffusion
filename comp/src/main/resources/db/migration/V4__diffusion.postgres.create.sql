@@ -84,7 +84,7 @@
         emailVerified boolean not null,
         familyName varchar(255),
         givenName varchar(255),
-        groupsList varchar(7000),
+        groupsList text,
         status int4,
         version int8 not null,
         primary key (id)
@@ -116,6 +116,7 @@
 
     create table Workspace (
         id varchar(255) not null,
+        alias varchar(255),
         changed boolean not null,
         clock int4 not null,
         head varchar(255),
@@ -127,10 +128,15 @@
         primary key (id)
     );
 
+    create table WorkspaceAlias (
+        id int8 not null,
+        primary key (id)
+    );
+
     create table "GROUP" (
         id varchar(255) not null,
         description varchar(2500),
-        membersList varchar(7000),
+        membersList text,
         name varchar(255),
         version int8 not null,
         primary key (id)
@@ -143,7 +149,10 @@
     create index UK_1y5xufstwuf5398odn1vl3ykw on Process (initier, state);
 
     create index UK_8vv92rpgi9suidc96s1b88rw1 on RegistryEntry (identifier);
-
+    
+    alter table Workspace 
+        add constraint UK_48cyeq9y05tbu0dgn64iswitn  unique (alias);
+    
     alter table Collection_segments 
         add constraint FK_qtkd8pouce5ufvwfwj4bgsk8u 
         foreign key (Collection_id) 
@@ -153,3 +162,5 @@
         add constraint FK_dq11bmpucl4gg88ldggue1qvr 
         foreign key (Profile_id) 
         references Profile;
+        
+    create sequence SEQ_WSALIAS_PK;

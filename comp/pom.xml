@@ -175,10 +175,6 @@
 			<version>1.8.1</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.sshd</groupId>
-			<artifactId>sshd-sftp</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>net.handle</groupId>
 			<artifactId>hdlnet-hclj</artifactId>
 			<version>7.3.1</version>

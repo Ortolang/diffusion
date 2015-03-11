@@ -64,7 +64,7 @@ public interface AuthorisationService {
 	
 	public void checkOwnership(String key, List<String> subjects) throws AuthorisationServiceException, AccessDeniedException;
 	
-	public void checkAuthentified(String identifier) throws AuthorisationServiceException, AccessDeniedException;
+	public void checkAuthentified(List<String> subjects) throws AuthorisationServiceException, AccessDeniedException;
 	
 	public void checkSuperUser(String identifier) throws AuthorisationServiceException, AccessDeniedException;
 	

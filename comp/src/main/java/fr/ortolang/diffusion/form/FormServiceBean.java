@@ -68,6 +68,7 @@ import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
 import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
@@ -161,7 +162,8 @@ public class FormServiceBean implements FormService {
 		logger.log(Level.FINE, "creating form for key [" + key + "] and name [" + name + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			authorisation.checkAuthentified(caller);
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkAuthentified(subjects);
 
 			Form form = new Form();
 			form.setId(UUID.randomUUID().toString());
@@ -174,7 +176,7 @@ public class FormServiceBean implements FormService {
 			authorisation.createPolicy(key, caller);
 
 			notification.throwEvent(key, caller, Form.OBJECT_TYPE, OrtolangEvent.buildEventType(FormService.SERVICE_NAME, Form.OBJECT_TYPE, "create"), "");
-		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException e) {
+		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException e) {
 			ctx.setRollbackOnly();
 			throw new FormServiceException("unable to create form with key [" + key + "]", e);
 		}
@@ -224,7 +226,7 @@ public class FormServiceBean implements FormService {
 			registry.update(key);
 
 			notification.throwEvent(key, caller, Form.OBJECT_TYPE, OrtolangEvent.buildEventType(FormService.SERVICE_NAME, Form.OBJECT_TYPE, "update"), "");
-		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
 			ctx.setRollbackOnly();
 			throw new FormServiceException("error while trying to update the form with key [" + key + "]");
 		}
@@ -243,7 +245,7 @@ public class FormServiceBean implements FormService {
 			checkObjectType(identifier, Form.OBJECT_TYPE);
 			registry.delete(key);
 			notification.throwEvent(key, caller, Form.OBJECT_TYPE, OrtolangEvent.buildEventType(FormService.SERVICE_NAME, Form.OBJECT_TYPE, "delete"), "");
-		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
 			ctx.setRollbackOnly();
 			throw new FormServiceException("unable to delete form with key [" + key + "]", e);
 		}
