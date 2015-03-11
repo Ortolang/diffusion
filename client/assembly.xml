@@ -1,0 +1,43 @@
+<assembly>
+    <id>server-client</id>
+
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+
+    <fileSets>
+        <fileSet>
+            <directory>src/main/resources/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+        </fileSet>
+        <fileSet>
+        	<includes>
+            	<include>src/main/resources/client-config.properties</include>
+            </includes>
+            <outputDirectory>conf</outputDirectory>
+        </fileSet>
+    </fileSets>
+    <dependencySets>
+        <dependencySet>
+            <unpack>false</unpack>
+            <scope>compile</scope>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
+            <includes>
+                <include>fr.ortolang.diffusion:server-client:jar</include>
+            </includes>
+            <outputDirectory>lib</outputDirectory>
+        </dependencySet>
+        <dependencySet>
+            <unpack>false</unpack>
+            <scope>compile</scope>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
+            <includes>
+                <include>commons-io:commons-io:jar</include>
+            </includes>
+            <outputDirectory>lib</outputDirectory>
+        </dependencySet>
+    </dependencySets>
+</assembly>
