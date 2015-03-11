@@ -27,7 +27,7 @@ public class ImportBagItTest {
 	}
 	
 	private String getBagsList() {
-		String list = BagItImporter.DEFAULT_BAGS_FOLDER;
+		String list = "";
 		String property = System.getProperty("bags.list");
 		logger.log(Level.INFO,"Property bags.list : "+property);
 		if (property != null && property.length() != 0) {
