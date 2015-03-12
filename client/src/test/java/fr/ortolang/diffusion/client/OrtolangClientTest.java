@@ -45,45 +45,47 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
-import fr.ortolang.diffusion.client.account.OrtolangClientAccountManager;
 import fr.ortolang.diffusion.membership.MembershipService;
 
 public class OrtolangClientTest {
 	
 	private static Logger logger = Logger.getLogger(OrtolangClientTest.class.getName());
-	private static String clientId = "client";
+	private static OrtolangClient client;
 	
 	@BeforeClass
 	public static void init() throws OrtolangClientAccountException {
-		OrtolangClientAccountManager.getInstance(clientId).setCredentials("root", "tagada54");
+		client = new OrtolangClient();
+		client.getAccountManager().setCredentials("root", "tagada54");
 	}
 	
-	@Test
-	public void testAnonnymousAuthentication() throws OrtolangClientException {
-		OrtolangClient client = new OrtolangClient(clientId);
-		String profile = client.connectedProfile();
-		logger.log(Level.INFO, "connected profile: {0}", profile);
-		assertEquals(MembershipService.UNAUTHENTIFIED_IDENTIFIER, profile);
+	@AfterClass
+	public static void clear() {
 		client.close();
 	}
 	
 	@Test
-	public void testRootAuthentication() throws OrtolangClientException {
-		OrtolangClient client = new OrtolangClient(clientId);
+	public void testAnonnymousAuthentication() throws OrtolangClientException, OrtolangClientAccountException {
+		String profile = client.connectedProfile();
+		logger.log(Level.INFO, "connected profile: {0}", profile);
+		assertEquals(MembershipService.UNAUTHENTIFIED_IDENTIFIER, profile);
+	}
+	
+	@Test
+	public void testRootAuthentication() throws OrtolangClientException, OrtolangClientAccountException {
 		client.login("root");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
 		assertEquals(MembershipService.SUPERUSER_IDENTIFIER, profile);
-		client.close();
+		client.logout();
 	}
 	
 	@Test
-	public void testImportWorkspace() throws OrtolangClientException {
-		OrtolangClient client = new OrtolangClient(clientId);
+	public void testImportWorkspace() throws OrtolangClientException, OrtolangClientAccountException {
 		client.login("root");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
@@ -94,7 +96,7 @@ public class OrtolangClientTest {
 		params.put("wsname", "SLDR 000 745");
 		params.put("bagpath", "/media/space/jerome/Data/newbags/sldr000745");
 		client.createProcess("import-workspace", "Import SLDR 745", params, Collections.<String, File> emptyMap());
-		client.close();
+		client.logout();
 	}
 
 }

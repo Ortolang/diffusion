@@ -18,7 +18,6 @@ import org.apache.commons.cli.ParseException;
 import fr.ortolang.diffusion.client.OrtolangClient;
 import fr.ortolang.diffusion.client.OrtolangClientException;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
-import fr.ortolang.diffusion.client.account.OrtolangClientAccountManager;
 
 public class ImportWorkspace {
 
@@ -84,9 +83,9 @@ public class ImportWorkspace {
 				params.put("wstype", "user");
 			}
 
-			OrtolangClient client = new OrtolangClient("client");
+			OrtolangClient client = new OrtolangClient();
 			if ( username.length() > 0 ) {
-				OrtolangClientAccountManager.getInstance("client").setCredentials(username, password);
+				client.getAccountManager().setCredentials(username, password);
 				client.login(username);
 			}
 			System.out.println("Connected as user: " + client.connectedProfile());

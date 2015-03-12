@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 import org.junit.Test;
 
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
-import fr.ortolang.diffusion.client.account.OrtolangClientAccountManager;
 
 public class ImportBagsTest {
 
@@ -25,8 +24,8 @@ public class ImportBagsTest {
 			bags = "";
 		}
 
-		OrtolangClient client = new OrtolangClient("client");
-		OrtolangClientAccountManager.getInstance("client").setCredentials("root", "tagada54");
+		OrtolangClient client = new OrtolangClient();
+		client.getAccountManager().setCredentials("root", "tagada54");
 		client.login("root");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);

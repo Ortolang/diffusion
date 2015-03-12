@@ -54,17 +54,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import net.iharder.Base64;
-
-import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-
 import fr.ortolang.diffusion.client.OrtolangClientConfig;
-import fr.ortolang.diffusion.client.OrtolangClientCookieFilter;
 
 public class OrtolangClientAccountManager {
 
 	private static final Logger logger = Logger.getLogger(OrtolangClientAccountManager.class.getName());
-	private static Map<String, OrtolangClientAccountManager> instances = new HashMap<String, OrtolangClientAccountManager>();
-
+	
 	private Client client;
 	private String authurl;
 	private String authrealm;
@@ -72,27 +67,14 @@ public class OrtolangClientAccountManager {
 	private String appsecret;
 	private Map<String, OrtolangClientAccount> accounts = new HashMap<String, OrtolangClientAccount> ();
 	
-	private OrtolangClientAccountManager(String id) {
-		logger.log(Level.INFO, "Creating OrtolangClientAccountManager for id " + id);
+	public OrtolangClientAccountManager(Client client) {
+		logger.log(Level.INFO, "Creating OrtolangClientAccountManager");
 		
 		this.authurl = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.url");
 		this.authrealm = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.realm");
-		this.appname = OrtolangClientConfig.getInstance().getProperty(id + ".app.name");
-		this.appsecret = OrtolangClientConfig.getInstance().getProperty(id + ".app.secret");
-		
-		ResteasyClientBuilder builder = new ResteasyClientBuilder();
-		builder.register(OrtolangClientCookieFilter.class);
-		if (Boolean.valueOf(OrtolangClientConfig.getInstance().getProperty("trustmanager.disabled"))) {
-			builder.disableTrustManager();
-		}
-		client = builder.build();
-	}
-	
-	public static OrtolangClientAccountManager getInstance(String id) {
-		if ( !instances.containsKey(id) ) {
-			instances.put(id, new OrtolangClientAccountManager(id));
-		}
-		return instances.get(id);
+		this.appname = OrtolangClientConfig.getInstance().getProperty("client.app.name");
+		this.appsecret = OrtolangClientConfig.getInstance().getProperty("client.app.secret");
+		this.client = client;
 	}
 	
 	public boolean exists(String user) {
@@ -115,6 +97,7 @@ public class OrtolangClientAccountManager {
 		if (response.getStatus() == Status.OK.getStatusCode()) {
 			String tokenResponse = response.readEntity(String.class);
 			JsonObject object = Json.createReader(new StringReader(tokenResponse)).readObject();
+			response.close();
 			logger.log(Level.FINE, "Received grant response: " + object.toString());
 			OrtolangClientAccount account = new OrtolangClientAccount();
 			account.setUsername(user);
@@ -147,6 +130,7 @@ public class OrtolangClientAccountManager {
 		Response response = invocationBuilder.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
 		if (response.getStatus() == Status.OK.getStatusCode()) {
 			String tokenResponse = response.readEntity(String.class);
+			response.close();
 			JsonObject object = Json.createReader(new StringReader(tokenResponse)).readObject();
 			logger.log(Level.FINE, "Received grant response: " + object.toString());
 			OrtolangClientAccount account = new OrtolangClientAccount();
@@ -202,6 +186,7 @@ public class OrtolangClientAccountManager {
 		Response response = invocationBuilder.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
 		if (response.getStatus() == Status.OK.getStatusCode()) {
 			String tokenResponse = response.readEntity(String.class);
+			response.close();
 			JsonObject object = Json.createReader(new StringReader(tokenResponse)).readObject();
 			logger.log(Level.FINE, "Received refresh response: " + object.toString());
 			account.setIdToken(object.getString("id_token"));
