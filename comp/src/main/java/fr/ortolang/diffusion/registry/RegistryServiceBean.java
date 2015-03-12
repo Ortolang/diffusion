@@ -212,9 +212,12 @@ public class RegistryServiceBean implements RegistryService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void update(String key) throws RegistryServiceException, KeyNotFoundException {
+	public void update(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
 		logger.log(Level.FINE, "updating key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
+		if ( entry.isLocked() ) {
+			throw new KeyLockedException("Key [" + key + "] is locked and cannot be updated");
+		}
 		try {
 			entry.setLastModificationDate(System.currentTimeMillis());
 			em.merge(entry);
@@ -251,9 +254,12 @@ public class RegistryServiceBean implements RegistryService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void hide(String key) throws RegistryServiceException, KeyNotFoundException {
+	public void hide(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
 		logger.log(Level.FINE, "hidding key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
+		if ( entry.isLocked() ) {
+			throw new KeyLockedException("Key [" + key + "] is locked and cannot be hide");
+		}
 		try {
 			entry.setHidden(true);
 			em.merge(entry);
@@ -266,9 +272,12 @@ public class RegistryServiceBean implements RegistryService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void show(String key) throws RegistryServiceException, KeyNotFoundException {
+	public void show(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
 		logger.log(Level.FINE, "showing key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
+		if ( entry.isLocked() ) {
+			throw new KeyLockedException("Key [" + key + "] is locked and cannot be shown");
+		}
 		try {
 			entry.setHidden(false);
 			em.merge(entry);
@@ -297,9 +306,12 @@ public class RegistryServiceBean implements RegistryService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException {
+	public void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
 		logger.log(Level.FINE, "locking key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
+		if ( entry.isLocked() ) {
+			throw new KeyLockedException("Key [" + key + "] is already locked");
+		}
 		try {
 			entry.setLock(owner);
 			em.merge(entry);
@@ -312,9 +324,12 @@ public class RegistryServiceBean implements RegistryService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void itemify(String key) throws RegistryServiceException, KeyNotFoundException {
+	public void itemify(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
 		logger.log(Level.FINE, "itemify key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
+		if ( entry.isLocked() ) {
+			throw new KeyLockedException("Key [" + key + "] is locked and cannot be itemified");
+		}
 		try {
 			entry.setItem(true);
 			em.merge(entry);
@@ -335,9 +350,12 @@ public class RegistryServiceBean implements RegistryService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void setPublicationStatus(String key, String state) throws RegistryServiceException, KeyNotFoundException {
+	public void setPublicationStatus(String key, String state) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
 		logger.log(Level.FINE, "setting key [" + key + "] with state [" + state + "]");
 		RegistryEntry entry = findEntryByKey(key);
+		if ( entry.isLocked() ) {
+			throw new KeyLockedException("Key [" + key + "] is locked, publication status cannot be modified");
+		}
 		try {
 			entry.setPublicationStatus(state);
 			em.merge(entry);
@@ -350,9 +368,27 @@ public class RegistryServiceBean implements RegistryService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void delete(String key) throws RegistryServiceException, KeyNotFoundException {
+	public void systemDelete(String key) throws RegistryServiceException, KeyNotFoundException {
+		logger.log(Level.FINE, "SYSTEM deleting key [" + key + "]");
+		RegistryEntry entry = findEntryByKey(key);
+		try {
+			entry.setDeleted(true);
+			em.merge(entry);
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+			ctx.setRollbackOnly();
+			throw new RegistryServiceException(e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void delete(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
 		logger.log(Level.FINE, "deleting key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
+		if ( entry.isLocked() ) {
+			throw new KeyLockedException("Key [" + key + "] is locked and cannot be deleted");
+		}
 		try {
 			entry.setDeleted(true);
 			em.merge(entry);
@@ -439,9 +475,12 @@ public class RegistryServiceBean implements RegistryService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException {
+	public void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
 		logger.log(Level.FINE, "setting property [" + name + "] with value [" + value + "] for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
+		if ( entry.isLocked() ) {
+			throw new KeyLockedException("Key [" + key + "] is locked, property cannot be setted");
+		}
 		try {
 			entry.setProperty(name, value);
 			em.merge(entry);
@@ -489,8 +528,11 @@ public class RegistryServiceBean implements RegistryService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private RegistryEntry findEntryByKey(String key) throws KeyNotFoundException {
 		RegistryEntry entry = em.find(RegistryEntry.class, key);
-		if (entry == null || entry.isDeleted() ) {
+		if ( entry == null ) {
 			throw new KeyNotFoundException("no entry found for key [" + key + "]");
+		}
+		if ( entry.isDeleted() ) {
+			throw new KeyNotFoundException("entry for key [" + key + "] has been deleted");
 		}
 		
 		return entry;

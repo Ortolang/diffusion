@@ -199,6 +199,25 @@ public class CoreServiceTest {
 			loginContext.logout();
 		}
 	}
+	
+	@Test(expected = CoreServiceException.class)
+	public void testCreateWorkspaceWithExistingAlias() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException {
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+		loginContext.login();
+		try {
+			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			try {
+				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+			} catch (ProfileAlreadyExistsException e) {
+				logger.log(Level.INFO, "Profile user1 already exists !!");
+			}
+			core.createWorkspace("WSK1", "workspace-001", "Blabla2", "test");
+			core.createWorkspace("WSK2", "workspace-001", "Blabla2", "test");
+			fail("Should have raised a CoreServiceException");
+		} finally {
+			loginContext.logout();
+		}
+	}
 
 	@Test(expected = KeyNotFoundException.class)
 	public void testReadUnexistingWorkspace() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException,

@@ -39,12 +39,14 @@ package fr.ortolang.diffusion.membership.entity;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Transient;
 import javax.persistence.Version;
+
+import org.hibernate.annotations.Type;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -66,13 +68,12 @@ public class Profile extends OrtolangObject {
 	private String familyName;
 	private String email;
 	private boolean emailVerified;
-	@Column(length=7000)
+	@Lob
+	@Type(type = "org.hibernate.type.TextType")
 	private String groupsList;
 	private ProfileStatus status;
 	@ElementCollection
 	private Set<ProfileKey> keys;
-//	private ProfileData infos;
-//	private ProfileData friends;
 	
 	public Profile() {
 		groupsList = "";

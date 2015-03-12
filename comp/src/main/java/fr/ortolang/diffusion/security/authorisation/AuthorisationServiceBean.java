@@ -282,12 +282,12 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	}
 
 	@Override
-	public void checkAuthentified(String identifier) throws AuthorisationServiceException, AccessDeniedException {
-		logger.log(Level.FINE, "checking authentification of identifier [" + identifier + "]");
-		if (!identifier.equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+	public void checkAuthentified(List<String> subjects) throws AuthorisationServiceException, AccessDeniedException {
+		logger.log(Level.FINE, "checking authentification state");
+		if (subjects.contains(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY)) {
 			return;
 		}
-		throw new AccessDeniedException("identifier [" + identifier + "] is not an authenticated identifier");
+		throw new AccessDeniedException("subjects does not contains " + MembershipService.ALL_AUTHENTIFIED_GROUP_KEY + " group key");
 	}
 
 	@Override

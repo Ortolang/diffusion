@@ -217,7 +217,7 @@ public class CoreSshFile implements SshFile {
 
 	@Override
 	public boolean setLastModified(long time) {
-		//logger.log(Level.INFO, "set last modified: " + time);
+		logger.log(Level.FINE, "set last modified: " + time);
 		return false;
 	}
 
@@ -327,6 +327,9 @@ public class CoreSshFile implements SshFile {
 		if ( !isWritable() ) {
 			throw new IOException("No write permission for DataObject");
 		}
+		if ( offset > 0 ) {
+			throw new IOException("Unsupported offset");
+		}
 		//TODO create an output stream in a temporary file but needs to create the data object at the end of this creation (maybe handle close called)...
 		temp = Files.createTempFile("ssh-upload-", ".tmp");
 		return Files.newOutputStream(temp);
@@ -340,6 +343,9 @@ public class CoreSshFile implements SshFile {
 		}
 		if ( !isReadable() ) {
 			throw new IOException("No read permission for DataObject");
+		}
+		if ( offset > 0 ) {
+			throw new IOException("Unsupported offset");
 		}
 		try {
 			LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());

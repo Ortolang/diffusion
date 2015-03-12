@@ -67,7 +67,7 @@ public interface RegistryService {
 	
 	public void register(String key, OrtolangObjectIdentifier identifier, String parent, boolean inherit) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, KeyNotFoundException;
 	
-	public void update(String key) throws RegistryServiceException, KeyNotFoundException;
+	public void update(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	
 	public long getCreationDate(String key) throws RegistryServiceException, KeyNotFoundException;
 	
@@ -75,25 +75,27 @@ public interface RegistryService {
 	
 	public String getAuthor(String key) throws RegistryServiceException, KeyNotFoundException;
 	
-	public void hide(String key) throws RegistryServiceException, KeyNotFoundException;
+	public void hide(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	
-	public void show(String key) throws RegistryServiceException, KeyNotFoundException;
+	public void show(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	
 	public boolean isHidden(String key) throws RegistryServiceException, KeyNotFoundException;
 	
-	public void delete(String key) throws RegistryServiceException, KeyNotFoundException;
+	public void delete(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	
-	public void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException;
+	public void systemDelete(String key) throws RegistryServiceException, KeyNotFoundException;
+	
+	public void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	
 	public boolean isLocked(String key) throws RegistryServiceException, KeyNotFoundException;
 	
 	public String getLock(String key) throws RegistryServiceException, KeyNotFoundException;
 	
-	public void itemify(String key) throws RegistryServiceException, KeyNotFoundException;
+	public void itemify(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	
 	public boolean isItem(String key) throws RegistryServiceException, KeyNotFoundException;
 	
-	public void setPublicationStatus(String key, String status) throws RegistryServiceException, KeyNotFoundException;
+	public void setPublicationStatus(String key, String status) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	
 	public String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException;
 	
@@ -103,7 +105,7 @@ public interface RegistryService {
 	
 	public String getParent(String key) throws RegistryServiceException, KeyNotFoundException;
 	
-	public void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException;
+	public void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	
 	public String getProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException;
 	

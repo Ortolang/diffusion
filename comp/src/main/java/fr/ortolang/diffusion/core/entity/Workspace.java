@@ -42,6 +42,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
@@ -58,7 +59,8 @@ import fr.ortolang.diffusion.core.CoreService;
 
 @Entity
 @NamedQueries(value= {
-		@NamedQuery(name="findWorkspaceByMember", query="select w from Workspace w where w.members IN :groups")
+		@NamedQuery(name="findWorkspaceByMember", query="select w from Workspace w where w.members IN :groups"),
+		@NamedQuery(name="findWorkspaceByAlias", query="select w from Workspace w where w.alias = :alias")
 })
 @SuppressWarnings("serial")
 public class Workspace extends OrtolangObject {
@@ -72,6 +74,8 @@ public class Workspace extends OrtolangObject {
 	private long version;
 	@Transient
 	private String key;
+	@Column(unique=true)
+	private String alias;
 	private String type;
 	private String name;
 	private String head;
@@ -85,6 +89,7 @@ public class Workspace extends OrtolangObject {
 	public Workspace() {
 		clock = 1;
 		changed = false;
+		alias = "";
 	}
 	
 	public String getId() {
@@ -103,6 +108,14 @@ public class Workspace extends OrtolangObject {
 		this.key = key;
 	}
 
+	public String getAlias() {
+		return alias;
+	}
+	
+	public void setAlias(String alias) {
+		this.alias = alias;
+	}
+	
 	public String getType() {
 		return type;
 	}

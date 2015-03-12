@@ -44,6 +44,7 @@ import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.OrtolangObjectVersion;
 import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -64,7 +65,7 @@ public interface BrowserService extends OrtolangService {
 	
 	public OrtolangObjectProperty getProperty(String key, String name) throws BrowserServiceException, KeyNotFoundException, PropertyNotFoundException, AccessDeniedException;
 	
-	public void setProperty(String key, String name, String value) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+	public void setProperty(String key, String name, String value) throws BrowserServiceException, KeyNotFoundException, KeyLockedException, AccessDeniedException;
 	
 	public OrtolangObjectState getState(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
 	

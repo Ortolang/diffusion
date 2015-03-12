@@ -64,6 +64,7 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
+import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -194,7 +195,7 @@ public class BrowserServiceBean implements BrowserService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void setProperty(String key, String name, String value) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+	public void setProperty(String key, String name, String value) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException {
 		logger.log(Level.INFO, "setting property with name [" + name + "] for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
