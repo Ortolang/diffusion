@@ -14,8 +14,17 @@ public class JsonStoreDocumentBuilder {
 	public static final String META_PROPERTY = "meta";
 
 	public static ODocument buildDocument(OrtolangIndexableObject object) {
+		return buildDocument(object, null);
+	}
+	
+	public static ODocument buildDocument(OrtolangIndexableObject object, ODocument oldDoc) {
 		
-		ODocument doc = new ODocument(object.getType());
+		ODocument doc = null;
+		if(oldDoc!=null) {
+			doc = oldDoc;
+		} else {
+			doc = new ODocument(object.getType());
+		}
 		
 		doc.field(KEY_PROPERTY, object.getKey());
 		doc.field(STATUS_PROPERTY, object.getStatus());
