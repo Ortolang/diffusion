@@ -23,7 +23,10 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool;
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx;
+import com.orientechnologies.orient.core.db.record.OIdentifiable;
+import com.orientechnologies.orient.core.index.OIndex;
 import com.orientechnologies.orient.core.record.impl.ODocument;
+import com.orientechnologies.orient.core.sql.OCommandSQL;
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery;
 import com.orientechnologies.orient.server.OServer;
 import com.orientechnologies.orient.server.OServerMain;
@@ -74,8 +77,11 @@ public class JsonStoreServiceBean implements JsonStoreService {
     	    ODatabaseDocumentTx db = new ODatabaseDocumentTx("plocal:"+this.base.toFile().getAbsolutePath());
 
     	    try {
-	    	    if(!db.exists())
+	    	    if(!db.exists()) {
 	    	    	db.create();
+	    	    	
+	    	    	db.command(new OCommandSQL("CREATE INDEX ortolangKey unique string")).execute();
+	    	    }
 	    	} finally {
 	    		db.close();
 	    	}
@@ -124,10 +130,12 @@ public class JsonStoreServiceBean implements JsonStoreService {
 
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
+			ODocument oldDoc = getDocumentByKey(object.getKey());
+			oldDoc.delete();
 			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
 			db.save(doc);
 		} catch(Exception e) {
-			logger.log(Level.SEVERE, "unable to index json ",e);
+			logger.log(Level.SEVERE, "unable to reindex json ",e);
 		} finally {
 			db.close();
 		}
@@ -138,15 +146,15 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	public void remove(String key) throws JsonStoreServiceException {
 		logger.log(Level.FINE, "Removing key: " + key);
 		
-//		try {
-//			db.begin();
-			
-//			db.delete(JsonStoreDocumentBuilder.buildDocument(object));
-//		} catch(Exception e) {
-//			db.rollback();
-//		} finally {
-//			db.commit();
-//		}
+		ODatabaseDocumentTx db = pool.acquire();
+		try {
+			ODocument oldDoc = getDocumentByKey(key);
+			oldDoc.delete();
+		} catch(Exception e) {
+			logger.log(Level.SEVERE, "unable to remove json ",e);
+		} finally {
+			db.close();
+		}
 	}
 
 	@Override
@@ -166,6 +174,21 @@ public class JsonStoreServiceBean implements JsonStoreService {
 			db.close();
 		}
 		return jsonResults;
+	}
+	
+	protected ODocument getDocumentByKey(String key) {
+
+		ODatabaseDocumentTx db = pool.acquire();
+		try {
+			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
+			OIdentifiable doc = (OIdentifiable) ortolangKeyIdx.get(key);
+			if( doc != null )
+				return (ODocument) doc.getRecord();
+			
+		} finally {
+			db.close();
+		}
+		return null;
 	}
 
 }
