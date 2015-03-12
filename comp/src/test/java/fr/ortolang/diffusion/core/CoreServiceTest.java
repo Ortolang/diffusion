@@ -163,21 +163,26 @@ public class CoreServiceTest {
 
 	@Test
 	public void testLogin() throws LoginException {
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("anonymous", "password");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			String key = membership.getProfileKeyForConnectedIdentifier();
-			assertEquals("guest", key);
+			assertEquals("anonymous", key);
 		} finally {
 			loginContext.logout();
 		}
 	}
 
 	@Test(expected = AccessDeniedException.class)
-	public void testCreateWorkspaceAsUnauthentifiedUser() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
+	public void testCreateWorkspaceAsUnauthentifiedUser() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException {
 		logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-		core.createWorkspace("K1", "Blabla", "test");
+		try {
+			membership.createProfile("Anonymous", "", "anonymous@ortolang.fr");
+		} catch (ProfileAlreadyExistsException e) {
+			logger.log(Level.INFO, "Profile anonymous already exists !!");
+		}
+		core.createWorkspace("K1", "alias", "Blabla", "test");
 		fail("Should have raised an AccessDeniedException");
 	}
 
