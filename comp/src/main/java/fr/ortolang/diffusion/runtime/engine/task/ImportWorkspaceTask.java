@@ -76,27 +76,37 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			Set<Path> objects = listObjects(version, bag.getPayload());
 			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Objects found in version " + version + ": " + Arrays.deepToString(objects.toArray())));
 			
-			Set<Path> toCreate = new HashSet<Path> ();
-			toCreate.addAll(objects);
-			toCreate.removeAll(previousObjects);
-			Set<Path> toUpdate = new HashSet<Path> ();
-			toUpdate.addAll(objects);
-			toUpdate.retainAll(previousObjects);
-			Set<Path> toDelete = new HashSet<Path> ();
-			toDelete.addAll(previousObjects);
-			toDelete.removeAll(toUpdate);
+			Set<Path> objectsToCreate = new HashSet<Path> ();
+			objectsToCreate.addAll(objects);
+			objectsToCreate.removeAll(previousObjects);
+			Set<Path> objectsToUpdate = new HashSet<Path> ();
+			objectsToUpdate.addAll(objects);
+			objectsToUpdate.retainAll(previousObjects);
+			Set<Path> objectsToDelete = new HashSet<Path> ();
+			objectsToDelete.addAll(previousObjects);
+			objectsToDelete.removeAll(objectsToUpdate);
 			previousObjects = objects;
-			
-			logger.log(Level.INFO, "[CREATE] " + Arrays.deepToString(toCreate.toArray()));
-			logger.log(Level.INFO, "[UPDATE] " + Arrays.deepToString(toUpdate.toArray()));
-			logger.log(Level.INFO, "[DELETE] " + Arrays.deepToString(toDelete.toArray()));
-			
-			
-			
+			logger.log(Level.INFO, "[OBJECT-CREATE] " + Arrays.deepToString(objectsToCreate.toArray()));
+			logger.log(Level.INFO, "[OBJECT-UPDATE] " + Arrays.deepToString(objectsToUpdate.toArray()));
+			logger.log(Level.INFO, "[OBJECT-DELETE] " + Arrays.deepToString(objectsToDelete.toArray()));
+						
 			logger.log(Level.FINE, "- built version metadata tree");
 			Set<Path> metadata = listMetadata(version, bag.getPayload());
 			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Metadata found in version " + version + ": " + Arrays.deepToString(metadata.toArray())));
 			
+			Set<Path> metadataToCreate = new HashSet<Path> ();
+			metadataToCreate.addAll(metadata);
+			metadataToCreate.removeAll(previousMetadata);
+			Set<Path> metadataToUpdate = new HashSet<Path> ();
+			metadataToUpdate.addAll(metadata);
+			metadataToUpdate.retainAll(previousMetadata);
+			Set<Path> metadataToDelete = new HashSet<Path> ();
+			metadataToDelete.addAll(previousMetadata);
+			metadataToDelete.removeAll(metadataToUpdate);
+			previousMetadata = metadata;
+			logger.log(Level.INFO, "[METADATA-CREATE] " + Arrays.deepToString(metadataToCreate.toArray()));
+			logger.log(Level.INFO, "[METADATA-UPDATE] " + Arrays.deepToString(metadataToUpdate.toArray()));
+			logger.log(Level.INFO, "[METADATA-DELETE] " + Arrays.deepToString(metadataToDelete.toArray()));
 		}
 		
 	}
