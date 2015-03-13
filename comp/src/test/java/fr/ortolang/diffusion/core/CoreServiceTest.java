@@ -41,7 +41,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -76,6 +75,7 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
@@ -88,6 +88,8 @@ public class CoreServiceTest {
 	private MembershipService membership;
 	@EJB
 	private CoreService core;
+	@EJB
+	private RegistryService registry;
 
 	@Deployment
 	public static EnterpriseArchive createDeployment() {
@@ -434,7 +436,14 @@ public class CoreServiceTest {
 			core.snapshotWorkspace(wsk, "v4");
 			core.moveCollection(wsk, "/a/e/f", "/a/c/g");
 			logger.log(Level.INFO, walkWorkspace(wsk));
-
+			
+			core.snapshotWorkspace(wsk, "v5");
+			core.createCollection(wsk, "/a/c/g/d1", "Collection to delete");
+			core.createCollection(wsk, "/a/c/g/d1/d2", "Collection to delete also");
+			core.createCollection(wsk, "/a/c/g/d1/d2/d3", "Collection to delete again");
+			core.deleteCollection(wsk, "/a/c/g");
+			logger.log(Level.INFO, walkWorkspace(wsk));
+			
 		} finally {
 			loginContext.logout();
 		}
