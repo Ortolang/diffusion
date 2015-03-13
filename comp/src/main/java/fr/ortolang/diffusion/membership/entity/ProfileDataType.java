@@ -8,4 +8,5 @@ public enum ProfileDataType {
 	ADDRESS,
 	TEL,
 	MULTI_VALUE,
+	ENUM,
 }

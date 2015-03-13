@@ -53,7 +53,7 @@ public class ProfileRepresentation {
 	private String status;
 	private String[] groups;
 	private boolean complete;
-
+	
 	public ProfileRepresentation() {
 		groups = new String[0];
 	}
@@ -121,7 +121,7 @@ public class ProfileRepresentation {
 	public void setComplete(boolean complete) {
 		this.complete = complete;
 	}
-
+	
 	public static ProfileRepresentation fromProfile(Profile profile) {
 		ProfileRepresentation representation = new ProfileRepresentation();
 		representation.setKey(profile.getKey());

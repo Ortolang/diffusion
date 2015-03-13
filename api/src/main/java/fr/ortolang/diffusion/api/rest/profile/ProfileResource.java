@@ -44,7 +44,11 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
 import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.membership.entity.ProfileData;
+import fr.ortolang.diffusion.membership.entity.ProfileDataType;
+import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 import javax.ejb.EJB;
@@ -56,7 +60,11 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -101,6 +109,16 @@ public class ProfileResource {
 		return Response.ok(representation).build();
 	}
 
+	/**
+	 * @responseType fr.ortolang.diffusion.api.rest.profile.ProfileRepresentation
+	 * @param key
+	 * @param request
+	 * @return {@link fr.ortolang.diffusion.api.rest.profile.ProfileRepresentation}
+	 * @throws MembershipServiceException
+	 * @throws BrowserServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 */
 	@GET
 	@Path("/{key}")
 	@Template(template = "profiles/detail.vm", types = { MediaType.TEXT_HTML })
@@ -131,6 +149,93 @@ public class ProfileResource {
         builder.cacheControl(cc);
         Response response = builder.build();
         return response;
+	}
+	
+	@GET
+	@Path("/{key}/friends")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	public Response getFriends(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
+		logger.log(Level.INFO, "GET /profiles/" + key + "/friends");
+				
+		List<String> friends = membership.listFriends(key);		
+		return Response.ok(friends).build();
+	}
+	
+	@GET
+	@Path("/{key}/infos")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	public Response getInfos(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
+		logger.log(Level.INFO, "GET /profiles/" + key + "/infos");
+				
+		List<ProfileDataRepresentation> infosRepresentation = new ArrayList<ProfileDataRepresentation>();
+		Map<String, ProfileData> infos = membership.listInfos(key);		
+		for(Entry<String, ProfileData> entry : infos.entrySet()) {			
+		    ProfileData data = entry.getValue();
+			ProfileDataRepresentation dataRepresentation = ProfileDataRepresentation.fromProfileData(data);
+			infosRepresentation.add(dataRepresentation);
+		}	
+		return Response.ok(infosRepresentation).build();
+	}
+	
+
+	@GET
+	@Path("/{key}/infos/{name}")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	public Response getInfo(@PathParam(value = "key") String key, @PathParam(value = "name") String name, @Context Request request) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException, RegistryServiceException {
+		logger.log(Level.INFO, "GET /profiles/" + key + "/infos/" + name);
+				
+		ProfileData info = membership.readInfo(key, name);		
+		ProfileDataRepresentation dataRepresentation = ProfileDataRepresentation.fromProfileData(info);
+
+		return Response.ok(dataRepresentation).build();
+	}
+
+	@POST
+	@Path("/{key}/infos")
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED })
+	public Response updateInfos(@PathParam(value = "key") String key, ProfileDataRepresentation info) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "POST /profiles/" + key + "/infos");
+		membership.updateInfo(key, info.getName(), info.getValue(), ProfileDataVisibility.valueOf(info.getVisibility()), ProfileDataType.valueOf(info.getType()), info.getSource());
+		return Response.ok().build();
+	}
+	
+
+	@GET
+	@Path("/{key}/settings")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	public Response getSettings(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
+		logger.log(Level.INFO, "GET /profiles/" + key + "/settings");
+				
+		List<ProfileDataRepresentation> infosRepresentation = new ArrayList<ProfileDataRepresentation>();
+		Map<String, ProfileData> settings = membership.listSettings(key);		
+		for(Entry<String, ProfileData> entry : settings.entrySet()) {			
+		    ProfileData data = entry.getValue();
+			ProfileDataRepresentation dataRepresentation = ProfileDataRepresentation.fromProfileData(data);
+			infosRepresentation.add(dataRepresentation);
+		}	
+		return Response.ok(infosRepresentation).build();
+	}
+	
+
+	@GET
+	@Path("/{key}/settings/{name}")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	public Response getSettings(@PathParam(value = "key") String key, @PathParam(value = "name") String name, @Context Request request) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException, RegistryServiceException {
+		logger.log(Level.INFO, "GET /profiles/" + key + "/settings/" + name);
+				
+		ProfileData setting = membership.readSetting(key, name);		
+		ProfileDataRepresentation dataRepresentation = ProfileDataRepresentation.fromProfileData(setting);
+
+		return Response.ok(dataRepresentation).build();
+	}
+
+	@POST
+	@Path("/{key}/settings")
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED })
+	public Response updateSettings(@PathParam(value = "key") String key, ProfileDataRepresentation setting) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "POST /profiles/" + key + "/settings");
+		membership.updateSetting(key, setting.getName(), setting.getValue(), ProfileDataVisibility.valueOf(setting.getVisibility()), ProfileDataType.valueOf(setting.getType()), setting.getSource());
+		return Response.ok().build();
 	}
 
 	@PUT

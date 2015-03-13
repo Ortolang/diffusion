@@ -44,6 +44,7 @@ import java.util.Set;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Transient;
@@ -79,8 +80,10 @@ public class Profile extends OrtolangObject {
 	private ProfileStatus status;
 	@ElementCollection
 	private Set<ProfileKey> keys;
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.EAGER)
 	private Map<String, ProfileData> infos = new HashMap<String, ProfileData> ();
+	@ElementCollection(fetch = FetchType.EAGER)
+	private Map<String, ProfileData> settings = new HashMap<String, ProfileData> ();
 //	private ProfileData contributions;
 	
 	public Profile() {
@@ -240,42 +243,77 @@ public class Profile extends OrtolangObject {
 
 		return groupsList.split(",");
 	}
-	
-
-	public void addFriend(String friendKey) {
-//		if (!isFriendOf(friendKey)) {
-//			if (friendsList.length() > 0) {
-//				friendsList += ("," + friendKey);
-//			} else {
-//				friendsList += friendKey;
-//			}
-//		}
-	}
-
-	public void removeFriend(String friendKey) {
-//		if (isFriendOf(friendKey)) {
-//			friendsList = friendsList.replaceAll("(" + friendKey + "){1},?", "");
-//		}
-	}
-	
+		
 	public Map<String,ProfileData> getInfos() {
+		Map<String, ProfileData> infos = new HashMap<String, ProfileData>();
+		for(Entry<String, ProfileData> entry : this.infos.entrySet()) {
+			infos.put(entry.getValue().getName(), entry.getValue());
+		}
 		return infos;
+	}
+	
+	public ProfileData getInfos(String name) {
+		return this.infos.get(name);
+	}
+	
+	public void updateInfo(String name, ProfileData data) {
+		this.infos.put(name, data);
+	}
+	
+	public void setInfos(Map<String, ProfileData> infos) {
+		this.infos = infos;
 	}
 	
 	public Map<String,ProfileData> getInfos(ProfileDataVisibility visibility) {
 		Map<String, ProfileData> infosVisibles = new HashMap<String, ProfileData>();
-		for(Entry<String, ProfileData> entry : infos.entrySet()) {
+		for(Entry<String, ProfileData> entry : this.infos.entrySet()) {
 	    	ProfileDataVisibility dataVisibility = entry.getValue().getVisibility();
 		    if(visibility == ProfileDataVisibility.NOBODY){
-		    	infosVisibles.put(entry.getKey(), entry.getValue());
+		    	infosVisibles.put(entry.getValue().getName(), entry.getValue());
 		    } else if(visibility == ProfileDataVisibility.FRIENDS && 
 		    		(dataVisibility == ProfileDataVisibility.FRIENDS || dataVisibility == ProfileDataVisibility.EVERYBODY)){
-		    	infosVisibles.put(entry.getKey(), entry.getValue());
+		    	infosVisibles.put(entry.getValue().getName(), entry.getValue());
 		    } else if(visibility == ProfileDataVisibility.EVERYBODY && dataVisibility == ProfileDataVisibility.EVERYBODY){
-		    	infosVisibles.put(entry.getKey(), entry.getValue());
+		    	infosVisibles.put(entry.getValue().getName(), entry.getValue());
 		    }
 		}
 		return infosVisibles;
+	}
+	
+	public Map<String,ProfileData> getSettings() {
+		Map<String, ProfileData> settings = new HashMap<String, ProfileData>();
+		for(Entry<String, ProfileData> entry : this.settings.entrySet()) {
+			settings.put(entry.getValue().getName(), entry.getValue());
+		}
+		return settings;
+	}
+	
+	public ProfileData getSettings(String name) {
+		return this.settings.get(name);
+	}
+	
+	public void updateSettings(String name, ProfileData data) {
+		this.settings.put(name, data);
+	}
+	
+	public void setSettings(Map<String, ProfileData> settings) {
+		this.settings = settings;
+	}
+	
+	public Map<String,ProfileData> getSettings(ProfileDataVisibility visibility) {
+		Map<String, ProfileData> settingsVisibles = new HashMap<String, ProfileData>();
+		for(Entry<String, ProfileData> entry : this.settings.entrySet()) {
+	    	ProfileDataVisibility dataVisibility = entry.getValue().getVisibility();
+		    if(visibility == ProfileDataVisibility.NOBODY){
+		    	settingsVisibles.put(entry.getValue().getName(), entry.getValue());
+		    } else if(visibility == ProfileDataVisibility.FRIENDS && 
+		    		(dataVisibility == ProfileDataVisibility.FRIENDS || dataVisibility == ProfileDataVisibility.EVERYBODY)){
+		    	settingsVisibles.put(entry.getValue().getName(), entry.getValue());
+		    } else if(visibility == ProfileDataVisibility.EVERYBODY && dataVisibility == ProfileDataVisibility.EVERYBODY){
+		    	settingsVisibles.put(entry.getValue().getName(), entry.getValue());
+		    }
+		}
+		return settingsVisibles;
 	}
 		
 	@Override
