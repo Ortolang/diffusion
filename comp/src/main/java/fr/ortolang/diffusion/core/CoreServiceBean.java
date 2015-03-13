@@ -2882,6 +2882,7 @@ public class CoreServiceBean implements CoreService {
                 }
             }
         } catch (AuthorisationServiceException | AccessDeniedException e) {
+            ortolangSizeInfo.setPartial(true);
         }
         return ortolangSizeInfo;
     }
