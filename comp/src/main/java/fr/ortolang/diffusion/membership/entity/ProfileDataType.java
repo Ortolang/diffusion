@@ -9,4 +9,5 @@ public enum ProfileDataType {
 	TEL,
 	MULTI_VALUE,
 	ENUM,
+	RADIO
 }

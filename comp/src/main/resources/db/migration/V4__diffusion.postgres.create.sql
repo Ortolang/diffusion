@@ -1,4 +1,4 @@
-	create table AuthorisationPolicy (
+create table AuthorisationPolicy (
         id varchar(255) not null,
         owner varchar(255),
         rulesContent text,
@@ -83,6 +83,7 @@
         email varchar(255),
         emailVerified boolean not null,
         familyName varchar(255),
+        friends varchar(255),
         givenName varchar(255),
         groupsList text,
         status int4,
@@ -90,10 +91,32 @@
         primary key (id)
     );
 
+    create table Profile_infos (
+        Profile_id varchar(255) not null,
+        name varchar(255),
+        source varchar(255),
+        type int4,
+        value varchar(7500),
+        visibility int4,
+        infos_KEY varchar(255),
+        primary key (Profile_id, infos_KEY)
+    );
+
     create table Profile_keys (
         Profile_id varchar(255) not null,
         key varchar(2500),
         password varchar(2500)
+    );
+
+    create table Profile_settings (
+        Profile_id varchar(255) not null,
+        name varchar(255),
+        source varchar(255),
+        type int4,
+        value varchar(7500),
+        visibility int4,
+        settings_KEY varchar(255),
+        primary key (Profile_id, settings_KEY)
     );
 
     create table RegistryEntry (
@@ -149,18 +172,28 @@
     create index UK_1y5xufstwuf5398odn1vl3ykw on Process (initier, state);
 
     create index UK_8vv92rpgi9suidc96s1b88rw1 on RegistryEntry (identifier);
-    
+
     alter table Workspace 
         add constraint UK_48cyeq9y05tbu0dgn64iswitn  unique (alias);
-    
+
     alter table Collection_segments 
         add constraint FK_qtkd8pouce5ufvwfwj4bgsk8u 
         foreign key (Collection_id) 
         references Collection;
 
+    alter table Profile_infos 
+        add constraint FK_5dmu1n4w0bx2vaucrqr4mog87 
+        foreign key (Profile_id) 
+        references Profile;
+
     alter table Profile_keys 
         add constraint FK_dq11bmpucl4gg88ldggue1qvr 
         foreign key (Profile_id) 
         references Profile;
-        
+
+    alter table Profile_settings 
+        add constraint FK_72jqsvu72974p1wge4tuiywl8 
+        foreign key (Profile_id) 
+        references Profile;
+
     create sequence SEQ_WSALIAS_PK;

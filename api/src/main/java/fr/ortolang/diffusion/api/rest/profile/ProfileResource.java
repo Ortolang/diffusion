@@ -47,6 +47,7 @@ import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
 import fr.ortolang.diffusion.membership.entity.ProfileDataType;
 import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
+import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -193,7 +194,7 @@ public class ProfileResource {
 	@POST
 	@Path("/{key}/infos")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED })
-	public Response updateInfos(@PathParam(value = "key") String key, ProfileDataRepresentation info) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+	public Response updateInfos(@PathParam(value = "key") String key, ProfileDataRepresentation info) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException {
 		logger.log(Level.INFO, "POST /profiles/" + key + "/infos");
 		membership.updateInfo(key, info.getName(), info.getValue(), ProfileDataVisibility.valueOf(info.getVisibility()), ProfileDataType.valueOf(info.getType()), info.getSource());
 		return Response.ok().build();
@@ -232,7 +233,7 @@ public class ProfileResource {
 	@POST
 	@Path("/{key}/settings")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED })
-	public Response updateSettings(@PathParam(value = "key") String key, ProfileDataRepresentation setting) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+	public Response updateSettings(@PathParam(value = "key") String key, ProfileDataRepresentation setting) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException {
 		logger.log(Level.INFO, "POST /profiles/" + key + "/settings");
 		membership.updateSetting(key, setting.getName(), setting.getValue(), ProfileDataVisibility.valueOf(setting.getVisibility()), ProfileDataType.valueOf(setting.getType()), setting.getSource());
 		return Response.ok().build();
