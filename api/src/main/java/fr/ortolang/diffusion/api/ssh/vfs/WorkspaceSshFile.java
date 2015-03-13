@@ -97,10 +97,10 @@ public class WorkspaceSshFile implements SshFile {
 			logger.log(Level.SEVERE, "error while trying to load workspace for path " + path, e);
 			throw new OrtolangException("error while trying to load workspace for path " + path, e);
 		} catch (KeyNotFoundException e) {
-			logger.log(Level.WARNING, "unable to read workspace for path " + path + ", key does not exists", e);
+			logger.log(Level.WARNING, "unable to read workspace for path " + path + ", key not found");
 			exists = false;
 		} catch (AccessDeniedException e) {
-			logger.log(Level.FINE, "unable to read workspace for path " + path + ", access denied", e);
+			logger.log(Level.FINE, "unable to read workspace for path " + path + ", access denied");
 			readable = false;
 		} 
 	}

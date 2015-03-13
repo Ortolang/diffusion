@@ -54,9 +54,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 
+import fr.ortolang.diffusion.client.OrtolangClient;
 import fr.ortolang.diffusion.client.OrtolangClientConfig;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
-import fr.ortolang.diffusion.client.account.OrtolangClientAccountManager;
 
 @Path("/client")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -65,12 +65,12 @@ public class ClientResource {
 	private static Logger logger = Logger.getLogger(ClientResource.class.getName());
 	
 	private static boolean initialized = false;
-	private static OrtolangClientAccountManager manager;
 	private static String authUrl;
 	private static String authRealm; 
 	private static String appName; 
 	private static String callbackUrl; 
 	private static Map<String, String> states = new HashMap<String, String> ();
+	private static OrtolangClient client = new OrtolangClient();
 	
 	@Context 
 	private SecurityContext ctx;
@@ -78,14 +78,16 @@ public class ClientResource {
 	public ClientResource() {
 		logger.log(Level.INFO, "Creating new ClientResource");
 		if ( !initialized ) {
-			String id = "client";
-			manager = OrtolangClientAccountManager.getInstance(id);
 			authUrl = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.url");
 			authRealm = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.realm");
-			appName = OrtolangClientConfig.getInstance().getProperty(id + ".app.name");
-			callbackUrl = OrtolangClientConfig.getInstance().getProperty(id + ".auth.callback.url");
+			appName = OrtolangClientConfig.getInstance().getProperty("client.app.name");
+			callbackUrl = OrtolangClientConfig.getInstance().getProperty("client.auth.callback.url");
 			initialized = true;
 		}
+	}
+	
+	public static OrtolangClient getOrtolangClient() {
+		return client;
 	}
 	
 	@GET
@@ -98,7 +100,7 @@ public class ClientResource {
 		} else {
 			return Response.status(Status.UNAUTHORIZED).build();
 		}
-		if ( !manager.exists(user) ) {
+		if ( !client.getAccountManager().exists(user) ) {
 			logger.log(Level.FINE, "Generating authentication url");
 			String state = UUID.randomUUID().toString();
 			states.put(state, user);
@@ -122,7 +124,7 @@ public class ClientResource {
 		logger.log(Level.INFO, "Setting grant code");
 		if ( states.containsKey(state) ) {
 			try {
-				manager.setAuthorisationCode(states.get(state), code);
+				client.getAccountManager().setAuthorisationCode(states.get(state), code);
 			} catch (OrtolangClientAccountException e) {
 				return Response.serverError().entity(e.getMessage()).build();
 			}

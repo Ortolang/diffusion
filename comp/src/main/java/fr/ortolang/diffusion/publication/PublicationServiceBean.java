@@ -55,13 +55,12 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectState;
-import fr.ortolang.diffusion.indexing.IndexingContext;
 import fr.ortolang.diffusion.indexing.IndexingService;
-import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
+import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
@@ -158,12 +157,11 @@ public class PublicationServiceBean implements PublicationService {
 				authorisation.updatePolicyOwner(key, MembershipService.SUPERUSER_IDENTIFIER);
 				authorisation.setPolicyRules(key, context.getType().getSecurityRules());
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
-				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
 				registry.update(key);
-				indexing.index(key, new IndexingContext(context.getRoot(), context.getPath(), context.getName()));
-				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "status"), "status=publish");
+				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
+				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "publish"), "");
 			}
-		} catch (AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException | IndexingServiceException e ) {
+		} catch (KeyLockedException | AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException e ) {
 			logger.log(Level.SEVERE, "error during publication of key", e);
 			ctx.setRollbackOnly();
 			throw new PublicationServiceException("error during publishing key : " + e);
@@ -187,9 +185,9 @@ public class PublicationServiceBean implements PublicationService {
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.REVIEW.value());
 				registry.update(key);
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
-				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "status"), "status=review");
+				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "review"), "");
 			}
-		} catch (AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException e ) {
+		} catch (KeyLockedException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException e ) {
 			ctx.setRollbackOnly();
 			throw new PublicationServiceException("error during submitting key for review : " + e);
 		}

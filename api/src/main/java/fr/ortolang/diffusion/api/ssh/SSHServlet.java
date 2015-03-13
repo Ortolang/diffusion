@@ -118,7 +118,7 @@ public class SSHServlet extends HttpServlet {
 		try {
 			logger.log(Level.INFO, "stopping ssh service...");
 			if ( started ) {
-				sshd.stop();
+				sshd.stop(true);
 				logger.log(Level.INFO, "ssh service stopped");
 			} else  {
 				logger.log(Level.INFO, "ssh service not running, nothing to stop");

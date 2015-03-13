@@ -315,20 +315,6 @@ public class ObjectResource {
 		return Response.ok(representation).build();
 	}
 
-	/**
-	 * Download Object by key
-	 * 
-	 * @param key
-	 *            The object key
-	 * @param response
-	 * @throws BrowserServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 * @throws OrtolangException
-	 * @throws DataNotFoundException
-	 * @throws IOException
-	 * @throws CoreServiceException
-	 */
 	@GET
 	@Path("/{key}/download")
 	public Response download(final @PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException,

@@ -41,6 +41,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -163,21 +164,26 @@ public class CoreServiceTest {
 
 	@Test
 	public void testLogin() throws LoginException {
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("anonymous", "password");
 		loginContext.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			String key = membership.getProfileKeyForConnectedIdentifier();
-			assertEquals("guest", key);
+			assertEquals("anonymous", key);
 		} finally {
 			loginContext.logout();
 		}
 	}
 
 	@Test(expected = AccessDeniedException.class)
-	public void testCreateWorkspaceAsUnauthentifiedUser() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
+	public void testCreateWorkspaceAsUnauthentifiedUser() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException {
 		logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-		core.createWorkspace("K1", "Blabla", "test");
+		try {
+			membership.createProfile("Anonymous", "", "anonymous@ortolang.fr");
+		} catch (ProfileAlreadyExistsException e) {
+			logger.log(Level.INFO, "Profile anonymous already exists !!");
+		}
+		core.createWorkspace("K1", "alias", "Blabla", "test");
 		fail("Should have raised an AccessDeniedException");
 	}
 
@@ -195,6 +201,25 @@ public class CoreServiceTest {
 			core.createWorkspace("K2", "Blabla2", "test");
 			core.createWorkspace("K2", "Blabla3", "test");
 			fail("Should have raised a KeyAlreadyExistsException");
+		} finally {
+			loginContext.logout();
+		}
+	}
+	
+	@Test(expected = CoreServiceException.class)
+	public void testCreateWorkspaceWithExistingAlias() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException {
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+		loginContext.login();
+		try {
+			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			try {
+				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+			} catch (ProfileAlreadyExistsException e) {
+				logger.log(Level.INFO, "Profile user1 already exists !!");
+			}
+			core.createWorkspace("WSK1", "workspace-001", "Blabla2", "test");
+			core.createWorkspace("WSK2", "workspace-001", "Blabla2", "test");
+			fail("Should have raised a CoreServiceException");
 		} finally {
 			loginContext.logout();
 		}

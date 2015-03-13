@@ -48,6 +48,7 @@ import fr.ortolang.diffusion.membership.entity.ProfileDataType;
 import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
 import fr.ortolang.diffusion.membership.entity.ProfileStatus;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -111,11 +112,11 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	public boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void addFriend(String key) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	public void addFriend(String key) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException, KeyLockedException;
 
 	public ProfileData readInfo(String key, String name) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, RegistryServiceException;
 
-	public void updateInfo(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	public void updateInfo(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException;
 
 	public List<String> listFriends(String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException;
 
@@ -123,6 +124,6 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	public Map<String, ProfileData> listSettings(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void updateSetting(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	public void updateSetting(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException;
 
 }

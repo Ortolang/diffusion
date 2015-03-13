@@ -202,7 +202,14 @@ public class PathBuilder {
 			return false;
 		return true;
 	}
-
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((buffer.toString() == null) ? 0 : buffer.toString().hashCode());
+		return result;
+	}
 	@Override
 	public PathBuilder clone() {
 		PathBuilder builder = new PathBuilder();

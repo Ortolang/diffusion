@@ -70,18 +70,19 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public static final String WORKSPACE_KEY_PARAM_NAME = "wskey";
 	public static final String WORKSPACE_NAME_PARAM_NAME = "wsname";
 	public static final String WORKSPACE_TYPE_PARAM_NAME = "wstype";
+	public static final String WORKSPACE_ALIAS_PARAM_NAME = "wsalias";
 
 	private static final Logger logger = Logger.getLogger(RuntimeEngineTask.class.getName());
 
-	private UserTransaction userTx;
-	private RuntimeEngine engine;
-	private RuntimeService runtime;
-	private MembershipService membership;
-	private BinaryStoreService store;
-	private CoreService core;
-	private BrowserService browser;
-	private RegistryService registry;
-	private PublicationService publication;
+	protected UserTransaction userTx;
+	protected RuntimeEngine engine;
+	protected RuntimeService runtime;
+	protected MembershipService membership;
+	protected BinaryStoreService store;
+	protected CoreService core;
+	protected BrowserService browser;
+	protected RegistryService registry;
+	protected PublicationService publication;
 
 	public MembershipService getMembershipService() throws RuntimeEngineTaskException {
 		try {
@@ -194,7 +195,6 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 				logger.log(Level.FINE, "Task executed");
 			} catch (RuntimeEngineTaskException e) {
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " IN ERROR: " + e.getMessage()));
-				// TODO provide capability for task to say if it's needed to abort process on error ( task.abortProcessOnError():boolean )
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessAbortEvent(execution.getProcessBusinessKey(), e.getMessage()));
 				throw e;
 			}
@@ -216,8 +216,6 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	}
 
 	public abstract String getTaskName();
-
-	// public abstract boolean abortProcessOnError();
 
 	public abstract void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException;
 

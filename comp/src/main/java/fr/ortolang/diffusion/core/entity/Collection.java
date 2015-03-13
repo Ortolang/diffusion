@@ -223,7 +223,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 					break;
 				}
 			}
-			newsegment = newsegment.replaceAll("(?m)^(" + element.serialize() + ")\n?", "");
+			newsegment = newsegment.replaceAll("(?m)^(" + Pattern.quote(element.serialize()) + ")\n?", "");
 			if ( newsegment.endsWith("\n") ) {
 				newsegment = newsegment.substring(0, newsegment.length()-1);
 			}
@@ -264,9 +264,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	}
 	
 	public CollectionElement findElementByName(String name) {
-		Pattern SPECIAL_REGEX_CHARS = Pattern.compile("[{}()\\[\\].+*?^$\\\\|]");
-		String nname = SPECIAL_REGEX_CHARS.matcher(name).replaceAll("\\\\$0");
-		Pattern pattern = Pattern.compile("(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\t" + nname + "\t([0-9]{13})\t([0-9]+)\t([^\t]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
+		Pattern pattern = Pattern.compile("(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\t" + Pattern.quote(name) + "\t([0-9]{13})\t([0-9]+)\t([^\t]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
 		for ( String segment : segments ) {
 			Matcher matcher = pattern.matcher(segment);
 			if ( matcher.matches() ) {
@@ -319,7 +317,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	
 	public boolean removeMetadata(MetadataElement metadata) {
 		if ( containsMetadata(metadata) ) {
-			metadatasContent = metadatasContent.replaceAll("(?m)^(" + metadata.serialize() + ")\n?", "");
+			metadatasContent = metadatasContent.replaceAll("(?m)^(" + Pattern.quote(metadata.serialize()) + ")\n?", "");
 			if ( metadatasContent.endsWith("\n") ) {
 				metadatasContent = metadatasContent.substring(0, metadatasContent.length()-1);
 			}
@@ -351,7 +349,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	}
 	
 	public MetadataElement findMetadataByName(String name) {
-		Pattern pattern = Pattern.compile("(?s).*(" + name + "/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
+		Pattern pattern = Pattern.compile("(?s).*(" + Pattern.quote(name) + "/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
 		Matcher matcher = pattern.matcher(metadatasContent);
 		if ( matcher.matches() ) {
 			return MetadataElement.deserialize(matcher.group(1));

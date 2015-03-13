@@ -72,9 +72,8 @@ public class Profile extends OrtolangObject {
 	private String familyName;
 	private String email;
 	private boolean emailVerified;
-		
 	@Lob
-	@Type(type = "org.hibernate.type.TextType")	
+	@Type(type = "org.hibernate.type.TextType")
 	private String groupsList;
 	private String friends;
 	private ProfileStatus status;
