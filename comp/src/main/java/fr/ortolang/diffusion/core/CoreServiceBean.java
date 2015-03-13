@@ -927,10 +927,10 @@ public class CoreServiceBean implements CoreService {
 				for (MetadataElement mde : leaf.getMetadatas()) {
 					registry.delete(mde.getKey());
 				}
-
 				registry.delete(leaf.getKey());
-
 			}
+			
+			deleteCollectionContent(leaf, ws.getClock());
 
 			notification.throwEvent(leaf.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "delete"), "");
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException e) {
@@ -939,7 +939,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to delete collection into workspace [" + workspace + "] at path [" + path + "]", e);
 		}
 	}
-
+	
 	/* Data Objects */
 
 	@Override
@@ -1593,7 +1593,6 @@ public class CoreServiceBean implements CoreService {
 			parent.removeElement(element);
 			em.merge(parent);
 			registry.update(parent.getKey());
-
 			logger.log(Level.FINEST, "parent [" + parent.getKey() + "] has been updated");
 
 			ws.setChanged(true);
@@ -2870,6 +2869,54 @@ public class CoreServiceBean implements CoreService {
 		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | CoreServiceException | KeyNotFoundException
 				| KeyAlreadyExistsException e) {
 			throw new CloneException("unable to clone metadata with origin [" + origin + "] and target [" + target + "]", e);
+		}
+	}
+	
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	private void deleteCollectionContent(Collection collection, int clock) throws CoreServiceException, RegistryServiceException, KeyNotFoundException, KeyLockedException {
+		logger.log(Level.FINE, "delete content for collection with id [" + collection.getId() + "]");
+		for ( CollectionElement element : collection.getElements() ) {
+			if ( element.getType().equals(Collection.OBJECT_TYPE) ) {
+				OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
+				checkObjectType(identifier, Collection.OBJECT_TYPE);
+				Collection coll = em.find(Collection.class, identifier.getId());
+				if (coll == null) {
+					throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
+				}
+				deleteCollectionContent(coll, clock);
+			} 
+			if ( element.getType().equals(DataObject.OBJECT_TYPE) ) {
+				OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
+				checkObjectType(identifier, DataObject.OBJECT_TYPE);
+				DataObject object = em.find(DataObject.class, identifier.getId());
+				if (object == null) {
+					throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
+				}
+				if (object.getClock() == clock) {
+					logger.log(Level.FINEST, "object clock [" + object.getClock() + "] is the same, key can be deleted and unindexed");
+					for (MetadataElement mde : object.getMetadatas()) {
+						registry.delete(mde.getKey());
+					}
+					registry.delete(element.getKey());
+
+				}
+			}
+			if ( element.getType().equals(Link.OBJECT_TYPE) ) {
+				OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
+				checkObjectType(identifier, Link.OBJECT_TYPE);
+				Link link = em.find(Link.class, identifier.getId());
+				if (link == null) {
+					throw new CoreServiceException("unable to load link with id [" + identifier.getId() + "] from storage");
+				}
+				if (link.getClock() == clock) {
+					logger.log(Level.FINEST, "link clock [" + link.getClock() + "] is the same, key can be deleted and unindexed");
+					for (MetadataElement mde : link.getMetadatas()) {
+						registry.delete(mde.getKey());
+					}
+					registry.delete(element.getKey());
+
+				}
+			}
 		}
 	}
 	
