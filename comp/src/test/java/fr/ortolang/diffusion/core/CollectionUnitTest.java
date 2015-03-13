@@ -288,34 +288,51 @@ public class CollectionUnitTest {
 //		}
 	}
 
-	//TODO Fix in Haricot
-//    @Test
-//    public void testCollectionElementWithSpecialChars() {
-//        Collection c = new Collection();
-//        c.setId("1");
-//        c.setClock(1);
-//        c.setKey("K1");
-//        c.setRoot(false);
-//        c.setName("collection");
-//        c.setDescription("description");
-//        long tsk1 = System.currentTimeMillis();
-//        long tsk2 = System.currentTimeMillis();
-//
-//
-//        String key1 = UUID.randomUUID().toString();
-//        CollectionElement collectionElement1 = new CollectionElement(DataObject.OBJECT_TYPE, "myname1(foo)", tsk1, 12, Collection.MIME_TYPE, key1);
-//        c.addElement(collectionElement1);
-//        String key2 = UUID.randomUUID().toString();
-//        CollectionElement collectionElement2 = new CollectionElement(DataObject.OBJECT_TYPE, "myname1[foo]", tsk2, 12, Collection.MIME_TYPE, key2);
-//        c.addElement(collectionElement2);
-//
-//        assertTrue(c.containsElementName(collectionElement1.getName()));
-//        assertTrue(c.containsElementName(collectionElement2.getName()));
-//        c.removeElement(collectionElement1);
-//        assertFalse(c.containsElementKey(key1));
-//        c.removeElement(collectionElement2);
-//        assertFalse(c.containsElementKey(key2));
-//    }
+    @Test
+    public void testCollectionElementWithSpecialChars() {
+        Collection c = new Collection();
+        c.setId("1");
+        c.setClock(1);
+        c.setKey("K1");
+        c.setRoot(false);
+        c.setName("collection");
+        c.setDescription("description");
+        long tsk1 = System.currentTimeMillis();
+        long tsk2 = System.currentTimeMillis();
+
+
+        String key1 = UUID.randomUUID().toString();
+        CollectionElement collectionElement1 = new CollectionElement(DataObject.OBJECT_TYPE, "myname1 (foo)", tsk1, 12, Collection.MIME_TYPE, key1);
+        c.addElement(collectionElement1);
+        String key2 = UUID.randomUUID().toString();
+        CollectionElement collectionElement2 = new CollectionElement(DataObject.OBJECT_TYPE, "myname1 [foo]", tsk2, 12, Collection.MIME_TYPE, key2);
+        c.addElement(collectionElement2);
+
+        assertTrue(c.containsElementName(collectionElement1.getName()));
+        assertTrue(c.containsElementName(collectionElement2.getName()));
+        
+        CollectionElement ce1 = c.findElementByName("myname1 (foo)");
+        assertNotNull(ce1);
+        assertEquals(DataObject.OBJECT_TYPE,ce1.getType());
+        assertEquals("myname1 (foo)",ce1.getName());
+        assertEquals(tsk1,ce1.getModification());
+        assertEquals(12,ce1.getSize());
+        assertEquals(Collection.MIME_TYPE,ce1.getMimeType());
+        assertEquals(key1,ce1.getKey());
+        CollectionElement ce2 = c.findElementByName("myname1 [foo]");
+        assertNotNull(ce2);
+        assertEquals(DataObject.OBJECT_TYPE,ce2.getType());
+        assertEquals("myname1 [foo]",ce2.getName());
+        assertEquals(tsk2,ce2.getModification());
+        assertEquals(12,ce2.getSize());
+        assertEquals(Collection.MIME_TYPE,ce2.getMimeType());
+        assertEquals(key2,ce2.getKey());
+        
+        c.removeElement(collectionElement1);
+        assertFalse(c.containsElementKey(key1));
+        c.removeElement(collectionElement2);
+        assertFalse(c.containsElementKey(key2));
+    }
 	
 	@Test
 	public void testFindCollectionElement() {
