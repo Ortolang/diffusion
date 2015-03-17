@@ -83,7 +83,7 @@ public class ImportWorkspace {
 				params.put("wstype", "user");
 			}
 
-			OrtolangClient client = new OrtolangClient();
+			OrtolangClient client = OrtolangClient.getInstance();
 			if ( username.length() > 0 ) {
 				client.getAccountManager().setCredentials(username, password);
 				client.login(username);
