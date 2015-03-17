@@ -81,11 +81,13 @@ public class ProfileDataRepresentation {
 	}
 	public static ProfileDataRepresentation fromProfileData(ProfileData data) {
 		ProfileDataRepresentation representation = new ProfileDataRepresentation();
-		representation.setName(data.getName());
-		representation.setValue(data.getValue());
-		representation.setType(data.getType().toString());
-		representation.setSource(data.getSource());
-		representation.setVisibility(data.getVisibility().toString());
+		if(data != null) {
+			representation.setName(data.getName());
+			representation.setValue(data.getValue());
+			representation.setType(data.getType().toString());
+			representation.setSource(data.getSource());
+			representation.setVisibility(data.getVisibility().toString());
+		}
 		return representation;
 	}
 	

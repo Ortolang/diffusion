@@ -78,6 +78,7 @@ create table AuthorisationPolicy (
         primary key (id)
     );
 
+    
     create table Profile (
         id varchar(255) not null,
         email varchar(255),
@@ -89,6 +90,17 @@ create table AuthorisationPolicy (
         status int4,
         version int8 not null,
         primary key (id)
+    );
+
+    create table Profile_aboutMe (
+        Profile_id varchar(255) not null,
+        name varchar(255),
+        source varchar(255),
+        type int4,
+        value varchar(7500),
+        visibility int4,
+        aboutMe_KEY varchar(255),
+        primary key (Profile_id, aboutMe_KEY)
     );
 
     create table Profile_infos (
@@ -180,6 +192,11 @@ create table AuthorisationPolicy (
         add constraint FK_qtkd8pouce5ufvwfwj4bgsk8u 
         foreign key (Collection_id) 
         references Collection;
+
+    alter table Profile_aboutMe 
+        add constraint FK_paryp0c2ky233nwllmr2ggr67 
+        foreign key (Profile_id) 
+        references Profile;
 
     alter table Profile_infos 
         add constraint FK_5dmu1n4w0bx2vaucrqr4mog87 

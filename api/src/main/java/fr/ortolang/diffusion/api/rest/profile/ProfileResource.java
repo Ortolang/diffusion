@@ -47,6 +47,7 @@ import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
 import fr.ortolang.diffusion.membership.entity.ProfileDataType;
 import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
+import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
@@ -200,6 +201,27 @@ public class ProfileResource {
 		return Response.ok().build();
 	}
 	
+
+	@GET
+	@Path("/{key}/aboutme/{name}")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	public Response getAboutMe(@PathParam(value = "key") String key, @PathParam(value = "name") String name, @Context Request request) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException, RegistryServiceException, NotificationServiceException {
+		logger.log(Level.INFO, "GET /profiles/" + key + "/aboutme/" + name);
+				
+		ProfileData presentation = membership.readAboutMe(key, name);	
+		ProfileDataRepresentation dataRepresentation = ProfileDataRepresentation.fromProfileData(presentation);
+	
+		return Response.ok(dataRepresentation).build();
+	}
+
+	@POST
+	@Path("/{key}/aboutme")
+	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED })
+	public Response updatePresentation(@PathParam(value = "key") String key, ProfileDataRepresentation presentation) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException, RegistryServiceException, NotificationServiceException {
+		logger.log(Level.INFO, "POST /profiles/" + key + "/aboutme");
+		membership.updateAboutMe(key, presentation.getName(), presentation.getValue(), ProfileDataVisibility.valueOf(presentation.getVisibility()), ProfileDataType.valueOf(presentation.getType()), presentation.getSource());
+		return Response.ok().build();
+	}
 
 	@GET
 	@Path("/{key}/settings")

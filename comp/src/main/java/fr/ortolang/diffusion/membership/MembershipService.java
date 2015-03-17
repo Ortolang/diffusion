@@ -47,6 +47,7 @@ import fr.ortolang.diffusion.membership.entity.ProfileData;
 import fr.ortolang.diffusion.membership.entity.ProfileDataType;
 import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
 import fr.ortolang.diffusion.membership.entity.ProfileStatus;
+import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -125,5 +126,11 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	public Map<String, ProfileData> listSettings(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void updateSetting(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException;
+
+	public ProfileData readAboutMe(String key, String name) throws MembershipServiceException, RegistryServiceException, KeyNotFoundException, AccessDeniedException, NotificationServiceException;
+
+	public void updateAboutMe(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, RegistryServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException, NotificationServiceException;
+
+	Map<String, ProfileData> listAboutMe(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 }
