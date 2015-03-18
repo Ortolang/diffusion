@@ -62,8 +62,7 @@ public class ImportWorkspaceTaskUnitTest {
 			allowing(execution).getVariable("wsalias", String.class); will(returnValue(null));
 			allowing(execution).getProcessBusinessKey(); will(returnValue("pid1"));
 			allowing(engine).notify(with(any(RuntimeEngineEvent.class)));
-			allowing(registry).lookup("WSK1"); will(throwException(new KeyNotFoundException("WSK1 does not exists")));
-			oneOf(core).createWorkspace("WSK1", "Workspace Test", "test");
+			oneOf(core).createWorkspace(with(any(String.class)), with("test"), with("The Test Workspace"), with("test"));
 	    }});
 		
 		task.executeTask(execution);

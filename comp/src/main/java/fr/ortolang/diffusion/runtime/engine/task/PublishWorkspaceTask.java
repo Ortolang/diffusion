@@ -54,7 +54,7 @@ import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
 import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.publication.PublicationContext;
-import fr.ortolang.diffusion.publication.type.ForAllPublicationType;
+import fr.ortolang.diffusion.publication.type.FreeForAll;
 import fr.ortolang.diffusion.publication.type.PublicationType;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
@@ -110,11 +110,11 @@ public class PublishWorkspaceTask extends RuntimeEngineTask {
 	private void builtPublicationMap(String key, Map<String, PublicationContext> map, String root, PathBuilder path) throws RuntimeEngineTaskException {
 		try {
 			OrtolangObject object = getCoreService().findObject(key);
-			map.put(key, new PublicationContext(PublicationType.getType(ForAllPublicationType.NAME), root, path.build(), object.getObjectName()));
+			map.put(key, new PublicationContext(PublicationType.getType(FreeForAll.NAME), root, path.build(), object.getObjectName()));
 			
 			Set<MetadataElement> mde = ((MetadataSource)object).getMetadatas();
 			for ( MetadataElement element : mde) {
-				map.put(element.getKey(), new PublicationContext(PublicationType.getType(ForAllPublicationType.NAME), root, path.build(), object.getObjectName()));
+				map.put(element.getKey(), new PublicationContext(PublicationType.getType(FreeForAll.NAME), root, path.build(), object.getObjectName()));
 			}
 			
 			if (object instanceof Collection) {

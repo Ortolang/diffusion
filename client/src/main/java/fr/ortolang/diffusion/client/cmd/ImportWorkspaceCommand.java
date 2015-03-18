@@ -2,11 +2,8 @@ package fr.ortolang.diffusion.client.cmd;
 
 import java.io.Console;
 import java.io.File;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -19,48 +16,49 @@ import fr.ortolang.diffusion.client.OrtolangClient;
 import fr.ortolang.diffusion.client.OrtolangClientException;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
 
-public class DeleteWorkspace {
+public class ImportWorkspaceCommand extends Command {
 
-	private static final Logger log = Logger.getLogger(DeleteWorkspace.class.getName());
-	private String[] args = null;
 	private Options options = new Options();
 
-	public DeleteWorkspace(String[] args) {
-		this.args = args;
+	public ImportWorkspaceCommand() {
 		options.addOption("h", "help", false, "show help.");
 		options.addOption("U", "username", true, "username for login");
 		options.addOption("P", "password", true, "password for login");
-		options.addOption("k", "key", true, "the workspace key");
+		options.addOption("f", "file", true, "bag file to import");
+		options.addOption("upload", false, "bag file is local and need upload");
 	}
 
-	public void parse() {
+	public void execute(String[] args) {
 		CommandLineParser parser = new BasicParser();
 		CommandLine cmd = null;
 		String username = "";
 		String password = "";
 		Map<String, String> params = new HashMap<String, String> ();
+		Map<String, File> files = new HashMap<String, File> ();
 		try {
 			cmd = parser.parse(options, args);
 			if (cmd.hasOption("h")) {
 				help();
 			}
-			if (cmd.hasOption("u")) {
-				log.log(Level.INFO, "Using provided username: " + cmd.getOptionValue("u"));
-				username = cmd.getOptionValue("u");
-				if (cmd.hasOption("p")) {
-					log.log(Level.INFO, "Using provided password");
+			if (cmd.hasOption("U")) {
+				username = cmd.getOptionValue("U");
+				if (cmd.hasOption("P")) {
+					password = cmd.getOptionValue("P");
 				} else {
 					Console cons;
 					char[] passwd;
 					if ((cons = System.console()) != null && (passwd = cons.readPassword("[%s]", "Password:")) != null) {
-					    java.util.Arrays.fill(passwd, ' ');
 					    password = new String(passwd);
 					}
 				}
 			}
 			
-			if (cmd.hasOption("k")) {
-				params.put("wskey", cmd.getOptionValue("k"));
+			if ( cmd.hasOption("f") ) {
+				if (cmd.hasOption("upload")) {
+					files.put("bagpath", new File(cmd.getOptionValue("f")));
+				} else {
+					params.put("bagpath", cmd.getOptionValue("f"));
+				}
 			} else {
 				help();
 			}
@@ -71,29 +69,25 @@ public class DeleteWorkspace {
 				client.login(username);
 			}
 			System.out.println("Connected as user: " + client.connectedProfile());
-			String pkey = client.createProcess("delete-workspace", "DeleteWorkspace", params, Collections.<String, File> emptyMap());
-			log.log(Level.INFO, "Process created with key : " + pkey);
+			String pkey = client.createProcess("import-workspace", "ImportWorkspace", params, files);
+			System.out.println("Import-Workspace process created with key : " + pkey);
 			
 			client.logout();
 			client.close();
 			
 		} catch (ParseException e) {
-			log.log(Level.SEVERE, "Failed to parse comand line properties", e);
+			System.out.println("Failed to parse comand line properties " +  e.getMessage());
 			help();
 		} catch (OrtolangClientException | OrtolangClientAccountException e) {
-			log.log(Level.SEVERE, "Unexpected error", e);
-			System.out.println(e.getMessage());
+			System.out.println("Unexpected error !!");
+			e.printStackTrace();
 		}
 	}
 
 	private void help() {
 		HelpFormatter formater = new HelpFormatter();
-		formater.printHelp("Delete Workspace", options);
+		formater.printHelp("Import Workspace", options);
 		System.exit(0);
-	}
-
-	public static void main(String[] args) {
-		new ImportWorkspace(args).parse();;
 	}
 
 }

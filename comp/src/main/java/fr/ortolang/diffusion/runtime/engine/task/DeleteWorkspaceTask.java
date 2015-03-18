@@ -50,6 +50,7 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 					logger.log(Level.FINE, "Deleting content key: " + key);
 					getRegistryService().systemDelete(key);
 				}
+				getCoreService().deleteWorkspace(wskey);
 			} catch (KeyNotFoundException | AccessDeniedException | CoreServiceException | RegistryServiceException e) {
 				getUserTransaction().rollback();
 				throw new RuntimeEngineTaskException("unexpected error during delete workspace task", e);

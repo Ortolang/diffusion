@@ -59,6 +59,7 @@ import org.apache.sshd.common.file.SshFile;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
+import fr.ortolang.diffusion.core.CollectionNotEmptyException;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
@@ -261,7 +262,7 @@ public class CoreSshFile implements SshFile {
 				//TODO maybe reload informations...
 				lc.logout();
 				return true;
-			} catch ( LoginException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | OrtolangException e ) {
+			} catch ( LoginException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | OrtolangException | CollectionNotEmptyException e ) {
 				logger.log(Level.SEVERE, "error while trying to delete path: " + path, e); 
 			}
 		}

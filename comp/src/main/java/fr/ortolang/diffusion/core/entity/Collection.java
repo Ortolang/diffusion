@@ -147,6 +147,19 @@ public class Collection extends OrtolangObject implements MetadataSource {
 		return segments;
 	}
 	
+	public boolean isEmpty() {
+		if ( elements != null ) {
+			return elements.size() > 0;
+		} else {
+			for ( String segment : segments ) {
+				if ( segment.length() > 0 ) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
 	public Set<CollectionElement> getElements() {
 		if ( elements != null ) {
 			return elements;

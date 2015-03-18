@@ -2,138 +2,31 @@
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
   <process id="import-workspace" name="Import Workspace Process" isExecutable="true">
     <startEvent id="start" name="Start"></startEvent>
-    <sequenceFlow id="flow1" sourceRef="start" targetRef="check"></sequenceFlow>
-    <serviceTask id="check" name="Check Bag" activiti:class="fr.ortolang.diffusion.runtime.engine.task.CheckBagTask">
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="import-workspace-task"></sequenceFlow>
+    <serviceTask id="import-workspace-task" name="Import Workspace Task" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportWorkspaceTask">
       <documentation>Check the bag content according to md5 provided in the bag avoiding transfert data coruption.</documentation>
     </serviceTask>
-    <subProcess id="import-version" name="Import Version">
-      <multiInstanceLoopCharacteristics isSequential="true" activiti:collection="${bagversions}" activiti:elementVariable="bagversion"></multiInstanceLoopCharacteristics>
-      <startEvent id="start-import" name="Start"></startEvent>
-      <serviceTask id="import" name="Import Content" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportBinaryContentTask">
-        <documentation>Import binary content of current working branch (head by default).</documentation>
-      </serviceTask>
-      <sequenceFlow id="flow4" sourceRef="import" targetRef="import-objects"></sequenceFlow>
-      <sequenceFlow id="flow7" sourceRef="start-import" targetRef="import"></sequenceFlow>
-      <serviceTask id="import-objects" name="Import Objects" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportObjectsTask">
-        <documentation>Create all data objects of  the current working branch (head by default).</documentation>
-      </serviceTask>
-      <endEvent id="end-import" name="End"></endEvent>
-      <serviceTask id="import-metadata" name="Import Metadata" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportMetadataTask"></serviceTask>
-      <sequenceFlow id="flow13" sourceRef="import-objects" targetRef="import-metadata"></sequenceFlow>
-      <exclusiveGateway id="issnapshot" name="IsSnapshot" default="flow16"></exclusiveGateway>
-      <sequenceFlow id="flow15" sourceRef="issnapshot" targetRef="end-import">
-        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${bagversion.equals("head")}]]></conditionExpression>
-      </sequenceFlow>
-      <serviceTask id="snapshot" name="Snapshot" activiti:class="fr.ortolang.diffusion.runtime.engine.task.SnapshotWorkspaceTask"></serviceTask>
-      <sequenceFlow id="flow16" sourceRef="issnapshot" targetRef="snapshot"></sequenceFlow>
-      <serviceTask id="publish" name="Publish" activiti:class="fr.ortolang.diffusion.runtime.engine.task.PublishWorkspaceTask"></serviceTask>
-      <sequenceFlow id="flow18" sourceRef="publish" targetRef="end-import"></sequenceFlow>
-      <sequenceFlow id="flow24" sourceRef="import-metadata" targetRef="issnapshot"></sequenceFlow>
-      <sequenceFlow id="flow25" sourceRef="snapshot" targetRef="publish"></sequenceFlow>
-    </subProcess>
     <endEvent id="end" name="End"></endEvent>
-    <sequenceFlow id="flow9" sourceRef="import-version" targetRef="end"></sequenceFlow>
-    <serviceTask id="list-versions" name="List Versions" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ListBagVersionsTask"></serviceTask>
-    <sequenceFlow id="flow10" sourceRef="check" targetRef="list-versions"></sequenceFlow>
-    <sequenceFlow id="flow11" sourceRef="create-workspace" targetRef="import-version"></sequenceFlow>
-    <serviceTask id="create-workspace" name="Create Workspace" activiti:class="fr.ortolang.diffusion.runtime.engine.task.CreateWorkspaceTask"></serviceTask>
-    <sequenceFlow id="flow12" sourceRef="list-versions" targetRef="create-workspace"></sequenceFlow>
+    <sequenceFlow id="flow2" sourceRef="import-workspace-task" targetRef="end"></sequenceFlow>
   </process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_import-workspace">
     <bpmndi:BPMNPlane bpmnElement="import-workspace" id="BPMNPlane_import-workspace">
       <bpmndi:BPMNShape bpmnElement="start" id="BPMNShape_start">
         <omgdc:Bounds height="35.0" width="35.0" x="164.0" y="57.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="check" id="BPMNShape_check">
-        <omgdc:Bounds height="55.0" width="105.0" x="278.0" y="47.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="import-version" id="BPMNShape_import-version">
-        <omgdc:Bounds height="281.0" width="540.0" x="61.0" y="340.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="start-import" id="BPMNShape_start-import">
-        <omgdc:Bounds height="35.0" width="35.0" x="94.0" y="380.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="import" id="BPMNShape_import">
-        <omgdc:Bounds height="55.0" width="105.0" x="154.0" y="370.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="import-objects" id="BPMNShape_import-objects">
-        <omgdc:Bounds height="55.0" width="105.0" x="304.0" y="370.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="end-import" id="BPMNShape_end-import">
-        <omgdc:Bounds height="35.0" width="35.0" x="345.0" y="463.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="import-metadata" id="BPMNShape_import-metadata">
-        <omgdc:Bounds height="55.0" width="105.0" x="454.0" y="370.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="issnapshot" id="BPMNShape_issnapshot">
-        <omgdc:Bounds height="40.0" width="40.0" x="486.0" y="460.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="snapshot" id="BPMNShape_snapshot">
-        <omgdc:Bounds height="55.0" width="105.0" x="454.0" y="530.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="publish" id="BPMNShape_publish">
-        <omgdc:Bounds height="55.0" width="105.0" x="310.0" y="530.0"></omgdc:Bounds>
+      <bpmndi:BPMNShape bpmnElement="import-workspace-task" id="BPMNShape_import-workspace-task">
+        <omgdc:Bounds height="55.0" width="133.0" x="278.0" y="47.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="end" id="BPMNShape_end">
-        <omgdc:Bounds height="35.0" width="35.0" x="313.0" y="670.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="list-versions" id="BPMNShape_list-versions">
-        <omgdc:Bounds height="55.0" width="105.0" x="278.0" y="141.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="create-workspace" id="BPMNShape_create-workspace">
-        <omgdc:Bounds height="55.0" width="105.0" x="278.0" y="237.0"></omgdc:Bounds>
+        <omgdc:Bounds height="35.0" width="35.0" x="490.0" y="57.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
         <omgdi:waypoint x="199.0" y="74.0"></omgdi:waypoint>
         <omgdi:waypoint x="278.0" y="74.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
-        <omgdi:waypoint x="259.0" y="397.0"></omgdi:waypoint>
-        <omgdi:waypoint x="304.0" y="397.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
-        <omgdi:waypoint x="129.0" y="397.0"></omgdi:waypoint>
-        <omgdi:waypoint x="154.0" y="397.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow13" id="BPMNEdge_flow13">
-        <omgdi:waypoint x="409.0" y="397.0"></omgdi:waypoint>
-        <omgdi:waypoint x="454.0" y="397.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow15" id="BPMNEdge_flow15">
-        <omgdi:waypoint x="486.0" y="480.0"></omgdi:waypoint>
-        <omgdi:waypoint x="380.0" y="480.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow16" id="BPMNEdge_flow16">
-        <omgdi:waypoint x="506.0" y="500.0"></omgdi:waypoint>
-        <omgdi:waypoint x="506.0" y="530.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow18" id="BPMNEdge_flow18">
-        <omgdi:waypoint x="362.0" y="530.0"></omgdi:waypoint>
-        <omgdi:waypoint x="362.0" y="498.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow24" id="BPMNEdge_flow24">
-        <omgdi:waypoint x="506.0" y="425.0"></omgdi:waypoint>
-        <omgdi:waypoint x="506.0" y="460.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow25" id="BPMNEdge_flow25">
-        <omgdi:waypoint x="454.0" y="557.0"></omgdi:waypoint>
-        <omgdi:waypoint x="415.0" y="557.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
-        <omgdi:waypoint x="331.0" y="621.0"></omgdi:waypoint>
-        <omgdi:waypoint x="330.0" y="670.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow10" id="BPMNEdge_flow10">
-        <omgdi:waypoint x="330.0" y="102.0"></omgdi:waypoint>
-        <omgdi:waypoint x="330.0" y="141.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow11" id="BPMNEdge_flow11">
-        <omgdi:waypoint x="330.0" y="292.0"></omgdi:waypoint>
-        <omgdi:waypoint x="331.0" y="340.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow12" id="BPMNEdge_flow12">
-        <omgdi:waypoint x="330.0" y="196.0"></omgdi:waypoint>
-        <omgdi:waypoint x="330.0" y="237.0"></omgdi:waypoint>
+      <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+        <omgdi:waypoint x="411.0" y="74.0"></omgdi:waypoint>
+        <omgdi:waypoint x="490.0" y="74.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

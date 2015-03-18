@@ -83,6 +83,7 @@ import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.rest.template.Template;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
+import fr.ortolang.diffusion.core.CollectionNotEmptyException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
@@ -473,7 +474,7 @@ public class WorkspaceResource {
 	@Path("/{wskey}/elements")
 	public Response deleteWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@QueryParam(value = "metadataname") String metadataname) throws CoreServiceException, InvalidPathException, AccessDeniedException, KeyNotFoundException,
-			BrowserServiceException {
+			BrowserServiceException, CollectionNotEmptyException {
 		logger.log(Level.INFO, "DELETE /workspaces/" + wskey + "/elements");
 		if (path == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
