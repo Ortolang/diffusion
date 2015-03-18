@@ -70,7 +70,7 @@ public class ClientResource {
 	private static String appName; 
 	private static String callbackUrl; 
 	private static Map<String, String> states = new HashMap<String, String> ();
-	private static OrtolangClient client = new OrtolangClient();
+	private static OrtolangClient client = OrtolangClient.getInstance();
 	
 	@Context 
 	private SecurityContext ctx;
@@ -85,11 +85,7 @@ public class ClientResource {
 			initialized = true;
 		}
 	}
-	
-	public static OrtolangClient getOrtolangClient() {
-		return client;
-	}
-	
+
 	@GET
 	@Path("/grant")
 	public Response getAuthStatus() {

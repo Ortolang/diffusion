@@ -43,9 +43,9 @@ import java.util.Map;
 
 import fr.ortolang.diffusion.membership.MembershipService;
 
-public class ForAllPublicationType extends PublicationType {
+public class FreeForAll extends PublicationType {
 
-	public static final String NAME = "forall";
+	public static final String NAME = "free";
 	public static final String DESCRIPTION = "read & download permission for all users";
 	
 	@Override

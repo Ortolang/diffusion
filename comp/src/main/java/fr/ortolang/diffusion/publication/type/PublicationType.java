@@ -46,8 +46,10 @@ public abstract class PublicationType {
 	private static Map<String, PublicationType> types = new HashMap<String, PublicationType> ();
 	
 	static {
-		ForAllPublicationType all = new ForAllPublicationType();
+		FreeForAll all = new FreeForAll();
+		DownloadForAuthentified auth = new DownloadForAuthentified();
 		types.put(all.getName(), all);
+		types.put(auth.getName(), auth);
 	}
 	
 	abstract public String getName();

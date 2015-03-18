@@ -24,7 +24,7 @@ public class ImportBagsTest {
 			bags = "";
 		}
 
-		OrtolangClient client = new OrtolangClient();
+		OrtolangClient client = OrtolangClient.getInstance();
 		client.getAccountManager().setCredentials("root", "tagada54");
 		client.login("root");
 		String profile = client.connectedProfile();

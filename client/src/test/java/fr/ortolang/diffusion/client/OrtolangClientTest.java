@@ -59,7 +59,7 @@ public class OrtolangClientTest {
 	
 	@BeforeClass
 	public static void init() throws OrtolangClientAccountException {
-		client = new OrtolangClient();
+		client = OrtolangClient.getInstance();
 		client.getAccountManager().setCredentials("root", "tagada54");
 	}
 	

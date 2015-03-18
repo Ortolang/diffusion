@@ -4,9 +4,6 @@ import java.io.Console;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -19,25 +16,19 @@ import fr.ortolang.diffusion.client.OrtolangClient;
 import fr.ortolang.diffusion.client.OrtolangClientException;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
 
-public class ImportWorkspace {
+public class ImportWorkspaceCommand extends Command {
 
-	private static final Logger log = Logger.getLogger(ImportWorkspace.class.getName());
-	private String[] args = null;
 	private Options options = new Options();
 
-	public ImportWorkspace(String[] args) {
-		this.args = args;
+	public ImportWorkspaceCommand() {
 		options.addOption("h", "help", false, "show help.");
 		options.addOption("U", "username", true, "username for login");
 		options.addOption("P", "password", true, "password for login");
-		options.addOption("a", "alias", true, "a unique alias for this workspace");
-		options.addOption("n", "name", true, "a friendly name for the workspace");
-		options.addOption("t", "type", true, "default type is 'user'");
 		options.addOption("f", "file", true, "bag file to import");
-		options.addOption("p", "path", true, "bag path to import (server side)");
+		options.addOption("upload", false, "bag file is local and need upload");
 	}
 
-	public void parse() {
+	public void execute(String[] args) {
 		CommandLineParser parser = new BasicParser();
 		CommandLine cmd = null;
 		String username = "";
@@ -50,10 +41,9 @@ public class ImportWorkspace {
 				help();
 			}
 			if (cmd.hasOption("U")) {
-				log.log(Level.INFO, "Using provided username: " + cmd.getOptionValue("U"));
 				username = cmd.getOptionValue("U");
 				if (cmd.hasOption("P")) {
-					log.log(Level.INFO, "Using provided password");
+					password = cmd.getOptionValue("P");
 				} else {
 					Console cons;
 					char[] passwd;
@@ -63,44 +53,34 @@ public class ImportWorkspace {
 				}
 			}
 			
-			params.put("wskey", UUID.randomUUID().toString());
-			if (cmd.hasOption("f")) {
-				files.put("bagpath", new File(cmd.getOptionValue("f")));
-			} else if (cmd.hasOption("p")) {
-				params.put("bagpath", cmd.getOptionValue("p"));
+			if ( cmd.hasOption("f") ) {
+				if (cmd.hasOption("upload")) {
+					files.put("bagpath", new File(cmd.getOptionValue("f")));
+				} else {
+					params.put("bagpath", cmd.getOptionValue("f"));
+				}
 			} else {
 				help();
 			}
-			if (cmd.hasOption("a")) {
-				params.put("wsalias", cmd.getOptionValue("a"));
-			} 
-			if (cmd.hasOption("n")) {
-				params.put("wsname", cmd.getOptionValue("n"));
-			}
-			if (cmd.hasOption("t")) {
-				params.put("wstype", cmd.getOptionValue("t"));
-			} else {
-				params.put("wstype", "user");
-			}
 
-			OrtolangClient client = new OrtolangClient();
+			OrtolangClient client = OrtolangClient.getInstance();
 			if ( username.length() > 0 ) {
 				client.getAccountManager().setCredentials(username, password);
 				client.login(username);
 			}
 			System.out.println("Connected as user: " + client.connectedProfile());
 			String pkey = client.createProcess("import-workspace", "ImportWorkspace", params, files);
-			log.log(Level.INFO, "Process created with key : " + pkey);
+			System.out.println("Import-Workspace process created with key : " + pkey);
 			
 			client.logout();
 			client.close();
 			
 		} catch (ParseException e) {
-			log.log(Level.SEVERE, "Failed to parse comand line properties", e);
+			System.out.println("Failed to parse comand line properties " +  e.getMessage());
 			help();
 		} catch (OrtolangClientException | OrtolangClientAccountException e) {
-			log.log(Level.SEVERE, "Unexpected error", e);
-			System.out.println(e.getMessage());
+			System.out.println("Unexpected error !!");
+			e.printStackTrace();
 		}
 	}
 
@@ -108,10 +88,6 @@ public class ImportWorkspace {
 		HelpFormatter formater = new HelpFormatter();
 		formater.printHelp("Import Workspace", options);
 		System.exit(0);
-	}
-
-	public static void main(String[] args) {
-		new ImportWorkspace(args).parse();;
 	}
 
 }

@@ -847,10 +847,16 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to move collection into workspace [" + workspace + "] from path [" + source + "] to path [" + destination + "]", e);
 		}
 	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void deleteCollection(String workspace, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, CollectionNotEmptyException {
+		deleteCollection(workspace, path, false);
+	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void deleteCollection(String workspace, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException {
+	public void deleteCollection(String workspace, String path, boolean force) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, CollectionNotEmptyException {
 		logger.log(Level.FINE, "deleting collection into workspace [" + workspace + "] at path [" + path + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
@@ -893,6 +899,10 @@ public class CoreServiceBean implements CoreService {
 			}
 			leaf.setKey(element.getKey());
 			logger.log(Level.FINEST, "collection exists and loaded from storage");
+			
+			if ( !leaf.isEmpty() && !force ) {
+				throw new CollectionNotEmptyException("collection at path: [" + path + "] is not empty");
+			}
 
 			parent.removeElement(element);
 			em.merge(parent);
@@ -2557,7 +2567,6 @@ public class CoreServiceBean implements CoreService {
 			if (workspace == null) {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
-			keys.add(wskey);
 			keys = systemListCollectionKeys(workspace.getHead(), keys);
 			for ( SnapshotElement snapshot : workspace.getSnapshots() ) {
 				keys = systemListCollectionKeys(snapshot.getKey(), keys);
@@ -2882,6 +2891,7 @@ public class CoreServiceBean implements CoreService {
                 }
             }
         } catch (AuthorisationServiceException | AccessDeniedException e) {
+            ortolangSizeInfo.setPartial(true);
         }
         return ortolangSizeInfo;
     }

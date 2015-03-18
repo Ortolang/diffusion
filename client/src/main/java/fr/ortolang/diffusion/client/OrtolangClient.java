@@ -73,8 +73,8 @@ public class OrtolangClient {
 	private Client client;
 	private String currentUser = null;
 	private String authorization = null;
-	
-	public OrtolangClient() {
+
+	private OrtolangClient() {
 		logger.log(Level.INFO, "Creating new OrtolangClient");
 		ResteasyClientBuilder builder = new ResteasyClientBuilder();
 		builder.register(OrtolangClientCookieFilter.class);
@@ -88,6 +88,14 @@ public class OrtolangClient {
 		
 		logger.log(Level.INFO, "Client created");
 	}
+
+    public static OrtolangClient getInstance() {
+        return OrtolangClientHolder.INSTANCE;
+    }
+
+    private static class OrtolangClientHolder {
+        static final OrtolangClient INSTANCE = new OrtolangClient();
+    }
 	
 	public OrtolangClientAccountManager getAccountManager() {
 		return accountManager;
