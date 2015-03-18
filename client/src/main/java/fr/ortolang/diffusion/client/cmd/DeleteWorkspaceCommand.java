@@ -58,7 +58,7 @@ public class DeleteWorkspaceCommand extends Command {
 				help();
 			}
 
-			OrtolangClient client = new OrtolangClient();
+			OrtolangClient client = OrtolangClient.getInstance();
 			if ( username.length() > 0 ) {
 				client.getAccountManager().setCredentials(username, password);
 				client.login(username);

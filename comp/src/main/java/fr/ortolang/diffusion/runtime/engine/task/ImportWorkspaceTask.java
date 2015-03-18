@@ -180,8 +180,8 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 				logger.log(Level.FINE, "- snapshot version " + version);
 				snapshotWorkspace(wskey, version.substring(version.lastIndexOf("/")));
 				
-				logger.log(Level.FINE, "- publish version " + version);
-				publishVersion(root);
+				//logger.log(Level.FINE, "- publish version " + version);
+				//publishVersion(root);
 			}
 			
 			//TODO  pid
