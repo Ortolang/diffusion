@@ -43,6 +43,7 @@ import java.util.Set;
 import fr.ortolang.diffusion.OrtolangBinaryService;
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangSizeInfo;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
@@ -92,7 +93,9 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	public void createCollection(String wskey, String key, String path, String description) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException;
 	
 	public Collection readCollection(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
-	
+
+	public OrtolangSizeInfo calculateCollectionSize(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+
 	public void updateCollection(String wskey, String path, String description) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
 	
 	public void moveCollection(String wskey, String from, String to) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;

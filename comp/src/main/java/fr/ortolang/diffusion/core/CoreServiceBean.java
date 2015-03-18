@@ -665,7 +665,23 @@ public class CoreServiceBean implements CoreService {
 		}
 	}
 
-	@Override
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public OrtolangSizeInfo calculateCollectionSize(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+        logger.log(Level.FINE, "calculating collection size for collection with key [" + key + "]");
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            OrtolangSizeInfo ortolangSizeInfo = new OrtolangSizeInfo();
+
+            ortolangSizeInfo = calculateCollectionSize(key, ortolangSizeInfo, subjects);
+            return ortolangSizeInfo;
+        } catch (MembershipServiceException | RegistryServiceException e) {
+            logger.log(Level.SEVERE, "unexpected error while calculating collection size", e);
+            throw new CoreServiceException("unable to calculate collection size for collection with key [" + key + "]", e);
+        }
+    }
+
+    @Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public String resolvePathFromCollection(String key, String path) throws KeyNotFoundException, CoreServiceException, AccessDeniedException, InvalidPathException {
 		logger.log(Level.FINE, "reading collection with key [" + key + "]");
@@ -2880,6 +2896,38 @@ public class CoreServiceBean implements CoreService {
 			throw new CloneException("unable to clone metadata with origin [" + origin + "] and target [" + target + "]", e);
 		}
 	}
+
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    private OrtolangSizeInfo calculateCollectionSize(String key, OrtolangSizeInfo ortolangSizeInfo, List<String> subjects) throws KeyNotFoundException, RegistryServiceException, CoreServiceException {
+        logger.log(Level.FINE, "calculating collection size for collection with key [" + key + "]");
+        try {
+            OrtolangObjectIdentifier cidentifier = registry.lookup(key);
+            checkObjectType(cidentifier, Collection.OBJECT_TYPE);
+            authorisation.checkPermission(key, subjects, "read");
+
+            Collection collection = em.find(Collection.class, cidentifier.getId());
+            if (collection == null) {
+                throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
+            }
+
+            for (CollectionElement element : collection.getElements()) {
+                if (element.getType().equals(DataObject.OBJECT_TYPE)) {
+                    try {
+                        authorisation.checkPermission(element.getKey(), subjects, "read");
+                        ortolangSizeInfo.addElementSize(element.getSize());
+                    }  catch (AuthorisationServiceException | AccessDeniedException e) {
+                        ortolangSizeInfo.setPartial(true);
+                    }
+                } else if (element.getType().equals(Collection.OBJECT_TYPE)) {
+                    ortolangSizeInfo.incrementCollectionNumber();
+                    ortolangSizeInfo = calculateCollectionSize(element.getKey(), ortolangSizeInfo, subjects);
+                }
+            }
+        } catch (AuthorisationServiceException | AccessDeniedException e) {
+            ortolangSizeInfo.setPartial(true);
+        }
+        return ortolangSizeInfo;
+    }
 	
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	private void deleteCollectionContent(Collection collection, int clock) throws CoreServiceException, RegistryServiceException, KeyNotFoundException, KeyLockedException {
