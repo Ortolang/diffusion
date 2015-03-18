@@ -52,6 +52,7 @@ import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 
 import javax.ejb.EJB;
 import javax.ws.rs.*;
@@ -109,6 +110,27 @@ public class ProfileResource {
 		}
 		ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
 		return Response.ok(representation).build();
+	}
+	
+	@GET
+	@Path("/list")
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	public Response getProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, AuthorisationServiceException {
+		logger.log(Level.INFO, "GET /profiles/list");
+		List<Profile> profiles;
+		profiles = membership.listProfiles();
+		return Response.ok(profiles).build();
+	}
+	
+	@POST
+	@Path("/search")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException, AuthorisationServiceException {
+		logger.log(Level.INFO, "POST /profiles/search");
+		logger.log(Level.INFO, data.toString());
+		List<Profile> result = membership.search(data.);
+		return Response.ok(result).build();
 	}
 
 	/**

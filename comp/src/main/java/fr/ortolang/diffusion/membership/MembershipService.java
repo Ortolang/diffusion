@@ -53,6 +53,7 @@ import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 
 public interface MembershipService extends OrtolangService, OrtolangIndexableService {
 	
@@ -131,6 +132,10 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	public void updateAboutMe(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, RegistryServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException, NotificationServiceException;
 
-	Map<String, ProfileData> listAboutMe(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	public Map<String, ProfileData> listAboutMe(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+
+	public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, AuthorisationServiceException;
+
+	public List<Profile> search(String data) throws MembershipServiceException, KeyNotFoundException, AuthorisationServiceException, AccessDeniedException;
 
 }

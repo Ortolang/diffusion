@@ -63,6 +63,7 @@ import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
 import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
@@ -249,6 +250,63 @@ public class MembershipServiceBean implements MembershipService {
 		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to create profile with key [" + key + "]", e);
+		}
+	}
+	
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AuthorisationServiceException, AccessDeniedException {
+		logger.log(Level.FINE, "listing profiles");
+		try {
+			List<Profile> ProfilesList = new ArrayList<Profile>();
+			List<String> listKeys = registry.list(1, 100, OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null, false);
+			for (String key : listKeys) {
+				List<String> subjects = getConnectedIdentifierSubjects();
+				authorisation.checkPermission(key, subjects, "read");
+	
+				OrtolangObjectIdentifier identifier = registry.lookup(key);
+				checkObjectType(identifier, Profile.OBJECT_TYPE);
+				Profile profile = em.find(Profile.class, identifier.getId());
+				if (profile == null) {
+					throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
+				}
+				ProfilesList.add(profile);
+			}
+			return ProfilesList;
+			
+		} catch (RegistryServiceException e) {
+			throw new MembershipServiceException("unable to list the profiles", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<Profile> search(String data) throws MembershipServiceException, KeyNotFoundException, AuthorisationServiceException, AccessDeniedException {
+		logger.log(Level.FINE, "searching profiles with " + data);
+		try {
+			List<Profile> ProfilesList = new ArrayList<Profile>();
+			List<String> listKeys = registry.list(1, 100, OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null, false);
+			for (String key : listKeys) {
+				List<String> subjects = getConnectedIdentifierSubjects();
+				authorisation.checkPermission(key, subjects, "read");
+	
+				OrtolangObjectIdentifier identifier = registry.lookup(key);
+				checkObjectType(identifier, Profile.OBJECT_TYPE);
+				Profile profile = em.find(Profile.class, identifier.getId());
+				if (profile == null) {
+					throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
+				}
+				String id = profile.getId();
+				String name = profile.getFullName();
+				if(id.matches("(?i).*" + data + ".*") || name.matches("(?i).*" + data + ".*")){
+					ProfilesList.add(profile);
+				}
+			}
+			return ProfilesList;
+			
+		} catch (RegistryServiceException e) {
+			throw new MembershipServiceException("unable to list the profiles", e);
 		}
 	}
 
