@@ -36,11 +36,10 @@ package fr.ortolang.diffusion.api.rest.workspace;
  * #L%
  */
 
-import java.io.InputStream;
+import org.jboss.resteasy.annotations.providers.multipart.PartType;
 
 import javax.ws.rs.FormParam;
-
-import org.jboss.resteasy.annotations.providers.multipart.PartType;
+import java.io.InputStream;
 
 public class WorkspaceElementFormRepresentation {
 
@@ -54,19 +53,19 @@ public class WorkspaceElementFormRepresentation {
 
 	@FormParam("name")
 	@PartType("text/plain")
-	private String name = "no name provided";
+	private String name = "";
 
 	@FormParam("description")
 	@PartType("text/plain")
-	private String description = "no description provided";
+	private String description = "";
 
 	@FormParam("format")
 	@PartType("text/plain")
-	private String format = "no format provided";
+	private String format = "";
 
 	@FormParam("target")
 	@PartType("text/plain")
-	private String target = "no target provided";
+	private String target = "";
 
 	@FormParam("preview")
 	@PartType("application/octet-stream")
