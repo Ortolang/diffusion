@@ -129,7 +129,7 @@ public class ProfileResource {
 	public Response searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException, AuthorisationServiceException {
 		logger.log(Level.INFO, "POST /profiles/search");
 		logger.log(Level.INFO, data.toString());
-		List<Profile> result = membership.search(data.);
+		List<Profile> result = membership.search(data);
 		return Response.ok(result).build();
 	}
 
