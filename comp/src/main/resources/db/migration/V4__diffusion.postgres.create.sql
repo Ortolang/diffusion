@@ -1,4 +1,4 @@
-create table AuthorisationPolicy (
+    create table AuthorisationPolicy (
         id varchar(255) not null,
         owner varchar(255),
         rulesContent text,
@@ -78,7 +78,6 @@ create table AuthorisationPolicy (
         primary key (id)
     );
 
-    
     create table Profile (
         id varchar(255) not null,
         email varchar(255),
@@ -92,24 +91,13 @@ create table AuthorisationPolicy (
         primary key (id)
     );
 
-    create table Profile_aboutMe (
-        Profile_id varchar(255) not null,
-        name varchar(255),
-        source varchar(255),
-        type int4,
-        value varchar(7500),
-        visibility int4,
-        aboutMe_KEY varchar(255),
-        primary key (Profile_id, aboutMe_KEY)
-    );
-
     create table Profile_infos (
         Profile_id varchar(255) not null,
         name varchar(255),
         source varchar(255),
         type int4,
         value varchar(7500),
-        visibility int4,
+        visibility int4 not null,
         infos_KEY varchar(255),
         primary key (Profile_id, infos_KEY)
     );
@@ -118,17 +106,6 @@ create table AuthorisationPolicy (
         Profile_id varchar(255) not null,
         key varchar(2500),
         password varchar(2500)
-    );
-
-    create table Profile_settings (
-        Profile_id varchar(255) not null,
-        name varchar(255),
-        source varchar(255),
-        type int4,
-        value varchar(7500),
-        visibility int4,
-        settings_KEY varchar(255),
-        primary key (Profile_id, settings_KEY)
     );
 
     create table RegistryEntry (
@@ -193,11 +170,6 @@ create table AuthorisationPolicy (
         foreign key (Collection_id) 
         references Collection;
 
-    alter table Profile_aboutMe 
-        add constraint FK_paryp0c2ky233nwllmr2ggr67 
-        foreign key (Profile_id) 
-        references Profile;
-
     alter table Profile_infos 
         add constraint FK_5dmu1n4w0bx2vaucrqr4mog87 
         foreign key (Profile_id) 
@@ -205,11 +177,6 @@ create table AuthorisationPolicy (
 
     alter table Profile_keys 
         add constraint FK_dq11bmpucl4gg88ldggue1qvr 
-        foreign key (Profile_id) 
-        references Profile;
-
-    alter table Profile_settings 
-        add constraint FK_72jqsvu72974p1wge4tuiywl8 
         foreign key (Profile_id) 
         references Profile;
 

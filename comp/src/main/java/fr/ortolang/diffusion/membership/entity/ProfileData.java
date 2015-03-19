@@ -41,15 +41,24 @@ import javax.persistence.Embeddable;
 
 @Embeddable
 public class ProfileData {
-		
+	
 	private String name;
 	@Column(length = 7500)
 	private String value;
-	private ProfileDataVisibility visibility;
+	private int visibility;
 	private ProfileDataType type;
 	private String source;
 
 	public ProfileData() {
+	}
+	
+	public ProfileData(String name, String value, int visibility, ProfileDataType type, String source) {
+		super();
+		this.name = name;
+		this.value = value;
+		this.visibility = visibility;
+		this.type = type;
+		this.source = source;
 	}
 
 	public String getName() {
@@ -68,11 +77,11 @@ public class ProfileData {
 		this.value = value;
 	}
 
-	public ProfileDataVisibility getVisibility() {
+	public int getVisibility() {
 		return visibility;
 	}
 
-	public void setVisibility(ProfileDataVisibility visibility) {
+	public void setVisibility(int visibility) {
 		this.visibility = visibility;
 	}
 

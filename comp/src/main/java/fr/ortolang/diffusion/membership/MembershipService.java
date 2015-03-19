@@ -37,7 +37,6 @@ package fr.ortolang.diffusion.membership;
  */
 
 import java.util.List;
-import java.util.Map;
 
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangService;
@@ -45,15 +44,10 @@ import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
 import fr.ortolang.diffusion.membership.entity.ProfileDataType;
-import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
 import fr.ortolang.diffusion.membership.entity.ProfileStatus;
-import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
-import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 
 public interface MembershipService extends OrtolangService, OrtolangIndexableService {
 	
@@ -82,8 +76,6 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public Map<String, ProfileData> listInfos(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
-
 	public void updateProfile(String key, String givenName, String familyName, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
@@ -92,6 +84,15 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	
 	public void removeProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
+	public List<ProfileData> listProfileInfos(String key, String filter) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+
+	public void setProfileInfo(String key, String name, String value, int visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+
+	public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+
+	public List<Profile> searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+
+	
 	public void createGroup(String key, String name, String description) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException;
 
 	public Group readGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
@@ -113,29 +114,5 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	public List<String> getProfileGroups(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
-
-	public void addFriend(String key) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException, KeyLockedException;
-
-	public ProfileData readInfo(String key, String name) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, RegistryServiceException;
-
-	public void updateInfo(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException;
-
-	public List<String> listFriends(String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException;
-
-	public ProfileData readSetting(String key, String name) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, RegistryServiceException;
-
-	public Map<String, ProfileData> listSettings(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
-
-	public void updateSetting(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException;
-
-	public ProfileData readAboutMe(String key, String name) throws MembershipServiceException, RegistryServiceException, KeyNotFoundException, AccessDeniedException, NotificationServiceException;
-
-	public void updateAboutMe(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, RegistryServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException, NotificationServiceException;
-
-	public Map<String, ProfileData> listAboutMe(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
-
-	public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, AuthorisationServiceException;
-
-	public List<Profile> search(String data) throws MembershipServiceException, KeyNotFoundException, AuthorisationServiceException, AccessDeniedException;
 
 }

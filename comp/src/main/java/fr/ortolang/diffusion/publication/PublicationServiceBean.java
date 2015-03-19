@@ -60,6 +60,7 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
+import fr.ortolang.diffusion.publication.type.PublicationType;
 import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -142,7 +143,7 @@ public class PublicationServiceBean implements PublicationService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void publish(String key, PublicationContext context) throws PublicationServiceException, AccessDeniedException {
+	public void publish(String key, PublicationType type) throws PublicationServiceException, AccessDeniedException {
 		logger.log(Level.FINE, "publishing key : " + key);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -155,7 +156,7 @@ public class PublicationServiceBean implements PublicationService {
 				logger.log(Level.WARNING, "key [" + key + "] is already published, nothing to do !!");
 			} else {
 				authorisation.updatePolicyOwner(key, MembershipService.SUPERUSER_IDENTIFIER);
-				authorisation.setPolicyRules(key, context.getType().getSecurityRules());
+				authorisation.setPolicyRules(key, type.getSecurityRules());
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
 				registry.update(key);
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);

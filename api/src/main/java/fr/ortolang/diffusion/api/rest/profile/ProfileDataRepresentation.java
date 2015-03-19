@@ -47,7 +47,7 @@ public class ProfileDataRepresentation {
 	private String value;
 	private String type;
 	private String source;
-	private String visibility;
+	private int visibility;
 	
 	public String getName() {
 		return name;
@@ -73,10 +73,10 @@ public class ProfileDataRepresentation {
 	public void setSource(String source) {
 		this.source = source;
 	}
-	public String getVisibility() {
+	public int getVisibility() {
 		return visibility;
 	}
-	public void setVisibility(String visibility) {
+	public void setVisibility(int visibility) {
 		this.visibility = visibility;
 	}
 	public static ProfileDataRepresentation fromProfileData(ProfileData data) {
@@ -86,7 +86,7 @@ public class ProfileDataRepresentation {
 			representation.setValue(data.getValue());
 			representation.setType(data.getType().toString());
 			representation.setSource(data.getSource());
-			representation.setVisibility(data.getVisibility().toString());
+			representation.setVisibility(data.getVisibility());
 		}
 		return representation;
 	}

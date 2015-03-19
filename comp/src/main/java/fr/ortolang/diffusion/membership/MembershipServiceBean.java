@@ -39,7 +39,6 @@ package fr.ortolang.diffusion.membership;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,7 +62,6 @@ import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
 import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
@@ -256,7 +254,8 @@ public class MembershipServiceBean implements MembershipService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AuthorisationServiceException, AccessDeniedException {
+	//TODO refactor
+	public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.FINE, "listing profiles");
 		try {
 			List<Profile> ProfilesList = new ArrayList<Profile>();
@@ -275,14 +274,15 @@ public class MembershipServiceBean implements MembershipService {
 			}
 			return ProfilesList;
 			
-		} catch (RegistryServiceException e) {
+		} catch (AuthorisationServiceException | RegistryServiceException e) {
 			throw new MembershipServiceException("unable to list the profiles", e);
 		}
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<Profile> search(String data) throws MembershipServiceException, KeyNotFoundException, AuthorisationServiceException, AccessDeniedException {
+	//TODO refactor
+	public List<Profile> searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.FINE, "searching profiles with " + data);
 		try {
 			List<Profile> ProfilesList = new ArrayList<Profile>();
@@ -305,7 +305,7 @@ public class MembershipServiceBean implements MembershipService {
 			}
 			return ProfilesList;
 			
-		} catch (RegistryServiceException e) {
+		} catch (AuthorisationServiceException | RegistryServiceException e) {
 			throw new MembershipServiceException("unable to list the profiles", e);
 		}
 	}
@@ -335,13 +335,13 @@ public class MembershipServiceBean implements MembershipService {
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public Map<String, ProfileData> listInfos(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "reading list of infos in profile for key [" + key + "] ");
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public List<ProfileData> listProfileInfos(String key, String filter) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.FINE, "list profile infos for profile with key [" + key + "]");
 		try {
-			ProfileDataVisibility visibility = ProfileDataVisibility.NOBODY;
 			String caller = getProfileKeyForConnectedIdentifier();
-			List<String> subjects = getConnectedIdentifierSubjects();			
+			List<String> subjects = getConnectedIdentifierSubjects();
+			authorisation.checkPermission(key, subjects, "read");
 
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Profile.OBJECT_TYPE);
@@ -349,84 +349,50 @@ public class MembershipServiceBean implements MembershipService {
 			if (profile == null) {
 				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
 			}
-			String friends = profile.getFriends();
 			
+			ProfileDataVisibility visibilityLevel = ProfileDataVisibility.EVERYBODY;
 			try {
 				authorisation.checkOwnership(key, subjects);
+				visibilityLevel = ProfileDataVisibility.NOBODY;
 			} catch(AccessDeniedException e) {
-				visibility = ProfileDataVisibility.FRIENDS;
-				if(!isMember(caller, friends)){
-					visibility = ProfileDataVisibility.EVERYBODY;					
+				if(!isMember(caller, profile.getFriends())){
+					visibilityLevel = ProfileDataVisibility.FRIENDS;
+				} 
+			}
+			logger.log(Level.FINE, "Visibility level set to " + visibilityLevel);
+			
+			List<ProfileData> visibleInfos = new ArrayList<ProfileData> ();
+			for ( ProfileData info : profile.getInfos().values() ) {
+				logger.log(Level.FINE, "Traeating info " + info.getName() );
+				if ( visibilityLevel.getValue() >= info.getVisibility() ) {
+					logger.log(Level.FINE, "info is visible");
+					if ( filter != null && filter.length() > 0 ) {
+						if ( info.getName().matches(filter) ) {
+							logger.log(Level.FINE, "info name matches filter");
+							visibleInfos.add(info);
+						}
+					} else {
+						logger.log(Level.FINE, "filter is null or empty, adding info");
+						visibleInfos.add(info);
+					}
 				}
 			}
 			
-			Map<String, ProfileData> infos = profile.getInfos(visibility);
 			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "list-infos"), "");
-			
-			return infos;
+			return visibleInfos;
 		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException e) {
-			throw new MembershipServiceException("unable to read the profile with key [" + key + "]", e);
+			throw new MembershipServiceException("unable to listy profile infos for profile with key [" + key + "]", e);
 		}
 	}
 	
 	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public ProfileData readInfo(String key, String name) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, RegistryServiceException {
-		logger.log(Level.FINE, "reading info " + name + " from profile with key [" + key + "] ");
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void setProfileInfo(String key, String name, String value, int visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.FINE, "set profile info [" +  name + "] for profile with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
-			authorisation.checkPermission(caller, subjects, "read");
-			
-			Map<String, ProfileData> listInfos = listInfos(key);
-			ProfileData info = listInfos.get(name);
-			if(info == null){
-				return null;
-			}
-			switch (info.getVisibility()) {
-				case NOBODY:
-					authorisation.checkOwnership(key, subjects);						
-					notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read-info"), "");
-					return info;
-				case FRIENDS:
-					try {
-						authorisation.checkOwnership(key, subjects);	
-						notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read-info"), "");
-						return info;
-					} catch (AccessDeniedException e) {
-						OrtolangObjectIdentifier identifier = registry.lookup(key);
-						checkObjectType(identifier, Profile.OBJECT_TYPE);
-						Profile profile = em.find(Profile.class, key);
-						if (profile == null) {
-							throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
-						}
-						if(isMember(caller, profile.getFriends())){
-							notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read-info"), "");
-							return info;
-						} else {
-							return null;
-						}
-					}
-				case EVERYBODY:				
-					notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read-info"), "");
-					return info;
-				default:
-					return null;	
-			}
-			
-		} catch (NotificationServiceException | AuthorisationServiceException e) {
-			throw new MembershipServiceException("unable to read the profile with key [" + key + "]", e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public Map<String, ProfileData> listAboutMe(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "reading list of about me item in profile for key [" + key + "] ");
-		try {
-			ProfileDataVisibility visibility = ProfileDataVisibility.NOBODY;
-			String caller = getProfileKeyForConnectedIdentifier();
-			List<String> subjects = getConnectedIdentifierSubjects();			
+			authorisation.checkPermission(key, subjects, "update");
 
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Profile.OBJECT_TYPE);
@@ -434,316 +400,17 @@ public class MembershipServiceBean implements MembershipService {
 			if (profile == null) {
 				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
 			}
-			String friends = profile.getFriends();
 			
-			try {
-				authorisation.checkOwnership(key, subjects);
-			} catch(AccessDeniedException e) {
-				visibility = ProfileDataVisibility.FRIENDS;
-				if(!isMember(caller, friends)){
-					visibility = ProfileDataVisibility.EVERYBODY;					
-				}
+			ProfileData info = null;
+			if ( value != null && value.length() > 0 ) {
+				info = new ProfileData(name, value, visibility, type, source);
 			}
-			
-			Map<String, ProfileData> infos = profile.getAboutMe(visibility);
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "list-about-me"), "");
-			
-			return infos;
+			profile.setInfo(name, info);
+			em.merge(profile);
+						
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "set-info"), "name=" + name);
 		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException e) {
-			throw new MembershipServiceException("unable to read the profile with key [" + key + "]", e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public ProfileData readAboutMe(String key, String name) throws MembershipServiceException, RegistryServiceException, KeyNotFoundException, AccessDeniedException, NotificationServiceException {
-		logger.log(Level.FINE, "reading " + name + " from aboutMe from profile with key [" + key + "] ");
-		try {
-			String caller = getProfileKeyForConnectedIdentifier();
-			List<String> subjects = getConnectedIdentifierSubjects();
-			authorisation.checkPermission(caller, subjects, "read");
-			
-			Map<String, ProfileData> listAboutMe = listAboutMe(key);
-			ProfileData item = listAboutMe.get(name);
-			if(item == null){
-				return null;
-			}
-			switch (item.getVisibility()) {
-				case NOBODY:
-					authorisation.checkOwnership(key, subjects);						
-					notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read-about-me"), "");
-					return item;
-				case FRIENDS:
-					try {
-						authorisation.checkOwnership(key, subjects);	
-						notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read-about-me"), "");
-						return item;
-					} catch (AccessDeniedException e) {
-						OrtolangObjectIdentifier identifier = registry.lookup(key);
-						checkObjectType(identifier, Profile.OBJECT_TYPE);
-						Profile profile = em.find(Profile.class, key);
-						if (profile == null) {
-							throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
-						}
-						if(isMember(caller, profile.getFriends())){
-							notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read-about-me"), "");
-							return item;
-						} else {
-							return null;
-						}
-					}
-				case EVERYBODY:				
-					notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read-about-me"), "");
-					return item;
-				default:
-					return null;	
-			}
-			
-		} catch (AuthorisationServiceException e) {
-			throw new MembershipServiceException("unable to read the profile with key [" + key + "]", e);
-		}
-	}
-	
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateAboutMe(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, RegistryServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException, NotificationServiceException {
-		logger.log(Level.FINE, "updating presentation of user with profile with key [" + key + "] ");
-		try {
-			String caller = getProfileKeyForConnectedIdentifier();
-			List<String> subjects = getConnectedIdentifierSubjects();
-			authorisation.checkPermission(caller, subjects, "update");
-						
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, Profile.OBJECT_TYPE);
-			Profile profile = em.find(Profile.class, identifier.getId());
-			if (profile == null) {
-				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
-			}
-			ProfileData data = profile.getAboutMe(name);
-			if (data == null) {
-				data = new ProfileData();
-			}
-			data.setName(name);
-			data.setValue(value);
-			data.setType(type);
-			data.setVisibility(visibility);
-			data.setSource(source);
-			profile.updateAboutMe(name, data);
-			em.merge(profile);
-
-			registry.update(key);
-
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update-about-me"), "");
-		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
-			ctx.setRollbackOnly();
-			throw new MembershipServiceException("error while trying to update the profile with key [" + key + "]");
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public Map<String, ProfileData> listSettings(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "reading list of settings in profile for key [" + key + "] ");
-		try {
-			ProfileDataVisibility visibility = ProfileDataVisibility.NOBODY;
-			String caller = getProfileKeyForConnectedIdentifier();
-			List<String> subjects = getConnectedIdentifierSubjects();			
-
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, Profile.OBJECT_TYPE);
-			Profile profile = em.find(Profile.class, key);
-			if (profile == null) {
-				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
-			}
-			String friends = profile.getFriends();
-			
-			try {
-				authorisation.checkOwnership(key, subjects);
-			} catch(AccessDeniedException e) {
-				visibility = ProfileDataVisibility.FRIENDS;
-				if(!isMember(caller, friends)){
-					visibility = ProfileDataVisibility.EVERYBODY;					
-				}
-			}
-			
-			Map<String, ProfileData> settings = profile.getSettings(visibility);
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "list-settings"), "");
-			
-			return settings;
-		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException e) {
-			throw new MembershipServiceException("unable to read the profile with key [" + key + "]", e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public ProfileData readSetting(String key, String name) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, RegistryServiceException {
-		logger.log(Level.FINE, "reading setting " + name + " from profile with key [" + key + "] ");
-		try {
-			String caller = getProfileKeyForConnectedIdentifier();
-			List<String> subjects = getConnectedIdentifierSubjects();
-			authorisation.checkPermission(caller, subjects, "read");
-			
-			Map<String, ProfileData> listSettings = listSettings(key);
-			ProfileData setting = listSettings.get(name);
-			if(setting == null){
-				return null;
-			}
-			switch (setting.getVisibility()) {
-				case NOBODY:
-					authorisation.checkOwnership(key, subjects);						
-					notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read-setting"), "");
-					return setting;
-				case FRIENDS:
-					try {
-						authorisation.checkOwnership(key, subjects);	
-						notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read-setting"), "");
-						return setting;
-					} catch (AccessDeniedException e) {
-						OrtolangObjectIdentifier identifier = registry.lookup(key);
-						checkObjectType(identifier, Profile.OBJECT_TYPE);
-						Profile profile = em.find(Profile.class, key);
-						if (profile == null) {
-							throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
-						}
-						if(isMember(caller, profile.getFriends())){
-							notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read-setting"), "");
-							return setting;
-						} else {
-							return null;
-						}
-					}
-				case EVERYBODY:				
-					notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read-setting"), "");
-					return setting;
-				default:
-					return null;	
-			}
-			
-		} catch (NotificationServiceException | AuthorisationServiceException e) {
-			throw new MembershipServiceException("unable to read the profile with key [" + key + "]", e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void addFriend(String key) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException, KeyLockedException {
-		logger.log(Level.FINE, "adding friend with key [" + key + "] to profile");
-		try {
-			String caller = getProfileKeyForConnectedIdentifier();
-			List<String> subjects = getConnectedIdentifierSubjects();
-			authorisation.checkPermission(caller, subjects, "update");
-
-			OrtolangObjectIdentifier callerIdentifier = registry.lookup(caller);
-			checkObjectType(callerIdentifier, Profile.OBJECT_TYPE);
-			OrtolangObjectIdentifier friendIdentifier = registry.lookup(key);
-			checkObjectType(friendIdentifier, Profile.OBJECT_TYPE);
-			
-			Profile profile = em.find(Profile.class, callerIdentifier.getId());
-			if (profile == null) {
-				throw new MembershipServiceException("unable to find a profile for id " + callerIdentifier.getId());
-			}
-			if (profile.getFriends() == null){
-				String friendKey = "friends"+callerIdentifier.getId();
-				createGroup(friendKey, "friends", "group of friends for profile [" + callerIdentifier.getId() + "]");
-				profile.setFriends(friendKey);
-				em.merge(profile);
-			}
-			
-			Profile profileFriend = em.find(Profile.class, friendIdentifier.getId());
-			if (profileFriend == null) {
-				throw new MembershipServiceException("unable to find a profile for id " + friendIdentifier.getId());
-			}
-			
-			Group group = em.find(Group.class, profile.getFriends());
-			if (group == null) {
-				throw new MembershipServiceException("unable to find a group for id " + profile.getFriends());
-			}
-			
-			group.addMember(key);
-			em.merge(group);
-
-			registry.update(key);
-			registry.update(group.getId());
-			registry.update(caller);
-
-			notification.throwEvent(caller, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "add-friend"), "friend=" + key);
-		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | KeyNotFoundException e) {
-			ctx.setRollbackOnly();
-			throw new MembershipServiceException("unable to add friend with key [" + key + "] to profile", e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateInfo(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException {
-		logger.log(Level.FINE, "updating info " + name + " from profile with key [" + key + "] ");
-		try {
-			String caller = getProfileKeyForConnectedIdentifier();
-			List<String> subjects = getConnectedIdentifierSubjects();
-			authorisation.checkPermission(caller, subjects, "update");
-						
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, Profile.OBJECT_TYPE);
-			Profile profile = em.find(Profile.class, identifier.getId());
-			if (profile == null) {
-				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
-			}
-			ProfileData data = profile.getInfos(name);
-			if (data == null) {
-				data = new ProfileData();
-			}
-			data.setName(name);
-			data.setValue(value);
-			data.setType(type);
-			data.setVisibility(visibility);
-			data.setSource(source);
-			profile.updateInfo(name, data);
-			em.merge(profile);
-
-			registry.update(key);
-
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update-info"), "");
-		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
-			ctx.setRollbackOnly();
-			throw new MembershipServiceException("error while trying to update the profile with key [" + key + "]");
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateSetting(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException {
-		logger.log(Level.FINE, "updating setting " + name + " from profile with key [" + key + "] ");
-		try {
-			String caller = getProfileKeyForConnectedIdentifier();
-			List<String> subjects = getConnectedIdentifierSubjects();
-			authorisation.checkPermission(caller, subjects, "update");
-						
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, Profile.OBJECT_TYPE);
-			Profile profile = em.find(Profile.class, identifier.getId());
-			if (profile == null) {
-				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
-			}
-			ProfileData data = profile.getSettings(name);
-			if (data == null) {
-				data = new ProfileData();
-			}
-			data.setName(name);
-			data.setValue(value);
-			data.setType(type);
-			data.setVisibility(visibility);
-			data.setSource(source);
-			profile.updateSettings(name, data);
-			em.merge(profile);
-
-			registry.update(key);
-
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update-setting"), "");
-		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
-			ctx.setRollbackOnly();
-			throw new MembershipServiceException("error while trying to update the profile with key [" + key + "]");
+			throw new MembershipServiceException("unable to set profile info for profile with key [" + key + "]", e);
 		}
 	}
 	
@@ -1135,43 +802,6 @@ public class MembershipServiceBean implements MembershipService {
 		}
 	}
 	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> listFriends(String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
-		logger.log(Level.FINE, "listing members of group 'friends' for profile with key [" + key + "]");
-		try {
-			String caller = getProfileKeyForConnectedIdentifier();
-			List<String> subjects = getConnectedIdentifierSubjects();
-			authorisation.checkPermission(key, subjects, "read");
-
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, Profile.OBJECT_TYPE);
-			Profile profile = em.find(Profile.class, identifier.getId());
-			if (profile == null) {
-				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
-			}
-			
-			String friendsKeyGroup = profile.getFriends();
-			if(friendsKeyGroup == null) {
-				return new ArrayList<String>();
-			}
-			
-			OrtolangObjectIdentifier friendsIdentifier = registry.lookup(friendsKeyGroup);
-			checkObjectType(friendsIdentifier, Group.OBJECT_TYPE);
-
-			Group group = em.find(Group.class, identifier.getId());
-			if (group == null) {
-				throw new MembershipServiceException("unable to find a group for id " + identifier.getId());
-			}
-			String[] members = group.getMembers();
-
-			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "list-friends"), "");
-			return Arrays.asList(members);
-		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
-			throw new MembershipServiceException("unable to list members in group with key [" + key + "]", e);
-		}
-	}
-
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> listMembers(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {

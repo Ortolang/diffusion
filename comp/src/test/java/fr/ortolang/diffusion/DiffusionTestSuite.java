@@ -44,6 +44,7 @@ import fr.ortolang.diffusion.api.OrtolangObjectidentifierTest;
 import fr.ortolang.diffusion.core.CollectionUnitTest;
 import fr.ortolang.diffusion.core.CoreServiceTest;
 import fr.ortolang.diffusion.core.PathBuilderTest;
+import fr.ortolang.diffusion.membership.MembershipServiceTest;
 import fr.ortolang.diffusion.registry.RegistryServiceTest;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceTest;
 import fr.ortolang.diffusion.store.index.IndexStoreServiceTest;
@@ -55,6 +56,7 @@ import fr.ortolang.diffusion.store.triple.TripleStoreServiceTest;
 	OrtolangObjectidentifierTest.class,
 	CollectionUnitTest.class,
 	CoreServiceTest.class,
+	MembershipServiceTest.class,
 	PathBuilderTest.class,
 	RegistryServiceTest.class,
 	BinaryStoreServiceTest.class,

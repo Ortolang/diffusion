@@ -39,7 +39,6 @@ package fr.ortolang.diffusion.membership.entity;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.persistence.ElementCollection;
@@ -79,17 +78,13 @@ public class Profile extends OrtolangObject {
 	private ProfileStatus status;
 	@ElementCollection
 	private Set<ProfileKey> keys;
-	@ElementCollection(fetch = FetchType.EAGER)
-	private Map<String, ProfileData> infos = new HashMap<String, ProfileData> ();
-	@ElementCollection(fetch = FetchType.EAGER)
-	private Map<String, ProfileData> settings = new HashMap<String, ProfileData> ();
-	@ElementCollection(fetch = FetchType.EAGER)
-	private Map<String, ProfileData> aboutMe = new HashMap<String, ProfileData> ();
-//	private ProfileData contributions;
+	@ElementCollection(fetch = FetchType.LAZY)
+	private Map<String, ProfileData> infos;
 	
 	public Profile() {
 		groupsList = "";
 		keys = new HashSet<ProfileKey> ();
+		infos = new HashMap<String, ProfileData> ();
 	}
 
 	public String getId() {
@@ -241,118 +236,21 @@ public class Profile extends OrtolangObject {
 		if (groupsList.equals("")) {
 			return new String[0];
 		}
-
 		return groupsList.split(",");
 	}
 		
-	public Map<String,ProfileData> getInfos() {
-		Map<String, ProfileData> infos = new HashMap<String, ProfileData>();
-		for(Entry<String, ProfileData> entry : this.infos.entrySet()) {
-			infos.put(entry.getValue().getName(), entry.getValue());
-		}
+	public Map<String, ProfileData> getInfos() {
 		return infos;
-	}
-	
-	public ProfileData getInfos(String name) {
-		return this.infos.get(name);
-	}
-	
-	public void updateInfo(String name, ProfileData data) {
-		this.infos.put(name, data);
 	}
 	
 	public void setInfos(Map<String, ProfileData> infos) {
 		this.infos = infos;
 	}
 	
-	public Map<String,ProfileData> getInfos(ProfileDataVisibility visibility) {
-		Map<String, ProfileData> infosVisibles = new HashMap<String, ProfileData>();
-		for(Entry<String, ProfileData> entry : this.infos.entrySet()) {
-	    	ProfileDataVisibility dataVisibility = entry.getValue().getVisibility();
-		    if(visibility == ProfileDataVisibility.NOBODY){
-		    	infosVisibles.put(entry.getValue().getName(), entry.getValue());
-		    } else if(visibility == ProfileDataVisibility.FRIENDS && 
-		    		(dataVisibility == ProfileDataVisibility.FRIENDS || dataVisibility == ProfileDataVisibility.EVERYBODY)){
-		    	infosVisibles.put(entry.getValue().getName(), entry.getValue());
-		    } else if(visibility == ProfileDataVisibility.EVERYBODY && dataVisibility == ProfileDataVisibility.EVERYBODY){
-		    	infosVisibles.put(entry.getValue().getName(), entry.getValue());
-		    }
-		}
-		return infosVisibles;
+	public void setInfo(String name, ProfileData info) {
+		this.infos.put(name, info);
 	}
 	
-	public Map<String,ProfileData> getSettings() {
-		Map<String, ProfileData> settings = new HashMap<String, ProfileData>();
-		for(Entry<String, ProfileData> entry : this.settings.entrySet()) {
-			settings.put(entry.getValue().getName(), entry.getValue());
-		}
-		return settings;
-	}
-	
-	public ProfileData getSettings(String name) {
-		return this.settings.get(name);
-	}
-	
-	public void updateSettings(String name, ProfileData data) {
-		this.settings.put(name, data);
-	}
-	
-	public void setSettings(Map<String, ProfileData> settings) {
-		this.settings = settings;
-	}
-	
-	public Map<String,ProfileData> getSettings(ProfileDataVisibility visibility) {
-		Map<String, ProfileData> settingsVisibles = new HashMap<String, ProfileData>();
-		for(Entry<String, ProfileData> entry : this.settings.entrySet()) {
-	    	ProfileDataVisibility dataVisibility = entry.getValue().getVisibility();
-		    if(visibility == ProfileDataVisibility.NOBODY){
-		    	settingsVisibles.put(entry.getValue().getName(), entry.getValue());
-		    } else if(visibility == ProfileDataVisibility.FRIENDS && 
-		    		(dataVisibility == ProfileDataVisibility.FRIENDS || dataVisibility == ProfileDataVisibility.EVERYBODY)){
-		    	settingsVisibles.put(entry.getValue().getName(), entry.getValue());
-		    } else if(visibility == ProfileDataVisibility.EVERYBODY && dataVisibility == ProfileDataVisibility.EVERYBODY){
-		    	settingsVisibles.put(entry.getValue().getName(), entry.getValue());
-		    }
-		}
-		return settingsVisibles;
-	}
-	
-	public Map<String,ProfileData> getAboutMe() {
-		Map<String, ProfileData> aboutMe = new HashMap<String, ProfileData>();
-		for(Entry<String, ProfileData> entry : this.aboutMe.entrySet()) {
-			aboutMe.put(entry.getValue().getName(), entry.getValue());
-		}
-		return aboutMe;
-	}
-	
-	public ProfileData getAboutMe(String name) {
-		return this.aboutMe.get(name);
-	}
-	
-	public void updateAboutMe(String name, ProfileData data) {
-		this.aboutMe.put(name, data);
-	}
-	
-	public void setAboutMe(Map<String, ProfileData> aboutMe) {
-		this.aboutMe = aboutMe;
-	}
-	
-	public Map<String,ProfileData> getAboutMe(ProfileDataVisibility visibility) {
-		Map<String, ProfileData> aboutMeVisibles = new HashMap<String, ProfileData>();
-		for(Entry<String, ProfileData> entry : this.aboutMe.entrySet()) {
-	    	ProfileDataVisibility dataVisibility = entry.getValue().getVisibility();
-		    if(visibility == ProfileDataVisibility.NOBODY){
-		    	aboutMeVisibles.put(entry.getValue().getName(), entry.getValue());
-		    } else if(visibility == ProfileDataVisibility.FRIENDS && 
-		    		(dataVisibility == ProfileDataVisibility.FRIENDS || dataVisibility == ProfileDataVisibility.EVERYBODY)){
-		    	aboutMeVisibles.put(entry.getValue().getName(), entry.getValue());
-		    } else if(visibility == ProfileDataVisibility.EVERYBODY && dataVisibility == ProfileDataVisibility.EVERYBODY){
-		    	aboutMeVisibles.put(entry.getValue().getName(), entry.getValue());
-		    }
-		}
-		return aboutMeVisibles;
-	}
-		
 	@Override
 	public String getObjectKey() {
 		return getKey();
