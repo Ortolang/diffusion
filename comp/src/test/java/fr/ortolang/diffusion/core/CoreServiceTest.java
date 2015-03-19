@@ -441,7 +441,14 @@ public class CoreServiceTest {
 			core.createCollection(wsk, "/a/c/g/d1", "Collection to delete");
 			core.createCollection(wsk, "/a/c/g/d1/d2", "Collection to delete also");
 			core.createCollection(wsk, "/a/c/g/d1/d2/d3", "Collection to delete again");
-			core.deleteCollection(wsk, "/a/c/g");
+			try {
+				core.deleteCollection(wsk, "/a/c/g");
+				fail("collection is not empty and should have raised an exception");
+			} catch ( CollectionNotEmptyException e ) {
+				//
+			}
+			core.deleteCollection(wsk, "/a/c/g", true);
+			
 			logger.log(Level.INFO, walkWorkspace(wsk));
 			
 		} finally {

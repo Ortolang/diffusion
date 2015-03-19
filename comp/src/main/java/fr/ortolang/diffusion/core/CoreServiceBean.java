@@ -634,7 +634,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException, CoreServiceException {
+    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
         logger.log(Level.FINE, "calculating size for object with key [" + key + "]");
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -653,9 +653,9 @@ public class CoreServiceBean implements CoreService {
                 }
             }
             return ortolangObjectSize;
-        } catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException e) {
+        } catch (CoreServiceException | MembershipServiceException | RegistryServiceException | AuthorisationServiceException e) {
             logger.log(Level.SEVERE, "unexpected error while calculating object size", e);
-            throw new CoreServiceException("unable to calculate size for object with key [" + key + "]", e);
+            throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
         }
     }
 

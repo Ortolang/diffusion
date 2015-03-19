@@ -158,7 +158,7 @@ public class SearchServiceBean implements SearchService {
 	}
 
     @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException, CoreServiceException {
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
         throw new OrtolangException("This service does not manage any object");
     }
 

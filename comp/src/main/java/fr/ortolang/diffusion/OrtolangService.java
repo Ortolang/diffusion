@@ -36,7 +36,6 @@ package fr.ortolang.diffusion;
  * #L%
  */
 
-import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
@@ -59,6 +58,6 @@ public interface OrtolangService {
 
 	public abstract OrtolangObject findObject(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException;
 
-    public abstract OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException, CoreServiceException;
+    public abstract OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException;
 	
 }

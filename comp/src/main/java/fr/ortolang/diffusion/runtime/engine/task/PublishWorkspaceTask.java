@@ -74,10 +74,10 @@ public class PublishWorkspaceTask extends RuntimeEngineTask {
 			throw new RuntimeEngineTaskException("execution variable " + ROOT_COLLECTION_PARAM_NAME + " is not set");
 		}
 		String root = execution.getVariable(ROOT_COLLECTION_PARAM_NAME, String.class);
-
+		
+		logger.log(Level.INFO, "Building publication map...");
 		Map<String, PublicationType> map = new HashMap<String, PublicationType>();
-		logger.log(Level.INFO, "starting building publication map...");
-		builtPublicationMap(root, map);
+		builtPublicationMap(root, map, new FreeForAll());
 		logger.log(Level.INFO, "publication map built containing " + map.size() + " keys");
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "PublicationMap built, containing " + map.size() + " elements"));
 
@@ -101,20 +101,20 @@ public class PublishWorkspaceTask extends RuntimeEngineTask {
 		return NAME;
 	}
 
-	private void builtPublicationMap(String key, Map<String, PublicationType> map) throws RuntimeEngineTaskException {
+	private void builtPublicationMap(String key, Map<String, PublicationType> map, PublicationType current) throws RuntimeEngineTaskException {
 		try {
 			OrtolangObject object = getCoreService().findObject(key);
-			map.put(key, PublicationType.getType(FreeForAll.NAME));
+			map.put(key, current);
 			
 			Set<MetadataElement> mde = ((MetadataSource)object).getMetadatas();
 			for ( MetadataElement element : mde) {
-				map.put(element.getKey(), PublicationType.getType(FreeForAll.NAME));
+				map.put(element.getKey(), current);
 			}
 			
 			if (object instanceof Collection) {
 				
 				for (CollectionElement element : ((Collection)object).getElements()) {
-					builtPublicationMap(element.getKey(), map);
+					builtPublicationMap(element.getKey(), map, current);
 				}
 			}
 		} catch (KeyNotFoundException | AccessDeniedException | OrtolangException e) {
