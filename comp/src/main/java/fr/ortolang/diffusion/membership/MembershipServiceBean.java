@@ -929,10 +929,35 @@ public class MembershipServiceBean implements MembershipService {
 		}
 	}
 
-    // @TODO implement getSize
     @Override
     public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
-        return null;
+        logger.log(Level.FINE, "calculating size for object with key [" + key + "]");
+        try {
+            List<String> subjects = getConnectedIdentifierSubjects();
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+            OrtolangObjectSize ortolangObjectSize = new OrtolangObjectSize();
+            authorisation.checkPermission(key, subjects, "read");
+            switch (identifier.getType()) {
+                case Group.OBJECT_TYPE: {
+                    ortolangObjectSize.addElements("member", readGroup(key).getMembers().length);
+                    break;
+                }
+                case Profile.OBJECT_TYPE: {
+                    Profile profile = readProfile(key);
+                    ortolangObjectSize.addElements("groups", profile.getGroups().length);
+                    ortolangObjectSize.addElements("keys", profile.getKeys().size());
+                    ortolangObjectSize.addElements("friends", profile.getFriendsList().length);
+                    break;
+                }
+            }
+            return ortolangObjectSize;
+        } catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException e) {
+            logger.log(Level.SEVERE, "unexpected error while calculating object size", e);
+            throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
+        }
     }
 
     @Override

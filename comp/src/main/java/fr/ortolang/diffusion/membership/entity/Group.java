@@ -116,12 +116,8 @@ public class Group extends OrtolangObject {
 	}
 
 	public boolean isMember(String member) {
-		if (membersList.indexOf(member) != -1) {
-			return true;
-		}
-
-		return false;
-	}
+        return membersList.contains(member);
+    }
 
 	public void addMember(String member) {
 		if (!isMember(member)) {

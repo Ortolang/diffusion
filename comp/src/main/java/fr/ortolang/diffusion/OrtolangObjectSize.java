@@ -36,11 +36,13 @@ package fr.ortolang.diffusion;
  * #L%
  */
 
+import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 @SuppressWarnings("serial")
+@XmlRootElement(name = "object-size")
 public class OrtolangObjectSize implements Serializable {
 
     private long size;
@@ -67,6 +69,15 @@ public class OrtolangObjectSize implements Serializable {
             elements.put(type, elements.get(type) + 1);
         } else {
             elements.put(type, 1);
+        }
+    }
+
+    public void addElements(String type, int number) {
+        this.size += number;
+        if (elements.containsKey(type)) {
+            elements.put(type, elements.get(type) + number);
+        } else {
+            elements.put(type, number);
         }
     }
 

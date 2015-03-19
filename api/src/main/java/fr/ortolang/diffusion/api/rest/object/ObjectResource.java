@@ -386,11 +386,10 @@ public class ObjectResource {
 
     @GET
     @Path("/{key}/size")
-    public Response calculateCollectionSize(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, OrtolangException, KeyNotFoundException, CoreServiceException {
+    public Response getObjectSize(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, OrtolangException, KeyNotFoundException, CoreServiceException {
         logger.log(Level.INFO, "GET /objects/" + key + "/size");
         OrtolangObjectSize ortolangObjectSize = core.getSize(key);
-        ObjectSizeRepresentation objectSizeRepresentation = ObjectSizeRepresentation.fromOrtolangObjectSize(ortolangObjectSize);
-        return Response.ok(objectSizeRepresentation).build();
+        return Response.ok(ortolangObjectSize).build();
     }
 
 	@GET

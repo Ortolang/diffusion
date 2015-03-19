@@ -639,6 +639,9 @@ public class CoreServiceBean implements CoreService {
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             OrtolangObjectIdentifier cidentifier = registry.lookup(key);
+            if (!cidentifier.getService().equals(CoreService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + cidentifier + " does not refer to service " + getServiceName());
+            }
             OrtolangObjectSize ortolangObjectSize = new OrtolangObjectSize();
             switch (cidentifier.getType()) {
                 case DataObject.OBJECT_TYPE: {
@@ -649,6 +652,15 @@ public class CoreServiceBean implements CoreService {
                 }
                 case Collection.OBJECT_TYPE: {
                     ortolangObjectSize = getCollectionSize(key, cidentifier, ortolangObjectSize, subjects);
+                    break;
+                }
+                case Workspace.OBJECT_TYPE: {
+                    authorisation.checkPermission(key, subjects, "read");
+                    Workspace workspace = em.find(Workspace.class, cidentifier.getId());
+                    ortolangObjectSize = getCollectionSize(workspace.getHead(), registry.lookup(workspace.getHead()), ortolangObjectSize, subjects);
+                    for (SnapshotElement snapshotElement : workspace.getSnapshots()) {
+                        ortolangObjectSize = getCollectionSize(snapshotElement.getKey(), registry.lookup(snapshotElement.getKey()), ortolangObjectSize, subjects);
+                    }
                     break;
                 }
             }
