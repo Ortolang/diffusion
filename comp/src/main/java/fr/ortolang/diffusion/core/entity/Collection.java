@@ -36,26 +36,17 @@ package fr.ortolang.diffusion.core.entity;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.core.CoreService;
+import org.hibernate.annotations.Type;
+
+import javax.persistence.*;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Transient;
-import javax.persistence.Version;
-
-import org.hibernate.annotations.Type;
-
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.core.CoreService;
 
 @Entity
 @SuppressWarnings("serial")
@@ -230,7 +221,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 			elements = null;
 			String newsegment = "";
 			for ( String segment : segments ) {
-				if ( segment.indexOf(element.serialize()) != -1 ) {
+				if (segment.contains(element.serialize())) {
 					newsegment = segment;
 					segments.remove(segment);
 					break;
@@ -251,7 +242,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	
 	public boolean containsElement(CollectionElement element) {
 		for ( String segment : segments ) {
-			if ( segment.indexOf(element.serialize()) != -1 ) {
+			if (segment.contains(element.serialize())) {
 				return true;
 			}
 		}
@@ -260,7 +251,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	
 	public boolean containsElementName(String name) {
 		for ( String segment : segments ) {
-			if ( segment.indexOf("\t" + name + "\t") != -1 ) {
+			if (segment.contains("\t" + name + "\t")) {
 				return true;
 			}
 		}
@@ -269,7 +260,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	
 	public boolean containsElementKey(String key) {
 		for ( String segment : segments ) {
-			if ( segment.indexOf("\t" + key) != -1 ) {
+			if (segment.contains("\t" + key)) {
 				return true;
 			}
 		}
@@ -341,25 +332,16 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	}
 	
 	public boolean containsMetadata(MetadataElement metadata) {
-		if ( metadatasContent.length() > 0 && metadatasContent.indexOf(metadata.serialize()) != -1 ) {
-			return true;
-		}
-		return false;
-	}
+        return metadatasContent.length() > 0 && metadatasContent.contains(metadata.serialize());
+    }
 	
 	public boolean containsMetadataName(String name) {
-		if ( metadatasContent.indexOf(name + "/") != -1 ) {
-			return true;
-		}
-		return false;
-	}
+        return metadatasContent.contains(name + "/");
+    }
 	
 	public boolean containsMetadataKey(String key) {
-		if ( metadatasContent.indexOf("/" + key) != -1 ) {
-			return true;
-		}
-		return false;
-	}
+        return metadatasContent.contains("/" + key);
+    }
 	
 	public MetadataElement findMetadataByName(String name) {
 		Pattern pattern = Pattern.compile("(?s).*(" + Pattern.quote(name) + "/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");

@@ -48,12 +48,10 @@ import javax.ejb.Local;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 
+import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.core.CoreServiceException;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -159,7 +157,12 @@ public class SearchServiceBean implements SearchService {
 		throw new OrtolangException("This service does not manage any object");
 	}
 
-	@Override
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException, CoreServiceException {
+        throw new OrtolangException("This service does not manage any object");
+    }
+
+    @Override
 	public List<OrtolangSearchResult> indexSearch(String query) throws SearchServiceException {
 		logger.log(Level.FINE, "Performing index search with query: " + query);
 		try {

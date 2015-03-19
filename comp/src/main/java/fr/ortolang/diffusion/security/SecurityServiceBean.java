@@ -50,12 +50,10 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.core.CoreServiceException;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -285,5 +283,10 @@ public class SecurityServiceBean implements SecurityService {
 	public OrtolangObject findObject(String key) throws OrtolangException {
 		throw new OrtolangException("this service does not manage any object");
 	}
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException, CoreServiceException {
+        throw new OrtolangException("This service does not manage any object");
+    }
 
 }

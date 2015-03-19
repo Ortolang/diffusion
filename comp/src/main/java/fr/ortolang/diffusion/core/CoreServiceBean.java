@@ -634,17 +634,28 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public OrtolangSizeInfo calculateCollectionSize(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-        logger.log(Level.FINE, "calculating collection size for collection with key [" + key + "]");
+    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException, CoreServiceException {
+        logger.log(Level.FINE, "calculating size for object with key [" + key + "]");
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
-            OrtolangSizeInfo ortolangSizeInfo = new OrtolangSizeInfo();
-
-            ortolangSizeInfo = calculateCollectionSize(key, ortolangSizeInfo, subjects);
-            return ortolangSizeInfo;
-        } catch (MembershipServiceException | RegistryServiceException e) {
-            logger.log(Level.SEVERE, "unexpected error while calculating collection size", e);
-            throw new CoreServiceException("unable to calculate collection size for collection with key [" + key + "]", e);
+            OrtolangObjectIdentifier cidentifier = registry.lookup(key);
+            OrtolangObjectSize ortolangObjectSize = new OrtolangObjectSize();
+            switch (cidentifier.getType()) {
+                case DataObject.OBJECT_TYPE: {
+                    authorisation.checkPermission(key, subjects, "read");
+                    DataObject dataObject = em.find(DataObject.class, cidentifier.getId());
+                    ortolangObjectSize.addElement(DataObject.OBJECT_TYPE, dataObject.getSize());
+                    break;
+                }
+                case Collection.OBJECT_TYPE: {
+                    ortolangObjectSize = getCollectionSize(key, cidentifier, ortolangObjectSize, subjects);
+                    break;
+                }
+            }
+            return ortolangObjectSize;
+        } catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException e) {
+            logger.log(Level.SEVERE, "unexpected error while calculating object size", e);
+            throw new CoreServiceException("unable to calculate size for object with key [" + key + "]", e);
         }
     }
 
@@ -2865,11 +2876,9 @@ public class CoreServiceBean implements CoreService {
 	}
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    private OrtolangSizeInfo calculateCollectionSize(String key, OrtolangSizeInfo ortolangSizeInfo, List<String> subjects) throws KeyNotFoundException, RegistryServiceException, CoreServiceException {
+    private OrtolangObjectSize getCollectionSize(String key, OrtolangObjectIdentifier cidentifier, OrtolangObjectSize ortolangObjectSize, List<String> subjects) throws KeyNotFoundException, RegistryServiceException, CoreServiceException {
         logger.log(Level.FINE, "calculating collection size for collection with key [" + key + "]");
         try {
-            OrtolangObjectIdentifier cidentifier = registry.lookup(key);
-            checkObjectType(cidentifier, Collection.OBJECT_TYPE);
             authorisation.checkPermission(key, subjects, "read");
 
             Collection collection = em.find(Collection.class, cidentifier.getId());
@@ -2881,22 +2890,23 @@ public class CoreServiceBean implements CoreService {
                 if (element.getType().equals(DataObject.OBJECT_TYPE)) {
                     try {
                         authorisation.checkPermission(element.getKey(), subjects, "read");
-                        ortolangSizeInfo.addElementSize(element.getSize());
+                        ortolangObjectSize.addElement(element.getType(), element.getSize());
                     }  catch (AuthorisationServiceException | AccessDeniedException e) {
-                        ortolangSizeInfo.setPartial(true);
+                        ortolangObjectSize.setPartial(true);
                     }
                 } else if (element.getType().equals(Collection.OBJECT_TYPE)) {
-                    ortolangSizeInfo.incrementCollectionNumber();
-                    ortolangSizeInfo = calculateCollectionSize(element.getKey(), ortolangSizeInfo, subjects);
+                    ortolangObjectSize.addElement(element.getType(), 0);
+                    OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
+                    ortolangObjectSize = getCollectionSize(element.getKey(), identifier, ortolangObjectSize, subjects);
                 }
             }
         } catch (AuthorisationServiceException | AccessDeniedException e) {
-            ortolangSizeInfo.setPartial(true);
+            ortolangObjectSize.setPartial(true);
         }
-        return ortolangSizeInfo;
+        return ortolangObjectSize;
     }
-	
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
 	private void deleteCollectionContent(Collection collection, int clock) throws CoreServiceException, RegistryServiceException, KeyNotFoundException, KeyLockedException {
 		logger.log(Level.FINE, "delete content for collection with id [" + collection.getId() + "]");
 		for ( CollectionElement element : collection.getElements() ) {
