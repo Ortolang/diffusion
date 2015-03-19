@@ -1,4 +1,4 @@
-	create table AuthorisationPolicy (
+create table AuthorisationPolicy (
         id varchar(255) not null,
         owner varchar(255),
         rulesContent text,
@@ -49,6 +49,14 @@
         metadatasContent text,
         name varchar(255),
         target varchar(255),
+        version int8 not null,
+        primary key (id)
+    );
+
+    create table MetadataFormat (
+        id varchar(255) not null,
+        name varchar(255),
+        schema varchar(255),
         version int8 not null,
         primary key (id)
     );

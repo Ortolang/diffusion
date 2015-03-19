@@ -36,7 +36,9 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -63,6 +65,13 @@ import javax.persistence.TypedQuery;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
+
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableJsonContent;
@@ -75,6 +84,7 @@ import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
@@ -1646,6 +1656,16 @@ public class CoreServiceBean implements CoreService {
 				meta.setContentType("application/octet-stream");
 				meta.setStream("");
 			}
+
+			List<String> keyMetadataFormat = findMetadataFormatByName(format);
+			if(keyMetadataFormat!=null && keyMetadataFormat.size()==1) {
+				if(!validateMetadata(meta, keyMetadataFormat.get(0))) {
+					throw new CoreServiceException("the metadata is not valid with metadata format ["+format+"].");
+				}
+			} else {
+				logger.log(Level.WARNING, "Metadata format unknown ["+format+"]");
+			}
+			
 			meta.setTarget(tkey);
 			meta.setFormat(format);
 			meta.setKey(key);
@@ -2131,6 +2151,139 @@ public class CoreServiceBean implements CoreService {
 		}
 	}
 
+	/* MetadataFormat */
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<MetadataFormat> listMetadataFormat() throws CoreServiceException {
+
+		try {
+			List<MetadataFormat> formats = new ArrayList<MetadataFormat>();
+			TypedQuery<MetadataFormat> query = em.createNamedQuery("listMetadataFormat", MetadataFormat.class);
+			List<MetadataFormat> metadataFormats = query.getResultList();
+
+			for (MetadataFormat format : metadataFormats) {
+				String ikey = registry.lookup(format.getObjectIdentifier());
+				format.setKey(ikey);
+				formats.add(format);
+			}
+			return formats;
+		} catch (RegistryServiceException | IdentifierNotRegisteredException e) {
+			logger.log(Level.SEVERE, "unexpected error occured during listing all metadata formats", e);
+			throw new CoreServiceException("unable to list all metadata formats", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public MetadataFormat readMetadataFormat(String key) throws CoreServiceException, KeyNotFoundException {
+		logger.log(Level.FINE, "reading metadata format for key [" + key + "]");
+		try {
+//			String caller = membership.getProfileKeyForConnectedIdentifier();
+//			List<String> subjects = membership.getConnectedIdentifierSubjects();
+//			authorisation.checkPermission(key, subjects, "read");
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, MetadataFormat.OBJECT_TYPE);
+
+			MetadataFormat metaFormat = em.find(MetadataFormat.class, identifier.getId());
+			if (metaFormat == null) {
+				throw new CoreServiceException("unable to load metadata format with id [" + identifier.getId() + "] from storage");
+			}
+			metaFormat.setKey(key);
+
+//			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "read"), "");
+			return metaFormat;
+		} catch (RegistryServiceException e) {
+			logger.log(Level.SEVERE, "unexpected error occured during reading metadata", e);
+			throw new CoreServiceException("unable to read metadata with key [" + key + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void createMetadataFormat(String name, String hash) throws CoreServiceException {
+		logger.log(Level.FINE, "creating metadataformat with name [" + name + "]");
+		String key = UUID.randomUUID().toString();
+		
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+		
+			// TODO si le nom du format de metadata existe ?
+			
+			MetadataFormat mf = new MetadataFormat();
+			mf.setId(UUID.randomUUID().toString());
+			mf.setName(name);
+			if (hash != null && hash.length() > 0) {
+				mf.setSchema(hash);
+			} else {
+				mf.setSchema("");
+			}
+			mf.setKey(key);
+			em.persist(mf);
+
+			registry.register(key, mf.getObjectIdentifier(), caller);
+		} catch (RegistryServiceException | KeyAlreadyExistsException
+				| IdentifierAlreadyRegisteredException e) {
+			ctx.setRollbackOnly();
+			logger.log(Level.SEVERE, "unexpected error occured during metadata format creation", e);
+			throw new CoreServiceException("unable to create metadata format with name : "+name, e);
+		}
+	}
+	
+	public List<String> findMetadataFormatByName(String name) throws CoreServiceException {
+		logger.log(Level.FINE, "finding metadata format with name [" + name + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
+			TypedQuery<MetadataFormat> query = em.createNamedQuery("findMetadataFormatByName", MetadataFormat.class).setParameter("name", name);
+			List<MetadataFormat> mdfs = query.getResultList();
+			List<String> results = new ArrayList<String>();
+			for (MetadataFormat mdf : mdfs) {
+				String key = registry.lookup(mdf.getObjectIdentifier());
+				results.add(key);
+			}
+			notification.throwEvent("", caller, MetadataFormat.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataFormat.OBJECT_TYPE, "find"), "name="
+					+ name);
+			return results;
+		} catch (NotificationServiceException | RegistryServiceException | IdentifierNotRegisteredException e) {
+			logger.log(Level.SEVERE, "unexpected error occured during finding metadata format", e);
+			throw new CoreServiceException("unable to find metadata format by name [" + name + "]", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public boolean validateMetadata(MetadataObject metadata, String metadataFormat) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+		try {
+			MetadataFormat metaFormat = readMetadataFormat(metadataFormat);
+			
+			if (metaFormat.getSchema() != null && metaFormat.getSchema().length() > 0) {
+				JsonNode jsonSchema = JsonLoader.fromReader(new InputStreamReader(binarystore.get(metaFormat.getSchema())));
+
+				JsonNode jsonFile = JsonLoader.fromReader(new InputStreamReader(binarystore.get(metadata.getStream())));
+
+		        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+
+		        JsonSchema schema = factory.getJsonSchema(jsonSchema);
+
+		        ProcessingReport report;
+
+		        report = schema.validate(jsonFile);
+		        logger.log(Level.INFO, report.toString());
+		        
+				return report.isSuccess();
+			} else {
+				logger.log(Level.SEVERE, "unexpected error occured during validating metadata ["+metadata+"] with metadata format ["+metadataFormat+"] : schema not found");
+				throw new CoreServiceException("unable to validate metadata ["+metadata+"] with metadata format ["+metadataFormat+"] : schema not found");
+			}
+			
+		} catch (IOException | ProcessingException | DataNotFoundException | BinaryStoreServiceException e) {
+			logger.log(Level.SEVERE, "unexpected error occured during validating metadata ["+metadata+"] with metadata format ["+metadataFormat+"]", e);
+			throw new CoreServiceException("unable to validate metadata ["+metadata+"] with metadata format ["+metadataFormat+"]", e);
+		}
+	}
+	
 	/* BinaryContent */
 
 	@Override
@@ -2219,7 +2372,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to get preview content", e);
 		}
 	}
-
+	
 	/* Service */
 
 	@Override
