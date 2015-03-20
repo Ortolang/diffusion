@@ -120,6 +120,9 @@ public class CoreServiceTest {
 		jar.addAsResource("config.properties");
 		jar.addAsResource("ontology/foaf.xml");
 		jar.addAsResource("ontology/ortolang.xml");
+		jar.addAsResource("ontology/ortolang-market.xml");
+		jar.addAsResource("ontology/lexvo-ontology.xml");
+		jar.addAsResource("ontology/lexvo_2013-02-08.rdf");
 		jar.addAsResource("ontology/rdfs.xml");
 		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
 		logger.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
@@ -149,6 +152,7 @@ public class CoreServiceTest {
 		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-queryresultio-sparqljson:2.7.8").withTransitivity().asFile());
 		ear.addAsLibraries(pom.resolve("org.apache.velocity:velocity:1.7").withTransitivity().asFile());
 		ear.addAsLibraries(pom.resolve("org.apache.velocity:velocity-tools:2.0").withTransitivity().asFile());
+		ear.addAsLibraries(pom.resolve("com.github.fge:json-schema-validator:2.2.6").withTransitivity().asFile());
 		logger.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 
 		return ear;
