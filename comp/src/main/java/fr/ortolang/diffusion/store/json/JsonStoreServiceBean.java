@@ -161,8 +161,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> search(String query)
-			throws JsonStoreServiceException {
+	public List<String> search(String query) throws JsonStoreServiceException {
 
 		List<String> jsonResults = new ArrayList<String>();
 
@@ -172,6 +171,9 @@ public class JsonStoreServiceBean implements JsonStoreService {
 			for(ODocument doc : results) {
 				jsonResults.add(doc.toJSON());
 		    }
+		} catch(Exception e) {
+			logger.log(Level.SEVERE, "query failed in json store : "+e.getMessage());
+			throw new JsonStoreServiceException(e.getMessage());
 		} finally {
 			db.close();
 		}
