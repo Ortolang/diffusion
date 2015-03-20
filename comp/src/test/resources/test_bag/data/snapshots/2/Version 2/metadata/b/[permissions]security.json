@@ -1,0 +1,5 @@
+{
+	"rules":[
+		{"subject":"esr","permissions":"read,download"}
+	]
+}

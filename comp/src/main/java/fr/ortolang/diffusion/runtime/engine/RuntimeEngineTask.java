@@ -61,9 +61,6 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public static final String BAG_VERSIONS_PARAM_NAME = "bagversions";
 	public static final String BAG_VERSION_PARAM_NAME = "bagversion";
 
-	public static final String METADATA_ENTRIES_PARAM_NAME = "metadataentries";
-	public static final String OBJECT_ENTRIES_PARAM_NAME = "objectentries";
-
 	public static final String ROOT_COLLECTION_PARAM_NAME = "root";
 	public static final String SNAPSHOT_NAME_PARAM_NAME = "snapshot";
 
@@ -194,16 +191,17 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 				executeTask(execution);
 				logger.log(Level.FINE, "Task executed");
 			} catch (RuntimeEngineTaskException e) {
+				logger.log(Level.SEVERE, "RuntimeTask exception intercepted, putting task in error and aborting process", e);
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " IN ERROR: " + e.getMessage()));
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessAbortEvent(execution.getProcessBusinessKey(), e.getMessage()));
-				throw e;
+				throw new BpmnError("RuntimeTaskExecutionError", e.getMessage());
 			}
 
 			logger.log(Level.FINE, "Sending events of process evolution");
 			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityCompleteEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " COMPLETED"));
 		} catch (RuntimeEngineTaskException e) {
-			logger.log(Level.SEVERE, "Unexpected runtime task error, should result in inconsistent state of the workflow", e);
-			throw new BpmnError("RuntimeTaskExecutionError", e.getMessage());
+			logger.log(Level.SEVERE, "Unexpected runtime task exception", e);
+			throw new BpmnError("Unexpected RuntimeTaskExecutionError", e.getMessage());
 		}
 	}
 

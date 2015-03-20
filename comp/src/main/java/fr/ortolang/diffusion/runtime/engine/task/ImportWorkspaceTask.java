@@ -92,11 +92,15 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			int created = 0;
 			for (String object : objectsToCreate) {
 				String filepath = DATA_PREFIX + version + "/objects" + object;
-				createObject(wskey, bag.getBagFile(filepath), bag.getChecksums(filepath).get(Algorithm.SHA1), object, cache);
-				logger.log(Level.INFO, "  - object created: " + filepath);
-				created++;
+				try {
+					logger.log(Level.FINE, "  - create object: " + filepath);
+					createObject(wskey, bag.getBagFile(filepath), bag.getChecksums(filepath).get(Algorithm.SHA1), object, cache);
+					created++;
+				} catch ( InvalidPathException e ) {
+					logger.log(Level.SEVERE, "  - OBJECT CREATION ERROR: " + filepath);
+					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - ERROR creating object with path " + filepath));
+				}
 			}
-			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - " + created + " objects created"));
 			int updated = 0;
 			for (String object : objectsToUpdate) {
 				String filepath = DATA_PREFIX + version + "/objects" + object;
@@ -107,25 +111,34 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 					String oldfilepath = DATA_PREFIX + previousVersion + "/objects" + object;
 					BagFile oldfile = bag.getBagFile(oldfilepath);
 					String oldfilehash = bag.getChecksums(oldfilepath).get(Algorithm.SHA1);
-					if ( oldfile.getSize() == file.getSize() && oldfilehash.equals(filehash) ) {
+					if ( oldfilehash != null && oldfile.getSize() == file.getSize() && oldfilehash.equals(filehash) ) {
 						skipupdate = true;
 					}
 				} 
 				if ( !skipupdate ) {
-					updateObject(wskey, bag.getBagFile(filepath), object);
-					logger.log(Level.INFO, "  - object updated: " + filepath);
-					updated++;
+					try {
+						logger.log(Level.FINE, "  - update object: " + filepath);
+						updateObject(wskey, bag.getBagFile(filepath), object);
+						updated++;
+					} catch ( InvalidPathException e ) {
+						logger.log(Level.SEVERE, "  - OBJECT UPDATE ERROR: " + filepath);
+						throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - ERROR updating object with path " + filepath));
+					}
 				}
 			}
-			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - " + updated + " objects updated"));
 			int deleted = 0;
 			for (String object : objectsToDelete) {
 				String filepath = DATA_PREFIX + version + "/objects" + object;
-				deleteObject(wskey, object);
-				logger.log(Level.INFO, "  - object deleted: " + filepath);
-				deleted++;
+				try {
+					logger.log(Level.FINE, "  - delete object: " + filepath);
+					deleteObject(wskey, object);
+					deleted++;
+				} catch ( InvalidPathException e ) {
+					logger.log(Level.SEVERE, "  - OBJECT DELETE ERROR: " + filepath);
+					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - ERROR deleting object with path " + filepath));
+				}
 			}
-			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - " + deleted + " objects deleted"));
+			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - objects summary: " + created + " created, " + updated + " updated, " + deleted + " deleted"));
 
 			Set<String> metadata = listMetadata(version, bag.getPayload());
 			Set<String> metadataToCreate = new HashSet<String>();
@@ -141,11 +154,15 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			int mdcreated = 0;
 			for (String md : metadataToCreate) {
 				String filepath = DATA_PREFIX + version + "/metadata" + md;
-				createMetadata(wskey, bag.getBagFile(filepath), bag.getChecksums(filepath).get(Algorithm.SHA1), md);
-				logger.log(Level.INFO, "  - metadata created: " + filepath);
-				mdcreated++;
+				try {
+					logger.log(Level.FINE, "  - create metadata: " + filepath);
+					createMetadata(wskey, bag.getBagFile(filepath), bag.getChecksums(filepath).get(Algorithm.SHA1), md);
+					mdcreated++;
+				} catch ( InvalidPathException e ) {
+					logger.log(Level.SEVERE, "  - METADATA CREATE ERROR: " + filepath);
+					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - ERROR creating metadata with path " + filepath));
+				}
 			}
-			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - " + mdcreated + " metadata created"));
 			int mdupdated = 0;
 			for (String md : metadataToUpdate) {
 				String filepath = DATA_PREFIX + version + "/metadata" + md;
@@ -156,25 +173,34 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 					String oldfilepath = DATA_PREFIX + previousVersion + "/metadata" + md;
 					BagFile oldfile = bag.getBagFile(oldfilepath);
 					String oldfilehash = bag.getChecksums(oldfilepath).get(Algorithm.SHA1);
-					if ( oldfile.getSize() == file.getSize() && oldfilehash.equals(filehash) ) {
+					if ( oldfilehash != null && oldfile.getSize() == file.getSize() && oldfilehash.equals(filehash) ) {
 						skipupdate = true;
 					}
 				} 
 				if ( !skipupdate ) {
-					updateMetadata(wskey, bag.getBagFile(filepath), md);
-					logger.log(Level.INFO, "  - metadata updated: " + filepath);
-					mdupdated++;
+					try {
+						logger.log(Level.INFO, "  - update metadata: " + filepath);
+						updateMetadata(wskey, bag.getBagFile(filepath), md);
+						mdupdated++;
+					} catch ( InvalidPathException e ) {
+						logger.log(Level.SEVERE, "  - METADATA UPDATE ERROR: " + filepath);
+						throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - ERROR updating metadata with path " + filepath));
+					}
 				}
 			}
-			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - " + mdupdated + " metadata updated"));
 			int mddeleted = 0;
 			for (String md : metadataToDelete) {
 				String filepath = DATA_PREFIX + version + "/metadata" + md;
-				deleteMetadata(wskey, md);
-				logger.log(Level.INFO, "  - metadata deleted: " + filepath);
-				mddeleted++;
+				try {
+					logger.log(Level.INFO, "  - delete metadata: " + filepath);
+					deleteMetadata(wskey, md);
+					mddeleted++;
+				} catch ( InvalidPathException e ) {
+					logger.log(Level.SEVERE, "  - METADATA DELETE ERROR: " + filepath);
+					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - ERROR deleting metadata with path " + filepath));
+				}
 			}
-			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - " + mddeleted + " metadata deleted"));
+			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - metadata summary: " + mdcreated + " created, " + mdupdated + " updated, " + mddeleted + " deleted"));
 			
 			if (!version.equals(Workspace.HEAD)) {
 				logger.log(Level.FINE, "- snapshot version " + version);
@@ -226,7 +252,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 	private String createWorkspace(Bag bag) throws RuntimeEngineTaskException {
 		String wskey = UUID.randomUUID().toString();
 		BagFile propFile = bag.getBagFile("data/workspace.properties");
-		if (!propFile.exists()) {
+		if (propFile == null || !propFile.exists()) {
 			throw new RuntimeEngineTaskException("Workspace properties file does not exists, create one !!");
 		}
 		try {
@@ -295,7 +321,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 		return objects;
 	}
 
-	private void createObject(String wskey, BagFile file, String sha1, String path, Set<String> cache) throws RuntimeEngineTaskException {
+	private void createObject(String wskey, BagFile file, String sha1, String path, Set<String> cache) throws InvalidPathException, RuntimeEngineTaskException {
 		try {
 			if ( sha1 == null || (sha1 != null && !getBinaryStore().contains(sha1)) ) {
 				InputStream is = file.newInputStream();
@@ -323,12 +349,12 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			getCoreService().createDataObject(wskey, current, "", sha1);
 		} catch (IOException e) {
 			logger.log(Level.WARNING, "unable to close input stream", e);
-		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | InvalidPathException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "]", e);
 		} 
 	}
 	
-	private void updateObject(String wskey, BagFile file, String path) throws RuntimeEngineTaskException {
+	private void updateObject(String wskey, BagFile file, String path) throws InvalidPathException, RuntimeEngineTaskException {
 		try {
 			InputStream is = file.newInputStream();
 			String hash = getCoreService().put(is);
@@ -337,32 +363,28 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			getCoreService().updateDataObject(wskey, path, "", hash);
 		} catch (IOException e) {
 			logger.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | InvalidPathException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error updating object for path [" + path + "]", e);
 		}
 	}
 
-	private void deleteObject(String wskey, String path) throws RuntimeEngineTaskException {
+	private void deleteObject(String wskey, String path) throws InvalidPathException, RuntimeEngineTaskException {
 		try {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().deleteDataObject(wskey, path);
-		} catch (CoreServiceException | AccessDeniedException | InvalidPathException | KeyNotFoundException e) {
+		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
 			logger.log(Level.FINE, "Error deleting object for path: " + path, e);
 			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "]", e);
 		}
 
-		try {
-			PathBuilder opath = PathBuilder.fromPath(path).parent();
-			while (!opath.isRoot()) {
-				try {
-					getCoreService().deleteCollection(wskey, opath.build());
-				} catch (CollectionNotEmptyException | CoreServiceException | KeyNotFoundException | AccessDeniedException e) {
-					break;
-				}
-				opath.parent();
+		PathBuilder opath = PathBuilder.fromPath(path).parent();
+		while (!opath.isRoot()) {
+			try {
+				getCoreService().deleteCollection(wskey, opath.build());
+			} catch (CollectionNotEmptyException | CoreServiceException | KeyNotFoundException | AccessDeniedException e) {
+				break;
 			}
-		} catch (InvalidPathException e) {
-			logger.log(Level.FINE, "Error deleting object parent collection", e);
+			opath.parent();
 		}
 	}
 	
@@ -397,7 +419,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 		return mdname;
 	}
 
-	private void createMetadata(String wskey, BagFile file, String sha1, String path) throws RuntimeEngineTaskException {
+	private void createMetadata(String wskey, BagFile file, String sha1, String path) throws InvalidPathException, RuntimeEngineTaskException {
 		try {
 			if ( sha1 == null || (sha1 != null && !getBinaryStore().contains(sha1)) ) {
 				InputStream is = file.newInputStream();
@@ -408,12 +430,12 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			getCoreService().createMetadataObject(wskey, mdname[2], mdname[0], mdname[1], sha1);
 		} catch (IOException e) {
 			logger.log(Level.WARNING, "unable to close input stream", e);
-		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | InvalidPathException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error creating metadata for path [" + path + "]", e);
 		} 
 	}
 	
-	private void updateMetadata(String wskey, BagFile file, String path) throws RuntimeEngineTaskException {
+	private void updateMetadata(String wskey, BagFile file, String path) throws InvalidPathException, RuntimeEngineTaskException {
 		try {
 			InputStream is = file.newInputStream();
 			String sha1 = getCoreService().put(is);
@@ -423,17 +445,17 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			getCoreService().updateMetadataObject(wskey, mdname[2], mdname[0], mdname[1], sha1);
 		} catch (IOException e) {
 			logger.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | InvalidPathException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error updating metadata for path [" + path + "]", e);
 		} 
 	}
 	
-	private void deleteMetadata(String wskey, String path) throws RuntimeEngineTaskException {
+	private void deleteMetadata(String wskey, String path) throws InvalidPathException, RuntimeEngineTaskException {
 		try {
 			String[] mdname = parseMetadataName(path);
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, mdname[2]);
 			getCoreService().deleteMetadataObject(wskey, mdname[2], mdname[0]);
-		} catch (CoreServiceException | InvalidPathException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error deleting metadata for path [" + path + "]", e);
 		} 
 	}

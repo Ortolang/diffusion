@@ -174,6 +174,10 @@ public class BootstrapServiceBean implements BootstrapService {
 				InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
 				String schemaHash = core.put(schemaInputStream);
 				core.createMetadataFormat("ortolang-item-json", "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schemaHash);
+				logger.log(Level.FINE, "import schema : ortolang-permissions");
+				InputStream schemaInputStream2 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-permissions-schema.json");
+				String schemaHash2 = core.put(schemaInputStream2);
+				core.createMetadataFormat("ortolang-permissions-json", "Les métadonnées de permissions permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2);
 				
 				logger.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException
