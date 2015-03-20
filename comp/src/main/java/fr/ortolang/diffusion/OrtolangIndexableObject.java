@@ -56,6 +56,7 @@ public class OrtolangIndexableObject {
 	private List<OrtolangObjectProperty> properties;
 	private OrtolangIndexablePlainTextContent plainTextContent;
 	private OrtolangIndexableSemanticContent semanticContent;
+	private OrtolangIndexableJsonContent jsonContent;
 	private IndexingContext context;
 
 	public OrtolangIndexableObject() {
@@ -83,6 +84,14 @@ public class OrtolangIndexableObject {
 
 	public void setSemanticContent(OrtolangIndexableSemanticContent content) {
 		this.semanticContent = content;
+	}
+
+	public OrtolangIndexableJsonContent getJsonContent() {
+		return jsonContent;
+	}
+
+	public void setJsonContent(OrtolangIndexableJsonContent jsonContent) {
+		this.jsonContent = jsonContent;
 	}
 
 	public void setKey(String key) {

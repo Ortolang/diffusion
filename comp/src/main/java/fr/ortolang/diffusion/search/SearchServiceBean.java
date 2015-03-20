@@ -62,6 +62,8 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.index.IndexStoreService;
 import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
+import fr.ortolang.diffusion.store.json.JsonStoreService;
+import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.store.triple.TripleStoreService;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 
@@ -81,6 +83,8 @@ public class SearchServiceBean implements SearchService {
 	private IndexStoreService indexStore;
 	@EJB
 	private TripleStoreService tripleStore;
+	@EJB
+	private JsonStoreService jsonStore;
 	@EJB
 	private NotificationService notification;
 	@Resource
@@ -111,6 +115,14 @@ public class SearchServiceBean implements SearchService {
 
 	public void setTripleStoreService(TripleStoreService store) {
 		this.tripleStore = store;
+	}
+
+	public JsonStoreService getJsonStoreService() {
+		return jsonStore;
+	}
+
+	public void setJsonStoreService(JsonStoreService jsonStore) {
+		this.jsonStore = jsonStore;
 	}
 
 	public MembershipService getMembershipService() {
@@ -193,6 +205,19 @@ public class SearchServiceBean implements SearchService {
 			return result;
 		} catch ( TripleStoreServiceException | NotificationServiceException e ) {
 			throw new SearchServiceException("unable to perform semantic search", e);
+		}
+	}
+
+	@Override
+	public List<String> jsonSearch(String query) throws SearchServiceException {
+		logger.log(Level.FINE, "Performing semantic search with query: " + query);
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> result = jsonStore.search(query);
+			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "json-search"), "query=" + query);
+			return result;
+		} catch ( JsonStoreServiceException | NotificationServiceException e ) {
+			throw new SearchServiceException("unable to perform json search", e);
 		}
 	}
 

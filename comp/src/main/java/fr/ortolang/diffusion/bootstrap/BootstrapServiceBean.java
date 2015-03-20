@@ -169,6 +169,12 @@ public class BootstrapServiceBean implements BootstrapService {
 				String jsonDefinition2 = IOUtils.toString(is2);
 				form.createForm("test-process-confirm-form", "Test Process Confirm Form", jsonDefinition2);
 
+				logger.log(Level.FINE, "import schemas");
+				logger.log(Level.FINE, "import schema : ortolang-item");
+				InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
+				String schemaHash = core.put(schemaInputStream);
+				core.createMetadataFormat("ortolang-item-json", "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schemaHash);
+				
 				logger.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException
 					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | RuntimeServiceException | FormServiceException e1) {

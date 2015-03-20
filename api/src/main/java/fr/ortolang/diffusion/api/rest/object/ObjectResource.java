@@ -120,10 +120,11 @@ public class ObjectResource {
 	@Template(template = "objects/list.vm", types = { MediaType.TEXT_HTML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
 	public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit,
+			@QueryParam(value = "service") String service, @QueryParam(value = "type") String type,
 			@DefaultValue(value = "false") @QueryParam(value = "items") boolean itemsOnly, @QueryParam(value = "status") String status) throws BrowserServiceException {
 		logger.log(Level.INFO, "GET /objects?offset=" + offset + "&limit=" + limit + "&items-only=" + itemsOnly + "&status=" + status);
-		List<String> keys = browser.list(offset, limit, "", "", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
-		long nbentries = browser.count("", "", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
+		List<String> keys = browser.list(offset, limit, (service!=null && service.length()>0)?service:"", (type!=null && type.length()>0)?type:"", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
+		long nbentries = browser.count((service!=null && service.length()>0)?service:"", (type!=null && type.length()>0)?type:"", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
 		UriBuilder objects = DiffusionUriBuilder.getRestUriBuilder().path(ObjectResource.class);
 
 		GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String>();
@@ -317,6 +318,12 @@ public class ObjectResource {
 				builder.type(((MetadataObject) object).getContentType());
 				builder.lastModified(lmd);
 			}
+			if (object instanceof MetadataFormat) {
+				logger.log(Level.INFO, "metadata format object ");
+				builder.header("Content-Disposition", "attachment; filename=" + object.getObjectName());
+				builder.type(((MetadataFormat) object).getMimeType());
+				builder.lastModified(lmd);
+			}
 			if (object instanceof Collection) {
 				builder.header("Content-Disposition", "attachment; filename=" + key + ".zip");
 				builder.type("application/zip");
@@ -422,6 +429,21 @@ public class ObjectResource {
 		List<OrtolangSearchResult> results;
 		if (query != null && query.length() > 0) {
 			results = search.indexSearch(query);
+		} else {
+			results = Collections.emptyList();
+		}
+		return Response.ok(results).build();
+	}
+
+	@GET
+	@Path("/json")
+	@Template(template = "json/query.vm", types = { MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	public Response jsonSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
+		logger.log(Level.INFO, "searching objects with json query: " + query);
+		List<String> results;
+		if (query != null && query.length() > 0) {
+			results = search.jsonSearch(query);
 		} else {
 			results = Collections.emptyList();
 		}

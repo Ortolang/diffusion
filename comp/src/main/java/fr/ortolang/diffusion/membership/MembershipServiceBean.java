@@ -58,6 +58,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangIndexableJsonContent;
 import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
 import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangObject;
@@ -1032,6 +1033,12 @@ public class MembershipServiceBean implements MembershipService {
 		} catch (KeyNotFoundException | RegistryServiceException | TripleStoreServiceException e) {
 			throw new OrtolangException("unable to get indexable semantic content for key " + key, e);
 		} 
+	}
+
+	@Override
+	public OrtolangIndexableJsonContent getIndexableJsonContent(String key)
+			throws OrtolangException {
+		return null;
 	}
 
 	private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws MembershipServiceException {

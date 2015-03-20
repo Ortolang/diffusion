@@ -59,7 +59,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 		{ DataObject.OBJECT_TYPE, "read,update,delete,download" },
 		{ Collection.OBJECT_TYPE, "read,update,delete,download" },
 		{ Link.OBJECT_TYPE, "read,update,delete,download" },
-		{ MetadataObject.OBJECT_TYPE, "read,update,delete,download"}};
+		{ MetadataObject.OBJECT_TYPE, "read,update,delete,download"}}; 
 	
 	/* Workspace */
 	
@@ -140,6 +140,18 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	public void updateMetadataObject(String wskey, String path, String name, String format, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
 	
 	public void deleteMetadataObject(String wskey, String path, String name) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
+
+	/*MetadataFormat*/
+	
+	public List<MetadataFormat> listMetadataFormat() throws CoreServiceException;
+	
+	public MetadataFormat readMetadataFormat(String key) throws CoreServiceException, KeyNotFoundException;
+	
+	public void createMetadataFormat(String name, String description, String hash) throws CoreServiceException;
+
+	public List<String> findMetadataFormatByName(String name) throws CoreServiceException, KeyNotFoundException;
+	
+	public boolean validateMetadata(MetadataObject metadata, String metadataFormat) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	/*BinaryContent*/
 	
