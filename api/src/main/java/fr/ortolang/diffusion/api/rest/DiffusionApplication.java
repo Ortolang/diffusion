@@ -44,6 +44,7 @@ import javax.ws.rs.core.Application;
 
 import fr.ortolang.diffusion.api.rest.filter.ContentTypeSetterPreProcessorInterceptor;
 import fr.ortolang.diffusion.api.rest.form.FormResource;
+import fr.ortolang.diffusion.api.rest.format.MetadataFormatResource;
 import fr.ortolang.diffusion.api.rest.mapper.AccessDeniedExceptionMapper;
 import fr.ortolang.diffusion.api.rest.mapper.BrowserServiceExceptionMapper;
 import fr.ortolang.diffusion.api.rest.mapper.InvalidPathExceptionMapper;
@@ -69,6 +70,7 @@ public class DiffusionApplication extends Application {
 		classes.add(ProfileResource.class);
 		classes.add(RuntimeResource.class);
 		classes.add(FormResource.class);
+		classes.add(MetadataFormatResource.class);
 	}
 
 	@Override

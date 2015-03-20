@@ -56,6 +56,9 @@ create table AuthorisationPolicy (
     create table MetadataFormat (
         id varchar(255) not null,
         name varchar(255),
+        description varchar(2500),
+        size int8 not null,
+        mimeType varchar(255),
         schema varchar(255),
         version int8 not null,
         primary key (id)

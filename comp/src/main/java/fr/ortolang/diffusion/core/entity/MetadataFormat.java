@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.core.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
@@ -27,6 +28,10 @@ public class MetadataFormat extends OrtolangObject {
 	@Transient
 	private String key;
 	private String name;
+	@Column(length=2500)
+	private String description;
+	private long size;
+	private String mimeType;
 	private String schema;
 	
 	public String getId() {
@@ -59,6 +64,30 @@ public class MetadataFormat extends OrtolangObject {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public long getSize() {
+		return size;
+	}
+
+	public void setSize(long size) {
+		this.size = size;
+	}
+
+	public String getMimeType() {
+		return mimeType;
+	}
+
+	public void setMimeType(String mimeType) {
+		this.mimeType = mimeType;
 	}
 
 	public String getSchema() {

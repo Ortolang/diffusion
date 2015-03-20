@@ -94,6 +94,7 @@ import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -150,10 +151,11 @@ public class ObjectResource {
 	@Template(template = "objects/list.vm", types = { MediaType.TEXT_HTML })
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
 	public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit,
+			@QueryParam(value = "service") String service, @QueryParam(value = "type") String type,
 			@DefaultValue(value = "false") @QueryParam(value = "items") boolean itemsOnly, @QueryParam(value = "status") String status) throws BrowserServiceException {
 		logger.log(Level.INFO, "GET /objects?offset=" + offset + "&limit=" + limit + "&items-only=" + itemsOnly + "&status=" + status);
-		List<String> keys = browser.list(offset, limit, "", "", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
-		long nbentries = browser.count("", "", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
+		List<String> keys = browser.list(offset, limit, (service!=null && service.length()>0)?service:"", (type!=null && type.length()>0)?type:"", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
+		long nbentries = browser.count((service!=null && service.length()>0)?service:"", (type!=null && type.length()>0)?type:"", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
 		UriBuilder objects = DiffusionUriBuilder.getRestUriBuilder().path(ObjectResource.class);
 
 		GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String>();
@@ -359,6 +361,12 @@ public class ObjectResource {
 			if (object instanceof MetadataObject) {
 				builder.header("Content-Disposition", "attachment; filename=" + object.getObjectName());
 				builder.type(((MetadataObject) object).getContentType());
+				builder.lastModified(lmd);
+			}
+			if (object instanceof MetadataFormat) {
+				logger.log(Level.INFO, "metadata format object ");
+				builder.header("Content-Disposition", "attachment; filename=" + object.getObjectName());
+				builder.type(((MetadataFormat) object).getMimeType());
 				builder.lastModified(lmd);
 			}
 			if (object instanceof Collection) {

@@ -2202,7 +2202,7 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void createMetadataFormat(String name, String hash) throws CoreServiceException {
+	public void createMetadataFormat(String name, String description, String hash) throws CoreServiceException {
 		logger.log(Level.FINE, "creating metadataformat with name [" + name + "]");
 		String key = UUID.randomUUID().toString();
 		
@@ -2214,9 +2214,14 @@ public class CoreServiceBean implements CoreService {
 			MetadataFormat mf = new MetadataFormat();
 			mf.setId(UUID.randomUUID().toString());
 			mf.setName(name);
+			mf.setDescription(description);
 			if (hash != null && hash.length() > 0) {
+				mf.setSize(binarystore.size(hash));
+				mf.setMimeType(binarystore.type(hash));
 				mf.setSchema(hash);
 			} else {
+				mf.setSize(0);
+				mf.setMimeType("application/octet-stream");
 				mf.setSchema("");
 			}
 			mf.setKey(key);
@@ -2224,7 +2229,7 @@ public class CoreServiceBean implements CoreService {
 
 			registry.register(key, mf.getObjectIdentifier(), caller);
 		} catch (RegistryServiceException | KeyAlreadyExistsException
-				| IdentifierAlreadyRegisteredException e) {
+				| IdentifierAlreadyRegisteredException | BinaryStoreServiceException | DataNotFoundException e) {
 			ctx.setRollbackOnly();
 			logger.log(Level.SEVERE, "unexpected error occured during metadata format creation", e);
 			throw new CoreServiceException("unable to create metadata format with name : "+name, e);
@@ -2356,6 +2361,15 @@ public class CoreServiceBean implements CoreService {
 					throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
 				}
 				hash = object.getStream();
+			} else if (identifier.getType().equals(MetadataFormat.OBJECT_TYPE)) {
+
+				logger.log(Level.INFO, "metadata format object ");
+//				authorisation.checkPermission(key, subjects, "read");
+				MetadataFormat object = em.find(MetadataFormat.class, identifier.getId());
+				if (object == null) {
+					throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+				}
+				hash = object.getSchema();
 			} else {
 				throw new CoreServiceException("unable to find downloadable content for key [" + key + "]");
 			}

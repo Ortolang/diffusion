@@ -141,7 +141,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	public MetadataFormat readMetadataFormat(String key) throws CoreServiceException, KeyNotFoundException;
 	
-	public void createMetadataFormat(String name, String hash) throws CoreServiceException;
+	public void createMetadataFormat(String name, String description, String hash) throws CoreServiceException;
 
 	public List<String> findMetadataFormatByName(String name) throws CoreServiceException, KeyNotFoundException;
 	
