@@ -22,3 +22,4 @@ eb599ec83d383f0f25691c184f656d40384f9435  data/snapshots/3/Version 3/objects/a/o
 4ad279e6ec016823e1186210afa37ba37d9d236b  data/head/objects/b/cece/d/obcd1.txt
 6f70ce2a783986fe58c0cc370e0c7114c812e04d  data/head/objects/o2.txt
 3430ff48135a7e73c96b71b584ed6e644f4e4596  data/workspace.properties
+919dc6b6b51da56d40e2752aca336104e2b812c6  data/snapshots/2/Version 2/metadata/b/[permissions]security.json

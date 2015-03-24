@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "properties": {
+    "rules": {
+      "id": "http://jsonschema.net/rules",
+      "type": "array",
+      "items": {
+        "id": "http://jsonschema.net/rules/0",
+        "type": "object",
+        "properties": {
+          "subject": {
+            "id": "http://jsonschema.net/rules/0/subject",
+            "type": "string"
+          },
+          "permissions": {
+            "id": "http://jsonschema.net/rules/0/permissions",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "subject",
+          "permissions"
+        ]
+      },
+      "additionalItems": true
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "rules"
+  ]
+}
