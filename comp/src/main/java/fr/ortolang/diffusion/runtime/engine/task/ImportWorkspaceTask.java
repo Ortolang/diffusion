@@ -427,7 +427,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 				is.close();
 			}
 			String[] mdname = parseMetadataName(path);
-			getCoreService().createMetadataObject(wskey, mdname[2], mdname[0], mdname[1], sha1);
+			getCoreService().createMetadataObject(wskey, mdname[2], mdname[0], sha1);
 		} catch (IOException e) {
 			logger.log(Level.WARNING, "unable to close input stream", e);
 		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {

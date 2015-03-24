@@ -38,7 +38,6 @@ package fr.ortolang.diffusion.core;
 
 
 import fr.ortolang.diffusion.*;
-import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.*;
 
 import java.io.IOException;
@@ -1688,11 +1687,11 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createMetadataObject(String workspace, String path, String name, String format, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException,
+	public void createMetadataObject(String workspace, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException,
 			AccessDeniedException {
 		String key = UUID.randomUUID().toString();
 		try {
-			createMetadataObject(workspace, key, path, name, format, hash);
+			createMetadataObject(workspace, key, path, name, hash);
 		} catch ( KeyAlreadyExistsException e ) {
 			ctx.setRollbackOnly();
 			logger.log(Level.WARNING, "the generated key already exists : " + key);
@@ -1701,7 +1700,7 @@ public class CoreServiceBean implements CoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createMetadataObject(String workspace, String key, String path, String name, String format, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
+	public void createMetadataObject(String workspace, String key, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
 			AccessDeniedException {
 		logger.log(Level.FINE, "create metadataobject with key [" + key + "] into workspace [" + workspace + "] for path [" + path + "] with name [" + name + "]");
 		try {
@@ -1758,18 +1757,21 @@ public class CoreServiceBean implements CoreService {
 				meta.setContentType("application/octet-stream");
 				meta.setStream("");
 			}
-
-			List<String> keyMetadataFormat = findMetadataFormatByName(format);
-			if(keyMetadataFormat!=null && keyMetadataFormat.size()==1) {
-				if(!validateMetadata(meta, keyMetadataFormat.get(0))) {
-					throw new CoreServiceException("the metadata is not valid with metadata format ["+format+"].");
+				
+			String lastMetadataFormat = findLastMetadataFormatByName(name);
+			if(lastMetadataFormat!=null) {
+			
+				if(!validateMetadata(meta, lastMetadataFormat)) {
+					throw new CoreServiceException("the metadata is not valid with metadata format ["+name+"].");
 				}
+
+				meta.setFormat(lastMetadataFormat);
 			} else {
-				logger.log(Level.WARNING, "Metadata format unknown ["+format+"]");
+				logger.log(Level.SEVERE, "Metadata format unknown ["+name+"]");
+				throw new CoreServiceException("the metadata format is not found ["+name+"].");
 			}
 			
 			meta.setTarget(tkey);
-			meta.setFormat(format);
 			meta.setKey(key);
 			em.persist(meta);
 
@@ -2281,9 +2283,6 @@ public class CoreServiceBean implements CoreService {
 	public MetadataFormat readMetadataFormat(String key) throws CoreServiceException, KeyNotFoundException {
 		logger.log(Level.FINE, "reading metadata format for key [" + key + "]");
 		try {
-//			String caller = membership.getProfileKeyForConnectedIdentifier();
-//			List<String> subjects = membership.getConnectedIdentifierSubjects();
-//			authorisation.checkPermission(key, subjects, "read");
 
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, MetadataFormat.OBJECT_TYPE);
@@ -2294,7 +2293,6 @@ public class CoreServiceBean implements CoreService {
 			}
 			metaFormat.setKey(key);
 
-//			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "read"), "");
 			return metaFormat;
 		} catch (RegistryServiceException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during reading metadata", e);
@@ -2304,23 +2302,37 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void createMetadataFormat(String name, String description, String hash) throws CoreServiceException {
+	public void createMetadataFormat(String name, String description, String scheamHash, String formKey) throws CoreServiceException {
 		logger.log(Level.FINE, "creating metadataformat with name [" + name + "]");
 		String key = UUID.randomUUID().toString();
 		
+		List<String> mdf = findMetadataFormatByName(name);
+		MetadataFormat oldMF = null;
+		if(mdf!=null && mdf.size()>0) {
+			logger.log(Level.WARNING, "Creates new version of metadata format with name : "+name);
+			
+			try {
+				oldMF = readMetadataFormat(mdf.get(0));
+			} catch (KeyNotFoundException e) {
+				logger.log(Level.SEVERE, "unable to load precedent version of metadata format with name "+name, e);
+				throw new CoreServiceException("unable to load precedent version of metadata format with name "+name, e);
+			}
+		}
+		
 		try {
+			
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 		
-			// TODO si le nom du format de metadata existe ?
-			
 			MetadataFormat mf = new MetadataFormat();
 			mf.setId(UUID.randomUUID().toString());
 			mf.setName(name);
 			mf.setDescription(description);
-			if (hash != null && hash.length() > 0) {
-				mf.setSize(binarystore.size(hash));
-				mf.setMimeType(binarystore.type(hash));
-				mf.setSchema(hash);
+			mf.setForm(formKey);
+			mf.setSerialNumber((oldMF!=null)?oldMF.getSerialNumber()+1:1);
+			if (scheamHash != null && scheamHash.length() > 0) {
+				mf.setSize(binarystore.size(scheamHash));
+				mf.setMimeType(binarystore.type(scheamHash));
+				mf.setSchema(scheamHash);
 			} else {
 				mf.setSize(0);
 				mf.setMimeType("application/octet-stream");
@@ -2353,6 +2365,25 @@ public class CoreServiceBean implements CoreService {
 			notification.throwEvent("", caller, MetadataFormat.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataFormat.OBJECT_TYPE, "find"), "name="
 					+ name);
 			return results;
+		} catch (NotificationServiceException | RegistryServiceException | IdentifierNotRegisteredException e) {
+			logger.log(Level.SEVERE, "unexpected error occured during finding metadata format", e);
+			throw new CoreServiceException("unable to find metadata format by name [" + name + "]", e);
+		}
+	}
+
+	public String findLastMetadataFormatByName(String name) throws CoreServiceException {
+		logger.log(Level.FINE, "finding metadata format with name [" + name + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
+			TypedQuery<MetadataFormat> query = em.createNamedQuery("findLastMetadataFormatByName", MetadataFormat.class).setParameter("name", name);
+			List<MetadataFormat> mdfs = query.getResultList();
+			if (mdfs.size()>0) {
+				notification.throwEvent("", caller, MetadataFormat.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataFormat.OBJECT_TYPE, "find"), "name="
+						+ name);
+				return registry.lookup(mdfs.get(0).getObjectIdentifier());
+			}
+			return null;
 		} catch (NotificationServiceException | RegistryServiceException | IdentifierNotRegisteredException e) {
 			logger.log(Level.SEVERE, "unexpected error occured during finding metadata format", e);
 			throw new CoreServiceException("unable to find metadata format by name [" + name + "]", e);

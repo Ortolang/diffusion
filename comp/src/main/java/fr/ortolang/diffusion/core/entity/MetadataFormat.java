@@ -15,7 +15,8 @@ import fr.ortolang.diffusion.core.CoreService;
 @Entity
 @NamedQueries({
 	@NamedQuery(name="listMetadataFormat", query="select f from MetadataFormat f"),
-	@NamedQuery(name="findMetadataFormatByName", query="select f from MetadataFormat f where f.name = :name")
+	@NamedQuery(name="findMetadataFormatByName", query="select f from MetadataFormat f where f.name = :name"),
+	@NamedQuery(name="findLastMetadataFormatByName", query="select f from MetadataFormat f where f.name = :name order by f.serialNumber desc")
 })
 @SuppressWarnings("serial")
 public class MetadataFormat extends OrtolangObject {
@@ -33,6 +34,8 @@ public class MetadataFormat extends OrtolangObject {
 	private long size;
 	private String mimeType;
 	private String schema;
+	private String form;
+	private int serialNumber; 
 	
 	public String getId() {
 		return id;
@@ -96,6 +99,22 @@ public class MetadataFormat extends OrtolangObject {
 
 	public void setSchema(String schema) {
 		this.schema = schema;
+	}
+
+	public String getForm() {
+		return form;
+	}
+
+	public void setForm(String form) {
+		this.form = form;
+	}
+
+	public int getSerialNumber() {
+		return serialNumber;
+	}
+
+	public void setSerialNumber(int serialNumber) {
+		this.serialNumber = serialNumber;
 	}
 
 	@Override

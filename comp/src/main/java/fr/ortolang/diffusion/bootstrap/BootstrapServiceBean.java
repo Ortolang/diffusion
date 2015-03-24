@@ -168,16 +168,20 @@ public class BootstrapServiceBean implements BootstrapService {
 				InputStream is2 = getClass().getClassLoader().getResourceAsStream("forms/test-process-confirm-form.json");
 				String jsonDefinition2 = IOUtils.toString(is2);
 				form.createForm("test-process-confirm-form", "Test Process Confirm Form", jsonDefinition2);
-
+				logger.log(Level.FINE, "import form : test-process-confirm-form");
+				InputStream isFormItem = getClass().getClassLoader().getResourceAsStream("forms/ortolang-item-form.json");
+				String jsonDefinitionItem = IOUtils.toString(isFormItem);
+				form.createForm("ortolang-item-form", "Schema Form for an ORTOLANG item", jsonDefinitionItem);
+				
 				logger.log(Level.FINE, "import schemas");
 				logger.log(Level.FINE, "import schema : ortolang-item");
 				InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
 				String schemaHash = core.put(schemaInputStream);
-				core.createMetadataFormat("ortolang-item-json", "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schemaHash);
+				core.createMetadataFormat("ortolang-item-json", "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schemaHash, "ortolang-item-form");
 				logger.log(Level.FINE, "import schema : ortolang-permissions");
 				InputStream schemaInputStream2 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-permissions-schema.json");
 				String schemaHash2 = core.put(schemaInputStream2);
-				core.createMetadataFormat("ortolang-permissions-json", "Les métadonnées de permissions permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2);
+				core.createMetadataFormat("ortolang-permissions-json", "Les métadonnées de permissions permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, null);
 				
 				logger.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException
