@@ -37,10 +37,6 @@ package fr.ortolang.diffusion.core;
  */
 
 
-import fr.ortolang.diffusion.*;
-import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.*;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -77,11 +73,35 @@ import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 
+import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangIndexableJsonContent;
+import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
+import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.CollectionElement;
+import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.Link;
+import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
+import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.registry.*;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyLockedException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
@@ -193,7 +213,7 @@ public class CoreServiceBean implements CoreService {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkAuthentified(subjects);
-
+			
 			String members = UUID.randomUUID().toString();
 			membership.createGroup(members, name + "'s Members", "Members of a workspace have all permissions on workspace content");
 			membership.addMemberInGroup(members, caller);
@@ -544,7 +564,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to resolve into workspace [" + wskey + "] metadata name [" + name + "] at [" + path + "]", e);
 		}
 	}
-
+	
 	/* Collections */
 	
 	@Override
@@ -2367,16 +2387,11 @@ public class CoreServiceBean implements CoreService {
 			
 			if (metaFormat.getSchema() != null && metaFormat.getSchema().length() > 0) {
 				JsonNode jsonSchema = JsonLoader.fromReader(new InputStreamReader(binarystore.get(metaFormat.getSchema())));
-
 				JsonNode jsonFile = JsonLoader.fromReader(new InputStreamReader(binarystore.get(metadata.getStream())));
-
 		        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-
 		        JsonSchema schema = factory.getJsonSchema(jsonSchema);
-
-		        ProcessingReport report;
-
-		        report = schema.validate(jsonFile);
+		        
+		        ProcessingReport report = schema.validate(jsonFile);
 		        logger.log(Level.INFO, report.toString());
 		        
 				return report.isSuccess();

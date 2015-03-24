@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.security.authentication;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.*;
+
 import java.io.*;
 import java.security.DigestException;
 import java.security.InvalidKeyException;
@@ -117,7 +118,8 @@ public class TicketHelper {
         return null;
     }
 
-    public static class Ticket implements Serializable {
+    @SuppressWarnings("serial")
+	public static class Ticket implements Serializable {
 
         private String username;
         private String hash;

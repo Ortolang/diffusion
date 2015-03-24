@@ -172,7 +172,7 @@ public class WorkspaceResource {
 		CacheControl cc = new CacheControl();
 		cc.setPrivate(true);
 		if ( state.isLocked() ) {
-			cc.setMaxAge(31536000);
+			cc.setMaxAge(691200);
 			cc.setMustRevalidate(false);
 		} else {
 			cc.setMaxAge(0);
@@ -226,7 +226,7 @@ public class WorkspaceResource {
 		CacheControl cc = new CacheControl();
 		cc.setPrivate(true);
 		if ( state.isLocked() ) {
-			cc.setMaxAge(31536000);
+			cc.setMaxAge(691200);
 			cc.setMustRevalidate(false);
 		} else {
 			cc.setMaxAge(0);

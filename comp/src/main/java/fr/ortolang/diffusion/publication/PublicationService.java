@@ -36,8 +36,10 @@ package fr.ortolang.diffusion.publication;
  * #L%
  */
 
+import java.util.List;
+import java.util.Map;
+
 import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.publication.type.PublicationType;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface PublicationService extends OrtolangService {
@@ -45,8 +47,10 @@ public interface PublicationService extends OrtolangService {
 	public static final String SERVICE_NAME = "publication";
 	public static final String[] OBJECT_TYPE_LIST = new String[] { };
 	
-	public void publish(String key, PublicationType type) throws PublicationServiceException, AccessDeniedException;
+	public void publish(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException;
 	
 	public void review(String key) throws PublicationServiceException, AccessDeniedException;
+	
+	public Map<String, Map<String, List<String>>> buildPublicationMap(String root) throws PublicationServiceException, AccessDeniedException;
 	
 }

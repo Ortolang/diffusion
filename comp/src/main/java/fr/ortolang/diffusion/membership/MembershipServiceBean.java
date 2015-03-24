@@ -173,6 +173,7 @@ public class MembershipServiceBean implements MembershipService {
 			subjects.add(caller);
 			if ( profile.getStatus().equals(ProfileStatus.ACTIVE) ) {
 				if ( !caller.equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
+					subjects.add(MembershipService.UNAUTHENTIFIED_IDENTIFIER);
 					subjects.add(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY);
 				}
 				subjects.addAll(Arrays.asList(groups));

@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.publication.type;
+package fr.ortolang.diffusion.security.policies;
 
 /*
  * #%L
@@ -43,7 +43,7 @@ import java.util.Map;
 
 import fr.ortolang.diffusion.membership.MembershipService;
 
-public class FreeForAll extends PublicationType {
+public class DefaultSecurityPolicy extends PredefinedSecurityPolicy {
 
 	public static final String NAME = "free";
 	public static final String DESCRIPTION = "read & download permission for all users";
@@ -59,7 +59,7 @@ public class FreeForAll extends PublicationType {
 	}
 
 	@Override
-	public Map<String, List<String>> getSecurityRules() {
+	public Map<String, List<String>> getRules(Map<String, String> params) {
 		Map<String, List<String>> rules = new HashMap<String, List<String>>();
 		rules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read", "download"));
 		return rules;

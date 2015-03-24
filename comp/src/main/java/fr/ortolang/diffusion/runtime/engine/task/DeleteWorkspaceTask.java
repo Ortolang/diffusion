@@ -11,6 +11,7 @@ import org.activiti.engine.delegate.DelegateExecution;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
+import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
@@ -40,7 +41,7 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 				logger.log(Level.FINE, "Reading workspace");
 				Workspace workspace = getCoreService().readWorkspace(wskey);
 				if ( workspace.getType().equals(WorkspaceType.SYSTEM.toString())) {
-					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace is a SYSTEM workspace and it si forbidden to delete it"));
+					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace is a SYSTEM workspace and it is forbidden to delete it"));
 					throw new RuntimeEngineTaskException("deleting a system workspace is forbidden");
 				}
 				logger.log(Level.FINE, "Listing workspace keys");
@@ -48,10 +49,10 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace content retreived"));
 				for ( String key : keys ) {
 					logger.log(Level.FINE, "Deleting content key: " + key);
-					getRegistryService().systemDelete(key);
+					getRegistryService().delete(key, true);
 				}
 				getCoreService().deleteWorkspace(wskey);
-			} catch (KeyNotFoundException | AccessDeniedException | CoreServiceException | RegistryServiceException e) {
+			} catch (KeyNotFoundException | AccessDeniedException | CoreServiceException | RegistryServiceException | KeyLockedException e) {
 				getUserTransaction().rollback();
 				throw new RuntimeEngineTaskException("unexpected error during delete workspace task", e);
 			} 

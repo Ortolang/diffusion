@@ -36,7 +36,10 @@ package fr.ortolang.diffusion.publication;
  * #L%
  */
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,12 +59,17 @@ import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.CollectionElement;
+import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.publication.type.PublicationType;
 import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -69,6 +77,10 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import fr.ortolang.diffusion.security.policies.DefaultSecurityPolicy;
+import fr.ortolang.diffusion.store.binary.BinaryStoreService;
+import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
+import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 @Local(PublicationService.class)
 @Stateless(name = PublicationService.SERVICE_NAME)
@@ -77,11 +89,15 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 public class PublicationServiceBean implements PublicationService {
 
 	private Logger logger = Logger.getLogger(PublicationServiceBean.class.getName());
-	
+
 	@EJB
 	private RegistryService registry;
 	@EJB
 	private MembershipService membership;
+	@EJB
+	private CoreService core;
+	@EJB
+	private BinaryStoreService binaryStore;
 	@EJB
 	private AuthorisationService authorisation;
 	@EJB
@@ -90,10 +106,10 @@ public class PublicationServiceBean implements PublicationService {
 	private NotificationService notification;
 	@Resource
 	private SessionContext ctx;
-	
+
 	public PublicationServiceBean() {
 	}
-	
+
 	public RegistryService getRegistryService() {
 		return registry;
 	}
@@ -122,8 +138,24 @@ public class PublicationServiceBean implements PublicationService {
 		return membership;
 	}
 
+	public BinaryStoreService getBinaryStore() {
+		return binaryStore;
+	}
+
+	public void setBinaryStore(BinaryStoreService binaryStore) {
+		this.binaryStore = binaryStore;
+	}
+
 	public void setMembershipService(MembershipService membership) {
 		this.membership = membership;
+	}
+
+	public CoreService getCoreService() {
+		return core;
+	}
+
+	public void setCoreService(CoreService core) {
+		this.core = core;
 	}
 
 	public AuthorisationService getAuthorisationService() {
@@ -133,7 +165,7 @@ public class PublicationServiceBean implements PublicationService {
 	public void setAuthorisationService(AuthorisationService authorisation) {
 		this.authorisation = authorisation;
 	}
-	
+
 	public void setSessionContext(SessionContext ctx) {
 		this.ctx = ctx;
 	}
@@ -144,26 +176,27 @@ public class PublicationServiceBean implements PublicationService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void publish(String key, PublicationType type) throws PublicationServiceException, AccessDeniedException {
+	public void publish(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException {
 		logger.log(Level.FINE, "publishing key : " + key);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) ) {
+			if (!caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY)) {
 				throw new AccessDeniedException("user " + caller + " is not allowed to publish, only moderators can publish content");
 			}
-			
-			if ( registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
+
+			if (registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.PUBLISHED.value())) {
 				logger.log(Level.WARNING, "key [" + key + "] is already published, nothing to do !!");
 			} else {
 				authorisation.updatePolicyOwner(key, MembershipService.SUPERUSER_IDENTIFIER);
-				authorisation.setPolicyRules(key, type.getSecurityRules());
+				authorisation.setPolicyRules(key, permissions);
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
 				registry.update(key);
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
+				// TODO reindex key;
 				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "publish"), "");
 			}
-		} catch (KeyLockedException | AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException e ) {
+		} catch (KeyLockedException | AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException e) {
 			logger.log(Level.SEVERE, "error during publication of key", e);
 			ctx.setRollbackOnly();
 			throw new PublicationServiceException("error during publishing key : " + e);
@@ -177,24 +210,53 @@ public class PublicationServiceBean implements PublicationService {
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			
-			if ( registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
+
+			if (registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.PUBLISHED.value())) {
 				logger.log(Level.WARNING, "key [" + key + "] is already published, nothing to do !!");
-			} else if ( registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.REVIEW.value()) ) {
+			} else if (registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.REVIEW.value())) {
 				logger.log(Level.WARNING, "key [" + key + "] is already in review, nothing to do !!");
 			} else {
 				authorisation.checkOwnership(key, subjects);
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.REVIEW.value());
 				registry.update(key);
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
+				// TODO reindex key;
 				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "review"), "");
 			}
-		} catch (KeyLockedException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException e ) {
+		} catch (KeyLockedException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new PublicationServiceException("error during submitting key for review : " + e);
 		}
 	}
-	
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public Map<String, Map<String, List<String>>> buildPublicationMap(String root) throws PublicationServiceException, AccessDeniedException {
+		try {
+			Map<String, Map<String, List<String>>> map = new HashMap<String, Map<String, List<String>>>();
+			builtPublicationMap(root, map, DefaultSecurityPolicy.getDefaultRules());
+			return map;
+		} catch (OrtolangException | KeyNotFoundException | CoreServiceException | BinaryStoreServiceException | DataNotFoundException e) {
+			throw new PublicationServiceException("unexpected error while trying to built publication map", e);
+		}
+	}
+
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private void builtPublicationMap(String root, Map<String, Map<String, List<String>>> map, Map<String, List<String>> current) throws OrtolangException, KeyNotFoundException, AccessDeniedException, CoreServiceException, BinaryStoreServiceException, DataNotFoundException {
+		OrtolangObject object = getCoreService().findObject(root);
+		
+		Set<MetadataElement> mde = ((MetadataSource) object).getMetadatas();
+		for (MetadataElement element : mde) {
+			map.put(element.getKey(), current);
+		}
+		map.put(root, current);
+		if (object instanceof Collection) {
+			for (CollectionElement element : ((Collection) object).getElements()) {
+				builtPublicationMap(element.getKey(), map, current);
+			}
+		}
+	}
+
 	@Override
 	public String getServiceName() {
 		return PublicationService.SERVICE_NAME;
@@ -215,9 +277,9 @@ public class PublicationServiceBean implements PublicationService {
 		throw new OrtolangException("This service does not manage any object");
 	}
 
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("This service does not manage any object");
-    }
+	@Override
+	public OrtolangObjectSize getSize(String key) throws OrtolangException {
+		throw new OrtolangException("This service does not manage any object");
+	}
 
 }

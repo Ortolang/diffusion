@@ -1,7 +1,10 @@
 package fr.ortolang.diffusion.runtime.engine.task;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +36,7 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
+import fr.ortolang.diffusion.template.TemplateEngine;
 import gov.loc.repository.bagit.Bag;
 import gov.loc.repository.bagit.BagFactory;
 import gov.loc.repository.bagit.BagFile;
@@ -67,6 +71,10 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 		String wskey = createWorkspace(bag);
 		logger.log(Level.INFO, "  - workspace created: " + wskey);
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace created with key: " + wskey));
+		
+		logger.log(Level.FINE, "- build global params");
+		Map<String, Object> globalparams = new HashMap<String, Object> ();
+		loadWorkspaceParams(wskey, globalparams);
 
 		logger.log(Level.FINE, "- list versions");
 		List<String> versions = listVersions(bag);
@@ -152,11 +160,12 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			metadataToDelete.removeAll(metadataToUpdate);
 			previousMetadata = metadata;
 			int mdcreated = 0;
+			
 			for (String md : metadataToCreate) {
 				String filepath = DATA_PREFIX + version + "/metadata" + md;
 				try {
 					logger.log(Level.FINE, "  - create metadata: " + filepath);
-					createMetadata(wskey, bag.getBagFile(filepath), bag.getChecksums(filepath).get(Algorithm.SHA1), md);
+					createMetadata(wskey, bag.getBagFile(filepath), md, globalparams);
 					mdcreated++;
 				} catch ( InvalidPathException e ) {
 					logger.log(Level.SEVERE, "  - METADATA CREATE ERROR: " + filepath);
@@ -180,7 +189,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 				if ( !skipupdate ) {
 					try {
 						logger.log(Level.INFO, "  - update metadata: " + filepath);
-						updateMetadata(wskey, bag.getBagFile(filepath), md);
+						updateMetadata(wskey, bag.getBagFile(filepath), md, globalparams);
 						mdupdated++;
 					} catch ( InvalidPathException e ) {
 						logger.log(Level.SEVERE, "  - METADATA UPDATE ERROR: " + filepath);
@@ -209,11 +218,6 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 				//logger.log(Level.FINE, "- publish version " + version);
 				//publishVersion(root);
 			}
-			
-			//TODO  pid
-			
-			//TODO  publication
-			
 			
 			previousVersion = version;
 			previousObjects = objects;
@@ -268,6 +272,17 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			throw new RuntimeEngineTaskException("unable to create workspace", e2);
 		}
 		return wskey;
+	}
+	
+	private void loadWorkspaceParams(String wskey, Map<String, Object> params) throws RuntimeEngineTaskException {
+		try {
+			Workspace ws = getCoreService().readWorkspace(wskey);
+			params.put("workspace.key", wskey);
+			params.put("workspace.members", ws.getMembers());
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, "unable to read workspace", e);
+			throw new RuntimeEngineTaskException("unable to read workspace", e);
+		}
 	}
 
 	private List<String> listVersions(Bag bag) {
@@ -412,33 +427,35 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			mdname[0] = path.substring(lastPathIndex + 1);
 			mdname[2] = path.substring(0, lastPathIndex);
 		}
-		if (path.indexOf("[") == 0 && path.indexOf("]") >= 0) {
-			mdname[1] = path.substring(1, path.indexOf("]")).trim();
-			mdname[0] = path.substring(path.indexOf("]") + 1).trim();
+		if (mdname[0].indexOf("[") == 0 && mdname[0].indexOf("]") >= 0) {
+			mdname[1] = mdname[0].substring(1, mdname[0].indexOf("]")).trim();
+			mdname[0] = mdname[0].substring(mdname[0].indexOf("]") + 1).trim();
 		}
 		return mdname;
 	}
 
-	private void createMetadata(String wskey, BagFile file, String sha1, String path) throws InvalidPathException, RuntimeEngineTaskException {
+	private void createMetadata(String wskey, BagFile file, String path, Map<String, Object> params) throws InvalidPathException, RuntimeEngineTaskException {
 		try {
-			if ( sha1 == null || (sha1 != null && !getBinaryStore().contains(sha1)) ) {
-				InputStream is = file.newInputStream();
-				sha1 = getCoreService().put(is);
-				is.close();
-			}
+			InputStream is = file.newInputStream();
+			StringWriter writer = new StringWriter();
+			TemplateEngine.evaluate(params, writer, "import-metadata", new InputStreamReader(is));
+			String sha1 = getCoreService().put(new ByteArrayInputStream(writer.toString().getBytes()));
+			is.close();
 			String[] mdname = parseMetadataName(path);
 			getCoreService().createMetadataObject(wskey, mdname[2], mdname[0], mdname[1], sha1);
 		} catch (IOException e) {
 			logger.log(Level.WARNING, "unable to close input stream", e);
-		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error creating metadata for path [" + path + "]", e);
 		} 
 	}
 	
-	private void updateMetadata(String wskey, BagFile file, String path) throws InvalidPathException, RuntimeEngineTaskException {
+	private void updateMetadata(String wskey, BagFile file, String path, Map<String, Object> params) throws InvalidPathException, RuntimeEngineTaskException {
 		try {
 			InputStream is = file.newInputStream();
-			String sha1 = getCoreService().put(is);
+			StringWriter writer = new StringWriter();
+			TemplateEngine.evaluate(params, writer, "import-metadata", new InputStreamReader(is));
+			String sha1 = getCoreService().put(new ByteArrayInputStream(writer.toString().getBytes()));
 			is.close();
 			String[] mdname = parseMetadataName(path);
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, mdname[2]);

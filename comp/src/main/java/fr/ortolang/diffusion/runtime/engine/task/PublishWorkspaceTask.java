@@ -36,24 +36,15 @@ package fr.ortolang.diffusion.runtime.engine.task;
  * #L%
  */
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.logging.Logger;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.jboss.logmanager.Level;
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.CollectionElement;
-import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.core.entity.MetadataSource;
-import fr.ortolang.diffusion.publication.type.FreeForAll;
-import fr.ortolang.diffusion.publication.type.PublicationType;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.publication.PublicationServiceException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
@@ -76,17 +67,21 @@ public class PublishWorkspaceTask extends RuntimeEngineTask {
 		String root = execution.getVariable(ROOT_COLLECTION_PARAM_NAME, String.class);
 		
 		logger.log(Level.INFO, "Building publication map...");
-		Map<String, PublicationType> map = new HashMap<String, PublicationType>();
-		builtPublicationMap(root, map, new FreeForAll());
+		Map<String, Map<String, List<String>>> map;
+		try {
+			map = getPublicationService().buildPublicationMap(root);
+		} catch (PublicationServiceException | AccessDeniedException e) {
+			throw new RuntimeEngineTaskException("unexpected error while trying to built the publication map", e);
+		}
 		logger.log(Level.INFO, "publication map built containing " + map.size() + " keys");
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "PublicationMap built, containing " + map.size() + " elements"));
 
 		StringBuffer report = new StringBuffer();
 		logger.log(Level.INFO, "starting publication");
-		for (Entry<String, PublicationType> entry : map.entrySet()) {
+		for (Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
 			try {
 				getPublicationService().publish(entry.getKey(), entry.getValue());
-				report.append("key [").append(entry.getKey()).append("] published successfully with publication type [").append(entry.getValue().getName()).append("]\r\n");
+				report.append("key [").append(entry.getKey()).append("] published successfully\r\n");
 			} catch (Exception e) {
 				logger.log(Level.INFO, "key [" + entry.getKey() + "] failed to publish: " + e.getMessage());
 				report.append("key [").append(entry.getKey()).append("] failed to publish: ").append(e.getMessage()).append("\r\n");
@@ -101,24 +96,4 @@ public class PublishWorkspaceTask extends RuntimeEngineTask {
 		return NAME;
 	}
 
-	private void builtPublicationMap(String key, Map<String, PublicationType> map, PublicationType current) throws RuntimeEngineTaskException {
-		try {
-			OrtolangObject object = getCoreService().findObject(key);
-			map.put(key, current);
-			
-			Set<MetadataElement> mde = ((MetadataSource)object).getMetadatas();
-			for ( MetadataElement element : mde) {
-				map.put(element.getKey(), current);
-			}
-			
-			if (object instanceof Collection) {
-				
-				for (CollectionElement element : ((Collection)object).getElements()) {
-					builtPublicationMap(element.getKey(), map, current);
-				}
-			}
-		} catch (KeyNotFoundException | AccessDeniedException | OrtolangException e) {
-			throw new RuntimeEngineTaskException("unexpected error while trying to load core object for key : " + key, e);
-		}
-	}
 }

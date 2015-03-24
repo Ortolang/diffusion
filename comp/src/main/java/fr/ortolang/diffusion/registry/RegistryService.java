@@ -83,7 +83,7 @@ public interface RegistryService {
 	
 	public void delete(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	
-	public void systemDelete(String key) throws RegistryServiceException, KeyNotFoundException;
+	public void delete(String key, boolean force) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	
 	public void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	

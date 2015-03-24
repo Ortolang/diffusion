@@ -368,25 +368,16 @@ public class RegistryServiceBean implements RegistryService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void systemDelete(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "SYSTEM deleting key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		try {
-			entry.setDeleted(true);
-			em.merge(entry);
-		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
-			ctx.setRollbackOnly();
-			throw new RegistryServiceException(e);
-		}
+	public void delete(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
+		delete(key, false);
 	}
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void delete(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
+	public void delete(String key, boolean force) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
 		logger.log(Level.FINE, "deleting key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
-		if ( entry.isLocked() ) {
+		if ( !force && entry.isLocked() ) {
 			throw new KeyLockedException("Key [" + key + "] is locked and cannot be deleted");
 		}
 		try {
