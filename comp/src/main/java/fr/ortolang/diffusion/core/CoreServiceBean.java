@@ -2462,7 +2462,9 @@ public class CoreServiceBean implements CoreService {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 
+			logger.log(Level.INFO, "searching key "+key);
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			logger.log(Level.INFO, "found key "+key);
 			String hash;
 			if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
 				authorisation.checkPermission(key, subjects, "download");
@@ -2554,6 +2556,10 @@ public class CoreServiceBean implements CoreService {
 
 			if (identifier.getType().equals(MetadataObject.OBJECT_TYPE)) {
 				return readMetadataObject(key);
+			}
+
+			if (identifier.getType().equals(MetadataFormat.OBJECT_TYPE)) {
+				return readMetadataFormat(key);
 			}
 
 			throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
