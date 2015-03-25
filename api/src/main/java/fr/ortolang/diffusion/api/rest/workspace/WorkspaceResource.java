@@ -407,7 +407,7 @@ public class WorkspaceResource {
 						core.updateMetadataObject(wskey, npath.build(), name, form.getFormat(), form.getStreamHash());
 						return Response.ok().build();
 					} else {
-						core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash());
+						core.createMetadataObject(wskey, npath.build(), name, form.getFormat(), form.getStreamHash());
 						URI newly = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build())
 								.queryParam("metadataname", name).build();
 						return Response.created(newly).build();

@@ -128,10 +128,12 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	public Link readLink(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	/*MetadataObject*/
-	
+
 	public void createMetadataObject(String wskey, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
+
+	public void createMetadataObject(String wskey, String path, String name, String formatKey, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
 	
-	public void createMetadataObject(String wskey, String key, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException;
+	public void createMetadataObject(String wskey, String key, String path, String name, String formatKey, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException;
 	
 	public List<String> findMetadataObjectsForTarget(String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
@@ -151,7 +153,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
 	public List<String> findMetadataFormatByName(String name) throws CoreServiceException, KeyNotFoundException;
 	
-	public boolean validateMetadata(MetadataObject metadata, String metadataFormat) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	public boolean validateMetadata(MetadataObject metadata, MetadataFormat metaFormat) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	/*BinaryContent*/
 	
