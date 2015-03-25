@@ -1,6 +1,0 @@
-{
-	"rules":[
-		{"subject":"anonymous", permissions="read"},
-		{"subject":"${workspace.members}", permissions="read,download"}
-	]
-}

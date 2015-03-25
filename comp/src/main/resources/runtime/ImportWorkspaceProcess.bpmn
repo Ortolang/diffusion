@@ -2,19 +2,19 @@
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
   <process id="import-workspace" name="Import Workspace Process" isExecutable="true">
     <startEvent id="start" name="Start"></startEvent>
-    <sequenceFlow id="flow1" sourceRef="start" targetRef="import-workspace-task"></sequenceFlow>
-    <serviceTask id="import-workspace-task" name="Import Workspace Task" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportWorkspaceTask">
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="load-bag"></sequenceFlow>
+    <serviceTask id="load-bag" name="Load Bag Content Task" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LoadBagContentTask">
       <documentation>Check the bag content according to md5 provided in the bag avoiding transfert data coruption.</documentation>
     </serviceTask>
     <endEvent id="end" name="End"></endEvent>
-    <sequenceFlow id="flow2" sourceRef="import-workspace-task" targetRef="end"></sequenceFlow>
+    <sequenceFlow id="flow2" sourceRef="load-bag" targetRef="end"></sequenceFlow>
   </process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_import-workspace">
     <bpmndi:BPMNPlane bpmnElement="import-workspace" id="BPMNPlane_import-workspace">
       <bpmndi:BPMNShape bpmnElement="start" id="BPMNShape_start">
         <omgdc:Bounds height="35.0" width="35.0" x="164.0" y="57.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="import-workspace-task" id="BPMNShape_import-workspace-task">
+      <bpmndi:BPMNShape bpmnElement="load-bag" id="BPMNShape_load-bag">
         <omgdc:Bounds height="55.0" width="133.0" x="278.0" y="47.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="end" id="BPMNShape_end">

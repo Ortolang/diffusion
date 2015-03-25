@@ -50,13 +50,13 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
-public class PublishWorkspaceTask extends RuntimeEngineTask {
+public class PublishSnapshotTask extends RuntimeEngineTask {
 
 	public static final String NAME = "Publish Workspace";
 	
-	private static final Logger logger = Logger.getLogger(PublishWorkspaceTask.class.getName());
+	private static final Logger logger = Logger.getLogger(PublishSnapshotTask.class.getName());
 
-	public PublishWorkspaceTask() {
+	public PublishSnapshotTask() {
 	}
 
 	@Override
