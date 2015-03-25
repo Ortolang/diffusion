@@ -1710,9 +1710,19 @@ public class CoreServiceBean implements CoreService {
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createMetadataObject(String workspace, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException,
 			AccessDeniedException {
+		
+		String lastMetadataFormat = findLastMetadataFormatByName(name);
+		createMetadataObject(workspace, path, name, lastMetadataFormat, hash);
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void createMetadataObject(String workspace, String path, String name, String formatKey, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException,
+			AccessDeniedException {
 		String key = UUID.randomUUID().toString();
+		
 		try {
-			createMetadataObject(workspace, key, path, name, hash);
+			createMetadataObject(workspace, key, path, name, formatKey, hash);
 		} catch ( KeyAlreadyExistsException e ) {
 			ctx.setRollbackOnly();
 			logger.log(Level.WARNING, "the generated key already exists : " + key);
@@ -1721,7 +1731,7 @@ public class CoreServiceBean implements CoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createMetadataObject(String workspace, String key, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
+	public void createMetadataObject(String workspace, String key, String path, String name, String formatKey, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
 			AccessDeniedException {
 		logger.log(Level.FINE, "create metadataobject with key [" + key + "] into workspace [" + workspace + "] for path [" + path + "] with name [" + name + "]");
 		try {
@@ -1778,15 +1788,17 @@ public class CoreServiceBean implements CoreService {
 				meta.setContentType("application/octet-stream");
 				meta.setStream("");
 			}
-				
-			String lastMetadataFormat = findLastMetadataFormatByName(name);
-			if(lastMetadataFormat!=null) {
 			
-				if(!validateMetadata(meta, lastMetadataFormat)) {
+			if(formatKey!=null) {
+				MetadataFormat metaFormat = readMetadataFormat(formatKey);
+				if(metaFormat==null) {
+					logger.log(Level.SEVERE, "Unable to load Metadata format with key ["+formatKey+"]");
+					throw new CoreServiceException("Unable to load Metadata format with key ["+formatKey+"].");
+				}
+				if(!validateMetadata(meta, metaFormat)) {
 					throw new CoreServiceException("the metadata is not valid with metadata format ["+name+"].");
 				}
-
-				meta.setFormat(lastMetadataFormat);
+				meta.setFormat(formatKey);
 			} else {
 				logger.log(Level.SEVERE, "Metadata format unknown ["+name+"]");
 				throw new CoreServiceException("the metadata format is not found ["+name+"].");
@@ -2413,9 +2425,9 @@ public class CoreServiceBean implements CoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public boolean validateMetadata(MetadataObject metadata, String metadataFormat) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	public boolean validateMetadata(MetadataObject metadata, MetadataFormat metaFormat) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		try {
-			MetadataFormat metaFormat = readMetadataFormat(metadataFormat);
+//			MetadataFormat metaFormat = readMetadataFormat(metadataFormat);
 			
 			if (metaFormat.getSchema() != null && metaFormat.getSchema().length() > 0) {
 				JsonNode jsonSchema = JsonLoader.fromReader(new InputStreamReader(binarystore.get(metaFormat.getSchema())));
@@ -2428,13 +2440,13 @@ public class CoreServiceBean implements CoreService {
 		        
 				return report.isSuccess();
 			} else {
-				logger.log(Level.SEVERE, "unexpected error occured during validating metadata ["+metadata+"] with metadata format ["+metadataFormat+"] : schema not found");
-				throw new CoreServiceException("unable to validate metadata ["+metadata+"] with metadata format ["+metadataFormat+"] : schema not found");
+				logger.log(Level.SEVERE, "unexpected error occured during validating metadata ["+metadata+"] with metadata format ["+metaFormat+"] : schema not found");
+				throw new CoreServiceException("unable to validate metadata ["+metadata+"] with metadata format ["+metaFormat+"] : schema not found");
 			}
 			
 		} catch (IOException | ProcessingException | DataNotFoundException | BinaryStoreServiceException e) {
-			logger.log(Level.SEVERE, "unexpected error occured during validating metadata ["+metadata+"] with metadata format ["+metadataFormat+"]", e);
-			throw new CoreServiceException("unable to validate metadata ["+metadata+"] with metadata format ["+metadataFormat+"]", e);
+			logger.log(Level.SEVERE, "unexpected error occured during validating metadata ["+metadata+"] with metadata format ["+metaFormat+"]", e);
+			throw new CoreServiceException("unable to validate metadata ["+metadata+"] with metadata format ["+metaFormat+"]", e);
 		}
 	}
 	
