@@ -2313,7 +2313,7 @@ public class CoreServiceBean implements CoreService {
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createMetadataFormat(String name, String description, String scheamHash, String formKey) throws CoreServiceException {
 		logger.log(Level.FINE, "creating metadataformat with name [" + name + "]");
 		String key = UUID.randomUUID().toString();
@@ -2361,7 +2361,9 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to create metadata format with name : "+name, e);
 		}
 	}
-	
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> findMetadataFormatByName(String name) throws CoreServiceException {
 		logger.log(Level.FINE, "finding metadata format with name [" + name + "]");
 		try {
@@ -2383,6 +2385,7 @@ public class CoreServiceBean implements CoreService {
 		}
 	}
 
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String findLastMetadataFormatByName(String name) throws CoreServiceException {
 		logger.log(Level.FINE, "finding metadata format with name [" + name + "]");
 		try {

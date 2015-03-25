@@ -41,6 +41,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -68,6 +69,7 @@ import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -78,6 +80,7 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.binary.DataCollisionException;
 
 @RunWith(Arquillian.class)
 public class CoreServiceTest {
@@ -124,6 +127,7 @@ public class CoreServiceTest {
 		jar.addAsResource("ontology/lexvo-ontology.xml");
 		jar.addAsResource("ontology/lexvo_2013-02-09.rdf");
 		jar.addAsResource("ontology/rdfs.xml");
+		jar.addAsResource("schema/ortolang-item-schema.json");
 		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
 		logger.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
 
@@ -537,6 +541,44 @@ public class CoreServiceTest {
 
 			assertEquals(expectedSize, col.getElements().size());
 
+		} finally {
+			loginContext.logout();
+		}
+	}
+
+	@Test
+	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException {
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+		loginContext.login();
+		try {
+			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			try {
+				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+			} catch (ProfileAlreadyExistsException e) {
+				logger.log(Level.INFO, "Profile user1 already exists !!");
+			}
+
+			String wsk = UUID.randomUUID().toString();
+			core.createWorkspace(wsk, "WorkspaceCollection", "test");
+
+			InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
+			String schemaHash = core.put(schemaInputStream);
+			core.createMetadataFormat("ortolang-item-json", "ORTOLANG Item", schemaHash, null);
+			
+			List<MetadataFormat> mfs = core.listMetadataFormat();
+			assertEquals(1, mfs.size());
+			
+			String key = mfs.get(0).getKey();
+			MetadataFormat mf = core.readMetadataFormat(key);
+			assertEquals("ortolang-item-json", mf.getName());
+			assertEquals("ORTOLANG Item", mf.getDescription());
+			assertEquals(schemaHash, mf.getSchema());
+			
+			List<String> findMf = core.findMetadataFormatByName("ortolang-item-json");
+			assertEquals(1, findMf.size());
+			
+			
+			
 		} finally {
 			loginContext.logout();
 		}
