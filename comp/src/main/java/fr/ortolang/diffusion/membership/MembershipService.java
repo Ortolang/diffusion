@@ -72,7 +72,7 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	public void createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
 	
-	public Profile createProfile(String givenName, String familyName, String email) throws MembershipServiceException, ProfileAlreadyExistsException;
+	public Profile createProfile(String givenName, String familyName, String email) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
 
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 

@@ -163,7 +163,7 @@ public class MembershipServiceBean implements MembershipService {
 		logger.log(Level.FINE, "getting connected identifier subjects");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
-
+			
 			OrtolangObjectIdentifier identifier = registry.lookup(caller);
 			Profile profile = em.find(Profile.class, identifier.getId());
 			if (profile == null) {
@@ -188,7 +188,7 @@ public class MembershipServiceBean implements MembershipService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public Profile createProfile(String givenName, String familyName, String email) throws MembershipServiceException, ProfileAlreadyExistsException {
+	public Profile createProfile(String givenName, String familyName, String email) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException {
 		logger.log(Level.FINE, "creating profile for connected identifier");
 
 		String connectedIdentifier = authentication.getConnectedIdentifier();
@@ -201,12 +201,14 @@ public class MembershipServiceBean implements MembershipService {
 			} catch ( KeyNotFoundException e ) {
 			}
 			
+			String friendGroupKey = connectedIdentifier+"-friends";
+			
 			Profile profile = new Profile();
 			profile.setId(connectedIdentifier);
 			profile.setGivenName(givenName);
 			profile.setFamilyName(familyName);
 			profile.setEmail(email);
-			profile.setFriends(connectedIdentifier+"-friends");
+			profile.setFriends(friendGroupKey);
 			profile.setStatus(ProfileStatus.ACTIVE);
 			em.persist(profile);
 
@@ -216,7 +218,12 @@ public class MembershipServiceBean implements MembershipService {
 			Map<String, List<String>> readRules = new HashMap<String, List<String>>();
 			readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[] { "read" }));
 			authorisation.setPolicyRules(key, readRules);
-
+			
+			createGroup(connectedIdentifier, connectedIdentifier + "'s Collaborators", "List of collaborators of user " + connectedIdentifier);
+			Map<String, List<String>> friendsReadRules = new HashMap<String, List<String>>();
+			friendsReadRules.put(friendGroupKey, Arrays.asList(new String[] { "read" }));
+			authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
+			
 			notification.throwEvent(key, key, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
 			return profile;
 		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | KeyAlreadyExistsException e) {
@@ -236,22 +243,29 @@ public class MembershipServiceBean implements MembershipService {
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			authorisation.checkSuperUser(caller);
+			
+			String friendGroupKey = identifier+"-friends";
 
 			Profile profile = new Profile();
 			profile.setId(identifier);
 			profile.setGivenName(givenName);
 			profile.setFamilyName(familyName);
 			profile.setEmail(email);
-			profile.setFriends(identifier+"-friends");
+			profile.setFriends(friendGroupKey);
 			profile.setStatus(ProfileStatus.ACTIVE);
-			em.persist(profile);
+			em.persist(profile);			
 
 			registry.register(key, profile.getObjectIdentifier(), caller);
 			
 			authorisation.createPolicy(key, key);
 			Map<String, List<String>> readRules = new HashMap<String, List<String>>();
 			readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[] { "read" }));
-			authorisation.setPolicyRules(key, readRules);
+			authorisation.setPolicyRules(key, readRules);			
+
+			createGroup(friendGroupKey, identifier + "'s Collaborators", "List of collaborators of user " + identifier);
+			Map<String, List<String>> friendsReadRules = new HashMap<String, List<String>>();
+			friendsReadRules.put(friendGroupKey, Arrays.asList(new String[] { "read" }));
+			authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
 
 			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
@@ -551,11 +565,11 @@ public class MembershipServiceBean implements MembershipService {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
 			authorisation.checkAuthentified(subjects);
-
+			
 			if ( key.equals(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY ) ) {
 				throw new MembershipServiceException("key [" + key + "] is reserved for all authentified users and cannot be used for a group");
 			}
-			
+
 			Group group = new Group();
 			group.setId(UUID.randomUUID().toString());
 			group.setName(name);
@@ -969,6 +983,7 @@ public class MembershipServiceBean implements MembershipService {
                     Profile profile = readProfile(key);
                     ortolangObjectSize.addElements("groups", profile.getGroups().length);
                     ortolangObjectSize.addElements("keys", profile.getKeys().size());
+                    ortolangObjectSize.addElements("friends", readGroup(profile.getFriends()).getMembers().length);
                     break;
                 }
             }
