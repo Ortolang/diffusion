@@ -49,9 +49,11 @@ import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
 import fr.ortolang.diffusion.membership.entity.ProfileDataType;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 
 import javax.ejb.EJB;
@@ -60,8 +62,11 @@ import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -78,6 +83,8 @@ public class ProfileResource {
 	private BrowserService browser;
 	@EJB
 	private MembershipService membership;
+	@EJB
+	private AuthorisationService authorisation;
 
 	public ProfileResource() {
 	}
@@ -104,6 +111,8 @@ public class ProfileResource {
 			profile = membership.createProfile("", "", "");
 		}
 		ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
+		List<String> friends = membership.listMembers(profile.getFriends());
+		representation.setFriends(friends.toArray(new String[friends.size()]));
 		return Response.ok(representation).build();
 	}
 	
@@ -123,7 +132,10 @@ public class ProfileResource {
 		logger.log(Level.INFO, "GET /profiles/list");
 		GenericCollectionRepresentation<ProfileRepresentation> representation = new GenericCollectionRepresentation<ProfileRepresentation>();
 		for (Profile profile : membership.listProfiles()) {
-			representation.addEntry(ProfileRepresentation.fromProfile(profile));
+			ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
+			List<String> friends = membership.listMembers(profile.getFriends());
+			profileRepresentation.setFriends(friends.toArray(new String[friends.size()]));
+			representation.addEntry(profileRepresentation);	
 		}
 		return Response.ok(representation).build();
 	}
@@ -148,7 +160,10 @@ public class ProfileResource {
 		logger.log(Level.INFO, "POST /profiles/search");
 		GenericCollectionRepresentation<ProfileRepresentation> representation = new GenericCollectionRepresentation<ProfileRepresentation>();
 		for (Profile profile : membership.searchProfile(data)) {
-			representation.addEntry(ProfileRepresentation.fromProfile(profile));
+			ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
+			List<String> friends = membership.listMembers(profile.getFriends());
+			profileRepresentation.setFriends(friends.toArray(new String[friends.size()]));
+			representation.addEntry(profileRepresentation);			
 		}
 		return Response.ok(representation).build();
 	}
@@ -183,6 +198,8 @@ public class ProfileResource {
 		if(builder == null){
 			Profile profile = membership.readProfile(key);
 			ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
+			List<String> friends = membership.listMembers(profile.getFriends());
+			representation.setFriends(friends.toArray(new String[friends.size()]));
 			builder = Response.ok(representation);
     		builder.lastModified(lmd);
         }
@@ -269,7 +286,7 @@ public class ProfileResource {
 	@Path("/{key}/keys")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	public Response removeProfilePublicKey(@PathParam(value = "key") String key, ProfileKeyRepresentation pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "POST /profiles/" + key + "/keys");
+		logger.log(Level.INFO, "DELETE /profiles/" + key + "/keys");
 		membership.removeProfilePublicKey(key, pubkey.getPublicKey());
 		return Response.ok().build();
 	}
@@ -337,8 +354,52 @@ public class ProfileResource {
 		membership.setProfileInfo(key, info.getName(), info.getValue(), info.getVisibility(), ProfileDataType.valueOf(info.getType()), info.getSource());
 		return Response.ok().build();
 	}
-	
 
+	/**
+	 * @description Add a friend to a profile
+	 * @param key {@link String}
+	 * 		Key of the profile
+	 * @param friendKey {@link String}
+	 * 		Key of the profile of the friend to add
+	 * @return {@link Response}
+	 * 		Response with OK status
+	 * @throws MembershipServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 * @throws KeyAlreadyExistsException
+	 * @throws AuthorisationServiceException
+	 */
+	@POST
+	@Path("/{key}/friend")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	public Response addFriend(@PathParam(value = "key") String key, String friendKey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyAlreadyExistsException, AuthorisationServiceException {
+		logger.log(Level.INFO, "POST /profiles/" + key + "/friend");
+		String friendGroupKey = membership.readProfile(key).getFriends();
+		membership.addMemberInGroup(friendGroupKey, friendKey);
+		return Response.ok().build();
+	}
+	
+	/**
+	 * @description Remove a friend from a profile
+	 * @param key {@link String}
+	 * 		Key of the profile
+	 * @param friendKey {@link String}
+	 * 		Key of the profile of the friend to add
+	 * @return {@link Response}
+	 * 		Response with OK status
+	 * @throws MembershipServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 */
+	@DELETE
+	@Path("/{key}/friend")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	public Response removeFriend(@PathParam(value = "key") String key, String friendKey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "DELETE /profiles/" + key + "/friend");
+		membership.removeMemberFromGroup(key, friendKey);
+		return Response.ok().build();
+	}
+	
 	/**
 	 * @description Return the size of a profile
 	 * @param key {@link String}

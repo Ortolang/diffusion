@@ -149,16 +149,23 @@ public class MembershipServiceTest {
 		loginContextRoot.login();
 		try {
 			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			logger.log(Level.FINE, "creating root profile");
 			membership.createProfile(MembershipService.SUPERUSER_IDENTIFIER, "Super", "User", "root@ortolang.org", ProfileStatus.ACTIVE);
 			
 			membership.createProfile("jmarple", "Jane", "Marple", "jmarple@ortolang.fr", ProfileStatus.ACTIVE);
-			membership.createProfile("sholmes", "Sherlock", "Holmes", "sholmes@ortolang.fr", ProfileStatus.ACTIVE);logger.log(Level.FINE, "creating root profile");
+			membership.createProfile("sholmes", "Sherlock", "Holmes", "sholmes@ortolang.fr", ProfileStatus.ACTIVE);
+
+			logger.log(Level.FINE, "adding sholmes as friend");
+			String friendGroupKey = membership.readProfile("root").getFriends();
+			membership.addMemberInGroup(friendGroupKey, "sholmes");
 			
 			String key = membership.getProfileKeyForConnectedIdentifier();
 			assertEquals("root", key);
 		} catch ( ProfileAlreadyExistsException e ) {
 			logger.log(Level.INFO, "Profile already exists");
-		} 
+		} catch ( KeyNotFoundException e) {
+			fail(e.getMessage());
+		}
 		try {
 			// Create infos
 			membership.setProfileInfo("root", "presentation.prop1", "value1", ProfileDataVisibility.EVERYBODY.getValue(), ProfileDataType.STRING, "");
@@ -166,14 +173,6 @@ public class MembershipServiceTest {
 			membership.setProfileInfo("root", "presentation.prop3", "value3", ProfileDataVisibility.NOBODY.getValue(), ProfileDataType.STRING, "");
 			membership.setProfileInfo("root", "setting.prop4", "value4", ProfileDataVisibility.EVERYBODY.getValue(), ProfileDataType.STRING, "");
 			membership.setProfileInfo("root", "setting.prop5", "value5", ProfileDataVisibility.NOBODY.getValue(), ProfileDataType.STRING, "");
-			
-			logger.log(Level.FINE, "creating friends group and adding sholmes");
-			String friendGroupKey = membership.readProfile("root").getFriends();
-			membership.createGroup(friendGroupKey, "root's friends", "List of collaborators of user root");
-			membership.addMemberInGroup(friendGroupKey, "sholmes");
-			Map<String, List<String>> friendsReadRules = new HashMap<String, List<String>>();
-			friendsReadRules.put(friendGroupKey, Arrays.asList(new String[] { "read" }));
-			authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
 			
 			// Get infos with root profile
 			logger.log(Level.INFO, "TEST1 : root should see all infos of his own profile.");
@@ -217,7 +216,7 @@ public class MembershipServiceTest {
 			
 			loginContextSHolmes.logout();						
 			
-		} catch ( MembershipServiceException | KeyNotFoundException | KeyAlreadyExistsException | AuthorisationServiceException e) {
+		} catch ( MembershipServiceException | KeyNotFoundException e) {
 			fail(e.getMessage());
 		}
 	}
