@@ -122,7 +122,7 @@ public class CoreServiceTest {
 		jar.addAsResource("ontology/ortolang.xml");
 		jar.addAsResource("ontology/ortolang-market.xml");
 		jar.addAsResource("ontology/lexvo-ontology.xml");
-		jar.addAsResource("ontology/lexvo_2013-02-08.rdf");
+		jar.addAsResource("ontology/lexvo_2013-02-09.rdf");
 		jar.addAsResource("ontology/rdfs.xml");
 		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
 		logger.log(Level.INFO, "Created JAR for test : " + jar.toString(true));

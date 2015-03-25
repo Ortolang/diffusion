@@ -38,7 +38,9 @@ package fr.ortolang.diffusion.membership;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -204,12 +206,16 @@ public class MembershipServiceBean implements MembershipService {
 			profile.setGivenName(givenName);
 			profile.setFamilyName(familyName);
 			profile.setEmail(email);
+			profile.setFriends(connectedIdentifier+"-friends");
 			profile.setStatus(ProfileStatus.ACTIVE);
 			em.persist(profile);
 
 			registry.register(key, profile.getObjectIdentifier(), key);
-			
+
 			authorisation.createPolicy(key, key);
+			Map<String, List<String>> readRules = new HashMap<String, List<String>>();
+			readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[] { "read" }));
+			authorisation.setPolicyRules(key, readRules);
 
 			notification.throwEvent(key, key, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
 			return profile;
@@ -236,12 +242,16 @@ public class MembershipServiceBean implements MembershipService {
 			profile.setGivenName(givenName);
 			profile.setFamilyName(familyName);
 			profile.setEmail(email);
+			profile.setFriends(identifier+"-friends");
 			profile.setStatus(ProfileStatus.ACTIVE);
 			em.persist(profile);
 
 			registry.register(key, profile.getObjectIdentifier(), caller);
 			
 			authorisation.createPolicy(key, key);
+			Map<String, List<String>> readRules = new HashMap<String, List<String>>();
+			readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[] { "read" }));
+			authorisation.setPolicyRules(key, readRules);
 
 			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
@@ -356,10 +366,19 @@ public class MembershipServiceBean implements MembershipService {
 			try {
 				authorisation.checkOwnership(key, subjects);
 				visibilityLevel = ProfileDataVisibility.NOBODY;
-			} catch(AccessDeniedException e) {
-				if(!isMember(caller, profile.getFriends())){
-					visibilityLevel = ProfileDataVisibility.FRIENDS;
-				} 
+			} catch(AccessDeniedException e1) {
+				if(profile.getFriends()!=null) {
+					String friendsGroupKey = profile.getFriends();
+					OrtolangObjectIdentifier friendsObject = registry.lookup(friendsGroupKey);
+					checkObjectType(friendsObject, Group.OBJECT_TYPE);
+					try {
+						if (isMember(friendsGroupKey, caller)){
+							visibilityLevel = ProfileDataVisibility.FRIENDS;
+						} 
+					} catch (AccessDeniedException e2){
+						logger.log(Level.FINE, caller + " is not authorized to read friend list of profile with key [" + key + "]");						
+					}
+				}
 			}
 			logger.log(Level.FINE, "Visibility level set to " + visibilityLevel);
 			
@@ -369,7 +388,7 @@ public class MembershipServiceBean implements MembershipService {
 				if ( visibilityLevel.getValue() >= info.getVisibility() ) {
 					logger.log(Level.FINE, "info is visible");
 					if ( filter != null && filter.length() > 0 ) {
-						if ( info.getName().matches(filter) ) {
+						if ( info.getName().matches(filter+"(.*)") ) {
 							logger.log(Level.FINE, "info name matches filter");
 							visibleInfos.add(info);
 						}
@@ -950,7 +969,6 @@ public class MembershipServiceBean implements MembershipService {
                     Profile profile = readProfile(key);
                     ortolangObjectSize.addElements("groups", profile.getGroups().length);
                     ortolangObjectSize.addElements("keys", profile.getKeys().size());
-                    ortolangObjectSize.addElements("friends", profile.getFriendsList().length);
                     break;
                 }
             }

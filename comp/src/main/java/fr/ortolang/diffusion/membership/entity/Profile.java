@@ -168,10 +168,6 @@ public class Profile extends OrtolangObject {
         return groupsList.contains(group);
     }
 	
-	public boolean isFriendOf() {
-        return isMemberOf(friends);
-    }
-
 	public boolean isComplete() {
 		return givenName != null && !givenName.isEmpty()
 				&& familyName != null && !familyName.isEmpty()
@@ -230,13 +226,6 @@ public class Profile extends OrtolangObject {
 		}
 		return groupsList.split(",");
 	}
-
-    public String[] getFriendsList() {
-        if (friends == null || friends.equals("")) {
-            return new String [0];
-        }
-        return friends.split(",");
-    }
 		
 	public Map<String, ProfileData> getInfos() {
 		return infos;
