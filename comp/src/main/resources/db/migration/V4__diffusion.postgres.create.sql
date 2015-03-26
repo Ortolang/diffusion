@@ -5,6 +5,13 @@
         primary key (id)
     );
 
+    create table AuthorisationPolicyTemplate (
+        name varchar(255) not null,
+        description varchar(255),
+        template varchar(255),
+        primary key (name)
+    );
+
     create table Collection (
         id varchar(255) not null,
         clock int4 not null,
