@@ -45,7 +45,7 @@ import java.util.logging.Logger;
 
 public class EchoInputStream extends FilterInputStream {
 
-	private static Logger logger = Logger.getLogger(EchoInputStream.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(EchoInputStream.class.getName());
 
 	private OutputStream echo;
 
@@ -57,12 +57,12 @@ public class EchoInputStream extends FilterInputStream {
 	@Override
 	public int read() throws IOException {
 		int c = super.read();
-		logger.log(Level.FINE, "byte read : " + c);
+		LOGGER.log(Level.FINE, "byte read : " + c);
 		if ( c == 13 ) {
 			echo.write('\r');
 		} else if ( c == 127 ) {
 			echo.write('\b');
-			logger.log(Level.INFO, "Value of character \\b" + (int) 'b');
+			LOGGER.log(Level.INFO, "Value of character \\b" + (int) 'b');
 		} else {
 			echo.write(c);
 		}

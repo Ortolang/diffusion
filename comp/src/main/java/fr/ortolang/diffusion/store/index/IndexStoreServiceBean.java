@@ -91,7 +91,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 
 	public static final String DEFAULT_INDEX_HOME = "/index-store";
 
-	private static final Logger logger = Logger.getLogger(IndexStoreServiceBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(IndexStoreServiceBean.class.getName());
 
 	private Path base;
 	private Analyzer analyzer;
@@ -100,36 +100,36 @@ public class IndexStoreServiceBean implements IndexStoreService {
 	private IndexWriter writer;
 	
 	public IndexStoreServiceBean() {
-		logger.log(Level.INFO, "Instanciating service");
+		LOGGER.log(Level.INFO, "Instanciating service");
 		this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_INDEX_HOME);
 	}
 
 	@PostConstruct
 	public void init() {
-		logger.log(Level.INFO, "Initializing service with base folder: " + base);
+		LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
 		try {
 			if ( Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.index.purge")) ) {
-				logger.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
+				LOGGER.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
 				Files.walkFileTree(base, new DeleteFileVisitor());
 			}
 			analyzer = new StandardAnalyzer(Version.LUCENE_46);
 			directory = FSDirectory.open(base.toFile());
-			logger.log(Level.FINEST, "directory implementation: " + directory.getClass());
+			LOGGER.log(Level.FINEST, "directory implementation: " + directory.getClass());
 			config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
 			writer = new IndexWriter(directory, config);
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, "unable to configure lucene index writer", e);
+			LOGGER.log(Level.SEVERE, "unable to configure lucene index writer", e);
 		}
 	}
 
 	@PreDestroy
 	public void shutdown() {
-		logger.log(Level.INFO, "Shuting down service");
+		LOGGER.log(Level.INFO, "Shuting down service");
 		try {
 			writer.close();
 			directory.close();
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, "unable to close lucene index writer", e);
+			LOGGER.log(Level.SEVERE, "unable to close lucene index writer", e);
 		}
 	}
 	
@@ -140,12 +140,12 @@ public class IndexStoreServiceBean implements IndexStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void index(OrtolangIndexableObject object) throws IndexStoreServiceException {
-		logger.log(Level.FINE, "Indexing new object: " + object.getIdentifier());
+		LOGGER.log(Level.FINE, "Indexing new object: " + object.getIdentifier());
 		try {
 			writer.addDocument(IndexStoreDocumentBuilder.buildDocument(object));
 			writer.commit();
 		} catch (IOException e) {
-			logger.log(Level.WARNING, "unable to index object " + object, e);
+			LOGGER.log(Level.WARNING, "unable to index object " + object, e);
 			throw new IndexStoreServiceException("Can't index an object", e);
 		}
 	}
@@ -153,13 +153,13 @@ public class IndexStoreServiceBean implements IndexStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void reindex(OrtolangIndexableObject object) throws IndexStoreServiceException {
-		logger.log(Level.FINE, "Reindexing object: " + object.getIdentifier());
+		LOGGER.log(Level.FINE, "Reindexing object: " + object.getIdentifier());
 		try {
 			Term term = new Term("KEY", object.getKey());
 			writer.updateDocument(term, IndexStoreDocumentBuilder.buildDocument(object));
 			writer.commit();
 		} catch (IOException e) {
-			logger.log(Level.WARNING, "unable to index object " + object, e);
+			LOGGER.log(Level.WARNING, "unable to index object " + object, e);
 			throw new IndexStoreServiceException("Can't index an object", e);
 		}
 	}
@@ -167,13 +167,13 @@ public class IndexStoreServiceBean implements IndexStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void remove(String key) throws IndexStoreServiceException {
-		logger.log(Level.FINE, "Removing key: " + key);
+		LOGGER.log(Level.FINE, "Removing key: " + key);
 		try {
 			Term term = new Term("KEY", key);
 			writer.deleteDocuments(term);
 			writer.commit();
 		} catch (IOException e) {
-			logger.log(Level.WARNING, "unable to remove object " + key + " from index", e);
+			LOGGER.log(Level.WARNING, "unable to remove object " + key + " from index", e);
 			throw new IndexStoreServiceException("Can't remove object " + key + " from index", e);
 		}
 	}
@@ -181,7 +181,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<OrtolangSearchResult> search(String queryString) throws IndexStoreServiceException {
-		logger.log(Level.FINE, "Searching query: " + queryString);
+		LOGGER.log(Level.FINE, "Searching query: " + queryString);
 		try {
 			//IndexReader reader = DirectoryReader.open(writer, true);
 			IndexReader reader = DirectoryReader.open(directory);
@@ -221,7 +221,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 			}
 			return results;
 		} catch (Exception e) {
-			logger.log(Level.WARNING, "unable search in index using " + queryString, e);
+			LOGGER.log(Level.WARNING, "unable search in index using " + queryString, e);
 			throw new IndexStoreServiceException("Can't search in index using '" + queryString + "'\n", e);
 		}
 	}

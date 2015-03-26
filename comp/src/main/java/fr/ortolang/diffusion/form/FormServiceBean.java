@@ -83,7 +83,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @PermitAll
 public class FormServiceBean implements FormService {
 
-	private static final Logger logger = Logger.getLogger(FormServiceBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(FormServiceBean.class.getName());
 
 	private static final String[] OBJECT_TYPE_LIST = new String[] { Form.OBJECT_TYPE };
 	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
@@ -140,7 +140,7 @@ public class FormServiceBean implements FormService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<Form> listForms() throws FormServiceException {
-		logger.log(Level.INFO, "Listing all forms");
+		LOGGER.log(Level.INFO, "Listing all forms");
 		try {
 			TypedQuery<Form> query = em.createNamedQuery("findAllForms", Form.class);
 			List<Form> forms = query.getResultList();
@@ -151,12 +151,12 @@ public class FormServiceBean implements FormService {
 					form.setKey(ikey);
 					rforms.add(form);
 				} catch (IdentifierNotRegisteredException e) {
-					logger.log(Level.FINE, "unregistered form found in storage for id: " + form.getId());
+					LOGGER.log(Level.FINE, "unregistered form found in storage for id: " + form.getId());
 				}
 			}
 			return rforms;
 		} catch (RegistryServiceException e) {
-			logger.log(Level.SEVERE, "unexpected error occured while listing forms", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occured while listing forms", e);
 			throw new FormServiceException("unable to list forms", e);
 		}
 	}
@@ -164,7 +164,7 @@ public class FormServiceBean implements FormService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createForm(String key, String name, String definition) throws FormServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.FINE, "creating form for key [" + key + "] and name [" + name + "]");
+		LOGGER.log(Level.FINE, "creating form for key [" + key + "] and name [" + name + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -190,7 +190,7 @@ public class FormServiceBean implements FormService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Form readForm(String key) throws FormServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "reading form for key [" + key + "]");
+		LOGGER.log(Level.FINE, "reading form for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 
@@ -212,7 +212,7 @@ public class FormServiceBean implements FormService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateForm(String key, String name, String definition) throws FormServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "updating form for key [" + key + "]");
+		LOGGER.log(Level.FINE, "updating form for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -240,7 +240,7 @@ public class FormServiceBean implements FormService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteForm(String key) throws FormServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "deleting form for key [" + key + "]");
+		LOGGER.log(Level.FINE, "deleting form for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();

@@ -87,21 +87,21 @@ public class TripleStoreServiceBean implements TripleStoreService {
 	public static final String DEFAULT_TRIPLE_HOME = "/triple-store";
 	
     
-    private static final Logger logger = Logger.getLogger(TripleStoreServiceBean.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(TripleStoreServiceBean.class.getName());
     private Path base;
     private static Repository repository;
     
     public TripleStoreServiceBean() {
-    	logger.log(Level.FINE, "Instanciating service");
+    	LOGGER.log(Level.FINE, "Instanciating service");
     	this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_TRIPLE_HOME);
     }
 
     @PostConstruct
     public void init() {
-    	logger.log(Level.INFO, "Initializing service with base folder: " + base);
+    	LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
     	try {
     		if ( Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.triple.purge")) ) {
-				logger.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
+				LOGGER.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
 				Files.walkFileTree(base, new DeleteFileVisitor());
 			} 
     		Files.createDirectories(base);
@@ -114,17 +114,17 @@ public class TripleStoreServiceBean implements TripleStoreService {
             this.importOntology("http://www.ortolang.fr/2014/05/diffusion#", "ontology/ortolang.xml");
             this.importOntology("http://www.ortolang.fr/2014/09/market#", "ontology/ortolang-market.xml");
 	    } catch (Exception e) {
-    		logger.log(Level.SEVERE, "unable to initialize triple store", e);
+    		LOGGER.log(Level.SEVERE, "unable to initialize triple store", e);
     	}
     }
     
     @PreDestroy
     public void shutdown() {
-    	logger.log(Level.INFO, "Shuting down triple store");
+    	LOGGER.log(Level.INFO, "Shuting down triple store");
     	try {
     		repository.shutDown();
         } catch (Exception e) {
-    		logger.log(Level.SEVERE, "unable to shutdown triple store", e);
+    		LOGGER.log(Level.SEVERE, "unable to shutdown triple store", e);
     	}
     }
 
@@ -135,16 +135,16 @@ public class TripleStoreServiceBean implements TripleStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void importOntology(String ontologyURI, String resourceName) throws TripleStoreServiceException {
-		logger.log(Level.FINE, "importing ontology [" + ontologyURI + "] into triple store");
+		LOGGER.log(Level.FINE, "importing ontology [" + ontologyURI + "] into triple store");
         try {
             RepositoryConnection con = repository.getConnection();
             try {
                 if (!con.hasStatement(new URIImpl(ontologyURI), new URIImpl("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), new URIImpl("http://www.w3.org/2002/07/owl#Ontology"), false)) {
-                    logger.log(Level.FINE, "ontology not present, importing...");
+                    LOGGER.log(Level.FINE, "ontology not present, importing...");
                     InputStream is = getClass().getClassLoader().getResourceAsStream(resourceName);
                     con.add(is, ontologyURI, RDFFormat.RDFXML);
                 } else {
-                    logger.log(Level.FINE, "ontology already present, no need to import");
+                    LOGGER.log(Level.FINE, "ontology already present, no need to import");
                 }
             } finally {
                 con.close();

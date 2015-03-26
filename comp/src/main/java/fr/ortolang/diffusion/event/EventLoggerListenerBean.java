@@ -56,14 +56,14 @@ import fr.ortolang.diffusion.event.entity.Event;
 @SecurityDomain("ortolang")
 public class EventLoggerListenerBean implements MessageListener {
 
-	private static final Logger logger = Logger.getLogger(EventLoggerListenerBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(EventLoggerListenerBean.class.getName());
 
 	static {
-		logger.setLevel(Level.FINEST);
+		LOGGER.setLevel(Level.FINEST);
 		try {
 			String pattern = "%h/OrtolangEvents%g.log";
 			FileHandler handler = new FileHandler(pattern, 10000000, 5, true);
-			logger.addHandler(handler);
+			LOGGER.addHandler(handler);
 		} catch (Exception e) {
 			//
 		} 
@@ -75,9 +75,9 @@ public class EventLoggerListenerBean implements MessageListener {
 		try {
 			Event e = new Event();
 			e.fromJMSMessage(message);
-			logger.log(Level.FINEST, EventLoggerFormater.formatEvent(e));
+			LOGGER.log(Level.FINEST, EventLoggerFormater.formatEvent(e));
 		} catch (Exception e) {
-			logger.log(Level.WARNING, "unable to log event", e);
+			LOGGER.log(Level.WARNING, "unable to log event", e);
 		}
 	}
 

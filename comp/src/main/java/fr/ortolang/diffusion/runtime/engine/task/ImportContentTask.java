@@ -34,7 +34,7 @@ import gov.loc.repository.bagit.utilities.SimpleResult;
 
 public class ImportContentTask extends RuntimeEngineTask {
 
-	private static final Logger logger = Logger.getLogger(ImportContentTask.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ImportContentTask.class.getName());
 
 	public static final String NAME = "Import Content";
 	private Set<String> collectionCreationCache = new HashSet<String>();
@@ -45,7 +45,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		logger.log(Level.INFO, "Starting Import Content Task");
+		LOGGER.log(Level.INFO, "Starting Import Content Task");
 		checkParameters(execution);
 		Path bagpath = Paths.get(execution.getVariable(BAG_PATH_PARAM_NAME, String.class));
 		Bag bag = loadBag(bagpath);
@@ -55,7 +55,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		try {
 			String line = null;
 			while ((line = reader.readLine()) != null) {
-				logger.log(Level.FINE, "- executing operation: " + line);
+				LOGGER.log(Level.FINE, "- executing operation: " + line);
 				String[] operation = line.split("\t");
 				try {
 					switch (operation[0]) {
@@ -92,15 +92,15 @@ public class ImportContentTask extends RuntimeEngineTask {
 				}
 			}
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, "- unexpected error during reading operations script", e);
+			LOGGER.log(Level.SEVERE, "- unexpected error during reading operations script", e);
 		}
 		
 		try {
 			bag.close();
 		} catch ( IOException e ) {
-			logger.log(Level.SEVERE, "- error during closing bag", e);
+			LOGGER.log(Level.SEVERE, "- error during closing bag", e);
 		}
-		logger.log(Level.FINE, "- import content done");
+		LOGGER.log(Level.FINE, "- import content done");
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import content done"));
 	}
 
@@ -126,7 +126,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		Bag bag = factory.createBag(bagpath.toFile());
 		SimpleResult result = bag.verifyPayloadManifests();
 		if (!result.isSuccess()) {
-			logger.log(Level.WARNING, "bag verification failed: " + result.messagesToString());
+			LOGGER.log(Level.WARNING, "bag verification failed: " + result.messagesToString());
 			throw new RuntimeEngineTaskException("bag verification failed: " + result.messagesToString());
 		}
 		return bag;
@@ -141,7 +141,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		try {
 			getCoreService().createWorkspace(wskey, alias, name, type);
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "unable to create workspace", e);
+			LOGGER.log(Level.SEVERE, "unable to create workspace", e);
 			throw new RuntimeEngineTaskException("unable to create workspace", e);
 		}
 	}
@@ -173,7 +173,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			String current = opath.build();
 			getCoreService().createDataObject(wskey, current, "", sha1);
 		} catch (IOException e) {
-			logger.log(Level.WARNING, "unable to close input stream", e);
+			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "]", e);
 		} 
@@ -187,7 +187,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().updateDataObject(wskey, path, "", hash);
 		} catch (IOException e) {
-			logger.log(Level.WARNING, "unable to close input stream", e);
+			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error updating object for path [" + path + "]", e);
 		}
@@ -198,7 +198,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().deleteDataObject(wskey, path);
 		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
-			logger.log(Level.FINE, "Error deleting object for path: " + path, e);
+			LOGGER.log(Level.FINE, "Error deleting object for path: " + path, e);
 			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "]", e);
 		}
 
@@ -221,7 +221,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().createMetadataObject(wskey, path, name, hash);
 		} catch (IOException e) {
-			logger.log(Level.WARNING, "unable to close input stream", e);
+			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error creating metadata for path [" + path + "]", e);
 		} 
@@ -235,7 +235,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().updateMetadataObject(wskey, path, name, hash);
 		} catch (IOException e) {
-			logger.log(Level.WARNING, "unable to close input stream", e);
+			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error updating metadata for path [" + path + "]", e);
 		} 
@@ -251,7 +251,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 	}
 
 	private void snapshotWorkspace() throws RuntimeEngineTaskException {
-		logger.log(Level.INFO, "SNAPSHOT WORKSPACE");
+		LOGGER.log(Level.INFO, "SNAPSHOT WORKSPACE");
 	}
 
 }

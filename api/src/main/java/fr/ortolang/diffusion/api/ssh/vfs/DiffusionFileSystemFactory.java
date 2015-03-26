@@ -48,11 +48,11 @@ import fr.ortolang.diffusion.api.ssh.session.SSHSession;
 
 public class DiffusionFileSystemFactory implements FileSystemFactory {
 	
-	private static Logger logger = Logger.getLogger(DiffusionFileSystemFactory.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(DiffusionFileSystemFactory.class.getName());
 	
     @Override
 	public FileSystemView createFileSystemView(Session session) throws IOException {
-    	logger.log(Level.INFO, "Creating new DiffusionFileSystemView for session : " + session.getUsername());
+    	LOGGER.log(Level.INFO, "Creating new DiffusionFileSystemView for session : " + session.getUsername());
     	return new DiffusionFileSystemView((SSHSession) session);
 	}
 

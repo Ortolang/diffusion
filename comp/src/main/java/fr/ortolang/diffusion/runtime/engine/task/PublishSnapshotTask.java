@@ -54,7 +54,7 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 
 	public static final String NAME = "Publish Workspace";
 	
-	private static final Logger logger = Logger.getLogger(PublishSnapshotTask.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(PublishSnapshotTask.class.getName());
 
 	public PublishSnapshotTask() {
 	}
@@ -66,24 +66,24 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 		}
 		String root = execution.getVariable(ROOT_COLLECTION_PARAM_NAME, String.class);
 		
-		logger.log(Level.INFO, "Building publication map...");
+		LOGGER.log(Level.INFO, "Building publication map...");
 		Map<String, Map<String, List<String>>> map;
 		try {
 			map = getPublicationService().buildPublicationMap(root);
 		} catch (PublicationServiceException | AccessDeniedException e) {
 			throw new RuntimeEngineTaskException("unexpected error while trying to built the publication map", e);
 		}
-		logger.log(Level.INFO, "publication map built containing " + map.size() + " keys");
+		LOGGER.log(Level.INFO, "publication map built containing " + map.size() + " keys");
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "PublicationMap built, containing " + map.size() + " elements"));
 
 		StringBuffer report = new StringBuffer();
-		logger.log(Level.INFO, "starting publication");
+		LOGGER.log(Level.INFO, "starting publication");
 		for (Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
 			try {
 				getPublicationService().publish(entry.getKey(), entry.getValue());
 				report.append("key [").append(entry.getKey()).append("] published successfully\r\n");
 			} catch (Exception e) {
-				logger.log(Level.INFO, "key [" + entry.getKey() + "] failed to publish: " + e.getMessage());
+				LOGGER.log(Level.INFO, "key [" + entry.getKey() + "] failed to publish: " + e.getMessage());
 				report.append("key [").append(entry.getKey()).append("] failed to publish: ").append(e.getMessage()).append("\r\n");
 			}
 		}

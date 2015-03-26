@@ -54,14 +54,14 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 @PermitAll
 public class AuthenticationServiceBean implements AuthenticationService {
 	
-	private static final Logger logger = Logger.getLogger(AuthenticationServiceBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(AuthenticationServiceBean.class.getName());
 	
 	@Resource
 	private SessionContext ctx;
 
 	@Override
 	public String getConnectedIdentifier() {
-		logger.log(Level.FINE, "Connected identifier " + ctx.getCallerPrincipal().getName());
+		LOGGER.log(Level.FINE, "Connected identifier " + ctx.getCallerPrincipal().getName());
 		
 		return ctx.getCallerPrincipal().getName();
 	}

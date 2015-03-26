@@ -11,7 +11,7 @@ import fr.ortolang.diffusion.core.entity.MetadataObject;
 
 public class JsonStoreDocumentBuilder {
 	
-	private static final Logger logger = Logger.getLogger(JsonStoreDocumentBuilder.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(JsonStoreDocumentBuilder.class.getName());
 
 	public static final String KEY_PROPERTY = "key";
 	public static final String STATUS_PROPERTY = "status";
@@ -37,7 +37,7 @@ public class JsonStoreDocumentBuilder {
 			try {
 				doc.field(META_PROPERTY, new ODocument(MetadataObject.OBJECT_TYPE).fromJSON(object.getJsonContent().getStream()));
 			} catch (IOException e) {
-				logger.log(Level.SEVERE, "unable to get object json content", e);
+				LOGGER.log(Level.SEVERE, "unable to get object json content", e);
 			}
 		}
 		

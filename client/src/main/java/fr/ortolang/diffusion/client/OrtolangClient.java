@@ -66,7 +66,7 @@ import fr.ortolang.diffusion.client.account.OrtolangClientAccountManager;
 
 public class OrtolangClient {
 
-	private static Logger logger = Logger.getLogger(OrtolangClient.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(OrtolangClient.class.getName());
 	
 	private OrtolangClientAccountManager accountManager;
 	private WebTarget base;
@@ -75,7 +75,7 @@ public class OrtolangClient {
 	private String authorization = null;
 
 	private OrtolangClient() {
-		logger.log(Level.INFO, "Creating new OrtolangClient");
+		LOGGER.log(Level.INFO, "Creating new OrtolangClient");
 		ResteasyClientBuilder builder = new ResteasyClientBuilder();
 		builder.register(OrtolangClientCookieFilter.class);
 		if (Boolean.valueOf(OrtolangClientConfig.getInstance().getProperty("trustmanager.disabled"))) {
@@ -86,7 +86,7 @@ public class OrtolangClient {
 		base = client.target(OrtolangClientConfig.getInstance().getProperty("diffusion.api.url"));
 		accountManager = new OrtolangClientAccountManager(client);
 		
-		logger.log(Level.INFO, "Client created");
+		LOGGER.log(Level.INFO, "Client created");
 	}
 
     public static OrtolangClient getInstance() {

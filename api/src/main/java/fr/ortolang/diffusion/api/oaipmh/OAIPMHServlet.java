@@ -83,7 +83,7 @@ import fr.ortolang.diffusion.search.SearchService;
 @SuppressWarnings("serial")
 public class OAIPMHServlet extends HttpServlet {
 
-	private static final Logger logger = Logger.getLogger(OAIPMHServlet.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(OAIPMHServlet.class.getName());
 
 	@EJB
 	private static SearchService search;
@@ -96,7 +96,7 @@ public class OAIPMHServlet extends HttpServlet {
     
 	@Override
 	public void init(ServletConfig config) throws ServletException {
-		logger.log(Level.FINE, "OAI PMH Initialized");
+		LOGGER.log(Level.FINE, "OAI PMH Initialized");
 		
 		String metadataFormatsStr = OrtolangConfig.getInstance().getProperty("oai.metadata.format");
 		String[] metadataFormats = metadataFormatsStr.split(",");
@@ -117,14 +117,14 @@ public class OAIPMHServlet extends HttpServlet {
 		try {
 			earliestDate = dateProvider.parse(earliestDateStr, Granularity.Day);
 		} catch (ParseException e) {
-			logger.log(Level.SEVERE, "unable to parse date", e);
+			LOGGER.log(Level.SEVERE, "unable to parse date", e);
 		}
 		if(earliestDate==null) {
 			try {
 				earliestDate = dateProvider.parse("2014-08-10", Granularity.Day);
 			} catch (ParseException e) {
 				earliestDate = new Date();
-				logger.log(Level.SEVERE, "unable to parse date", e);
+				LOGGER.log(Level.SEVERE, "unable to parse date", e);
 			}
 		}
 		
@@ -164,7 +164,7 @@ public class OAIPMHServlet extends HttpServlet {
 		try {
 			response = dataProvider.handle(request);
 		} catch (OAIException e1) {
-			logger.log(Level.WARNING, e1.getMessage(), e1.fillInStackTrace());
+			LOGGER.log(Level.WARNING, e1.getMessage(), e1.fillInStackTrace());
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1.getMessage());
 			return;
 		}
@@ -175,11 +175,11 @@ public class OAIPMHServlet extends HttpServlet {
 			try {
 				result = write(response);
 			} catch (XMLStreamException e) {
-				logger.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
+				LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
 				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 				return;
 			} catch (XmlWriteException e) {
-				logger.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
+				LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
 				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 				return;
 			}
@@ -197,7 +197,7 @@ public class OAIPMHServlet extends HttpServlet {
 			return;
 		}
 		
-		logger.log(Level.WARNING, "OAIPMH XMl object is null");
+		LOGGER.log(Level.WARNING, "OAIPMH XMl object is null");
 		resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "No valid response to send");
 		return;
 	}

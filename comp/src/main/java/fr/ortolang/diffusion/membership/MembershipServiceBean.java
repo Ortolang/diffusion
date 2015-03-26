@@ -94,7 +94,7 @@ import fr.ortolang.diffusion.store.triple.URIHelper;
 @PermitAll
 public class MembershipServiceBean implements MembershipService {
 
-	private static final Logger logger = Logger.getLogger(MembershipServiceBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(MembershipServiceBean.class.getName());
 
 	private static final String[] OBJECT_TYPE_LIST = new String[] { Group.OBJECT_TYPE, Profile.OBJECT_TYPE };
 	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
@@ -165,7 +165,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> getConnectedIdentifierSubjects() throws MembershipServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "getting connected identifier subjects");
+		LOGGER.log(Level.FINE, "getting connected identifier subjects");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			
@@ -195,7 +195,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public Profile createProfile(String givenName, String familyName, String email) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.FINE, "creating profile for connected identifier");
+		LOGGER.log(Level.FINE, "creating profile for connected identifier");
 
 		String connectedIdentifier = authentication.getConnectedIdentifier();
 		String key = getProfileKeyForConnectedIdentifier();
@@ -241,10 +241,10 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.FINE, "creating profile for identifier [" + identifier + "] and email [" + email + "]");
+		LOGGER.log(Level.FINE, "creating profile for identifier [" + identifier + "] and email [" + email + "]");
 
 		String key = getProfileKeyForIdentifier(identifier);
-		logger.log(Level.FINEST, "generated profile key [" + key + "]");
+		LOGGER.log(Level.FINEST, "generated profile key [" + key + "]");
 
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
@@ -288,7 +288,7 @@ public class MembershipServiceBean implements MembershipService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	//TODO refactor
 	public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "listing profiles");
+		LOGGER.log(Level.FINE, "listing profiles");
 		try {
 			List<Profile> ProfilesList = new ArrayList<Profile>();
 			List<String> listKeys = registry.list(1, 100, OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null, false);
@@ -315,7 +315,7 @@ public class MembershipServiceBean implements MembershipService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	//TODO refactor
 	public List<Profile> searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "searching profiles with " + data);
+		LOGGER.log(Level.FINE, "searching profiles with " + data);
 		try {
 			List<Profile> ProfilesList = new ArrayList<Profile>();
 			List<String> listKeys = registry.list(1, 100, OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null, false);
@@ -345,7 +345,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "reading profile for key [" + key + "]");
+		LOGGER.log(Level.FINE, "reading profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -369,7 +369,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public List<ProfileData> listProfileInfos(String key, String filter) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "list profile infos for profile with key [" + key + "]");
+		LOGGER.log(Level.FINE, "list profile infos for profile with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -396,24 +396,24 @@ public class MembershipServiceBean implements MembershipService {
 							visibilityLevel = ProfileDataVisibility.FRIENDS;
 						} 
 					} catch (AccessDeniedException e2){
-						logger.log(Level.FINE, caller + " is not authorized to read friend list of profile with key [" + key + "]");						
+						LOGGER.log(Level.FINE, caller + " is not authorized to read friend list of profile with key [" + key + "]");						
 					}
 				}
 			}
-			logger.log(Level.FINE, "Visibility level set to " + visibilityLevel);
+			LOGGER.log(Level.FINE, "Visibility level set to " + visibilityLevel);
 			
 			List<ProfileData> visibleInfos = new ArrayList<ProfileData> ();
 			for ( ProfileData info : profile.getInfos().values() ) {
-				logger.log(Level.FINE, "Traeating info " + info.getName() );
+				LOGGER.log(Level.FINE, "Traeating info " + info.getName() );
 				if ( visibilityLevel.getValue() >= info.getVisibility() ) {
-					logger.log(Level.FINE, "info is visible");
+					LOGGER.log(Level.FINE, "info is visible");
 					if ( filter != null && filter.length() > 0 ) {
 						if ( info.getName().matches(filter+"(.*)") ) {
-							logger.log(Level.FINE, "info name matches filter");
+							LOGGER.log(Level.FINE, "info name matches filter");
 							visibleInfos.add(info);
 						}
 					} else {
-						logger.log(Level.FINE, "filter is null or empty, adding info");
+						LOGGER.log(Level.FINE, "filter is null or empty, adding info");
 						visibleInfos.add(info);
 					}
 				}
@@ -429,7 +429,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void setProfileInfo(String key, String name, String value, int visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "set profile info [" +  name + "] for profile with key [" + key + "]");
+		LOGGER.log(Level.FINE, "set profile info [" +  name + "] for profile with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -458,7 +458,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateProfile(String key, String givenName, String familyName, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "updating profile for key [" + key + "]");
+		LOGGER.log(Level.FINE, "updating profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -486,7 +486,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "deleting profile for key [" + key + "]");
+		LOGGER.log(Level.FINE, "deleting profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -512,7 +512,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void addProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "adding public key to profile with key [" + key + "]");
+		LOGGER.log(Level.FINE, "adding public key to profile with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -539,7 +539,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void removeProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "removing public key to profile with key [" + key + "]");
+		LOGGER.log(Level.FINE, "removing public key to profile with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -566,7 +566,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createGroup(String key, String name, String description) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.FINE, "creating group for key [" + key + "] and name [" + name + "]");
+		LOGGER.log(Level.FINE, "creating group for key [" + key + "] and name [" + name + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -596,7 +596,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Group readGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "reading group for key [" + key + "]");
+		LOGGER.log(Level.FINE, "reading group for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -620,7 +620,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateGroup(String key, String name, String description) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "updating group for key [" + key + "]");
+		LOGGER.log(Level.FINE, "updating group for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -648,7 +648,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "deleting group for key [" + key + "]");
+		LOGGER.log(Level.FINE, "deleting group for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -672,7 +672,7 @@ public class MembershipServiceBean implements MembershipService {
 				try {
 					registry.update(pkey);
 				} catch ( Exception e ) {
-					logger.log(Level.WARNING, "unable to update profile key [" + pkey + "]", e);
+					LOGGER.log(Level.WARNING, "unable to update profile key [" + pkey + "]", e);
 				}
 			}
 			
@@ -687,7 +687,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void addMemberInGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "adding member in group for key [" + key + "] and member [" + member + "]");
+		LOGGER.log(Level.FINE, "adding member in group for key [" + key + "] and member [" + member + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -726,7 +726,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void removeMemberFromGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "removing member [" + member + "] from group with key [" + key + "]");
+		LOGGER.log(Level.FINE, "removing member [" + member + "] from group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -768,7 +768,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void joinGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "joining group with key [" + key + "]");
+		LOGGER.log(Level.FINE, "joining group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -805,7 +805,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void leaveGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "leaving group with key [" + key + "]");
+		LOGGER.log(Level.FINE, "leaving group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -846,7 +846,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> listMembers(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "listing members of group with key [" + key + "]");
+		LOGGER.log(Level.FINE, "listing members of group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -871,7 +871,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> getProfileGroups(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "listing groups of profile with key [" + key + "]");
+		LOGGER.log(Level.FINE, "listing groups of profile with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -896,7 +896,7 @@ public class MembershipServiceBean implements MembershipService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "checking membership of member [" + member + "] in group with key [" + key + "]");
+		LOGGER.log(Level.FINE, "checking membership of member [" + member + "] in group with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -971,7 +971,7 @@ public class MembershipServiceBean implements MembershipService {
 
     @Override
     public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
-        logger.log(Level.FINE, "calculating size for object with key [" + key + "]");
+        LOGGER.log(Level.FINE, "calculating size for object with key [" + key + "]");
         try {
             List<String> subjects = getConnectedIdentifierSubjects();
             OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -995,7 +995,7 @@ public class MembershipServiceBean implements MembershipService {
             }
             return ortolangObjectSize;
         } catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException e) {
-            logger.log(Level.SEVERE, "unexpected error while calculating object size", e);
+            LOGGER.log(Level.SEVERE, "unexpected error while calculating object size", e);
             throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
         }
     }

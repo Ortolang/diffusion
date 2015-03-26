@@ -44,7 +44,7 @@ import org.activiti.engine.ActivitiObjectNotFoundException;
 
 public class ActivitiTaskRunner implements Runnable {
 
-	private Logger logger = Logger.getLogger(ActivitiTaskRunner.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ActivitiTaskRunner.class.getName());
 
 	private ActivitiEngineBean engine;
 	private String task;
@@ -58,13 +58,13 @@ public class ActivitiTaskRunner implements Runnable {
 
 	@Override
 	public void run() {
-		logger.log(Level.INFO, "Starting task runner for task: " + task);
+		LOGGER.log(Level.INFO, "Starting task runner for task: " + task);
 		try {
 			engine.getActivitiTaskService().complete(task, variables);
 		} catch ( ActivitiObjectNotFoundException e ) {
-			logger.log(Level.WARNING, "Error during task execution", e);
+			LOGGER.log(Level.WARNING, "Error during task execution", e);
 		}
-		logger.log(Level.INFO, "Task runner stopped for task: " + task);
+		LOGGER.log(Level.INFO, "Task runner stopped for task: " + task);
 	}
 
 }

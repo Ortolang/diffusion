@@ -69,7 +69,8 @@ import fr.ortolang.diffusion.api.oaipmh.handlers.helpers.MultiMetadataItemReposi
 import fr.ortolang.diffusion.api.oaipmh.repository.MultiMetadataItemRepository;
 
 public class DiffusionListRecordsHandler extends VerbHandler<ListRecords> {
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+	
+	private static final Logger LOGGER = Logger.getLogger(DiffusionListRecordsHandler.class.getName());
 	
 	private final MultiMetadataItemRepositoryHelper itemRepositoryHelper;
     private final SetRepositoryHelper setRepositoryHelper;
@@ -89,7 +90,7 @@ public class DiffusionListRecordsHandler extends VerbHandler<ListRecords> {
         if (parameters.hasSet() && !getRepository().getSetRepository().supportSets())
             throw new DoesNotSupportSetsException();
 
-        logger.log(Level.FINEST, "Getting items from data source");
+        LOGGER.log(Level.FINEST, "Getting items from data source");
         int offset = getOffset(parameters);
         ListItemsResults result;
         if (!parameters.hasSet()) {
@@ -129,11 +130,11 @@ public class DiffusionListRecordsHandler extends VerbHandler<ListRecords> {
                         length, parameters.getMetadataPrefix(),
                         parameters.getSet());
         }
-        logger.log(Level.FINEST, "Items retrieved from data source");
+        LOGGER.log(Level.FINEST, "Items retrieved from data source");
 
         List<Item> results = result.getResults();
         if (results.isEmpty()) throw new NoMatchesException();
-        logger.log(Level.FINEST, "Now adding records to the OAI-PMH Output");
+        LOGGER.log(Level.FINEST, "Now adding records to the OAI-PMH Output");
         for (Item i : results)
             res.withRecord(this.createRecord(parameters, i));
 
@@ -181,7 +182,7 @@ public class DiffusionListRecordsHandler extends VerbHandler<ListRecords> {
 
             record.withMetadata(metadata);
 
-            logger.log(Level.FINEST, "Outputting ItemAbout");
+            LOGGER.log(Level.FINEST, "Outputting ItemAbout");
             if (item.getAbout() != null) {
                 for (About about : item.getAbout()) {
                     record.withAbout(about);

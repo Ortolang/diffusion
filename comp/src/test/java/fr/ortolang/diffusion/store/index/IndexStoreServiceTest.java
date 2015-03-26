@@ -67,7 +67,7 @@ import fr.ortolang.diffusion.indexing.IndexingContext;
 
 public class IndexStoreServiceTest {
 	
-	private Logger logger = Logger.getLogger(IndexStoreServiceTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(IndexStoreServiceTest.class.getName());
 	private IndexStoreServiceBean service;
 	
 	@BeforeClass
@@ -114,7 +114,7 @@ public class IndexStoreServiceTest {
 
 				@Override
 				public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-					logger.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
+					LOGGER.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
 					return FileVisitResult.TERMINATE;
 				}
 
@@ -126,7 +126,7 @@ public class IndexStoreServiceTest {
 				
 			});
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 	
@@ -247,6 +247,6 @@ public class IndexStoreServiceTest {
 		for ( OrtolangSearchResult result : results ) {
 			dump.append("\r\n").append(result.toString());
 		}
-		logger.log(Level.FINE, dump.toString());
+		LOGGER.log(Level.FINE, dump.toString());
 	}
 }

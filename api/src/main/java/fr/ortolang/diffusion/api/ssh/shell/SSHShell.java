@@ -52,7 +52,7 @@ import org.apache.sshd.server.session.ServerSession;
 
 public class SSHShell implements Command, Runnable, SessionAware {
 
-	private static Logger logger = Logger.getLogger(SSHShell.class.getName());
+	private static final Logger lOGGER = Logger.getLogger(SSHShell.class.getName());
     private InputStream in;
     private OutputStream out;
     private OutputStream err;
@@ -69,31 +69,31 @@ public class SSHShell implements Command, Runnable, SessionAware {
 
     @Override
     public void setInputStream(InputStream in) {
-        logger.log(Level.INFO, "setting input stream");
+        lOGGER.log(Level.INFO, "setting input stream");
         this.in = in;
     }
 
     @Override
     public void setOutputStream(OutputStream out) {
-    	logger.log(Level.INFO, "setting output stream");
+    	lOGGER.log(Level.INFO, "setting output stream");
         this.out = out;
     }
 
     @Override
     public void setErrorStream(OutputStream err) {
-    	logger.log(Level.INFO, "setting error stream");
+    	lOGGER.log(Level.INFO, "setting error stream");
         this.err = err;
     }
 
     @Override
     public void setExitCallback(ExitCallback callback) {
-    	logger.log(Level.INFO, "setting exit callback");
+    	lOGGER.log(Level.INFO, "setting exit callback");
         this.callback = callback;
     }
     
     @Override
     public void setSession(ServerSession session) {
-    	logger.log(Level.INFO, "setting session");
+    	lOGGER.log(Level.INFO, "setting session");
         this.session = session;
     }
 
@@ -103,7 +103,7 @@ public class SSHShell implements Command, Runnable, SessionAware {
 
     @Override
 	public void start(Environment env) throws IOException {
-    	logger.log(Level.FINE, "Starting shell");
+    	lOGGER.log(Level.FINE, "Starting shell");
     	this.in = new EchoInputStream(in, out);
 		this.env = env;
 		thread = threadFactory.newThread(this);
@@ -113,43 +113,43 @@ public class SSHShell implements Command, Runnable, SessionAware {
     @Override
     public void run() {
 		try {
-			logger.log(Level.INFO, "Starting Interpreter");
+			lOGGER.log(Level.INFO, "Starting Interpreter");
 			try {
 				int cpt = 0;
 				int input;
 				while ( cpt < 50 && (input = in.read()) != -1 ) {
 					cpt++;
-					logger.log(Level.FINE, "" + input);
+					lOGGER.log(Level.FINE, "" + input);
 				}
 				out.write('\r');
 				out.write('\n');
 			} catch ( IOException e ) {
-				logger.log(Level.SEVERE, "Don't know what happened but problem: ", e);
+				lOGGER.log(Level.SEVERE, "Don't know what happened but problem: ", e);
 			}
-			logger.log(Level.INFO, "Interpreter stopped, bye");
+			lOGGER.log(Level.INFO, "Interpreter stopped, bye");
 		} finally {
 			try {
 				out.flush();
 			} catch (IOException err) {
-				logger.log(Level.SEVERE, "Error running impl", err);
+				lOGGER.log(Level.SEVERE, "Error running impl", err);
 			}
 			try {
 				err.flush();
 			} catch (IOException err) {
-				logger.log(Level.SEVERE, "Error running impl", err);
+				lOGGER.log(Level.SEVERE, "Error running impl", err);
 			}
 			callback.onExit(0);
 		}
 		try {
 			session.disconnect(12, "Number of characters reached !!");
 		} catch ( IOException e ) {
-			logger.log(Level.SEVERE, "Don't know what happened but problem: ", e);
+			lOGGER.log(Level.SEVERE, "Don't know what happened but problem: ", e);
 		}
 	}
 
 	@Override
 	public void destroy() {
-		logger.log(Level.FINE, "Shell Destroyed");
+		lOGGER.log(Level.FINE, "Shell Destroyed");
 		
 	}
 }

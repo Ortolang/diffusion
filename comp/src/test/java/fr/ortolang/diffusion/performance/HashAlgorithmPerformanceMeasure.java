@@ -60,7 +60,7 @@ public class HashAlgorithmPerformanceMeasure {
 	private static final String SAMPLE_FOLDER = "/home/jerome/Vidéos";
 	//private static final String SAMPLE_FOLDER = "/home/jerome/Images/Photos/Travaux Maison";
 	
-	private Logger logger = Logger.getLogger(HashAlgorithmPerformanceMeasure.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(HashAlgorithmPerformanceMeasure.class.getName());
 	
 	@Test
 	public void testGenerateHash1() {
@@ -113,7 +113,7 @@ public class HashAlgorithmPerformanceMeasure {
 				fnva32 += throughout;
 				result.append(throughout + " Mo/s [fnv1a32:" + hash + "]\r\n");
 				cpt ++;
-				logger.log(Level.INFO, result.toString());
+				LOGGER.log(Level.INFO, result.toString());
 			}
 				
 			sha1 = sha1 / cpt;
@@ -130,9 +130,9 @@ public class HashAlgorithmPerformanceMeasure {
 			results.append("Average throughput for CRC32   : " + crc32 + " Mb/s \r\n");
 			results.append("Average throughput for FNV132  : " + fnv132 + " Mb/s \r\n");
 			results.append("Average throughput for FNV1a32 : " + fnva32 + " Mb/s \r\n");
-			logger.log(Level.INFO, results.toString());
+			LOGGER.log(Level.INFO, results.toString());
 		} catch ( Exception e ) {
-			logger.log(Level.INFO, "Error during generating hash", e);
+			LOGGER.log(Level.INFO, "Error during generating hash", e);
 			fail(e.getMessage());
 		}
 	}

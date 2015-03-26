@@ -45,7 +45,7 @@ import gov.loc.repository.bagit.utilities.SimpleResult;
 
 public class ImportWorkspaceTask extends RuntimeEngineTask {
 
-	private static final Logger logger = Logger.getLogger(ImportWorkspaceTask.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ImportWorkspaceTask.class.getName());
 
 	public static final String NAME = "Import Workspace";
 	public static final String DATA_PREFIX = "data/";
@@ -59,24 +59,24 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		logger.log(Level.INFO, "Starting Import Workspace Task");
+		LOGGER.log(Level.INFO, "Starting Import Workspace Task");
 		
-		logger.log(Level.FINE, "- load bag");
+		LOGGER.log(Level.FINE, "- load bag");
 		checkParameters(execution);
 		Path bagpath = Paths.get(execution.getVariable(BAG_PATH_PARAM_NAME, String.class));
 		Bag bag = loadBag(bagpath);
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Bag loaded from local file: " + bag.getFile()));
 
-		logger.log(Level.FINE, "- create workspace");
+		LOGGER.log(Level.FINE, "- create workspace");
 		String wskey = createWorkspace(bag);
-		logger.log(Level.INFO, "  - workspace created: " + wskey);
+		LOGGER.log(Level.INFO, "  - workspace created: " + wskey);
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace created with key: " + wskey));
 		
-		logger.log(Level.FINE, "- build global params");
+		LOGGER.log(Level.FINE, "- build global params");
 		Map<String, Object> globalparams = new HashMap<String, Object> ();
 		loadWorkspaceParams(wskey, globalparams);
 
-		logger.log(Level.FINE, "- list versions");
+		LOGGER.log(Level.FINE, "- list versions");
 		List<String> versions = listVersions(bag);
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), versions.size() + " versions found in this workspace: " + Arrays.deepToString(versions.toArray())));
 
@@ -101,11 +101,11 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			for (String object : objectsToCreate) {
 				String filepath = DATA_PREFIX + version + "/objects" + object;
 				try {
-					logger.log(Level.FINE, "  - create object: " + filepath);
+					LOGGER.log(Level.FINE, "  - create object: " + filepath);
 					createObject(wskey, bag.getBagFile(filepath), bag.getChecksums(filepath).get(Algorithm.SHA1), object, cache);
 					created++;
 				} catch ( InvalidPathException e ) {
-					logger.log(Level.SEVERE, "  - OBJECT CREATION ERROR: " + filepath);
+					LOGGER.log(Level.SEVERE, "  - OBJECT CREATION ERROR: " + filepath);
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - ERROR creating object with path " + filepath));
 				}
 			}
@@ -125,11 +125,11 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 				} 
 				if ( !skipupdate ) {
 					try {
-						logger.log(Level.FINE, "  - update object: " + filepath);
+						LOGGER.log(Level.FINE, "  - update object: " + filepath);
 						updateObject(wskey, bag.getBagFile(filepath), object);
 						updated++;
 					} catch ( InvalidPathException e ) {
-						logger.log(Level.SEVERE, "  - OBJECT UPDATE ERROR: " + filepath);
+						LOGGER.log(Level.SEVERE, "  - OBJECT UPDATE ERROR: " + filepath);
 						throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - ERROR updating object with path " + filepath));
 					}
 				}
@@ -138,11 +138,11 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			for (String object : objectsToDelete) {
 				String filepath = DATA_PREFIX + version + "/objects" + object;
 				try {
-					logger.log(Level.FINE, "  - delete object: " + filepath);
+					LOGGER.log(Level.FINE, "  - delete object: " + filepath);
 					deleteObject(wskey, object);
 					deleted++;
 				} catch ( InvalidPathException e ) {
-					logger.log(Level.SEVERE, "  - OBJECT DELETE ERROR: " + filepath);
+					LOGGER.log(Level.SEVERE, "  - OBJECT DELETE ERROR: " + filepath);
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - ERROR deleting object with path " + filepath));
 				}
 			}
@@ -164,11 +164,11 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			for (String md : metadataToCreate) {
 				String filepath = DATA_PREFIX + version + "/metadata" + md;
 				try {
-					logger.log(Level.FINE, "  - create metadata: " + filepath);
+					LOGGER.log(Level.FINE, "  - create metadata: " + filepath);
 					createMetadata(wskey, bag.getBagFile(filepath), md, globalparams);
 					mdcreated++;
 				} catch ( InvalidPathException e ) {
-					logger.log(Level.SEVERE, "  - METADATA CREATE ERROR: " + filepath);
+					LOGGER.log(Level.SEVERE, "  - METADATA CREATE ERROR: " + filepath);
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - ERROR creating metadata with path " + filepath));
 				}
 			}
@@ -188,11 +188,11 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 				} 
 				if ( !skipupdate ) {
 					try {
-						logger.log(Level.INFO, "  - update metadata: " + filepath);
+						LOGGER.log(Level.INFO, "  - update metadata: " + filepath);
 						updateMetadata(wskey, bag.getBagFile(filepath), md, globalparams);
 						mdupdated++;
 					} catch ( InvalidPathException e ) {
-						logger.log(Level.SEVERE, "  - METADATA UPDATE ERROR: " + filepath);
+						LOGGER.log(Level.SEVERE, "  - METADATA UPDATE ERROR: " + filepath);
 						throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - ERROR updating metadata with path " + filepath));
 					}
 				}
@@ -201,18 +201,18 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			for (String md : metadataToDelete) {
 				String filepath = DATA_PREFIX + version + "/metadata" + md;
 				try {
-					logger.log(Level.INFO, "  - delete metadata: " + filepath);
+					LOGGER.log(Level.INFO, "  - delete metadata: " + filepath);
 					deleteMetadata(wskey, md);
 					mddeleted++;
 				} catch ( InvalidPathException e ) {
-					logger.log(Level.SEVERE, "  - METADATA DELETE ERROR: " + filepath);
+					LOGGER.log(Level.SEVERE, "  - METADATA DELETE ERROR: " + filepath);
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - ERROR deleting metadata with path " + filepath));
 				}
 			}
 			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), " - metadata summary: " + mdcreated + " created, " + mdupdated + " updated, " + mddeleted + " deleted"));
 			
 			if (!version.equals(Workspace.HEAD)) {
-				logger.log(Level.FINE, "- snapshot version " + version);
+				LOGGER.log(Level.FINE, "- snapshot version " + version);
 				snapshotWorkspace(wskey, version.substring(version.lastIndexOf("/")));
 				
 				//logger.log(Level.FINE, "- publish version " + version);
@@ -247,7 +247,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 		Bag bag = factory.createBag(bagpath.toFile());
 		SimpleResult result = bag.verifyPayloadManifests();
 		if (!result.isSuccess()) {
-			logger.log(Level.WARNING, "bag verification failed: " + result.messagesToString());
+			LOGGER.log(Level.WARNING, "bag verification failed: " + result.messagesToString());
 			throw new RuntimeEngineTaskException("bag verification failed: " + result.messagesToString());
 		}
 		return bag;
@@ -268,7 +268,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 				getCoreService().createWorkspace(wskey, props.getProperty("name"), props.getProperty("type"));
 			}
 		} catch (Exception e2) {
-			logger.log(Level.SEVERE, "unable to create workspace", e2);
+			LOGGER.log(Level.SEVERE, "unable to create workspace", e2);
 			throw new RuntimeEngineTaskException("unable to create workspace", e2);
 		}
 		return wskey;
@@ -280,7 +280,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			params.put("workspace.key", wskey);
 			params.put("workspace.members", ws.getMembers());
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "unable to read workspace", e);
+			LOGGER.log(Level.SEVERE, "unable to read workspace", e);
 			throw new RuntimeEngineTaskException("unable to read workspace", e);
 		}
 	}
@@ -292,21 +292,21 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			if (bagfile.getFilepath().startsWith(SNAPSHOTS_PREFIX)) {
 				String[] parts = bagfile.getFilepath().substring(SNAPSHOTS_PREFIX.length()).split("/");
 				if (parts.length <= 1 || parts[0].length() <= 0 || parts[1].length() <= 0) {
-					logger.log(Level.INFO, "Unparsable snapshot hierarchy found: " + Arrays.deepToString(parts));
+					LOGGER.log(Level.INFO, "Unparsable snapshot hierarchy found: " + Arrays.deepToString(parts));
 				}
 				Integer index = -1;
 				try {
 					index = Integer.decode(parts[0]);
 					if (snapshots.containsKey(index)) {
 						if (!snapshots.get(index).equals(parts[1])) {
-							logger.log(Level.WARNING, "Found a version with existing index but different name!! " + snapshots.get(index) + " - " + parts[1]);
+							LOGGER.log(Level.WARNING, "Found a version with existing index but different name!! " + snapshots.get(index) + " - " + parts[1]);
 						}
 					} else {
-						logger.log(Level.INFO, "Found new version with index: " + index + " and name: " + parts[1]);
+						LOGGER.log(Level.INFO, "Found new version with index: " + index + " and name: " + parts[1]);
 						snapshots.put(index, parts[1]);
 					}
 				} catch (Exception e) {
-					logger.log(Level.INFO, "Snapshot index is not a number: " + parts[0]);
+					LOGGER.log(Level.INFO, "Snapshot index is not a number: " + parts[0]);
 				}
 			}
 		}
@@ -363,7 +363,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			String current = opath.build();
 			getCoreService().createDataObject(wskey, current, "", sha1);
 		} catch (IOException e) {
-			logger.log(Level.WARNING, "unable to close input stream", e);
+			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "]", e);
 		} 
@@ -377,7 +377,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().updateDataObject(wskey, path, "", hash);
 		} catch (IOException e) {
-			logger.log(Level.WARNING, "unable to close input stream", e);
+			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error updating object for path [" + path + "]", e);
 		}
@@ -388,7 +388,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().deleteDataObject(wskey, path);
 		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
-			logger.log(Level.FINE, "Error deleting object for path: " + path, e);
+			LOGGER.log(Level.FINE, "Error deleting object for path: " + path, e);
 			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "]", e);
 		}
 
@@ -444,7 +444,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 //			String[] mdname = parseMetadataName(path);
 //			getCoreService().createMetadataObject(wskey, mdname[2], mdname[0], sha1);
 		} catch (IOException e) {
-			logger.log(Level.WARNING, "unable to close input stream", e);
+			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (CoreServiceException | DataCollisionException e) {
 			throw new RuntimeEngineTaskException("Error creating metadata for path [" + path + "]", e);
 		} 
@@ -461,7 +461,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 //			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, mdname[2]);
 //			getCoreService().updateMetadataObject(wskey, mdname[2], mdname[0], mdname[1], sha1);
 		} catch (IOException e) {
-			logger.log(Level.WARNING, "unable to close input stream", e);
+			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (CoreServiceException | DataCollisionException e) {
 			throw new RuntimeEngineTaskException("Error updating metadata for path [" + path + "]", e);
 		} 
@@ -481,7 +481,7 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 		try {
 			getCoreService().snapshotWorkspace(wskey, name);
 		} catch (CoreServiceException | KeyNotFoundException | AccessDeniedException | RuntimeEngineTaskException e) {
-			logger.log(Level.FINE, "Error during workspace snapshot", e);
+			LOGGER.log(Level.FINE, "Error during workspace snapshot", e);
 			throw new RuntimeEngineTaskException("Error during workspace snapshot", e);
 		}
 	}

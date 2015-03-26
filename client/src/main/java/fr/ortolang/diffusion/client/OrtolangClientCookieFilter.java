@@ -54,7 +54,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class OrtolangClientCookieFilter implements ClientRequestFilter, ClientResponseFilter {
 
-	private static final Logger logger = Logger.getLogger(OrtolangClientCookieFilter.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(OrtolangClientCookieFilter.class.getName());
 	private static List<Object> cookies = new ArrayList<Object>();
 
 	public OrtolangClientCookieFilter() {
@@ -62,17 +62,17 @@ public class OrtolangClientCookieFilter implements ClientRequestFilter, ClientRe
 
 	@Override
 	public void filter(ClientRequestContext request) throws IOException {
-		logger.log(Level.FINE, "Injecting Cookies in request headers");
+		LOGGER.log(Level.FINE, "Injecting Cookies in request headers");
 		request.getHeaders().put("Cookie", cookies);
 	}
 
 	@Override
 	public void filter(ClientRequestContext request, ClientResponseContext response) throws IOException {
-		logger.log(Level.FINE, "Storing cookies");
+		LOGGER.log(Level.FINE, "Storing cookies");
 		for ( Entry<String, NewCookie> entry : response.getCookies().entrySet() ) {
 			Cookie cookie = entry.getValue().toCookie(); 
 			cookies.add(cookie);
-			logger.log(Level.INFO, "New Cookie stored : " + cookie);
+			LOGGER.log(Level.INFO, "New Cookie stored : " + cookie);
 		}
 	}
 }

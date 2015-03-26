@@ -45,11 +45,11 @@ import org.apache.sshd.server.session.ServerSession;
 
 public class DummyPasswordAuthenticator implements PasswordAuthenticator {
 	
-	private static Logger logger = Logger.getLogger(DummyPasswordAuthenticator.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(DummyPasswordAuthenticator.class.getName());
     
     @Override
     public boolean authenticate(String username, String password, ServerSession session) {
-    	logger.log(Level.FINE, "authenticating dummy user: " + username);
+    	LOGGER.log(Level.FINE, "authenticating dummy user: " + username);
         return true;
     }
 }

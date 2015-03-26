@@ -67,7 +67,7 @@ import fr.ortolang.diffusion.store.triple.TripleStoreService;
 @SecurityDomain("ortolang")
 public class IndexingListenerBean implements MessageListener {
 
-	private Logger logger = Logger.getLogger(IndexingListenerBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(IndexingListenerBean.class.getName());
 
 	@EJB
 	private IndexStoreService indexStore;
@@ -120,7 +120,7 @@ public class IndexingListenerBean implements MessageListener {
 			String path = message.getStringProperty("path");
 			String name = message.getStringProperty("name");
 			IndexingContext context = new IndexingContext(root, path, name);
-			logger.log(Level.FINE, action + " action called on key: " + key);
+			LOGGER.log(Level.FINE, action + " action called on key: " + key);
 			try {
 				if (action.equals("index"))
 					this.addToStore(key, context);
@@ -129,10 +129,10 @@ public class IndexingListenerBean implements MessageListener {
 				if (action.equals("remove"))
 					this.removeFromStore(key, context);
 			} catch (Exception e) {
-				logger.log(Level.WARNING, "error during indexation of key " + key, e);
+				LOGGER.log(Level.WARNING, "error during indexation of key " + key, e);
 			}
 		} catch (Exception e) {
-			logger.log(Level.WARNING, "unable to index content", e);
+			LOGGER.log(Level.WARNING, "unable to index content", e);
 		}
 	}
 

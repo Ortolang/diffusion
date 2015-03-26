@@ -40,14 +40,13 @@ import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ThreadFactory;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Logger;
 import org.apache.sshd.common.Factory;
 import org.apache.sshd.server.Command;
 
 public class SSHShellFactory implements Factory<Command> {
     
-	private static Log logger = LogFactory.getLog(SSHShellFactory.class);
+	private static final Logger LOGGER = Logger.getLogger(SSHShellFactory.class.getName());
     private List<String> commands;
     private ThreadFactory threadFactory;
     
@@ -58,7 +57,7 @@ public class SSHShellFactory implements Factory<Command> {
 
     @Override
     public SSHShell create() {
-        logger.debug("creating a new shell");
+        LOGGER.debug("creating a new shell");
         return new SSHShell(commands, threadFactory);
     }
     

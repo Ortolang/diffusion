@@ -38,7 +38,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 @RunWith(Arquillian.class)
 public class MembershipServiceTest {
 	
-	private static Logger logger = Logger.getLogger(MembershipServiceTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(MembershipServiceTest.class.getName());
 
 	@EJB
 	private MembershipService membership;
@@ -83,7 +83,7 @@ public class MembershipServiceTest {
 		jar.addAsResource("ontology/lexvo-ontology.xml");
 		jar.addAsResource("ontology/rdfs.xml");
 		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
-		logger.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
+		LOGGER.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
 
 		PomEquippedResolveStage pom = Maven.resolver().loadPomFromFile("pom.xml");
 
@@ -110,19 +110,19 @@ public class MembershipServiceTest {
 		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-queryresultio-sparqljson:2.7.8").withTransitivity().asFile());
 		ear.addAsLibraries(pom.resolve("org.apache.velocity:velocity:1.7").withTransitivity().asFile());
 		ear.addAsLibraries(pom.resolve("org.apache.velocity:velocity-tools:2.0").withTransitivity().asFile());
-		logger.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
+		LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 
 		return ear;
 	}
 
 	@Before
 	public void setup() throws MembershipServiceException, AccessDeniedException {
-		logger.log(Level.INFO, "setting up test environment");
+		LOGGER.log(Level.INFO, "setting up test environment");
 	}
 
 	@After
 	public void tearDown() {
-		logger.log(Level.INFO, "clearing environment");
+		LOGGER.log(Level.INFO, "clearing environment");
 	}
 	
 	@Test
@@ -130,7 +130,7 @@ public class MembershipServiceTest {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("anonymous", "password");
 		loginContext.login();
 		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			String key = membership.getProfileKeyForConnectedIdentifier();
 			assertEquals("anonymous", key);
 		} finally {
@@ -143,23 +143,23 @@ public class MembershipServiceTest {
 		LoginContext loginContextRoot = UsernamePasswordLoginContextFactory.createLoginContext("root", "tagada54");
 		loginContextRoot.login();
 		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			logger.log(Level.FINE, "creating root profile");
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.FINE, "creating root profile");
 			membership.createProfile(MembershipService.SUPERUSER_IDENTIFIER, "Super", "User", "root@ortolang.org", ProfileStatus.ACTIVE);
-			logger.log(Level.FINE, "creating anonymous profile");
+			LOGGER.log(Level.FINE, "creating anonymous profile");
 			membership.createProfile(MembershipService.UNAUTHENTIFIED_IDENTIFIER, "Anonymous", "User", "anonymous@ortolang.org", ProfileStatus.ACTIVE);
 			
 			membership.createProfile("user1", "User", "One", "user1@ortolang.fr", ProfileStatus.ACTIVE);
 			membership.createProfile("user2", "User", "Two", "user2@ortolang.fr", ProfileStatus.ACTIVE);
 
-			logger.log(Level.FINE, "adding user2 as friend");
+			LOGGER.log(Level.FINE, "adding user2 as friend");
 			String friendGroupKey = membership.readProfile("root").getFriends();
 			membership.addMemberInGroup(friendGroupKey, "user2");
 			
 			String key = membership.getProfileKeyForConnectedIdentifier();
 			assertEquals("root", key);
 		} catch ( ProfileAlreadyExistsException e ) {
-			logger.log(Level.INFO, "Profile already exists");
+			LOGGER.log(Level.INFO, "Profile already exists");
 		} catch ( KeyNotFoundException e) {
 			fail(e.getMessage());
 		}
@@ -172,12 +172,12 @@ public class MembershipServiceTest {
 			membership.setProfileInfo("root", "setting.prop5", "value5", ProfileDataVisibility.NOBODY.getValue(), ProfileDataType.STRING, "");
 			
 			// Get infos with root profile
-			logger.log(Level.INFO, "TEST1 : root should see all infos of his own profile.");
+			LOGGER.log(Level.INFO, "TEST1 : root should see all infos of his own profile.");
 			List<ProfileData> infosSeenByRoot = membership.listProfileInfos("root", "");
 			assertEquals(5, infosSeenByRoot.size());
 			
 			// Consult infos of category "presentation"
-			logger.log(Level.INFO, "TEST2 : root should only see root's infos of category 'presentation'.");
+			LOGGER.log(Level.INFO, "TEST2 : root should only see root's infos of category 'presentation'.");
 			List<ProfileData> presentationSeenByRoot = membership.listProfileInfos("root", "presentation");
 			assertEquals(3, presentationSeenByRoot.size());
 
@@ -187,12 +187,12 @@ public class MembershipServiceTest {
 			loginContextUser1.login();
 						
 			// Get infos with jmarple profile
-			logger.log(Level.INFO, "TEST3 : user1 should only see root's infos with visibility set to EVERYBODY.");
+			LOGGER.log(Level.INFO, "TEST3 : user1 should only see root's infos with visibility set to EVERYBODY.");
 			List<ProfileData> infosSeenByUser1 = membership.listProfileInfos("root", "");
 			assertEquals(2, infosSeenByUser1.size());
 			
 			// Consult infos of category "presentation"
-			logger.log(Level.INFO, "TEST4 : user1 should only see root's infos of category 'presentation' and with visibility set to EVERYBODY.");
+			LOGGER.log(Level.INFO, "TEST4 : user1 should only see root's infos of category 'presentation' and with visibility set to EVERYBODY.");
 			List<ProfileData> presentationSeenByUser1 = membership.listProfileInfos("root", "presentation");
 			assertEquals(1, presentationSeenByUser1.size());
 			
@@ -202,12 +202,12 @@ public class MembershipServiceTest {
 			loginContextUser2.login();
 			
 			// Get infos with sholmes profile (friend of root)
-			logger.log(Level.INFO, "TEST5 : user2 should only see root's infos with visibility set to EVERYBODY OR FRIENDS.");
+			LOGGER.log(Level.INFO, "TEST5 : user2 should only see root's infos with visibility set to EVERYBODY OR FRIENDS.");
 			List<ProfileData> infosSeenByUser2 = membership.listProfileInfos("root", "");
 			assertEquals(3, infosSeenByUser2.size());
 			
 			// Consult infos of category "presentation"
-			logger.log(Level.INFO, "TEST6 : user2 should only see root's infos of category 'presentation' and with visibility set to EVERYBODY or FRIENDS.");
+			LOGGER.log(Level.INFO, "TEST6 : user2 should only see root's infos of category 'presentation' and with visibility set to EVERYBODY or FRIENDS.");
 			List<ProfileData> presentationSeenByUser2 = membership.listProfileInfos("root", "presentation");
 			assertEquals(2, presentationSeenByUser2.size());
 			

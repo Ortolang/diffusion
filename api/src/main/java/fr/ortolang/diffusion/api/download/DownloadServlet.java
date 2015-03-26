@@ -59,14 +59,14 @@ import java.util.logging.Logger;
 @SuppressWarnings("serial")
 public class DownloadServlet extends HttpServlet {
 
-	private static final Logger logger = Logger.getLogger(DownloadServlet.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(DownloadServlet.class.getName());
 
 	@EJB
 	private static BinaryStoreService binaryStore;
 
 	@Override
 	public void init() throws ServletException {
-		logger.log(Level.FINE, "DownloadServlet Initialized");
+		LOGGER.log(Level.FINE, "DownloadServlet Initialized");
 		super.init();
 	}
 
@@ -83,8 +83,8 @@ public class DownloadServlet extends HttpServlet {
 			filename = st.nextToken();
 			int size = Integer.parseInt(st.nextToken());
 			String contentType = st.nextToken();
-			logger.log(Level.INFO, "User " + ticket.getUsername() + " trying to download file '" + filename + "' (" + hash + ")");
-			logger.log(Level.FINE, "Validating ticket " + ticket);
+			LOGGER.log(Level.INFO, "User " + ticket.getUsername() + " trying to download file '" + filename + "' (" + hash + ")");
+			LOGGER.log(Level.FINE, "Validating ticket " + ticket);
 			if (!ticket.validate(hash)) {
 				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid ticket");
 			}
@@ -99,21 +99,21 @@ public class DownloadServlet extends HttpServlet {
 				IOUtils.closeQuietly(input);
 			}
 		} catch (BinaryStoreServiceException | DataNotFoundException e) {
-			logger.log(Level.SEVERE, "An error occurred when trying to download " + filename, e);
+			LOGGER.log(Level.SEVERE, "An error occurred when trying to download " + filename, e);
 			throw new ServletException(e);
 		}
 	}
 
 	@Override
 	protected long getLastModified(HttpServletRequest request) {
-		logger.log(Level.FINE, "Getting last modification");
+		LOGGER.log(Level.FINE, "Getting last modification");
 		String[] uriSplit = request.getRequestURI().split("/");
 		String hash = uriSplit[uriSplit.length - 1];
 		try {
 			long lmd = binaryStore.getFile(hash).lastModified();
 			return (lmd / 1000 * 1000);
 		} catch (BinaryStoreServiceException | DataNotFoundException e) {
-			logger.log(Level.SEVERE, "An error occurred when trying to get last modification date for hash: " + hash, e);
+			LOGGER.log(Level.SEVERE, "An error occurred when trying to get last modification date for hash: " + hash, e);
 			return -1;
 		}
 	}

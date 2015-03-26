@@ -53,7 +53,7 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 
 public class DiffusionFileSystemView implements FileSystemView {
 	
-	private static Logger logger = Logger.getLogger(DiffusionFileSystemView.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(DiffusionFileSystemView.class.getName());
 	
 	private SSHSession session;
 	private CoreService core;
@@ -61,51 +61,51 @@ public class DiffusionFileSystemView implements FileSystemView {
 	private BinaryStoreService binary;
 	
 	public DiffusionFileSystemView(SSHSession session) {
-		logger.log(Level.INFO, "DiffusionFileSystemView created for user: " + session.getUsername());
+		LOGGER.log(Level.INFO, "DiffusionFileSystemView created for user: " + session.getUsername());
 		this.session = session;
 	}
 
 	@Override
 	public SshFile getFile(String file) {
-		logger.log(Level.FINE, "Getting file: " + file);
+		LOGGER.log(Level.FINE, "Getting file: " + file);
 		try {
 			return loadFile(PathBuilder.fromPath(file));
 		} catch (InvalidPathException | OrtolangException e) {
 			//TODO how is it possible to send errors to client ??
-			logger.log(Level.WARNING, "Unable to get file: " + file, e);
+			LOGGER.log(Level.WARNING, "Unable to get file: " + file, e);
 			return null;
 		}
 	}
 
 	@Override
 	public SshFile getFile(SshFile baseDir, String file) {
-		logger.log(Level.FINE, "Getting file with base dir: " + baseDir.getAbsolutePath() + " and file: " + file);
+		LOGGER.log(Level.FINE, "Getting file with base dir: " + baseDir.getAbsolutePath() + " and file: " + file);
 		try {
 			return loadFile(PathBuilder.fromPath(baseDir.getAbsolutePath()).path(file));
 		} catch (InvalidPathException | OrtolangException e) {
 			//TODO how is it possible to send errors to client ??
-			logger.log(Level.WARNING, "Unable to get file: " + file, e);
+			LOGGER.log(Level.WARNING, "Unable to get file: " + file, e);
 			return null;
 		}
 	}
 
 	@Override
 	public FileSystemView getNormalizedView() {
-		logger.log(Level.FINE, "Getting normalized view");
+		LOGGER.log(Level.FINE, "Getting normalized view");
 		return this;
 	}
 	
 	protected SshFile loadFile(PathBuilder path) throws OrtolangException {
-		logger.log(Level.FINE, "Loading file: " + path.build());
+		LOGGER.log(Level.FINE, "Loading file: " + path.build());
        	SshFile file = null;
 		if ( path.isRoot() ) {
-			logger.log(Level.FINE, "RootLevel, loading ProfileSshFile");
+			LOGGER.log(Level.FINE, "RootLevel, loading ProfileSshFile");
 			file = new ProfileSshFile(this);
 		} else if ( path.depth() == 1 ) {
-			logger.log(Level.FINE, "WorkspaceLevel, loading WorkspaceSshFile with name: " + path.part());
+			LOGGER.log(Level.FINE, "WorkspaceLevel, loading WorkspaceSshFile with name: " + path.part());
 			file = new WorkspaceSshFile(this, path);
 		} else {
-			logger.log(Level.FINE, "CoreLevel, loading CoreSshFile with path: " + path.build());
+			LOGGER.log(Level.FINE, "CoreLevel, loading CoreSshFile with path: " + path.build());
 			file = new CoreSshFile(this, path);
 		}
 		return file;

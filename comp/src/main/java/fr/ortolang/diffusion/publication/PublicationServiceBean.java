@@ -88,7 +88,7 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 @PermitAll
 public class PublicationServiceBean implements PublicationService {
 
-	private static final Logger logger = Logger.getLogger(PublicationServiceBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(PublicationServiceBean.class.getName());
 
 	private static final String[] OBJECT_TYPE_LIST = new String[] { };
 	private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
@@ -180,7 +180,7 @@ public class PublicationServiceBean implements PublicationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void publish(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException {
-		logger.log(Level.FINE, "publishing key : " + key);
+		LOGGER.log(Level.FINE, "publishing key : " + key);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -189,7 +189,7 @@ public class PublicationServiceBean implements PublicationService {
 			}
 
 			if (registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.PUBLISHED.value())) {
-				logger.log(Level.WARNING, "key [" + key + "] is already published, nothing to do !!");
+				LOGGER.log(Level.WARNING, "key [" + key + "] is already published, nothing to do !!");
 			} else {
 				authorisation.updatePolicyOwner(key, MembershipService.SUPERUSER_IDENTIFIER);
 				authorisation.setPolicyRules(key, permissions);
@@ -200,7 +200,7 @@ public class PublicationServiceBean implements PublicationService {
 				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "publish"), "");
 			}
 		} catch (KeyLockedException | AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException e) {
-			logger.log(Level.SEVERE, "error during publication of key", e);
+			LOGGER.log(Level.SEVERE, "error during publication of key", e);
 			ctx.setRollbackOnly();
 			throw new PublicationServiceException("error during publishing key : " + e);
 		}
@@ -209,15 +209,15 @@ public class PublicationServiceBean implements PublicationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void review(String key) throws PublicationServiceException, AccessDeniedException {
-		logger.log(Level.FINE, "submiting key for review");
+		LOGGER.log(Level.FINE, "submiting key for review");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 
 			if (registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.PUBLISHED.value())) {
-				logger.log(Level.WARNING, "key [" + key + "] is already published, nothing to do !!");
+				LOGGER.log(Level.WARNING, "key [" + key + "] is already published, nothing to do !!");
 			} else if (registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.REVIEW.value())) {
-				logger.log(Level.WARNING, "key [" + key + "] is already in review, nothing to do !!");
+				LOGGER.log(Level.WARNING, "key [" + key + "] is already in review, nothing to do !!");
 			} else {
 				authorisation.checkOwnership(key, subjects);
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.REVIEW.value());

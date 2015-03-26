@@ -48,7 +48,7 @@ import org.apache.sshd.server.sftp.SftpSubsystem;
 
 public class DiffusionSftpSubsystem extends SftpSubsystem {
 	
-	protected final Logger logger = Logger.getLogger(DiffusionSftpSubsystem.class.getName());
+	protected final static Logger LOGGER = Logger.getLogger(DiffusionSftpSubsystem.class.getName());
 	private ThreadFactory factory;
 	
     public static class Factory implements NamedFactory<Command> {
@@ -76,7 +76,7 @@ public class DiffusionSftpSubsystem extends SftpSubsystem {
     
     @Override
     public void start(Environment env) throws IOException {
-    	logger.log(Level.INFO, "Creating new thread for diffusion sftp subsystem");
+    	LOGGER.log(Level.INFO, "Creating new thread for diffusion sftp subsystem");
     	Thread thread = factory.newThread(this);
     	thread.start();
     }

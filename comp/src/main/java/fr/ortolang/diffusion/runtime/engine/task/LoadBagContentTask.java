@@ -31,7 +31,7 @@ import gov.loc.repository.bagit.utilities.SimpleResult;
 
 public class LoadBagContentTask extends RuntimeEngineTask {
 	
-	private static final Logger logger = Logger.getLogger(LoadBagContentTask.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(LoadBagContentTask.class.getName());
 	
 	public static final String NAME = "Load Bag Content";
 	public static final String DATA_PREFIX = "data/";
@@ -45,16 +45,16 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 	
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		logger.log(Level.INFO, "Starting Load Bag Content Task");
+		LOGGER.log(Level.INFO, "Starting Load Bag Content Task");
 		checkParameters(execution);
 		Path bagpath = Paths.get(execution.getVariable(BAG_PATH_PARAM_NAME, String.class));
 		Bag bag = loadBag(bagpath);
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Bag file loaded from local file: " + bag.getFile()));
 		
-		logger.log(Level.FINE, "- list versions");
+		LOGGER.log(Level.FINE, "- list versions");
 		List<String> versions = searchVersions(bag);
 		
-		logger.log(Level.FINE, "- build import script");
+		LOGGER.log(Level.FINE, "- build import script");
 		StringBuffer buffer = new StringBuffer();
 		appendWorkspaceInformations(buffer, bag);
 		String pversion = null;
@@ -75,9 +75,9 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		try {
 			bag.close();
 		} catch ( IOException e ) {
-			logger.log(Level.SEVERE, "- error during closing bag", e);
+			LOGGER.log(Level.SEVERE, "- error during closing bag", e);
 		}
-		logger.log(Level.INFO, "- import script generated : \r\n" + buffer.toString());
+		LOGGER.log(Level.INFO, "- import script generated : \r\n" + buffer.toString());
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import script generated"));
 		execution.setVariable(BAG_VERSIONS_PARAM_NAME, versions);
 		execution.setVariable(IMPORT_OPERATIONS_PARAM_NAME, buffer);
@@ -102,7 +102,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		Bag bag = factory.createBag(bagpath.toFile());
 		SimpleResult result = bag.verifyPayloadManifests();
 		if (!result.isSuccess()) {
-			logger.log(Level.WARNING, "bag verification failed: " + result.messagesToString());
+			LOGGER.log(Level.WARNING, "bag verification failed: " + result.messagesToString());
 			throw new RuntimeEngineTaskException("bag verification failed: " + result.messagesToString());
 		}
 		return bag;
@@ -115,21 +115,21 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 			if (bagfile.getFilepath().startsWith(SNAPSHOTS_PREFIX)) {
 				String[] parts = bagfile.getFilepath().substring(SNAPSHOTS_PREFIX.length()).split("/");
 				if (parts.length <= 1 || parts[0].length() <= 0 || parts[1].length() <= 0) {
-					logger.log(Level.INFO, "Unparsable snapshot hierarchy found: " + Arrays.deepToString(parts));
+					LOGGER.log(Level.INFO, "Unparsable snapshot hierarchy found: " + Arrays.deepToString(parts));
 				}
 				Integer index = -1;
 				try {
 					index = Integer.decode(parts[0]);
 					if (snapshots.containsKey(index)) {
 						if (!snapshots.get(index).equals(parts[1])) {
-							logger.log(Level.WARNING, "Found a version with existing index but different name!! " + snapshots.get(index) + " - " + parts[1]);
+							LOGGER.log(Level.WARNING, "Found a version with existing index but different name!! " + snapshots.get(index) + " - " + parts[1]);
 						}
 					} else {
-						logger.log(Level.INFO, "Found new version with index: " + index + " and name: " + parts[1]);
+						LOGGER.log(Level.INFO, "Found new version with index: " + index + " and name: " + parts[1]);
 						snapshots.put(index, parts[1]);
 					}
 				} catch (Exception e) {
-					logger.log(Level.INFO, "Snapshot index is not a number: " + parts[0]);
+					LOGGER.log(Level.INFO, "Snapshot index is not a number: " + parts[0]);
 				}
 			}
 		}
@@ -155,7 +155,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 			props.load(propFile.newInputStream());
 			buffer.append("create-workspace\t").append(props.getProperty("alias")).append("\t").append(props.getProperty("name")).append("\t").append(props.getProperty("type")).append("\t");
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "unable to append workspace informations", e);
+			LOGGER.log(Level.SEVERE, "unable to append workspace informations", e);
 			throw new RuntimeEngineTaskException("unable to append workspace informations", e);
 		}
 	}

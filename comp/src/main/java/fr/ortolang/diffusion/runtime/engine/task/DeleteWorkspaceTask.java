@@ -21,7 +21,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public class DeleteWorkspaceTask extends RuntimeEngineTask {
 	
-	private static final Logger logger = Logger.getLogger(DeleteWorkspaceTask.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(DeleteWorkspaceTask.class.getName());
 	public static final String NAME = "Delete Workspace";
 	
 	public DeleteWorkspaceTask() {
@@ -29,7 +29,7 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		logger.log(Level.INFO, "Starting Delete Workspace Task");
+		LOGGER.log(Level.INFO, "Starting Delete Workspace Task");
 		String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
 		if ( !execution.hasVariable(WORKSPACE_NAME_PARAM_NAME) ) {
 			execution.setVariable(WORKSPACE_NAME_PARAM_NAME, wskey);
@@ -38,17 +38,17 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 		try {
 			try {
 				getUserTransaction().setTransactionTimeout(2000);
-				logger.log(Level.FINE, "Reading workspace");
+				LOGGER.log(Level.FINE, "Reading workspace");
 				Workspace workspace = getCoreService().readWorkspace(wskey);
 				if ( workspace.getType().equals(WorkspaceType.SYSTEM.toString())) {
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace is a SYSTEM workspace and it is forbidden to delete it"));
 					throw new RuntimeEngineTaskException("deleting a system workspace is forbidden");
 				}
-				logger.log(Level.FINE, "Listing workspace keys");
+				LOGGER.log(Level.FINE, "Listing workspace keys");
 				Set<String> keys = getCoreService().systemListWorkspaceKeys(wskey);
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace content retreived"));
 				for ( String key : keys ) {
-					logger.log(Level.FINE, "Deleting content key: " + key);
+					LOGGER.log(Level.FINE, "Deleting content key: " + key);
 					getRegistryService().delete(key, true);
 				}
 				getCoreService().deleteWorkspace(wskey);

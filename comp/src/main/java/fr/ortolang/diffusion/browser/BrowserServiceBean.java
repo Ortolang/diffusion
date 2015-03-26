@@ -80,7 +80,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @PermitAll
 public class BrowserServiceBean implements BrowserService {
 
-	private static final Logger logger = Logger.getLogger(BrowserServiceBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(BrowserServiceBean.class.getName());
 
 	private static final String[] OBJECT_TYPE_LIST = new String[] { };
 	private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
@@ -132,7 +132,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObjectIdentifier lookup(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "looking up identifier for key [" + key + "]");
+		LOGGER.log(Level.FINE, "looking up identifier for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -148,9 +148,9 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> list(int offset, int limit, String service, String type, OrtolangObjectState.Status status, boolean itemsOnly) throws BrowserServiceException {
-		logger.log(Level.FINE, "listing keys");
+		LOGGER.log(Level.FINE, "listing keys");
 		try {
-			logger.log(Level.FINE, "auth user: " + membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.FINE, "auth user: " + membership.getProfileKeyForConnectedIdentifier());
 			return registry.list(offset, limit, OrtolangObjectIdentifier.buildJPQLFilterPattern(service, type), status, itemsOnly);
 		} catch (RegistryServiceException e) {
 			throw new BrowserServiceException("error during listing keys", e);
@@ -160,7 +160,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public long count(String service, String type, OrtolangObjectState.Status status, boolean itemsOnly) throws BrowserServiceException {
-		logger.log(Level.FINE, "counting keys");
+		LOGGER.log(Level.FINE, "counting keys");
 		try {
 			return registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(service, type), status, itemsOnly);
 		} catch (RegistryServiceException e) {
@@ -171,7 +171,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<OrtolangObjectProperty> listProperties(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "listing properties for key [" + key + "]");
+		LOGGER.log(Level.FINE, "listing properties for key [" + key + "]");
 		try {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
@@ -185,7 +185,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObjectProperty getProperty(String key, String name) throws BrowserServiceException, KeyNotFoundException, PropertyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "getting property with name [" + name + "] for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting property with name [" + name + "] for key [" + key + "]");
 		try {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
@@ -200,7 +200,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void setProperty(String key, String name, String value) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException {
-		logger.log(Level.INFO, "setting property with name [" + name + "] for key [" + key + "]");
+		LOGGER.log(Level.INFO, "setting property with name [" + name + "] for key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -218,7 +218,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObjectState getState(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "getting state for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting state for key [" + key + "]");
 		try {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
@@ -236,7 +236,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObjectInfos getInfos(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "getting infos for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting infos for key [" + key + "]");
 		try {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
@@ -253,7 +253,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObjectVersion getVersion(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "getting version for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting version for key [" + key + "]");
 		try {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
@@ -275,7 +275,7 @@ public class BrowserServiceBean implements BrowserService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<OrtolangObjectVersion> getHistory(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.FINE, "getting history for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting history for key [" + key + "]");
 		
 		List<OrtolangObjectVersion> versions = new ArrayList<OrtolangObjectVersion> ();
 		String parent = key;
@@ -304,7 +304,7 @@ public class BrowserServiceBean implements BrowserService {
 
 	@Override
 	public OrtolangObject findObject(String key) throws OrtolangException, AccessDeniedException, KeyNotFoundException {
-		logger.log(Level.FINE, "trying to find object for key [" + key + "]");
+		LOGGER.log(Level.FINE, "trying to find object for key [" + key + "]");
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			OrtolangService service = OrtolangServiceLocator.findService(identifier.getService());

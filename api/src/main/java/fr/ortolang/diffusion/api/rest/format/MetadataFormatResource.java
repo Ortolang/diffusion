@@ -36,7 +36,7 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 @Produces({ MediaType.APPLICATION_JSON })
 public class MetadataFormatResource {
 
-	private Logger logger = Logger.getLogger(MetadataFormatResource.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(MetadataFormatResource.class.getName());
 
 	@EJB
 	private CoreService core;
@@ -45,7 +45,7 @@ public class MetadataFormatResource {
 
 	@GET
 	public Response listMetadataFormat() throws CoreServiceException {
-		logger.log(Level.INFO, "GET /metadataformats");
+		LOGGER.log(Level.INFO, "GET /metadataformats");
 		
 		List<MetadataFormat> mdfs = core.listMetadataFormat();
 		
@@ -62,7 +62,7 @@ public class MetadataFormatResource {
 	@GET
 	@Path("/{key}/download")
 	public void download(final @PathParam(value = "key") String key, @Context HttpServletResponse response) throws OrtolangException, KeyNotFoundException, AccessDeniedException, CoreServiceException, DataNotFoundException, IOException {
-		logger.log(Level.INFO, "GET /metadataformats/" + key + "/download");
+		LOGGER.log(Level.INFO, "GET /metadataformats/" + key + "/download");
 		
 		OrtolangObject object = browser.findObject(key);
 		if (object instanceof MetadataFormat) {

@@ -65,20 +65,20 @@ import fr.ortolang.diffusion.api.ssh.vfs.DiffusionSftpSubsystem;
 @SuppressWarnings("serial")
 public class SSHServlet extends HttpServlet {
 
-	private static Logger logger = Logger.getLogger(SSHServlet.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(SSHServlet.class.getName());
 
 	@Resource
-	private ManagedThreadFactory threadFactory;
+	private static ManagedThreadFactory threadFactory;
 	@Resource
-	private ManagedScheduledExecutorService executor;
+	private static ManagedScheduledExecutorService executor;
 
-	private SshServer sshd = null;
-	private boolean started = false;
+	private static SshServer sshd = null;
+	private static boolean started = false;
 
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		try {
-			logger.log(Level.INFO, "starting ssh service...");
+			LOGGER.log(Level.INFO, "starting ssh service...");
 			if (sshd == null) {
 				sshd = SshServer.setUpDefaultServer();
 				sshd.getProperties().put(SshServer.WELCOME_BANNER, "Welcome to Ortolang SSHD\n");
@@ -107,24 +107,24 @@ public class SSHServlet extends HttpServlet {
 				sshd.start();
 			}
 			started = true;
-			logger.log(Level.INFO, "ssh service started: " + sshd.getVersion());
+			LOGGER.log(Level.INFO, "ssh service started: " + sshd.getVersion());
 		} catch ( IOException e ) {
-			logger.log(Level.SEVERE, "unable to start ssh service: " + e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, "unable to start ssh service: " + e.getMessage(), e);
 		}
 	}
 
 	@Override
 	public void destroy() {
 		try {
-			logger.log(Level.INFO, "stopping ssh service...");
+			LOGGER.log(Level.INFO, "stopping ssh service...");
 			if ( started ) {
 				sshd.stop(true);
-				logger.log(Level.INFO, "ssh service stopped");
+				LOGGER.log(Level.INFO, "ssh service stopped");
 			} else  {
-				logger.log(Level.INFO, "ssh service not running, nothing to stop");
+				LOGGER.log(Level.INFO, "ssh service not running, nothing to stop");
 			}
 		} catch ( InterruptedException e ) {
-			logger.log(Level.WARNING, "unable to stop ssh service: " + e.getMessage(), e);
+			LOGGER.log(Level.WARNING, "unable to stop ssh service: " + e.getMessage(), e);
 		}
 	}
 

@@ -52,7 +52,7 @@ import java.util.logging.Logger;
 
 public class TicketHelper {
 
-    private static final Logger logger = Logger.getLogger(TicketHelper.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(TicketHelper.class.getName());
 
     private static final String ALGORITHM = "AES";
     private static final String ALGORITHM_MODE_PADDING = ALGORITHM + "/ECB/PKCS5Padding";
@@ -69,7 +69,7 @@ public class TicketHelper {
             generator.init(KEY_SIZE);
             key = generator.generateKey();
         } catch (NoSuchAlgorithmException e) {
-            logger.log(Level.SEVERE, "Error during TicketHelper initialization", e);
+            LOGGER.log(Level.SEVERE, "Error during TicketHelper initialization", e);
         }
     }
 
@@ -88,7 +88,7 @@ public class TicketHelper {
             byte[] encryptedBytes = cipher.doFinal(bos.toByteArray());
             return Base64.encodeBase64URLSafeString(encryptedBytes);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IOException | BadPaddingException | IllegalBlockSizeException e) {
-            logger.log(Level.SEVERE, "Error when making a ticket", e);
+            LOGGER.log(Level.SEVERE, "Error when making a ticket", e);
         }
         return "";
     }
@@ -113,7 +113,7 @@ public class TicketHelper {
             ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(serializedMap));
             return (Ticket) ois.readObject();
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | BadPaddingException | IllegalBlockSizeException | IOException | ClassNotFoundException | DigestException e) {
-            logger.log(Level.SEVERE, "Error when decoding ticket", e);
+            LOGGER.log(Level.SEVERE, "Error when decoding ticket", e);
         }
         return null;
     }
@@ -145,14 +145,14 @@ public class TicketHelper {
 
         public boolean validate(String hash) {
             if (!hash.equals(this.hash)) {
-                logger.log(Level.FINE, "Ticket not valid for this hash");
+                LOGGER.log(Level.FINE, "Ticket not valid for this hash");
                 return false;
             }
             Date date = new Date(expiration);
             if (date.after(new Date())) {
                 return true;
             }
-            logger.log(Level.FINE, "Ticket validity has expired");
+            LOGGER.log(Level.FINE, "Ticket validity has expired");
             return false;
         }
 

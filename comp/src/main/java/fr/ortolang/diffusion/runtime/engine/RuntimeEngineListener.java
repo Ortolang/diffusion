@@ -46,7 +46,7 @@ import fr.ortolang.diffusion.runtime.entity.Process.State;
 
 public class RuntimeEngineListener {
 
-	private static final Logger logger = Logger.getLogger(RuntimeEngineListener.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(RuntimeEngineListener.class.getName());
 
 	private RuntimeService runtime;
 
@@ -62,7 +62,7 @@ public class RuntimeEngineListener {
 	}
 
 	public void onEvent(RuntimeEngineEvent event) {
-		logger.log(Level.FINE, "RuntimeEngineEvent type: " + event.getType());
+		LOGGER.log(Level.FINE, "RuntimeEngineEvent type: " + event.getType());
 		try {
 			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_START)) {
 				getRuntimeService().updateProcessState(event.getPid(), State.RUNNING);
@@ -93,7 +93,7 @@ public class RuntimeEngineListener {
 				getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
 			}
 		} catch (RuntimeServiceException | RuntimeEngineException e) {
-			logger.log(Level.SEVERE, "unexpected error while trying to treat runtime  event", e);
+			LOGGER.log(Level.SEVERE, "unexpected error while trying to treat runtime  event", e);
 		}
 	}
 

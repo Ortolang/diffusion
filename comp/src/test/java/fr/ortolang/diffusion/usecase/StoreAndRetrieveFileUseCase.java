@@ -74,7 +74,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 @RunWith(Arquillian.class)
 public class StoreAndRetrieveFileUseCase {
 
-	private static Logger logger = Logger.getLogger(StoreAndRetrieveFileUseCase.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(StoreAndRetrieveFileUseCase.class.getName());
 
 	@EJB
 	private BrowserService browser;
@@ -98,7 +98,7 @@ public class StoreAndRetrieveFileUseCase {
 		jar.addPackage("fr.ortolang.diffusion.notification");
 		jar.addAsResource("config.properties");
 		jar.addAsResource("file1.jpg");
-		logger.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
+		LOGGER.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
 
 		EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class);
 		ear.addAsModule(jar);
@@ -110,7 +110,7 @@ public class StoreAndRetrieveFileUseCase {
 				.withTransitivity().asFile());
 		ear.addAsLibraries(Maven.resolver().loadPomFromFile("pom.xml").resolve("org.apache.tika:tika-core:1.4")
 				.withTransitivity().asFile());
-		logger.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
+		LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 
 		return ear;
 	}
@@ -119,10 +119,10 @@ public class StoreAndRetrieveFileUseCase {
 	public void testHostSimpleFile() throws URISyntaxException {
 		// Path origin = Paths.get(HostAndRetrieveFileTest.class.getClassLoader().getResource("file1.jpg").getPath());
 		Path origin = Paths.get("/home/jerome/Images/test.jpg");
-		logger.log(Level.INFO, "Origin file to insert in container : " + origin.toString());
+		LOGGER.log(Level.INFO, "Origin file to insert in container : " + origin.toString());
 
 		Path destination = Paths.get("/tmp/" + System.currentTimeMillis());
-		logger.log(Level.INFO, "Destination file for retrieving content from container : " + destination.toString());
+		LOGGER.log(Level.INFO, "Destination file for retrieving content from container : " + destination.toString());
 
 		String wkey = UUID.randomUUID().toString();
 		String okey = UUID.randomUUID().toString();
@@ -131,7 +131,7 @@ public class StoreAndRetrieveFileUseCase {
 		try {
 			core.createWorkspace(wkey, "Test Workspace", "test");
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			fail(e.getMessage());
 		}
 
@@ -141,7 +141,7 @@ public class StoreAndRetrieveFileUseCase {
 			Files.copy(origin, baos);
 			//core.createDataObject(wkey, "/" + okey, "Test Object", "A really simple test object !!", baos.toByteArray());
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			fail(e.getMessage());
 		}
 
@@ -151,17 +151,17 @@ public class StoreAndRetrieveFileUseCase {
 			assertEquals(identifier.getService(), CoreService.SERVICE_NAME);
 			assertEquals(identifier.getType(), DataObject.OBJECT_TYPE);
 		} catch (BrowserServiceException | KeyNotFoundException | AccessDeniedException e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			fail(e.getMessage());
 		}
 
 		// Retrieve this digital object informations using the key
 		try {
 			DataObject object = core.readDataObject(okey);
-			logger.log(Level.INFO, "Detected mime type : " + object.getMimeType());
-			logger.log(Level.INFO, "Detected size : " + object.getSize());
+			LOGGER.log(Level.INFO, "Detected mime type : " + object.getMimeType());
+			LOGGER.log(Level.INFO, "Detected size : " + object.getSize());
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			fail(e.getMessage());
 		}
 
@@ -170,7 +170,7 @@ public class StoreAndRetrieveFileUseCase {
 			//byte[] data = core.readDataObjectContent(okey);
 			//Files.copy(new ByteArrayInputStream(data), destination);
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			fail(e.getMessage());
 		}
 
@@ -182,7 +182,7 @@ public class StoreAndRetrieveFileUseCase {
 			input1.close();
 			input2.close();
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			fail(e.getMessage());
 		}
 
@@ -190,7 +190,7 @@ public class StoreAndRetrieveFileUseCase {
 		try {
 			Files.delete(destination);
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 
 	}

@@ -49,7 +49,7 @@ import org.junit.Test;
 
 public class HandleStoreServiceTest {
 	
-	private Logger logger = Logger.getLogger(HandleStoreServiceTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(HandleStoreServiceTest.class.getName());
 	private HandleStoreServiceBean service;
 	
 	@Before
@@ -77,10 +77,10 @@ public class HandleStoreServiceTest {
 			assertFalse(service.exists("test-777"));
 			
 			String res = service.read("test-666");
-			logger.log(Level.INFO, "received handle value: " + res);
+			LOGGER.log(Level.INFO, "received handle value: " + res);
 			service.delete("test-666");
 		} catch ( Exception e ) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			fail(e.getMessage());
 		}
 	}

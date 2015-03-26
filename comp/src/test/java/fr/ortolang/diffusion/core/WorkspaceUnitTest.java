@@ -53,7 +53,7 @@ import fr.ortolang.diffusion.core.entity.Workspace;
 
 public class WorkspaceUnitTest {
 
-	private static Logger logger = Logger.getLogger(WorkspaceUnitTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(WorkspaceUnitTest.class.getName());
 	
 	@Test
 	public void testWorkspaceSnapshot() {
@@ -69,7 +69,7 @@ public class WorkspaceUnitTest {
 		String sn1 = "Version 1";
 		SnapshotElement se1 = new SnapshotElement(sn1, sk1);
 		w.addSnapshot(se1);
-		logger.log(Level.INFO, "Workspace Snapshot Content : \r\n" + w.getSnapshotsContent());
+		LOGGER.log(Level.INFO, "Workspace Snapshot Content : \r\n" + w.getSnapshotsContent());
 		assertEquals(1, w.getSnapshots().size());
 		assertTrue(w.containsSnapshotKey(sk1));
 		assertTrue(w.containsSnapshotName(sn1));
@@ -81,7 +81,7 @@ public class WorkspaceUnitTest {
 		String sn2 = "Version 2";
 		SnapshotElement se2 = new SnapshotElement(sn2, sk2);
 		w.addSnapshot(se2);
-		logger.log(Level.INFO, "Workspace Snapshot Content : \r\n" + w.getSnapshotsContent());
+		LOGGER.log(Level.INFO, "Workspace Snapshot Content : \r\n" + w.getSnapshotsContent());
 		assertEquals(2, w.getSnapshots().size());
 		assertTrue(w.containsSnapshotKey(sk1));
 		assertTrue(w.containsSnapshotName(sn1));
@@ -95,7 +95,7 @@ public class WorkspaceUnitTest {
 		assertEquals(se2, w.findSnapshotByName(sn2));
 		
 		w.removeSnapshot(se1);
-		logger.log(Level.INFO, "Workspace Snapshot Content : \r\n" + w.getSnapshotsContent());
+		LOGGER.log(Level.INFO, "Workspace Snapshot Content : \r\n" + w.getSnapshotsContent());
 		assertEquals(1, w.getSnapshots().size());
 		assertFalse(w.containsSnapshotKey(sk1));
 		assertFalse(w.containsSnapshotName(sn1));

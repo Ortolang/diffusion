@@ -76,7 +76,7 @@ import static java.lang.Math.min;
 
 public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
-	private static final Logger logger = Logger.getLogger(DiffusionItemRepository.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(DiffusionItemRepository.class.getName());
 	
 	// From fr.ortolang.diffusion.store.triple.TripleStoreStatementBuilder
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -107,7 +107,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		try {
 			subjectURI = URIHelper.fromKey(key);
 		} catch (TripleStoreServiceException e) {
-			logger.log(Level.SEVERE, "unable to get subject URI", e);
+			LOGGER.log(Level.SEVERE, "unable to get subject URI", e);
 		}
 		
 		String query = "SELECT ?metadataPrefix WHERE { "
@@ -120,9 +120,9 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		String languageResult = "json";
 		try {
 			List<String> metadataFormat = new ArrayList<String>();
-			logger.log(Level.FINE, "SPARQL query : "+query);
+			LOGGER.log(Level.FINE, "SPARQL query : "+query);
 			String semanticResult = search.semanticSearch(query, languageResult);
-			logger.log(Level.FINE, "SPARQL Result : "+semanticResult);
+			LOGGER.log(Level.FINE, "SPARQL Result : "+semanticResult);
 			JsonObject jsonObject = Json.createReader(new StringReader(semanticResult)).readObject();
 			JsonArray results = jsonObject.getJsonObject("results").getJsonArray("bindings");
 			JsonObject result = null;
@@ -139,7 +139,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 			
 			return metadataFormat;
 		} catch (SearchServiceException e) {
-			logger.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
+			LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
 		}
 		
 		throw new NoMetadataFormatsException();
@@ -333,9 +333,9 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		
 		String languageResult = "json";
 		try {
-			logger.log(Level.FINE, "SPARQL query : "+query);
+			LOGGER.log(Level.FINE, "SPARQL query : "+query);
 			String semanticResult = search.semanticSearch(query, languageResult);
-			logger.log(Level.FINE, "Result of SPARQL query : "+semanticResult);
+			LOGGER.log(Level.FINE, "Result of SPARQL query : "+semanticResult);
 			JsonObject jsonObject = Json.createReader(new StringReader(semanticResult)).readObject();
 			JsonArray results = jsonObject.getJsonObject("results").getJsonArray("bindings");
 			
@@ -355,19 +355,19 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 					try {
 						datestamp = sdf.parse(lastDate);
 					} catch (ParseException e) {
-						logger.log(Level.SEVERE, "unable to parse date", e);
+						LOGGER.log(Level.SEVERE, "unable to parse date", e);
 					}
 					if(itemID!=null && datestamp!=null) {
 						list.add(new DiffusionItemIdentifier().withIdentifier(PREFIX_IDENTIFIER+itemID).withDatestamp(datestamp));
 					} else {
-						logger.log(Level.SEVERE, "Unable to parse datestamp string : "+datestamp);
+						LOGGER.log(Level.SEVERE, "Unable to parse datestamp string : "+datestamp);
 					}
 				}
 			}
 		} catch (SearchServiceException e) {
 //			e.printStackTrace();
-			logger.log(Level.SEVERE, "Unable to search into the triplestore with SPARQL query : "+query);
-			logger.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
+			LOGGER.log(Level.SEVERE, "Unable to search into the triplestore with SPARQL query : "+query);
+			LOGGER.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
 		}
 		
 		return new ListItemIdentifiersResult(offset + length < list.size(), new ArrayList<ItemIdentifier>(list.subList(offset, min(offset + length, list.size()))));
@@ -394,8 +394,8 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		try {
 			subjectURI = URIHelper.fromKey(key);
 		} catch (TripleStoreServiceException e1) {
-			logger.log(Level.SEVERE, "Unable to create subject URI with key : "+key);
-			logger.log(Level.SEVERE, "Stack traces : ", e1.fillInStackTrace());
+			LOGGER.log(Level.SEVERE, "Unable to create subject URI with key : "+key);
+			LOGGER.log(Level.SEVERE, "Stack traces : ", e1.fillInStackTrace());
 			throw new IdDoesNotExistException();
 		}
 		
@@ -405,13 +405,13 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 				+"; <http://www.ortolang.fr/2014/05/diffusion#hasMetadata> ?metadata "
 				+". ?metadata <http://www.ortolang.fr/2014/05/diffusion#metadataFormat> '"+metadataPrefix+"' "
 				+"}";
-		logger.log(Level.FINE, "SPARQL query : "+query);
+		LOGGER.log(Level.FINE, "SPARQL query : "+query);
 
 		String languageResult = "json";
 		try {
-			logger.log(Level.FINE, "SPARQL query : "+query);
+			LOGGER.log(Level.FINE, "SPARQL query : "+query);
 			String semanticResult = search.semanticSearch(query, languageResult);
-			logger.log(Level.FINE, "SPARQL Result : "+semanticResult);
+			LOGGER.log(Level.FINE, "SPARQL Result : "+semanticResult);
 			JsonObject jsonObject = Json.createReader(new StringReader(semanticResult)).readObject();
 			JsonArray results = jsonObject.getJsonObject("results").getJsonArray("bindings");
 			JsonObject result = null;
@@ -432,14 +432,14 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 				} catch (OrtolangException | KeyNotFoundException
 						| CoreServiceException
 						| DataNotFoundException | IOException e) {
-					logger.log(Level.SEVERE, "Unable to get metadata of "+key);
-					logger.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
+					LOGGER.log(Level.SEVERE, "Unable to get metadata of "+key);
+					LOGGER.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
 					return null;
 				}
 			}
 		} catch (SearchServiceException e) {
-			logger.log(Level.SEVERE, "Unable to search to the triplestore with the query  "+query);
-			logger.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
+			LOGGER.log(Level.SEVERE, "Unable to search to the triplestore with the query  "+query);
+			LOGGER.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
 			return null;
 		}
 		
@@ -577,9 +577,9 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		
 		String languageResult = "json";
 		try {
-			logger.log(Level.FINE, "SPARQL query : "+query);
+			LOGGER.log(Level.FINE, "SPARQL query : "+query);
 			String semanticResult = search.semanticSearch(query, languageResult);
-			logger.log(Level.FINE, "Result for item OAI : "+semanticResult);
+			LOGGER.log(Level.FINE, "Result for item OAI : "+semanticResult);
 			JsonObject jsonObject = Json.createReader(new StringReader(semanticResult)).readObject();
 			JsonArray results = jsonObject.getJsonObject("results").getJsonArray("bindings");
 			
@@ -602,8 +602,8 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 					} catch (OrtolangException | KeyNotFoundException
 							| CoreServiceException
 							| DataNotFoundException | IOException e) {
-						logger.log(Level.SEVERE, "Unable to get metadata of "+semanticIdentifier);
-						logger.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
+						LOGGER.log(Level.SEVERE, "Unable to get metadata of "+semanticIdentifier);
+						LOGGER.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
 					}
 					
 					if(item!=null) {
@@ -612,8 +612,8 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 				}
 			}
 		} catch (SearchServiceException e) {
-			logger.log(Level.SEVERE, "Unable to search into the triplestore with SPARQL query : "+query);
-			logger.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
+			LOGGER.log(Level.SEVERE, "Unable to search into the triplestore with SPARQL query : "+query);
+			LOGGER.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
 		}
 		
 		return new ListItemsResults(offset + length < list.size(), new ArrayList<Item>(list.subList(offset, min(offset + length, list.size()))));
@@ -630,8 +630,8 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		try {
 			datestamp = sdf.parse(lastDate);
 		} catch (ParseException e) {
-			logger.log(Level.SEVERE, "Unable to parse datestamp : "+lastDate);
-			logger.log(Level.SEVERE, "Stacktraces : ", e.fillInStackTrace());
+			LOGGER.log(Level.SEVERE, "Unable to parse datestamp : "+lastDate);
+			LOGGER.log(Level.SEVERE, "Stacktraces : ", e.fillInStackTrace());
 		}
 		item.withDatestamp(datestamp);
 		
@@ -643,8 +643,8 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 			try {
 				input = core.download(metadataKey);
 			} catch (AccessDeniedException e) {
-				logger.log(Level.SEVERE, "Unable to access to metadata of "+metadataKey);
-				logger.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
+				LOGGER.log(Level.SEVERE, "Unable to access to metadata of "+metadataKey);
+				LOGGER.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
 			}
 			
 			item.withMetadata(input);

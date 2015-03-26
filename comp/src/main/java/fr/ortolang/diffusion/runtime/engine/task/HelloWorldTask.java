@@ -51,7 +51,7 @@ public class HelloWorldTask extends RuntimeEngineTask {
 	
 	public static final String NAME = "HelloWorld";
 
-	private static final Logger logger = Logger.getLogger(HelloWorldTask.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(HelloWorldTask.class.getName());
 
 	private FixedValue delay = null;
 
@@ -70,14 +70,14 @@ public class HelloWorldTask extends RuntimeEngineTask {
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
 		String name = (String) execution.getVariable("name");
 		if (delay != null) {
-			logger.log(Level.INFO, "sleeping a while...");
+			LOGGER.log(Level.INFO, "sleeping a while...");
 			try {
 				Thread.sleep(Integer.parseInt(delay.getExpressionText()));
 			} catch (NumberFormatException | InterruptedException e) {
-				logger.log(Level.WARNING, "error while waiting...", e);
+				LOGGER.log(Level.WARNING, "error while waiting...", e);
 			}
 		}
-		logger.log(Level.INFO, "Hello " + name);
+		LOGGER.log(Level.INFO, "Hello " + name);
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Hello " + name));
 		execution.setVariable("greettime", new Date());
 	}

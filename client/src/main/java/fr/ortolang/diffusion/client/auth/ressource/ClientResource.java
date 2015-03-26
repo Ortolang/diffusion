@@ -62,7 +62,7 @@ import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
 @Produces({ MediaType.APPLICATION_JSON })
 public class ClientResource {
 
-	private static Logger logger = Logger.getLogger(ClientResource.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ClientResource.class.getName());
 	
 	private static boolean initialized = false;
 	private static String authUrl;
@@ -76,7 +76,7 @@ public class ClientResource {
 	private SecurityContext ctx;
 	
 	public ClientResource() {
-		logger.log(Level.INFO, "Creating new ClientResource");
+		LOGGER.log(Level.INFO, "Creating new ClientResource");
 		if ( !initialized ) {
 			authUrl = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.url");
 			authRealm = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.realm");
@@ -89,7 +89,7 @@ public class ClientResource {
 	@GET
 	@Path("/grant")
 	public Response getAuthStatus() {
-		logger.log(Level.INFO, "Checking grant status");
+		LOGGER.log(Level.INFO, "Checking grant status");
 		String user = null;
 		if ( ctx.getUserPrincipal() != null ) {
 			user = ctx.getUserPrincipal().getName();
@@ -97,7 +97,7 @@ public class ClientResource {
 			return Response.status(Status.UNAUTHORIZED).build();
 		}
 		if ( !client.getAccountManager().exists(user) ) {
-			logger.log(Level.FINE, "Generating authentication url");
+			LOGGER.log(Level.FINE, "Generating authentication url");
 			String state = UUID.randomUUID().toString();
 			states.put(state, user);
 			StringBuffer url = new StringBuffer();
@@ -117,7 +117,7 @@ public class ClientResource {
 	@Path("/code")
 	@Produces(MediaType.TEXT_HTML)
 	public Response setAuthCode(@QueryParam("code") String code, @QueryParam("state") String state) {
-		logger.log(Level.INFO, "Setting grant code");
+		LOGGER.log(Level.INFO, "Setting grant code");
 		if ( states.containsKey(state) ) {
 			try {
 				client.getAccountManager().setAuthorisationCode(states.get(state), code);
@@ -133,10 +133,10 @@ public class ClientResource {
 	@GET
 	@Path("/revoke")
 	public Response revoke() {
-		logger.log(Level.INFO, "Revoking grant");
-		String user = null;
+		LOGGER.log(Level.INFO, "Revoking grant");
+		//String user = null;
 		if ( ctx.getUserPrincipal() != null ) {
-			user = ctx.getUserPrincipal().getName();
+			//user = ctx.getUserPrincipal().getName();
 		} else {
 			return Response.status(Status.UNAUTHORIZED).build();
 		}

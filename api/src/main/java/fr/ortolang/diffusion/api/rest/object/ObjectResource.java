@@ -113,7 +113,7 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 @Produces({ MediaType.APPLICATION_JSON })
 public class ObjectResource {
 
-	private static final Logger logger = Logger.getLogger(ObjectResource.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ObjectResource.class.getName());
 
 	@EJB
 	private BrowserService browser;
@@ -148,7 +148,7 @@ public class ObjectResource {
 	public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit,
 			@QueryParam(value = "service") String service, @QueryParam(value = "type") String type,
 			@DefaultValue(value = "false") @QueryParam(value = "items") boolean itemsOnly, @QueryParam(value = "status") String status) throws BrowserServiceException {
-		logger.log(Level.INFO, "GET /objects?offset=" + offset + "&limit=" + limit + "&items-only=" + itemsOnly + "&status=" + status);
+		LOGGER.log(Level.INFO, "GET /objects?offset=" + offset + "&limit=" + limit + "&items-only=" + itemsOnly + "&status=" + status);
 		List<String> keys = browser.list(offset, limit, (service!=null && service.length()>0)?service:"", (type!=null && type.length()>0)?type:"", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
 		long nbentries = browser.count((service!=null && service.length()>0)?service:"", (type!=null && type.length()>0)?type:"", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
 		UriBuilder objects = DiffusionUriBuilder.getRestUriBuilder().path(ObjectResource.class);
@@ -186,7 +186,7 @@ public class ObjectResource {
 	@Path("/{key}")
 	public Response get(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, SecurityServiceException,
 			OrtolangException {
-		logger.log(Level.INFO, "GET /objects/" + key);
+		LOGGER.log(Level.INFO, "GET /objects/" + key);
 
 		OrtolangObjectState state = browser.getState(key);
 		CacheControl cc = new CacheControl();
@@ -244,7 +244,7 @@ public class ObjectResource {
 	@Path("/{key}/element")
 	public Response resolve(@PathParam(value = "key") String key, @QueryParam(value = "path") String relativePath, @Context Request request) throws OrtolangException, KeyNotFoundException,
 			AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException {
-		logger.log(Level.INFO, "GET /objects/" + key + "?path=" + relativePath);
+		LOGGER.log(Level.INFO, "GET /objects/" + key + "?path=" + relativePath);
 
 		return get(core.resolvePathFromCollection(key, relativePath), request);
 	}
@@ -263,7 +263,7 @@ public class ObjectResource {
 	@GET
 	@Path("/{key}/history")
 	public Response history(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "get history of object " + key);
+		LOGGER.log(Level.INFO, "get history of object " + key);
 
 		OrtolangObjectState state = browser.getState(key);
 		CacheControl cc = new CacheControl();
@@ -298,7 +298,7 @@ public class ObjectResource {
 	@GET
 	@Path("/{key}/keys")
 	public Response listKeys(@PathParam(value = "key") String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "list keys contains in object " + key);
+		LOGGER.log(Level.INFO, "list keys contains in object " + key);
 
 		List<String> keys = this.listKeys(key, new ArrayList<String>());
 
@@ -313,7 +313,7 @@ public class ObjectResource {
 	@Path("/{key}/download")
 	public Response download(final @PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException,
 			AccessDeniedException, OrtolangException, DataNotFoundException, IOException, CoreServiceException {
-		logger.log(Level.INFO, "GET /objects/" + key + "/download");
+		LOGGER.log(Level.INFO, "GET /objects/" + key + "/download");
 		
 		OrtolangObjectState state = browser.getState(key);
 		CacheControl cc = new CacheControl();
@@ -342,7 +342,7 @@ public class ObjectResource {
 				builder.lastModified(lmd);
 			}
 			if (object instanceof MetadataFormat) {
-				logger.log(Level.INFO, "metadata format object ");
+				LOGGER.log(Level.INFO, "metadata format object ");
 				builder.header("Content-Disposition", "attachment; filename=" + object.getObjectName());
 				builder.type(((MetadataFormat) object).getMimeType());
 				builder.lastModified(lmd);
@@ -379,7 +379,7 @@ public class ObjectResource {
 	@Path("/{key}/download/ticket")
 	public Response downloadTicket(@PathParam(value = "key") String key, @QueryParam(value = "hash") String hash, @Context HttpServletResponse response) throws AccessDeniedException,
 			OrtolangException, KeyNotFoundException, BrowserServiceException {
-		logger.log(Level.INFO, "GET /objects/" + key + "/download/ticket");
+		LOGGER.log(Level.INFO, "GET /objects/" + key + "/download/ticket");
 		if (hash != null) {
 			browser.lookup(key);
 		} else {
@@ -399,7 +399,7 @@ public class ObjectResource {
 	@Path("/{key}/preview")
 	public void preview(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException,
 			DataNotFoundException, IOException, CoreServiceException {
-		logger.log(Level.INFO, "GET /objects/" + key + "/preview");
+		LOGGER.log(Level.INFO, "GET /objects/" + key + "/preview");
 		OrtolangObject object = browser.findObject(key);
 		if (object instanceof DataObject) {
 			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
@@ -417,7 +417,7 @@ public class ObjectResource {
     @GET
     @Path("/{key}/size")
     public Response getObjectSize(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, OrtolangException, KeyNotFoundException, CoreServiceException {
-        logger.log(Level.INFO, "GET /objects/" + key + "/size");
+        LOGGER.log(Level.INFO, "GET /objects/" + key + "/size");
         OrtolangObjectSize ortolangObjectSize = core.getSize(key);
         return Response.ok(ortolangObjectSize).build();
     }
@@ -425,15 +425,15 @@ public class ObjectResource {
 	@GET
 	@Path("/semantic")
 	public Response semanticSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
-		logger.log(Level.INFO, "GET /objects/semantic?query=" + query);
+		LOGGER.log(Level.INFO, "GET /objects/semantic?query=" + query);
 		if (query != null && query.length() > 0) {
 			String queryEncoded = "";
 			try {
 				queryEncoded = URLDecoder.decode(query, "UTF-8");
 			} catch (UnsupportedEncodingException e) {
-				logger.log(Level.WARNING, "cannot decode URL " + query);
+				LOGGER.log(Level.WARNING, "cannot decode URL " + query);
 			}
-			logger.log(Level.INFO, "searching objects with semantic query: " + queryEncoded);
+			LOGGER.log(Level.INFO, "searching objects with semantic query: " + queryEncoded);
 			String results = search.semanticSearch(queryEncoded, "json");
 			return Response.ok(results).build();
 		} else {
@@ -444,7 +444,7 @@ public class ObjectResource {
 	@GET
 	@Path("/index")
 	public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
-		logger.log(Level.INFO, "searching objects with plain text query: " + query);
+		LOGGER.log(Level.INFO, "searching objects with plain text query: " + query);
 		List<OrtolangSearchResult> results;
 		if (query != null && query.length() > 0) {
 			results = search.indexSearch(query);
@@ -457,7 +457,7 @@ public class ObjectResource {
 	@GET
 	@Path("/json")
 	public Response jsonSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
-		logger.log(Level.INFO, "searching objects with json query: " + query);
+		LOGGER.log(Level.INFO, "searching objects with json query: " + query);
 		List<String> results;
 		if (query != null && query.length() > 0) {
 			results = search.jsonSearch(query);
@@ -498,7 +498,7 @@ public class ObjectResource {
 		OrtolangObject object = browser.findObject(key);
 		String type = object.getObjectIdentifier().getType();
 
-		logger.log(Level.INFO, "export collection to zip : " + path.build() + " (" + key + ")");
+		LOGGER.log(Level.INFO, "export collection to zip : " + path.build() + " (" + key + ")");
 
 		ZipEntry ze = new ZipEntry(path.build() + PathBuilder.PATH_SEPARATOR);
 
@@ -521,7 +521,7 @@ public class ObjectResource {
 
 							DataObject dataObject = (DataObject) browser.findObject(element.getKey());
 
-							logger.log(Level.INFO, "export dataobject to zip : " + pathElement.build() + " (" + element.getKey() + ")");
+							LOGGER.log(Level.INFO, "export dataobject to zip : " + pathElement.build() + " (" + element.getKey() + ")");
 							ZipEntry entry = new ZipEntry(pathElement.build());
 							entry.setTime(element.getModification());
 							entry.setSize(dataObject.getSize());
@@ -536,11 +536,11 @@ public class ObjectResource {
 								zos.closeEntry();
 							}
 						} catch (CoreServiceException | DataNotFoundException e1) {
-							logger.log(Level.SEVERE, "unexpected error during export to zip !!", e1);
+							LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e1);
 						}
 					}
 				} catch (InvalidPathException e) {
-					logger.log(Level.SEVERE, "invalid path during export to zip !!", e);
+					LOGGER.log(Level.SEVERE, "invalid path during export to zip !!", e);
 				}
 
 			}

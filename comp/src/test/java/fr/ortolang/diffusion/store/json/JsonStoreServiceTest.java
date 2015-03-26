@@ -31,7 +31,7 @@ import fr.ortolang.diffusion.store.triple.Triple;
 
 public class JsonStoreServiceTest {
 
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceTest.class.getName());
 	private JsonStoreServiceBean service;
 
 	@Before
@@ -62,7 +62,7 @@ public class JsonStoreServiceTest {
 
 				@Override
 				public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-					logger.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
+					LOGGER.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
 					return FileVisitResult.TERMINATE;
 				}
 
@@ -74,7 +74,7 @@ public class JsonStoreServiceTest {
 
 			});
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 	

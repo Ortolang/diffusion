@@ -58,7 +58,7 @@ import fr.ortolang.diffusion.client.OrtolangClientConfig;
 
 public class OrtolangClientAccountManager {
 
-	private static final Logger logger = Logger.getLogger(OrtolangClientAccountManager.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(OrtolangClientAccountManager.class.getName());
 	
 	private Client client;
 	private String authurl;
@@ -68,7 +68,7 @@ public class OrtolangClientAccountManager {
 	private Map<String, OrtolangClientAccount> accounts = new HashMap<String, OrtolangClientAccount> ();
 	
 	public OrtolangClientAccountManager(Client client) {
-		logger.log(Level.INFO, "Creating OrtolangClientAccountManager");
+		LOGGER.log(Level.INFO, "Creating OrtolangClientAccountManager");
 		
 		this.authurl = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.url");
 		this.authrealm = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.realm");
@@ -82,7 +82,7 @@ public class OrtolangClientAccountManager {
 	}
 
 	public void setAuthorisationCode(String user, String code) throws OrtolangClientAccountException {
-		logger.log(Level.INFO, "Asking AccessToken using authorisation code for user: " + user);
+		LOGGER.log(Level.INFO, "Asking AccessToken using authorisation code for user: " + user);
 		
 		WebTarget target = client.target(authurl).path("realms").path(authrealm).path("protocol/openid-connect/access/codes");
 		Form form = new Form().param("code", code);
@@ -98,7 +98,7 @@ public class OrtolangClientAccountManager {
 			String tokenResponse = response.readEntity(String.class);
 			JsonObject object = Json.createReader(new StringReader(tokenResponse)).readObject();
 			response.close();
-			logger.log(Level.FINE, "Received grant response: " + object.toString());
+			LOGGER.log(Level.FINE, "Received grant response: " + object.toString());
 			OrtolangClientAccount account = new OrtolangClientAccount();
 			account.setUsername(user);
 			account.setIdToken(object.getString("id_token"));
@@ -107,16 +107,16 @@ public class OrtolangClientAccountManager {
 			account.setSessionState(object.getString("session-state"));
 			account.setExpires(System.currentTimeMillis() + ((object.getInt("expires_in") - 5) * 1000));
 			accounts.put(user, account);
-			logger.log(Level.FINE, "AccessToken stored for user: " + user);
+			LOGGER.log(Level.FINE, "AccessToken stored for user: " + user);
 		} else {
-			logger.log(Level.SEVERE, "unexpected response code ("+response.getStatus()+") : "+response.getStatusInfo().getReasonPhrase());
-			logger.log(Level.SEVERE, response.readEntity(String.class));
+			LOGGER.log(Level.SEVERE, "unexpected response code ("+response.getStatus()+") : "+response.getStatusInfo().getReasonPhrase());
+			LOGGER.log(Level.SEVERE, response.readEntity(String.class));
 			throw new OrtolangClientAccountException("unexpected authorisation code grant response code: " + response.getStatus());
 		}
 	}
 
 	public void setCredentials(String user, String password) throws OrtolangClientAccountException {
-		logger.log(Level.INFO, "Asking AccessToken using credential grant for user: " + user);
+		LOGGER.log(Level.INFO, "Asking AccessToken using credential grant for user: " + user);
 			
 		WebTarget target = client.target(authurl).path("realms").path(authrealm).path("protocol/openid-connect/grants/access");
 		Form form = new Form().param("username", user).param("password", password);
@@ -132,7 +132,7 @@ public class OrtolangClientAccountManager {
 			String tokenResponse = response.readEntity(String.class);
 			response.close();
 			JsonObject object = Json.createReader(new StringReader(tokenResponse)).readObject();
-			logger.log(Level.FINE, "Received grant response: " + object.toString());
+			LOGGER.log(Level.FINE, "Received grant response: " + object.toString());
 			OrtolangClientAccount account = new OrtolangClientAccount();
 			account.setUsername(user);
 			account.setIdToken(object.getString("id_token"));
@@ -141,27 +141,27 @@ public class OrtolangClientAccountManager {
 			account.setSessionState(object.getString("session-state"));
 			account.setExpires(System.currentTimeMillis() + ((object.getInt("expires_in") - 5) * 1000));
 			accounts.put(user, account);
-			logger.log(Level.FINE, "AccessToken stored for user: " + user);
+			LOGGER.log(Level.FINE, "AccessToken stored for user: " + user);
 		} else {
-			logger.log(Level.SEVERE, "unexpected response code ("+response.getStatus()+") : "+response.getStatusInfo().getReasonPhrase());
-			logger.log(Level.SEVERE, response.readEntity(String.class));
+			LOGGER.log(Level.SEVERE, "unexpected response code ("+response.getStatus()+") : "+response.getStatusInfo().getReasonPhrase());
+			LOGGER.log(Level.SEVERE, response.readEntity(String.class));
 			throw new OrtolangClientAccountException("unexpected credential grant response code: " + response.getStatus());
 		}
 	}
 
 	public void revoke(String user) {
 		if ( accounts.containsKey(user) ) {
-			logger.log(Level.INFO, "Revoking AccessToken for user: " + user);
+			LOGGER.log(Level.INFO, "Revoking AccessToken for user: " + user);
 			accounts.remove(user);
 		}
 	}
 
 	public String getHttpAuthorisationHeader(String user) throws OrtolangClientAccountException {
 		if ( accounts.containsKey(user) ) {
-			logger.log(Level.FINE, "Account found for user: " + user);
+			LOGGER.log(Level.FINE, "Account found for user: " + user);
 			OrtolangClientAccount account = accounts.get(user);
 			if (account.getExpires() < System.currentTimeMillis()) {
-				logger.log(Level.FINE, "AccessToken expired for user: " + user);
+				LOGGER.log(Level.FINE, "AccessToken expired for user: " + user);
 				this.refresh(account);
 				account = accounts.get(user);
 			}
@@ -172,7 +172,7 @@ public class OrtolangClientAccountManager {
 	}
 	
 	private void refresh(OrtolangClientAccount account) throws OrtolangClientAccountException {
-		logger.log(Level.INFO, "Refreshing AccessToken for user: " + account.getUsername());
+		LOGGER.log(Level.INFO, "Refreshing AccessToken for user: " + account.getUsername());
 		
 		WebTarget target = client.target(authurl).path("realms").path(authrealm).path("protocol/openid-connect/refresh");
 		Form form = new Form().param("refresh_token", account.getRefreshToken());
@@ -188,16 +188,16 @@ public class OrtolangClientAccountManager {
 			String tokenResponse = response.readEntity(String.class);
 			response.close();
 			JsonObject object = Json.createReader(new StringReader(tokenResponse)).readObject();
-			logger.log(Level.FINE, "Received refresh response: " + object.toString());
+			LOGGER.log(Level.FINE, "Received refresh response: " + object.toString());
 			account.setIdToken(object.getString("id_token"));
 			account.setAccessToken(object.getString("access_token"));
 			account.setRefreshToken(object.getString("refresh_token"));
 			account.setSessionState(object.getString("session-state"));
 			account.setExpires(System.currentTimeMillis() + ((object.getInt("expires_in") - 5) * 1000));
-			logger.log(Level.FINE, "AccessToken refreshed for user: " + account.getUsername());
+			LOGGER.log(Level.FINE, "AccessToken refreshed for user: " + account.getUsername());
 		} else {
-			logger.log(Level.SEVERE, "unexpected response code ("+response.getStatus()+") : "+response.getStatusInfo().getReasonPhrase());
-			logger.log(Level.SEVERE, response.readEntity(String.class));
+			LOGGER.log(Level.SEVERE, "unexpected response code ("+response.getStatus()+") : "+response.getStatusInfo().getReasonPhrase());
+			LOGGER.log(Level.SEVERE, response.readEntity(String.class));
 			throw new OrtolangClientAccountException("unexpected credential grant response code: " + response.getStatus());
 		}
 	}

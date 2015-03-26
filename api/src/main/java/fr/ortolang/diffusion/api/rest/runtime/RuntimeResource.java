@@ -59,12 +59,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriInfo;
 
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -88,10 +86,8 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 @Produces({ MediaType.APPLICATION_JSON })
 public class RuntimeResource {
 	
-	private Logger logger = Logger.getLogger(RuntimeResource.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(RuntimeResource.class.getName());
 
-	@Context
-	private UriInfo uriInfo;
 	@EJB
 	private CoreService core;
 	@EJB
@@ -102,7 +98,7 @@ public class RuntimeResource {
 	@GET
 	@Path("/types")
 	public Response listDefinitions() throws RuntimeServiceException {
-		logger.log(Level.INFO, "GET /runtime/types");
+		LOGGER.log(Level.INFO, "GET /runtime/types");
 		List<ProcessType> types = runtime.listProcessTypes();
 		
 		GenericCollectionRepresentation<ProcessTypeRepresentation> representation = new GenericCollectionRepresentation<ProcessTypeRepresentation>();
@@ -118,7 +114,7 @@ public class RuntimeResource {
 	@GET
 	@Path("/processes")
 	public Response listProcesses(@QueryParam("state") String state) throws RuntimeServiceException, AccessDeniedException {
-		logger.log(Level.INFO, "GET /runtime/processes");
+		LOGGER.log(Level.INFO, "GET /runtime/processes");
 		List<Process> instances;
 		if ( state != null ) {
 			instances = runtime.listProcesses(State.valueOf(state));
@@ -142,7 +138,7 @@ public class RuntimeResource {
 	@Path("/processes")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	public Response createProcess(MultivaluedMap<String, String> params) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException {
-		logger.log(Level.INFO, "POST(application/x-www-form-urlencoded) /runtime/processes");
+		LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /runtime/processes");
 		String key = UUID.randomUUID().toString();
 		
 		String definition = null;
@@ -183,7 +179,7 @@ public class RuntimeResource {
 	@Path("/processes")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response startInstance(MultipartFormDataInput input) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException, IOException, CoreServiceException, DataCollisionException {
-		logger.log(Level.INFO, "POST(multipart/form-data) /runtime/processes");
+		LOGGER.log(Level.INFO, "POST(multipart/form-data) /runtime/processes");
 		String key = UUID.randomUUID().toString();
 		
 		Map<String, Object> mparams = new HashMap<String, Object> ();
@@ -207,13 +203,13 @@ public class RuntimeResource {
 				StringBuffer values = new StringBuffer();
 				for ( InputPart value : entry.getValue() ) {
 					if ( value.getHeaders().containsKey("Content-Disposition") && value.getHeaders().getFirst("Content-Disposition").contains("filename=") ) {
-						logger.log(Level.FINE, "seems this part [" + entry.getKey() + "] is a file");
+						LOGGER.log(Level.FINE, "seems this part [" + entry.getKey() + "] is a file");
 						InputStream is = value.getBody(InputStream.class, null);
 						java.nio.file.Path file = Files.createTempFile("process-file", ".tmp");
 						Files.copy(is, file, StandardCopyOption.REPLACE_EXISTING);
 						values.append(file).append(",");
 					} else {
-						logger.log(Level.FINE, "seems this part  [" + entry.getKey() + "] is a simple text value");
+						LOGGER.log(Level.FINE, "seems this part  [" + entry.getKey() + "] is a simple text value");
 						values.append(value.getBodyAsString()).append(",");
 					}
 				}
@@ -229,7 +225,7 @@ public class RuntimeResource {
 	@GET
 	@Path("/processes/{key}")
 	public Response listInstances(@PathParam("key") String key) throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
-		logger.log(Level.INFO, "GET /runtime/processes/" + key);
+		LOGGER.log(Level.INFO, "GET /runtime/processes/" + key);
 		Process process = runtime.readProcess(key);
 		ProcessRepresentation representation = ProcessRepresentation.fromProcess(process);
 		return Response.ok(representation).build();
@@ -238,7 +234,7 @@ public class RuntimeResource {
 	@GET
 	@Path("/tasks")
 	public Response listCandidateTasks() throws RuntimeServiceException, AccessDeniedException {
-		logger.log(Level.INFO, "GET /runtime/tasks");
+		LOGGER.log(Level.INFO, "GET /runtime/tasks");
 		List<HumanTask> ctasks = runtime.listCandidateTasks();
 		List<HumanTask> atasks = runtime.listAssignedTasks();
 		GenericCollectionRepresentation<HumanTaskRepresentation> representation = new GenericCollectionRepresentation<HumanTaskRepresentation>();
@@ -258,7 +254,7 @@ public class RuntimeResource {
 	@Path("/tasks/{id}")
 	@Consumes( MediaType.APPLICATION_JSON)
 	public Response performTaskAction(@PathParam("id") String id, ProcessTaskActionRepresentation action) throws RuntimeServiceException {
-		logger.log(Level.INFO, "POST /runtime/tasks");
+		LOGGER.log(Level.INFO, "POST /runtime/tasks");
 		if ( action.getAction().equals("claim") ) {
 			runtime.claimTask(id);
 		} else if ( action.getAction().equals("complete") ) {

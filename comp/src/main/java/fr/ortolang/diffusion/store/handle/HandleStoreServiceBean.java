@@ -79,7 +79,7 @@ import fr.ortolang.diffusion.OrtolangConfig;
 @PermitAll
 public class HandleStoreServiceBean implements HandleStoreService {
 
-	private static final Logger logger = Logger.getLogger(HandleStoreServiceBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(HandleStoreServiceBean.class.getName());
 
 	private PrivateKey privkey = null;
 	private HandleResolver resolver;
@@ -87,15 +87,15 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	private AdminRecord admin;
 
 	public HandleStoreServiceBean() {
-		logger.log(Level.INFO, "Instanciating service");
+		LOGGER.log(Level.INFO, "Instanciating service");
 	}
 
 	@PostConstruct
 	public void init() {
-		logger.log(Level.INFO, "Initializing service");
+		LOGGER.log(Level.INFO, "Initializing service");
 		try {
 			URL keyFileURL = HandleStoreServiceBean.class.getClassLoader().getResource(OrtolangConfig.getInstance().getProperty("handle.key"));
-			logger.log(Level.FINE, "using private key file : " + keyFileURL.getPath());
+			LOGGER.log(Level.FINE, "using private key file : " + keyFileURL.getPath());
 			File f = new File(keyFileURL.getPath());
 			FileInputStream fs = new FileInputStream(f);
 			byte[] key = new byte[(int) f.length()];
@@ -106,29 +106,29 @@ public class HandleStoreServiceBean implements HandleStoreService {
 			fs.read(key);
 			fs.close();
 
-			logger.log(Level.FINE, "decrypting key");
+			LOGGER.log(Level.FINE, "decrypting key");
 			byte[] secKey = OrtolangConfig.getInstance().getProperty("handle.key.passphrase").getBytes();
 			key = Util.decrypt(key, secKey);
 			privkey = Util.getPrivateKeyFromBytes(key, 0);
 
-			logger.log(Level.FINE, "building handle resolver");
+			LOGGER.log(Level.FINE, "building handle resolver");
 			resolver = new HandleResolver();
 
 			auth = new PublicKeyAuthenticationInfo(OrtolangConfig.getInstance().getProperty("handle.admin").getBytes(), Integer.valueOf(
 					OrtolangConfig.getInstance().getProperty("handle.index")).intValue(), privkey);
 			admin = new AdminRecord(OrtolangConfig.getInstance().getProperty("handle.admin").getBytes(), 300, true, true, true, true, true, true, true, true, true, true, true,
 					true);
-			logger.log(Level.FINE, "auth info: " + auth.toString());
-			logger.log(Level.FINE, "admin record: " + admin.toString());
+			LOGGER.log(Level.FINE, "auth info: " + auth.toString());
+			LOGGER.log(Level.FINE, "admin record: " + admin.toString());
 
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "Unable to initialize Handle Store : " + e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, "Unable to initialize Handle Store : " + e.getMessage(), e);
 		}
 	}
 
 	@PreDestroy
 	public void shutdown() {
-		logger.log(Level.INFO, "Shuting down service");
+		LOGGER.log(Level.INFO, "Shuting down service");
 
 	}
 
@@ -137,20 +137,20 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	public String create(String suffix, String... values) throws HandleStoreServiceException {
 		int timestamp = (int) (System.currentTimeMillis() / 1000);
 		String name = OrtolangConfig.getInstance().getProperty("handle.prefix") + "/" + suffix;
-		logger.log(Level.FINE, "complete handle name : " + name);
+		LOGGER.log(Level.FINE, "complete handle name : " + name);
 		HandleValue[] val = new HandleValue[values.length + 1];
 		val[0] = new HandleValue(100, "HS_ADMIN".getBytes(), Encoder.encodeAdminRecord(admin), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
-		logger.log(Level.FINE, "handle value created for admin : " + val[0]);
+		LOGGER.log(Level.FINE, "handle value created for admin : " + val[0]);
 		for (int i = 1; i <= values.length; i++) {
 			val[i] = new HandleValue(i, Common.STD_TYPE_URL, values[i - 1].getBytes(), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
-			logger.log(Level.FINE, "handle value created for index " + i + " : " + val[i]);
+			LOGGER.log(Level.FINE, "handle value created for index " + i + " : " + val[i]);
 		}
 		try {
-			logger.log(Level.FINE, "building create request");
+			LOGGER.log(Level.FINE, "building create request");
 			CreateHandleRequest req = new CreateHandleRequest(name.getBytes(), val, auth);
-			logger.log(Level.FINE, "processing request...");
+			LOGGER.log(Level.FINE, "processing request...");
 			AbstractResponse response = resolver.processRequest(req);
-			logger.log(Level.FINE, "response received");
+			LOGGER.log(Level.FINE, "response received");
 			if (response.responseCode != AbstractMessage.RC_SUCCESS) {
 				throw new HandleStoreServiceException("handle server response error code: " + response.responseCode);
 			}
@@ -164,13 +164,13 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public boolean exists(String suffix) throws HandleStoreServiceException {
 		String name = OrtolangConfig.getInstance().getProperty("handle.prefix") + "/" + suffix;
-		logger.log(Level.FINE, "complete handle name : " + name);
+		LOGGER.log(Level.FINE, "complete handle name : " + name);
 		try {
-			logger.log(Level.FINE, "building resolution request");
+			LOGGER.log(Level.FINE, "building resolution request");
 			ResolutionRequest req = new ResolutionRequest(name.getBytes(), null, null, null);
-			logger.log(Level.FINE, "processing request...");
+			LOGGER.log(Level.FINE, "processing request...");
 			AbstractResponse response = resolver.processRequest(req);
-			logger.log(Level.FINE, "response received");
+			LOGGER.log(Level.FINE, "response received");
 			if (response.responseCode == AbstractMessage.RC_HANDLE_NOT_FOUND) {
 				return false;
 			}
@@ -187,13 +187,13 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String read(String suffix) throws HandleStoreServiceException {
 		String name = OrtolangConfig.getInstance().getProperty("handle.prefix") + "/" + suffix;
-		logger.log(Level.FINE, "complete handle name : " + name);
+		LOGGER.log(Level.FINE, "complete handle name : " + name);
 		try {
-			logger.log(Level.FINE, "building resolution request");
+			LOGGER.log(Level.FINE, "building resolution request");
 			ResolutionRequest req = new ResolutionRequest(name.getBytes(), null, null, null);
-			logger.log(Level.FINE, "processing request...");
+			LOGGER.log(Level.FINE, "processing request...");
 			AbstractResponse response = resolver.processRequest(req);
-			logger.log(Level.FINE, "response received");
+			LOGGER.log(Level.FINE, "response received");
 			if (response.responseCode != AbstractMessage.RC_SUCCESS) {
 				throw new HandleStoreServiceException("handle server response error code: " + response.responseCode);
 			}
@@ -215,13 +215,13 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void delete(String suffix) throws HandleStoreServiceException {
 		String name = OrtolangConfig.getInstance().getProperty("handle.prefix") + "/" + suffix;
-		logger.log(Level.FINE, "complete handle name : " + name);
+		LOGGER.log(Level.FINE, "complete handle name : " + name);
 		try {
-			logger.log(Level.FINE, "building delete request");
+			LOGGER.log(Level.FINE, "building delete request");
 			DeleteHandleRequest req = new DeleteHandleRequest(name.getBytes(), auth);
-			logger.log(Level.FINE, "processing request...");
+			LOGGER.log(Level.FINE, "processing request...");
 			AbstractResponse response = resolver.processRequest(req);
-			logger.log(Level.FINE, "response received");
+			LOGGER.log(Level.FINE, "response received");
 			if (response.responseCode != AbstractMessage.RC_SUCCESS) {
 				throw new HandleStoreServiceException("handle server response error code: " + response.responseCode);
 			}

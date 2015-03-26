@@ -64,7 +64,8 @@ import com.lyncode.xml.exceptions.XmlWriteException;
  *
  */
 public class DiffusionEchoElement implements XmlWritable {
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+	
+	private static final Logger LOGGER = Logger.getLogger(DiffusionEchoElement.class.getName());
 	
 	private static XMLInputFactory factory = XMLInputFactory2.newFactory();
 	private String xmlString = null;
@@ -84,7 +85,7 @@ public class DiffusionEchoElement implements XmlWritable {
 				if (event.isStartElement()) {
 					
 					QName name = event.asStartElement().getName();
-					logger.log(Level.FINEST, "write xml element "+name.getLocalPart());
+					LOGGER.log(Level.FINEST, "write xml element "+name.getLocalPart());
 					
 					writer.writeStartElement(name.getPrefix(), name.getLocalPart(), name.getNamespaceURI());
 					addNamespaceIfRequired(writer, name);
@@ -95,7 +96,7 @@ public class DiffusionEchoElement implements XmlWritable {
 						Object o = ns.next();
 						
 						if(o instanceof Namespace) {
-							logger.log(Level.FINEST, "Try to add namespace "+((Namespace) o).getName());
+							LOGGER.log(Level.FINEST, "Try to add namespace "+((Namespace) o).getName());
 							addNamespaceIfRequired(writer, new QName(((Namespace) o).getNamespaceURI(), "", ((Namespace) o).getPrefix()));
 						}
 					}
@@ -114,7 +115,7 @@ public class DiffusionEchoElement implements XmlWritable {
 				} else if (event.isCharacters()) {
 					writer.writeCharacters(event.asCharacters().getData());
 				} else {
-					logger.log(Level.FINEST, "write unknown event "+event.getEventType());
+					LOGGER.log(Level.FINEST, "write unknown event "+event.getEventType());
 					
 				}
 			}

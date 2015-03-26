@@ -68,7 +68,7 @@ import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContex
 @RunWith(Arquillian.class)
 public class RegistryServiceTest {
 	
-	private static Logger logger = Logger.getLogger(RegistryServiceTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(RegistryServiceTest.class.getName());
 
     @PersistenceContext
     private EntityManager em;
@@ -88,18 +88,18 @@ public class RegistryServiceTest {
 		jar.addClass("fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory");
 		jar.addAsResource("config.properties");
 		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
-        logger.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
+        LOGGER.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
 
 		EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class, "test-registry.ear");
 		ear.addAsModule(jar);
-		logger.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
+		LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 
 		return ear;
     }
  
 	@Before
 	public void setup() throws Exception {
-		logger.log(Level.INFO, "Setting up test environment, clearing data");
+		LOGGER.log(Level.INFO, "Setting up test environment, clearing data");
 		utx.begin();
 	    em.joinTransaction();
 		em.createQuery("delete from RegistryEntry").executeUpdate();
@@ -108,7 +108,7 @@ public class RegistryServiceTest {
 	
 	@After
 	public void tearDown() {
-		logger.log(Level.INFO, "clearing environment");
+		LOGGER.log(Level.INFO, "clearing environment");
 	}
 
 	@Test

@@ -67,7 +67,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
@@ -107,10 +106,8 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 @Produces({ MediaType.APPLICATION_JSON })
 public class WorkspaceResource {
 
-	private Logger logger = Logger.getLogger(WorkspaceResource.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(WorkspaceResource.class.getName());
 
-	@Context
-	private UriInfo uriInfo;
 	@EJB
 	private CoreService core;
 	@EJB
@@ -123,7 +120,7 @@ public class WorkspaceResource {
 
 	@GET
 	public Response listWorkspaces() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "GET /workspaces");
+		LOGGER.log(Level.INFO, "GET /workspaces");
 		String profile = membership.getProfileKeyForConnectedIdentifier();
 
 		List<String> keys = core.findWorkspacesForProfile(profile);
@@ -142,7 +139,7 @@ public class WorkspaceResource {
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	public Response createWorkspace(@FormParam("type") @DefaultValue("default") String type, @FormParam("name") @DefaultValue("No Name Provided") String name)
 			throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
+		LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
 		String key = java.util.UUID.randomUUID().toString();
 		core.createWorkspace(key, name, type);
 		URI location = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(key).build();
@@ -152,7 +149,7 @@ public class WorkspaceResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response createWorkspace(WorkspaceRepresentation representation) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
-		logger.log(Level.INFO, "POST(application/json) /workspaces");
+		LOGGER.log(Level.INFO, "POST(application/json) /workspaces");
 		String key = UUID.randomUUID().toString();
 		core.createWorkspace(key, representation.getName(), representation.getType());
 		URI location = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(key).build();
@@ -162,7 +159,7 @@ public class WorkspaceResource {
 	@GET
 	@Path("/{wskey}")
 	public Response getWorkspace(@PathParam(value = "wskey") String wskey, @Context Request request) throws CoreServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "GET /workspaces/" + wskey);
+		LOGGER.log(Level.INFO, "GET /workspaces/" + wskey);
 		
 		OrtolangObjectState state = browser.getState(wskey);
 		CacheControl cc = new CacheControl();
@@ -194,7 +191,7 @@ public class WorkspaceResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateWorkspace(@PathParam(value = "wskey") String wskey, WorkspaceRepresentation representation) throws CoreServiceException, KeyAlreadyExistsException,
 			AccessDeniedException, KeyNotFoundException {
-		logger.log(Level.INFO, "PUT /workspaces/" + wskey);
+		LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey);
 		if (representation.getKey() != null && representation.getKey().length() > 0) {
 			core.updateWorkspace(representation.getKey(), representation.getName());
 			return Response.ok().build();
@@ -208,7 +205,7 @@ public class WorkspaceResource {
 	public Response getWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@QueryParam(value = "metadata") String metadata, @Context Request request) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, OrtolangException,
 			BrowserServiceException, PropertyNotFoundException {
-		logger.log(Level.INFO, "GET /workspaces/" + wskey + "/elements?root=" + root + "&path=" + path + "&metadata=" + metadata);
+		LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/elements?root=" + root + "&path=" + path + "&metadata=" + metadata);
 		if (path == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
 		}
@@ -234,10 +231,10 @@ public class WorkspaceResource {
 			WorkspaceElementRepresentation representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
 			if (representation != null) {
 				if (metadata != null && metadata.length() > 0) {
-					logger.log(Level.INFO, "searching element metadata: " + metadata);
+					LOGGER.log(Level.INFO, "searching element metadata: " + metadata);
 					for (MetadataElement element : representation.getMetadatas()) {
 						if (element.getName().equals(metadata)) {
-							logger.log(Level.FINE, "element metadata key found, loading...");
+							LOGGER.log(Level.FINE, "element metadata key found, loading...");
 							ekey = element.getKey();
 							object = browser.findObject(ekey);
 							representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
@@ -255,7 +252,7 @@ public class WorkspaceResource {
 				builder = Response.ok(representation);
 	    		builder.lastModified(lmd);
 			} else {
-				logger.log(Level.FINE, "unable to find a workspace element at path: " + path);
+				LOGGER.log(Level.FINE, "unable to find a workspace element at path: " + path);
 				return Response.status(Response.Status.NOT_FOUND).build();
 			}
 		}
@@ -270,7 +267,7 @@ public class WorkspaceResource {
 	public void download(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@QueryParam(value = "metadata") String metadata, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException,
 			OrtolangException, DataNotFoundException, IOException, CoreServiceException, InvalidPathException {
-		logger.log(Level.INFO, "GET /workspaces/" + wskey + "/download?root=" + root + "&path=" + path + "&metadata=" + metadata);
+		LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/download?root=" + root + "&path=" + path + "&metadata=" + metadata);
 		if (path == null) {
 			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "parameter 'path' is mandatory");
 			return;
@@ -283,7 +280,7 @@ public class WorkspaceResource {
 		if (metadata != null && metadata.length() > 0) {
 			for (MetadataElement element : ((MetadataSource) object).getMetadatas()) {
 				if (element.getName().equals(metadata)) {
-					logger.log(Level.FINE, "element metadata key found, loading...");
+					LOGGER.log(Level.FINE, "element metadata key found, loading...");
 					ekey = element.getKey();
 					object = browser.findObject(ekey);
 					response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
@@ -320,7 +317,7 @@ public class WorkspaceResource {
 	public void preview(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, DataNotFoundException,
 			IOException, CoreServiceException, InvalidPathException {
-		logger.log(Level.INFO, "GET /workspaces/" + wskey + "/preview?root=" + root + "&path=" + path);
+		LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/preview?root=" + root + "&path=" + path);
 		if (path == null) {
 			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "parameter 'path' is mandatory");
 			return;
@@ -350,7 +347,7 @@ public class WorkspaceResource {
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response writeWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form, @Context HttpHeaders headers)
 			throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException {
-		logger.log(Level.INFO, "POST /workspaces/" + wskey + "/elements");
+		LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/elements");
 		try {
 			String contentTransferEncoding = "UTF-8";
 			if (headers != null) {
@@ -378,7 +375,7 @@ public class WorkspaceResource {
 			PathBuilder npath = PathBuilder.fromPath(form.getPath());
 			try {
 				String ekey = core.resolveWorkspacePath(wskey, "head", npath.build());
-				logger.log(Level.INFO, "element found at path: " + npath.build());
+				LOGGER.log(Level.INFO, "element found at path: " + npath.build());
 				OrtolangObject object = browser.findObject(ekey);
 				switch (form.getType()) {
 				case Collection.OBJECT_TYPE:
@@ -392,7 +389,7 @@ public class WorkspaceResource {
 					String name = URLDecoder.decode(form.getName(), contentTransferEncoding);
 					for (MetadataElement element : ((MetadataSource) object).getMetadatas()) {
 						if (element.getName().equals(name)) {
-							logger.log(Level.FINE, "element metadata key found, need to update");
+							LOGGER.log(Level.FINE, "element metadata key found, need to update");
 							mdexists = true;
 							break;
 						}
@@ -411,7 +408,7 @@ public class WorkspaceResource {
 				}
 			} catch (InvalidPathException e) {
 				if (form.getType().equals(MetadataObject.OBJECT_TYPE)) {
-					logger.log(Level.FINEST, "unable to create metadata, path: " + npath.build() + " does not exists");
+					LOGGER.log(Level.FINEST, "unable to create metadata, path: " + npath.build() + " does not exists");
 					return Response.status(Response.Status.BAD_REQUEST).entity("unable to create metadata, path: " + npath.build() + " does not exists").build();
 				} else {
 					switch (form.getType()) {
@@ -432,7 +429,7 @@ public class WorkspaceResource {
 				}
 			}
 		} catch (DataCollisionException | UnsupportedEncodingException e) {
-			logger.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
 			return Response.serverError().entity(e.getMessage()).build();
 		}
 	}
@@ -442,11 +439,11 @@ public class WorkspaceResource {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response writeWorkspaceElementRepresentation(@PathParam(value = "wskey") String wskey, WorkspaceElementRepresentation representation) throws CoreServiceException,
 			KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException {
-		logger.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements");
+		LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements");
 		PathBuilder npath = PathBuilder.fromPath(representation.getPath());
 		try {
 			core.resolveWorkspacePath(wskey, "head", npath.build());
-			logger.log(Level.INFO, "element found at path: " + npath.build());
+			LOGGER.log(Level.INFO, "element found at path: " + npath.build());
 			if (representation.getType().equals(Collection.OBJECT_TYPE)) {
 				core.updateCollection(wskey, npath.build(), representation.getDescription());
 				return Response.ok().build();
@@ -469,7 +466,7 @@ public class WorkspaceResource {
 	public Response deleteWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@QueryParam(value = "metadataname") String metadataname) throws CoreServiceException, InvalidPathException, AccessDeniedException, KeyNotFoundException,
 			BrowserServiceException, CollectionNotEmptyException {
-		logger.log(Level.INFO, "DELETE /workspaces/" + wskey + "/elements");
+		LOGGER.log(Level.INFO, "DELETE /workspaces/" + wskey + "/elements");
 		if (path == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
 		}
@@ -501,7 +498,7 @@ public class WorkspaceResource {
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey, @FormParam(value = "snapshotname") String name) throws CoreServiceException, KeyNotFoundException,
 			AccessDeniedException {
-		logger.log(Level.INFO, "POST /workspaces/" + wskey + "/snapshots");
+		LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/snapshots");
 		if (name == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'snapshotname' is mandatory").build();
 		}

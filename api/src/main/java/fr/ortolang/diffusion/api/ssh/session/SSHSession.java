@@ -45,13 +45,13 @@ import org.apache.sshd.server.session.ServerSession;
 
 public class SSHSession extends ServerSession {
 
-	private static Logger logger = Logger.getLogger(SSHSession.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(SSHSession.class.getName());
 	private String login;
 	private String password;
 
 	public SSHSession(SshServer server, IoSession ioSession) throws Exception {
 		super(server, ioSession);
-		logger.log(Level.FINE, "ssh server session created");
+		LOGGER.log(Level.FINE, "ssh server session created");
 	}
 
 	public void setLogin(String login) {

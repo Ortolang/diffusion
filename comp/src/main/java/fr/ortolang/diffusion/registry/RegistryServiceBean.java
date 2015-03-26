@@ -67,7 +67,7 @@ import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 @PermitAll
 public class RegistryServiceBean implements RegistryService {
 
-	private static final  Logger logger = Logger.getLogger(RegistryServiceBean.class.getName());
+	private static final  Logger LOGGER = Logger.getLogger(RegistryServiceBean.class.getName());
 	
 	@PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;
@@ -96,7 +96,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void register(String key, OrtolangObjectIdentifier identifier, String author) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException {
-		logger.log(Level.FINE, "creating key [" + key + "] for OOI [" + identifier + "]");
+		LOGGER.log(Level.FINE, "creating key [" + key + "] for OOI [" + identifier + "]");
 		try {
 			findEntryByKey(key);
 			throw new KeyAlreadyExistsException("the key [" + key + "] already exists");
@@ -117,7 +117,7 @@ public class RegistryServiceBean implements RegistryService {
 			entry.setLastModificationDate(current);
 			em.persist(entry);
 		} catch ( Exception e ) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new RegistryServiceException(e);
 		}
@@ -126,7 +126,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void register(String key, OrtolangObjectIdentifier identifier, String parent, boolean inherit) throws RegistryServiceException, KeyAlreadyExistsException, KeyNotFoundException, IdentifierAlreadyRegisteredException {
-		logger.log(Level.FINE, "creating key [" + key + "] for OOI [" + identifier + "] and with parent [" + parent + "]");
+		LOGGER.log(Level.FINE, "creating key [" + key + "] for OOI [" + identifier + "] and with parent [" + parent + "]");
 		try {
 			findEntryByKey(key);
 			throw new KeyAlreadyExistsException("the key [" + key + "] already exists");
@@ -164,7 +164,7 @@ public class RegistryServiceBean implements RegistryService {
 			}
 			em.persist(entry);
 		} catch ( Exception e ) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new RegistryServiceException(e);
 		}
@@ -173,7 +173,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public boolean hasChildren(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "checking children existence for key [" + key + "]");
+		LOGGER.log(Level.FINE, "checking children existence for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.getChildren() != null;
 	}
@@ -181,7 +181,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getChildren(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "getting children for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting children for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.getChildren();
 	}
@@ -189,7 +189,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getParent(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "getting parent for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting parent for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.getParent();
 	}
@@ -197,7 +197,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public boolean isHidden(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "checking visibility state for key [" + key + "]");
+		LOGGER.log(Level.FINE, "checking visibility state for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.isHidden();
 	}
@@ -205,7 +205,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public boolean isItem(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "checking if key [" + key + "] is an item");
+		LOGGER.log(Level.FINE, "checking if key [" + key + "] is an item");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.isItem();
 	}
@@ -213,7 +213,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void update(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		logger.log(Level.FINE, "updating key [" + key + "]");
+		LOGGER.log(Level.FINE, "updating key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		if ( entry.isLocked() ) {
 			throw new KeyLockedException("Key [" + key + "] is locked and cannot be updated");
@@ -222,7 +222,7 @@ public class RegistryServiceBean implements RegistryService {
 			entry.setLastModificationDate(System.currentTimeMillis());
 			em.merge(entry);
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new RegistryServiceException(e);
 		}
@@ -231,7 +231,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public long getCreationDate(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "getting creation date for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting creation date for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.getCreationDate();
 	}
@@ -239,7 +239,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public long getLastModificationDate(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "getting last modification date for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting last modification date for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.getLastModificationDate();
 	}
@@ -247,7 +247,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getAuthor(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "getting author for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting author for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.getAuthor();
 	}
@@ -255,7 +255,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void hide(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		logger.log(Level.FINE, "hidding key [" + key + "]");
+		LOGGER.log(Level.FINE, "hidding key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		if ( entry.isLocked() ) {
 			throw new KeyLockedException("Key [" + key + "] is locked and cannot be hide");
@@ -264,7 +264,7 @@ public class RegistryServiceBean implements RegistryService {
 			entry.setHidden(true);
 			em.merge(entry);
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new RegistryServiceException(e);
 		}
@@ -273,7 +273,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void show(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		logger.log(Level.FINE, "showing key [" + key + "]");
+		LOGGER.log(Level.FINE, "showing key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		if ( entry.isLocked() ) {
 			throw new KeyLockedException("Key [" + key + "] is locked and cannot be shown");
@@ -282,7 +282,7 @@ public class RegistryServiceBean implements RegistryService {
 			entry.setHidden(false);
 			em.merge(entry);
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new RegistryServiceException(e);
 		}
@@ -291,7 +291,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public boolean isLocked(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "checking lock state for key [" + key + "]");
+		LOGGER.log(Level.FINE, "checking lock state for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.isLocked();
 	}
@@ -299,7 +299,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getLock(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "getting lock owner for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting lock owner for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.getLock();
 	}
@@ -307,7 +307,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		logger.log(Level.FINE, "locking key [" + key + "]");
+		LOGGER.log(Level.FINE, "locking key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		if ( entry.isLocked() ) {
 			throw new KeyLockedException("Key [" + key + "] is already locked");
@@ -316,7 +316,7 @@ public class RegistryServiceBean implements RegistryService {
 			entry.setLock(owner);
 			em.merge(entry);
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new RegistryServiceException(e);
 		}
@@ -325,7 +325,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void itemify(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		logger.log(Level.FINE, "itemify key [" + key + "]");
+		LOGGER.log(Level.FINE, "itemify key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		if ( entry.isLocked() ) {
 			throw new KeyLockedException("Key [" + key + "] is locked and cannot be itemified");
@@ -334,7 +334,7 @@ public class RegistryServiceBean implements RegistryService {
 			entry.setItem(true);
 			em.merge(entry);
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new RegistryServiceException(e);
 		}
@@ -343,7 +343,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "getting state for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting state for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.getPublicationStatus();
 	}
@@ -351,7 +351,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void setPublicationStatus(String key, String state) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		logger.log(Level.FINE, "setting key [" + key + "] with state [" + state + "]");
+		LOGGER.log(Level.FINE, "setting key [" + key + "] with state [" + state + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		if ( entry.isLocked() ) {
 			throw new KeyLockedException("Key [" + key + "] is locked, publication status cannot be modified");
@@ -360,7 +360,7 @@ public class RegistryServiceBean implements RegistryService {
 			entry.setPublicationStatus(state);
 			em.merge(entry);
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new RegistryServiceException(e);
 		}
@@ -375,7 +375,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void delete(String key, boolean force) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		logger.log(Level.FINE, "deleting key [" + key + "]");
+		LOGGER.log(Level.FINE, "deleting key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		if ( !force && entry.isLocked() ) {
 			throw new KeyLockedException("Key [" + key + "] is locked and cannot be deleted");
@@ -384,7 +384,7 @@ public class RegistryServiceBean implements RegistryService {
 			entry.setDeleted(true);
 			em.merge(entry);
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new RegistryServiceException(e);
 		}
@@ -393,7 +393,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObjectIdentifier lookup(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "lookup identifier for key [" + key + "]");
+		LOGGER.log(Level.FINE, "lookup identifier for key [" + key + "]");
 		OrtolangObjectIdentifier identifier =  OrtolangObjectIdentifier.deserialize(findEntryByKey(key).getIdentifier());
 		return identifier;
 	}
@@ -401,7 +401,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String lookup(OrtolangObjectIdentifier identifier) throws RegistryServiceException, IdentifierNotRegisteredException {
-		logger.log(Level.FINE, "lookup key for identifier [" + identifier + "]");
+		LOGGER.log(Level.FINE, "lookup key for identifier [" + identifier + "]");
 		String key = findEntryByIdentifier(identifier).getKey();
 		return key;
 	}
@@ -409,7 +409,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> list(int offset, int limit, String identifierFilter, OrtolangObjectState.Status statusFilter, boolean itemFilter) throws RegistryServiceException {
-		logger.log(Level.FINE, "listing keys with offset:" + offset + " and limit:" + limit + " and identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter + " and itemFilter:" + itemFilter);
+		LOGGER.log(Level.FINE, "listing keys with offset:" + offset + " and limit:" + limit + " and identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter + " and itemFilter:" + itemFilter);
 		if (offset < 0) {
 			throw new RegistryServiceException("offset MUST be >= 0");
 		}
@@ -429,10 +429,10 @@ public class RegistryServiceBean implements RegistryService {
 		}
 		TypedQuery<String> query;
 		if ( itemFilter ) {
-			logger.log(Level.FINE, "listing items only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
+			LOGGER.log(Level.FINE, "listing items only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
 			query = em.createNamedQuery("listVisibleItems", String.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString()).setFirstResult(offset).setMaxResults(limit);
 		} else {
-			logger.log(Level.FINE, "listing all keys only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
+			LOGGER.log(Level.FINE, "listing all keys only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
 			query = em.createNamedQuery("listVisibleKeys", String.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString()).setFirstResult(offset).setMaxResults(limit);
 		}
 		List<String> entries = query.getResultList();
@@ -442,7 +442,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public long count(String identifierFilter, OrtolangObjectState.Status statusFilter, boolean itemFilter) throws RegistryServiceException {
-		logger.log(Level.FINE, "counting keys with identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter + " and itemFilter:" + itemFilter);
+		LOGGER.log(Level.FINE, "counting keys with identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter + " and itemFilter:" + itemFilter);
 		StringBuffer ifilter = new StringBuffer();
 		if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
 			 ifilter.append(identifierFilter);
@@ -467,7 +467,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		logger.log(Level.FINE, "setting property [" + name + "] with value [" + value + "] for key [" + key + "]");
+		LOGGER.log(Level.FINE, "setting property [" + name + "] with value [" + value + "] for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		if ( entry.isLocked() ) {
 			throw new KeyLockedException("Key [" + key + "] is locked, property cannot be setted");
@@ -476,7 +476,7 @@ public class RegistryServiceBean implements RegistryService {
 			entry.setProperty(name, value);
 			em.merge(entry);
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new RegistryServiceException(e);
 		}
@@ -485,7 +485,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException {
-		logger.log(Level.FINE, "getting property [" + name + "] for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting property [" + name + "] for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		try {
 			if (!entry.getProperties().containsKey(name)) {
@@ -493,7 +493,7 @@ public class RegistryServiceBean implements RegistryService {
 			}
 			return (String) entry.getProperties().get(name);
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			throw new RegistryServiceException(e);
 		}
 	}
@@ -501,7 +501,7 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<OrtolangObjectProperty> getProperties(String key) throws RegistryServiceException, KeyNotFoundException {
-		logger.log(Level.FINE, "getting properties for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting properties for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		List<OrtolangObjectProperty> properties = new ArrayList<OrtolangObjectProperty>();
 		try {
@@ -511,7 +511,7 @@ public class RegistryServiceBean implements RegistryService {
 			}
 			return properties;
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			throw new RegistryServiceException(e);
 		}
 	}
@@ -539,7 +539,7 @@ public class RegistryServiceBean implements RegistryService {
 			throw new IdentifierNotRegisteredException("no entry found with identifier [" + identifier + "]");
 		}
 		if ( entries.size() > 1 ) {
-			logger.log(Level.SEVERE, "the identifier [" + identifier + "] is registered more than once !!");
+			LOGGER.log(Level.SEVERE, "the identifier [" + identifier + "] is registered more than once !!");
 		}
 		if ( entries.get(0).isDeleted() ) {
 			throw new IdentifierNotRegisteredException("no entry found with identifier [" + identifier + "]");

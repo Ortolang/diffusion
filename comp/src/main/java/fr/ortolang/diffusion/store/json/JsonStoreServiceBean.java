@@ -45,14 +45,14 @@ public class JsonStoreServiceBean implements JsonStoreService {
 
 	public static final String DEFAULT_JSON_HOME = "/json-store";
 
-    private static final Logger logger = Logger.getLogger(JsonStoreServiceBean.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceBean.class.getName());
 
     private Path base;
     private OServer server;
     private OPartitionedDatabasePool pool;
 
     public JsonStoreServiceBean() {
-    	logger.log(Level.FINE, "Instanciating json store service");
+    	LOGGER.log(Level.FINE, "Instanciating json store service");
     	this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_JSON_HOME);
     }
     
@@ -62,10 +62,10 @@ public class JsonStoreServiceBean implements JsonStoreService {
 
     @PostConstruct
     public void init() {
-    	logger.log(Level.INFO, "Initializing service with base folder: " + base);
+    	LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
     	try {
     		if ( Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.json.purge")) ) {
-				logger.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
+				LOGGER.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
 				Files.walkFileTree(base, new DeleteFileVisitor());
 			} 
     		Files.createDirectories(base);
@@ -89,19 +89,19 @@ public class JsonStoreServiceBean implements JsonStoreService {
     	    pool = new OPartitionedDatabasePool("plocal:"+this.base.toFile().getAbsolutePath(), "admin", "admin");
     	    
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "unable to initialize json store", e);
+			LOGGER.log(Level.SEVERE, "unable to initialize json store", e);
 		}
     }
  
 
     @PreDestroy
     public void shutdown() {
-    	logger.log(Level.INFO, "Shuting down json store");
+    	LOGGER.log(Level.INFO, "Shuting down json store");
     	try {
     		pool.close();
     		server.shutdown();
         } catch (Exception e) {
-    		logger.log(Level.SEVERE, "unable to shutdown json store", e);
+    		LOGGER.log(Level.SEVERE, "unable to shutdown json store", e);
     	}
     }
     
@@ -109,7 +109,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void index(OrtolangIndexableObject object)
 			throws JsonStoreServiceException {
-		logger.log(Level.INFO, "Indexing object: " + object.getKey());
+		LOGGER.log(Level.INFO, "Indexing object: " + object.getKey());
 		
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
@@ -118,7 +118,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
 			ortolangKeyIdx.put(object.getKey(), doc);
 		} catch(Exception e) {
-			logger.log(Level.SEVERE, "unable to index json ",e);
+			LOGGER.log(Level.SEVERE, "unable to index json ",e);
 		} finally {
 			db.close();
 		}
@@ -128,7 +128,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void reindex(OrtolangIndexableObject object)
 			throws JsonStoreServiceException {
-		logger.log(Level.FINE, "Reindexing object: " + object.getKey());
+		LOGGER.log(Level.FINE, "Reindexing object: " + object.getKey());
 
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
@@ -137,7 +137,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object, oldDoc);
 			db.save(doc);
 		} catch(Exception e) {
-			logger.log(Level.SEVERE, "unable to reindex json ",e);
+			LOGGER.log(Level.SEVERE, "unable to reindex json ",e);
 		} finally {
 			db.close();
 		}
@@ -146,14 +146,14 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void remove(String key) throws JsonStoreServiceException {
-		logger.log(Level.FINE, "Removing key: " + key);
+		LOGGER.log(Level.FINE, "Removing key: " + key);
 		
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			ODocument oldDoc = getDocumentByKey(key);
 			oldDoc.delete();
 		} catch(Exception e) {
-			logger.log(Level.SEVERE, "unable to remove json ",e);
+			LOGGER.log(Level.SEVERE, "unable to remove json ",e);
 		} finally {
 			db.close();
 		}
@@ -172,7 +172,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 				jsonResults.add(doc.toJSON());
 		    }
 		} catch(Exception e) {
-			logger.log(Level.SEVERE, "query failed in json store : "+e.getMessage());
+			LOGGER.log(Level.SEVERE, "query failed in json store : "+e.getMessage());
 			throw new JsonStoreServiceException(e.getMessage());
 		} finally {
 			db.close();

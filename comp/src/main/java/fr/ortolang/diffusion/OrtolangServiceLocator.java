@@ -52,7 +52,7 @@ public class OrtolangServiceLocator {
 	private static final String NAMESPACE = "java:global/diffusion/components/";
 	private static final String SERVICE_SUFFIX = "Service";
 	
-	private static Logger logger = Logger.getLogger(OrtolangServiceLocator.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(OrtolangServiceLocator.class.getName());
 	private static InitialContext jndi;
 	private static Map<String, OrtolangService> services = new HashMap<String, OrtolangService> ();
 	private static Map<String, OrtolangIndexableService> indexableServices = new HashMap<String, OrtolangIndexableService> ();
@@ -75,7 +75,7 @@ public class OrtolangServiceLocator {
 			while (enumeration.hasMoreElements()) {
 				String name = ((NameClassPair) enumeration.next()).getName();
 				if (name.endsWith(OrtolangServiceLocator.SERVICE_SUFFIX)) {
-					logger.log(Level.INFO, "jndi service name found : " + name);
+					LOGGER.log(Level.INFO, "jndi service name found : " + name);
 					results.add(name.substring(0, name.indexOf("!")));
 				}
 			}

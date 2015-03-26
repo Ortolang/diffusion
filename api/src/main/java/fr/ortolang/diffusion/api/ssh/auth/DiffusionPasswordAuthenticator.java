@@ -52,39 +52,39 @@ import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContex
 
 public class DiffusionPasswordAuthenticator implements PasswordAuthenticator {
 	
-	private static Logger logger = Logger.getLogger(DiffusionPasswordAuthenticator.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(DiffusionPasswordAuthenticator.class.getName());
 
     @Override
     public boolean authenticate(final String username, final String password, final ServerSession session) {
         try {
-        	logger.log(Level.INFO, "performing jaas authentication...");
+        	LOGGER.log(Level.INFO, "performing jaas authentication...");
         	LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(username, password);
             lc.login();
-            logger.log(Level.INFO, "try a call to membreship service to validate credentials");
+            LOGGER.log(Level.INFO, "try a call to membreship service to validate credentials");
             MembershipService membership = (MembershipService)OrtolangServiceLocator.findService("membership");
             String expected = membership.getProfileKeyForIdentifier(username);
     		String key = membership.getProfileKeyForConnectedIdentifier();
     		lc.logout();
-    		logger.log(Level.INFO, "expected: " + expected);
-    		logger.log(Level.INFO, "key: " + key);
+    		LOGGER.log(Level.INFO, "expected: " + expected);
+    		LOGGER.log(Level.INFO, "key: " + key);
     		
     		if (key.equals(expected)) {
     			session.setAttribute(new AttributeKey<UsernamePassword>(), new UsernamePassword(username, password));
-    			logger.log(Level.INFO, "connected profile [" + key + "] is the expected one [" + expected + "], login OK");
+    			LOGGER.log(Level.INFO, "connected profile [" + key + "] is the expected one [" + expected + "], login OK");
     			if (session instanceof SSHSession) {
     				((SSHSession) session).setLogin(username);
     				((SSHSession) session).setPassword(password);
                 } else {
-                	logger.log(Level.WARNING, "ServerSession is not of type SSHServerSession : unable to set login/password for futur authentication");
+                	LOGGER.log(Level.WARNING, "ServerSession is not of type SSHServerSession : unable to set login/password for futur authentication");
                 	return false;
                 }
     			return true;
     		} else {
-    			logger.log(Level.INFO, "connected profile [" + key + "] is NOT the expected one [" + expected + "], login KO");
+    			LOGGER.log(Level.INFO, "connected profile [" + key + "] is NOT the expected one [" + expected + "], login KO");
     			return false;
     		}
         } catch (Exception e) {
-        	logger.log(Level.INFO, "login failed ", e);
+        	LOGGER.log(Level.INFO, "login failed ", e);
             return false;
         }
     }

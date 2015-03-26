@@ -75,7 +75,7 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 public class CoreSshFile implements SshFile {
 	
-	private static Logger logger = Logger.getLogger(CoreSshFile.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(CoreSshFile.class.getName());
 	
 	private DiffusionFileSystemView view;
 	private PathBuilder absolutePath;
@@ -95,14 +95,14 @@ public class CoreSshFile implements SshFile {
 	private Path temp = null;
 	
 	protected CoreSshFile(DiffusionFileSystemView view, PathBuilder path) throws OrtolangException {
-		logger.log(Level.INFO, "CoreSshFile created for path: " + path.build());
+		LOGGER.log(Level.INFO, "CoreSshFile created for path: " + path.build());
 		this.view = view;
 		this.path = path;
 		this.load();
 	}
 	
 	private void load() throws OrtolangException {
-		logger.log(Level.INFO, "loading element : " + path.part());
+		LOGGER.log(Level.INFO, "loading element : " + path.part());
 		try {
 			LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 			lc.login();
@@ -137,7 +137,7 @@ public class CoreSshFile implements SshFile {
 			}
 			lc.logout();
 		} catch (AccessDeniedException | BrowserServiceException | LoginException | OrtolangException | CoreServiceException | KeyNotFoundException e) {
-			logger.log(Level.SEVERE, "error while trying to load element for path " + path, e);
+			LOGGER.log(Level.SEVERE, "error while trying to load element for path " + path, e);
 			throw new OrtolangException("unable to load core object associated with path: " + path.build(), e);
 		} catch (InvalidPathException e) {
 			exists = false;
@@ -146,91 +146,91 @@ public class CoreSshFile implements SshFile {
 
 	@Override
 	public String getName() {
-		logger.log(Level.FINE, "retreive name: " + name);
+		LOGGER.log(Level.FINE, "retreive name: " + name);
 		return name;
 	}
 	
 	@Override
 	public String getAbsolutePath() {
-		logger.log(Level.FINE, "retreive absolute path: " + absolutePath.build());
+		LOGGER.log(Level.FINE, "retreive absolute path: " + absolutePath.build());
 		return absolutePath.build();
 	}
 
 	@Override
 	public String getOwner() {
-		logger.log(Level.FINE, "retreive owner : " + view.getConnectedUser());
+		LOGGER.log(Level.FINE, "retreive owner : " + view.getConnectedUser());
 		return view.getConnectedUser();
 	}
 
 	@Override
 	public boolean isDirectory() {
-		logger.log(Level.FINE, "check if isDirectory: " + type.equals(Collection.OBJECT_TYPE));
+		LOGGER.log(Level.FINE, "check if isDirectory: " + type.equals(Collection.OBJECT_TYPE));
 		return type.equals(Collection.OBJECT_TYPE);
 	}
 
 	@Override
 	public boolean isFile() {
-		logger.log(Level.FINE, "check if isFile: " + type.equals(DataObject.OBJECT_TYPE));
+		LOGGER.log(Level.FINE, "check if isFile: " + type.equals(DataObject.OBJECT_TYPE));
 		return type.equals(DataObject.OBJECT_TYPE);
 	}
 
 	@Override
 	public boolean doesExist() {
-		logger.log(Level.FINE, "check if doesExists: " + exists);
+		LOGGER.log(Level.FINE, "check if doesExists: " + exists);
 		return exists;
 	}
 
 	@Override
 	public boolean isReadable() {
-		logger.log(Level.FINE, "check if isReadable: " + readable);
+		LOGGER.log(Level.FINE, "check if isReadable: " + readable);
 		return readable;
 	}
 
 	@Override
 	public boolean isWritable() {
-		logger.log(Level.FINE, "check if isWritable: " + writable);
+		LOGGER.log(Level.FINE, "check if isWritable: " + writable);
 		return writable;
 	}
 
 	@Override
 	public boolean isExecutable() {
-		logger.log(Level.FINE, "check if isExecutable: " + executable); 
+		LOGGER.log(Level.FINE, "check if isExecutable: " + executable); 
 		return executable;
 	}
 
 	@Override
 	public boolean isRemovable() {
-		logger.log(Level.FINE, "check if isRemovable: " + removable);
+		LOGGER.log(Level.FINE, "check if isRemovable: " + removable);
 		return removable;
 	}
 
 	@Override
 	public SshFile getParentFile() {
-		logger.log(Level.FINE, "retreive parent file calling the view to create it ");
+		LOGGER.log(Level.FINE, "retreive parent file calling the view to create it ");
 		return view.getFile(path.clone().parent().build());
 	}
 	
 	@Override
 	public long getLastModified() {
-		logger.log(Level.FINE, "retreive last modified: " + lastModified);
+		LOGGER.log(Level.FINE, "retreive last modified: " + lastModified);
 		return lastModified;
 	}
 
 	@Override
 	public boolean setLastModified(long time) {
-		logger.log(Level.FINE, "set last modified: " + time);
+		LOGGER.log(Level.FINE, "set last modified: " + time);
 		return false;
 	}
 
 	@Override
 	public long getSize() {
-		logger.log(Level.FINE, "get size: " + size);
+		LOGGER.log(Level.FINE, "get size: " + size);
 		return size;
 	}
 
 	@Override
 	public boolean mkdir() {
-		logger.log(Level.FINE, "mkdir called");
+		LOGGER.log(Level.FINE, "mkdir called");
 		if ( !exists ) {
 			try {
 				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
@@ -240,7 +240,7 @@ public class CoreSshFile implements SshFile {
 				lc.logout();
 				return true;
 			} catch ( LoginException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | OrtolangException e ) {
-				logger.log(Level.SEVERE, "error while trying to make directory for path: " + path, e); 
+				LOGGER.log(Level.SEVERE, "error while trying to make directory for path: " + path, e); 
 			}
 		}
 		return false;
@@ -248,7 +248,7 @@ public class CoreSshFile implements SshFile {
 
 	@Override
 	public boolean delete() {
-		logger.log(Level.FINE, "delete called");
+		LOGGER.log(Level.FINE, "delete called");
 		if ( exists ) {
 			try {
 				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
@@ -263,7 +263,7 @@ public class CoreSshFile implements SshFile {
 				lc.logout();
 				return true;
 			} catch ( LoginException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | OrtolangException | CollectionNotEmptyException e ) {
-				logger.log(Level.SEVERE, "error while trying to delete path: " + path, e); 
+				LOGGER.log(Level.SEVERE, "error while trying to delete path: " + path, e); 
 			}
 		}
 		return false;
@@ -271,7 +271,7 @@ public class CoreSshFile implements SshFile {
 
 	@Override
 	public boolean create() throws IOException {
-		logger.log(Level.FINE, "create called");
+		LOGGER.log(Level.FINE, "create called");
 		if ( !exists ) {
 			try {
 				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
@@ -281,7 +281,7 @@ public class CoreSshFile implements SshFile {
 				lc.logout();
 				return true;
 			} catch ( LoginException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | OrtolangException e ) {
-				logger.log(Level.SEVERE, "error while trying to make directory for path: " + path, e); 
+				LOGGER.log(Level.SEVERE, "error while trying to make directory for path: " + path, e); 
 			}
 		}
 		return false;
@@ -289,7 +289,7 @@ public class CoreSshFile implements SshFile {
 
 	@Override
 	public void truncate() throws IOException {
-		logger.log(Level.FINE, "truncate called");
+		LOGGER.log(Level.FINE, "truncate called");
 		if ( exists ) {
 			try {
 				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
@@ -298,21 +298,21 @@ public class CoreSshFile implements SshFile {
 				//TODO maybe reload informations...
 				lc.logout();
 			} catch ( LoginException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | OrtolangException e ) {
-				logger.log(Level.SEVERE, "error while trying to make directory for path: " + path, e); 
+				LOGGER.log(Level.SEVERE, "error while trying to make directory for path: " + path, e); 
 			}
 		}
 	}
 
 	@Override
 	public boolean move(SshFile destination) {
-		logger.log(Level.FINE, "move called to : " + destination.getAbsolutePath());
+		LOGGER.log(Level.FINE, "move called to : " + destination.getAbsolutePath());
 		//TODO
 		return false;
 	}
 
 	@Override
 	public List<SshFile> listSshFiles() {
-		logger.log(Level.FINE, "listing element children depending on type of element");
+		LOGGER.log(Level.FINE, "listing element children depending on type of element");
 		List<SshFile> children = new ArrayList<SshFile>();
 		for ( CollectionElement element : elements ) {
 			if (element.getType().equals(Collection.OBJECT_TYPE) || element.getType().equals(DataObject.OBJECT_TYPE)) {
@@ -324,7 +324,7 @@ public class CoreSshFile implements SshFile {
 	
 	@Override
 	public OutputStream createOutputStream(long offset) throws IOException {
-		logger.log(Level.FINE, "create ouput stream called with offset : " + offset);
+		LOGGER.log(Level.FINE, "create ouput stream called with offset : " + offset);
 		if ( !isWritable() ) {
 			throw new IOException("No write permission for DataObject");
 		}
@@ -338,7 +338,7 @@ public class CoreSshFile implements SshFile {
 
 	@Override
 	public InputStream createInputStream(long offset) throws IOException {
-		logger.log(Level.FINE, "create input stream called with offset : " + offset);
+		LOGGER.log(Level.FINE, "create input stream called with offset : " + offset);
 		if ( !exists ) {
 			throw new IOException("DataObject does not exists");
 		}
@@ -359,16 +359,16 @@ public class CoreSshFile implements SshFile {
 			lc.logout();
 			return input;
 		} catch ( LoginException | CoreServiceException | KeyNotFoundException | AccessDeniedException | OrtolangException | BinaryStoreServiceException | DataNotFoundException e ) {
-			logger.log(Level.SEVERE, "error while trying to make directory for path: " + path, e); 
+			LOGGER.log(Level.SEVERE, "error while trying to make directory for path: " + path, e); 
 		}
 		return null;
 	}
 
 	@Override
 	public void handleClose() throws IOException {
-		logger.log(Level.FINE, "handle close called");
+		LOGGER.log(Level.FINE, "handle close called");
 		if ( temp != null ) {
-			logger.log(Level.INFO, "we have a temp file uploaded, maybe update data object according to this !!");
+			LOGGER.log(Level.INFO, "we have a temp file uploaded, maybe update data object according to this !!");
 			try {
 				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();
@@ -376,7 +376,7 @@ public class CoreSshFile implements SshFile {
 				view.getCore().updateDataObject(workspace, path.build(), "pas de description", hash);
 				lc.logout();
 			} catch ( LoginException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | OrtolangException | BinaryStoreServiceException | DataCollisionException e ) {
-				logger.log(Level.SEVERE, "error while trying to update data with uploaded content", e); 
+				LOGGER.log(Level.SEVERE, "error while trying to update data with uploaded content", e); 
 			}
 			Files.delete(temp);
 			temp = null;
@@ -385,7 +385,7 @@ public class CoreSshFile implements SshFile {
 	
 	@Override
 	public Map<Attribute, Object> getAttributes(boolean followLinks) throws IOException {
-		logger.log(Level.FINE, "trying to get attributes ");
+		LOGGER.log(Level.FINE, "trying to get attributes ");
 		Map<Attribute, Object> map = new HashMap<Attribute, Object>();
         map.put(Attribute.Size, getSize());
         map.put(Attribute.IsDirectory, isDirectory());
@@ -417,7 +417,7 @@ public class CoreSshFile implements SshFile {
 
 	@Override
 	public void setAttributes(Map<Attribute, Object> attributes) throws IOException {
-		logger.log(Level.FINE, "trying to set attributes ");
+		LOGGER.log(Level.FINE, "trying to set attributes ");
 		if ( !attributes.isEmpty() ) {
 			//throw new UnsupportedOptionException();
 		}
@@ -425,13 +425,13 @@ public class CoreSshFile implements SshFile {
 
 	@Override
 	public Object getAttribute(Attribute attribute, boolean followLinks) throws IOException {
-		logger.log(Level.FINE, "trying to get attribute : " + attribute.name());
+		LOGGER.log(Level.FINE, "trying to get attribute : " + attribute.name());
 		return getAttributes(followLinks).get(attribute);
 	}
 
 	@Override
 	public void setAttribute(Attribute attribute, Object value) throws IOException {
-		logger.log(Level.FINE, "trying to set attribute : " + attribute.name());
+		LOGGER.log(Level.FINE, "trying to set attribute : " + attribute.name());
 		Map<Attribute, Object> map = new HashMap<Attribute, Object> ();
 		map.put(attribute, value);
 		setAttributes(map);
@@ -439,13 +439,13 @@ public class CoreSshFile implements SshFile {
 
 	@Override
 	public String readSymbolicLink() throws IOException {
-		logger.log(Level.FINE, "trying to read symlink ");
+		LOGGER.log(Level.FINE, "trying to read symlink ");
 		throw new IOException();
 	}
 
 	@Override
 	public void createSymbolicLink(SshFile destination) throws IOException {
-		logger.log(Level.FINE, "trying to create symlink for destination : " + destination.getAbsolutePath());
+		LOGGER.log(Level.FINE, "trying to create symlink for destination : " + destination.getAbsolutePath());
 		throw new IOException();
 	}
 

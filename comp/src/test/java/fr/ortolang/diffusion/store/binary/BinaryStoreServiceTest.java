@@ -59,7 +59,7 @@ import org.junit.Test;
 
 public class BinaryStoreServiceTest {
 
-	private Logger logger = Logger.getLogger(BinaryStoreServiceTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(BinaryStoreServiceTest.class.getName());
 	private BinaryStoreServiceBean service;
 	
 	@Before
@@ -89,7 +89,7 @@ public class BinaryStoreServiceTest {
 
 				@Override
 				public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-					logger.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
+					LOGGER.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
 					return FileVisitResult.TERMINATE;
 				}
 
@@ -101,7 +101,7 @@ public class BinaryStoreServiceTest {
 				
 			});
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 
@@ -128,7 +128,7 @@ public class BinaryStoreServiceTest {
 			assertFalse(hash1.equals(hash4));
 			assertFalse(hash3.equals(hash4));
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 			fail(e.getMessage());
 		}
 	}

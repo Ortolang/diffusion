@@ -73,7 +73,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public static final String WORKSPACE_TYPE_PARAM_NAME = "wstype";
 	public static final String WORKSPACE_ALIAS_PARAM_NAME = "wsalias";
 
-	private static final Logger logger = Logger.getLogger(RuntimeEngineTask.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(RuntimeEngineTask.class.getName());
 
 	protected UserTransaction userTx;
 	protected RuntimeEngine engine;
@@ -187,24 +187,24 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	@Override
 	public void execute(DelegateExecution execution) {
 		try {
-			logger.log(Level.INFO, "Starting RuntimeTask execution");
+			LOGGER.log(Level.INFO, "Starting RuntimeTask execution");
 			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityStartEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " STARTED"));
 
 			try {
-				logger.log(Level.FINE, "Executing task");
+				LOGGER.log(Level.FINE, "Executing task");
 				executeTask(execution);
-				logger.log(Level.FINE, "Task executed");
+				LOGGER.log(Level.FINE, "Task executed");
 			} catch (RuntimeEngineTaskException e) {
-				logger.log(Level.SEVERE, "RuntimeTask exception intercepted, putting task in error and aborting process", e);
+				LOGGER.log(Level.SEVERE, "RuntimeTask exception intercepted, putting task in error and aborting process", e);
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " IN ERROR: " + e.getMessage()));
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessAbortEvent(execution.getProcessBusinessKey(), e.getMessage()));
 				throw new BpmnError("RuntimeTaskExecutionError", e.getMessage());
 			}
 
-			logger.log(Level.FINE, "Sending events of process evolution");
+			LOGGER.log(Level.FINE, "Sending events of process evolution");
 			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityCompleteEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " COMPLETED"));
 		} catch (RuntimeEngineTaskException e) {
-			logger.log(Level.SEVERE, "Unexpected runtime task exception", e);
+			LOGGER.log(Level.SEVERE, "Unexpected runtime task exception", e);
 			throw new BpmnError("Unexpected RuntimeTaskExecutionError", e.getMessage());
 		}
 	}

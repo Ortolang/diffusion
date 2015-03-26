@@ -94,7 +94,7 @@ import fr.ortolang.diffusion.runtime.entity.ProcessType;
 @PermitAll
 public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener {
 
-	private static final Logger logger = Logger.getLogger(ActivitiEngineBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ActivitiEngineBean.class.getName());
 
 	@Resource
 	private ManagedScheduledExecutorService scheduledExecutor;
@@ -113,7 +113,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 
 	@PostConstruct
 	public void init() {
-		logger.log(Level.INFO, "Initilizing EngineServiceBean");
+		LOGGER.log(Level.INFO, "Initilizing EngineServiceBean");
 		if (engine == null) {
 			ProcessEngineConfiguration config = ProcessEngineConfiguration.createProcessEngineConfigurationFromResourceDefault();
 			config.setJpaHandleTransaction(true);
@@ -127,18 +127,18 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 			engine = config.buildProcessEngine();
 			engine.getRuntimeService().addEventListener(this);
 			listener = new RuntimeEngineListener();
-			logger.log(Level.INFO, "Activiti Engine created: " + engine.getName());
+			LOGGER.log(Level.INFO, "Activiti Engine created: " + engine.getName());
 		}
-		logger.log(Level.INFO, "EngineServiceBean initialized");
+		LOGGER.log(Level.INFO, "EngineServiceBean initialized");
 	}
 
 	@PreDestroy
 	public void dispose() {
-		logger.log(Level.INFO, "Stopping EngineServiceBean");
+		LOGGER.log(Level.INFO, "Stopping EngineServiceBean");
 		if (engine != null) {
 			engine.close();
 		}
-		logger.log(Level.INFO, "EngineServiceBean stopped");
+		LOGGER.log(Level.INFO, "EngineServiceBean stopped");
 	}
 	
 	protected RuntimeService getActivitiRuntimeService() {
@@ -152,16 +152,16 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deployDefinitions(String[] resources) {
-		logger.log(Level.INFO, "Deploying process definitions");
+		LOGGER.log(Level.INFO, "Deploying process definitions");
 		DeploymentBuilder deployment = engine.getRepositoryService().createDeployment();
 		deployment.enableDuplicateFiltering();
 		deployment.name("EngineServiceDeployement");
 		for (String resource : resources) {
-			logger.log(Level.INFO, "Adding process definition resource to deployment : " + resource);
+			LOGGER.log(Level.INFO, "Adding process definition resource to deployment : " + resource);
 			deployment.addClasspathResource(resource);
 		}
 		Deployment deploy = deployment.deploy();
-		logger.log(Level.INFO, "Process definitions deployed on " + deploy.getDeploymentTime());
+		LOGGER.log(Level.INFO, "Process definitions deployed on " + deploy.getDeploymentTime());
 	}
 
 	@Override
@@ -294,18 +294,18 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	public void onEvent(ActivitiEvent event) {
 		try {
 			if (event.getType().equals(ActivitiEventType.PROCESS_COMPLETED)) {
-				logger.log(Level.INFO, "Activiti process completed event received");
+				LOGGER.log(Level.INFO, "Activiti process completed event received");
 				String pid = ((ExecutionEntity)((ActivitiEntityEvent)event).getEntity()).getBusinessKey();
 				notify(RuntimeEngineEvent.createProcessCompleteEvent(pid));
 			}
 			if (event.getType().equals(ActivitiEventType.TASK_CREATED)) {
-				logger.log(Level.INFO, "Activiti task created event received");
+				LOGGER.log(Level.INFO, "Activiti task created event received");
 				TaskEntity task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
 				String pid = task.getExecution().getBusinessKey();
 				notify(RuntimeEngineEvent.createProcessActivityStartEvent(pid, task.getName(), "human task: " + task.getName() + " created"));
 			}
 		} catch ( RuntimeEngineException e ) {
-			logger.log(Level.WARNING, "unexpected error during treating activiti event", e);
+			LOGGER.log(Level.WARNING, "unexpected error during treating activiti event", e);
 		}
 	}
 

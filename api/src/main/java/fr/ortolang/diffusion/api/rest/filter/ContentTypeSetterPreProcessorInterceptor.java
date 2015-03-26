@@ -54,11 +54,11 @@ import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
 @ServerInterceptor
 public class ContentTypeSetterPreProcessorInterceptor implements PreProcessInterceptor {
 	
-	private Logger logger = Logger.getLogger(ContentTypeSetterPreProcessorInterceptor.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ContentTypeSetterPreProcessorInterceptor.class.getName());
 
 	@Override
 	public ServerResponse preProcess(HttpRequest request, ResourceMethodInvoker method) throws Failure, WebApplicationException {
-		logger.log(Level.INFO, "content type setter for Input Part");
+		LOGGER.log(Level.INFO, "content type setter for Input Part");
 		request.setAttribute(InputPart.DEFAULT_CHARSET_PROPERTY, "UTF-8");
 		return null;
 	}

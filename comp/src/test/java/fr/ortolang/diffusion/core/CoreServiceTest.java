@@ -86,7 +86,7 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 @RunWith(Arquillian.class)
 public class CoreServiceTest {
 
-	private static Logger logger = Logger.getLogger(CoreServiceTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(CoreServiceTest.class.getName());
 
 	@EJB
 	private MembershipService membership;
@@ -131,7 +131,7 @@ public class CoreServiceTest {
 		jar.addAsResource("schema/ortolang-item-schema.json");
 		jar.addAsResource("json/meta.json");
 		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
-		logger.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
+		LOGGER.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
 
 		PomEquippedResolveStage pom = Maven.resolver().loadPomFromFile("pom.xml");
 
@@ -159,19 +159,19 @@ public class CoreServiceTest {
 		ear.addAsLibraries(pom.resolve("org.apache.velocity:velocity:1.7").withTransitivity().asFile());
 		ear.addAsLibraries(pom.resolve("org.apache.velocity:velocity-tools:2.0").withTransitivity().asFile());
 		ear.addAsLibraries(pom.resolve("com.github.fge:json-schema-validator:2.2.6").withTransitivity().asFile());
-		logger.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
+		LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 
 		return ear;
 	}
 
 	@Before
 	public void setup() {
-		logger.log(Level.INFO, "setting up test environment");
+		LOGGER.log(Level.INFO, "setting up test environment");
 	}
 
 	@After
 	public void tearDown() {
-		logger.log(Level.INFO, "clearing environment");
+		LOGGER.log(Level.INFO, "clearing environment");
 	}
 
 	@Test
@@ -179,7 +179,7 @@ public class CoreServiceTest {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("anonymous", "password");
 		loginContext.login();
 		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			String key = membership.getProfileKeyForConnectedIdentifier();
 			assertEquals("anonymous", key);
 		} finally {
@@ -189,11 +189,11 @@ public class CoreServiceTest {
 
 	@Test(expected = AccessDeniedException.class)
 	public void testCreateWorkspaceAsUnauthentifiedUser() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException {
-		logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+		LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 		try {
 			membership.createProfile("Anonymous", "", "anonymous@ortolang.fr");
 		} catch (ProfileAlreadyExistsException e) {
-			logger.log(Level.INFO, "Profile anonymous already exists !!");
+			LOGGER.log(Level.INFO, "Profile anonymous already exists !!");
 		}
 		core.createWorkspace("K1", "alias", "Blabla", "test");
 		fail("Should have raised an AccessDeniedException");
@@ -204,11 +204,11 @@ public class CoreServiceTest {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
 				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
-				logger.log(Level.INFO, "Profile user1 already exists !!");
+				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
 			}
 			core.createWorkspace("K2", "Blabla2", "test");
 			core.createWorkspace("K2", "Blabla3", "test");
@@ -223,11 +223,11 @@ public class CoreServiceTest {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
 				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
-				logger.log(Level.INFO, "Profile user1 already exists !!");
+				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
 			}
 			core.createWorkspace("WSK1", "workspace-001", "Blabla2", "test");
 			core.createWorkspace("WSK2", "workspace-001", "Blabla2", "test");
@@ -243,11 +243,11 @@ public class CoreServiceTest {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
 				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
-				logger.log(Level.INFO, "Profile user1 already exists !!");
+				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
 			}
 			core.readWorkspace("UNEXISTING");
 			fail("Should have raised a KeyNotFoundException");
@@ -266,11 +266,11 @@ public class CoreServiceTest {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
 				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
-				logger.log(Level.INFO, "Profile user1 already exists !!");
+				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
 			}
 			core.createWorkspace(WORKSPACE_KEY, WORKSPACE_NAME, WORKSPACE_TYPE);
 		} finally {
@@ -280,11 +280,11 @@ public class CoreServiceTest {
 		loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user2", "tagada");
 		loginContext.login();
 		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
 				membership.createProfile("User", "TWO", "user.two@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
-				logger.log(Level.INFO, "Profile user2 already exists !!");
+				LOGGER.log(Level.INFO, "Profile user2 already exists !!");
 			}
 			core.readWorkspace(WORKSPACE_KEY);
 			fail("Should have raised a  AccessDeniedException");
@@ -304,11 +304,11 @@ public class CoreServiceTest {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
 				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
-				logger.log(Level.INFO, "Profile user1 already exists !!");
+				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
 			}
 			core.createWorkspace(WORKSPACE_KEY, WORKSPACE_NAME, WORKSPACE_TYPE);
 			Workspace ws = core.readWorkspace(WORKSPACE_KEY);
@@ -346,11 +346,11 @@ public class CoreServiceTest {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
 				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
-				logger.log(Level.INFO, "Profile user1 already exists !!");
+				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
 			}
 
 			String wsk = UUID.randomUUID().toString();
@@ -360,8 +360,8 @@ public class CoreServiceTest {
 			core.createCollection(wsk, "/a/b", "Collection B inside A");
 			core.createCollection(wsk, "/a/c", "Collection C inside A");
 
-			logger.log(Level.INFO, "Workspace created with 3 collections");
-			logger.log(Level.INFO, walkWorkspace(wsk));
+			LOGGER.log(Level.INFO, "Workspace created with 3 collections");
+			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
 			String akey = core.resolveWorkspacePath(wsk, "head", "/a");
 			Collection collection = core.readCollection(akey);
@@ -398,7 +398,7 @@ public class CoreServiceTest {
 			assertTrue(collection.findElementByName("b") == null);
 			assertTrue(collection.findElementByName("c").getKey().equals(ckey));
 
-			logger.log(Level.INFO, walkWorkspace(wsk));
+			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
 			Workspace workspace = core.readWorkspace(wsk);
 			assertEquals(0, workspace.getSnapshots().size());
@@ -410,19 +410,19 @@ public class CoreServiceTest {
 			assertEquals(2, workspace.getClock());
 			assertFalse(workspace.hasChanged());
 
-			logger.log(Level.INFO, "Workspace snapshotted");
-			logger.log(Level.INFO, walkWorkspace(wsk));
+			LOGGER.log(Level.INFO, "Workspace snapshotted");
+			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
 			try {
 				core.snapshotWorkspace(wsk, "v2");
 				fail("A second snapshot without changes should produce an exception");
 			} catch (Exception e) {
-				logger.log(Level.INFO, e.getMessage());
+				LOGGER.log(Level.INFO, e.getMessage());
 			}
 
 			core.updateCollection(wsk, "/a/c", "Collection C INSIDE A, updated");
 			core.createCollection(wsk, "/a/d", "New Collection D INSIDE A");
-			logger.log(Level.INFO, walkWorkspace(wsk));
+			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
 			core.snapshotWorkspace(wsk, "v2");
 			workspace = core.readWorkspace(wsk);
@@ -431,21 +431,21 @@ public class CoreServiceTest {
 			assertFalse(workspace.hasChanged());
 
 			core.deleteCollection(wsk, "/a/d");
-			logger.log(Level.INFO, walkWorkspace(wsk));
+			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
 			core.createCollection(wsk, "/a/e", "Collection E");
 			core.snapshotWorkspace(wsk, "v3");
-			logger.log(Level.INFO, walkWorkspace(wsk));
+			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
 			core.createCollection(wsk, "/a/c/f", "Third level Collection F");
-			logger.log(Level.INFO, walkWorkspace(wsk));
+			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
 			core.moveCollection(wsk, "/a/c/f", "/a/e/f");
-			logger.log(Level.INFO, walkWorkspace(wsk));
+			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
 			core.snapshotWorkspace(wsk, "v4");
 			core.moveCollection(wsk, "/a/e/f", "/a/c/g");
-			logger.log(Level.INFO, walkWorkspace(wsk));
+			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 			
 			core.snapshotWorkspace(wsk, "v5");
 			core.createCollection(wsk, "/a/c/g/d1", "Collection to delete");
@@ -459,7 +459,7 @@ public class CoreServiceTest {
 			}
 			core.deleteCollection(wsk, "/a/c/g", true);
 			
-			logger.log(Level.INFO, walkWorkspace(wsk));
+			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 			
 		} finally {
 			loginContext.logout();
@@ -472,11 +472,11 @@ public class CoreServiceTest {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
 				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
-				logger.log(Level.INFO, "Profile user1 already exists !!");
+				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
 			}
 
 			String wsk = UUID.randomUUID().toString();
@@ -494,8 +494,8 @@ public class CoreServiceTest {
 			core.createCollection(wsk, "/a/i", "Collection I inside A");
 			core.createCollection(wsk, "/a/j", "Collection J inside A");
 
-			logger.log(Level.INFO, "Workspace created");
-			logger.log(Level.INFO, walkWorkspace(wsk));
+			LOGGER.log(Level.INFO, "Workspace created");
+			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 			
 			String key = core.resolveWorkspacePath(wsk, "head", "/a");
 			Collection col = core.readCollection(key);
@@ -523,11 +523,11 @@ public class CoreServiceTest {
 			}
 
 			while (group.activeCount() > 0) {
-				logger.log(Level.INFO, "wait for threads to finish");
+				LOGGER.log(Level.INFO, "wait for threads to finish");
 				try {
 					Thread.sleep(2000);
 				} catch (InterruptedException e) {
-					logger.log(Level.INFO, "interrupted", e);
+					LOGGER.log(Level.INFO, "interrupted", e);
 				}
 			}
 			
@@ -553,11 +553,11 @@ public class CoreServiceTest {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
-			logger.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 			try {
 				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
 			} catch (ProfileAlreadyExistsException e) {
-				logger.log(Level.INFO, "Profile user1 already exists !!");
+				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
 			}
 
 			InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
@@ -611,16 +611,16 @@ public class CoreServiceTest {
 				LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 				loginContext.login();
 				try {
-					logger.log(Level.INFO, "Deleting collection at path: " + path);
+					LOGGER.log(Level.INFO, "Deleting collection at path: " + path);
 					core.deleteCollection(wskey, path);
 					deleted = true;
 				} catch (CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | CollectionNotEmptyException e) {
-					logger.log(Level.SEVERE, "error during deleting collection: " + e.getMessage());
+					LOGGER.log(Level.SEVERE, "error during deleting collection: " + e.getMessage());
 				} finally {
 					loginContext.logout();
 				}
 			} catch (LoginException e) {
-				logger.log(Level.SEVERE, "unable to login", e);
+				LOGGER.log(Level.SEVERE, "unable to login", e);
 			}
 		}
 	}

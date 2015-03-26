@@ -76,7 +76,7 @@ import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 @PermitAll
 public class SearchServiceBean implements SearchService {
 
-	private static final Logger logger = Logger.getLogger(SearchServiceBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(SearchServiceBean.class.getName());
 	
 	private static final String[] OBJECT_TYPE_LIST = new String[] { };
 	private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
@@ -182,7 +182,7 @@ public class SearchServiceBean implements SearchService {
 
     @Override
 	public List<OrtolangSearchResult> indexSearch(String query) throws SearchServiceException {
-		logger.log(Level.FINE, "Performing index search with query: " + query);
+		LOGGER.log(Level.FINE, "Performing index search with query: " + query);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -203,7 +203,7 @@ public class SearchServiceBean implements SearchService {
 	
 	@Override
 	public String semanticSearch(String query, String languageResult) throws SearchServiceException {
-		logger.log(Level.FINE, "Performing semantic search with query: " + query);
+		LOGGER.log(Level.FINE, "Performing semantic search with query: " + query);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			String result = tripleStore.query("SPARQL", query, languageResult);
@@ -216,7 +216,7 @@ public class SearchServiceBean implements SearchService {
 
 	@Override
 	public List<String> jsonSearch(String query) throws SearchServiceException {
-		logger.log(Level.FINE, "Performing semantic search with query: " + query);
+		LOGGER.log(Level.FINE, "Performing semantic search with query: " + query);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> result = jsonStore.search(query);

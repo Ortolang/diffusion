@@ -57,28 +57,28 @@ import fr.ortolang.diffusion.core.entity.Link;
 
 public class CollectionUnitTest {
 	
-	private static Logger logger = Logger.getLogger(CollectionUnitTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(CollectionUnitTest.class.getName());
 	
 	@Test 
 	public void testRegexp() {
 		String work = "1,2,3,4,5,6";
 		
 		work = removeElement(work, "2");
-		logger.log(Level.INFO,work);
+		LOGGER.log(Level.INFO,work);
 		assertEquals("1,3,4,5,6", work);
 		
 		work = removeElement(work, "1");
-		logger.log(Level.INFO,work);
+		LOGGER.log(Level.INFO,work);
 		assertEquals("3,4,5,6", work);
 		
 		work = removeElement(work, "6");
-		logger.log(Level.INFO,work);
+		LOGGER.log(Level.INFO,work);
 		assertEquals("3,4,5", work);
 		
 		work = removeElement(work, "5");
 		work = removeElement(work, "3");
 		work = removeElement(work, "4");
-		logger.log(Level.INFO,work);
+		LOGGER.log(Level.INFO,work);
 		assertEquals("", work);
 	}
 	
@@ -95,21 +95,21 @@ public class CollectionUnitTest {
 		String work = "1\n2\n3\n4\n5\n6";
 		
 		work = removeElement2(work, "2");
-		logger.log(Level.INFO,"\n" + work);
+		LOGGER.log(Level.INFO,"\n" + work);
 		assertEquals("1\n3\n4\n5\n6", work);
 		
 		work = removeElement2(work, "1");
-		logger.log(Level.INFO,"\n" + work);
+		LOGGER.log(Level.INFO,"\n" + work);
 		assertEquals("3\n4\n5\n6", work);
 		
 		work = removeElement2(work, "6");
-		logger.log(Level.INFO,"\n" + work);
+		LOGGER.log(Level.INFO,"\n" + work);
 		assertEquals("3\n4\n5", work);
 		
 		work = removeElement2(work, "5");
 		work = removeElement2(work, "3");
 		work = removeElement2(work, "4");
-		logger.log(Level.INFO,"\n" + work);
+		LOGGER.log(Level.INFO,"\n" + work);
 		assertEquals("", work);
 	}
 	
@@ -132,7 +132,7 @@ public class CollectionUnitTest {
 				serial1.append(Integer.toHexString(cpt)).append(",");
 				serial2.append(UUID.randomUUID().toString()).append(",");
 			}
-			logger.log(Level.INFO, cpt + "," + serial1.length() + "," + serial2.length());
+			LOGGER.log(Level.INFO, cpt + "," + serial1.length() + "," + serial2.length());
 		}
 	}
 	
@@ -362,41 +362,41 @@ public class CollectionUnitTest {
 		String regexp = "(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\tmyname1\t([0-9]{13})\t([0-9]+)\t([^%]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$";
 		
 		for ( String segment : c.getSegments() ) {
-			logger.log(Level.INFO, segment);
-			logger.log(Level.INFO, "segment matches myname1: " + segment.matches(regexp));
+			LOGGER.log(Level.INFO, segment);
+			LOGGER.log(Level.INFO, "segment matches myname1: " + segment.matches(regexp));
 			Pattern pattern = Pattern.compile(regexp);
 			Matcher matcher = pattern.matcher(segment);
 			matcher.matches();
-			logger.log(Level.INFO, "group 1 : " + matcher.group(1));
-			logger.log(Level.INFO, "group 2 : " + matcher.group(2));
-			logger.log(Level.INFO, "group 3 : " + matcher.group(3));
-			logger.log(Level.INFO, "group 4 : " + matcher.group(4));
+			LOGGER.log(Level.INFO, "group 1 : " + matcher.group(1));
+			LOGGER.log(Level.INFO, "group 2 : " + matcher.group(2));
+			LOGGER.log(Level.INFO, "group 3 : " + matcher.group(3));
+			LOGGER.log(Level.INFO, "group 4 : " + matcher.group(4));
 		}
 		
 		for ( CollectionElement element : c.getElements() ) {
-			logger.log(Level.INFO, "element: " + element.serialize());
+			LOGGER.log(Level.INFO, "element: " + element.serialize());
 		}
 		
 		CollectionElement ce1 = c.findElementByName("myname1");
-		logger.log(Level.INFO, "ce1 : " + ce1);
+		LOGGER.log(Level.INFO, "ce1 : " + ce1);
 		assertNotNull(ce1);
 		CollectionElement ce2 = c.findElementByName("myname2");
-		logger.log(Level.INFO, "ce2 : " + ce2);
+		LOGGER.log(Level.INFO, "ce2 : " + ce2);
 		assertNotNull(ce2);
 		CollectionElement ce3 = c.findElementByName("myname3");
-		logger.log(Level.INFO, "ce3 : " + ce3);
+		LOGGER.log(Level.INFO, "ce3 : " + ce3);
 		assertNotNull(ce3);
 		CollectionElement ce4 = c.findElementByName("myname4");
-		logger.log(Level.INFO, "ce4 : " + ce4);
+		LOGGER.log(Level.INFO, "ce4 : " + ce4);
 		assertNotNull(ce4);
 		CollectionElement ce5 = c.findElementByName("myname 5");
-		logger.log(Level.INFO, "ce5 : " + ce5);
+		LOGGER.log(Level.INFO, "ce5 : " + ce5);
 		assertNotNull(ce5);
 		CollectionElement ce6 = c.findElementByName("w&értþÿû 523 ze");
-		logger.log(Level.INFO, "ce6 : " + ce6);
+		LOGGER.log(Level.INFO, "ce6 : " + ce6);
 		assertNotNull(ce6);
 		CollectionElement ce7 = c.findElementByName("Bootstrap (1).txt");
-		logger.log(Level.INFO, "ce7 : " + ce7);
+		LOGGER.log(Level.INFO, "ce7 : " + ce7);
 		assertNotNull(ce7);
 	}
 	

@@ -85,7 +85,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	public static final String DEFAULT_BINARY_HOME = "binary-store";
 	public static final int DISTINGUISH_SIZE = 2;
 	
-	private static final Logger logger = Logger.getLogger(BinaryStoreServiceBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(BinaryStoreServiceBean.class.getName());
 
 	private HashedFilterInputStreamFactory factory;
 	private Path base;
@@ -101,17 +101,17 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 		this.working = Paths.get(base.toString(), "work");
 		this.collide = Paths.get(base.toString(), "collide");
 		this.factory = new SHA1FilterInputStreamFactory();
-		logger.log(Level.FINEST, "Initializing service with base folder: " + base);
+		LOGGER.log(Level.FINEST, "Initializing service with base folder: " + base);
 		try {
 			if ( Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.binary.purge")) ) {
-				logger.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
+				LOGGER.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
 				Files.walkFileTree(base, new DeleteFileVisitor());
 			}
 			Files.createDirectories(base);
 			Files.createDirectories(working);
 			Files.createDirectories(collide);
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "unable to initialize binary store", e);
+			LOGGER.log(Level.SEVERE, "unable to initialize binary store", e);
 		}
 	}
 	
@@ -224,9 +224,9 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 				Path tmpfile = Paths.get(working.toString(), Long.toString(System.nanoTime()));
 				
 				Files.copy(input, tmpfile);
-				logger.log(Level.FINE, "content stored in local temporary file: " + tmpfile.toString());
+				LOGGER.log(Level.FINE, "content stored in local temporary file: " + tmpfile.toString());
 				String hash = input.getHash();
-				logger.log(Level.FINE, "content based generated sha1 hash: " + hash);
+				LOGGER.log(Level.FINE, "content based generated sha1 hash: " + hash);
 				
 				String digit = hash.substring(0, DISTINGUISH_SIZE);
 				Path volume = Paths.get(base.toString(), BinaryStoreVolumeMapper.getVolume(digit));
@@ -240,15 +240,15 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 				}
 				if (!Files.exists(file)) {
 					Files.move(tmpfile, file);
-					logger.log(Level.FINE, "content moved in local definitive file: " + file.toString());
+					LOGGER.log(Level.FINE, "content moved in local definitive file: " + file.toString());
 				} else {
-					logger.log(Level.INFO, "a file with same hash already exists, trying to detect collision");
+					LOGGER.log(Level.INFO, "a file with same hash already exists, trying to detect collision");
 					try (InputStream input1 = Files.newInputStream(file); 
 							InputStream input2 = Files.newInputStream(tmpfile)) {
 						if ( IOUtils.contentEquals(input1, input2) ) {
 							Files.delete(tmpfile);
 						} else {
-							logger.log(Level.SEVERE, "BINARY COLLISION DETECTED - storing colliding files in dedicated folder");
+							LOGGER.log(Level.SEVERE, "BINARY COLLISION DETECTED - storing colliding files in dedicated folder");
 							Files.copy(file, Paths.get(collide.toString(), hash + ".origin"));
 							Files.move(tmpfile, Paths.get(collide.toString(), hash + ".colliding"));
 							throw new DataCollisionException();

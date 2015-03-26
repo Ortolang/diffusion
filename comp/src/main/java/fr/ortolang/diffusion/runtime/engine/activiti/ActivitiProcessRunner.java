@@ -47,7 +47,7 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineException;
 
 public class ActivitiProcessRunner implements Runnable {
 
-	private Logger logger = Logger.getLogger(ActivitiProcessRunner.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ActivitiProcessRunner.class.getName());
 
 	private ActivitiEngineBean engine;
 	private String type;
@@ -63,19 +63,19 @@ public class ActivitiProcessRunner implements Runnable {
 	
 	@Override
 	public void run() {
-		logger.log(Level.INFO, "ActivitiProcessRunner starting new instance of type " + type  + " with business key: " + key);
+		LOGGER.log(Level.INFO, "ActivitiProcessRunner starting new instance of type " + type  + " with business key: " + key);
 		try {
 			try {
 				engine.notify(RuntimeEngineEvent.createProcessStartEvent(key));
 				engine.getActivitiRuntimeService().startProcessInstanceByKey(type, key, variables);			
 			} catch ( ActivitiObjectNotFoundException e ) {
-				logger.log(Level.WARNING, "Error during starting process instance", e);
+				LOGGER.log(Level.WARNING, "Error during starting process instance", e);
 				engine.notify(RuntimeEngineEvent.createProcessAbortEvent(key, e.getMessage()));
 			}
 		} catch ( RuntimeEngineException e ) {
-			logger.log(Level.WARNING, "unexpected error during process runner execution", e);
+			LOGGER.log(Level.WARNING, "unexpected error during process runner execution", e);
 		}
-		logger.log(Level.INFO, "ActivitiProcessRunner stopped for business key: " + key);
+		LOGGER.log(Level.INFO, "ActivitiProcessRunner stopped for business key: " + key);
 	}
 
 }

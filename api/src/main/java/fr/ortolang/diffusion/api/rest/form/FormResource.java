@@ -60,7 +60,7 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 @Produces({ MediaType.APPLICATION_JSON })
 public class FormResource {
 
-	private Logger logger = Logger.getLogger(FormResource.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(FormResource.class.getName());
 
 	@EJB
 	private FormService form;
@@ -72,7 +72,7 @@ public class FormResource {
 	
 	@GET
 	public Response list() throws FormServiceException {
-		logger.log(Level.INFO, "list availables forms");
+		LOGGER.log(Level.INFO, "list availables forms");
 		
 		List<Form> forms = form.listForms();
 		
@@ -91,7 +91,7 @@ public class FormResource {
 	@GET
 	@Path("/{key}")
 	public Response get(@PathParam(value = "key") String key) throws FormServiceException, KeyNotFoundException {
-		logger.log(Level.INFO, "read form for key: " + key);
+		LOGGER.log(Level.INFO, "read form for key: " + key);
 				
 		Form representation = form.readForm(key);
 		

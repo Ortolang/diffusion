@@ -60,7 +60,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public class ProfileSshFile implements SshFile {
 	
-	private static Logger logger = Logger.getLogger(ProfileSshFile.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ProfileSshFile.class.getName());
 	
 	private DiffusionFileSystemView view;
 	private List<String> workspaces;
@@ -68,13 +68,13 @@ public class ProfileSshFile implements SshFile {
 	private boolean readable;
 	
 	protected ProfileSshFile(DiffusionFileSystemView view) throws OrtolangException {
-		logger.log(Level.INFO, "ProfileDiffusionSshFile created");
+		LOGGER.log(Level.INFO, "ProfileDiffusionSshFile created");
 		this.view = view; 
 		this.load();
 	}
 	
 	private void load() throws OrtolangException {
-		logger.log(Level.INFO, "loading profile : " + view.getConnectedUser());
+		LOGGER.log(Level.INFO, "loading profile : " + view.getConnectedUser());
 		try {
 			LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 			lc.login();
@@ -83,133 +83,133 @@ public class ProfileSshFile implements SshFile {
 			readable = true;
 			lc.logout();
 		} catch (CoreServiceException | OrtolangException | LoginException e) {
-			logger.log(Level.SEVERE, "error while trying to load profile for user " + view.getConnectedUser(), e);
+			LOGGER.log(Level.SEVERE, "error while trying to load profile for user " + view.getConnectedUser(), e);
 			throw new OrtolangException("error while trying to load profile for user " + view.getConnectedUser(), e);
 		} catch (KeyNotFoundException e) {
-			logger.log(Level.WARNING, "unable to read profile for user " + view.getConnectedUser() + ", key does not exists", e);
+			LOGGER.log(Level.WARNING, "unable to read profile for user " + view.getConnectedUser() + ", key does not exists", e);
 			exists = false;
 		} catch (AccessDeniedException e) {
-			logger.log(Level.FINE, "unable to read profile for user " + view.getConnectedUser() + ", access denied", e);
+			LOGGER.log(Level.FINE, "unable to read profile for user " + view.getConnectedUser() + ", access denied", e);
 			readable = false;
 		} 
 	}
 	
 	@Override
 	public String getName() {
-		logger.log(Level.INFO, "retreive name: " + view.getConnectedUser());
+		LOGGER.log(Level.INFO, "retreive name: " + view.getConnectedUser());
 		return view.getConnectedUser();
 	}
 	
 	@Override
 	public String getAbsolutePath() {
-		logger.log(Level.INFO, "retreive absolute path: ");
+		LOGGER.log(Level.INFO, "retreive absolute path: ");
 		return "/";
 	}
 
 	@Override
 	public String getOwner() {
-		logger.log(Level.INFO, "retreive owner : " + view.getConnectedUser());
+		LOGGER.log(Level.INFO, "retreive owner : " + view.getConnectedUser());
 		return view.getConnectedUser();
 	}
 
 	@Override
 	public boolean isDirectory() {
-		logger.log(Level.INFO, "check if isDirectory: true");
+		LOGGER.log(Level.INFO, "check if isDirectory: true");
 		return true;
 	}
 
 	@Override
 	public boolean isFile() {
-		logger.log(Level.INFO, "check if isFile: false");
+		LOGGER.log(Level.INFO, "check if isFile: false");
 		return false;
 	}
 
 	@Override
 	public boolean doesExist() {
-		logger.log(Level.INFO, "check if doesExists: " + exists);
+		LOGGER.log(Level.INFO, "check if doesExists: " + exists);
 		return exists;
 	}
 
 	@Override
 	public boolean isReadable() {
-		logger.log(Level.INFO, "check if isReadable: " + readable);
+		LOGGER.log(Level.INFO, "check if isReadable: " + readable);
 		return readable;
 	}
 
 	@Override
 	public boolean isWritable() {
-		logger.log(Level.INFO, "check if isWritable: false");
+		LOGGER.log(Level.INFO, "check if isWritable: false");
 		return false;
 	}
 
 	@Override
 	public boolean isExecutable() {
-		logger.log(Level.INFO, "check if isExecutable: true"); 
+		LOGGER.log(Level.INFO, "check if isExecutable: true"); 
 		return true;
 	}
 
 	@Override
 	public boolean isRemovable() {
-		logger.log(Level.INFO, "check if isRemovable: false"); 
+		LOGGER.log(Level.INFO, "check if isRemovable: false"); 
 		return false;
 	}
 
 	@Override
 	public SshFile getParentFile() {
-		logger.log(Level.INFO, "retreive parent file: this"); 
+		LOGGER.log(Level.INFO, "retreive parent file: this"); 
 		return this;
 	}
 	
 	@Override
 	public long getLastModified() {
-		logger.log(Level.INFO, "retreive last modified: 0");
+		LOGGER.log(Level.INFO, "retreive last modified: 0");
 		return 0;
 	}
 
 	@Override
 	public boolean setLastModified(long time) {
-		logger.log(Level.INFO, "set last modified: " + time);
+		LOGGER.log(Level.INFO, "set last modified: " + time);
 		return false;
 	}
 
 	@Override
 	public long getSize() {
-		logger.log(Level.INFO, "get size: 0");
+		LOGGER.log(Level.INFO, "get size: 0");
 		return 0;
 	}
 
 	@Override
 	public boolean mkdir() {
-		logger.log(Level.INFO, "mkdir called");
+		LOGGER.log(Level.INFO, "mkdir called");
 		return false;
 	}
 
 	@Override
 	public boolean delete() {
-		logger.log(Level.INFO, "delete called");
+		LOGGER.log(Level.INFO, "delete called");
 		return false;
 	}
 
 	@Override
 	public boolean create() throws IOException {
-		logger.log(Level.INFO, "create called");
+		LOGGER.log(Level.INFO, "create called");
 		return false;
 	}
 
 	@Override
 	public void truncate() throws IOException {
-		logger.log(Level.INFO, "truncate called");
+		LOGGER.log(Level.INFO, "truncate called");
 	}
 
 	@Override
 	public boolean move(SshFile destination) {
-		logger.log(Level.INFO, "move called to : " + destination.getAbsolutePath());
+		LOGGER.log(Level.INFO, "move called to : " + destination.getAbsolutePath());
 		return false;
 	}
 
 	@Override
 	public List<SshFile> listSshFiles() {
-		logger.log(Level.INFO, "listing user workspaces");
+		LOGGER.log(Level.INFO, "listing user workspaces");
 		List<SshFile> children = new ArrayList<SshFile>();
 		for ( String workspace : workspaces ) {
 			children.add(view.getFile(this, workspace));
@@ -219,25 +219,25 @@ public class ProfileSshFile implements SshFile {
 
 	@Override
 	public OutputStream createOutputStream(long offset) throws IOException {
-		logger.log(Level.INFO, "create ouput stream called with offset : " + offset);
+		LOGGER.log(Level.INFO, "create ouput stream called with offset : " + offset);
 		throw new IOException();
 	}
 
 	@Override
 	public InputStream createInputStream(long offset) throws IOException {
-		logger.log(Level.INFO, "create input stream called with offset : " + offset);
+		LOGGER.log(Level.INFO, "create input stream called with offset : " + offset);
 		throw new IOException();
 	}
 
 	@Override
 	public void handleClose() throws IOException {
-		logger.log(Level.INFO, "handle close called");
+		LOGGER.log(Level.INFO, "handle close called");
 		//Noop
 	}
 	
 	@Override
 	public Map<Attribute, Object> getAttributes(boolean followLinks) throws IOException {
-		logger.log(Level.INFO, "trying to get attributes ");
+		LOGGER.log(Level.INFO, "trying to get attributes ");
 		Map<Attribute, Object> map = new HashMap<Attribute, Object>();
         map.put(Attribute.Size, getSize());
         map.put(Attribute.IsDirectory, isDirectory());
@@ -269,7 +269,7 @@ public class ProfileSshFile implements SshFile {
 
 	@Override
 	public void setAttributes(Map<Attribute, Object> attributes) throws IOException {
-		logger.log(Level.INFO, "trying to set attributes ");
+		LOGGER.log(Level.INFO, "trying to set attributes ");
 		if ( !attributes.isEmpty() ) {
 			throw new IOException();
 		}
@@ -277,13 +277,13 @@ public class ProfileSshFile implements SshFile {
 
 	@Override
 	public Object getAttribute(Attribute attribute, boolean followLinks) throws IOException {
-		logger.log(Level.INFO, "trying to get attribute : " + attribute.name());
+		LOGGER.log(Level.INFO, "trying to get attribute : " + attribute.name());
 		return getAttributes(followLinks).get(attribute);
 	}
 
 	@Override
 	public void setAttribute(Attribute attribute, Object value) throws IOException {
-		logger.log(Level.INFO, "trying to set attribute : " + attribute.name());
+		LOGGER.log(Level.INFO, "trying to set attribute : " + attribute.name());
 		Map<Attribute, Object> map = new HashMap<Attribute, Object> ();
 		map.put(attribute, value);
 		setAttributes(map);
@@ -291,13 +291,13 @@ public class ProfileSshFile implements SshFile {
 
 	@Override
 	public String readSymbolicLink() throws IOException {
-		logger.log(Level.INFO, "trying to read symlink ");
+		LOGGER.log(Level.INFO, "trying to read symlink ");
 		throw new IOException();
 	}
 
 	@Override
 	public void createSymbolicLink(SshFile destination) throws IOException {
-		logger.log(Level.INFO, "trying to create symlink for destination : " + destination.getAbsolutePath());
+		LOGGER.log(Level.INFO, "trying to create symlink for destination : " + destination.getAbsolutePath());
 		throw new IOException();
 	}
 

@@ -51,7 +51,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class CORSFilter implements Filter {
 	
-	private Logger logger = Logger.getLogger(CORSFilter.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(CORSFilter.class.getName());
 	
 	private static final String ORIGIN_PROPERTY = "Origin";
 	private static final String ACCESS_CONTROL_ORIGIN_PROPERTY = "Access-Control-Allow-Origin";
@@ -72,12 +72,12 @@ public class CORSFilter implements Filter {
 	
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		logger.log(Level.FINE, "Filtering Origin");
+		LOGGER.log(Level.FINE, "Filtering Origin");
 		
 		HttpServletRequest hrequest = (HttpServletRequest)request;
 		String origin = hrequest.getHeader(ORIGIN_PROPERTY);
         if(origin != null && !origin.isEmpty()) {
-        	logger.log(Level.INFO, "Origin found in headers : " + origin);
+        	LOGGER.log(Level.INFO, "Origin found in headers : " + origin);
 //        	((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ORIGIN_PROPERTY, origin);
             // TODO remove dev hack allowing Cross-origin
         	((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ORIGIN_PROPERTY, "*");

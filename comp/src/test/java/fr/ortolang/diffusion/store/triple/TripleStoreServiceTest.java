@@ -62,7 +62,7 @@ import fr.ortolang.diffusion.OrtolangObjectProperty;
 
 public class TripleStoreServiceTest {
 
-	private Logger logger = Logger.getLogger(TripleStoreServiceTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(TripleStoreServiceTest.class.getName());
 	private TripleStoreServiceBean service;
 
 	@Before
@@ -93,7 +93,7 @@ public class TripleStoreServiceTest {
 
 				@Override
 				public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-					logger.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
+					LOGGER.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
 					return FileVisitResult.TERMINATE;
 				}
 
@@ -105,7 +105,7 @@ public class TripleStoreServiceTest {
 
 			});
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 

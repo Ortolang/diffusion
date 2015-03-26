@@ -44,7 +44,7 @@ import org.apache.velocity.runtime.log.LogChute;
 
 public class TemplateEngineLogger implements LogChute {
 	
-	private Logger logger = Logger.getLogger(TemplateEngineLogger.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(TemplateEngineLogger.class.getName());
 
 	public TemplateEngineLogger() {
 	}
@@ -55,12 +55,12 @@ public class TemplateEngineLogger implements LogChute {
 
 	@Override
 	public void log(int level, String message) {
-		logger.log(Level.FINE, message);
+		LOGGER.log(Level.FINE, message);
 	}
 
 	@Override
 	public void log(int level, String message, Throwable t) {
-		logger.log(Level.FINE, message, t);
+		LOGGER.log(Level.FINE, message, t);
 	}
 
 	@Override

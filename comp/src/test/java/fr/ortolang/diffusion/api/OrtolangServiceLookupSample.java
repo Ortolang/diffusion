@@ -56,11 +56,11 @@ import fr.ortolang.diffusion.browser.BrowserServiceException;
 
 public class OrtolangServiceLookupSample {
 	
-	private static Logger logger = Logger.getLogger(OrtolangServiceLookupSample.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(OrtolangServiceLookupSample.class.getName());
 
 	@Test
 	public void testListServices() throws NamingException {
-		logger.log(Level.INFO, "Ortolang available services : ");
+		LOGGER.log(Level.INFO, "Ortolang available services : ");
 		Properties jndiProps = new Properties();
 		jndiProps.put(Context.INITIAL_CONTEXT_FACTORY, "org.jboss.naming.remote.client.InitialContextFactory");
 		jndiProps.put(Context.PROVIDER_URL,"http-remoting://localhost:8080");
@@ -71,7 +71,7 @@ public class OrtolangServiceLookupSample {
 		while (enumeration.hasMoreElements()) {
 			String name = ((NameClassPair) enumeration.next()).getName();
 			if (name.endsWith("Service")) {
-				logger.log(Level.INFO, "jndi service name found : " + name);
+				LOGGER.log(Level.INFO, "jndi service name found : " + name);
 				results.add(name.substring(0, name.indexOf("!")));
 			}
 		}
@@ -90,9 +90,9 @@ public class OrtolangServiceLookupSample {
 			if (name.endsWith("Service")) {
 				if (name.substring(0, name.indexOf("!")).equals("browser")) {
 					OrtolangService service = (OrtolangService) jndi.lookup("diffusion-server/components/" + name);
-					logger.log(Level.INFO, service.getServiceName());
+					LOGGER.log(Level.INFO, service.getServiceName());
 					BrowserService browser = (BrowserService) service;
-					logger.log(Level.INFO, "nb keys : " + browser.count("", "", null, false));
+					LOGGER.log(Level.INFO, "nb keys : " + browser.count("", "", null, false));
 				}
 			}
 		}
@@ -106,7 +106,7 @@ public class OrtolangServiceLookupSample {
 		jndiProps.put("jboss.naming.client.ejb.context", true);
 		Context jndi = new InitialContext(jndiProps);
 		BrowserService browser = (BrowserService) jndi.lookup("diffusion-server/components/browser!fr.ortolang.diffusion.browser.BrowserService");
-		logger.log(Level.INFO, browser.getServiceName());
+		LOGGER.log(Level.INFO, browser.getServiceName());
 	}
 	
 	

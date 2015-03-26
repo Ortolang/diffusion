@@ -49,31 +49,31 @@ import org.activiti.engine.impl.jobexecutor.JobExecutor;
 
 public class ActivitiEngineJobExecutor extends JobExecutor {
 
-	private static Logger logger = Logger.getLogger(ActivitiEngineJobExecutor.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ActivitiEngineJobExecutor.class.getName());
 
 	private ScheduledExecutorService scheduledExecutor;
 	private ExecutorService executor;
 	
 	public ActivitiEngineJobExecutor(ScheduledExecutorService scheduledExecutor, ExecutorService executor) {
-		logger.log(Level.INFO, "Instanciating new WorkflowJobExecutor");
+		LOGGER.log(Level.INFO, "Instanciating new WorkflowJobExecutor");
 		this.scheduledExecutor = scheduledExecutor;
 		this.executor = executor;
 	}
 
 	protected void startExecutingJobs() {
-		logger.log(Level.INFO, "Scheduling start of JobAcquisitionThread (5s)");
+		LOGGER.log(Level.INFO, "Scheduling start of JobAcquisitionThread (5s)");
 		scheduledExecutor.schedule(acquireJobsRunnable, 5, TimeUnit.SECONDS);
 	}
 
 	protected void stopExecutingJobs() {
-		logger.log(Level.INFO, "Stopping JobAcquisitionThread...");
+		LOGGER.log(Level.INFO, "Stopping JobAcquisitionThread...");
 		acquireJobsRunnable.stop();
-		logger.log(Level.INFO, "JobAcquisitionThread stopped");
+		LOGGER.log(Level.INFO, "JobAcquisitionThread stopped");
 	}
 
 	public void executeJobs(List<String> jobIds) {
 		try {
-			logger.log(Level.INFO, "Using executor to execute jobs");
+			LOGGER.log(Level.INFO, "Using executor to execute jobs");
 			executor.execute(new ExecuteJobsRunnable(this, jobIds));
 		} catch (RejectedExecutionException e) {
 			rejectedJobsHandler.jobsRejected(this, jobIds);

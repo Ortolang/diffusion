@@ -56,7 +56,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 @PermitAll
 public class IndexingServiceBean implements IndexingService {
 	
-	private static final Logger logger = Logger.getLogger(IndexingServiceBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(IndexingServiceBean.class.getName());
 	
 	@Resource(mappedName = "java:jboss/exported/jms/topic/indexing")
 	private Topic indexingTopic;
@@ -91,7 +91,7 @@ public class IndexingServiceBean implements IndexingService {
 			message.setStringProperty("name", indexingContext.getName());
 			context.createProducer().send(indexingTopic, message);                   
 		} catch (Exception e) {
-			logger.log(Level.WARNING, "unable to send indexing message", e);
+			LOGGER.log(Level.WARNING, "unable to send indexing message", e);
 			throw new IndexingServiceException("unable to send indexing message", e);
 		}
 	}

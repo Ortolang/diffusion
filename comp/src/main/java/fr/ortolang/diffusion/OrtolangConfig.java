@@ -45,7 +45,7 @@ import java.util.logging.Logger;
 
 public class OrtolangConfig {
 
-	private static Logger logger = Logger.getLogger(OrtolangConfig.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(OrtolangConfig.class.getName());
 	private static OrtolangConfig config;
 	private Properties props;
 	
@@ -81,17 +81,17 @@ public class OrtolangConfig {
                 String configFilePath = System.getProperty("ortolang.config.file");
                 if (configFilePath != null && configFilePath.length() != 0) {
                     config = new OrtolangConfig(configFilePath);
-                    logger.log(Level.INFO, "using custom config file : " + configFilePath);
+                    LOGGER.log(Level.INFO, "using custom config file : " + configFilePath);
                 } else {
                     URL configFileURL = OrtolangConfig.class.getClassLoader().getResource("config.properties");
                     config = new OrtolangConfig(configFileURL);
-                    logger.log(Level.INFO, "using default config file : " + configFileURL.getPath());
+                    LOGGER.log(Level.INFO, "using default config file : " + configFileURL.getPath());
                 }
             }
 
             return config;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "unable to load configuration", e);
+            LOGGER.log(Level.SEVERE, "unable to load configuration", e);
         }
         return null;
     }

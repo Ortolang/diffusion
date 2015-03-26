@@ -67,7 +67,7 @@ import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTe
 @PermitAll
 public class AuthorisationServiceBean implements AuthorisationService {
 
-	private static final Logger logger = Logger.getLogger(AuthorisationServiceBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(AuthorisationServiceBean.class.getName());
 
 	@PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;
@@ -95,7 +95,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 
 	@Override
 	public void createPolicyTemplate(String name, String description, String policykey) throws AuthorisationServiceException {
-		logger.log(Level.FINE, "creating authorisation policy template with name [" + name + "]");
+		LOGGER.log(Level.FINE, "creating authorisation policy template with name [" + name + "]");
 		AuthorisationPolicy policy = em.find(AuthorisationPolicy.class, policykey);
 		if (policy == null) {
 			throw new AuthorisationServiceException("unable to find security policy for policykey [" + policykey + "] in the storage");
@@ -113,7 +113,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	
 	@Override
 	public AuthorisationPolicyTemplate getPolicyTemplate(String name) throws AuthorisationServiceException {
-		logger.log(Level.FINE, "getting authorisation policy template with name [" + name + "]");
+		LOGGER.log(Level.FINE, "getting authorisation policy template with name [" + name + "]");
 		AuthorisationPolicyTemplate template = em.find(AuthorisationPolicyTemplate.class, name);
 		if (template == null) {
 			throw new AuthorisationServiceException("unable to find security policy template with name [" + name + "] in the storage");
@@ -123,7 +123,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 
 	@Override
 	public List<AuthorisationPolicyTemplate> listPolicyTemplates() throws AuthorisationServiceException {
-		logger.log(Level.FINE, "listing all authorisation policy templates");
+		LOGGER.log(Level.FINE, "listing all authorisation policy templates");
 		TypedQuery<AuthorisationPolicyTemplate> query = em.createNamedQuery("findAllAuthorisationPolicyTemplate", AuthorisationPolicyTemplate.class);
 		List<AuthorisationPolicyTemplate> results = query.getResultList();
 		return results;
@@ -132,7 +132,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createPolicy(String key, String owner) throws AuthorisationServiceException {
-		logger.log(Level.FINE, "creating authorisation policy for key [" + key + "]");
+		LOGGER.log(Level.FINE, "creating authorisation policy for key [" + key + "]");
 		AuthorisationPolicy policy = em.find(AuthorisationPolicy.class, key);
 		if (policy != null) {
 			throw new AuthorisationServiceException("a security policy already exists for key [" + key + "] in the storage");
@@ -146,7 +146,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void clonePolicy(String key, String origin) throws AuthorisationServiceException {
-		logger.log(Level.FINE, "cloning authorisation policy from origin [" + origin + "]for key [" + key + "]");
+		LOGGER.log(Level.FINE, "cloning authorisation policy from origin [" + origin + "]for key [" + key + "]");
 		try {
 			AuthorisationPolicy opolicy = em.find(AuthorisationPolicy.class, origin);
 			if (opolicy == null) {
@@ -162,7 +162,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 			policy.setRules(opolicy.getRules());
 			em.persist(policy);
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, "unable to persist policy : " + e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, "unable to persist policy : " + e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new AuthorisationServiceException("unable to persist policy", e);
 		}
@@ -171,7 +171,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void copyPolicy(String from, String to) throws AuthorisationServiceException {
-		logger.log(Level.FINE, "copying authorisation policy from key [" + from + "] to key [" + to + "]");
+		LOGGER.log(Level.FINE, "copying authorisation policy from key [" + from + "] to key [" + to + "]");
 		try {
 			AuthorisationPolicy frompolicy = em.find(AuthorisationPolicy.class, from);
 			if (frompolicy == null) {
@@ -185,7 +185,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 			topolicy.setRules(frompolicy.getRules());
 			em.persist(topolicy);
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, "unable to persist policy : " + e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, "unable to persist policy : " + e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new AuthorisationServiceException("unable to persist policy", e);
 		}
@@ -194,7 +194,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void copyPolicy(String from, Set<String> tos) throws AuthorisationServiceException {
-		logger.log(Level.FINE, "copying authorisation policy from key [" + from + "] to keys [" + Arrays.deepToString(tos.toArray()) + "]");
+		LOGGER.log(Level.FINE, "copying authorisation policy from key [" + from + "] to keys [" + Arrays.deepToString(tos.toArray()) + "]");
 		try {
 			AuthorisationPolicy frompolicy = em.find(AuthorisationPolicy.class, from);
 			if (frompolicy == null) {
@@ -210,7 +210,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 				em.persist(topolicy);
 			}
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, "unable to persist policy : " + e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, "unable to persist policy : " + e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new AuthorisationServiceException("unable to persist policy", e);
 		}
@@ -219,20 +219,20 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updatePolicyOwner(String key, String newowner) throws AuthorisationServiceException {
-		logger.log(Level.FINE, "updating authorisation policy owner to subject [" + newowner + "] on key [" + key + "]");
+		LOGGER.log(Level.FINE, "updating authorisation policy owner to subject [" + newowner + "] on key [" + key + "]");
 		AuthorisationPolicy policy = em.find(AuthorisationPolicy.class, key);
 		if (policy == null) {
 			throw new AuthorisationServiceException("unable to find security policy for key [" + key + "] in the storage");
 		}
 		policy.setOwner(newowner);
 		em.merge(policy);
-		logger.log(Level.FINE, "owner changed to [" + newowner + "] for key [" + key + "]");
+		LOGGER.log(Level.FINE, "owner changed to [" + newowner + "] for key [" + key + "]");
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getPolicyOwner(String key) throws AuthorisationServiceException {
-		logger.log(Level.FINE, "getting authorisation policy owner for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting authorisation policy owner for key [" + key + "]");
 		AuthorisationPolicy policy = em.find(AuthorisationPolicy.class, key);
 		if (policy == null) {
 			throw new AuthorisationServiceException("unable to find security policy for key [" + key + "] in the storage");
@@ -243,7 +243,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void setPolicyRules(String key, Map<String, List<String>> rules) throws AuthorisationServiceException {
-		logger.log(Level.FINE, "setting authorisation policy rules for key [" + key + "]");
+		LOGGER.log(Level.FINE, "setting authorisation policy rules for key [" + key + "]");
 		try {
 			AuthorisationPolicy policy = em.find(AuthorisationPolicy.class, key);
 			if (policy == null) {
@@ -252,7 +252,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 			policy.setRules(rules);
 			em.merge(policy);
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, "unable to persist policy : " + e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, "unable to persist policy : " + e.getMessage(), e);
 			ctx.setRollbackOnly();
 			throw new AuthorisationServiceException("unable to persist policy", e);
 		}
@@ -261,7 +261,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Map<String, List<String>> getPolicyRules(String key) throws AuthorisationServiceException {
-		logger.log(Level.FINE, "getting authorisation policy rules for key [" + key + "]");
+		LOGGER.log(Level.FINE, "getting authorisation policy rules for key [" + key + "]");
 		try {
 			AuthorisationPolicy policy = em.find(AuthorisationPolicy.class, key);
 			if (policy == null) {
@@ -269,7 +269,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 			}
 			return policy.getRules();
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, "unable to read policy : " + e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, "unable to read policy : " + e.getMessage(), e);
 			throw new AuthorisationServiceException("unable to persist policy", e);
 		}
 	}
@@ -277,7 +277,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void checkPermission(String key, List<String> subjects, String permission) throws AuthorisationServiceException, AccessDeniedException {
-		logger.log(Level.FINE, "checking permission [" + permission + "] for subjects [" + subjects + "] on key [" + key + "]");
+		LOGGER.log(Level.FINE, "checking permission [" + permission + "] for subjects [" + subjects + "] on key [" + key + "]");
 		try {
 			if (subjects.contains(MembershipService.SUPERUSER_IDENTIFIER)) {
 				return;
@@ -296,14 +296,14 @@ public class AuthorisationServiceBean implements AuthorisationService {
 			}
 			throw new AccessDeniedException("permission [" + permission + "] denied for subjects [" + subjects + "] on key [" + key + "]");
 		} catch (IOException e) {
-			logger.log(Level.SEVERE, "unable to read policy : " + e.getMessage(), e);
+			LOGGER.log(Level.SEVERE, "unable to read policy : " + e.getMessage(), e);
 			throw new AuthorisationServiceException("unable to persist policy", e);
 		}
 	}
 
 	@Override
 	public void checkOwnership(String key, List<String> subjects) throws AuthorisationServiceException, AccessDeniedException {
-		logger.log(Level.FINE, "checking ownership of subjects [" + subjects + "] on key [" + key + "]");
+		LOGGER.log(Level.FINE, "checking ownership of subjects [" + subjects + "] on key [" + key + "]");
 		if (subjects.contains(MembershipService.SUPERUSER_IDENTIFIER)) {
 			return;
 		}
@@ -321,7 +321,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 
 	@Override
 	public void checkAuthentified(List<String> subjects) throws AuthorisationServiceException, AccessDeniedException {
-		logger.log(Level.FINE, "checking authentification state");
+		LOGGER.log(Level.FINE, "checking authentification state");
 		if (subjects.contains(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY)) {
 			return;
 		}
@@ -330,7 +330,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 
 	@Override
 	public void checkSuperUser(String identifier) throws AuthorisationServiceException, AccessDeniedException {
-		logger.log(Level.FINE, "checking super user for identifier [" + identifier + "]");
+		LOGGER.log(Level.FINE, "checking super user for identifier [" + identifier + "]");
 		if (identifier.equals(MembershipService.SUPERUSER_IDENTIFIER)) {
 			return;
 		}
