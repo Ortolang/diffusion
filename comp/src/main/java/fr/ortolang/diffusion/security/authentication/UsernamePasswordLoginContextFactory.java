@@ -88,7 +88,9 @@ public class UsernamePasswordLoginContextFactory {
 				throw new IllegalArgumentException("Unexpected configuration name '" + name + "'");
 			}
 
-			return new AppConfigurationEntry[] { createClientLoginModuleConfigEntry(), };
+			return new AppConfigurationEntry[] { 
+					createClientLoginModuleConfigEntry(),
+				};
 		}
 		
 		private AppConfigurationEntry createClientLoginModuleConfigEntry() {

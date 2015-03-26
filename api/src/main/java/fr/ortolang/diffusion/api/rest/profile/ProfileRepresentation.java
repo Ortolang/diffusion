@@ -36,6 +36,8 @@ package fr.ortolang.diffusion.api.rest.profile;
  * #L%
  */
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -53,6 +55,7 @@ public class ProfileRepresentation {
 	private String status;
 	private String[] groups;
 	private boolean complete;
+	private String[] friends;
 	
 	public ProfileRepresentation() {
 		groups = new String[0];
@@ -112,8 +115,17 @@ public class ProfileRepresentation {
 
 	public void setGroups(String[] groups) {
 		this.groups = groups;
+	}	
+
+	public String[] getFriends() {
+		return friends;
+	}
+	
+	public void setFriends(String[] friends) {
+		this.friends = friends;		
 	}
 
+	
 	public boolean isComplete() {
 		return complete;
 	}

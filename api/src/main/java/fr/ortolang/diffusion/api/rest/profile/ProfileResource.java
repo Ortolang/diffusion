@@ -70,9 +70,11 @@ import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
 import fr.ortolang.diffusion.membership.entity.ProfileDataType;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 
 /**
@@ -88,13 +90,16 @@ public class ProfileResource {
 	private BrowserService browser;
 	@EJB
 	private MembershipService membership;
+	@EJB
+	private AuthorisationService authorisation;
 
 	public ProfileResource() {
 	}
 
 	/**
+	 * @description Connect to current profile
 	 * @responseType fr.ortolang.diffusion.api.rest.profile.ProfileRepresentation
-	 * @return {@link fr.ortolang.diffusion.api.rest.profile.ProfileRepresentation}
+	 * @return {@link ProfileRepresentation}
 	 * @throws MembershipServiceException
 	 * @throws KeyNotFoundException
 	 * @throws ProfileAlreadyExistsException
@@ -113,35 +118,78 @@ public class ProfileResource {
 			profile = membership.createProfile("", "", "");
 		}
 		ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
+		List<String> friends = membership.listMembers(profile.getFriends());
+		representation.setFriends(friends.toArray(new String[friends.size()]));
 		return Response.ok(representation).build();
 	}
 	
+	/**
+	 * @description List profiles
+	 * @responseType fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation
+	 * @return {@link GenericCollectionRepresentation}&lt;{@link ProfileRepresentation}&gt;
+	 * @throws MembershipServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 * @throws AuthorisationServiceException
+	 */
 	@GET
 	@Path("/list")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response getProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, AuthorisationServiceException {
 		logger.log(Level.INFO, "GET /profiles/list");
-		List<Profile> profiles;
-		profiles = membership.listProfiles();
-		return Response.ok(profiles).build();
+		GenericCollectionRepresentation<ProfileRepresentation> representation = new GenericCollectionRepresentation<ProfileRepresentation>();
+		List<Profile> results = membership.listProfiles();
+		for (Profile profile : results) {
+			ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
+			List<String> friends = membership.listMembers(profile.getFriends());
+			profileRepresentation.setFriends(friends.toArray(new String[friends.size()]));
+			representation.addEntry(profileRepresentation);	
+		}
+		representation.setOffset(0);
+		representation.setSize(results.size());
+		representation.setLimit(results.size());
+		return Response.ok(representation).build();
 	}
 	
+	/**
+	 * @description Search in profile for a fullName matching data
+	 * @responseType fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation
+	 * @param data {@link String}
+	 * 		String to find in profiles
+	 * @return {@link GenericCollectionRepresentation}&lt;{@link ProfileRepresentation}&gt;
+	 * @throws MembershipServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 * @throws KeyLockedException
+	 * @throws AuthorisationServiceException
+	 */
 	@POST
 	@Path("/search")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException, AuthorisationServiceException {
 		logger.log(Level.INFO, "POST /profiles/search");
-		logger.log(Level.INFO, data);
-		List<Profile> result = membership.searchProfile(data);
-		return Response.ok(result).build();
+		GenericCollectionRepresentation<ProfileRepresentation> representation = new GenericCollectionRepresentation<ProfileRepresentation>();
+		List<Profile> results = membership.searchProfile(data);
+		for (Profile profile : results) {
+			ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
+			List<String> friends = membership.listMembers(profile.getFriends());
+			profileRepresentation.setFriends(friends.toArray(new String[friends.size()]));
+			representation.addEntry(profileRepresentation);			
+		}
+		representation.setOffset(0);
+		representation.setSize(results.size());
+		representation.setLimit(results.size());
+		return Response.ok(representation).build();
 	}
 
 	/**
+	 * @description Return profile for a given key
 	 * @responseType fr.ortolang.diffusion.api.rest.profile.ProfileRepresentation
-	 * @param key
-	 * @param request
-	 * @return {@link fr.ortolang.diffusion.api.rest.profile.ProfileRepresentation}
+	 * @param key {@link String}
+	 * 		Key of wanted profile
+	 * @param request {@link Request} 		 
+	 * @return {@link ProfileRepresentation}
 	 * @throws MembershipServiceException
 	 * @throws BrowserServiceException
 	 * @throws KeyNotFoundException
@@ -164,6 +212,8 @@ public class ProfileResource {
 		if(builder == null){
 			Profile profile = membership.readProfile(key);
 			ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
+			List<String> friends = membership.listMembers(profile.getFriends());
+			representation.setFriends(friends.toArray(new String[friends.size()]));
 			builder = Response.ok(representation);
     		builder.lastModified(lmd);
         }
@@ -172,6 +222,18 @@ public class ProfileResource {
         return builder.build();
 	}
 	
+	/**
+	 * @description Update a profile
+	 * @param key {@link String}
+	 * 		Key of the profile to update {@link String}
+	 * @param representation {@link ProfileRepresentation}
+	 * 		New value
+	 * @return {@link Response}
+	 * 		Empty response
+	 * @throws MembershipServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 */
 	@PUT
 	@Path("/{key}")
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -182,6 +244,15 @@ public class ProfileResource {
 		return Response.noContent().build();
 	}
 	
+	/**
+	 * @description Return public keys of a profile
+	 * @param key {@link String}
+	 * 		Key of the profile {@link String}
+	 * @return {@link Set}&lt;{@link String}&gt;
+	 * @throws MembershipServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 */
 	@GET
 	@Path("/{key}/keys")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -191,6 +262,18 @@ public class ProfileResource {
 		return Response.ok(profile.getPublicKeys()).build();
 	}
 	
+	/**
+	 * @description Add a Public key to a profile
+	 * @param key {@link String}
+	 * 		Key of the profile {@link String}
+	 * @param pubkey {@link ProfileKeyRepresentation}
+	 * 		New public key value
+	 * @return {@link Response}
+	 * 		Response with OK status
+	 * @throws MembershipServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 */
 	@POST
 	@Path("/{key}/keys")
 	@Consumes({ MediaType.APPLICATION_JSON })
@@ -200,15 +283,41 @@ public class ProfileResource {
 		return Response.ok().build();
 	}
 	
+	/**
+	 * @description Delete a public key of a profile
+	 * @param key {@link String}
+	 * 		Key of the profile {@link String}
+	 * @param pubkey {@link ProfileKeyRepresentation}
+	 * 		New public key value
+	 * @return {@link Response}
+	 * 		Response with OK status
+	 * @throws MembershipServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 */
 	@DELETE
 	@Path("/{key}/keys")
 	@Consumes({ MediaType.APPLICATION_JSON })
 	public Response removeProfilePublicKey(@PathParam(value = "key") String key, ProfileKeyRepresentation pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		logger.log(Level.INFO, "POST /profiles/" + key + "/keys");
+		logger.log(Level.INFO, "DELETE /profiles/" + key + "/keys");
 		membership.removeProfilePublicKey(key, pubkey.getPublicKey());
 		return Response.ok().build();
 	}
 	
+	/**
+	 * @description Return collection of infos of a given profile
+	 * @responseType fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation
+	 * @param key {@link String}
+	 * 		Key of the profile {@link String}
+	 * @param filter {@link String}
+	 * 		Category of infos to return
+	 * @param request {@link Request}
+	 * @return {@link GenericCollectionRepresentation}&lt;{@link ProfileDataRepresentation}&gt;
+	 * @throws MembershipServiceException
+	 * @throws BrowserServiceException
+	 * @throws AccessDeniedException
+	 * @throws KeyNotFoundException
+	 */
 	@GET
 	@Path("/{key}/infos")
 	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
@@ -229,6 +338,9 @@ public class ProfileResource {
 			for (ProfileData info : infos) {
 				representation.addEntry(ProfileDataRepresentation.fromProfileData(info));
 			}
+			representation.setOffset(0);
+			representation.setSize(infos.size());
+			representation.setLimit(infos.size());
 			builder = Response.ok(representation);
     		builder.lastModified(lmd);
         }
@@ -237,6 +349,19 @@ public class ProfileResource {
         return builder.build();
 	}
 	
+	/**
+	 * @description Update infos for a given profile
+	 * @param key {@link String}
+	 * 		Key of the profile
+	 * @param info {@link ProfileDataRepresentation}
+	 * 		New infos values
+	 * @return {@link Response}
+	 * 		Response with OK status
+	 * @throws MembershipServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 * @throws KeyLockedException
+	 */
 	@POST
 	@Path("/{key}/infos")
 	@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED })
@@ -246,6 +371,61 @@ public class ProfileResource {
 		return Response.ok().build();
 	}
 
+	/**
+	 * @description Add a friend to a profile
+	 * @param key {@link String}
+	 * 		Key of the profile
+	 * @param friendKey {@link String}
+	 * 		Key of the profile of the friend to add
+	 * @return {@link Response}
+	 * 		Response with OK status
+	 * @throws MembershipServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 * @throws KeyAlreadyExistsException
+	 * @throws AuthorisationServiceException
+	 */
+	@POST
+	@Path("/{key}/friend")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	public Response addFriend(@PathParam(value = "key") String key, String friendKey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyAlreadyExistsException, AuthorisationServiceException {
+		logger.log(Level.INFO, "POST /profiles/" + key + "/friend");
+		String friendGroupKey = membership.readProfile(key).getFriends();
+		membership.addMemberInGroup(friendGroupKey, friendKey);
+		return Response.ok().build();
+	}
+	
+	/**
+	 * @description Remove a friend from a profile
+	 * @param key {@link String}
+	 * 		Key of the profile
+	 * @param friendKey {@link String}
+	 * 		Key of the profile of the friend to add
+	 * @return {@link Response}
+	 * 		Response with OK status
+	 * @throws MembershipServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 */
+	@DELETE
+	@Path("/{key}/friend")
+	@Consumes({ MediaType.APPLICATION_JSON })
+	public Response removeFriend(@PathParam(value = "key") String key, String friendKey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+		logger.log(Level.INFO, "DELETE /profiles/" + key + "/friend");
+		membership.removeMemberFromGroup(key, friendKey);
+		return Response.ok().build();
+	}
+	
+	/**
+	 * @description Return the size of a profile
+	 * @param key {@link String}
+	 * 		Key of the profile
+	 * @return {@link OrtolangObjectSize}
+	 * 		Size of the profile
+	 * @throws AccessDeniedException
+	 * @throws OrtolangException
+	 * @throws KeyNotFoundException
+	 */
     @GET
     @Path("/{key}/size")
     @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })

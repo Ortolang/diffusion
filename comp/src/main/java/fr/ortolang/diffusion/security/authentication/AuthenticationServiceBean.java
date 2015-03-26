@@ -62,6 +62,7 @@ public class AuthenticationServiceBean implements AuthenticationService {
 	@Override
 	public String getConnectedIdentifier() {
 		logger.log(Level.FINE, "Connected identifier " + ctx.getCallerPrincipal().getName());
+		
 		return ctx.getCallerPrincipal().getName();
 	}
 
