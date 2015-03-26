@@ -148,7 +148,6 @@ public class ObjectResource {
 	 * @throws BrowserServiceException
 	 */
 	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit,
 			@QueryParam(value = "service") String service, @QueryParam(value = "type") String type,
 			@DefaultValue(value = "false") @QueryParam(value = "items") boolean itemsOnly, @QueryParam(value = "status") String status) throws BrowserServiceException {
@@ -188,7 +187,6 @@ public class ObjectResource {
 	 */
 	@GET
 	@Path("/{key}")
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response get(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, SecurityServiceException,
 			OrtolangException {
 		logger.log(Level.INFO, "GET /objects/" + key);
@@ -247,7 +245,6 @@ public class ObjectResource {
 
 	@GET
 	@Path("/{key}/element")
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response resolve(@PathParam(value = "key") String key, @QueryParam(value = "path") String relativePath, @Context Request request) throws OrtolangException, KeyNotFoundException,
 			AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException {
 		logger.log(Level.INFO, "GET /objects/" + key + "?path=" + relativePath);
@@ -430,7 +427,6 @@ public class ObjectResource {
 
 	@GET
 	@Path("/semantic")
-	@Produces({ MediaType.APPLICATION_JSON })
 	public Response semanticSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
 		logger.log(Level.INFO, "GET /objects/semantic?query=" + query);
 		if (query != null && query.length() > 0) {
@@ -450,7 +446,6 @@ public class ObjectResource {
 
 	@GET
 	@Path("/index")
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
 		logger.log(Level.INFO, "searching objects with plain text query: " + query);
 		List<OrtolangSearchResult> results;
@@ -464,7 +459,6 @@ public class ObjectResource {
 
 	@GET
 	@Path("/json")
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response jsonSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
 		logger.log(Level.INFO, "searching objects with json query: " + query);
 		List<String> results;

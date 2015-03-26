@@ -44,7 +44,6 @@ public class MetadataFormatResource {
 	private BrowserService browser;
 
 	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response listMetadataFormat() throws CoreServiceException {
 		logger.log(Level.INFO, "GET /metadataformats");
 		

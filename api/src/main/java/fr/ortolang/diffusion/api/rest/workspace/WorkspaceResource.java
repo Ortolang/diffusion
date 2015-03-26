@@ -122,7 +122,6 @@ public class WorkspaceResource {
 	}
 
 	@GET
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response listWorkspaces() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "GET /workspaces");
 		String profile = membership.getProfileKeyForConnectedIdentifier();
@@ -162,7 +161,6 @@ public class WorkspaceResource {
 
 	@GET
 	@Path("/{wskey}")
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response getWorkspace(@PathParam(value = "wskey") String wskey, @Context Request request) throws CoreServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "GET /workspaces/" + wskey);
 		
@@ -207,7 +205,6 @@ public class WorkspaceResource {
 
 	@GET
 	@Path("/{wskey}/elements")
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response getWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@QueryParam(value = "metadata") String metadata, @Context Request request) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, OrtolangException,
 			BrowserServiceException, PropertyNotFoundException {

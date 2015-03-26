@@ -71,7 +71,6 @@ public class FormResource {
 	}
 	
 	@GET
-	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response list() throws FormServiceException {
 		logger.log(Level.INFO, "list availables forms");
 		
@@ -91,7 +90,6 @@ public class FormResource {
 	
 	@GET
 	@Path("/{key}")
-	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response get(@PathParam(value = "key") String key) throws FormServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "read form for key: " + key);
 				
