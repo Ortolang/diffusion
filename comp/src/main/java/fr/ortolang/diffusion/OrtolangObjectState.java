@@ -94,7 +94,7 @@ public class OrtolangObjectState implements Serializable {
 
 	@Override
 	public String toString() {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		if ( isLocked() ) {
 			buffer.append("locked by (" + getLock() + "), ");
 		} else {

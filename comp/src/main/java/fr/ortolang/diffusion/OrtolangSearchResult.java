@@ -132,14 +132,14 @@ public class OrtolangSearchResult implements Serializable {
 
 	@Override
 	public String toString() {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append("[").append(getScore()).append("]");
-		buffer.append(" key:").append(getKey());
-		buffer.append(" service:").append(getService());
-		buffer.append(" type:").append(getType());
-		buffer.append(" name:").append(getName());
-		buffer.append(" explain:").append(getExplain());
-		return buffer.toString();
+		StringBuilder sb = new StringBuilder();
+		sb.append("[").append(getScore()).append("]");
+		sb.append(" key:").append(getKey());
+		sb.append(" service:").append(getService());
+		sb.append(" type:").append(getType());
+		sb.append(" name:").append(getName());
+		sb.append(" explain:").append(getExplain());
+		return sb.toString();
 	}
 
 }

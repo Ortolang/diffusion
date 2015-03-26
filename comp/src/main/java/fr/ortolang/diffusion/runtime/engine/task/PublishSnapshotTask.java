@@ -76,7 +76,7 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 		LOGGER.log(Level.INFO, "publication map built containing " + map.size() + " keys");
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "PublicationMap built, containing " + map.size() + " elements"));
 
-		StringBuffer report = new StringBuffer();
+		StringBuilder report = new StringBuilder();
 		LOGGER.log(Level.INFO, "starting publication");
 		for (Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
 			try {

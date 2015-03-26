@@ -175,7 +175,7 @@ public class Workspace extends OrtolangObject {
 	}
 	
 	public void setSnapshots(Set<SnapshotElement> snapshots) {
-		StringBuffer newsnapshots = new StringBuffer();
+		StringBuilder newsnapshots = new StringBuilder();
 		for ( SnapshotElement snapshot : snapshots ) {
 			if ( newsnapshots.length() > 0 ) {
 				newsnapshots.append("\n");

@@ -77,7 +77,7 @@ public class OrtolangObjectIdentifier implements Serializable {
 	}
 	
 	public static String buildFilterPattern(String service, String type) {
-		StringBuffer pattern = new StringBuffer();
+		StringBuilder pattern = new StringBuilder();
 		pattern.append("/");
 		if ( service != null && service.length() > 0 ) {
 			pattern.append(service.toLowerCase());
@@ -95,7 +95,7 @@ public class OrtolangObjectIdentifier implements Serializable {
 	}
 	
 	public static String buildJPQLFilterPattern(String service, String type) {
-		StringBuffer pattern = new StringBuffer();
+		StringBuilder pattern = new StringBuilder();
 		pattern.append("/");
 		if ( service != null && service.length() > 0 ) {
 			pattern.append(service.toLowerCase());

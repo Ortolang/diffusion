@@ -157,7 +157,7 @@ public class RuntimeResource {
 		Map<String, Object> mparams = new HashMap<String, Object> ();
 		for ( Entry<String, List<String>> entry : params.entrySet() ) {
 			if ( entry.getValue().size() > 0 ) {
-				StringBuffer values = new StringBuffer();
+				StringBuilder values = new StringBuilder();
 				for ( String value : entry.getValue() ) {
 					values.append(value).append(",");
 				}
@@ -200,7 +200,7 @@ public class RuntimeResource {
 		
 		for ( Entry<String, List<InputPart>> entry : form.entrySet() ) {
 			if ( entry.getValue().size() > 0 ) {
-				StringBuffer values = new StringBuffer();
+				StringBuilder values = new StringBuilder();
 				for ( InputPart value : entry.getValue() ) {
 					if ( value.getHeaders().containsKey("Content-Disposition") && value.getHeaders().getFirst("Content-Disposition").contains("filename=") ) {
 						LOGGER.log(Level.FINE, "seems this part [" + entry.getKey() + "] is a file");

@@ -182,7 +182,7 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 	
 	@Override
 	public void setMetadatas(Set<MetadataElement> metadatas) {
-		StringBuffer newmetadatas = new StringBuffer();
+		StringBuilder newmetadatas = new StringBuilder();
 		for ( MetadataElement metadata : metadatas ) {
 			if ( newmetadatas.length() > 0 ) {
 				newmetadatas.append("\n");

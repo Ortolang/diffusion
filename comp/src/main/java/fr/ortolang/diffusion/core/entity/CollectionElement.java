@@ -123,14 +123,14 @@ public class CollectionElement implements Serializable {
 
 	@Override
 	public String toString() {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append("{Type:").append(getType());
-		buffer.append(",Name:").append(getName());
-		buffer.append(",Modification:").append(getModification());
-		buffer.append(",Size:").append(getSize());
-		buffer.append(",MimeType:").append(getMimeType());
-		buffer.append(",Key:").append(getKey()).append("}");
-		return buffer.toString();
+		StringBuilder sb = new StringBuilder();
+		sb.append("{Type:").append(getType());
+		sb.append(",Name:").append(getName());
+		sb.append(",Modification:").append(getModification());
+		sb.append(",Size:").append(getSize());
+		sb.append(",MimeType:").append(getMimeType());
+		sb.append(",Key:").append(getKey()).append("}");
+		return sb.toString();
 	}
 
 	@Override

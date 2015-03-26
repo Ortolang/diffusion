@@ -81,7 +81,7 @@ public class Triple implements Serializable {
 	
 	@Override
 	public String toString() {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append("{").append(subject);
 		sb.append(", ").append(object);
 		sb.append(", ").append(predicate).append("}");

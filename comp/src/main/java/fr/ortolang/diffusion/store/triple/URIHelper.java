@@ -48,7 +48,7 @@ public class URIHelper {
 			if ( key == null )  {
 				return null;
 			} else {
-				StringBuffer path = new StringBuffer();
+				StringBuilder path = new StringBuilder();
 				if ( OrtolangConfig.getInstance().getProperty("server.context") != null && OrtolangConfig.getInstance().getProperty("server.context").length() > 0 ) {
 					path.append(OrtolangConfig.getInstance().getProperty("server.context"));
 				}

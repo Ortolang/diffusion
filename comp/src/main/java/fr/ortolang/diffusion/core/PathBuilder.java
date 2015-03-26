@@ -45,10 +45,10 @@ public class PathBuilder {
 	private static final int MAX_PATHPART_SIZE = 255;
 	private static final String VALID_PATH_REGEXP = PATH_SEPARATOR + "|" + PATH_SEPARATOR + "[^\\/?%*:|\"<>~\t]{1," + MAX_PATHPART_SIZE + "}+(" + PATH_SEPARATOR + "[^\\/?%*:|\"<>~\t]{1," + MAX_PATHPART_SIZE + "}+)*";
 	
-	private StringBuffer buffer;
+	private StringBuilder builder;
 	
 	private PathBuilder() {
-		buffer = new StringBuffer();
+		builder = new StringBuilder();
 	}
 	
 	private PathBuilder(String path) throws InvalidPathException {
@@ -67,55 +67,55 @@ public class PathBuilder {
 	public PathBuilder path(String path) throws InvalidPathException {
 		String part = normalize(path);
 		if ( !part.equals(PATH_SEPARATOR) ) {
-			buffer.append(part);
+			builder.append(part);
 		}
 		return this;
 	}
 	
 	public String build() {
-		if ( buffer.length() <= 1 ) {
+		if ( builder.length() <= 1 ) {
 			return PATH_SEPARATOR;
 		} 
-		return buffer.toString();
+		return builder.toString();
 	}
 	
 	public String[] buildParts() {
-		if ( buffer.length() <= 1 ) {
+		if ( builder.length() <= 1 ) {
 			return new String[0];
 		} 
-		return buffer.substring(1).split(PATH_SEPARATOR);
+		return builder.substring(1).split(PATH_SEPARATOR);
 	}
 	
 	public boolean isRoot() {
-		if ( buffer.length() <= 1 ) {
+		if ( builder.length() <= 1 ) {
 			return true;
 		}
 		return false;
 	}
 	
 	public int depth() {
-		if ( buffer.length() <= 1 ) {
+		if ( builder.length() <= 1 ) {
 			return 0;
 		} 
-		String path = buffer.toString();
+		String path = builder.toString();
 		int depth = path.length() - path.replace(PATH_SEPARATOR, "").length();
 		return depth;
 	}
 	
 	public PathBuilder parent() {
-		if ( buffer.length() >= 1 ) {
-			buffer.delete(buffer.lastIndexOf(PATH_SEPARATOR), buffer.length());
+		if ( builder.length() >= 1 ) {
+			builder.delete(builder.lastIndexOf(PATH_SEPARATOR), builder.length());
 		}
-		if ( buffer.length() == 0 ) {
-			buffer.append(PATH_SEPARATOR);
+		if ( builder.length() == 0 ) {
+			builder.append(PATH_SEPARATOR);
 		}
 		return this;
 	}
 	
 	public PathBuilder relativize(String path) throws InvalidPathException {
 		String parent = normalize(path);
-		if (checkFiliation(parent, buffer.toString())) {
-			buffer = buffer.delete(0, parent.length());
+		if (checkFiliation(parent, builder.toString())) {
+			builder = builder.delete(0, parent.length());
 		} else {
 			throw new InvalidPathException("path " + path + " is not parent");
 		}
@@ -123,18 +123,18 @@ public class PathBuilder {
 	}
 	
 	public String part() {
-		if ( buffer.length() <= 1 ) {
+		if ( builder.length() <= 1 ) {
 			return "";
 		} 
-		return buffer.substring(buffer.lastIndexOf(PATH_SEPARATOR)+1);
+		return builder.substring(builder.lastIndexOf(PATH_SEPARATOR)+1);
 	}
 	
 	public boolean isChild(String path) throws InvalidPathException {
-		return checkFiliation(normalize(path), buffer.toString());
+		return checkFiliation(normalize(path), builder.toString());
 	}
 	
 	public boolean isParent(String path) throws InvalidPathException {
-		return checkFiliation(buffer.toString(), normalize(path));
+		return checkFiliation(builder.toString(), normalize(path));
 	}
 	
 	private String normalize(String path) throws InvalidPathException {
@@ -198,7 +198,7 @@ public class PathBuilder {
 		if (getClass() != obj.getClass())
 			return false;
 		PathBuilder other = (PathBuilder) obj;
-		if (!buffer.toString().equals(other.buffer.toString()))
+		if (!builder.toString().equals(other.builder.toString()))
 			return false;
 		return true;
 	}
@@ -207,13 +207,13 @@ public class PathBuilder {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((buffer.toString() == null) ? 0 : buffer.toString().hashCode());
+		result = prime * result + ((builder.toString() == null) ? 0 : builder.toString().hashCode());
 		return result;
 	}
 	@Override
 	public PathBuilder clone() {
 		PathBuilder builder = new PathBuilder();
-		builder.buffer = new StringBuffer().append(buffer);
+		builder.builder = new StringBuilder().append(builder);
 		return builder;
 	}
 

@@ -91,10 +91,10 @@ public class SnapshotElement implements Serializable {
 	
 	@Override
 	public String toString() {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append("{Name:").append(getName());
-		buffer.append(",Key:").append(getKey()).append("}");
-		return buffer.toString();
+		StringBuilder builder = new StringBuilder();
+		builder.append("{Name:").append(getName());
+		builder.append(",Key:").append(getKey()).append("}");
+		return builder.toString();
 	}
 
 	@Override

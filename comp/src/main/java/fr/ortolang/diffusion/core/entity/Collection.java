@@ -177,12 +177,12 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	public void setElements(Set<CollectionElement> elements) {
 		this.elements = elements;
 		segments.clear();
-		StringBuffer newsegment = new StringBuffer();
+		StringBuilder newsegment = new StringBuilder();
 		for ( CollectionElement element : elements ) {
 			String serializedElement = element.serialize();
 			if ( newsegment.length() >= (MAX_SEGMENT_SIZE+serializedElement.length()) ) {
 				segments.add(newsegment.toString());
-				newsegment = new StringBuffer();
+				newsegment = new StringBuilder();
 			}
 			if ( newsegment.length() > 0 ) {
 				newsegment.append("\n");

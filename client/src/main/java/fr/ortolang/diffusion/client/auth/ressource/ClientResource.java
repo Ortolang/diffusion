@@ -100,7 +100,7 @@ public class ClientResource {
 			LOGGER.log(Level.FINE, "Generating authentication url");
 			String state = UUID.randomUUID().toString();
 			states.put(state, user);
-			StringBuffer url = new StringBuffer();
+			StringBuilder url = new StringBuilder();
 			url.append(authUrl).append("/realms/").append(authRealm);
 			url.append("/tokens/login?client_id=").append(appName);
 			url.append("&state=").append(state);

@@ -38,10 +38,10 @@ package fr.ortolang.diffusion;
 
 public class OrtolangIndexablePlainTextContent {
 	
-	private StringBuffer sb;
+	private StringBuilder sb;
 
     public OrtolangIndexablePlainTextContent() {
-        sb = new StringBuffer();
+        sb = new StringBuilder();
     }
 
      public void addContentPart(String content) {

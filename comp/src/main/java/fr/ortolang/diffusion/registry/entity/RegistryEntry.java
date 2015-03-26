@@ -241,17 +241,17 @@ public class RegistryEntry implements Serializable {
 
 	@Override
 	public String toString() {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append("{key:").append(getKey());
-		buffer.append(", locked:").append(isLocked());
-		buffer.append(", hidden:").append(isHidden());
-		buffer.append(", item:").append(isItem());
-		buffer.append(", deleted:").append(isDeleted());
-		buffer.append(", parent:").append(getParent());
-		buffer.append(", identifier:").append(getIdentifier());
-		buffer.append(", author:").append(getAuthor());
-		buffer.append("}");
-		return buffer.toString();
+		StringBuilder builder = new StringBuilder();
+		builder.append("{key:").append(getKey());
+		builder.append(", locked:").append(isLocked());
+		builder.append(", hidden:").append(isHidden());
+		builder.append(", item:").append(isItem());
+		builder.append(", deleted:").append(isDeleted());
+		builder.append(", parent:").append(getParent());
+		builder.append(", identifier:").append(getIdentifier());
+		builder.append(", author:").append(getAuthor());
+		builder.append("}");
+		return builder.toString();
 	}
 
 }

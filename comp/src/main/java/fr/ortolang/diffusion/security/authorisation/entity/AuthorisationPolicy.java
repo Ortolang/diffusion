@@ -46,7 +46,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Level;
 import java.util.Properties;
 
 import javax.persistence.Cacheable;
@@ -133,7 +132,7 @@ public class AuthorisationPolicy {
 	public void setPermissions(String subject, List<String> permissions) throws IOException {
 		loadRules();
 		if (permissions.size() > 0) {
-			StringBuffer permissionsList = new StringBuffer();
+			StringBuilder permissionsList = new StringBuilder();
 			for (String permission : permissions) {
 				permissionsList.append(permission);
 				permissionsList.append(",");
@@ -174,7 +173,7 @@ public class AuthorisationPolicy {
 		rules.clear();
 		for (Entry<String, List<String>> rule: newrules.entrySet()) {
 			if (rule.getValue().size() > 0) {
-				StringBuffer permissionsList = new StringBuffer();
+				StringBuilder permissionsList = new StringBuilder();
 				for (String permission : rule.getValue()) {
 					permissionsList.append(permission);
 					permissionsList.append(",");

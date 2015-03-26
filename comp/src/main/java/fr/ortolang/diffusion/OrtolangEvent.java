@@ -118,7 +118,7 @@ public abstract class OrtolangEvent {
 //	}
 	
 	public static String buildEventType(String serviceName, String resourceName, String eventName) {
-    	StringBuffer event = new StringBuffer();
+		StringBuilder event = new StringBuilder();
     	if ( serviceName != null && serviceName.length() > 0 ) {
     		event.append(serviceName + ".");
     	}

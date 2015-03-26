@@ -55,20 +55,20 @@ public class EventLoggerFormater {
 	}
 	
 	public static String formatEvent(Event e) {
-		StringBuffer buffer = new StringBuffer();
-		buffer.append("[" + getEventDateFormatter().format(e.getDate()) + "]");
-		buffer.append(fieldSeparator);
-		buffer.append(e.getFromObject());
-		buffer.append(fieldSeparator);
-		buffer.append(e.getObjectType());
-		buffer.append(fieldSeparator);
-		buffer.append(e.getType());
-		buffer.append(fieldSeparator);
-		buffer.append(e.getThrowedBy());
-		buffer.append(fieldSeparator);
-		buffer.append(e.getArguments());
-		buffer.append(fieldSeparator);
-		return buffer.toString();
+		StringBuilder builder = new StringBuilder();
+		builder.append("[" + getEventDateFormatter().format(e.getDate()) + "]");
+		builder.append(fieldSeparator);
+		builder.append(e.getFromObject());
+		builder.append(fieldSeparator);
+		builder.append(e.getObjectType());
+		builder.append(fieldSeparator);
+		builder.append(e.getType());
+		builder.append(fieldSeparator);
+		builder.append(e.getThrowedBy());
+		builder.append(fieldSeparator);
+		builder.append(e.getArguments());
+		builder.append(fieldSeparator);
+		return builder.toString();
 	}
 
 }

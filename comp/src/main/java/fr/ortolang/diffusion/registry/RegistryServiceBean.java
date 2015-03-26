@@ -416,12 +416,12 @@ public class RegistryServiceBean implements RegistryService {
 		if (limit < 1) {
 			throw new RegistryServiceException("limit MUST be >= 1");
 		}
-		StringBuffer ifilter = new StringBuffer();
+		StringBuilder ifilter = new StringBuilder();
 		if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
 			 ifilter.append(identifierFilter);
 		} 
 		ifilter.append("%");
-		StringBuffer sfilter = new StringBuffer();
+		StringBuilder sfilter = new StringBuilder();
 		if ( statusFilter != null ) {
 			sfilter.append(statusFilter.value());
 		} else {
@@ -443,12 +443,12 @@ public class RegistryServiceBean implements RegistryService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public long count(String identifierFilter, OrtolangObjectState.Status statusFilter, boolean itemFilter) throws RegistryServiceException {
 		LOGGER.log(Level.FINE, "counting keys with identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter + " and itemFilter:" + itemFilter);
-		StringBuffer ifilter = new StringBuffer();
+		StringBuilder ifilter = new StringBuilder();
 		if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
 			 ifilter.append(identifierFilter);
 		} 
 		ifilter.append("%");
-		StringBuffer sfilter = new StringBuffer();
+		StringBuilder sfilter = new StringBuilder();
 		if ( statusFilter != null ) {
 			sfilter.append(statusFilter.value());
 		} else {

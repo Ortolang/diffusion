@@ -55,18 +55,18 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		List<String> versions = searchVersions(bag);
 		
 		LOGGER.log(Level.FINE, "- build import script");
-		StringBuffer buffer = new StringBuffer();
-		appendWorkspaceInformations(buffer, bag);
+		StringBuilder builder = new StringBuilder();
+		appendWorkspaceInformations(builder, bag);
 		String pversion = null;
 		Set<String> pobjects = Collections.emptySet();
 		Set<String> pmetadata = Collections.emptySet();
 		for (String version : versions) {
 			Set<String> objects = listObjects(version, bag.getPayload());
-			appendObjectsOperations(buffer, bag, pversion, version, pobjects, objects);
+			appendObjectsOperations(builder, bag, pversion, version, pobjects, objects);
 			Set<String> metadata = listMetadata(version, bag.getPayload());
-			appendMetadataOperations(buffer, bag, pversion, version, pmetadata, metadata);
+			appendMetadataOperations(builder, bag, pversion, version, pmetadata, metadata);
 			if (!version.equals(Workspace.HEAD)) {
-				buffer.append("snapshot-workspace\t").append(version.substring(version.lastIndexOf("/"))).append("\r\n");
+				builder.append("snapshot-workspace\t").append(version.substring(version.lastIndexOf("/"))).append("\r\n");
 			}
 			pversion = version;
 			pobjects = objects;
@@ -77,10 +77,10 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		} catch ( IOException e ) {
 			LOGGER.log(Level.SEVERE, "- error during closing bag", e);
 		}
-		LOGGER.log(Level.INFO, "- import script generated : \r\n" + buffer.toString());
+		LOGGER.log(Level.INFO, "- import script generated : \r\n" + builder.toString());
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import script generated"));
 		execution.setVariable(BAG_VERSIONS_PARAM_NAME, versions);
-		execution.setVariable(IMPORT_OPERATIONS_PARAM_NAME, buffer);
+		execution.setVariable(IMPORT_OPERATIONS_PARAM_NAME, builder);
 	}
 	
 	@Override
@@ -145,7 +145,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		return versions;
 	}
 	
-	private void appendWorkspaceInformations(StringBuffer buffer, Bag bag) throws RuntimeEngineTaskException {
+	private void appendWorkspaceInformations(StringBuilder builder, Bag bag) throws RuntimeEngineTaskException {
 		BagFile propFile = bag.getBagFile("data/workspace.properties");
 		if (propFile == null || !propFile.exists()) {
 			throw new RuntimeEngineTaskException("Workspace properties file does not exists, create one !!");
@@ -153,7 +153,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		try {
 			Properties props = new Properties();
 			props.load(propFile.newInputStream());
-			buffer.append("create-workspace\t").append(props.getProperty("alias")).append("\t").append(props.getProperty("name")).append("\t").append(props.getProperty("type")).append("\t");
+			builder.append("create-workspace\t").append(props.getProperty("alias")).append("\t").append(props.getProperty("name")).append("\t").append(props.getProperty("type")).append("\t");
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to append workspace informations", e);
 			throw new RuntimeEngineTaskException("unable to append workspace informations", e);
@@ -174,11 +174,11 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		return objects;
 	}
 	
-	private void appendObjectsOperations(StringBuffer buffer, Bag bag, String pversion, String version, Set<String> pobjects, Set<String> objects) {
+	private void appendObjectsOperations(StringBuilder builder, Bag bag, String pversion, String version, Set<String> pobjects, Set<String> objects) {
 		for (String object : objects) {
 			if ( !pobjects.contains(object) ) {
 				String bagfilepath = DATA_PREFIX + version + "/objects" + object;
-				buffer.append("create-object\t").append(bagfilepath).append("\t").append(bag.getChecksums(bagfilepath).get(Algorithm.SHA1)).append("\t").append(object).append("\r\n");
+				builder.append("create-object\t").append(bagfilepath).append("\t").append(bag.getChecksums(bagfilepath).get(Algorithm.SHA1)).append("\t").append(object).append("\r\n");
 			} else {
 				String bagfilepath = DATA_PREFIX + version + "/objects" + object;
 				BagFile file = bag.getBagFile(bagfilepath);
@@ -193,14 +193,14 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 					}
 				} 
 				if ( !skipupdate ) {
-					buffer.append("update-object\t").append(bagfilepath).append("\t").append(object).append("\r\n");
+					builder.append("update-object\t").append(bagfilepath).append("\t").append(object).append("\r\n");
 				}
 			}
 		}
 		for (String object : pobjects) {
 			if ( !objects.contains(object) ) {
 				String bagfilepath = DATA_PREFIX + version + "/objects" + object;
-				buffer.append("delete-object\t").append(bagfilepath).append("\t").append(object).append("\r\n");
+				builder.append("delete-object\t").append(bagfilepath).append("\t").append(object).append("\r\n");
 			}
 		}
 	}
@@ -219,14 +219,14 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		return metadata;
 	}
 	
-	private void appendMetadataOperations(StringBuffer buffer, Bag bag, String pversion, String version, Set<String> pmetadata, Set<String> metadata) {
+	private void appendMetadataOperations(StringBuilder builder, Bag bag, String pversion, String version, Set<String> pmetadata, Set<String> metadata) {
 		for (String md : metadata) {
 			if ( !pmetadata.contains(md) ) {
 				String bagfilepath = DATA_PREFIX + version + "/metadata" + md;
 				if ( md.lastIndexOf("/") > 0 ) {
-					buffer.append("create-metadata\t").append(bagfilepath).append("\t").append(md.substring(0,md.lastIndexOf("/"))).append("\t").append(md.substring(md.lastIndexOf("/")+1)).append("\r\n");
+					builder.append("create-metadata\t").append(bagfilepath).append("\t").append(md.substring(0,md.lastIndexOf("/"))).append("\t").append(md.substring(md.lastIndexOf("/")+1)).append("\r\n");
 				} else {
-					buffer.append("create-metadata\t").append(bagfilepath).append("\t/\t").append(md.substring(md.lastIndexOf("/")+1)).append("\r\n");
+					builder.append("create-metadata\t").append(bagfilepath).append("\t/\t").append(md.substring(md.lastIndexOf("/")+1)).append("\r\n");
 				}
 			} else {
 				String bagfilepath = DATA_PREFIX + version + "/metadata" + md;
@@ -243,9 +243,9 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 				} 
 				if ( !skipupdate ) {
 					if ( md.lastIndexOf("/") > 0 ) {
-						buffer.append("update-metadata\t").append(bagfilepath).append("\t").append(md.substring(0,md.lastIndexOf("/"))).append("\t").append(md.substring(md.lastIndexOf("/")+1)).append("\r\n");
+						builder.append("update-metadata\t").append(bagfilepath).append("\t").append(md.substring(0,md.lastIndexOf("/"))).append("\t").append(md.substring(md.lastIndexOf("/")+1)).append("\r\n");
 					} else {
-						buffer.append("update-metadata\t").append(bagfilepath).append("\t/\t").append(md.substring(md.lastIndexOf("/")+1)).append("\r\n");
+						builder.append("update-metadata\t").append(bagfilepath).append("\t/\t").append(md.substring(md.lastIndexOf("/")+1)).append("\r\n");
 					}
 				}
 			}
@@ -254,9 +254,9 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 			if ( !metadata.contains(md) ) {
 				String bagfilepath = DATA_PREFIX + version + "/metadata" + md;
 				if ( md.lastIndexOf("/") > 0 ) {
-					buffer.append("delete-metadata\t").append(bagfilepath).append("\t").append(md.substring(0,md.lastIndexOf("/"))).append("\t").append(md.substring(md.lastIndexOf("/")+1)).append("\r\n");
+					builder.append("delete-metadata\t").append(bagfilepath).append("\t").append(md.substring(0,md.lastIndexOf("/"))).append("\t").append(md.substring(md.lastIndexOf("/")+1)).append("\r\n");
 				} else {
-					buffer.append("delete-metadata\t").append(bagfilepath).append("\t/\t").append(md.substring(md.lastIndexOf("/")+1)).append("\r\n");
+					builder.append("delete-metadata\t").append(bagfilepath).append("\t/\t").append(md.substring(md.lastIndexOf("/")+1)).append("\r\n");
 				}
 			}
 		}

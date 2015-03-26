@@ -73,7 +73,7 @@ public class OrtolangObjectProperty implements Serializable {
 	
 	@Override
 	public String toString() {
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.append("{Name:").append(getName());
 		buffer.append(",Value:").append(getValue()).append("}");
 		return buffer.toString();
