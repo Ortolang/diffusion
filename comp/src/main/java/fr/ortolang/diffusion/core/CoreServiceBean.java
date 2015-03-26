@@ -2807,6 +2807,7 @@ public class CoreServiceBean implements CoreService {
 		}
 	}
 
+	@Override
 	public OrtolangIndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);

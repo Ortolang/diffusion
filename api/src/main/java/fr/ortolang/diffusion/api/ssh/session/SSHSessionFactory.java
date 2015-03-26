@@ -49,6 +49,7 @@ public class SSHSessionFactory extends SessionFactory {
     	this.sshserver = sshserver;
     }
     
+    @Override
     protected AbstractSession doCreateSession(IoSession ioSession) throws Exception {
     	return new SSHSession(sshserver, ioSession);
     }

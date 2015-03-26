@@ -169,6 +169,7 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 		return metadatasContent;
 	}
 	
+	@Override
 	public Set<MetadataElement> getMetadatas() {
 		Set<MetadataElement> metadatas = new HashSet<MetadataElement>();
 		if ( metadatasContent != null && metadatasContent.length() > 0 ) {
@@ -179,6 +180,7 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 		return metadatas;
 	}
 	
+	@Override
 	public void setMetadatas(Set<MetadataElement> metadatas) {
 		StringBuffer newmetadatas = new StringBuffer();
 		for ( MetadataElement metadata : metadatas ) {
@@ -190,6 +192,7 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 		metadatasContent = newmetadatas.toString();
 	}
 	
+	@Override
 	public boolean addMetadata(MetadataElement metadata) {
 		if ( !containsMetadata(metadata) ) {
 			if ( metadatasContent.length() > 0 ) {
@@ -202,6 +205,7 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 		return false;
 	}
 	
+	@Override
 	public boolean removeMetadata(MetadataElement metadata) {
 		if ( containsMetadata(metadata) ) {
 			metadatasContent = metadatasContent.replaceAll("(?m)^(" + metadata.serialize() + ")\n?", "");
@@ -214,6 +218,7 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 		}
 	}
 	
+	@Override
 	public boolean containsMetadata(MetadataElement metadata) {
 		if ( metadatasContent.length() > 0 && metadatasContent.indexOf(metadata.serialize()) != -1 ) {
 			return true;
@@ -221,6 +226,7 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 		return false;
 	}
 	
+	@Override
 	public boolean containsMetadataName(String name) {
 		if ( metadatasContent.indexOf(name + "/") != -1 ) {
 			return true;
@@ -228,6 +234,7 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 		return false;
 	}
 	
+	@Override
 	public boolean containsMetadataKey(String key) {
 		if ( metadatasContent.indexOf("/" + key) != -1 ) {
 			return true;
@@ -235,6 +242,7 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 		return false;
 	}
 	
+	@Override
 	public MetadataElement findMetadataByName(String name) {
 		Pattern pattern = Pattern.compile("(?s).*(" + name + "/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
 		Matcher matcher = pattern.matcher(metadatasContent);

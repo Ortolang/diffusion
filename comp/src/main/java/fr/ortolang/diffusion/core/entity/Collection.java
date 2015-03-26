@@ -39,9 +39,11 @@ package fr.ortolang.diffusion.core.entity;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
+
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -286,6 +288,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 		return metadatasContent;
 	}
 	
+	@Override
 	public Set<MetadataElement> getMetadatas() {
 		Set<MetadataElement> metadatas = new HashSet<MetadataElement>();
 		if ( metadatasContent != null && metadatasContent.length() > 0 ) {
@@ -296,6 +299,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 		return metadatas;
 	}
 	
+	@Override
 	public void setMetadatas(Set<MetadataElement> metadatas) {
 		StringBuffer newmetadatas = new StringBuffer();
 		for ( MetadataElement metadata : metadatas ) {
@@ -307,6 +311,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 		metadatasContent = newmetadatas.toString();
 	}
 	
+	@Override
 	public boolean addMetadata(MetadataElement metadata) {
 		if ( !containsMetadata(metadata) ) {
 			if ( metadatasContent.length() > 0 ) {
@@ -319,6 +324,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 		return false;
 	}
 	
+	@Override
 	public boolean removeMetadata(MetadataElement metadata) {
 		if ( containsMetadata(metadata) ) {
 			metadatasContent = metadatasContent.replaceAll("(?m)^(" + Pattern.quote(metadata.serialize()) + ")\n?", "");
@@ -331,18 +337,22 @@ public class Collection extends OrtolangObject implements MetadataSource {
 		}
 	}
 	
+	@Override
 	public boolean containsMetadata(MetadataElement metadata) {
         return metadatasContent.length() > 0 && metadatasContent.contains(metadata.serialize());
     }
 	
+	@Override
 	public boolean containsMetadataName(String name) {
         return metadatasContent.contains(name + "/");
     }
 	
+	@Override
 	public boolean containsMetadataKey(String key) {
         return metadatasContent.contains("/" + key);
     }
 	
+	@Override
 	public MetadataElement findMetadataByName(String name) {
 		Pattern pattern = Pattern.compile("(?s).*(" + Pattern.quote(name) + "/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
 		Matcher matcher = pattern.matcher(metadatasContent);

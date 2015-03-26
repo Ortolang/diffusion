@@ -46,6 +46,7 @@ import fr.ortolang.diffusion.security.SecurityServiceException;
 @Provider
 public class SecurityServiceExceptionMapper implements ExceptionMapper<SecurityServiceException> {
 
+	@Override
 	public Response toResponse(SecurityServiceException ex) {
 		return Response.status(Status.INTERNAL_SERVER_ERROR)
 				.entity("An error occured : " + ex.getMessage()).type("text/plain")

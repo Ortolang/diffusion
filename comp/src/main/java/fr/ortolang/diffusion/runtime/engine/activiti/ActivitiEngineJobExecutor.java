@@ -60,17 +60,20 @@ public class ActivitiEngineJobExecutor extends JobExecutor {
 		this.executor = executor;
 	}
 
+	@Override
 	protected void startExecutingJobs() {
 		LOGGER.log(Level.INFO, "Scheduling start of JobAcquisitionThread (5s)");
 		scheduledExecutor.schedule(acquireJobsRunnable, 5, TimeUnit.SECONDS);
 	}
 
+	@Override
 	protected void stopExecutingJobs() {
 		LOGGER.log(Level.INFO, "Stopping JobAcquisitionThread...");
 		acquireJobsRunnable.stop();
 		LOGGER.log(Level.INFO, "JobAcquisitionThread stopped");
 	}
 
+	@Override
 	public void executeJobs(List<String> jobIds) {
 		try {
 			LOGGER.log(Level.INFO, "Using executor to execute jobs");

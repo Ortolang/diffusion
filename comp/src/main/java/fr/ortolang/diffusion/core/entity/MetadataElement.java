@@ -69,6 +69,7 @@ public class MetadataElement implements Serializable {
 		this.key = key;
 	}
 	
+	@Override
 	public MetadataElement clone() {
 		MetadataElement clone = new MetadataElement();
 		clone.setKey(this.getKey());

@@ -46,6 +46,7 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 @Provider
 public class KeyNotFoundExceptionMapper implements ExceptionMapper<KeyNotFoundException> {
 
+	@Override
 	public Response toResponse(KeyNotFoundException ex) {
 		return Response.status(Status.NOT_FOUND)
 				.entity("No registry entry found for this key").type("text/plain")

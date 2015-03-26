@@ -46,6 +46,7 @@ import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 @Provider
 public class KeyAlreadyExistsExceptionMapper implements ExceptionMapper<KeyAlreadyExistsException> {
 
+	@Override
 	public Response toResponse(KeyAlreadyExistsException ex) {
 		return Response.status(Status.CONFLICT)
 				.entity("A registry entry already exists for this key").type("text/plain")

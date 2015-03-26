@@ -28,6 +28,7 @@ public class DeleteWorkspaceCommand extends Command {
 		options.addOption("k", "key", true, "the workspace key");
 	}
 	
+	@Override
 	public void execute(String[] args) {
 		CommandLineParser parser = new BasicParser();
 		CommandLine cmd = null;

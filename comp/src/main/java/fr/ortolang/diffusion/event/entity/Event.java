@@ -63,50 +63,62 @@ public class Event extends OrtolangEvent implements Serializable {
 		this.id = id;
 	}
 
+	@Override
 	public String getFromObject() {
 		return fromObject;
 	}
 
+	@Override
 	public void setFromObject(String fromObject) {
 		this.fromObject = fromObject;
 	}
 
+	@Override
 	public String getThrowedBy() {
 		return throwedBy;
 	}
 
+	@Override
 	public void setThrowedBy(String throwedBy) {
 		this.throwedBy = throwedBy;
 	}
 
+	@Override
 	public String getObjectType() {
 		return objectType;
 	}
 
+	@Override
 	public void setObjectType(String objectType) {
 		this.objectType = objectType;
 	}
 
+	@Override
 	public Date getDate() {
 		return date;
 	}
 
+	@Override
 	public void setDate(Date date) {
 		this.date = date;
 	}
 
+	@Override
 	public String getType() {
 		return type;
 	}
 
+	@Override
 	public void setType(String type) {
 		this.type = type;
 	}
 
+	@Override
 	public String getArguments() {
 		return args;
 	}
 
+	@Override
 	public void setArguments(String args) {
 		this.args = args;
 	}

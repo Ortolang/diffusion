@@ -46,6 +46,7 @@ import fr.ortolang.diffusion.registry.PropertyNotFoundException;
 @Provider
 public class PropertyNotFoundExceptionMapper implements ExceptionMapper<PropertyNotFoundException> {
 
+	@Override
 	public Response toResponse(PropertyNotFoundException ex) {
 		return Response.status(Status.NOT_FOUND)
 				.entity("An error occured : " + ex.getMessage()).type("text/plain")

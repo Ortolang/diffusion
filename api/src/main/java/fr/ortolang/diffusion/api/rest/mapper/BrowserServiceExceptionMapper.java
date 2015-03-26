@@ -46,6 +46,7 @@ import fr.ortolang.diffusion.browser.BrowserServiceException;
 @Provider
 public class BrowserServiceExceptionMapper implements ExceptionMapper<BrowserServiceException> {
 
+	@Override
 	public Response toResponse(BrowserServiceException ex) {
 		return Response.status(Status.INTERNAL_SERVER_ERROR)
 				.entity("An error occured : " + ex.getMessage()).type("text/plain")

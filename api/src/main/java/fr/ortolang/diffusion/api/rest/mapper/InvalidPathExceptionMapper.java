@@ -46,6 +46,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class InvalidPathExceptionMapper implements ExceptionMapper<InvalidPathException> {
 
+	@Override
 	public Response toResponse(InvalidPathException ex) {
 		return Response.status(Status.NOT_FOUND)
 				.entity("Element not found at path : " + ex.getMessage()).type("text/plain")

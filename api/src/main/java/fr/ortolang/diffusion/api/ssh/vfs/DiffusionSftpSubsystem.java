@@ -59,6 +59,7 @@ public class DiffusionSftpSubsystem extends SftpSubsystem {
         	this.threadFactory = threadFactory;
         }
 
+        @Override
         public Command create() {
         	DiffusionSftpSubsystem dsftp = new DiffusionSftpSubsystem();
         	dsftp.setThreadFactory(threadFactory);

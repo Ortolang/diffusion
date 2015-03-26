@@ -28,6 +28,7 @@ public class ImportWorkspaceCommand extends Command {
 		options.addOption("upload", false, "bag file is local and need upload");
 	}
 
+	@Override
 	public void execute(String[] args) {
 		CommandLineParser parser = new BasicParser();
 		CommandLine cmd = null;

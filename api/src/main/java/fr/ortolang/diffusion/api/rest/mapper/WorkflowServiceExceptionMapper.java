@@ -46,6 +46,7 @@ import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 @Provider
 public class WorkflowServiceExceptionMapper implements ExceptionMapper<RuntimeServiceException> {
 
+	@Override
 	public Response toResponse(RuntimeServiceException ex) {
 		return Response.status(Status.INTERNAL_SERVER_ERROR)
 				.entity("An error occured : " + ex.getMessage()).type("text/plain")

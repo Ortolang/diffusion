@@ -69,6 +69,7 @@ public class SnapshotElement implements Serializable {
 		this.key = key;
 	}
 	
+	@Override
 	public SnapshotElement clone() {
 		SnapshotElement clone = new SnapshotElement();
 		clone.setKey(this.getKey());

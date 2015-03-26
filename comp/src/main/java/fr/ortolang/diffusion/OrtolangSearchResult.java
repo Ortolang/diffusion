@@ -130,6 +130,7 @@ public class OrtolangSearchResult implements Serializable {
 		this.path = path;
 	}
 
+	@Override
 	public String toString() {
 		StringBuffer buffer = new StringBuffer();
 		buffer.append("[").append(getScore()).append("]");

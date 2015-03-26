@@ -46,6 +46,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 @Provider
 public class AccessDeniedExceptionMapper implements ExceptionMapper<AccessDeniedException> {
 
+	@Override
 	public Response toResponse(AccessDeniedException ex) {
 		return Response.status(Status.UNAUTHORIZED)
 				//.header("WWW-Authenticate", "Basic")

@@ -62,6 +62,7 @@ public class UsernamePasswordLoginContextFactory {
 			this.password = password;
 		}
 
+		@Override
 		public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
 			for (Callback current : callbacks) {
 				if (current instanceof NameCallback) {
