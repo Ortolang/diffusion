@@ -549,7 +549,7 @@ public class CoreServiceTest {
 	}
 
 	@Test
-	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException, InvalidPathException {
+	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException, InvalidPathException, MetadataFormatException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -582,11 +582,8 @@ public class CoreServiceTest {
 			String metak = UUID.randomUUID().toString();
 			InputStream metadataInputStream = getClass().getClassLoader().getResourceAsStream("json/meta.json");
 			String metadataHash = core.put(metadataInputStream);
-			core.createMetadataObject(wsk, metak, "/", mf.getName(), mf.getKey(), metadataHash);
+			core.createMetadataObject(wsk, metak, "/", mf.getName(), metadataHash);
 			MetadataObject metadata = core.readMetadataObject(metak);
-			
-			boolean valid = core.validateMetadata(metadata, mf);
-			assertTrue(valid);
 			
 		} finally {
 			loginContext.logout();
