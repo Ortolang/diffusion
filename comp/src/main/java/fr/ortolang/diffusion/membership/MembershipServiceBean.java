@@ -219,7 +219,7 @@ public class MembershipServiceBean implements MembershipService {
 			readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[] { "read" }));
 			authorisation.setPolicyRules(key, readRules);
 			
-			createGroup(connectedIdentifier, connectedIdentifier + "'s Collaborators", "List of collaborators of user " + connectedIdentifier);
+			createGroup(friendGroupKey, connectedIdentifier + "'s Collaborators", "List of collaborators of user " + connectedIdentifier);
 			Map<String, List<String>> friendsReadRules = new HashMap<String, List<String>>();
 			friendsReadRules.put(friendGroupKey, Arrays.asList(new String[] { "read" }));
 			authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
