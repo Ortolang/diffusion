@@ -212,9 +212,9 @@ public class PathBuilder {
 	}
 	@Override
 	public PathBuilder clone() {
-		PathBuilder builder = new PathBuilder();
-		builder.builder = new StringBuilder().append(builder);
-		return builder;
+		PathBuilder clone = new PathBuilder();
+		clone.builder = new StringBuilder().append(builder);
+		return clone;
 	}
 
 }
