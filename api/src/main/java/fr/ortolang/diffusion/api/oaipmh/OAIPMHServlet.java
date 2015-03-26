@@ -83,16 +83,16 @@ import fr.ortolang.diffusion.search.SearchService;
 @SuppressWarnings("serial")
 public class OAIPMHServlet extends HttpServlet {
 
-	private Logger logger = Logger.getLogger(OAIPMHServlet.class.getName());
+	private static final Logger logger = Logger.getLogger(OAIPMHServlet.class.getName());
 
 	@EJB
-	private SearchService search;
+	private static SearchService search;
 	@EJB
-	private CoreService core;
+	private static CoreService core;
 	
-    private Context context;
-    private Repository repository;
-    private DiffusionDataProvider dataProvider;
+    private static Context context;
+    private static Repository repository;
+    private static DiffusionDataProvider dataProvider;
     
 	@Override
 	public void init(ServletConfig config) throws ServletException {
@@ -117,14 +117,14 @@ public class OAIPMHServlet extends HttpServlet {
 		try {
 			earliestDate = dateProvider.parse(earliestDateStr, Granularity.Day);
 		} catch (ParseException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "unable to parse date", e);
 		}
 		if(earliestDate==null) {
 			try {
 				earliestDate = dateProvider.parse("2014-08-10", Granularity.Day);
 			} catch (ParseException e) {
-				e.printStackTrace();
 				earliestDate = new Date();
+				logger.log(Level.SEVERE, "unable to parse date", e);
 			}
 		}
 		

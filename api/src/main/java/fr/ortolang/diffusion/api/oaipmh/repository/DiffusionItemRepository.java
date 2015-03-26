@@ -76,7 +76,7 @@ import static java.lang.Math.min;
 
 public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
-	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private static final Logger logger = Logger.getLogger(DiffusionItemRepository.class.getName());
 	
 	// From fr.ortolang.diffusion.store.triple.TripleStoreStatementBuilder
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -106,8 +106,8 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		String subjectURI = null;
 		try {
 			subjectURI = URIHelper.fromKey(key);
-		} catch (TripleStoreServiceException e1) {
-			e1.printStackTrace();
+		} catch (TripleStoreServiceException e) {
+			logger.log(Level.SEVERE, "unable to get subject URI", e);
 		}
 		
 		String query = "SELECT ?metadataPrefix WHERE { "
@@ -355,7 +355,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 					try {
 						datestamp = sdf.parse(lastDate);
 					} catch (ParseException e) {
-						e.printStackTrace();
+						logger.log(Level.SEVERE, "unable to parse date", e);
 					}
 					if(itemID!=null && datestamp!=null) {
 						list.add(new DiffusionItemIdentifier().withIdentifier(PREFIX_IDENTIFIER+itemID).withDatestamp(datestamp));

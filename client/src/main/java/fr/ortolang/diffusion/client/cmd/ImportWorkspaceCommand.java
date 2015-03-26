@@ -32,7 +32,7 @@ public class ImportWorkspaceCommand extends Command {
 		CommandLineParser parser = new BasicParser();
 		CommandLine cmd = null;
 		String username = "";
-		String password = "";
+		String password = null;
 		Map<String, String> params = new HashMap<String, String> ();
 		Map<String, File> files = new HashMap<String, File> ();
 		try {

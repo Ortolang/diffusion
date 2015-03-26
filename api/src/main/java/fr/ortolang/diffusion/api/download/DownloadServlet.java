@@ -59,10 +59,10 @@ import java.util.logging.Logger;
 @SuppressWarnings("serial")
 public class DownloadServlet extends HttpServlet {
 
-	private static Logger logger = Logger.getLogger(DownloadServlet.class.getName());
+	private static final Logger logger = Logger.getLogger(DownloadServlet.class.getName());
 
 	@EJB
-	private BinaryStoreService binaryStore;
+	private static BinaryStoreService binaryStore;
 
 	@Override
 	public void init() throws ServletException {

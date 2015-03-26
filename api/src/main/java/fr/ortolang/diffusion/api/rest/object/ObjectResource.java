@@ -71,7 +71,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
 
@@ -114,10 +113,8 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 @Produces({ MediaType.APPLICATION_JSON })
 public class ObjectResource {
 
-	private Logger logger = Logger.getLogger(ObjectResource.class.getName());
+	private static final Logger logger = Logger.getLogger(ObjectResource.class.getName());
 
-	@Context
-	private UriInfo uriInfo;
 	@EJB
 	private BrowserService browser;
 	@EJB
@@ -539,13 +536,11 @@ public class ObjectResource {
 								zos.closeEntry();
 							}
 						} catch (CoreServiceException | DataNotFoundException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
+							logger.log(Level.SEVERE, "unexpected error during export to zip !!", e1);
 						}
 					}
 				} catch (InvalidPathException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					logger.log(Level.SEVERE, "invalid path during export to zip !!", e);
 				}
 
 			}

@@ -45,7 +45,7 @@ import java.util.logging.Logger;
 
 public class OrtolangClientConfig {
 	
-	private static Logger logger = Logger.getLogger(OrtolangClientConfig.class.getName());
+	private static final Logger logger = Logger.getLogger(OrtolangClientConfig.class.getName());
 	private static OrtolangClientConfig config;
 	private Properties props;
 	
@@ -91,7 +91,6 @@ public class OrtolangClientConfig {
 
             return config;
         } catch (Exception e) {
-            e.printStackTrace();
             logger.log(Level.SEVERE, "unable to load configuration", e);
         }
         return null;

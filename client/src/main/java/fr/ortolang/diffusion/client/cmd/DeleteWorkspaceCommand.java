@@ -32,7 +32,7 @@ public class DeleteWorkspaceCommand extends Command {
 		CommandLineParser parser = new BasicParser();
 		CommandLine cmd = null;
 		String username = "";
-		String password = "";
+		String password = null;
 		Map<String, String> params = new HashMap<String, String> ();
 		try {
 			cmd = parser.parse(options, args);

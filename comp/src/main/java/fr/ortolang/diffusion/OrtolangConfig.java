@@ -91,7 +91,6 @@ public class OrtolangConfig {
 
             return config;
         } catch (Exception e) {
-            e.printStackTrace();
             logger.log(Level.SEVERE, "unable to load configuration", e);
         }
         return null;
