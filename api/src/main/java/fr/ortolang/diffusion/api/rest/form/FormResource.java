@@ -51,7 +51,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
-import fr.ortolang.diffusion.api.rest.template.Template;
 import fr.ortolang.diffusion.form.FormService;
 import fr.ortolang.diffusion.form.FormServiceException;
 import fr.ortolang.diffusion.form.entity.Form;
@@ -72,8 +71,7 @@ public class FormResource {
 	}
 	
 	@GET
-	@Template( template="forms/list.vm", types={MediaType.TEXT_HTML})
-	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response list() throws FormServiceException {
 		logger.log(Level.INFO, "list availables forms");
 		
@@ -93,8 +91,7 @@ public class FormResource {
 	
 	@GET
 	@Path("/{key}")
-	@Template( template="forms/detail.vm", types={MediaType.TEXT_HTML})
-	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML})
+	@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response get(@PathParam(value = "key") String key) throws FormServiceException, KeyNotFoundException {
 		logger.log(Level.INFO, "read form for key: " + key);
 				

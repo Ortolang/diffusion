@@ -134,17 +134,18 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	/*MetadataObject*/
 
-	public void createMetadataObject(String wskey, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
+	public void createMetadataObject(String wskey, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException;
 
-	public void createMetadataObject(String wskey, String path, String name, String formatKey, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
-	
-	public void createMetadataObject(String wskey, String key, String path, String name, String formatKey, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException;
+	public void createMetadataObject(String wskey, String key, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException, MetadataFormatException;
 	
 	public List<String> findMetadataObjectsForTarget(String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public MetadataObject readMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateMetadataObject(String wskey, String path, String name, String format, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
+	public void updateMetadataObject(String wskey, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException;
+	
+	//TODO in case of format migration : 
+	//public void updateMetadataObject(String wskey, String path, String name, String format, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException;
 	
 	public void deleteMetadataObject(String wskey, String path, String name) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
 
@@ -157,8 +158,6 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	public void createMetadataFormat(String name, String description, String scheamHash, String formKey) throws CoreServiceException;
 
 	public List<String> findMetadataFormatByName(String name) throws CoreServiceException, KeyNotFoundException;
-	
-	public boolean validateMetadata(MetadataObject metadata, MetadataFormat metaFormat) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	/*BinaryContent*/
 	

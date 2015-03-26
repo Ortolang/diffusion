@@ -66,8 +66,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
@@ -80,13 +80,13 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.api.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.api.rest.filter.CORSFilter;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
-import fr.ortolang.diffusion.api.rest.template.Template;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CollectionNotEmptyException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
+import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.DataObject;
@@ -122,8 +122,7 @@ public class WorkspaceResource {
 	}
 
 	@GET
-	@Template(template = "workspaces/list.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response listWorkspaces() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "GET /workspaces");
 		String profile = membership.getProfileKeyForConnectedIdentifier();
@@ -163,8 +162,7 @@ public class WorkspaceResource {
 
 	@GET
 	@Path("/{wskey}")
-	@Template(template = "workspaces/detail.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response getWorkspace(@PathParam(value = "wskey") String wskey, @Context Request request) throws CoreServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "GET /workspaces/" + wskey);
 		
@@ -209,8 +207,7 @@ public class WorkspaceResource {
 
 	@GET
 	@Path("/{wskey}/elements")
-	@Template(template = "workspaces/browse.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response getWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@QueryParam(value = "metadata") String metadata, @Context Request request) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, OrtolangException,
 			BrowserServiceException, PropertyNotFoundException {
@@ -355,7 +352,7 @@ public class WorkspaceResource {
 	@Path("/{wskey}/elements")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response writeWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form, @Context HttpHeaders headers)
-			throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException {
+			throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException {
 		logger.log(Level.INFO, "POST /workspaces/" + wskey + "/elements");
 		try {
 			String contentTransferEncoding = "UTF-8";
@@ -404,10 +401,10 @@ public class WorkspaceResource {
 						}
 					}
 					if (mdexists) {
-						core.updateMetadataObject(wskey, npath.build(), name, form.getFormat(), form.getStreamHash());
+						core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash());
 						return Response.ok().build();
 					} else {
-						core.createMetadataObject(wskey, npath.build(), name, form.getFormat(), form.getStreamHash());
+						core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash());
 						URI newly = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build())
 								.queryParam("metadataname", name).build();
 						return Response.created(newly).build();

@@ -56,7 +56,6 @@ import fr.ortolang.diffusion.api.rest.mapper.SecurityServiceExceptionMapper;
 import fr.ortolang.diffusion.api.rest.object.ObjectResource;
 import fr.ortolang.diffusion.api.rest.profile.ProfileResource;
 import fr.ortolang.diffusion.api.rest.runtime.RuntimeResource;
-import fr.ortolang.diffusion.api.rest.template.TemplateFilter;
 import fr.ortolang.diffusion.api.rest.workspace.WorkspaceResource;
 
 @ApplicationPath("/rest/*")
@@ -81,7 +80,6 @@ public class DiffusionApplication extends Application {
 	@Override
 	public Set<Object> getSingletons() {
 		HashSet<Object> set = new HashSet<Object>();
-		set.add(new TemplateFilter());
 		set.add(new ContentTypeSetterPreProcessorInterceptor());
 		set.add(new AccessDeniedExceptionMapper());
 		set.add(new BrowserServiceExceptionMapper());

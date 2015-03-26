@@ -36,11 +36,32 @@ package fr.ortolang.diffusion.api.rest.profile;
  * #L%
  */
 
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ejb.EJB;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
-import fr.ortolang.diffusion.api.rest.template.Template;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -53,15 +74,6 @@ import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-
-import javax.ejb.EJB;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @resourceDescription Operations on Profiles
@@ -90,7 +102,7 @@ public class ProfileResource {
 	 */
 	@GET
 	@Path("/connected")
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response getConnected() throws MembershipServiceException, KeyNotFoundException, ProfileAlreadyExistsException, AccessDeniedException {
 		logger.log(Level.INFO, "GET /profiles/connected");
 		String key = membership.getProfileKeyForConnectedIdentifier();
@@ -106,7 +118,7 @@ public class ProfileResource {
 	
 	@GET
 	@Path("/list")
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response getProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, AuthorisationServiceException {
 		logger.log(Level.INFO, "GET /profiles/list");
 		List<Profile> profiles;
@@ -137,8 +149,7 @@ public class ProfileResource {
 	 */
 	@GET
 	@Path("/{key}")
-	@Template(template = "profiles/detail.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response getProfile(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "GET /profiles/" + key);
 		
@@ -173,8 +184,7 @@ public class ProfileResource {
 	
 	@GET
 	@Path("/{key}/keys")
-	@Template(template = "profiles/keys.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response getProfilePublicKeys(@PathParam(value = "key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		logger.log(Level.INFO, "GET /profiles/" + key + "/keys");
 		Profile profile = membership.readProfile(key);
@@ -201,7 +211,7 @@ public class ProfileResource {
 	
 	@GET
 	@Path("/{key}/infos")
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response getInfos(@PathParam(value = "key") String key, @QueryParam(value = "filter") String filter, @Context Request request) throws MembershipServiceException, BrowserServiceException, AccessDeniedException, KeyNotFoundException {
 		logger.log(Level.INFO, "GET /profiles/" + key + "/infos");
 				
@@ -238,7 +248,7 @@ public class ProfileResource {
 
     @GET
     @Path("/{key}/size")
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
     public Response getProfileSize(@PathParam(value = "key") String key) throws AccessDeniedException, OrtolangException, KeyNotFoundException {
         logger.log(Level.INFO, "GET /profiles/" + key + "/size");
         OrtolangObjectSize size = membership.getSize(key);

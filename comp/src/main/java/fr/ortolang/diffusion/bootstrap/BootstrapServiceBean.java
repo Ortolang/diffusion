@@ -61,6 +61,7 @@ import javax.ejb.TransactionAttributeType;
 import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.RunAsPrincipal;
 import org.jboss.ejb3.annotation.SecurityDomain;
+import org.jgroups.util.UUID;
 
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
@@ -144,8 +145,11 @@ public class BootstrapServiceBean implements BootstrapService {
 				logger.log(Level.FINE, "creating moderators group");
 				membership.createGroup(MembershipService.MODERATOR_GROUP_KEY, "Publication Moderators", "Moderators of the plateform can publish content");
 				membership.addMemberInGroup(MembershipService.MODERATOR_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
-				logger.log(Level.FINE, "set anon read rules");
 				authorisation.setPolicyRules(MembershipService.MODERATOR_GROUP_KEY, anonReadRules);
+				
+				logger.log(Level.FINE, "creating esr group");
+				membership.createGroup(MembershipService.ESR_GROUP_KEY, "ESR Members", "People from Superior Teaching and Reserch Group");
+				authorisation.setPolicyRules(MembershipService.ESR_GROUP_KEY, anonReadRules);
 
 				logger.log(Level.FINE, "create system workspace");
 				core.createWorkspace(BootstrapService.WORKSPACE_KEY, "system", "System Workspace", WorkspaceType.SYSTEM.toString());
@@ -155,6 +159,42 @@ public class BootstrapServiceBean implements BootstrapService {
 				props.setProperty("bootstrap.version", BootstrapService.VERSION);
 				String hash = core.put(new ByteArrayInputStream(props.toString().getBytes()));
 				core.createDataObject(BootstrapService.WORKSPACE_KEY, "/bootstrap.txt", "bootstrap file", hash);
+				
+				logger.log(Level.FINE, "create [forall] authorisation policy template");
+				String forallPolicyKey = UUID.randomUUID().toString();
+				authorisation.createPolicy(forallPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
+				Map<String, List<String>> forallPolicyRules = new HashMap<String, List<String>>();
+				forallPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] { "read", "download" }));
+				authorisation.setPolicyRules(forallPolicyKey, forallPolicyRules);
+				authorisation.createPolicyTemplate("forall", "All users can read and download this content", forallPolicyKey);
+				authorisation.createPolicyTemplate("default", "Default template allows all users to read and download content", forallPolicyKey);
+				
+				logger.log(Level.FINE, "create [authentified] authorisation policy template");
+				String authentifiedPolicyKey = UUID.randomUUID().toString();
+				authorisation.createPolicy(authentifiedPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
+				Map<String, List<String>> authentifiedPolicyRules = new HashMap<String, List<String>>();
+				authentifiedPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] { "read" }));
+				authentifiedPolicyRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[] { "read", "download" }));
+				authorisation.setPolicyRules(authentifiedPolicyKey, authentifiedPolicyRules);
+				authorisation.createPolicyTemplate("authentified", "All users can read this content but download is restricted to authentified users only", authentifiedPolicyKey);
+				
+				logger.log(Level.FINE, "create [esr] authorisation policy template");
+				String esrPolicyKey = UUID.randomUUID().toString();
+				authorisation.createPolicy(esrPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
+				Map<String, List<String>> esrPolicyRules = new HashMap<String, List<String>>();
+				esrPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] { "read" }));
+				esrPolicyRules.put(MembershipService.ESR_GROUP_KEY, Arrays.asList(new String[] { "read", "download" }));
+				authorisation.setPolicyRules(esrPolicyKey, esrPolicyRules);
+				authorisation.createPolicyTemplate("esr", "All users can read this content but download is restricted to ESR users only", esrPolicyKey);
+				
+				logger.log(Level.FINE, "create [restricted] authorisation policy template");
+				String restrictedPolicyKey = UUID.randomUUID().toString();
+				authorisation.createPolicy(restrictedPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
+				Map<String, List<String>> restrictedPolicyRules = new HashMap<String, List<String>>();
+				restrictedPolicyRules.put("${workspace.members}", Arrays.asList(new String[] { "read", "download" }));
+				authorisation.setPolicyRules(restrictedPolicyKey, restrictedPolicyRules);
+				authorisation.createPolicyTemplate("restricted", "Only workspace members can read and download this content, all other users cannot see this content", restrictedPolicyKey);
+				
 
 				logger.log(Level.FINE, "import process types");
 				runtime.importProcessTypes();

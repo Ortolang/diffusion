@@ -71,7 +71,6 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import fr.ortolang.diffusion.api.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
-import fr.ortolang.diffusion.api.rest.template.Template;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
@@ -102,8 +101,7 @@ public class RuntimeResource {
 	
 	@GET
 	@Path("/types")
-	@Template(template = "runtime/types.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response listDefinitions() throws RuntimeServiceException {
 		logger.log(Level.INFO, "GET /runtime/types");
 		List<ProcessType> types = runtime.listProcessTypes();
@@ -120,8 +118,7 @@ public class RuntimeResource {
 	
 	@GET
 	@Path("/processes")
-	@Template(template = "runtime/processes.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response listProcesses(@QueryParam("state") String state) throws RuntimeServiceException, AccessDeniedException {
 		logger.log(Level.INFO, "GET /runtime/processes");
 		List<Process> instances;
@@ -233,8 +230,7 @@ public class RuntimeResource {
 	
 	@GET
 	@Path("/processes/{key}")
-	@Template(template = "runtime/process.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response listInstances(@PathParam("key") String key) throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
 		logger.log(Level.INFO, "GET /runtime/processes/" + key);
 		Process process = runtime.readProcess(key);
@@ -244,8 +240,7 @@ public class RuntimeResource {
 	
 	@GET
 	@Path("/tasks")
-	@Template(template = "runtime/tasks.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response listCandidateTasks() throws RuntimeServiceException, AccessDeniedException {
 		logger.log(Level.INFO, "GET /runtime/tasks");
 		List<HumanTask> ctasks = runtime.listCandidateTasks();

@@ -441,11 +441,11 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			TemplateEngine.evaluate(params, writer, "import-metadata", new InputStreamReader(is));
 			String sha1 = getCoreService().put(new ByteArrayInputStream(writer.toString().getBytes()));
 			is.close();
-			String[] mdname = parseMetadataName(path);
-			getCoreService().createMetadataObject(wskey, mdname[2], mdname[0], sha1);
+//			String[] mdname = parseMetadataName(path);
+//			getCoreService().createMetadataObject(wskey, mdname[2], mdname[0], sha1);
 		} catch (IOException e) {
 			logger.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException | DataCollisionException e) {
 			throw new RuntimeEngineTaskException("Error creating metadata for path [" + path + "]", e);
 		} 
 	}
@@ -458,11 +458,11 @@ public class ImportWorkspaceTask extends RuntimeEngineTask {
 			String sha1 = getCoreService().put(new ByteArrayInputStream(writer.toString().getBytes()));
 			is.close();
 			String[] mdname = parseMetadataName(path);
-			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, mdname[2]);
-			getCoreService().updateMetadataObject(wskey, mdname[2], mdname[0], mdname[1], sha1);
+//			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, mdname[2]);
+//			getCoreService().updateMetadataObject(wskey, mdname[2], mdname[0], mdname[1], sha1);
 		} catch (IOException e) {
 			logger.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException | DataCollisionException e) {
 			throw new RuntimeEngineTaskException("Error updating metadata for path [" + path + "]", e);
 		} 
 	}

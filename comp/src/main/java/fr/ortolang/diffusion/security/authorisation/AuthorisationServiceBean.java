@@ -53,11 +53,13 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicy;
+import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 
 @Local(AuthorisationService.class)
 @Stateless(name = AuthorisationService.SERVICE_NAME)
@@ -89,6 +91,42 @@ public class AuthorisationServiceBean implements AuthorisationService {
 
 	public void setSessionContext(SessionContext ctx) {
 		this.ctx = ctx;
+	}
+
+	@Override
+	public void createPolicyTemplate(String name, String description, String policykey) throws AuthorisationServiceException {
+		logger.log(Level.FINE, "creating authorisation policy template with name [" + name + "]");
+		AuthorisationPolicy policy = em.find(AuthorisationPolicy.class, policykey);
+		if (policy == null) {
+			throw new AuthorisationServiceException("unable to find security policy for policykey [" + policykey + "] in the storage");
+		}
+		AuthorisationPolicyTemplate template = em.find(AuthorisationPolicyTemplate.class, name);
+		if (template != null) {
+			throw new AuthorisationServiceException("a security policy template already exists for name [" + name + "] in the storage");
+		}
+		template = new AuthorisationPolicyTemplate();
+		template.setName(name);
+		template.setDescription(description);
+		template.setTemplate(policykey);
+		em.persist(template);
+	}
+	
+	@Override
+	public AuthorisationPolicyTemplate getPolicyTemplate(String name) throws AuthorisationServiceException {
+		logger.log(Level.FINE, "getting authorisation policy template with name [" + name + "]");
+		AuthorisationPolicyTemplate template = em.find(AuthorisationPolicyTemplate.class, name);
+		if (template == null) {
+			throw new AuthorisationServiceException("unable to find security policy template with name [" + name + "] in the storage");
+		}
+		return template;
+	}
+
+	@Override
+	public List<AuthorisationPolicyTemplate> listPolicyTemplates() throws AuthorisationServiceException {
+		logger.log(Level.FINE, "listing all authorisation policy templates");
+		TypedQuery<AuthorisationPolicyTemplate> query = em.createNamedQuery("findAllAuthorisationPolicyTemplate", AuthorisationPolicyTemplate.class);
+		List<AuthorisationPolicyTemplate> results = query.getResultList();
+		return results;
 	}
 
 	@Override

@@ -57,9 +57,13 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 
 public abstract class RuntimeEngineTask implements JavaDelegate {
 
+	public static final String PRETEND = "pretend";
+	
 	public static final String BAG_PATH_PARAM_NAME = "bagpath";
 	public static final String BAG_VERSIONS_PARAM_NAME = "bagversions";
 	public static final String BAG_VERSION_PARAM_NAME = "bagversion";
+	
+	public static final String IMPORT_OPERATIONS_PARAM_NAME = "operations";
 
 	public static final String ROOT_COLLECTION_PARAM_NAME = "root";
 	public static final String SNAPSHOT_NAME_PARAM_NAME = "snapshot";

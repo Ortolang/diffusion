@@ -36,9 +36,54 @@ package fr.ortolang.diffusion.api.rest.object;
  * #L%
  */
 
-import fr.ortolang.diffusion.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import javax.ejb.EJB;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
+
+import org.apache.commons.io.IOUtils;
+
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectInfos;
+import fr.ortolang.diffusion.OrtolangObjectProperty;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.OrtolangObjectVersion;
+import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.api.rest.DiffusionUriBuilder;
-import fr.ortolang.diffusion.api.rest.template.Template;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
@@ -46,7 +91,12 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.*;
+import fr.ortolang.diffusion.core.entity.CollectionElement;
+import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
+import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.search.SearchService;
@@ -56,25 +106,6 @@ import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authentication.TicketHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
-import org.apache.commons.io.IOUtils;
-
-import javax.ejb.EJB;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 /**
  * @resourceDescription Operations on Objects
@@ -117,8 +148,7 @@ public class ObjectResource {
 	 * @throws BrowserServiceException
 	 */
 	@GET
-	@Template(template = "objects/list.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit,
 			@QueryParam(value = "service") String service, @QueryParam(value = "type") String type,
 			@DefaultValue(value = "false") @QueryParam(value = "items") boolean itemsOnly, @QueryParam(value = "status") String status) throws BrowserServiceException {
@@ -158,8 +188,7 @@ public class ObjectResource {
 	 */
 	@GET
 	@Path("/{key}")
-	@Template(template = "objects/detail.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 	public Response get(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, SecurityServiceException,
 			OrtolangException {
 		logger.log(Level.INFO, "GET /objects/" + key);
@@ -401,8 +430,7 @@ public class ObjectResource {
 
 	@GET
 	@Path("/semantic")
-	@Template(template = "semantic/query.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON })
 	public Response semanticSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
 		logger.log(Level.INFO, "GET /objects/semantic?query=" + query);
 		if (query != null && query.length() > 0) {
@@ -422,8 +450,7 @@ public class ObjectResource {
 
 	@GET
 	@Path("/index")
-	@Template(template = "index/query.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
 		logger.log(Level.INFO, "searching objects with plain text query: " + query);
 		List<OrtolangSearchResult> results;
@@ -437,8 +464,7 @@ public class ObjectResource {
 
 	@GET
 	@Path("/json")
-	@Template(template = "json/query.vm", types = { MediaType.TEXT_HTML })
-	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_HTML })
+	@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
 	public Response jsonSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
 		logger.log(Level.INFO, "searching objects with json query: " + query);
 		List<String> results;

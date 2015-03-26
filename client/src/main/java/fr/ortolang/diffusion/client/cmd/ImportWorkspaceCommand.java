@@ -62,7 +62,7 @@ public class ImportWorkspaceCommand extends Command {
 			} else {
 				help();
 			}
-
+			
 			OrtolangClient client = OrtolangClient.getInstance();
 			if ( username.length() > 0 ) {
 				client.getAccountManager().setCredentials(username, password);

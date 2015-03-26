@@ -1709,20 +1709,11 @@ public class CoreServiceBean implements CoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createMetadataObject(String workspace, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException,
-			AccessDeniedException {
-		
-		String lastMetadataFormat = findLastMetadataFormatByName(name);
-		createMetadataObject(workspace, path, name, lastMetadataFormat, hash);
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createMetadataObject(String workspace, String path, String name, String formatKey, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException,
-			AccessDeniedException {
+			AccessDeniedException, MetadataFormatException {
 		String key = UUID.randomUUID().toString();
 		
 		try {
-			createMetadataObject(workspace, key, path, name, formatKey, hash);
+			createMetadataObject(workspace, key, path, name, hash);
 		} catch ( KeyAlreadyExistsException e ) {
 			ctx.setRollbackOnly();
 			logger.log(Level.WARNING, "the generated key already exists : " + key);
@@ -1731,8 +1722,8 @@ public class CoreServiceBean implements CoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createMetadataObject(String workspace, String key, String path, String name, String formatKey, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
-			AccessDeniedException {
+	public void createMetadataObject(String workspace, String key, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
+			AccessDeniedException, MetadataFormatException {
 		logger.log(Level.FINE, "create metadataobject with key [" + key + "] into workspace [" + workspace + "] for path [" + path + "] with name [" + name + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
@@ -1789,21 +1780,14 @@ public class CoreServiceBean implements CoreService {
 				meta.setStream("");
 			}
 			
-			if(formatKey!=null) {
-				MetadataFormat metaFormat = readMetadataFormat(formatKey);
-				if(metaFormat==null) {
-					logger.log(Level.SEVERE, "Unable to load Metadata format with key ["+formatKey+"]");
-					throw new CoreServiceException("Unable to load Metadata format with key ["+formatKey+"].");
-				}
-				if(!validateMetadata(meta, metaFormat)) {
-					throw new CoreServiceException("the metadata is not valid with metadata format ["+name+"].");
-				}
-				meta.setFormat(formatKey);
-			} else {
-				logger.log(Level.SEVERE, "Metadata format unknown ["+name+"]");
-				throw new CoreServiceException("the metadata format is not found ["+name+"].");
+			String formatkey = findLastMetadataFormatByName(name);
+			MetadataFormat format = readMetadataFormat(formatkey);
+			if(format == null) {
+				logger.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
+				throw new CoreServiceException("unknown metadata format for name: " + name);
 			}
-			
+			validateMetadata(meta, format);
+			meta.setFormat(formatkey);
 			meta.setTarget(tkey);
 			meta.setKey(key);
 			em.persist(meta);
@@ -1937,9 +1921,8 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateMetadataObject(String workspace, String path, String name, String format, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException,
-			AccessDeniedException {
-		logger.log(Level.FINE, "updating metadata content into workspace [" + workspace + "] for path [" + path + "] and name [" + name + "] and format ["+format+"]");
+	public void updateMetadataObject(String workspace, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException {
+		logger.log(Level.FINE, "updating metadata content into workspace [" + workspace + "] for path [" + path + "] and name [" + name + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
 			PathBuilder ppath = npath.clone().parent();
@@ -2010,7 +1993,7 @@ public class CoreServiceBean implements CoreService {
 			if (cmeta == null) {
 				throw new CoreServiceException("unable to load metadata with id [" + cidentifier.getId() + "] from storage");
 			}
-			if ( !cmeta.equals(format) || !cmeta.equals(hash) ) {
+			if ( !cmeta.equals(hash) ) {
 				String tkey = ws.getHead();
 				Collection parent = null;
 				CollectionElement element = null;
@@ -2102,12 +2085,18 @@ public class CoreServiceBean implements CoreService {
 					meta.setSize(binarystore.size(hash));
 					meta.setContentType(binarystore.type(hash));
 					meta.setStream(hash);
+					String formatkey = findLastMetadataFormatByName(name);
+					MetadataFormat format = readMetadataFormat(formatkey);
+					if(format == null) {
+						logger.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
+						throw new CoreServiceException("unknown metadata format for name: " + name);
+					}
+					validateMetadata(meta, format);
+					meta.setFormat(formatkey);
+					meta.setTarget(tkey);
 				} else {
-					meta.setSize(0);
-					meta.setContentType("application/octet-stream");
-					meta.setStream("");
+					throw new CoreServiceException("unable to update a metadata with an empty content (hash is null)");
 				}
-				meta.setFormat(format);
 				em.merge(meta);
 
 				registry.update(mdelement.getKey());
@@ -2117,10 +2106,8 @@ public class CoreServiceBean implements CoreService {
 				registry.update(ws.getKey());
 				logger.log(Level.FINEST, "workspace set changed");
 
-				notification.throwEvent(mdelement.getKey(), caller, MetadataObject.OBJECT_TYPE,
-						OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "update"), "");
-				notification.throwEvent(tkey, caller, tidentifier.getType(),
-						OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "update-metadata"), "key=" + mdelement.getKey());
+				notification.throwEvent(mdelement.getKey(), caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "update"), "");
+				notification.throwEvent(tkey, caller, tidentifier.getType(), OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "update-metadata"), "key=" + mdelement.getKey());
 			} else {
 				logger.log(Level.FINEST, "no changes detected with current metadata object, nothing to do");
 			}
@@ -2404,7 +2391,7 @@ public class CoreServiceBean implements CoreService {
 		}
 	}
 
-	public String findLastMetadataFormatByName(String name) throws CoreServiceException {
+	private String findLastMetadataFormatByName(String name) throws CoreServiceException {
 		logger.log(Level.FINE, "finding metadata format with name [" + name + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -2423,14 +2410,10 @@ public class CoreServiceBean implements CoreService {
 		}
 	}
 	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public boolean validateMetadata(MetadataObject metadata, MetadataFormat metaFormat) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	private void validateMetadata(MetadataObject metadata, MetadataFormat format) throws CoreServiceException, MetadataFormatException {
 		try {
-//			MetadataFormat metaFormat = readMetadataFormat(metadataFormat);
-			
-			if (metaFormat.getSchema() != null && metaFormat.getSchema().length() > 0) {
-				JsonNode jsonSchema = JsonLoader.fromReader(new InputStreamReader(binarystore.get(metaFormat.getSchema())));
+			if (format.getSchema() != null && format.getSchema().length() > 0) {
+				JsonNode jsonSchema = JsonLoader.fromReader(new InputStreamReader(binarystore.get(format.getSchema())));
 				JsonNode jsonFile = JsonLoader.fromReader(new InputStreamReader(binarystore.get(metadata.getStream())));
 		        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
 		        JsonSchema schema = factory.getJsonSchema(jsonSchema);
@@ -2438,15 +2421,16 @@ public class CoreServiceBean implements CoreService {
 		        ProcessingReport report = schema.validate(jsonFile);
 		        logger.log(Level.INFO, report.toString());
 		        
-				return report.isSuccess();
+				if ( !report.isSuccess() ) {
+					throw new MetadataFormatException("invalid metadata format");
+				}
 			} else {
-				logger.log(Level.SEVERE, "unexpected error occured during validating metadata ["+metadata+"] with metadata format ["+metaFormat+"] : schema not found");
-				throw new CoreServiceException("unable to validate metadata ["+metadata+"] with metadata format ["+metaFormat+"] : schema not found");
+				logger.log(Level.SEVERE, "unexpected error occured during validating metadata [" + metadata + "] with metadata format [" + format + "] : schema not found");
+				throw new CoreServiceException("unable to validate metadata [" + metadata + "] with metadata format [" + format + "] : schema not found");
 			}
-			
 		} catch (IOException | ProcessingException | DataNotFoundException | BinaryStoreServiceException e) {
-			logger.log(Level.SEVERE, "unexpected error occured during validating metadata ["+metadata+"] with metadata format ["+metaFormat+"]", e);
-			throw new CoreServiceException("unable to validate metadata ["+metadata+"] with metadata format ["+metaFormat+"]", e);
+			logger.log(Level.SEVERE, "unexpected error occured during validating metadata [" + metadata + "] with metadata format [" + format + "] : schema not found");
+			throw new CoreServiceException("unable to validate metadata [" + metadata + "] with metadata format [" + format + "] : schema not found");
 		}
 	}
 	

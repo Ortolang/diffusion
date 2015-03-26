@@ -40,9 +40,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
+
 public interface AuthorisationService {
 	
 	public static final String SERVICE_NAME = "authorisation";
+	
+	public void createPolicyTemplate(String name, String description, String policykey) throws AuthorisationServiceException;
+	
+	public AuthorisationPolicyTemplate getPolicyTemplate(String name) throws AuthorisationServiceException;
+	
+	public List<AuthorisationPolicyTemplate> listPolicyTemplates() throws AuthorisationServiceException;
 	
 	public void createPolicy(String key, String owner) throws AuthorisationServiceException;
 	

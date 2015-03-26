@@ -77,7 +77,7 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-import fr.ortolang.diffusion.security.policies.DefaultSecurityPolicy;
+import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -234,9 +234,10 @@ public class PublicationServiceBean implements PublicationService {
 	public Map<String, Map<String, List<String>>> buildPublicationMap(String root) throws PublicationServiceException, AccessDeniedException {
 		try {
 			Map<String, Map<String, List<String>>> map = new HashMap<String, Map<String, List<String>>>();
-			builtPublicationMap(root, map, DefaultSecurityPolicy.getDefaultRules());
+			AuthorisationPolicyTemplate defaultTemplate = authorisation.getPolicyTemplate("default");
+			builtPublicationMap(root, map, authorisation.getPolicyRules(defaultTemplate.getTemplate()));
 			return map;
-		} catch (OrtolangException | KeyNotFoundException | CoreServiceException | BinaryStoreServiceException | DataNotFoundException e) {
+		} catch (OrtolangException | KeyNotFoundException | CoreServiceException | BinaryStoreServiceException | DataNotFoundException | AuthorisationServiceException e) {
 			throw new PublicationServiceException("unexpected error while trying to built publication map", e);
 		}
 	}

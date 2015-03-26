@@ -22,7 +22,3 @@ eb599ec83d383f0f25691c184f656d40384f9435  data/snapshots/3/Version 3/objects/a/o
 2b141ff6e12af000c045d5cb05a8ebd2d4e62e41  data/snapshots/2/Version 2/objects/o1.txt
 964bc67ade85531675e9c3b999ad0d15a4522801  data/snapshots/2/Version 2/objects/a/oa1.txt
 74d2094a1cae027e58ad48349efacf1bb5c7776a  data/head/metadata/a/oa1.txt/md1.txt
-b950b4f6e775a26ec1c0d70d43955c52588cf319  data/snapshots/1/Version 1/metadata/a/b/[acl]security
-b950b4f6e775a26ec1c0d70d43955c52588cf319  data/snapshots/2/Version 2/metadata/a/b/[acl]security
-b950b4f6e775a26ec1c0d70d43955c52588cf319  data/snapshots/3/Version 3/metadata/a/b/[acl]security
-b950b4f6e775a26ec1c0d70d43955c52588cf319  data/head/metadata/a/b/[acl]security
