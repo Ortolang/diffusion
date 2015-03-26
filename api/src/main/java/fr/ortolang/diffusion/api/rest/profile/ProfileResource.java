@@ -61,12 +61,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -131,12 +127,16 @@ public class ProfileResource {
 	public Response getProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, AuthorisationServiceException {
 		logger.log(Level.INFO, "GET /profiles/list");
 		GenericCollectionRepresentation<ProfileRepresentation> representation = new GenericCollectionRepresentation<ProfileRepresentation>();
-		for (Profile profile : membership.listProfiles()) {
+		List<Profile> results = membership.listProfiles();
+		for (Profile profile : results) {
 			ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
 			List<String> friends = membership.listMembers(profile.getFriends());
 			profileRepresentation.setFriends(friends.toArray(new String[friends.size()]));
 			representation.addEntry(profileRepresentation);	
 		}
+		representation.setOffset(0);
+		representation.setSize(results.size());
+		representation.setLimit(results.size());
 		return Response.ok(representation).build();
 	}
 	
@@ -159,12 +159,16 @@ public class ProfileResource {
 	public Response searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException, AuthorisationServiceException {
 		logger.log(Level.INFO, "POST /profiles/search");
 		GenericCollectionRepresentation<ProfileRepresentation> representation = new GenericCollectionRepresentation<ProfileRepresentation>();
-		for (Profile profile : membership.searchProfile(data)) {
+		List<Profile> results = membership.searchProfile(data);
+		for (Profile profile : results) {
 			ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
 			List<String> friends = membership.listMembers(profile.getFriends());
 			profileRepresentation.setFriends(friends.toArray(new String[friends.size()]));
 			representation.addEntry(profileRepresentation);			
 		}
+		representation.setOffset(0);
+		representation.setSize(results.size());
+		representation.setLimit(results.size());
 		return Response.ok(representation).build();
 	}
 
@@ -325,6 +329,9 @@ public class ProfileResource {
 			for (ProfileData info : infos) {
 				representation.addEntry(ProfileDataRepresentation.fromProfileData(info));
 			}
+			representation.setOffset(0);
+			representation.setSize(infos.size());
+			representation.setLimit(infos.size());
 			builder = Response.ok(representation);
     		builder.lastModified(lmd);
         }
