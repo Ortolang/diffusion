@@ -87,7 +87,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
 	public static final String DEFAULT_TRIPLE_HOME = "/triple-store";
 	
     
-    private Logger logger = Logger.getLogger(TripleStoreServiceBean.class.getName());
+    private static final Logger logger = Logger.getLogger(TripleStoreServiceBean.class.getName());
     private Path base;
     private static Repository repository;
     

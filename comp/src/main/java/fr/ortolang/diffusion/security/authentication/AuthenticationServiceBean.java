@@ -54,7 +54,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 @PermitAll
 public class AuthenticationServiceBean implements AuthenticationService {
 	
-	private Logger logger = Logger.getLogger(AuthenticationServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(AuthenticationServiceBean.class.getName());
 	
 	@Resource
 	private SessionContext ctx;

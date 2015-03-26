@@ -45,7 +45,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 
 	public static final String DEFAULT_JSON_HOME = "/json-store";
 
-    private Logger logger = Logger.getLogger(JsonStoreServiceBean.class.getName());
+    private static final Logger logger = Logger.getLogger(JsonStoreServiceBean.class.getName());
 
     private Path base;
     private OServer server;

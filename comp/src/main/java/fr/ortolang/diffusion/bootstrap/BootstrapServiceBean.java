@@ -92,7 +92,7 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 @RunAsPrincipal(value = MembershipService.SUPERUSER_IDENTIFIER)
 public class BootstrapServiceBean implements BootstrapService {
 
-	private static Logger logger = Logger.getLogger(BootstrapServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(BootstrapServiceBean.class.getName());
 
 	@EJB
 	private RegistryService registry;

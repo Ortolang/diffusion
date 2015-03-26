@@ -94,7 +94,12 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @PermitAll
 public class RuntimeServiceBean implements RuntimeService {
 	
-	private Logger logger = Logger.getLogger(RuntimeServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(RuntimeServiceBean.class.getName());
+	
+	private static final String[] OBJECT_TYPE_LIST = new String[] { Process.OBJECT_TYPE };
+	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
+			{ Process.OBJECT_TYPE, "read,update,delete,start" } };
+	
 	
 	@EJB
 	private RegistryService registry;
@@ -395,12 +400,17 @@ public class RuntimeServiceBean implements RuntimeService {
 
 	@Override
 	public String[] getObjectTypeList() {
-		return RuntimeService.OBJECT_TYPE_LIST;
+		return OBJECT_TYPE_LIST;
 	}
 
 	@Override
 	public String[] getObjectPermissionsList(String type) throws OrtolangException {
-		return new String[] {};
+		for (int i = 0; i < OBJECT_PERMISSIONS_LIST.length; i++) {
+			if (OBJECT_PERMISSIONS_LIST[i][0].equals(type)) {
+				return OBJECT_PERMISSIONS_LIST[i][1].split(",");
+			}
+		}
+		throw new OrtolangException("Unable to find object permissions list for object type : " + type);
 	}
 
 	@Override

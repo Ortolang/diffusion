@@ -67,7 +67,7 @@ import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 @PermitAll
 public class RegistryServiceBean implements RegistryService {
 
-	private Logger logger = Logger.getLogger(RegistryServiceBean.class.getName());
+	private static final  Logger logger = Logger.getLogger(RegistryServiceBean.class.getName());
 	
 	@PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;

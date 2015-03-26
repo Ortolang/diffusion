@@ -74,7 +74,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @PermitAll
 public class SecurityServiceBean implements SecurityService {
 
-	private Logger logger = Logger.getLogger(SecurityServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(SecurityServiceBean.class.getName());
 
 	@Resource
 	private SessionContext ctx;

@@ -91,7 +91,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 
 	public static final String DEFAULT_INDEX_HOME = "/index-store";
 
-	private static Logger logger = Logger.getLogger(IndexStoreServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(IndexStoreServiceBean.class.getName());
 
 	private Path base;
 	private Analyzer analyzer;

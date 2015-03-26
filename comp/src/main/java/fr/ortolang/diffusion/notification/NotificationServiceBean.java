@@ -61,7 +61,7 @@ import fr.ortolang.diffusion.OrtolangEvent;
 @PermitAll
 public class NotificationServiceBean implements NotificationService {
 	
-	private Logger logger = Logger.getLogger(NotificationServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(NotificationServiceBean.class.getName());
 	
 	@Resource(mappedName = "java:jboss/exported/jms/topic/notification")
 	private Topic notificationTopic;

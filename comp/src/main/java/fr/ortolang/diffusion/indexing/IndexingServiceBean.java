@@ -56,7 +56,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 @PermitAll
 public class IndexingServiceBean implements IndexingService {
 	
-	private Logger logger = Logger.getLogger(IndexingServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(IndexingServiceBean.class.getName());
 	
 	@Resource(mappedName = "java:jboss/exported/jms/topic/indexing")
 	private Topic indexingTopic;

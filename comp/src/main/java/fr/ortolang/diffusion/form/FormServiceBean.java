@@ -83,8 +83,12 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @PermitAll
 public class FormServiceBean implements FormService {
 
-	private Logger logger = Logger.getLogger(FormServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(FormServiceBean.class.getName());
 
+	private static final String[] OBJECT_TYPE_LIST = new String[] { Form.OBJECT_TYPE };
+	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
+		{ Form.OBJECT_TYPE, "read,update,delete" }};
+	
 	@EJB
 	private RegistryService registry;
 	@EJB

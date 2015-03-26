@@ -80,8 +80,11 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @PermitAll
 public class BrowserServiceBean implements BrowserService {
 
-	private Logger logger = Logger.getLogger(BrowserServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(BrowserServiceBean.class.getName());
 
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+	private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+	
 	@EJB
 	private RegistryService registry;
 	@EJB
@@ -291,12 +294,12 @@ public class BrowserServiceBean implements BrowserService {
 
 	@Override
 	public String[] getObjectTypeList() {
-		return BrowserService.OBJECT_TYPE_LIST;
+		return OBJECT_TYPE_LIST;
 	}
 
 	@Override
 	public String[] getObjectPermissionsList(String type) throws OrtolangException {
-		return new String[] {};
+		return OBJECT_PERMISSIONS_LIST;
 	}
 
 	@Override

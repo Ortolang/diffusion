@@ -119,8 +119,16 @@ import fr.ortolang.diffusion.store.triple.URIHelper;
 @PermitAll
 public class CoreServiceBean implements CoreService {
 
-	private Logger logger = Logger.getLogger(CoreServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(CoreServiceBean.class.getName());
 
+	private static final String[] OBJECT_TYPE_LIST = new String[] { Workspace.OBJECT_TYPE, DataObject.OBJECT_TYPE, Collection.OBJECT_TYPE, Link.OBJECT_TYPE, MetadataObject.OBJECT_TYPE };
+	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
+		{ Workspace.OBJECT_TYPE, "read,update,delete,snapshot" },
+		{ DataObject.OBJECT_TYPE, "read,update,delete,download" },
+		{ Collection.OBJECT_TYPE, "read,update,delete,download" },
+		{ Link.OBJECT_TYPE, "read,update,delete,download" },
+		{ MetadataObject.OBJECT_TYPE, "read,update,delete,download"}}; 
+	
 	@EJB
 	private RegistryService registry;
 	@EJB

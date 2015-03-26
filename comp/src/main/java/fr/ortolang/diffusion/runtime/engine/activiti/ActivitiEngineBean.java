@@ -94,7 +94,7 @@ import fr.ortolang.diffusion.runtime.entity.ProcessType;
 @PermitAll
 public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener {
 
-	private Logger logger = Logger.getLogger(ActivitiEngineBean.class.getName());
+	private static final Logger logger = Logger.getLogger(ActivitiEngineBean.class.getName());
 
 	@Resource
 	private ManagedScheduledExecutorService scheduledExecutor;

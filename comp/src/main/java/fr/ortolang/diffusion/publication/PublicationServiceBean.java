@@ -88,8 +88,11 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 @PermitAll
 public class PublicationServiceBean implements PublicationService {
 
-	private Logger logger = Logger.getLogger(PublicationServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(PublicationServiceBean.class.getName());
 
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+	private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+	
 	@EJB
 	private RegistryService registry;
 	@EJB
@@ -265,12 +268,12 @@ public class PublicationServiceBean implements PublicationService {
 
 	@Override
 	public String[] getObjectTypeList() {
-		return PublicationService.OBJECT_TYPE_LIST;
+		return OBJECT_TYPE_LIST;
 	}
 
 	@Override
 	public String[] getObjectPermissionsList(String type) throws OrtolangException {
-		return new String[] {};
+		return OBJECT_PERMISSIONS_LIST;
 	}
 
 	@Override

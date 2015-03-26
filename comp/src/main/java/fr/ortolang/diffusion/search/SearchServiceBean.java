@@ -76,7 +76,10 @@ import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 @PermitAll
 public class SearchServiceBean implements SearchService {
 
-	private Logger logger = Logger.getLogger(SearchServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(SearchServiceBean.class.getName());
+	
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+	private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
 	
 	@EJB
 	private MembershipService membership;
@@ -159,12 +162,12 @@ public class SearchServiceBean implements SearchService {
 
 	@Override
 	public String[] getObjectTypeList() {
-		return SearchService.OBJECT_TYPE_LIST;
+		return OBJECT_TYPE_LIST;
 	}
 
 	@Override
 	public String[] getObjectPermissionsList(String type) throws OrtolangException {
-		return new String[] {};
+		return OBJECT_PERMISSIONS_LIST;
 	}
 
 	@Override

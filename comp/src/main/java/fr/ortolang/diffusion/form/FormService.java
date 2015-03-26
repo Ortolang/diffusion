@@ -47,9 +47,6 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 public interface FormService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "form";
-	public static final String[] OBJECT_TYPE_LIST = new String[] { Form.OBJECT_TYPE };
-	public static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
-		{ Form.OBJECT_TYPE, "read,update,delete" }};
 	
 	public List<Form> listForms() throws FormServiceException;
 	

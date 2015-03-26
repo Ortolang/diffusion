@@ -94,8 +94,13 @@ import fr.ortolang.diffusion.store.triple.URIHelper;
 @PermitAll
 public class MembershipServiceBean implements MembershipService {
 
-	private Logger logger = Logger.getLogger(MembershipServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(MembershipServiceBean.class.getName());
 
+	private static final String[] OBJECT_TYPE_LIST = new String[] { Group.OBJECT_TYPE, Profile.OBJECT_TYPE };
+	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
+		{ Profile.OBJECT_TYPE, "read,update,delete" },
+		{ Group.OBJECT_TYPE, "read,update,delete" }};
+	
 	@EJB
 	private RegistryService registry;
 	@EJB

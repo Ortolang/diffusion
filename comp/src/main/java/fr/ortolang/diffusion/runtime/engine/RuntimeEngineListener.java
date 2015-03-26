@@ -39,19 +39,14 @@ package fr.ortolang.diffusion.runtime.engine;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
-
-import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
-import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 
 public class RuntimeEngineListener {
 
-	private Logger logger = Logger.getLogger(RuntimeEngineListener.class.getName());
+	private static final Logger logger = Logger.getLogger(RuntimeEngineListener.class.getName());
 
 	private RuntimeService runtime;
 

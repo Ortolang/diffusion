@@ -79,7 +79,7 @@ import fr.ortolang.diffusion.OrtolangConfig;
 @PermitAll
 public class HandleStoreServiceBean implements HandleStoreService {
 
-	private static Logger logger = Logger.getLogger(HandleStoreServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(HandleStoreServiceBean.class.getName());
 
 	private PrivateKey privkey = null;
 	private HandleResolver resolver;

@@ -67,7 +67,7 @@ import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTe
 @PermitAll
 public class AuthorisationServiceBean implements AuthorisationService {
 
-	private Logger logger = Logger.getLogger(AuthorisationServiceBean.class.getName());
+	private static final Logger logger = Logger.getLogger(AuthorisationServiceBean.class.getName());
 
 	@PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;

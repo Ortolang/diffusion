@@ -52,8 +52,6 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 public interface BrowserService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "browser";
-	public static final String[] OBJECT_TYPE_LIST = new String[] { };
-	public static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { };
 	
 	public List<String> list(int limit, int offset, String service, String type, OrtolangObjectState.Status status, boolean itemsOnly) throws BrowserServiceException;
 	

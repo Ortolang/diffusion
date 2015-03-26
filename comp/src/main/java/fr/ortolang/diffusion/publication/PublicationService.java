@@ -45,7 +45,6 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 public interface PublicationService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "publication";
-	public static final String[] OBJECT_TYPE_LIST = new String[] { };
 	
 	public void publish(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException;
 	

@@ -51,9 +51,6 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 public interface RuntimeService extends OrtolangService {
 
 	public static final String SERVICE_NAME = "runtime";
-	public static final String[] OBJECT_TYPE_LIST = new String[] { Process.OBJECT_TYPE };
-	public static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
-			{ Process.OBJECT_TYPE, "read,update,delete,start" } };
 	
 	public void importProcessTypes() throws RuntimeServiceException;
 	

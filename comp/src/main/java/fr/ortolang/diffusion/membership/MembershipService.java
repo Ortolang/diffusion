@@ -52,10 +52,6 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 public interface MembershipService extends OrtolangService, OrtolangIndexableService {
 	
 	public static final String SERVICE_NAME = "membership";
-	public static final String[] OBJECT_TYPE_LIST = new String[] { Group.OBJECT_TYPE, Profile.OBJECT_TYPE };
-	public static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
-		{ Profile.OBJECT_TYPE, "read,update,delete" },
-		{ Group.OBJECT_TYPE, "read,update,delete" }};
 	
 	public static final String UNAUTHENTIFIED_IDENTIFIER = "anonymous";
 	public static final String SUPERUSER_IDENTIFIER = "root";
