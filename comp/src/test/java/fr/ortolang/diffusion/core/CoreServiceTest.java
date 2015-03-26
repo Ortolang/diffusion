@@ -70,6 +70,7 @@ import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -547,7 +548,7 @@ public class CoreServiceTest {
 	}
 
 	@Test
-	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException {
+	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException, InvalidPathException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -557,9 +558,6 @@ public class CoreServiceTest {
 			} catch (ProfileAlreadyExistsException e) {
 				logger.log(Level.INFO, "Profile user1 already exists !!");
 			}
-
-			String wsk = UUID.randomUUID().toString();
-			core.createWorkspace(wsk, "WorkspaceCollection", "test");
 
 			InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
 			String schemaHash = core.put(schemaInputStream);
@@ -576,8 +574,18 @@ public class CoreServiceTest {
 			
 			List<String> findMf = core.findMetadataFormatByName("ortolang-item-json");
 			assertEquals(1, findMf.size());
+
+			String wsk = UUID.randomUUID().toString();
+			core.createWorkspace(wsk, "WorkspaceCollection", "test");
+
+			String metak = UUID.randomUUID().toString();
+			InputStream metadataInputStream = getClass().getClassLoader().getResourceAsStream("json/meta.json");
+			String metadataHash = core.put(metadataInputStream);
+			core.createMetadataObject(wsk, metak, "/", mf.getName(), mf.getKey(), metadataHash);
+			MetadataObject metadata = core.readMetadataObject(key);
 			
-			
+			boolean valid = core.validateMetadata(metadata, mf);
+			assertTrue(valid);
 			
 		} finally {
 			loginContext.logout();
