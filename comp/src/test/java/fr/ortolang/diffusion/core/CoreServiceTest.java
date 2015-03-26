@@ -129,6 +129,7 @@ public class CoreServiceTest {
 		jar.addAsResource("ontology/lexvo_2013-02-09.rdf");
 		jar.addAsResource("ontology/rdfs.xml");
 		jar.addAsResource("schema/ortolang-item-schema.json");
+		jar.addAsResource("json/meta.json");
 		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
 		logger.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
 
@@ -582,7 +583,7 @@ public class CoreServiceTest {
 			InputStream metadataInputStream = getClass().getClassLoader().getResourceAsStream("json/meta.json");
 			String metadataHash = core.put(metadataInputStream);
 			core.createMetadataObject(wsk, metak, "/", mf.getName(), mf.getKey(), metadataHash);
-			MetadataObject metadata = core.readMetadataObject(key);
+			MetadataObject metadata = core.readMetadataObject(metak);
 			
 			boolean valid = core.validateMetadata(metadata, mf);
 			assertTrue(valid);
