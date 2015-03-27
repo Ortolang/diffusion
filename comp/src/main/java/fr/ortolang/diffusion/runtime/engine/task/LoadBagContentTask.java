@@ -80,7 +80,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		LOGGER.log(Level.INFO, "- import script generated : \r\n" + builder.toString());
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import script generated"));
 		execution.setVariable(BAG_VERSIONS_PARAM_NAME, versions);
-		execution.setVariable(IMPORT_OPERATIONS_PARAM_NAME, builder);
+		execution.setVariable(IMPORT_OPERATIONS_PARAM_NAME, builder.toString());
 	}
 	
 	@Override
@@ -153,7 +153,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		try {
 			Properties props = new Properties();
 			props.load(propFile.newInputStream());
-			builder.append("create-workspace\t").append(props.getProperty("alias")).append("\t").append(props.getProperty("name")).append("\t").append(props.getProperty("type")).append("\t");
+			builder.append("create-workspace\t").append(props.getProperty("alias")).append("\t").append(props.getProperty("name")).append("\t").append(props.getProperty("type")).append("\r\n");
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to append workspace informations", e);
 			throw new RuntimeEngineTaskException("unable to append workspace informations", e);

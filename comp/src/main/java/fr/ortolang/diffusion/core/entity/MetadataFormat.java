@@ -5,38 +5,30 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.Transient;
 import javax.persistence.Version;
 
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.core.CoreService;
-
 @Entity
-@NamedQueries({
-	@NamedQuery(name="listMetadataFormat", query="select f from MetadataFormat f"),
-	@NamedQuery(name="findMetadataFormatByName", query="select f from MetadataFormat f where f.name = :name"),
-	@NamedQuery(name="findLastMetadataFormatByName", query="select f from MetadataFormat f where f.name = :name order by f.serialNumber desc")
-})
-@SuppressWarnings("serial")
-public class MetadataFormat extends OrtolangObject {
+@NamedQueries({ @NamedQuery(name = "listMetadataFormat", query = "select f from MetadataFormat f"),
+		@NamedQuery(name = "findMetadataFormatForName", query = "select f from MetadataFormat f where f.name = :name order by f.serial desc") })
+public class MetadataFormat {
 
-	public static final String OBJECT_TYPE = "metadataFormat";
 	@Id
 	private String id;
 	@Version
 	private long version;
-	@Transient
-	private String key;
+	private int serial;
 	private String name;
-	@Column(length=2500)
+	@Column(length = 2500)
 	private String description;
 	private long size;
 	private String mimeType;
 	private String schema;
 	private String form;
-	private int serialNumber; 
-	
+
+	public MetadataFormat() {
+		serial = 1;
+	}
+
 	public String getId() {
 		return id;
 	}
@@ -51,14 +43,6 @@ public class MetadataFormat extends OrtolangObject {
 
 	public void setVersion(long version) {
 		this.version = version;
-	}
-
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
 	}
 
 	public String getName() {
@@ -77,22 +61,6 @@ public class MetadataFormat extends OrtolangObject {
 		this.description = description;
 	}
 
-	public long getSize() {
-		return size;
-	}
-
-	public void setSize(long size) {
-		this.size = size;
-	}
-
-	public String getMimeType() {
-		return mimeType;
-	}
-
-	public void setMimeType(String mimeType) {
-		this.mimeType = mimeType;
-	}
-
 	public String getSchema() {
 		return schema;
 	}
@@ -109,28 +77,28 @@ public class MetadataFormat extends OrtolangObject {
 		this.form = form;
 	}
 
-	public int getSerialNumber() {
-		return serialNumber;
+	public long getSize() {
+		return size;
 	}
 
-	public void setSerialNumber(int serialNumber) {
-		this.serialNumber = serialNumber;
+	public void setSize(long size) {
+		this.size = size;
 	}
 
-	@Override
-	public String getObjectName() {
-		return name;
+	public String getMimeType() {
+		return mimeType;
 	}
 
-	@Override
-	public String getObjectKey() {
-		return key;
+	public void setMimeType(String mimeType) {
+		this.mimeType = mimeType;
 	}
 
-	@Override
-	public OrtolangObjectIdentifier getObjectIdentifier() {
-		return new OrtolangObjectIdentifier(CoreService.SERVICE_NAME, MetadataFormat.OBJECT_TYPE, id);
+	public int getSerial() {
+		return serial;
 	}
 
-	
+	public void setSerial(int serial) {
+		this.serial = serial;
+	}
+
 }

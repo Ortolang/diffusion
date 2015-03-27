@@ -72,6 +72,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public static final String WORKSPACE_NAME_PARAM_NAME = "wsname";
 	public static final String WORKSPACE_TYPE_PARAM_NAME = "wstype";
 	public static final String WORKSPACE_ALIAS_PARAM_NAME = "wsalias";
+	public static final String WORKSPACE_MEMBERS_PARAM_NAME = "wsmembers";
 
 	private static final Logger LOGGER = Logger.getLogger(RuntimeEngineTask.class.getName());
 

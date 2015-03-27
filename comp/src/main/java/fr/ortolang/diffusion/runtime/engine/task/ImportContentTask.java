@@ -60,7 +60,9 @@ public class ImportContentTask extends RuntimeEngineTask {
 				try {
 					switch (operation[0]) {
 						case "create-workspace":
+							wskey = UUID.randomUUID().toString();
 							createWorkspace(operation[1], operation[2], operation[3]);
+							execution.setVariable(WORKSPACE_KEY_PARAM_NAME, wskey);
 							break;
 						case "create-object":
 							createObject(bag, operation[1], operation[2], operation[3]);
@@ -69,7 +71,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 							updateObject(bag, operation[1], operation[2]);
 							break;
 						case "delete-object":
-							deleteObject(operation[1]);
+							deleteObject(operation[2]);
 							break;
 						case "create-metadata":
 							createMetadata(bag, operation[1], operation[2], operation[3]);
@@ -137,7 +139,6 @@ public class ImportContentTask extends RuntimeEngineTask {
 	}
 	
 	private void createWorkspace(String alias, String name, String type) throws RuntimeEngineTaskException {
-		String wskey = UUID.randomUUID().toString();
 		try {
 			getCoreService().createWorkspace(wskey, alias, name, type);
 		} catch (Exception e) {

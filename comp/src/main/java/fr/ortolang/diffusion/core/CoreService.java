@@ -71,6 +71,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
 	public void snapshotWorkspace(String wskey, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
+	//public void publishWorkspace(String wskey, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
 	public void deleteWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, KeyNotFoundException, AccessDeniedException;
 
 	public List<String> findWorkspacesForProfile(String profile) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
@@ -137,20 +139,19 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	public void updateMetadataObject(String wskey, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException;
 	
-	//TODO in case of format migration : 
-	//public void updateMetadataObject(String wskey, String path, String name, String format, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException;
-	
 	public void deleteMetadataObject(String wskey, String path, String name) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
 
 	/*MetadataFormat*/
 	
+	public String createMetadataFormat(String name, String description, String schema, String form) throws CoreServiceException;
+	
+	public MetadataFormat getMetadataFormat(String name) throws CoreServiceException;
+	
+	public MetadataFormat findMetadataFormatById(String id) throws CoreServiceException;
+	
 	public List<MetadataFormat> listMetadataFormat() throws CoreServiceException;
 	
-	public MetadataFormat readMetadataFormat(String key) throws CoreServiceException, KeyNotFoundException;
-	
-	public void createMetadataFormat(String name, String description, String scheamHash, String formKey) throws CoreServiceException;
-
-	public List<String> findMetadataFormatByName(String name) throws CoreServiceException, KeyNotFoundException;
+	public List<MetadataFormat> listAllMetadataFormat() throws CoreServiceException;
 	
 	/*BinaryContent*/
 	

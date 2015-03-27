@@ -36,7 +36,6 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -122,13 +121,9 @@ public class CoreServiceBean implements CoreService {
 	private static final Logger LOGGER = Logger.getLogger(CoreServiceBean.class.getName());
 
 	private static final String[] OBJECT_TYPE_LIST = new String[] { Workspace.OBJECT_TYPE, DataObject.OBJECT_TYPE, Collection.OBJECT_TYPE, Link.OBJECT_TYPE, MetadataObject.OBJECT_TYPE };
-	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
-		{ Workspace.OBJECT_TYPE, "read,update,delete,snapshot" },
-		{ DataObject.OBJECT_TYPE, "read,update,delete,download" },
-		{ Collection.OBJECT_TYPE, "read,update,delete,download" },
-		{ Link.OBJECT_TYPE, "read,update,delete,download" },
-		{ MetadataObject.OBJECT_TYPE, "read,update,delete,download"}}; 
-	
+	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { { Workspace.OBJECT_TYPE, "read,update,delete,snapshot" }, { DataObject.OBJECT_TYPE, "read,update,delete,download" },
+			{ Collection.OBJECT_TYPE, "read,update,delete,download" }, { Link.OBJECT_TYPE, "read,update,delete" }, { MetadataObject.OBJECT_TYPE, "read,update,delete,download" } };
+
 	@EJB
 	private RegistryService registry;
 	@EJB
@@ -204,7 +199,7 @@ public class CoreServiceBean implements CoreService {
 	}
 
 	/* Workspace */
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createWorkspace(String wskey, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
@@ -221,7 +216,7 @@ public class CoreServiceBean implements CoreService {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkAuthentified(subjects);
-			
+
 			String members = UUID.randomUUID().toString();
 			membership.createGroup(members, name + "'s Members", "Members of a workspace have all permissions on workspace content");
 			membership.addMemberInGroup(members, caller);
@@ -237,21 +232,21 @@ public class CoreServiceBean implements CoreService {
 
 			registry.register(head, collection.getObjectIdentifier(), caller);
 			registry.itemify(head);
-			
+
 			Map<String, List<String>> rules = new HashMap<String, List<String>>();
 			rules.put(members, Arrays.asList("read", "create", "update", "delete", "download"));
 			authorisation.createPolicy(head, members);
 			authorisation.setPolicyRules(head, rules);
-			
+
 			List<Workspace> results = em.createNamedQuery("findWorkspaceByAlias", Workspace.class).setParameter("alias", alias).getResultList();
-			if ( results.size() > 0 ) {
+			if (results.size() > 0) {
 				ctx.setRollbackOnly();
 				throw new CoreServiceException("a workspace with alias [" + alias + "] already exists in storage");
 			}
 			PathBuilder palias = null;
 			try {
 				palias = PathBuilder.fromPath(alias);
-				if ( palias.isRoot() || palias.depth() > 1 ) {
+				if (palias.isRoot() || palias.depth() > 1) {
 					throw new InvalidPathException("incorrect depth for an alias path");
 				}
 			} catch (InvalidPathException e) {
@@ -268,14 +263,14 @@ public class CoreServiceBean implements CoreService {
 			workspace.setChanged(true);
 			workspace.setMembers(members);
 			em.persist(workspace);
-			
+
 			registry.register(wskey, workspace.getObjectIdentifier(), caller);
-			
+
 			Map<String, List<String>> wsrules = new HashMap<String, List<String>>();
 			wsrules.put(members, Arrays.asList("read"));
 			authorisation.createPolicy(wskey, caller);
 			authorisation.setPolicyRules(wskey, wsrules);
-			
+
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "create"), "");
 			notification.throwEvent(head, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
@@ -288,7 +283,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to create workspace with key [" + wskey + "]", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Workspace readWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
@@ -306,7 +301,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
 			workspace.setKey(wskey);
-			//em.detach(workspace);
+			// em.detach(workspace);
 
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "read"), "");
 			return workspace;
@@ -361,7 +356,7 @@ public class CoreServiceBean implements CoreService {
 			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
 			checkObjectType(identifier, Workspace.OBJECT_TYPE);
 			authorisation.checkPermission(wskey, subjects, "update");
-			
+
 			Workspace workspace = em.find(Workspace.class, identifier.getId());
 			if (workspace == null) {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
@@ -372,7 +367,7 @@ public class CoreServiceBean implements CoreService {
 			workspace.setKey(wskey);
 			workspace.incrementClock();
 
-			if ( name.equals(Workspace.HEAD) ) {
+			if (name.equals(Workspace.HEAD)) {
 				throw new CoreServiceException("head is reserved and cannot be used as snapshot name");
 			}
 			try {
@@ -386,7 +381,7 @@ public class CoreServiceBean implements CoreService {
 			if (workspace.findSnapshotByName(name) != null) {
 				throw new CoreServiceException("the snapshot name '" + name + "' is already used in this workspace");
 			}
-			
+
 			OrtolangObjectIdentifier hidentifier = registry.lookup(workspace.getHead());
 			checkObjectType(hidentifier, Collection.OBJECT_TYPE);
 			Collection collection = em.find(Collection.class, hidentifier.getId());
@@ -401,7 +396,7 @@ public class CoreServiceBean implements CoreService {
 			workspace.setHead(clone.getKey());
 			workspace.setChanged(false);
 			em.merge(workspace);
-			
+
 			registry.update(wskey);
 
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "snapshot"), "");
@@ -452,14 +447,14 @@ public class CoreServiceBean implements CoreService {
 			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
 			checkObjectType(identifier, Workspace.OBJECT_TYPE);
 			authorisation.checkPermission(wskey, subjects, "delete");
-			
+
 			Workspace workspace = em.find(Workspace.class, identifier.getId());
 			if (workspace == null) {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
 			workspace.setAlias(null);
 			em.merge(workspace);
-			
+
 			membership.deleteGroup(workspace.getMembers());
 			registry.delete(wskey);
 
@@ -526,14 +521,14 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to resolve into workspace [" + wskey + "] path [" + path + "]", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String resolveWorkspaceMetadata(String wskey, String root, String path, String name) throws CoreServiceException, InvalidPathException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "resolving into workspace [" + wskey + "] and root [" + root + "] metadata with name [" + name + "] at path [" + path + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
-			
+
 			String key = resolveWorkspacePath(wskey, root, path);
 			OrtolangObjectIdentifier ctidentifier = registry.lookup(key);
 			if (!ctidentifier.getType().equals(Link.OBJECT_TYPE) && !ctidentifier.getType().equals(Collection.OBJECT_TYPE) && !ctidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
@@ -541,27 +536,27 @@ public class CoreServiceBean implements CoreService {
 			}
 			MetadataElement cmdelement = null;
 			switch (ctidentifier.getType()) {
-				case Collection.OBJECT_TYPE:
-					Collection collection = em.find(Collection.class, ctidentifier.getId());
-					if (collection == null) {
-						throw new CoreServiceException("unable to load collection with id [" + ctidentifier.getId() + "] from storage");
-					}
-					cmdelement = collection.findMetadataByName(name);
-					break;
-				case DataObject.OBJECT_TYPE:
-					DataObject object = em.find(DataObject.class, ctidentifier.getId());
-					if (object == null) {
-						throw new CoreServiceException("unable to load object with id [" + ctidentifier.getId() + "] from storage");
-					}
-					cmdelement = object.findMetadataByName(name);
-					break;
-				case Link.OBJECT_TYPE:
-					Link link = em.find(Link.class, ctidentifier.getId());
-					if (link == null) {
-						throw new CoreServiceException("unable to load link with id [" + ctidentifier.getId() + "] from storage");
-					}
-					cmdelement = link.findMetadataByName(name);
-					break;
+			case Collection.OBJECT_TYPE:
+				Collection collection = em.find(Collection.class, ctidentifier.getId());
+				if (collection == null) {
+					throw new CoreServiceException("unable to load collection with id [" + ctidentifier.getId() + "] from storage");
+				}
+				cmdelement = collection.findMetadataByName(name);
+				break;
+			case DataObject.OBJECT_TYPE:
+				DataObject object = em.find(DataObject.class, ctidentifier.getId());
+				if (object == null) {
+					throw new CoreServiceException("unable to load object with id [" + ctidentifier.getId() + "] from storage");
+				}
+				cmdelement = object.findMetadataByName(name);
+				break;
+			case Link.OBJECT_TYPE:
+				Link link = em.find(Link.class, ctidentifier.getId());
+				if (link == null) {
+					throw new CoreServiceException("unable to load link with id [" + ctidentifier.getId() + "] from storage");
+				}
+				cmdelement = link.findMetadataByName(name);
+				break;
 			}
 			if (cmdelement == null) {
 				throw new InvalidPathException("path [" + npath.build() + "] does not exists");
@@ -572,16 +567,16 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to resolve into workspace [" + wskey + "] metadata name [" + name + "] at [" + path + "]", e);
 		}
 	}
-	
+
 	/* Collections */
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createCollection(String wskey, String path, String description) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException {
 		String key = UUID.randomUUID().toString();
 		try {
 			createCollection(wskey, key, path, description);
-		} catch ( KeyAlreadyExistsException e ) {
+		} catch (KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.WARNING, "the generated key already exists : " + key);
 		}
@@ -589,7 +584,8 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createCollection(String wskey, String key, String path, String description) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException {
+	public void createCollection(String wskey, String key, String path, String description) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
+			AccessDeniedException {
 		LOGGER.log(Level.FINE, "creating collection with key [" + key + "] into workspace [" + wskey + "] at path [" + path + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
@@ -635,7 +631,7 @@ public class CoreServiceBean implements CoreService {
 			LOGGER.log(Level.FINEST, "collection [" + key + "] created");
 
 			registry.register(key, collection.getObjectIdentifier(), caller);
-			
+
 			authorisation.clonePolicy(key, ws.getHead());
 			LOGGER.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
 
@@ -649,10 +645,9 @@ public class CoreServiceBean implements CoreService {
 			registry.update(ws.getKey());
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
-
 			notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), "");
-		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException
-				| AuthorisationServiceException | MembershipServiceException | TreeBuilderException e) {
+		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
+				| MembershipServiceException | TreeBuilderException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occured during collection creation", e);
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to create collection into workspace [" + wskey + "] at path [" + path + "]", e);
@@ -676,7 +671,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
 			}
 			collection.setKey(key);
-			//em.detach(collection);
+			// em.detach(collection);
 
 			notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "read"), "");
 			return collection;
@@ -686,46 +681,46 @@ public class CoreServiceBean implements CoreService {
 		}
 	}
 
-    @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.FINE, "calculating size for object with key [" + key + "]");
-        try {
-            List<String> subjects = membership.getConnectedIdentifierSubjects();
-            OrtolangObjectIdentifier cidentifier = registry.lookup(key);
-            if (!cidentifier.getService().equals(CoreService.SERVICE_NAME)) {
-                throw new OrtolangException("object identifier " + cidentifier + " does not refer to service " + getServiceName());
-            }
-            OrtolangObjectSize ortolangObjectSize = new OrtolangObjectSize();
-            switch (cidentifier.getType()) {
-                case DataObject.OBJECT_TYPE: {
-                    authorisation.checkPermission(key, subjects, "read");
-                    DataObject dataObject = em.find(DataObject.class, cidentifier.getId());
-                    ortolangObjectSize.addElement(DataObject.OBJECT_TYPE, dataObject.getSize());
-                    break;
-                }
-                case Collection.OBJECT_TYPE: {
-                    ortolangObjectSize = getCollectionSize(key, cidentifier, ortolangObjectSize, subjects);
-                    break;
-                }
-                case Workspace.OBJECT_TYPE: {
-                    authorisation.checkPermission(key, subjects, "read");
-                    Workspace workspace = em.find(Workspace.class, cidentifier.getId());
-                    ortolangObjectSize = getCollectionSize(workspace.getHead(), registry.lookup(workspace.getHead()), ortolangObjectSize, subjects);
-                    for (SnapshotElement snapshotElement : workspace.getSnapshots()) {
-                        ortolangObjectSize = getCollectionSize(snapshotElement.getKey(), registry.lookup(snapshotElement.getKey()), ortolangObjectSize, subjects);
-                    }
-                    break;
-                }
-            }
-            return ortolangObjectSize;
-        } catch (CoreServiceException | MembershipServiceException | RegistryServiceException | AuthorisationServiceException e) {
-            LOGGER.log(Level.SEVERE, "unexpected error while calculating object size", e);
-            throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
-        }
-    }
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "calculating size for object with key [" + key + "]");
+		try {
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			OrtolangObjectIdentifier cidentifier = registry.lookup(key);
+			if (!cidentifier.getService().equals(CoreService.SERVICE_NAME)) {
+				throw new OrtolangException("object identifier " + cidentifier + " does not refer to service " + getServiceName());
+			}
+			OrtolangObjectSize ortolangObjectSize = new OrtolangObjectSize();
+			switch (cidentifier.getType()) {
+			case DataObject.OBJECT_TYPE: {
+				authorisation.checkPermission(key, subjects, "read");
+				DataObject dataObject = em.find(DataObject.class, cidentifier.getId());
+				ortolangObjectSize.addElement(DataObject.OBJECT_TYPE, dataObject.getSize());
+				break;
+			}
+			case Collection.OBJECT_TYPE: {
+				ortolangObjectSize = getCollectionSize(key, cidentifier, ortolangObjectSize, subjects);
+				break;
+			}
+			case Workspace.OBJECT_TYPE: {
+				authorisation.checkPermission(key, subjects, "read");
+				Workspace workspace = em.find(Workspace.class, cidentifier.getId());
+				ortolangObjectSize = getCollectionSize(workspace.getHead(), registry.lookup(workspace.getHead()), ortolangObjectSize, subjects);
+				for (SnapshotElement snapshotElement : workspace.getSnapshots()) {
+					ortolangObjectSize = getCollectionSize(snapshotElement.getKey(), registry.lookup(snapshotElement.getKey()), ortolangObjectSize, subjects);
+				}
+				break;
+			}
+			}
+			return ortolangObjectSize;
+		} catch (CoreServiceException | MembershipServiceException | RegistryServiceException | AuthorisationServiceException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error while calculating object size", e);
+			throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
+		}
+	}
 
-    @Override
+	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public String resolvePathFromCollection(String key, String path) throws KeyNotFoundException, CoreServiceException, AccessDeniedException, InvalidPathException {
 		LOGGER.log(Level.FINE, "reading collection with key [" + key + "]");
@@ -741,25 +736,25 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
 			}
 			collection.setKey(key);
-			//em.detach(collection);
+			// em.detach(collection);
 
 			PathBuilder pathTarget = PathBuilder.fromPath(path);
 			PathBuilder parentTarget = pathTarget.clone().parent();
-			
+
 			Collection parent = readCollectionAtPath(key, parentTarget);
-			
+
 			String partTarget = pathTarget.part();
-			
+
 			CollectionElement element = parent.findElementByName(partTarget);
 			if (element == null) {
-				throw new TreeBuilderException("unable to load path " + path + ", parent collection " + parent.getName() + " with key [" + parent.getKey()
-						+ " does not old an element named " + partTarget);
+				throw new TreeBuilderException("unable to load path " + path + ", parent collection " + parent.getName() + " with key [" + parent.getKey() + " does not old an element named "
+						+ partTarget);
 			}
-						
+
 			return element.getKey();
 		} catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException | TreeBuilderException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error while reading collection", e);
-			throw new CoreServiceException("unable to resolve path "+path+" from collection with key [" + key + "]", e);
+			throw new CoreServiceException("unable to resolve path " + path + " from collection with key [" + key + "]", e);
 		}
 	}
 
@@ -781,7 +776,7 @@ public class CoreServiceBean implements CoreService {
 			OrtolangObjectIdentifier wsidentifier = registry.lookup(workspace);
 			checkObjectType(wsidentifier, Workspace.OBJECT_TYPE);
 			LOGGER.log(Level.FINEST, "workspace with key [" + workspace + "] exists");
-			
+
 			Workspace ws = em.find(Workspace.class, wsidentifier.getId());
 			if (ws == null) {
 				throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
@@ -791,7 +786,7 @@ public class CoreServiceBean implements CoreService {
 
 			authorisation.checkPermission(ws.getHead(), subjects, "update");
 			LOGGER.log(Level.FINEST, "user [" + caller + "] has 'update' permission on the head collection of this workspace");
-			
+
 			String current = resolveWorkspacePath(workspace, Workspace.HEAD, npath.build());
 			OrtolangObjectIdentifier cidentifier = registry.lookup(current);
 			checkObjectType(cidentifier, Collection.OBJECT_TYPE);
@@ -800,11 +795,11 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
 			}
 			LOGGER.log(Level.FINEST, "current collection loaded");
-			
-			if ( !description.equals(ccollection.getDescription()) ) {
+
+			if (!description.equals(ccollection.getDescription())) {
 				Collection collection = loadCollectionAtPath(ws.getHead(), npath, ws.getClock());
 				LOGGER.log(Level.FINEST, "collection loaded for path " + npath.build());
-				
+
 				collection.setDescription(description);
 				em.merge(collection);
 				registry.update(collection.getKey());
@@ -815,8 +810,7 @@ public class CoreServiceBean implements CoreService {
 				registry.update(ws.getKey());
 				LOGGER.log(Level.FINEST, "workspace set changed");
 
-				notification.throwEvent(collection.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "update"),
-						"");
+				notification.throwEvent(collection.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "update"), "");
 			} else {
 				LOGGER.log(Level.FINEST, "no modification detected, doing nothing");
 			}
@@ -886,7 +880,7 @@ public class CoreServiceBean implements CoreService {
 			sparent.removeElement(selement);
 			em.merge(sparent);
 			registry.update(sparent.getKey());
-			
+
 			LOGGER.log(Level.FINEST, "parent [" + sparent.getKey() + "] has been updated");
 
 			Collection dparent = loadCollectionAtPath(ws.getHead(), dppath, ws.getClock());
@@ -916,15 +910,14 @@ public class CoreServiceBean implements CoreService {
 			registry.update(ws.getKey());
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
-			notification.throwEvent(scollection.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "move"),
-					"");
+			notification.throwEvent(scollection.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "move"), "");
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | CloneException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while moving collection", e);
 			throw new CoreServiceException("unable to move collection into workspace [" + workspace + "] from path [" + source + "] to path [" + destination + "]", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deleteCollection(String workspace, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, CollectionNotEmptyException {
@@ -933,7 +926,8 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void deleteCollection(String workspace, String path, boolean force) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, CollectionNotEmptyException {
+	public void deleteCollection(String workspace, String path, boolean force) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
+			CollectionNotEmptyException {
 		LOGGER.log(Level.FINE, "deleting collection into workspace [" + workspace + "] at path [" + path + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
@@ -976,8 +970,8 @@ public class CoreServiceBean implements CoreService {
 			}
 			leaf.setKey(element.getKey());
 			LOGGER.log(Level.FINEST, "collection exists and loaded from storage");
-			
-			if ( !leaf.isEmpty() && !force ) {
+
+			if (!leaf.isEmpty() && !force) {
 				throw new CollectionNotEmptyException("collection at path: [" + path + "] is not empty");
 			}
 
@@ -999,7 +993,7 @@ public class CoreServiceBean implements CoreService {
 				}
 				registry.delete(leaf.getKey());
 			}
-			
+
 			deleteCollectionContent(leaf, ws.getClock());
 
 			notification.throwEvent(leaf.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "delete"), "");
@@ -1009,26 +1003,25 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to delete collection into workspace [" + workspace + "] at path [" + path + "]", e);
 		}
 	}
-	
+
 	/* Data Objects */
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createDataObject(String workspace, String path, String description, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException,
-		AccessDeniedException {
+	public void createDataObject(String workspace, String path, String description, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException {
 		String key = UUID.randomUUID().toString();
 		try {
 			createDataObject(workspace, key, path, description, hash);
-		} catch ( KeyAlreadyExistsException e ) {
+		} catch (KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.WARNING, "the generated key already exists : " + key);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createDataObject(String workspace, String key, String path, String description, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
-			AccessDeniedException {
+	public void createDataObject(String workspace, String key, String path, String description, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException,
+			InvalidPathException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "create data objetc with key [" + key + "] into workspace [" + workspace + "] at path [" + path + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
@@ -1082,7 +1075,7 @@ public class CoreServiceBean implements CoreService {
 			LOGGER.log(Level.FINEST, "object [" + key + "] created");
 
 			registry.register(key, object.getObjectIdentifier(), caller);
-			
+
 			authorisation.clonePolicy(key, ws.getHead());
 			LOGGER.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
 
@@ -1096,11 +1089,10 @@ public class CoreServiceBean implements CoreService {
 			em.merge(ws);
 			registry.update(ws.getKey());
 			LOGGER.log(Level.FINEST, "workspace set changed");
-			
 
 			notification.throwEvent(key, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "create"), "");
-		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException
-				| AuthorisationServiceException | MembershipServiceException | TreeBuilderException | BinaryStoreServiceException | DataNotFoundException e) {
+		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
+				| MembershipServiceException | TreeBuilderException | BinaryStoreServiceException | DataNotFoundException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occured during object creation", e);
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to create object into workspace [" + workspace + "] at path [" + path + "]", e);
@@ -1124,7 +1116,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 			}
 			object.setKey(key);
-			//em.detach(object);
+			// em.detach(object);
 
 			notification.throwEvent(key, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "read"), "");
 			return object;
@@ -1136,8 +1128,7 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateDataObject(String workspace, String path, String description, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException,
-			AccessDeniedException {
+	public void updateDataObject(String workspace, String path, String description, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "updating object into workspace [" + workspace + "] at path [" + path + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
@@ -1164,7 +1155,7 @@ public class CoreServiceBean implements CoreService {
 
 			authorisation.checkPermission(ws.getHead(), subjects, "update");
 			LOGGER.log(Level.FINEST, "user [" + caller + "] has 'update' permission on the head collection of this workspace");
-			
+
 			String current = resolveWorkspacePath(workspace, Workspace.HEAD, npath.build());
 			OrtolangObjectIdentifier cidentifier = registry.lookup(current);
 			checkObjectType(cidentifier, DataObject.OBJECT_TYPE);
@@ -1173,8 +1164,8 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load object with id [" + cidentifier.getId() + "] from storage");
 			}
 			LOGGER.log(Level.FINEST, "current object loaded");
-			
-			if ( !description.equals(cobject.getDescription()) || !hash.equals(cobject.getStream()) ) {
+
+			if (!description.equals(cobject.getDescription()) || !hash.equals(cobject.getStream())) {
 				Collection parent = loadCollectionAtPath(ws.getHead(), ppath, ws.getClock());
 				LOGGER.log(Level.FINEST, "parent collection loaded for path " + npath.build());
 
@@ -1231,8 +1222,8 @@ public class CoreServiceBean implements CoreService {
 			} else {
 				LOGGER.log(Level.FINEST, "no changes detected with current object, nothing to do");
 			}
-		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException | TreeBuilderException
-				| BinaryStoreServiceException | DataNotFoundException | CloneException e) {
+		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
+				| TreeBuilderException | BinaryStoreServiceException | DataNotFoundException | CloneException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occured while reading object", e);
 			throw new CoreServiceException("unable to read object into workspace [" + workspace + "] at path [" + path + "]", e);
 		}
@@ -1416,15 +1407,16 @@ public class CoreServiceBean implements CoreService {
 		String key = UUID.randomUUID().toString();
 		try {
 			createLink(workspace, key, path, target);
-		} catch ( KeyAlreadyExistsException e ) {
+		} catch (KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.WARNING, "the generated key already exists : " + key);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createLink(String workspace, String key, String path, String target) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException {
+	public void createLink(String workspace, String key, String path, String target) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
+			AccessDeniedException {
 		LOGGER.log(Level.FINE, "create link with key [" + key + "] into workspace [" + workspace + "] at path [" + path + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
@@ -1469,7 +1461,7 @@ public class CoreServiceBean implements CoreService {
 			em.persist(link);
 
 			registry.register(key, link.getObjectIdentifier(), caller);
-			
+
 			authorisation.clonePolicy(key, ws.getHead());
 			LOGGER.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
 
@@ -1484,8 +1476,8 @@ public class CoreServiceBean implements CoreService {
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
 			notification.throwEvent(key, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "create"), "");
-		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException
-				| AuthorisationServiceException | MembershipServiceException | TreeBuilderException e) {
+		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
+				| MembershipServiceException | TreeBuilderException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occured during link creation", e);
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to create link into workspace [" + workspace + "] at path [" + path + "]", e);
@@ -1705,8 +1697,7 @@ public class CoreServiceBean implements CoreService {
 			}
 			notification.throwEvent("", caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "find"), "target=" + target);
 			return results;
-		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException
-				| IdentifierNotRegisteredException e) {
+		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occured during finding links for target", e);
 			throw new CoreServiceException("unable to find link for target [" + target + "]", e);
 		}
@@ -1716,22 +1707,22 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createMetadataObject(String workspace, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException,
-			AccessDeniedException, MetadataFormatException {
+	public void createMetadataObject(String workspace, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
+			MetadataFormatException {
 		String key = UUID.randomUUID().toString();
-		
+
 		try {
 			createMetadataObject(workspace, key, path, name, hash);
-		} catch ( KeyAlreadyExistsException e ) {
+		} catch (KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.WARNING, "the generated key already exists : " + key);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createMetadataObject(String workspace, String key, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
-			AccessDeniedException, MetadataFormatException {
+	public void createMetadataObject(String workspace, String key, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException,
+			InvalidPathException, AccessDeniedException, MetadataFormatException {
 		LOGGER.log(Level.FINE, "create metadataobject with key [" + key + "] into workspace [" + workspace + "] for path [" + path + "] with name [" + name + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
@@ -1787,21 +1778,20 @@ public class CoreServiceBean implements CoreService {
 				meta.setContentType("application/octet-stream");
 				meta.setStream("");
 			}
-			
-			String formatkey = findLastMetadataFormatByName(name);
-			MetadataFormat format = readMetadataFormat(formatkey);
-			if(format == null) {
+
+			MetadataFormat format = getMetadataFormat(name);
+			if (format == null) {
 				LOGGER.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
 				throw new CoreServiceException("unknown metadata format for name: " + name);
 			}
 			validateMetadata(meta, format);
-			meta.setFormat(formatkey);
+			meta.setFormat(format.getId());
 			meta.setTarget(tkey);
 			meta.setKey(key);
 			em.persist(meta);
 
 			registry.register(key, meta.getObjectIdentifier(), caller);
-			
+
 			authorisation.clonePolicy(key, ws.getHead());
 
 			switch (tidentifier.getType()) {
@@ -1888,12 +1878,11 @@ public class CoreServiceBean implements CoreService {
 			registry.update(ws.getKey());
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
-			notification.throwEvent(tkey, caller, tidentifier.getType(), OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "add-metadata"), "key="
-					+ key);
+			notification.throwEvent(tkey, caller, tidentifier.getType(), OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "add-metadata"), "key=" + key);
 			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "create"), "");
 
-		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException
-				| AuthorisationServiceException | MembershipServiceException | TreeBuilderException | BinaryStoreServiceException | DataNotFoundException | CloneException e) {
+		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
+				| MembershipServiceException | TreeBuilderException | BinaryStoreServiceException | DataNotFoundException | CloneException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occured during metadata creation", e);
 			throw new CoreServiceException("unable to create metadata into workspace [" + workspace + "] for path [" + path + "]", e);
@@ -1917,7 +1906,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
 			}
 			meta.setKey(key);
-			//em.detach(meta);
+			// em.detach(meta);
 
 			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "read"), "");
 			return meta;
@@ -1929,7 +1918,8 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateMetadataObject(String workspace, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException {
+	public void updateMetadataObject(String workspace, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
+			MetadataFormatException {
 		LOGGER.log(Level.FINE, "updating metadata content into workspace [" + workspace + "] for path [" + path + "] and name [" + name + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
@@ -1953,7 +1943,7 @@ public class CoreServiceBean implements CoreService {
 
 			authorisation.checkPermission(ws.getHead(), subjects, "update");
 			LOGGER.log(Level.FINEST, "user [" + caller + "] has 'update' permission on the head collection of this workspace");
-			
+
 			String current = resolveWorkspacePath(workspace, Workspace.HEAD, npath.build());
 			OrtolangObjectIdentifier ctidentifier = registry.lookup(current);
 			if (!ctidentifier.getType().equals(Link.OBJECT_TYPE) && !ctidentifier.getType().equals(Collection.OBJECT_TYPE) && !ctidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
@@ -1961,36 +1951,36 @@ public class CoreServiceBean implements CoreService {
 			}
 			MetadataElement cmdelement = null;
 			switch (ctidentifier.getType()) {
-				case Collection.OBJECT_TYPE:
-					Collection collection = em.find(Collection.class, ctidentifier.getId());
-					if (collection == null) {
-						throw new CoreServiceException("unable to load collection with id [" + ctidentifier.getId() + "] from storage");
-					}
-					if (collection.findMetadataByName(name) == null) {
-						throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for collection at path [" + npath.build() + "]");
-					}
-					cmdelement = collection.findMetadataByName(name);
-					break;
-				case DataObject.OBJECT_TYPE:
-					DataObject object = em.find(DataObject.class, ctidentifier.getId());
-					if (object == null) {
-						throw new CoreServiceException("unable to load object with id [" + ctidentifier.getId() + "] from storage");
-					}
-					if (object.findMetadataByName(name) == null) {
-						throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for object at path [" + npath.build() + "]");
-					}
-					cmdelement = object.findMetadataByName(name);
-					break;
-				case Link.OBJECT_TYPE:
-					Link link = em.find(Link.class, ctidentifier.getId());
-					if (link == null) {
-						throw new CoreServiceException("unable to load link with id [" + ctidentifier.getId() + "] from storage");
-					}
-					if (link.findMetadataByName(name) == null) {
-						throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for link at path [" + npath.build() + "]");
-					}
-					cmdelement = link.findMetadataByName(name);
-					break;
+			case Collection.OBJECT_TYPE:
+				Collection collection = em.find(Collection.class, ctidentifier.getId());
+				if (collection == null) {
+					throw new CoreServiceException("unable to load collection with id [" + ctidentifier.getId() + "] from storage");
+				}
+				if (collection.findMetadataByName(name) == null) {
+					throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for collection at path [" + npath.build() + "]");
+				}
+				cmdelement = collection.findMetadataByName(name);
+				break;
+			case DataObject.OBJECT_TYPE:
+				DataObject object = em.find(DataObject.class, ctidentifier.getId());
+				if (object == null) {
+					throw new CoreServiceException("unable to load object with id [" + ctidentifier.getId() + "] from storage");
+				}
+				if (object.findMetadataByName(name) == null) {
+					throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for object at path [" + npath.build() + "]");
+				}
+				cmdelement = object.findMetadataByName(name);
+				break;
+			case Link.OBJECT_TYPE:
+				Link link = em.find(Link.class, ctidentifier.getId());
+				if (link == null) {
+					throw new CoreServiceException("unable to load link with id [" + ctidentifier.getId() + "] from storage");
+				}
+				if (link.findMetadataByName(name) == null) {
+					throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for link at path [" + npath.build() + "]");
+				}
+				cmdelement = link.findMetadataByName(name);
+				break;
 			}
 			if (cmdelement == null) {
 				throw new CoreServiceException("unable to find current metadata target into workspace [" + workspace + "] for path [" + npath.build() + "] and name [" + name + "]");
@@ -2001,7 +1991,7 @@ public class CoreServiceBean implements CoreService {
 			if (cmeta == null) {
 				throw new CoreServiceException("unable to load metadata with id [" + cidentifier.getId() + "] from storage");
 			}
-			if ( !cmeta.equals(hash) ) {
+			if (!cmeta.equals(hash)) {
 				String tkey = ws.getHead();
 				Collection parent = null;
 				CollectionElement element = null;
@@ -2015,12 +2005,12 @@ public class CoreServiceBean implements CoreService {
 					LOGGER.log(Level.FINEST, "collection element found for name " + npath.part());
 					tkey = element.getKey();
 				}
-				
+
 				OrtolangObjectIdentifier tidentifier = registry.lookup(tkey);
 				if (!tidentifier.getType().equals(Link.OBJECT_TYPE) && !tidentifier.getType().equals(Collection.OBJECT_TYPE) && !tidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
 					throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
 				}
-				
+
 				MetadataElement mdelement = null;
 				switch (tidentifier.getType()) {
 				case Collection.OBJECT_TYPE:
@@ -2036,7 +2026,7 @@ public class CoreServiceBean implements CoreService {
 						if (parent != null && element != null) {
 							parent.removeElement(element);
 							parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, clone.getKey()));
-							
+
 						}
 						collection = clone;
 					}
@@ -2054,7 +2044,7 @@ public class CoreServiceBean implements CoreService {
 						DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 						parent.removeElement(element);
 						parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey()));
-						
+
 						object = clone;
 					}
 					mdelement = object.findMetadataByName(name);
@@ -2071,7 +2061,7 @@ public class CoreServiceBean implements CoreService {
 						Link clone = cloneLink(ws.getHead(), link, ws.getClock());
 						parent.removeElement(element);
 						parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, clone.getKey()));
-						
+
 						link = clone;
 					}
 					mdelement = link.findMetadataByName(name);
@@ -2093,14 +2083,12 @@ public class CoreServiceBean implements CoreService {
 					meta.setSize(binarystore.size(hash));
 					meta.setContentType(binarystore.type(hash));
 					meta.setStream(hash);
-					String formatkey = findLastMetadataFormatByName(name);
-					MetadataFormat format = readMetadataFormat(formatkey);
-					if(format == null) {
+					MetadataFormat format = findMetadataFormatById(meta.getFormat());
+					if (format == null) {
 						LOGGER.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
 						throw new CoreServiceException("unknown metadata format for name: " + name);
 					}
 					validateMetadata(meta, format);
-					meta.setFormat(formatkey);
 					meta.setTarget(tkey);
 				} else {
 					throw new CoreServiceException("unable to update a metadata with an empty content (hash is null)");
@@ -2115,12 +2103,13 @@ public class CoreServiceBean implements CoreService {
 				LOGGER.log(Level.FINEST, "workspace set changed");
 
 				notification.throwEvent(mdelement.getKey(), caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "update"), "");
-				notification.throwEvent(tkey, caller, tidentifier.getType(), OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "update-metadata"), "key=" + mdelement.getKey());
+				notification.throwEvent(tkey, caller, tidentifier.getType(), OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "update-metadata"),
+						"key=" + mdelement.getKey());
 			} else {
 				LOGGER.log(Level.FINEST, "no changes detected with current metadata object, nothing to do");
 			}
-		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException | TreeBuilderException
-				| BinaryStoreServiceException | DataNotFoundException | CloneException e) {
+		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
+				| TreeBuilderException | BinaryStoreServiceException | DataNotFoundException | CloneException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occured during metadata creation", e);
 			throw new CoreServiceException("unable to create metadata into workspace [" + workspace + "] for path [" + path + "] and name [" + name + "]", e);
@@ -2182,7 +2171,7 @@ public class CoreServiceBean implements CoreService {
 					Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
 					parent.removeElement(element);
 					parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, clone.getKey()));
-					
+
 					collection = clone;
 				}
 				mdelement = collection.findMetadataByName(name);
@@ -2202,7 +2191,7 @@ public class CoreServiceBean implements CoreService {
 					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 					parent.removeElement(element);
 					parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey()));
-					
+
 					object = clone;
 				}
 				mdelement = object.findMetadataByName(name);
@@ -2223,7 +2212,7 @@ public class CoreServiceBean implements CoreService {
 					Link clone = cloneLink(ws.getHead(), link, ws.getClock());
 					parent.removeElement(element);
 					parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, clone.getKey()));
-					
+
 					link = clone;
 				}
 				mdelement = link.findMetadataByName(name);
@@ -2245,12 +2234,11 @@ public class CoreServiceBean implements CoreService {
 
 			registry.delete(mdelement.getKey());
 
-			notification.throwEvent(mdelement.getKey(), caller, MetadataObject.OBJECT_TYPE,
-					OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "delete"), "");
-			notification.throwEvent(element.getKey(), caller, tidentifier.getType(),
-					OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "remove-metadata"), "key=" + mdelement.getKey());
-		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException | TreeBuilderException
-				| CloneException e) {
+			notification.throwEvent(mdelement.getKey(), caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "delete"), "");
+			notification.throwEvent(element.getKey(), caller, tidentifier.getType(), OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "remove-metadata"), "key="
+					+ mdelement.getKey());
+		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
+				| TreeBuilderException | CloneException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occured during metadata creation", e);
 			throw new CoreServiceException("unable to create metadata into workspace [" + workspace + "] for path [" + path + "]", e);
@@ -2273,11 +2261,9 @@ public class CoreServiceBean implements CoreService {
 				String key = registry.lookup(mdo.getObjectIdentifier());
 				results.add(key);
 			}
-			notification.throwEvent("", caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "find"), "target="
-					+ target);
+			notification.throwEvent("", caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "find"), "target=" + target);
 			return results;
-		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException
-				| IdentifierNotRegisteredException e) {
+		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occured during finding metadata", e);
 			throw new CoreServiceException("unable to find metadata for target [" + target + "]", e);
 		}
@@ -2286,152 +2272,97 @@ public class CoreServiceBean implements CoreService {
 	/* MetadataFormat */
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<MetadataFormat> listMetadataFormat() throws CoreServiceException {
-
-		try {
-			List<MetadataFormat> formats = new ArrayList<MetadataFormat>();
-			TypedQuery<MetadataFormat> query = em.createNamedQuery("listMetadataFormat", MetadataFormat.class);
-			List<MetadataFormat> metadataFormats = query.getResultList();
-
-			for (MetadataFormat format : metadataFormats) {
-				String ikey = registry.lookup(format.getObjectIdentifier());
-				format.setKey(ikey);
-				formats.add(format);
-			}
-			return formats;
-		} catch (RegistryServiceException | IdentifierNotRegisteredException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured during listing all metadata formats", e);
-			throw new CoreServiceException("unable to list all metadata formats", e);
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public MetadataFormat readMetadataFormat(String key) throws CoreServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "reading metadata format for key [" + key + "]");
-		try {
-
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, MetadataFormat.OBJECT_TYPE);
-
-			MetadataFormat metaFormat = em.find(MetadataFormat.class, identifier.getId());
-			if (metaFormat == null) {
-				throw new CoreServiceException("unable to load metadata format with id [" + identifier.getId() + "] from storage");
-			}
-			metaFormat.setKey(key);
-
-			return metaFormat;
-		} catch (RegistryServiceException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured during reading metadata", e);
-			throw new CoreServiceException("unable to read metadata with key [" + key + "]", e);
-		}
-	}
-
-	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createMetadataFormat(String name, String description, String scheamHash, String formKey) throws CoreServiceException {
+	public String createMetadataFormat(String name, String description, String schema, String form) throws CoreServiceException {
 		LOGGER.log(Level.FINE, "creating metadataformat with name [" + name + "]");
-		String key = UUID.randomUUID().toString();
-		
-		List<String> mdf = findMetadataFormatByName(name);
-		MetadataFormat oldMF = null;
-		if(mdf!=null && mdf.size()>0) {
-			LOGGER.log(Level.WARNING, "Creates new version of metadata format with name : "+name);
-			
-			try {
-				oldMF = readMetadataFormat(mdf.get(0));
-			} catch (KeyNotFoundException e) {
-				LOGGER.log(Level.SEVERE, "unable to load precedent version of metadata format with name "+name, e);
-				throw new CoreServiceException("unable to load precedent version of metadata format with name "+name, e);
-			}
-		}
-		
 		try {
-			
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-		
-			MetadataFormat mf = new MetadataFormat();
-			mf.setId(UUID.randomUUID().toString());
-			mf.setName(name);
-			mf.setDescription(description);
-			mf.setForm(formKey);
-			mf.setSerialNumber((oldMF!=null)?oldMF.getSerialNumber()+1:1);
-			if (scheamHash != null && scheamHash.length() > 0) {
-				mf.setSize(binarystore.size(scheamHash));
-				mf.setMimeType(binarystore.type(scheamHash));
-				mf.setSchema(scheamHash);
+			MetadataFormat mdf = getMetadataFormat(name);
+			MetadataFormat newmdf = new MetadataFormat();
+			if (mdf != null) {
+				LOGGER.log(Level.FINE, "metadata format version already exists, creating new version");
+				newmdf.setSerial(mdf.getSerial() + 1);
+			}
+			newmdf.setName(name);
+			newmdf.setId(name + ":" + newmdf.getSerial());
+			newmdf.setDescription(description);
+			newmdf.setForm(form);
+			if (schema != null && schema.length() > 0) {
+				newmdf.setSize(binarystore.size(schema));
+				newmdf.setMimeType(binarystore.type(schema));
+				newmdf.setSchema(schema);
 			} else {
-				mf.setSize(0);
-				mf.setMimeType("application/octet-stream");
-				mf.setSchema("");
+				newmdf.setSize(0);
+				newmdf.setMimeType("application/octet-stream");
+				newmdf.setSchema("");
 			}
-			mf.setKey(key);
-			em.persist(mf);
-
-			registry.register(key, mf.getObjectIdentifier(), caller);
-		} catch (RegistryServiceException | KeyAlreadyExistsException
-				| IdentifierAlreadyRegisteredException | BinaryStoreServiceException | DataNotFoundException e) {
-			ctx.setRollbackOnly();
-			LOGGER.log(Level.SEVERE, "unexpected error occured during metadata format creation", e);
-			throw new CoreServiceException("unable to create metadata format with name : "+name, e);
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> findMetadataFormatByName(String name) throws CoreServiceException {
-		LOGGER.log(Level.FINE, "finding metadata format with name [" + name + "]");
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			TypedQuery<MetadataFormat> query = em.createNamedQuery("findMetadataFormatByName", MetadataFormat.class).setParameter("name", name);
-			List<MetadataFormat> mdfs = query.getResultList();
-			List<String> results = new ArrayList<String>();
-			for (MetadataFormat mdf : mdfs) {
-				String key = registry.lookup(mdf.getObjectIdentifier());
-				results.add(key);
-			}
-			notification.throwEvent("", caller, MetadataFormat.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataFormat.OBJECT_TYPE, "find"), "name="
-					+ name);
-			return results;
-		} catch (NotificationServiceException | RegistryServiceException | IdentifierNotRegisteredException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured during finding metadata format", e);
-			throw new CoreServiceException("unable to find metadata format by name [" + name + "]", e);
-		}
-	}
-
-	private String findLastMetadataFormatByName(String name) throws CoreServiceException {
-		LOGGER.log(Level.FINE, "finding metadata format with name [" + name + "]");
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			TypedQuery<MetadataFormat> query = em.createNamedQuery("findLastMetadataFormatByName", MetadataFormat.class).setParameter("name", name);
-			List<MetadataFormat> mdfs = query.getResultList();
-			if (mdfs.size()>0) {
-				notification.throwEvent("", caller, MetadataFormat.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataFormat.OBJECT_TYPE, "find"), "name="
-						+ name);
-				return registry.lookup(mdfs.get(0).getObjectIdentifier());
-			}
-			return null;
-		} catch (NotificationServiceException | RegistryServiceException | IdentifierNotRegisteredException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured during finding metadata format", e);
-			throw new CoreServiceException("unable to find metadata format by name [" + name + "]", e);
+			em.persist(newmdf);
+			return newmdf.getId();
+		} catch ( BinaryStoreServiceException | DataNotFoundException e ) {
+			LOGGER.log(Level.SEVERE, "unexpected error during create metadata format", e);
+			throw new CoreServiceException("unexpected error during create metadata format", e);
 		}
 	}
 	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<MetadataFormat> listMetadataFormat() throws CoreServiceException {
+		List<MetadataFormat> formats = listAllMetadataFormat();
+		HashMap<String, MetadataFormat> latest = new HashMap<String, MetadataFormat> ();
+		for (MetadataFormat format : formats) {
+			if ( !latest.containsKey(format.getName()) ) {
+				latest.put(format.getName(), format);
+			} else if ( latest.get(format.getName()).getSerial() < format.getSerial() ) {
+				latest.put(format.getName(), format);
+			}
+		}
+		List<MetadataFormat> filteredformats = new ArrayList<MetadataFormat> ();
+		filteredformats.addAll(latest.values());
+		return filteredformats;
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<MetadataFormat> listAllMetadataFormat() throws CoreServiceException {
+		TypedQuery<MetadataFormat> query = em.createNamedQuery("listMetadataFormat", MetadataFormat.class);
+		List<MetadataFormat> formats = query.getResultList();
+		return formats;
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public MetadataFormat getMetadataFormat(String name) throws CoreServiceException {
+		LOGGER.log(Level.FINE, "reading metadata format for name [" + name + "]");
+		TypedQuery<MetadataFormat> query = em.createNamedQuery("findMetadataFormatForName", MetadataFormat.class).setParameter("name", name);
+		List<MetadataFormat> formats = query.getResultList();
+		if (formats.size() > 0) {
+			return formats.get(0);
+		} else {
+			return null;
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public MetadataFormat findMetadataFormatById(String id) throws CoreServiceException {
+		MetadataFormat format = em.find(MetadataFormat.class, id);
+		if ( format == null ) {
+			throw new CoreServiceException("unable to find a metadata format for id " + id + " in the storage");
+		}
+		return format;
+	}
+
 	private void validateMetadata(MetadataObject metadata, MetadataFormat format) throws CoreServiceException, MetadataFormatException {
 		try {
 			if (format.getSchema() != null && format.getSchema().length() > 0) {
 				JsonNode jsonSchema = JsonLoader.fromReader(new InputStreamReader(binarystore.get(format.getSchema())));
 				JsonNode jsonFile = JsonLoader.fromReader(new InputStreamReader(binarystore.get(metadata.getStream())));
-		        JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
-		        JsonSchema schema = factory.getJsonSchema(jsonSchema);
-		        
-		        ProcessingReport report = schema.validate(jsonFile);
-		        LOGGER.log(Level.INFO, report.toString());
-		        
-				if ( !report.isSuccess() ) {
+				JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+				JsonSchema schema = factory.getJsonSchema(jsonSchema);
+
+				ProcessingReport report = schema.validate(jsonFile);
+				LOGGER.log(Level.INFO, report.toString());
+
+				if (!report.isSuccess()) {
 					throw new MetadataFormatException("invalid metadata format");
 				}
 			} else {
@@ -2443,7 +2374,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to validate metadata [" + metadata + "] with metadata format [" + format + "] : schema not found");
 		}
 	}
-	
+
 	/* BinaryContent */
 
 	@Override
@@ -2480,8 +2411,7 @@ public class CoreServiceBean implements CoreService {
 			String hash = object.getPreview();
 			if (hash != null && hash.length() > 0) {
 				InputStream stream = binarystore.get(hash);
-				notification.throwEvent(key, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "preview"), "hash="
-						+ hash);
+				notification.throwEvent(key, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "preview"), "hash=" + hash);
 				return stream;
 			} else {
 				throw new DataNotFoundException("there is no preview available for this data object");
@@ -2500,9 +2430,9 @@ public class CoreServiceBean implements CoreService {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 
-			LOGGER.log(Level.INFO, "searching key "+key);
+			LOGGER.log(Level.INFO, "searching key " + key);
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			LOGGER.log(Level.INFO, "found key "+key);
+			LOGGER.log(Level.INFO, "found key " + key);
 			String hash;
 			if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
 				authorisation.checkPermission(key, subjects, "download");
@@ -2518,22 +2448,12 @@ public class CoreServiceBean implements CoreService {
 					throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
 				}
 				hash = object.getStream();
-			} else if (identifier.getType().equals(MetadataFormat.OBJECT_TYPE)) {
-
-				LOGGER.log(Level.INFO, "metadata format object ");
-//				authorisation.checkPermission(key, subjects, "read");
-				MetadataFormat object = em.find(MetadataFormat.class, identifier.getId());
-				if (object == null) {
-					throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
-				}
-				hash = object.getSchema();
 			} else {
 				throw new CoreServiceException("unable to find downloadable content for key [" + key + "]");
 			}
 			if (hash != null && hash.length() > 0) {
 				InputStream stream = binarystore.get(hash);
-				notification
-						.throwEvent(key, caller, identifier.getType(), OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, identifier.getType(), "download"), "hash=" + hash);
+				notification.throwEvent(key, caller, identifier.getType(), OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, identifier.getType(), "download"), "hash=" + hash);
 				return stream;
 			} else {
 				throw new DataNotFoundException("there is no preview available for this data object");
@@ -2543,7 +2463,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to get preview content", e);
 		}
 	}
-	
+
 	/* Service */
 
 	@Override
@@ -2594,10 +2514,6 @@ public class CoreServiceBean implements CoreService {
 
 			if (identifier.getType().equals(MetadataObject.OBJECT_TYPE)) {
 				return readMetadataObject(key);
-			}
-
-			if (identifier.getType().equals(MetadataFormat.OBJECT_TYPE)) {
-				return readMetadataFormat(key);
 			}
 
 			throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
@@ -2664,10 +2580,10 @@ public class CoreServiceBean implements CoreService {
 				if (object.getMimeType() != null) {
 					content.addContentPart(object.getMimeType());
 				}
-				
-				for(MetadataElement mde : object.getMetadatas()) {
+
+				for (MetadataElement mde : object.getMetadatas()) {
 					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-					
+
 					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
 					if (metadata == null) {
 						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
@@ -2690,10 +2606,10 @@ public class CoreServiceBean implements CoreService {
 				}
 				content.addContentPart(collection.getName());
 				content.addContentPart(collection.getDescription());
-				
-				for(MetadataElement mde : collection.getMetadatas()) {
+
+				for (MetadataElement mde : collection.getMetadatas()) {
 					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-					
+
 					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
 					if (metadata == null) {
 						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
@@ -2716,9 +2632,9 @@ public class CoreServiceBean implements CoreService {
 				}
 				content.addContentPart(reference.getName());
 
-				for(MetadataElement mde : reference.getMetadatas()) {
+				for (MetadataElement mde : reference.getMetadatas()) {
 					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-					
+
 					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
 					if (metadata == null) {
 						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
@@ -2762,7 +2678,7 @@ public class CoreServiceBean implements CoreService {
 					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
 				}
 				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", object.getName()));
-				for(MetadataElement me : object.getMetadatas()) {
+				for (MetadataElement me : object.getMetadatas()) {
 					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#hasMetadata", URIHelper.fromKey(me.getKey())));
 				}
 			}
@@ -2773,7 +2689,7 @@ public class CoreServiceBean implements CoreService {
 					throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
 				}
 				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", collection.getName()));
-				for(MetadataElement me : collection.getMetadatas()) {
+				for (MetadataElement me : collection.getMetadatas()) {
 					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#hasMetadata", URIHelper.fromKey(me.getKey())));
 				}
 			}
@@ -2784,7 +2700,7 @@ public class CoreServiceBean implements CoreService {
 					throw new OrtolangException("unable to load reference with id [" + identifier.getId() + "] from storage");
 				}
 				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", reference.getName()));
-				for(MetadataElement me : reference.getMetadatas()) {
+				for (MetadataElement me : reference.getMetadatas()) {
 					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#hasMetadata", URIHelper.fromKey(me.getKey())));
 				}
 			}
@@ -2798,7 +2714,7 @@ public class CoreServiceBean implements CoreService {
 				String subj = URIHelper.fromKey(key);
 				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#name", metadata.getName()));
 				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#metadataFormat", metadata.getFormat()));
-				
+
 			}
 
 			return content;
@@ -2819,18 +2735,18 @@ public class CoreServiceBean implements CoreService {
 			OrtolangIndexableJsonContent content = new OrtolangIndexableJsonContent();
 
 			if (identifier.getType().equals(Workspace.OBJECT_TYPE)) {
-				
+
 			}
-			
+
 			if (identifier.getType().equals(Collection.OBJECT_TYPE)) {
 				Collection collection = em.find(Collection.class, identifier.getId());
 				if (collection == null) {
 					throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
 				}
-				
-				for(MetadataElement mde : collection.getMetadatas()) {
+
+				for (MetadataElement mde : collection.getMetadatas()) {
 					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-					
+
 					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
 					if (metadata == null) {
 						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
@@ -2845,16 +2761,16 @@ public class CoreServiceBean implements CoreService {
 					}
 				}
 			}
-			
+
 			if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
 				DataObject object = em.find(DataObject.class, identifier.getId());
 				if (object == null) {
 					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
 				}
-				
-				for(MetadataElement mde : object.getMetadatas()) {
+
+				for (MetadataElement mde : object.getMetadatas()) {
 					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-					
+
 					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
 					if (metadata == null) {
 						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
@@ -2875,7 +2791,7 @@ public class CoreServiceBean implements CoreService {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}
-	
+
 	private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws CoreServiceException {
 		if (!identifier.getService().equals(getServiceName())) {
 			throw new CoreServiceException("object identifier " + identifier + " does not refer to service " + getServiceName());
@@ -2885,16 +2801,16 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("object identifier " + identifier + " does not refer to an object of type " + objectType);
 		}
 	}
-	
-	//System operations
+
+	// System operations
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public Set<String> systemListWorkspaceKeys(String wskey) throws CoreServiceException, KeyNotFoundException {
 		LOGGER.log(Level.FINE, "listing workspace keys [" + wskey + "]");
-		Set<String> keys = new HashSet<String> ();
+		Set<String> keys = new HashSet<String>();
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
+
 			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
 			checkObjectType(identifier, Workspace.OBJECT_TYPE);
 			Workspace workspace = em.find(Workspace.class, identifier.getId());
@@ -2902,10 +2818,10 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
 			keys = systemListCollectionKeys(workspace.getHead(), keys);
-			for ( SnapshotElement snapshot : workspace.getSnapshots() ) {
+			for (SnapshotElement snapshot : workspace.getSnapshots()) {
 				keys = systemListCollectionKeys(snapshot.getKey(), keys);
 			}
-			
+
 			notification.throwEvent(wskey, caller, identifier.getType(), OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, identifier.getType(), "system-list-keys"), "");
 			return keys;
 		} catch (NotificationServiceException | RegistryServiceException e) {
@@ -2913,7 +2829,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to list keys for workspace with key [" + wskey + "]", e);
 		}
 	}
-	
+
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private Set<String> systemListCollectionKeys(String key, Set<String> keys) throws RegistryServiceException, KeyNotFoundException, CoreServiceException {
 		OrtolangObjectIdentifier cidentifier = registry.lookup(key);
@@ -2922,17 +2838,17 @@ public class CoreServiceBean implements CoreService {
 		if (collection == null) {
 			throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
 		}
-		if ( keys.add(key) ) {
-			for ( MetadataElement element : collection.getMetadatas() ) {
+		if (keys.add(key)) {
+			for (MetadataElement element : collection.getMetadatas()) {
 				keys.add(element.getKey());
 			}
-			
-			for ( CollectionElement element : collection.getElements() ) {
+
+			for (CollectionElement element : collection.getElements()) {
 				keys.add(element.getKey());
-				if ( element.getType().equals(Collection.OBJECT_TYPE) ) {
+				if (element.getType().equals(Collection.OBJECT_TYPE)) {
 					systemListCollectionKeys(element.getKey(), keys);
 				}
-				if ( element.getType().equals(DataObject.OBJECT_TYPE) ) {
+				if (element.getType().equals(DataObject.OBJECT_TYPE)) {
 					OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
 					checkObjectType(identifier, DataObject.OBJECT_TYPE);
 					DataObject object = em.find(DataObject.class, identifier.getId());
@@ -2940,11 +2856,11 @@ public class CoreServiceBean implements CoreService {
 						throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 					}
 					keys.add(element.getKey());
-					for ( MetadataElement mde : object.getMetadatas() ) {
+					for (MetadataElement mde : object.getMetadatas()) {
 						keys.add(mde.getKey());
 					}
 				}
-				if ( element.getType().equals(Link.OBJECT_TYPE) ) {
+				if (element.getType().equals(Link.OBJECT_TYPE)) {
 					OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
 					checkObjectType(identifier, Link.OBJECT_TYPE);
 					Link link = em.find(Link.class, identifier.getId());
@@ -2952,16 +2868,16 @@ public class CoreServiceBean implements CoreService {
 						throw new CoreServiceException("unable to load link with id [" + identifier.getId() + "] from storage");
 					}
 					keys.add(element.getKey());
-					for ( MetadataElement mde : link.getMetadatas() ) {
+					for (MetadataElement mde : link.getMetadatas()) {
 						keys.add(mde.getKey());
 					}
 				}
 			}
 		}
-		
+
 		return keys;
 	}
-	
+
 	/* ### Internal operations ### */
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -3008,7 +2924,7 @@ public class CoreServiceBean implements CoreService {
 			throw new TreeBuilderException(e);
 		}
 	}
-	
+
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	private Collection loadCollectionAtPath(String root, PathBuilder path, int clock) throws TreeBuilderException {
 		LOGGER.log(Level.FINE, "Loading tree from root [" + root + "] to path [" + path.build() + "] with clock [" + clock + "]");
@@ -3192,48 +3108,48 @@ public class CoreServiceBean implements CoreService {
 			authorisation.clonePolicy(key, root);
 
 			return clone;
-		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | CoreServiceException | KeyNotFoundException
-				| KeyAlreadyExistsException e) {
+		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | CoreServiceException | KeyNotFoundException | KeyAlreadyExistsException e) {
 			throw new CloneException("unable to clone metadata with origin [" + origin + "] and target [" + target + "]", e);
 		}
 	}
 
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    private OrtolangObjectSize getCollectionSize(String key, OrtolangObjectIdentifier cidentifier, OrtolangObjectSize ortolangObjectSize, List<String> subjects) throws KeyNotFoundException, RegistryServiceException, CoreServiceException {
-        LOGGER.log(Level.FINE, "calculating collection size for collection with key [" + key + "]");
-        try {
-            authorisation.checkPermission(key, subjects, "read");
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private OrtolangObjectSize getCollectionSize(String key, OrtolangObjectIdentifier cidentifier, OrtolangObjectSize ortolangObjectSize, List<String> subjects) throws KeyNotFoundException,
+			RegistryServiceException, CoreServiceException {
+		LOGGER.log(Level.FINE, "calculating collection size for collection with key [" + key + "]");
+		try {
+			authorisation.checkPermission(key, subjects, "read");
 
-            Collection collection = em.find(Collection.class, cidentifier.getId());
-            if (collection == null) {
-                throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
-            }
+			Collection collection = em.find(Collection.class, cidentifier.getId());
+			if (collection == null) {
+				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
+			}
 
-            for (CollectionElement element : collection.getElements()) {
-                if (element.getType().equals(DataObject.OBJECT_TYPE)) {
-                    try {
-                        authorisation.checkPermission(element.getKey(), subjects, "read");
-                        ortolangObjectSize.addElement(element.getType(), element.getSize());
-                    }  catch (AuthorisationServiceException | AccessDeniedException e) {
-                        ortolangObjectSize.setPartial(true);
-                    }
-                } else if (element.getType().equals(Collection.OBJECT_TYPE)) {
-                    ortolangObjectSize.addElement(element.getType(), 0);
-                    OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
-                    ortolangObjectSize = getCollectionSize(element.getKey(), identifier, ortolangObjectSize, subjects);
-                }
-            }
-        } catch (AuthorisationServiceException | AccessDeniedException e) {
-            ortolangObjectSize.setPartial(true);
-        }
-        return ortolangObjectSize;
-    }
+			for (CollectionElement element : collection.getElements()) {
+				if (element.getType().equals(DataObject.OBJECT_TYPE)) {
+					try {
+						authorisation.checkPermission(element.getKey(), subjects, "read");
+						ortolangObjectSize.addElement(element.getType(), element.getSize());
+					} catch (AuthorisationServiceException | AccessDeniedException e) {
+						ortolangObjectSize.setPartial(true);
+					}
+				} else if (element.getType().equals(Collection.OBJECT_TYPE)) {
+					ortolangObjectSize.addElement(element.getType(), 0);
+					OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
+					ortolangObjectSize = getCollectionSize(element.getKey(), identifier, ortolangObjectSize, subjects);
+				}
+			}
+		} catch (AuthorisationServiceException | AccessDeniedException e) {
+			ortolangObjectSize.setPartial(true);
+		}
+		return ortolangObjectSize;
+	}
 
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	private void deleteCollectionContent(Collection collection, int clock) throws CoreServiceException, RegistryServiceException, KeyNotFoundException, KeyLockedException {
 		LOGGER.log(Level.FINE, "delete content for collection with id [" + collection.getId() + "]");
-		for ( CollectionElement element : collection.getElements() ) {
-			if ( element.getType().equals(Collection.OBJECT_TYPE) ) {
+		for (CollectionElement element : collection.getElements()) {
+			if (element.getType().equals(Collection.OBJECT_TYPE)) {
 				OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
 				checkObjectType(identifier, Collection.OBJECT_TYPE);
 				Collection coll = em.find(Collection.class, identifier.getId());
@@ -3241,8 +3157,8 @@ public class CoreServiceBean implements CoreService {
 					throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
 				}
 				deleteCollectionContent(coll, clock);
-			} 
-			if ( element.getType().equals(DataObject.OBJECT_TYPE) ) {
+			}
+			if (element.getType().equals(DataObject.OBJECT_TYPE)) {
 				OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
 				checkObjectType(identifier, DataObject.OBJECT_TYPE);
 				DataObject object = em.find(DataObject.class, identifier.getId());
@@ -3258,7 +3174,7 @@ public class CoreServiceBean implements CoreService {
 
 				}
 			}
-			if ( element.getType().equals(Link.OBJECT_TYPE) ) {
+			if (element.getType().equals(Link.OBJECT_TYPE)) {
 				OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
 				checkObjectType(identifier, Link.OBJECT_TYPE);
 				Link link = em.find(Link.class, identifier.getId());
@@ -3276,5 +3192,5 @@ public class CoreServiceBean implements CoreService {
 			}
 		}
 	}
-	
+
 }

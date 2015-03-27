@@ -93,7 +93,6 @@ import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -339,12 +338,6 @@ public class ObjectResource {
 			if (object instanceof MetadataObject) {
 				builder.header("Content-Disposition", "attachment; filename=" + object.getObjectName());
 				builder.type(((MetadataObject) object).getContentType());
-				builder.lastModified(lmd);
-			}
-			if (object instanceof MetadataFormat) {
-				LOGGER.log(Level.INFO, "metadata format object ");
-				builder.header("Content-Disposition", "attachment; filename=" + object.getObjectName());
-				builder.type(((MetadataFormat) object).getMimeType());
 				builder.lastModified(lmd);
 			}
 			if (object instanceof Collection) {

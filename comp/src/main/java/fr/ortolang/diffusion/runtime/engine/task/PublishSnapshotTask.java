@@ -44,7 +44,11 @@ import java.util.logging.Logger;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.jboss.logmanager.Level;
 
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.publication.PublicationServiceException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
@@ -61,16 +65,22 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		if (!execution.hasVariable(ROOT_COLLECTION_PARAM_NAME)) {
-			throw new RuntimeEngineTaskException("execution variable " + ROOT_COLLECTION_PARAM_NAME + " is not set");
+		if (!execution.hasVariable(SNAPSHOT_NAME_PARAM_NAME)) {
+			throw new RuntimeEngineTaskException("execution variable " + SNAPSHOT_NAME_PARAM_NAME + " is not set");
 		}
-		String root = execution.getVariable(ROOT_COLLECTION_PARAM_NAME, String.class);
+		String snapshot = execution.getVariable(SNAPSHOT_NAME_PARAM_NAME, String.class);
 		
-		LOGGER.log(Level.INFO, "Building publication map...");
 		Map<String, Map<String, List<String>>> map;
 		try {
-			map = getPublicationService().buildPublicationMap(root);
-		} catch (PublicationServiceException | AccessDeniedException e) {
+			LOGGER.log(Level.INFO, "loading snapshot...");
+			Workspace workspace = getCoreService().readWorkspace(execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class));
+			SnapshotElement element = workspace.findSnapshotByName(snapshot);
+			if ( element == null ) {
+				throw new RuntimeEngineTaskException("unable to find a snapshot with name " + snapshot + " in workspace with key " + workspace.getKey());
+			}
+			LOGGER.log(Level.INFO, "building publication map...");
+			map = getPublicationService().buildPublicationMap(element.getKey());
+		} catch (CoreServiceException | PublicationServiceException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("unexpected error while trying to built the publication map", e);
 		}
 		LOGGER.log(Level.INFO, "publication map built containing " + map.size() + " keys");

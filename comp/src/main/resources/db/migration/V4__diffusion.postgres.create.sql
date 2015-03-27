@@ -62,13 +62,13 @@
 
     create table MetadataFormat (
         id varchar(255) not null,
-        name varchar(255),
         description varchar(2500),
-        size int8 not null,
-        mimeType varchar(255),
-        schema varchar(255),
         form varchar(255),
-        serialNumber int4 not null,
+        mimeType varchar(255),
+        name varchar(255),
+        schema varchar(255),
+        serial int4 not null,
+        size int8 not null,
         version int8 not null,
         primary key (id)
     );

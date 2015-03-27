@@ -562,19 +562,18 @@ public class CoreServiceTest {
 
 			InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
 			String schemaHash = core.put(schemaInputStream);
-			core.createMetadataFormat("ortolang-item-json", "ORTOLANG Item", schemaHash, null);
+			String id = core.createMetadataFormat("ortolang-item-json", "ORTOLANG Item", schemaHash, null);
 			
 			List<MetadataFormat> mfs = core.listMetadataFormat();
 			assertEquals(1, mfs.size());
 			
-			String key = mfs.get(0).getKey();
-			MetadataFormat mf = core.readMetadataFormat(key);
+			MetadataFormat mf = core.getMetadataFormat("ortolang-item-json");
 			assertEquals("ortolang-item-json", mf.getName());
 			assertEquals("ORTOLANG Item", mf.getDescription());
 			assertEquals(schemaHash, mf.getSchema());
 			
-			List<String> findMf = core.findMetadataFormatByName("ortolang-item-json");
-			assertEquals(1, findMf.size());
+			MetadataFormat mfid = core.findMetadataFormatById(id);
+			assertEquals("ortolang-item-json", mfid.getName());
 
 			String wsk = UUID.randomUUID().toString();
 			core.createWorkspace(wsk, "WorkspaceCollection", "test");
@@ -584,6 +583,7 @@ public class CoreServiceTest {
 			String metadataHash = core.put(metadataInputStream);
 			core.createMetadataObject(wsk, metak, "/", mf.getName(), metadataHash);
 			MetadataObject metadata = core.readMetadataObject(metak);
+			assertEquals("ortolang-item-json:1", metadata.getFormat());
 			
 		} finally {
 			loginContext.logout();

@@ -7,14 +7,11 @@
       <documentation>Check the bag content according to md5 provided in the bag avoiding transfert data coruption.</documentation>
     </serviceTask>
     <endEvent id="end" name="End"></endEvent>
-    <exclusiveGateway id="executeOrPrented" name="Simulation Gateway" default="pretend"></exclusiveGateway>
-    <sequenceFlow id="flow2" sourceRef="load-bag" targetRef="executeOrPrented"></sequenceFlow>
+    <sequenceFlow id="flow2" sourceRef="load-bag" targetRef="import-content"></sequenceFlow>
     <serviceTask id="import-content" name="Import Content Task" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportContentTask"></serviceTask>
-    <sequenceFlow id="execute" sourceRef="executeOrPrented" targetRef="import-content">
-      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${pretend == null || pretend == false}]]></conditionExpression>
-    </sequenceFlow>
-    <sequenceFlow id="pretend" sourceRef="executeOrPrented" targetRef="end"></sequenceFlow>
-    <serviceTask id="publish-snapshot" name="Publish Snapshot Task" activiti:class="fr.ortolang.diffusion.runtime.engine.task.PublishSnapshotTask"></serviceTask>
+    <serviceTask id="publish-snapshot" name="Publish Snapshot Task" activiti:class="fr.ortolang.diffusion.runtime.engine.task.PublishSnapshotTask">
+      <multiInstanceLoopCharacteristics isSequential="true" activiti:collection="${snapshotsToPublish}" activiti:elementVariable="snapshot"></multiInstanceLoopCharacteristics>
+    </serviceTask>
     <sequenceFlow id="flow5" sourceRef="import-content" targetRef="publish-snapshot"></sequenceFlow>
     <sequenceFlow id="flow6" sourceRef="publish-snapshot" targetRef="end"></sequenceFlow>
   </process>
@@ -27,16 +24,13 @@
         <omgdc:Bounds height="55.0" width="133.0" x="170.0" y="90.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="end" id="BPMNShape_end">
-        <omgdc:Bounds height="35.0" width="35.0" x="369.0" y="233.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="executeOrPrented" id="BPMNShape_executeOrPrented">
-        <omgdc:Bounds height="40.0" width="40.0" x="366.0" y="97.0"></omgdc:Bounds>
+        <omgdc:Bounds height="35.0" width="35.0" x="253.0" y="230.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="import-content" id="BPMNShape_import-content">
-        <omgdc:Bounds height="55.0" width="131.0" x="486.0" y="90.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="131.0" x="370.0" y="90.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="publish-snapshot" id="BPMNShape_publish-snapshot">
-        <omgdc:Bounds height="55.0" width="131.0" x="486.0" y="223.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="131.0" x="370.0" y="220.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
         <omgdi:waypoint x="110.0" y="117.0"></omgdi:waypoint>
@@ -44,24 +38,15 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
         <omgdi:waypoint x="303.0" y="117.0"></omgdi:waypoint>
-        <omgdi:waypoint x="366.0" y="117.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="execute" id="BPMNEdge_execute">
-        <omgdi:waypoint x="406.0" y="117.0"></omgdi:waypoint>
-        <omgdi:waypoint x="486.0" y="117.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="pretend" id="BPMNEdge_pretend">
-        <omgdi:waypoint x="386.0" y="137.0"></omgdi:waypoint>
-        <omgdi:waypoint x="386.0" y="230.0"></omgdi:waypoint>
-        <omgdi:waypoint x="404.0" y="250.0"></omgdi:waypoint>
+        <omgdi:waypoint x="370.0" y="117.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
-        <omgdi:waypoint x="551.0" y="145.0"></omgdi:waypoint>
-        <omgdi:waypoint x="551.0" y="223.0"></omgdi:waypoint>
+        <omgdi:waypoint x="435.0" y="145.0"></omgdi:waypoint>
+        <omgdi:waypoint x="435.0" y="220.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
-        <omgdi:waypoint x="486.0" y="250.0"></omgdi:waypoint>
-        <omgdi:waypoint x="404.0" y="250.0"></omgdi:waypoint>
+        <omgdi:waypoint x="370.0" y="247.0"></omgdi:waypoint>
+        <omgdi:waypoint x="288.0" y="247.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

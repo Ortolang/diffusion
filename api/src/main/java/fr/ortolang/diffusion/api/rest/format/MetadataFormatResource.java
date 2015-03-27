@@ -10,8 +10,8 @@ import javax.ejb.EJB;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -19,14 +19,12 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.io.IOUtils;
 
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
-import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.binary.BinaryStoreService;
+import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 /**
@@ -41,7 +39,7 @@ public class MetadataFormatResource {
 	@EJB
 	private CoreService core;
 	@EJB
-	private BrowserService browser;
+	private BinaryStoreService store;
 
 	@GET
 	public Response listMetadataFormat() throws CoreServiceException {
@@ -60,22 +58,32 @@ public class MetadataFormatResource {
 	}
 	
 	@GET
-	@Path("/{key}/download")
-	public void download(final @PathParam(value = "key") String key, @Context HttpServletResponse response) throws OrtolangException, KeyNotFoundException, AccessDeniedException, CoreServiceException, DataNotFoundException, IOException {
-		LOGGER.log(Level.INFO, "GET /metadataformats/" + key + "/download");
+	@Path("/download")
+	public void download(final @QueryParam(value = "id") String id, final @QueryParam(value = "name") String name, @Context HttpServletResponse response) throws OrtolangException, CoreServiceException, DataNotFoundException, IOException, BinaryStoreServiceException {
+		LOGGER.log(Level.INFO, "GET /metadataformats/download");
 		
-		OrtolangObject object = browser.findObject(key);
-		if (object instanceof MetadataFormat) {
-			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
-			response.setContentType(((MetadataFormat) object).getMimeType());
-			response.setContentLength((int) ((MetadataFormat) object).getSize());
+		MetadataFormat format = null;
+		if ( id != null && id.length() > 0 ) {
+			format = core.findMetadataFormatById(id);
+		} else if ( name != null && name.length() > 0 ) {
+			format = core.getMetadataFormat(name);
+		} else {
+			throw new DataNotFoundException("either id or name must be provided in order to find metadata format");
 		}
-		InputStream input = core.download(key);
-		try {
-			IOUtils.copy(input, response.getOutputStream());
-		} finally {
-			IOUtils.closeQuietly(input);
+		if ( format != null ) {
+			response.setHeader("Content-Disposition", "attachment; filename=" + format.getName());
+			response.setContentType(format.getMimeType());
+			response.setContentLength((int)format.getSize());
+			InputStream input = store.get(format.getSchema());
+			try {
+				IOUtils.copy(input, response.getOutputStream());
+			} finally {
+				IOUtils.closeQuietly(input);
+			}
+		} else {
+			throw new DataNotFoundException("unable to find a metadata format for this name or this id");
 		}
+		
 	}
 	
 }
