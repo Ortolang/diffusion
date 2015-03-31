@@ -66,6 +66,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public static final String IMPORT_OPERATIONS_PARAM_NAME = "operations";
 
 	public static final String ROOT_COLLECTION_PARAM_NAME = "root";
+	public static final String SNAPSHOTS_TO_PUBLISH_PARAM_NAME = "snapshotsToPublish";
 	public static final String SNAPSHOT_NAME_PARAM_NAME = "snapshot";
 
 	public static final String WORKSPACE_KEY_PARAM_NAME = "wskey";

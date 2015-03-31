@@ -54,6 +54,7 @@ public class OrtolangServiceLocator {
 	
 	private static final Logger LOGGER = Logger.getLogger(OrtolangServiceLocator.class.getName());
 	private static InitialContext jndi;
+	private static Map<String, Object> objects = new HashMap<String, Object> ();
 	private static Map<String, OrtolangService> services = new HashMap<String, OrtolangService> ();
 	private static Map<String, OrtolangIndexableService> indexableServices = new HashMap<String, OrtolangIndexableService> ();
 	
@@ -108,7 +109,10 @@ public class OrtolangServiceLocator {
 	
 	public static Object lookup(String name) throws OrtolangException {
 		try {
-			return getJndiContext().lookup(NAMESPACE + "/" + name);
+			if ( !objects.containsKey(name) ) {
+				objects.put(name, getJndiContext().lookup(NAMESPACE + "/" + name));
+			}
+			return objects.get(name);
 		} catch (Exception e) {
 			throw new OrtolangException(e);
 		}

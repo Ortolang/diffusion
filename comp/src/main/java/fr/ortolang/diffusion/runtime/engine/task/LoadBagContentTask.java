@@ -54,6 +54,9 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		LOGGER.log(Level.FINE, "- list versions");
 		List<String> versions = searchVersions(bag);
 		
+		LOGGER.log(Level.FINE, "- list snapshots to publish");
+		List<String> snapshots = searchSnapshotsToPublish(bag);
+		
 		LOGGER.log(Level.FINE, "- build import script");
 		StringBuilder builder = new StringBuilder();
 		appendWorkspaceInformations(builder, bag);
@@ -81,6 +84,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import script generated"));
 		execution.setVariable(BAG_VERSIONS_PARAM_NAME, versions);
 		execution.setVariable(IMPORT_OPERATIONS_PARAM_NAME, builder.toString());
+		execution.setVariable(SNAPSHOTS_TO_PUBLISH_PARAM_NAME, snapshots);
 	}
 	
 	@Override
@@ -143,6 +147,21 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		}
 		versions.add(Workspace.HEAD);
 		return versions;
+	}
+	
+	private List<String> searchSnapshotsToPublish(Bag bag) throws RuntimeEngineTaskException {
+		BagFile propFile = bag.getBagFile("data/publication.properties");
+		if (propFile == null || !propFile.exists()) {
+			return Collections.emptyList();
+		}
+		try {
+			Properties props = new Properties();
+			props.load(propFile.newInputStream());
+			return Arrays.asList(props.getProperty("publish").split(","));
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to append workspace informations", e);
+			throw new RuntimeEngineTaskException("unable to append workspace informations", e);
+		}
 	}
 	
 	private void appendWorkspaceInformations(StringBuilder builder, Bag bag) throws RuntimeEngineTaskException {

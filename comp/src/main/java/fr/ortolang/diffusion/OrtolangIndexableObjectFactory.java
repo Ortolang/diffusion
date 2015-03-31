@@ -9,7 +9,7 @@ public class OrtolangIndexableObjectFactory<T> {
 	
 	public static OrtolangIndexableObject<IndexablePlainTextContent> buildPlainTextIndexableObject(String key) throws OrtolangException {
 		try {
-			RegistryService registry = (RegistryService)OrtolangServiceLocator.findService(RegistryService.SERVICE_NAME);
+			RegistryService registry = (RegistryService)OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME);
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
 			IndexablePlainTextContent content = service.getIndexablePlainTextContent(key);
@@ -24,7 +24,7 @@ public class OrtolangIndexableObjectFactory<T> {
 	
 	public static OrtolangIndexableObject<IndexableJsonContent> buildJsonIndexableObject(String key) throws OrtolangException {
 		try {
-			RegistryService registry = (RegistryService)OrtolangServiceLocator.findService(RegistryService.SERVICE_NAME);
+			RegistryService registry = (RegistryService)OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME);
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
 			IndexableJsonContent content = service.getIndexableJsonContent(key);
@@ -39,7 +39,7 @@ public class OrtolangIndexableObjectFactory<T> {
 	
 	public static OrtolangIndexableObject<IndexableSemanticContent> buildSemanticIndexableObject(String key) throws OrtolangException {
 		try {
-			RegistryService registry = (RegistryService)OrtolangServiceLocator.findService(RegistryService.SERVICE_NAME);
+			RegistryService registry = (RegistryService)OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME);
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
 			IndexableSemanticContent content = service.getIndexableSemanticContent(key);
@@ -54,7 +54,7 @@ public class OrtolangIndexableObjectFactory<T> {
 	
 	private static void loadBasicIndexableObject(String key, OrtolangObjectIdentifier identifier, OrtolangIndexableObject<?> object) throws OrtolangException {
 		try {
-			RegistryService registry = (RegistryService)OrtolangServiceLocator.findService(RegistryService.SERVICE_NAME);
+			RegistryService registry = (RegistryService)OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME);
 			object.setKey(key);
 			object.setIdentifier(identifier);
 			object.setService(identifier.getService());
