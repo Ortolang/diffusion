@@ -83,7 +83,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 							deleteMetadata(operation[1], operation[2]);
 							break;
 						case "snapshot-workspace":
-							snapshotWorkspace();
+							snapshotWorkspace(operation[1]);
 							purgeCache();
 							break;
 						default:
@@ -251,8 +251,12 @@ public class ImportContentTask extends RuntimeEngineTask {
 		} 
 	}
 
-	private void snapshotWorkspace() throws RuntimeEngineTaskException {
-		LOGGER.log(Level.INFO, "SNAPSHOT WORKSPACE");
+	private void snapshotWorkspace(String name) throws RuntimeEngineTaskException {
+		try {
+			getCoreService().snapshotWorkspace(wskey, name);
+		} catch ( CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
+			throw new RuntimeEngineTaskException("Error snapshoting workspace", e);
+		} 
 	}
 
 }

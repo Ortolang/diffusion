@@ -69,7 +69,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 			Set<String> metadata = listMetadata(version, bag.getPayload());
 			appendMetadataOperations(builder, bag, pversion, version, pmetadata, metadata);
 			if (!version.equals(Workspace.HEAD)) {
-				builder.append("snapshot-workspace\t").append(version.substring(version.lastIndexOf("/"))).append("\r\n");
+				builder.append("snapshot-workspace\t").append(version.substring(version.lastIndexOf("/")+1)).append("\r\n");
 			}
 			pversion = version;
 			pobjects = objects;
