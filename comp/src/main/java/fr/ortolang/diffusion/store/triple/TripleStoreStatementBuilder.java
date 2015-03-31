@@ -54,7 +54,7 @@ public class TripleStoreStatementBuilder {
 	
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 	
-	public static Set<Statement> buildStatements(OrtolangIndexableObject object) throws TripleStoreServiceException {
+	public static Set<Statement> buildStatements(OrtolangIndexableObject<IndexableSemanticContent> object) throws TripleStoreServiceException {
 		Set<Statement> statements = new HashSet<Statement> ();
 //		statements.add(buildStatement(URIHelper.fromKey(object.getKey()), "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "http://www.ortolang.fr/2014/05/diffusion#Object"));
 //		statements.add(buildStatement(URIHelper.fromKey(object.getKey()), "http://www.ortolang.fr/2014/05/diffusion#service", object.getService()));
@@ -65,7 +65,7 @@ public class TripleStoreStatementBuilder {
 //		for ( OrtolangObjectProperty property : object.getProperties() ) {
 //			statements.add(buildStatement(URIHelper.fromKey(object.getKey()), "http://www.ortolang.fr/2014/05/diffusion#" + property.getName(), property.getValue()));
 //		}
-		for ( Triple triple : object.getSemanticContent().getTriples() ) {
+		for ( Triple triple : object.getContent().getTriples() ) {
 			statements.add(buildStatement(triple.getSubject(), triple.getPredicate(), triple.getObject()));
 		}
 		return statements;

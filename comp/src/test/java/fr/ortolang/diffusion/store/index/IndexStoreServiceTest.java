@@ -58,12 +58,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangSearchResult;
-import fr.ortolang.diffusion.indexing.IndexingContext;
 
 public class IndexStoreServiceTest {
 	
@@ -132,11 +130,11 @@ public class IndexStoreServiceTest {
 	
 	@Test
     public void testIndexDocument() {
-		OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
+		IndexablePlainTextContent content = new IndexablePlainTextContent();
 		content.addContentPart("tagada");
 		content.addContentPart("ceci est une petite phrase");
 		content.addContentPart("qui dure longtemps...");
-		OrtolangIndexableObject object = new OrtolangIndexableObject();
+		OrtolangIndexableObject<IndexablePlainTextContent> object = new OrtolangIndexableObject<IndexablePlainTextContent>();
 		object.setKey("K1");
 		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
 		object.setService("service");
@@ -146,8 +144,7 @@ public class IndexStoreServiceTest {
 		object.setLocked(false);
 		object.setStatus("draft");
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
-		object.setPlainTextContent(content);
-		object.setContext(new IndexingContext("root", "/path", "the name"));
+		object.setContent(content);
 		
 		try {
 			service.index(object);
@@ -167,11 +164,11 @@ public class IndexStoreServiceTest {
 	
 	@Test
     public void testReindexDocument() {
-		OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
+		IndexablePlainTextContent content = new IndexablePlainTextContent();
 		content.addContentPart("tagada");
 		content.addContentPart("ceci est une petite phrase");
 		content.addContentPart("qui dure longtemps...");
-		OrtolangIndexableObject object = new OrtolangIndexableObject();
+		OrtolangIndexableObject<IndexablePlainTextContent> object = new OrtolangIndexableObject<IndexablePlainTextContent>();
 		object.setKey("K1");
 		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
 		object.setService("service");
@@ -181,8 +178,7 @@ public class IndexStoreServiceTest {
 		object.setLocked(false);
 		object.setStatus("DRAFT");
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
-		object.setPlainTextContent(content);
-		object.setContext(new IndexingContext("root", "/path", "the name"));
+		object.setContent(content);
 		
 		try {
 			service.index(object);
@@ -194,7 +190,7 @@ public class IndexStoreServiceTest {
 			dumpResults(results);
 			assertEquals(0, results.size());
 			
-			object.getPlainTextContent().addContentPart("avec des bidules en plus !");
+			object.getContent().addContentPart("avec des bidules en plus !");
 			service.reindex(object);
 			
 			results = service.search("bidules");
@@ -207,11 +203,11 @@ public class IndexStoreServiceTest {
 	
 	@Test
     public void testRemoveDocument() {
-		OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
+		IndexablePlainTextContent content = new IndexablePlainTextContent();
 		content.addContentPart("tagada");
 		content.addContentPart("ceci est une petite phrase");
 		content.addContentPart("qui dure longtemps...");
-		OrtolangIndexableObject object = new OrtolangIndexableObject();
+		OrtolangIndexableObject<IndexablePlainTextContent> object = new OrtolangIndexableObject<IndexablePlainTextContent>();
 		object.setKey("K1");
 		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
 		object.setService("service");
@@ -221,8 +217,7 @@ public class IndexStoreServiceTest {
 		object.setLocked(false);
 		object.setStatus("DRAFT");
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
-		object.setPlainTextContent(content);
-		object.setContext(new IndexingContext("root", "/path", "the name"));
+		object.setContent(content);
 		
 		try {
 			service.index(object);

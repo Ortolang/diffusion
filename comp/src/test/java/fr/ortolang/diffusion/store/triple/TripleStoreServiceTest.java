@@ -55,8 +55,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import fr.ortolang.diffusion.OrtolangIndexableObject;
-import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
-import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 
@@ -112,18 +110,14 @@ public class TripleStoreServiceTest {
 	@Test
 	public void testInsertAndRemoveTriples() {
 		try {
-			OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
-			content.addContentPart("tagada");
-			content.addContentPart("ceci est une petite phrase");
-			content.addContentPart("qui dure longtemps...");
-			OrtolangIndexableSemanticContent scontent = new OrtolangIndexableSemanticContent();
+			IndexableSemanticContent scontent = new IndexableSemanticContent();
 			scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/description", "W3Schools - Free tutorials"));
 			scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/publisher", "Refsnes Data as"));
 			scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/date", "2008-09-01"));
 			scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/type", "Web Development"));
 			scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/format", "text/html"));
 			scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/language", "en"));
-			OrtolangIndexableObject object = new OrtolangIndexableObject();
+			OrtolangIndexableObject<IndexableSemanticContent> object = new OrtolangIndexableObject<IndexableSemanticContent>();
 			object.setKey("K1");
 			object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
 			object.setService("service");
@@ -136,8 +130,7 @@ public class TripleStoreServiceTest {
 			object.setCreationDate(System.currentTimeMillis());
 			object.setLastModificationDate(System.currentTimeMillis());
 			object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("foo", "bar")} ));
-			object.setPlainTextContent(content);
-			object.setSemanticContent(scontent);
+			object.setContent(scontent);
 			
 			String query = "SELECT ?x WHERE { ?x  <http://purl.org/dc/elements/1.1/language>  \"en\" }";
 			

@@ -53,9 +53,9 @@ public interface TripleStoreService {
 
 	public void importOntology(String ontologyURI, String resourceName) throws TripleStoreServiceException;
 
-	public void index(OrtolangIndexableObject object) throws TripleStoreServiceException;
+	public void index(OrtolangIndexableObject<IndexableSemanticContent> object) throws TripleStoreServiceException;
 	
-	public void reindex(OrtolangIndexableObject object) throws TripleStoreServiceException;
+	public void reindex(OrtolangIndexableObject<IndexableSemanticContent> object) throws TripleStoreServiceException;
 	
 	public void remove(String key) throws TripleStoreServiceException;
 	

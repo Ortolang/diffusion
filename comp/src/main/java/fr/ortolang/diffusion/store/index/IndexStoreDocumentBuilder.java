@@ -59,7 +59,7 @@ public class IndexStoreDocumentBuilder {
 	public static final String CONTEXT_ROOT_FIELD = "ROOT";
 	public static final String CONTEXT_PATH_FIELD = "PATH";
 	
-	public static Document buildDocument(OrtolangIndexableObject object) {
+	public static Document buildDocument(OrtolangIndexableObject<IndexablePlainTextContent> object) {
 		Document document = new Document();
 		document.add(new Field(IDENTIFIER_FIELD, object.getIdentifier().serialize(), TextField.TYPE_STORED));
 		document.add(new Field(SERVICE_FIELD, object.getService(), StringField.TYPE_STORED));
@@ -79,10 +79,7 @@ public class IndexStoreDocumentBuilder {
 			document.add(new Field(PROPERTY_FIELD_PREFIX + prop.getName().toUpperCase(), prop.getValue().toLowerCase(), StringField.TYPE_STORED));
 		}
 		document.add(new Field(STATUS_FIELD, object.getStatus().toLowerCase(), StringField.TYPE_STORED));
-		document.add(new Field(CONTENT_FIELD, object.getPlainTextContent().toString(), TextField.TYPE_STORED));
-		document.add(new Field(CONTEXT_ROOT_FIELD, object.getContext().getRoot(), StringField.TYPE_STORED));
-		document.add(new Field(CONTEXT_PATH_FIELD, object.getContext().getPath(), StringField.TYPE_STORED));
-		document.add(new Field(NAME_FIELD, object.getContext().getName(), StringField.TYPE_STORED));
+		document.add(new Field(CONTENT_FIELD, object.getContent().toString(), TextField.TYPE_STORED));
 		return document;
 	}
 

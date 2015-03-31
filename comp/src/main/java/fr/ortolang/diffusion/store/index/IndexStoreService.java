@@ -45,9 +45,9 @@ public interface IndexStoreService {
 	
 	public static final String SERVICE_NAME = "index-store";
 	
-	public void index(OrtolangIndexableObject object) throws IndexStoreServiceException;
+	public void index(OrtolangIndexableObject<IndexablePlainTextContent> object) throws IndexStoreServiceException;
 	
-	public void reindex(OrtolangIndexableObject object) throws IndexStoreServiceException;
+	public void reindex(OrtolangIndexableObject<IndexablePlainTextContent> object) throws IndexStoreServiceException;
 	
 	public void remove(String key) throws IndexStoreServiceException;
 	

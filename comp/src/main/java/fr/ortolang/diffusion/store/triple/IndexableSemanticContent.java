@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion;
+package fr.ortolang.diffusion.store.triple;
 
 /*
  * #%L
@@ -39,13 +39,11 @@ package fr.ortolang.diffusion;
 import java.util.HashSet;
 import java.util.Set;
 
-import fr.ortolang.diffusion.store.triple.Triple;
-
-public class OrtolangIndexableSemanticContent {
+public class IndexableSemanticContent {
 	
 	private Set<Triple> triples;
 
-    public OrtolangIndexableSemanticContent() {
+    public IndexableSemanticContent() {
         triples = new HashSet<Triple> ();
     }
 

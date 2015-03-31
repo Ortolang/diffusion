@@ -156,7 +156,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void index(OrtolangIndexableObject object) throws TripleStoreServiceException {
+	public void index(OrtolangIndexableObject<IndexableSemanticContent> object) throws TripleStoreServiceException {
 		try {
 			RepositoryConnection con = repository.getConnection();
             try {
@@ -171,7 +171,7 @@ public class TripleStoreServiceBean implements TripleStoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void reindex(OrtolangIndexableObject object) throws TripleStoreServiceException {
+	public void reindex(OrtolangIndexableObject<IndexableSemanticContent> object) throws TripleStoreServiceException {
 		try {
             RepositoryConnection con = repository.getConnection();
             try {

@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.core;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import fr.ortolang.diffusion.OrtolangBinaryService;
@@ -71,11 +72,11 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
 	public void snapshotWorkspace(String wskey, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	//public void publishWorkspace(String wskey, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
-	
 	public void deleteWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, KeyNotFoundException, AccessDeniedException;
 
 	public List<String> findWorkspacesForProfile(String profile) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public Map<String, Map<String, List<String>>> buildWorkspacePublicationMap(String wskey, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, AccessDeniedException;
 	

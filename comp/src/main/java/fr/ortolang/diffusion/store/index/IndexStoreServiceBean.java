@@ -139,7 +139,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void index(OrtolangIndexableObject object) throws IndexStoreServiceException {
+	public void index(OrtolangIndexableObject<IndexablePlainTextContent> object) throws IndexStoreServiceException {
 		LOGGER.log(Level.FINE, "Indexing new object: " + object.getIdentifier());
 		try {
 			writer.addDocument(IndexStoreDocumentBuilder.buildDocument(object));
@@ -152,7 +152,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void reindex(OrtolangIndexableObject object) throws IndexStoreServiceException {
+	public void reindex(OrtolangIndexableObject<IndexablePlainTextContent> object) throws IndexStoreServiceException {
 		LOGGER.log(Level.FINE, "Reindexing object: " + object.getIdentifier());
 		try {
 			Term term = new Term("KEY", object.getKey());
@@ -183,7 +183,6 @@ public class IndexStoreServiceBean implements IndexStoreService {
 	public List<OrtolangSearchResult> search(String queryString) throws IndexStoreServiceException {
 		LOGGER.log(Level.FINE, "Searching query: " + queryString);
 		try {
-			//IndexReader reader = DirectoryReader.open(writer, true);
 			IndexReader reader = DirectoryReader.open(directory);
 			IndexSearcher searcher = new IndexSearcher(reader);
 			QueryParser parser = new QueryParser(Version.LUCENE_46, "CONTENT", analyzer);

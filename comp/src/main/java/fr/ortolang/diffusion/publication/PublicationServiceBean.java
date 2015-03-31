@@ -36,10 +36,8 @@ package fr.ortolang.diffusion.publication;
  * #L%
  */
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,11 +58,6 @@ import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.CollectionElement;
-import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
@@ -77,10 +70,7 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
-import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
-import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 @Local(PublicationService.class)
 @Stateless(name = PublicationService.SERVICE_NAME)
@@ -229,35 +219,6 @@ public class PublicationServiceBean implements PublicationService {
 		} catch (KeyLockedException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new PublicationServiceException("error during submitting key for review : " + e);
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public Map<String, Map<String, List<String>>> buildPublicationMap(String root) throws PublicationServiceException, AccessDeniedException {
-		try {
-			Map<String, Map<String, List<String>>> map = new HashMap<String, Map<String, List<String>>>();
-			AuthorisationPolicyTemplate defaultTemplate = authorisation.getPolicyTemplate("default");
-			builtPublicationMap(root, map, authorisation.getPolicyRules(defaultTemplate.getTemplate()));
-			return map;
-		} catch (OrtolangException | KeyNotFoundException | CoreServiceException | BinaryStoreServiceException | DataNotFoundException | AuthorisationServiceException e) {
-			throw new PublicationServiceException("unexpected error while trying to built publication map", e);
-		}
-	}
-
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	private void builtPublicationMap(String root, Map<String, Map<String, List<String>>> map, Map<String, List<String>> current) throws OrtolangException, KeyNotFoundException, AccessDeniedException, CoreServiceException, BinaryStoreServiceException, DataNotFoundException {
-		OrtolangObject object = getCoreService().findObject(root);
-		
-		Set<MetadataElement> mde = ((MetadataSource) object).getMetadatas();
-		for (MetadataElement element : mde) {
-			map.put(element.getKey(), current);
-		}
-		map.put(root, current);
-		if (object instanceof Collection) {
-			for (CollectionElement element : ((Collection) object).getElements()) {
-				builtPublicationMap(element.getKey(), map, current);
-			}
 		}
 	}
 

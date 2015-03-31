@@ -66,6 +66,7 @@ import org.jgroups.util.UUID;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.form.FormService;
 import fr.ortolang.diffusion.form.FormServiceException;
@@ -82,6 +83,7 @@ import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 
 @Startup
@@ -160,40 +162,40 @@ public class BootstrapServiceBean implements BootstrapService {
 				String hash = core.put(new ByteArrayInputStream(props.toString().getBytes()));
 				core.createDataObject(BootstrapService.WORKSPACE_KEY, "/bootstrap.txt", "bootstrap file", hash);
 				
-				LOGGER.log(Level.FINE, "create [forall] authorisation policy template");
+				LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.FORALL + "] authorisation policy template");
 				String forallPolicyKey = UUID.randomUUID().toString();
 				authorisation.createPolicy(forallPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
 				Map<String, List<String>> forallPolicyRules = new HashMap<String, List<String>>();
 				forallPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] { "read", "download" }));
 				authorisation.setPolicyRules(forallPolicyKey, forallPolicyRules);
-				authorisation.createPolicyTemplate("forall", "All users can read and download this content", forallPolicyKey);
-				authorisation.createPolicyTemplate("default", "Default template allows all users to read and download content", forallPolicyKey);
+				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.FORALL, "All users can read and download this content", forallPolicyKey);
+				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.DEFAULT, "Default template allows all users to read and download content", forallPolicyKey);
 				
-				LOGGER.log(Level.FINE, "create [authentified] authorisation policy template");
+				LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.AUTHENTIFIED + "] authorisation policy template");
 				String authentifiedPolicyKey = UUID.randomUUID().toString();
 				authorisation.createPolicy(authentifiedPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
 				Map<String, List<String>> authentifiedPolicyRules = new HashMap<String, List<String>>();
 				authentifiedPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] { "read" }));
 				authentifiedPolicyRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[] { "read", "download" }));
 				authorisation.setPolicyRules(authentifiedPolicyKey, authentifiedPolicyRules);
-				authorisation.createPolicyTemplate("authentified", "All users can read this content but download is restricted to authentified users only", authentifiedPolicyKey);
+				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.AUTHENTIFIED, "All users can read this content but download is restricted to authentified users only", authentifiedPolicyKey);
 				
-				LOGGER.log(Level.FINE, "create [esr] authorisation policy template");
+				LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.ESR + "] authorisation policy template");
 				String esrPolicyKey = UUID.randomUUID().toString();
 				authorisation.createPolicy(esrPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
 				Map<String, List<String>> esrPolicyRules = new HashMap<String, List<String>>();
 				esrPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] { "read" }));
 				esrPolicyRules.put(MembershipService.ESR_GROUP_KEY, Arrays.asList(new String[] { "read", "download" }));
 				authorisation.setPolicyRules(esrPolicyKey, esrPolicyRules);
-				authorisation.createPolicyTemplate("esr", "All users can read this content but download is restricted to ESR users only", esrPolicyKey);
+				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.ESR, "All users can read this content but download is restricted to ESR users only", esrPolicyKey);
 				
-				LOGGER.log(Level.FINE, "create [restricted] authorisation policy template");
+				LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.RESTRICTED + "] authorisation policy template");
 				String restrictedPolicyKey = UUID.randomUUID().toString();
 				authorisation.createPolicy(restrictedPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
 				Map<String, List<String>> restrictedPolicyRules = new HashMap<String, List<String>>();
 				restrictedPolicyRules.put("${workspace.members}", Arrays.asList(new String[] { "read", "download" }));
 				authorisation.setPolicyRules(restrictedPolicyKey, restrictedPolicyRules);
-				authorisation.createPolicyTemplate("restricted", "Only workspace members can read and download this content, all other users cannot see this content", restrictedPolicyKey);
+				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.RESTRICTED, "Only workspace members can read and download this content, all other users cannot see this content", restrictedPolicyKey);
 				
 
 				LOGGER.log(Level.FINE, "import process types");
@@ -213,15 +215,13 @@ public class BootstrapServiceBean implements BootstrapService {
 				String jsonDefinitionItem = IOUtils.toString(isFormItem);
 				form.createForm("ortolang-item-form", "Schema Form for an ORTOLANG item", jsonDefinitionItem);
 				
-				LOGGER.log(Level.FINE, "import schemas");
-				LOGGER.log(Level.FINE, "import schema : ortolang-item");
+				LOGGER.log(Level.FINE, "import metadataformat schemas");
 				InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
 				String schemaHash = core.put(schemaInputStream);
-				core.createMetadataFormat("ortolang-item-json", "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schemaHash, "ortolang-item-form");
-				LOGGER.log(Level.FINE, "import schema : ortolang-acl");
+				core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schemaHash, "ortolang-item-form");
 				InputStream schemaInputStream2 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-acl-schema.json");
 				String schemaHash2 = core.put(schemaInputStream2);
-				core.createMetadataFormat("ortolang-acl-json", "Les métadonnées de contrôle d'accès permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, "");
+				core.createMetadataFormat(MetadataFormat.ACL, "Les métadonnées de contrôle d'accès permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, "");
 				
 				LOGGER.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException

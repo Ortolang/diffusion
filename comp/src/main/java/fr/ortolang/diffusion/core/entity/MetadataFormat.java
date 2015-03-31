@@ -11,6 +11,10 @@ import javax.persistence.Version;
 @NamedQueries({ @NamedQuery(name = "listMetadataFormat", query = "select f from MetadataFormat f"),
 		@NamedQuery(name = "findMetadataFormatForName", query = "select f from MetadataFormat f where f.name = :name order by f.serial desc") })
 public class MetadataFormat {
+	
+	public static final String ACL = "ortolang-acl-json";
+	public static final String ITEM = "ortolang-item-json";
+	
 
 	@Id
 	private String id;

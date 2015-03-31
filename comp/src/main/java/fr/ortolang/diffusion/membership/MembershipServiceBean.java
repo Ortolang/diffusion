@@ -60,9 +60,6 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangIndexableJsonContent;
-import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
-import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectSize;
@@ -84,6 +81,9 @@ import fr.ortolang.diffusion.security.authentication.AuthenticationService;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
+import fr.ortolang.diffusion.store.json.IndexableJsonContent;
+import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
 import fr.ortolang.diffusion.store.triple.Triple;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 import fr.ortolang.diffusion.store.triple.URIHelper;
@@ -1002,7 +1002,7 @@ public class MembershipServiceBean implements MembershipService {
 
     @Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public OrtolangIndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException {
+	public IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
@@ -1010,7 +1010,7 @@ public class MembershipServiceBean implements MembershipService {
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 			}
 
-			OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
+			IndexablePlainTextContent content = new IndexablePlainTextContent();
 
 			if (identifier.getType().equals(Profile.OBJECT_TYPE)) {
 				Profile profile = em.find(Profile.class, identifier.getId());
@@ -1038,7 +1038,7 @@ public class MembershipServiceBean implements MembershipService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public OrtolangIndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException {
+	public IndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
@@ -1046,7 +1046,7 @@ public class MembershipServiceBean implements MembershipService {
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 			}
 
-			OrtolangIndexableSemanticContent content = new OrtolangIndexableSemanticContent();
+			IndexableSemanticContent content = new IndexableSemanticContent();
 			
 			if (identifier.getType().equals(Profile.OBJECT_TYPE)) {
 				Profile profile = em.find(Profile.class, identifier.getId());
@@ -1075,7 +1075,7 @@ public class MembershipServiceBean implements MembershipService {
 	}
 
 	@Override
-	public OrtolangIndexableJsonContent getIndexableJsonContent(String key)
+	public IndexableJsonContent getIndexableJsonContent(String key)
 			throws OrtolangException {
 		return null;
 	}

@@ -59,7 +59,6 @@ public class MembershipServiceTest {
 		jar.addPackage("fr.ortolang.diffusion.browser");
 		jar.addPackage("fr.ortolang.diffusion.event");
 		jar.addPackage("fr.ortolang.diffusion.event.entity");
-		jar.addClass("fr.ortolang.diffusion.indexing.IndexingContext");
 		jar.addClass("fr.ortolang.diffusion.indexing.IndexingService");
 		jar.addClass("fr.ortolang.diffusion.indexing.IndexingServiceBean");
 		jar.addClass("fr.ortolang.diffusion.indexing.IndexingServiceException");
@@ -73,7 +72,13 @@ public class MembershipServiceTest {
 		jar.addPackage("fr.ortolang.diffusion.security.authorisation.entity");
 		jar.addPackage("fr.ortolang.diffusion.store.binary");
 		jar.addPackage("fr.ortolang.diffusion.store.binary.hash");
-		jar.addPackage("fr.ortolang.diffusion.store.index");
+		jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
+		jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
+		jar.addClass("fr.ortolang.diffusion.store.triple.IndexableSemanticContent");
+		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreDocumentBuilder");
+		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreService");
+		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
+		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
 		jar.addPackage("fr.ortolang.diffusion.store.triple");
 		jar.addAsResource("config.properties");
 		jar.addAsResource("ontology/foaf.xml");

@@ -38,9 +38,7 @@ package fr.ortolang.diffusion;
 
 import java.util.List;
 
-import fr.ortolang.diffusion.indexing.IndexingContext;
-
-public class OrtolangIndexableObject {
+public class OrtolangIndexableObject<T> {
 
 	private OrtolangObjectIdentifier identifier;
 	private String service;
@@ -54,11 +52,8 @@ public class OrtolangIndexableObject {
 	private long creationDate;
 	private long lastModificationDate;
 	private List<OrtolangObjectProperty> properties;
-	private OrtolangIndexablePlainTextContent plainTextContent;
-	private OrtolangIndexableSemanticContent semanticContent;
-	private OrtolangIndexableJsonContent jsonContent;
-	private IndexingContext context;
-
+	private T content;
+	
 	public OrtolangIndexableObject() {
 	}
 
@@ -78,20 +73,12 @@ public class OrtolangIndexableObject {
 		this.name = name;
 	}
 
-	public void setPlainTextContent(OrtolangIndexablePlainTextContent content) {
-		this.plainTextContent = content;
+	public void setContent(T content) {
+		this.content = content;
 	}
 
-	public void setSemanticContent(OrtolangIndexableSemanticContent content) {
-		this.semanticContent = content;
-	}
-
-	public OrtolangIndexableJsonContent getJsonContent() {
-		return jsonContent;
-	}
-
-	public void setJsonContent(OrtolangIndexableJsonContent jsonContent) {
-		this.jsonContent = jsonContent;
+	public T getContent() {
+		return content;
 	}
 
 	public void setKey(String key) {
@@ -128,14 +115,6 @@ public class OrtolangIndexableObject {
 
 	public String getName() {
 		return name;
-	}
-
-	public OrtolangIndexablePlainTextContent getPlainTextContent() {
-		return plainTextContent;
-	}
-
-	public OrtolangIndexableSemanticContent getSemanticContent() {
-		return semanticContent;
 	}
 
 	public String getKey() {
@@ -180,14 +159,6 @@ public class OrtolangIndexableObject {
 
 	public void setLastModificationDate(long lastModificationDate) {
 		this.lastModificationDate = lastModificationDate;
-	}
-
-	public IndexingContext getContext() {
-		return context;
-	}
-
-	public void setContext(IndexingContext context) {
-		this.context = context;
 	}
 
 }

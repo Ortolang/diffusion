@@ -50,6 +50,4 @@ public interface PublicationService extends OrtolangService {
 	
 	public void review(String key) throws PublicationServiceException, AccessDeniedException;
 	
-	public Map<String, Map<String, List<String>>> buildPublicationMap(String root) throws PublicationServiceException, AccessDeniedException;
-	
 }

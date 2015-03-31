@@ -1,4 +1,6 @@
-package fr.ortolang.diffusion;
+package fr.ortolang.diffusion.store.json;
+
+import java.io.InputStream;
 
 /*
  * #%L
@@ -36,21 +38,20 @@ package fr.ortolang.diffusion;
  * #L%
  */
 
-public class OrtolangIndexablePlainTextContent {
+public class IndexableJsonContent {
 	
-	private StringBuilder sb;
+	private InputStream stream;
 
-    public OrtolangIndexablePlainTextContent() {
-        sb = new StringBuilder();
+    public IndexableJsonContent() {
+        
     }
 
-     public void addContentPart(String content) {
-        sb.append(content + " ");
+     public void setStream(InputStream stream) {
+        this.stream = stream;
     }
 
-    @Override
-    public String toString() {
-        return sb.toString();
-    }
-
+	public InputStream getStream() {
+		return stream;
+	}
+    
 }

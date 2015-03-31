@@ -45,80 +45,78 @@ public class JsonStoreServiceBean implements JsonStoreService {
 
 	public static final String DEFAULT_JSON_HOME = "/json-store";
 
-    private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceBean.class.getName());
 
-    private Path base;
-    private OServer server;
-    private OPartitionedDatabasePool pool;
+	private Path base;
+	private OServer server;
+	private OPartitionedDatabasePool pool;
 
-    public JsonStoreServiceBean() {
-    	LOGGER.log(Level.FINE, "Instanciating json store service");
-    	this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_JSON_HOME);
-    }
-    
-    public Path getBase() {
-    	return base;
-    }
+	public JsonStoreServiceBean() {
+		LOGGER.log(Level.FINE, "Instanciating json store service");
+		this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_JSON_HOME);
+	}
 
-    @PostConstruct
-    public void init() {
-    	LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
-    	try {
-    		if ( Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.json.purge")) ) {
+	public Path getBase() {
+		return base;
+	}
+
+	@PostConstruct
+	public void init() {
+		LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
+		try {
+			if (Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.json.purge"))) {
 				LOGGER.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
 				Files.walkFileTree(base, new DeleteFileVisitor());
-			} 
-    		Files.createDirectories(base);
-    		
-    		server = OServerMain.create();
-    	    server.startup(this.getClass().getResourceAsStream("/orientdb-config.xml"));
-    	    server.activate();
-    	    
-    	    ODatabaseDocumentTx db = new ODatabaseDocumentTx("plocal:"+this.base.toFile().getAbsolutePath());
+			}
+			Files.createDirectories(base);
 
-    	    try {
-	    	    if(!db.exists()) {
-	    	    	db.create();
-	    	    	
-	    	    	db.command(new OCommandSQL("CREATE INDEX ortolangKey unique string")).execute();
-	    	    }
-	    	} finally {
-	    		db.close();
-	    	}
-    	    
-    	    pool = new OPartitionedDatabasePool("plocal:"+this.base.toFile().getAbsolutePath(), "admin", "admin");
-    	    
+			server = OServerMain.create();
+			server.startup(this.getClass().getResourceAsStream("/orientdb-config.xml"));
+			server.activate();
+
+			ODatabaseDocumentTx db = new ODatabaseDocumentTx("plocal:" + this.base.toFile().getAbsolutePath());
+
+			try {
+				if (!db.exists()) {
+					db.create();
+
+					db.command(new OCommandSQL("CREATE INDEX ortolangKey unique string")).execute();
+				}
+			} finally {
+				db.close();
+			}
+
+			pool = new OPartitionedDatabasePool("plocal:" + this.base.toFile().getAbsolutePath(), "admin", "admin");
+
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to initialize json store", e);
 		}
-    }
- 
+	}
 
-    @PreDestroy
-    public void shutdown() {
-    	LOGGER.log(Level.INFO, "Shuting down json store");
-    	try {
-    		pool.close();
-    		server.shutdown();
-        } catch (Exception e) {
-    		LOGGER.log(Level.SEVERE, "unable to shutdown json store", e);
-    	}
-    }
-    
+	@PreDestroy
+	public void shutdown() {
+		LOGGER.log(Level.INFO, "Shuting down json store");
+		try {
+			pool.close();
+			server.shutdown();
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to shutdown json store", e);
+		}
+	}
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void index(OrtolangIndexableObject object)
-			throws JsonStoreServiceException {
+	public void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException {
 		LOGGER.log(Level.INFO, "Indexing object: " + object.getKey());
-		
+
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
 			db.save(doc);
 			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
 			ortolangKeyIdx.put(object.getKey(), doc);
-		} catch(Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to index json ",e);
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to index json ", e);
 		} finally {
 			db.close();
 		}
@@ -126,18 +124,16 @@ public class JsonStoreServiceBean implements JsonStoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void reindex(OrtolangIndexableObject object)
-			throws JsonStoreServiceException {
+	public void reindex(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException {
 		LOGGER.log(Level.FINE, "Reindexing object: " + object.getKey());
 
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			ODocument oldDoc = getDocumentByKey(object.getKey());
-			
 			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object, oldDoc);
 			db.save(doc);
-		} catch(Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to reindex json ",e);
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to reindex json ", e);
 		} finally {
 			db.close();
 		}
@@ -147,13 +143,13 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void remove(String key) throws JsonStoreServiceException {
 		LOGGER.log(Level.FINE, "Removing key: " + key);
-		
+
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			ODocument oldDoc = getDocumentByKey(key);
 			oldDoc.delete();
-		} catch(Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to remove json ",e);
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to remove json ", e);
 		} finally {
 			db.close();
 		}
@@ -168,27 +164,27 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			List<ODocument> results = db.query(new OSQLSynchQuery<ODocument>(query));
-			for(ODocument doc : results) {
+			for (ODocument doc : results) {
 				jsonResults.add(doc.toJSON());
-		    }
-		} catch(Exception e) {
-			LOGGER.log(Level.SEVERE, "query failed in json store : "+e.getMessage());
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "query failed in json store : " + e.getMessage());
 			throw new JsonStoreServiceException(e.getMessage());
 		} finally {
 			db.close();
 		}
 		return jsonResults;
 	}
-	
+
 	protected ODocument getDocumentByKey(String key) {
 
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
 			OIdentifiable doc = (OIdentifiable) ortolangKeyIdx.get(key);
-			if( doc != null )
+			if (doc != null)
 				return (ODocument) doc.getRecord();
-			
+
 		} finally {
 			db.close();
 		}

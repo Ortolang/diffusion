@@ -20,13 +20,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import fr.ortolang.diffusion.OrtolangIndexableJsonContent;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
-import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
-import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
+import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceBean;
+import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
 import fr.ortolang.diffusion.store.triple.Triple;
 
 public class JsonStoreServiceTest {
@@ -80,7 +79,7 @@ public class JsonStoreServiceTest {
 	
 	@Test
 	public void testInsert() {
-		OrtolangIndexableObject object = getOrtolangIndexableObject();
+		OrtolangIndexableObject<IndexableJsonContent> object = getOrtolangIndexableObject();
 		try {
 
 			System.out.println(" =========");
@@ -103,7 +102,7 @@ public class JsonStoreServiceTest {
 			System.out.println(" =========");
 			
 			// Changes a little bit
-			OrtolangIndexableJsonContent jsonContent = object.getJsonContent();
+			IndexableJsonContent jsonContent = object.getContent();
 			try {
 				jsonContent.setStream(new FileInputStream("src/test/resources/json/sample2.json"));
 			} catch (FileNotFoundException e) {
@@ -141,26 +140,26 @@ public class JsonStoreServiceTest {
 		}
 	}
 	
-	private OrtolangIndexableObject getOrtolangIndexableObject() {
-		OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
+	private OrtolangIndexableObject<IndexableJsonContent> getOrtolangIndexableObject() {
+		IndexablePlainTextContent content = new IndexablePlainTextContent();
 		content.addContentPart("tagada");
 		content.addContentPart("ceci est une petite phrase");
 		content.addContentPart("qui dure longtemps...");
-		OrtolangIndexableSemanticContent scontent = new OrtolangIndexableSemanticContent();
+		IndexableSemanticContent scontent = new IndexableSemanticContent();
 		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/description", "W3Schools - Free tutorials"));
 		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/publisher", "Refsnes Data as"));
 		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/date", "2008-09-01"));
 		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/type", "Web Development"));
 		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/format", "text/html"));
 		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/language", "en"));
-		OrtolangIndexableJsonContent jsonContent = new OrtolangIndexableJsonContent();
+		IndexableJsonContent jsonContent = new IndexableJsonContent();
 		try {
 			jsonContent.setStream(new FileInputStream("src/test/resources/json/sample.json"));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
-		OrtolangIndexableObject object = new OrtolangIndexableObject();
+		OrtolangIndexableObject<IndexableJsonContent> object = new OrtolangIndexableObject<IndexableJsonContent>();
 		object.setKey("K1");
 		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
 		object.setService("service");
@@ -173,9 +172,7 @@ public class JsonStoreServiceTest {
 		object.setCreationDate(System.currentTimeMillis());
 		object.setLastModificationDate(System.currentTimeMillis());
 		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("foo", "bar")} ));
-		object.setPlainTextContent(content);
-		object.setSemanticContent(scontent);
-		object.setJsonContent(jsonContent);
+		object.setContent(jsonContent);
 		
 		return object;
 	}

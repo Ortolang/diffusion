@@ -67,28 +67,25 @@ public class IndexingServiceBean implements IndexingService {
 	}
 
 	@Override
-	public void index(String key, IndexingContext indexingContext) throws IndexingServiceException {
-		sendMessage("index", key, indexingContext);
+	public void index(String key) throws IndexingServiceException {
+		sendMessage("index", key);
 	}
 
 	@Override
-	public void reindex(String key, IndexingContext indexingContext) throws IndexingServiceException {
-		sendMessage("reindex", key, indexingContext);
+	public void reindex(String key) throws IndexingServiceException {
+		sendMessage("reindex", key);
 	}
 
 	@Override
-	public void remove(String key, IndexingContext indexingContext) throws IndexingServiceException {
-		sendMessage("remove", key, indexingContext);
+	public void remove(String key) throws IndexingServiceException {
+		sendMessage("remove", key);
 	}
 
-	private void sendMessage(String action, String key, IndexingContext indexingContext) throws IndexingServiceException {
+	private void sendMessage(String action, String key) throws IndexingServiceException {
 		try {
 			Message message = context.createMessage();
 			message.setStringProperty("action", action);
 			message.setStringProperty("key", key);
-			message.setStringProperty("root", indexingContext.getRoot());
-			message.setStringProperty("path", indexingContext.getPath());
-			message.setStringProperty("name", indexingContext.getName());
 			context.createProducer().send(indexingTopic, message);                   
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "unable to send indexing message", e);

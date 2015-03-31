@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -59,6 +60,9 @@ import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
@@ -74,9 +78,6 @@ import com.github.fge.jsonschema.main.JsonSchemaFactory;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangIndexableJsonContent;
-import fr.ortolang.diffusion.OrtolangIndexablePlainTextContent;
-import fr.ortolang.diffusion.OrtolangIndexableSemanticContent;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectSize;
@@ -87,9 +88,12 @@ import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
+import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
+import fr.ortolang.diffusion.indexing.IndexingService;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -104,10 +108,14 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
+import fr.ortolang.diffusion.store.json.IndexableJsonContent;
+import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
 import fr.ortolang.diffusion.store.triple.Triple;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 import fr.ortolang.diffusion.store.triple.URIHelper;
@@ -132,6 +140,8 @@ public class CoreServiceBean implements CoreService {
 	private MembershipService membership;
 	@EJB
 	private AuthorisationService authorisation;
+	@EJB
+	private IndexingService indexing;
 	@EJB
 	private NotificationService notification;
 	@PersistenceContext(unitName = "ortolangPU")
@@ -180,6 +190,14 @@ public class CoreServiceBean implements CoreService {
 
 	public void setAuthorisationService(AuthorisationService authorisation) {
 		this.authorisation = authorisation;
+	}
+
+	public IndexingService getIndexingService() {
+		return indexing;
+	}
+
+	public void setIndexingService(IndexingService indexing) {
+		this.indexing = indexing;
 	}
 
 	public void setEntityManager(EntityManager em) {
@@ -270,7 +288,7 @@ public class CoreServiceBean implements CoreService {
 			wsrules.put(members, Arrays.asList("read"));
 			authorisation.createPolicy(wskey, caller);
 			authorisation.setPolicyRules(wskey, wsrules);
-
+			
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "create"), "");
 			notification.throwEvent(head, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), "");
 		} catch (KeyAlreadyExistsException e) {
@@ -281,7 +299,7 @@ public class CoreServiceBean implements CoreService {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occured while creating workspace", e);
 			throw new CoreServiceException("unable to create workspace with key [" + wskey + "]", e);
-		}
+		} 
 	}
 
 	@Override
@@ -301,8 +319,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
 			workspace.setKey(wskey);
-			// em.detach(workspace);
-
+			
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "read"), "");
 			return workspace;
 		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
@@ -427,7 +444,7 @@ public class CoreServiceBean implements CoreService {
 			em.merge(workspace);
 
 			registry.update(wskey);
-
+			
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), "");
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
@@ -457,7 +474,7 @@ public class CoreServiceBean implements CoreService {
 
 			membership.deleteGroup(workspace.getMembers());
 			registry.delete(wskey);
-
+			
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "delete"), "");
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
@@ -567,6 +584,80 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to resolve into workspace [" + wskey + "] metadata name [" + name + "] at [" + path + "]", e);
 		}
 	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public Map<String, Map<String, List<String>>> buildWorkspacePublicationMap(String wskey, String snapshot) throws CoreServiceException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "building publication map for workspace [" + wskey + "]");
+		try {
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+			checkObjectType(identifier, Workspace.OBJECT_TYPE);
+			authorisation.checkPermission(wskey, subjects, "delete");
+
+			Workspace workspace = em.find(Workspace.class, identifier.getId());
+			if (workspace == null) {
+				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+			}
+			if ( !workspace.containsSnapshotName(snapshot) ) {
+				throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + snapshot);
+			}
+			String root = workspace.findSnapshotByName(snapshot).getKey();
+			
+			Map<String, Map<String, List<String>>> map = new HashMap<String, Map<String, List<String>>>();
+			AuthorisationPolicyTemplate defaultTemplate = authorisation.getPolicyTemplate(AuthorisationPolicyTemplate.DEFAULT);
+			Map<String, String> aclParams = new HashMap<String, String> ();
+			aclParams.put("${workspace.members}", workspace.getMembers());
+			builtPublicationMap(root, map, authorisation.getPolicyRules(defaultTemplate.getTemplate()), aclParams);
+			return map;
+		} catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occured during building workspace publication map", e);
+			throw new CoreServiceException("unexpected error while trying to build workspace publication map", e);
+		}
+	}
+	
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private void builtPublicationMap(String key, Map<String, Map<String, List<String>>> map, Map<String, List<String>> current, Map<String, String> params) throws KeyNotFoundException, AccessDeniedException, CoreServiceException, OrtolangException {
+		Object object = findObject(key);
+		if (object instanceof MetadataSource) {
+			MetadataElement mde = ((MetadataSource)object).findMetadataByName(MetadataFormat.ACL);
+			if ( mde != null ) {
+				LOGGER.log(Level.FINE, "ACL metadata found, load json, find policy template and render it...");
+				MetadataObject md = readMetadataObject(mde.getKey());
+				try {
+					JsonReader reader = Json.createReader(binarystore.get(md.getStream()));
+					JsonObject json = reader.readObject();
+					String template = json.getString("template");
+					reader.close();
+					AuthorisationPolicyTemplate policy = authorisation.getPolicyTemplate(template);
+					Map<String, List<String>> rules = authorisation.getPolicyRules(policy.getTemplate());
+					Map<String, List<String>> filtered = new HashMap<String, List<String>> ();
+					for ( Entry<String, List<String>> entry : rules.entrySet() ) {
+						if ( params.containsKey(entry.getKey()) ) {
+							filtered.put(params.get(entry.getKey()), entry.getValue());
+						} else {
+							filtered.put(entry.getKey(), entry.getValue());
+						}
+					}
+					current = filtered;
+				} catch ( AuthorisationServiceException | BinaryStoreServiceException | DataNotFoundException e ) {
+					LOGGER.log(Level.SEVERE, "unable to read acl metadata", e);
+				}
+			}
+		}
+		map.put(key, current);
+		if (object instanceof MetadataSource) {
+			for (MetadataElement element : ((MetadataSource)object).getMetadatas()) {
+				map.put(element.getKey(), current);
+			}
+		}
+		if (object instanceof Collection) {
+			for (CollectionElement element : ((Collection)object).getElements()) {
+				builtPublicationMap(element.getKey(), map, current, params);
+			}
+		}
+	}
 
 	/* Collections */
 
@@ -645,9 +736,10 @@ public class CoreServiceBean implements CoreService {
 			registry.update(ws.getKey());
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
+			indexing.index(key);
 			notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), "");
 		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
-				| MembershipServiceException | TreeBuilderException e) {
+				| MembershipServiceException | TreeBuilderException | IndexingServiceException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occured during collection creation", e);
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to create collection into workspace [" + wskey + "] at path [" + path + "]", e);
@@ -671,8 +763,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
 			}
 			collection.setKey(key);
-			// em.detach(collection);
-
+			
 			notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "read"), "");
 			return collection;
 		} catch (NotificationServiceException | MembershipServiceException | AuthorisationServiceException | RegistryServiceException e) {
@@ -810,11 +901,12 @@ public class CoreServiceBean implements CoreService {
 				registry.update(ws.getKey());
 				LOGGER.log(Level.FINEST, "workspace set changed");
 
+				indexing.reindex(collection.getKey());
 				notification.throwEvent(collection.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "update"), "");
 			} else {
 				LOGGER.log(Level.FINEST, "no modification detected, doing nothing");
 			}
-		} catch (KeyLockedException | NotificationServiceException | MembershipServiceException | AuthorisationServiceException | RegistryServiceException | TreeBuilderException e) {
+		} catch (KeyLockedException | NotificationServiceException | MembershipServiceException | AuthorisationServiceException | RegistryServiceException | TreeBuilderException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while updating collection", e);
 			throw new CoreServiceException("unable to update collection into workspace [" + workspace + "] at path [" + path + "]", e);
@@ -880,6 +972,7 @@ public class CoreServiceBean implements CoreService {
 			sparent.removeElement(selement);
 			em.merge(sparent);
 			registry.update(sparent.getKey());
+			indexing.reindex(sparent.getKey());
 
 			LOGGER.log(Level.FINEST, "parent [" + sparent.getKey() + "] has been updated");
 
@@ -897,11 +990,12 @@ public class CoreServiceBean implements CoreService {
 				scollection.setName(dpath.part());
 				em.merge(scollection);
 				registry.update(scollection.getKey());
-
+				indexing.reindex(scollection.getKey());
 			}
 			dparent.addElement(new CollectionElement(Collection.OBJECT_TYPE, scollection.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, scollection.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
+			indexing.reindex(dparent.getKey());
 
 			LOGGER.log(Level.FINEST, "collection [" + scollection.getKey() + "] added to destination parent [" + dparent.getKey() + "]");
 
@@ -911,7 +1005,7 @@ public class CoreServiceBean implements CoreService {
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
 			notification.throwEvent(scollection.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "move"), "");
-		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | CloneException e) {
+		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | CloneException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while moving collection", e);
 			throw new CoreServiceException("unable to move collection into workspace [" + workspace + "] from path [" + source + "] to path [" + destination + "]", e);
@@ -978,6 +1072,7 @@ public class CoreServiceBean implements CoreService {
 			parent.removeElement(element);
 			em.merge(parent);
 			registry.update(parent.getKey());
+			indexing.reindex(parent.getKey());
 
 			LOGGER.log(Level.FINEST, "parent [" + parent.getKey() + "] has been updated");
 
@@ -992,12 +1087,13 @@ public class CoreServiceBean implements CoreService {
 					registry.delete(mde.getKey());
 				}
 				registry.delete(leaf.getKey());
+				indexing.remove(parent.getKey());
 			}
 
 			deleteCollectionContent(leaf, ws.getClock());
 
 			notification.throwEvent(leaf.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "delete"), "");
-		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException e) {
+		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while deleting collection", e);
 			throw new CoreServiceException("unable to delete collection into workspace [" + workspace + "] at path [" + path + "]", e);
@@ -1075,6 +1171,7 @@ public class CoreServiceBean implements CoreService {
 			LOGGER.log(Level.FINEST, "object [" + key + "] created");
 
 			registry.register(key, object.getObjectIdentifier(), caller);
+			indexing.index(key);
 
 			authorisation.clonePolicy(key, ws.getHead());
 			LOGGER.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
@@ -1082,6 +1179,7 @@ public class CoreServiceBean implements CoreService {
 			parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getSize(), object.getMimeType(), key));
 			em.merge(parent);
 			registry.update(parent.getKey());
+			indexing.reindex(parent.getKey());
 
 			LOGGER.log(Level.FINEST, "object [" + key + "] added to parent [" + parent.getKey() + "]");
 
@@ -1092,7 +1190,7 @@ public class CoreServiceBean implements CoreService {
 
 			notification.throwEvent(key, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "create"), "");
 		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
-				| MembershipServiceException | TreeBuilderException | BinaryStoreServiceException | DataNotFoundException e) {
+				| MembershipServiceException | TreeBuilderException | BinaryStoreServiceException | DataNotFoundException | IndexingServiceException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occured during object creation", e);
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to create object into workspace [" + workspace + "] at path [" + path + "]", e);
@@ -1116,7 +1214,6 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 			}
 			object.setKey(key);
-			// em.detach(object);
 
 			notification.throwEvent(key, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "read"), "");
 			return object;
@@ -1202,6 +1299,7 @@ public class CoreServiceBean implements CoreService {
 					CollectionElement celement = new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey());
 					parent.addElement(celement);
 					registry.update(parent.getKey());
+					indexing.reindex(parent.getKey());
 					object = clone;
 				} else {
 					parent.removeElement(element);
@@ -1211,6 +1309,7 @@ public class CoreServiceBean implements CoreService {
 				em.merge(parent);
 				em.merge(object);
 				registry.update(object.getKey());
+				indexing.reindex(object.getKey());
 				LOGGER.log(Level.FINEST, "object updated");
 
 				ws.setChanged(true);
@@ -1223,7 +1322,7 @@ public class CoreServiceBean implements CoreService {
 				LOGGER.log(Level.FINEST, "no changes detected with current object, nothing to do");
 			}
 		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
-				| TreeBuilderException | BinaryStoreServiceException | DataNotFoundException | CloneException e) {
+				| TreeBuilderException | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occured while reading object", e);
 			throw new CoreServiceException("unable to read object into workspace [" + workspace + "] at path [" + path + "]", e);
 		}
@@ -1288,6 +1387,7 @@ public class CoreServiceBean implements CoreService {
 			sparent.removeElement(selement);
 			em.merge(sparent);
 			registry.update(sparent.getKey());
+			indexing.reindex(sparent.getKey());
 
 			LOGGER.log(Level.FINEST, "parent [" + sparent.getKey() + "] has been updated");
 
@@ -1305,11 +1405,13 @@ public class CoreServiceBean implements CoreService {
 				sobject.setName(dpath.part());
 				em.merge(sobject);
 				registry.update(sobject.getKey());
+				indexing.reindex(sobject.getKey());
 
 			}
 			dparent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, sobject.getName(), System.currentTimeMillis(), sobject.getSize(), sobject.getMimeType(), sobject.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
+			indexing.reindex(dparent.getKey());
 
 			LOGGER.log(Level.FINEST, "object [" + sobject.getKey() + "] added to destination parent [" + dparent.getKey() + "]");
 
@@ -1319,7 +1421,7 @@ public class CoreServiceBean implements CoreService {
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
 			notification.throwEvent(sobject.getKey(), caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "move"), "");
-		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | CloneException e) {
+		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | CloneException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while moving object", e);
 			throw new CoreServiceException("unable to move object into workspace [" + workspace + "] from path [" + source + "] to path [" + destination + "]", e);
@@ -1375,6 +1477,7 @@ public class CoreServiceBean implements CoreService {
 			parent.removeElement(element);
 			em.merge(parent);
 			registry.update(parent.getKey());
+			indexing.reindex(parent.getKey());
 
 			LOGGER.log(Level.FINEST, "parent [" + parent.getKey() + "] has been updated");
 
@@ -1389,10 +1492,11 @@ public class CoreServiceBean implements CoreService {
 					registry.delete(mde.getKey());
 				}
 				registry.delete(leaf.getKey());
+				indexing.remove(leaf.getKey());
 			}
 
 			notification.throwEvent(leaf.getKey(), caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "delete"), "");
-		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException e) {
+		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while deleting object", e);
 			throw new CoreServiceException("unable to delete object into workspace [" + workspace + "] at path [" + path + "]", e);
@@ -1461,6 +1565,7 @@ public class CoreServiceBean implements CoreService {
 			em.persist(link);
 
 			registry.register(key, link.getObjectIdentifier(), caller);
+			indexing.index(key);
 
 			authorisation.clonePolicy(key, ws.getHead());
 			LOGGER.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
@@ -1468,6 +1573,7 @@ public class CoreServiceBean implements CoreService {
 			parent.addElement(new CollectionElement(Link.OBJECT_TYPE, link.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, key));
 			em.merge(parent);
 			registry.update(parent.getKey());
+			indexing.reindex(parent.getKey());
 			LOGGER.log(Level.FINEST, "link [" + key + "] added to parent [" + parent.getKey() + "]");
 
 			ws.setChanged(true);
@@ -1477,7 +1583,7 @@ public class CoreServiceBean implements CoreService {
 
 			notification.throwEvent(key, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "create"), "");
 		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
-				| MembershipServiceException | TreeBuilderException e) {
+				| MembershipServiceException | TreeBuilderException | IndexingServiceException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occured during link creation", e);
 			ctx.setRollbackOnly();
 			throw new CoreServiceException("unable to create link into workspace [" + workspace + "] at path [" + path + "]", e);
@@ -1569,6 +1675,7 @@ public class CoreServiceBean implements CoreService {
 			sparent.removeElement(selement);
 			em.merge(sparent);
 			registry.update(sparent.getKey());
+			indexing.reindex(sparent.getKey());
 
 			LOGGER.log(Level.FINEST, "parent [" + sparent.getKey() + "] has been updated");
 
@@ -1585,11 +1692,13 @@ public class CoreServiceBean implements CoreService {
 				slink.setName(dpath.part());
 				em.merge(slink);
 				registry.update(slink.getKey());
+				indexing.reindex(slink.getKey());
 
 			}
 			dparent.addElement(new CollectionElement(Link.OBJECT_TYPE, slink.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, slink.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
+			indexing.reindex(dparent.getKey());
 
 			LOGGER.log(Level.FINEST, "link [" + slink.getKey() + "] added to destination parent [" + dparent.getKey() + "]");
 
@@ -1599,7 +1708,7 @@ public class CoreServiceBean implements CoreService {
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
 			notification.throwEvent(slink.getKey(), caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "move"), "");
-		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | CloneException e) {
+		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | CloneException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while moving link", e);
 			throw new CoreServiceException("unable to move link into workspace [" + workspace + "] from path [" + source + "] to path [" + destination + "]", e);
@@ -1655,6 +1764,7 @@ public class CoreServiceBean implements CoreService {
 			parent.removeElement(element);
 			em.merge(parent);
 			registry.update(parent.getKey());
+			indexing.reindex(parent.getKey());
 			LOGGER.log(Level.FINEST, "parent [" + parent.getKey() + "] has been updated");
 
 			ws.setChanged(true);
@@ -1668,11 +1778,11 @@ public class CoreServiceBean implements CoreService {
 					registry.delete(mde.getKey());
 				}
 				registry.delete(leaf.getKey());
-
+				indexing.remove(leaf.getKey());
 			}
 
 			notification.throwEvent(leaf.getKey(), caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "delete"), "");
-		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException e) {
+		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while deleting link", e);
 			throw new CoreServiceException("unable to delete link into workspace [" + workspace + "] at path [" + path + "]", e);
@@ -2547,24 +2657,13 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public OrtolangIndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException {
+	public IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
-
 			if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 			}
-
-			OrtolangIndexablePlainTextContent content = new OrtolangIndexablePlainTextContent();
-
-			if (identifier.getType().equals(Workspace.OBJECT_TYPE)) {
-				Workspace workspace = em.find(Workspace.class, identifier.getId());
-				if (workspace == null) {
-					throw new OrtolangException("unable to find workspace with id [" + identifier.getId() + "] from storage");
-				}
-				content.addContentPart(workspace.getName());
-				content.addContentPart(workspace.getType());
-			}
+			IndexablePlainTextContent content = new IndexablePlainTextContent();
 
 			if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
 				DataObject object = em.find(DataObject.class, identifier.getId());
@@ -2583,12 +2682,10 @@ public class CoreServiceBean implements CoreService {
 
 				for (MetadataElement mde : object.getMetadatas()) {
 					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-
 					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
 					if (metadata == null) {
 						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
 					}
-
 					try {
 						if (metadata.getStream() != null && metadata.getStream().length() > 0) {
 							content.addContentPart(binarystore.extract(metadata.getStream()));
@@ -2609,12 +2706,10 @@ public class CoreServiceBean implements CoreService {
 
 				for (MetadataElement mde : collection.getMetadatas()) {
 					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-
 					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
 					if (metadata == null) {
 						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
 					}
-
 					try {
 						if (metadata.getStream() != null && metadata.getStream().length() > 0) {
 							content.addContentPart(binarystore.extract(metadata.getStream()));
@@ -2634,12 +2729,10 @@ public class CoreServiceBean implements CoreService {
 
 				for (MetadataElement mde : reference.getMetadatas()) {
 					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-
 					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
 					if (metadata == null) {
 						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
 					}
-
 					try {
 						if (metadata.getStream() != null && metadata.getStream().length() > 0) {
 							content.addContentPart(binarystore.extract(metadata.getStream()));
@@ -2658,19 +2751,13 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public OrtolangIndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException {
+	public IndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
-
 			if (!identifier.getService().equals(getServiceName())) {
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 			}
-
-			OrtolangIndexableSemanticContent content = new OrtolangIndexableSemanticContent();
-
-			if (identifier.getType().equals(Workspace.OBJECT_TYPE)) {
-
-			}
+			IndexableSemanticContent content = new IndexableSemanticContent();
 
 			if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
 				DataObject object = em.find(DataObject.class, identifier.getId());
@@ -2714,7 +2801,6 @@ public class CoreServiceBean implements CoreService {
 				String subj = URIHelper.fromKey(key);
 				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#name", metadata.getName()));
 				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#metadataFormat", metadata.getFormat()));
-
 			}
 
 			return content;
@@ -2724,19 +2810,14 @@ public class CoreServiceBean implements CoreService {
 	}
 
 	@Override
-	public OrtolangIndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException {
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
-
 			if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
 				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
 			}
-
-			OrtolangIndexableJsonContent content = new OrtolangIndexableJsonContent();
-
-			if (identifier.getType().equals(Workspace.OBJECT_TYPE)) {
-
-			}
+			IndexableJsonContent content = new IndexableJsonContent();
 
 			if (identifier.getType().equals(Collection.OBJECT_TYPE)) {
 				Collection collection = em.find(Collection.class, identifier.getId());
@@ -2746,14 +2827,12 @@ public class CoreServiceBean implements CoreService {
 
 				for (MetadataElement mde : collection.getMetadatas()) {
 					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-
 					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
 					if (metadata == null) {
 						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
 					}
-
 					try {
-						if (metadata.getStream() != null && metadata.getStream().length() > 0 && metadata.getFormat().equals("ortolang-item-json")) {
+						if (metadata.getStream() != null && metadata.getStream().length() > 0) {
 							content.setStream(binarystore.get(metadata.getStream()));
 						}
 					} catch (DataNotFoundException | BinaryStoreServiceException e) {
@@ -2770,14 +2849,12 @@ public class CoreServiceBean implements CoreService {
 
 				for (MetadataElement mde : object.getMetadatas()) {
 					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-
 					MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
 					if (metadata == null) {
 						throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
 					}
-
 					try {
-						if (metadata.getStream() != null && metadata.getStream().length() > 0 && metadata.getFormat().equals("ortolang-item-json")) {
+						if (metadata.getStream() != null && metadata.getStream().length() > 0) {
 							content.setStream(binarystore.get(metadata.getStream()));
 						}
 					} catch (DataNotFoundException | BinaryStoreServiceException e) {

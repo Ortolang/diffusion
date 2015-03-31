@@ -3,33 +3,19 @@
   "id": "http://jsonschema.net",
   "type": "object",
   "properties": {
-    "rules": {
-      "id": "http://jsonschema.net/rules",
-      "type": "array",
-      "items": {
-        "id": "http://jsonschema.net/rules/0",
-        "type": "object",
-        "properties": {
-          "subject": {
-            "id": "http://jsonschema.net/rules/0/subject",
-            "type": "string"
-          },
-          "permissions": {
-            "id": "http://jsonschema.net/rules/0/permissions",
-            "type": "string"
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "subject",
-          "permissions"
-        ]
-      },
-      "additionalItems": true
+    "template": {
+      "id": "http://jsonschema.net/template",
+      "type": "string",
+      "default": "forall",
+      "enum": [
+        "forall",
+        "authentified",
+        "esr",
+        "restricted"
+      ]
     }
   },
-  "additionalProperties": false,
   "required": [
-    "rules"
+    "template"
   ]
 }
