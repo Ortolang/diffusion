@@ -108,48 +108,20 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException {
 		LOGGER.log(Level.INFO, "Indexing object: " + object.getKey());
-
-		ODatabaseDocumentTx db = pool.acquire();
-		try {
-			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
-			db.save(doc);
-			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
-			ortolangKeyIdx.put(object.getKey(), doc);
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to index json ", e);
-		} finally {
-			db.close();
-		}
+		insert(object);
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void reindex(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException {
 		LOGGER.log(Level.FINE, "Reindexing object: " + object.getKey());
-
-		ODatabaseDocumentTx db = pool.acquire();
-		try {
-			ODocument oldDoc = getDocumentByKey(object.getKey());
-			if ( oldDoc != null ) {
-				oldDoc.delete();
-			}
-			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
-			db.save(doc);
-			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
-			ortolangKeyIdx.remove(object.getKey());
-			ortolangKeyIdx.put(object.getKey(), doc);
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to reindex json ", e);
-		} finally {
-			db.close();
-		}
+		insert(object);
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void remove(String key) throws JsonStoreServiceException {
 		LOGGER.log(Level.FINE, "Removing key: " + key);
-
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			ODocument oldDoc = getDocumentByKey(key);
@@ -164,9 +136,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> search(String query) throws JsonStoreServiceException {
-
 		List<String> jsonResults = new ArrayList<String>();
-
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			List<ODocument> results = db.query(new OSQLSynchQuery<ODocument>(query));
@@ -183,7 +153,6 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	}
 
 	protected ODocument getDocumentByKey(String key) {
-
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
@@ -195,6 +164,25 @@ public class JsonStoreServiceBean implements JsonStoreService {
 			db.close();
 		}
 		return null;
+	}
+	
+	private void insert(OrtolangIndexableObject<IndexableJsonContent> object) {
+		ODatabaseDocumentTx db = pool.acquire();
+		try {
+			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
+			ODocument oldDoc = getDocumentByKey(object.getKey());
+			if ( oldDoc != null ) {
+				oldDoc.delete();
+			}
+			db.save(doc);
+			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
+			ortolangKeyIdx.remove(object.getKey());
+			ortolangKeyIdx.put(object.getKey(), doc);
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to index json ", e);
+		} finally {
+			db.close();
+		}
 	}
 
 }

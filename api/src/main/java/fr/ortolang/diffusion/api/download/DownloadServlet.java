@@ -62,7 +62,7 @@ public class DownloadServlet extends HttpServlet {
 	private static final Logger LOGGER = Logger.getLogger(DownloadServlet.class.getName());
 
 	@EJB
-	private static BinaryStoreService binaryStore;
+	private BinaryStoreService binaryStore;
 
 	@Override
 	public void init() throws ServletException {

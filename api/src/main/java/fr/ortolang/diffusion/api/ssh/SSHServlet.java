@@ -68,9 +68,9 @@ public class SSHServlet extends HttpServlet {
 	private static final Logger LOGGER = Logger.getLogger(SSHServlet.class.getName());
 
 	@Resource
-	private static ManagedThreadFactory threadFactory;
+	private ManagedThreadFactory threadFactory;
 	@Resource
-	private static ManagedScheduledExecutorService executor;
+	private ManagedScheduledExecutorService executor;
 
 	private static SshServer sshd = null;
 	private static boolean started = false;

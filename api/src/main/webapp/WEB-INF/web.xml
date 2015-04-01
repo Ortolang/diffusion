@@ -78,11 +78,16 @@
 		<enabled>true</enabled>
 	</servlet>
 	<servlet>
+		<display-name>HTML Viewer Servlet</display-name>
+		<servlet-name>HtmlViewerServlet</servlet-name>
+		<servlet-class>fr.ortolang.diffusion.api.html.HtmlViewerServlet</servlet-class>
+		<load-on-startup>2</load-on-startup>
+		<enabled>true</enabled>
+	</servlet>
+	<servlet>
 		<display-name>OAI-PMH Servlet</display-name>
 		<servlet-name>OAIPMHServlet</servlet-name>
 		<servlet-class>fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet</servlet-class>
-		<!-- <load-on-startup>1</load-on-startup> -->
-		<!-- <enabled>true</enabled> -->
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>DownloadServlet</servlet-name>
@@ -93,9 +98,22 @@
 		<url-pattern>/rest/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
+		<servlet-name>HtmlViewerServlet</servlet-name>
+		<url-pattern>/html/*</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
 		<servlet-name>OAIPMHServlet</servlet-name>
 		<url-pattern>/oai/*</url-pattern>
 	</servlet-mapping>
+	<security-constraint>
+        <web-resource-collection>
+            <web-resource-name>viewer</web-resource-name>
+            <url-pattern>/html/*</url-pattern>
+        </web-resource-collection>
+        <user-data-constraint>
+			<transport-guarantee>NONE</transport-guarantee>
+		</user-data-constraint>
+    </security-constraint>
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name>All Access</web-resource-name>

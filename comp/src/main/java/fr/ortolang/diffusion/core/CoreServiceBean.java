@@ -361,7 +361,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to find workspaces for profile", e);
 		}
 	}
-
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void snapshotWorkspace(String wskey, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
@@ -482,6 +482,21 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to delete workspace with key [" + wskey + "]", e);
 		}
 	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public String resolveWorkspaceAlias(String alias) throws CoreServiceException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "finding workspace for alias:" + alias );
+		try {
+			TypedQuery<Workspace> query = em.createNamedQuery("findWorkspaceByAlias", Workspace.class).setParameter("alias", alias);
+			Workspace workspace = query.getSingleResult();
+			String wskey = registry.lookup(workspace.getObjectIdentifier());
+			return wskey;
+		} catch (RegistryServiceException | IdentifierNotRegisteredException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occured during resolving workspace alias: " + alias, e);
+			throw new CoreServiceException("unable to resolve workspace alias: " + alias, e);
+		}
+	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -491,10 +506,10 @@ public class CoreServiceBean implements CoreService {
 			PathBuilder npath = PathBuilder.fromPath(path);
 			PathBuilder ppath = npath.clone().parent();
 
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			authorisation.checkAuthentified(subjects);
-			LOGGER.log(Level.FINEST, "user [" + caller + "] is authentified");
+//			String caller = membership.getProfileKeyForConnectedIdentifier();
+//			List<String> subjects = membership.getConnectedIdentifierSubjects();
+//			authorisation.checkAuthentified(subjects);
+//			LOGGER.log(Level.FINEST, "user [" + caller + "] is authentified");
 
 			OrtolangObjectIdentifier wsidentifier = registry.lookup(wskey);
 			checkObjectType(wsidentifier, Workspace.OBJECT_TYPE);
@@ -507,8 +522,8 @@ public class CoreServiceBean implements CoreService {
 			ws.setKey(wskey);
 			LOGGER.log(Level.FINEST, "workspace loaded");
 
-			authorisation.checkPermission(ws.getHead(), subjects, "read");
-			LOGGER.log(Level.FINEST, "user [" + caller + "] has 'read' permission on the head collection of this workspace");
+//			authorisation.checkPermission(ws.getHead(), subjects, "read");
+//			LOGGER.log(Level.FINEST, "user [" + caller + "] has 'read' permission on the head collection of this workspace");
 
 			String rroot = ws.getHead();
 			if (root != null && root.length() > 0 && !root.equals(Workspace.HEAD)) {
@@ -533,7 +548,7 @@ public class CoreServiceBean implements CoreService {
 			}
 
 			return element.getKey();
-		} catch (KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | TreeBuilderException e) {
+		} catch (KeyNotFoundException | RegistryServiceException | TreeBuilderException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occured during resolving path", e);
 			throw new CoreServiceException("unable to resolve into workspace [" + wskey + "] path [" + path + "]", e);
 		}
