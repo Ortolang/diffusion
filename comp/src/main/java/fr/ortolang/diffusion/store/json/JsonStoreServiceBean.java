@@ -130,8 +130,14 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			ODocument oldDoc = getDocumentByKey(object.getKey());
-			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object, oldDoc);
+			if ( oldDoc != null ) {
+				oldDoc.delete();
+			}
+			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
 			db.save(doc);
+			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
+			ortolangKeyIdx.remove(object.getKey());
+			ortolangKeyIdx.put(object.getKey(), doc);
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to reindex json ", e);
 		} finally {

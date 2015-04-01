@@ -59,6 +59,7 @@ import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.indexing.IndexingService;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -186,10 +187,10 @@ public class PublicationServiceBean implements PublicationService {
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
 				registry.update(key);
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
-				// TODO reindex key;
+				indexing.reindex(key);
 				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "publish"), "");
 			}
-		} catch (KeyLockedException | AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException e) {
+		} catch (KeyLockedException | AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException | IndexingServiceException e) {
 			LOGGER.log(Level.SEVERE, "error during publication of key", e);
 			ctx.setRollbackOnly();
 			throw new PublicationServiceException("error during publishing key : " + e);
@@ -213,10 +214,10 @@ public class PublicationServiceBean implements PublicationService {
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.REVIEW.value());
 				registry.update(key);
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
-				// TODO reindex key;
+				indexing.reindex(key);
 				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "review"), "");
 			}
-		} catch (KeyLockedException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException e) {
+		} catch (KeyLockedException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			throw new PublicationServiceException("error during submitting key for review : " + e);
 		}

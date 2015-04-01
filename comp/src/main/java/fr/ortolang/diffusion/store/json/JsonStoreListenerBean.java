@@ -76,9 +76,9 @@ public class JsonStoreListenerBean implements MessageListener {
 		try {
 			String status = registry.getPublicationStatus(key);
 			if ( status.equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
-				LOGGER.log(Level.FINE, "key " + key + " is state " + OrtolangObjectState.Status.PUBLISHED.toString() + ", indexed in json store");
 				OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
 				store.index(object);
+				LOGGER.log(Level.FINE, "key " + key + " indexed in json store");
 			}
 		} catch (JsonStoreServiceException | OrtolangException | RegistryServiceException | KeyNotFoundException e) {
 			throw new IndexingServiceException("unable to insert object in store", e);
@@ -89,9 +89,9 @@ public class JsonStoreListenerBean implements MessageListener {
 		try {
 			String status = registry.getPublicationStatus(key);
 			if ( status.equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
-				LOGGER.log(Level.FINE, "key " + key + " is state " + OrtolangObjectState.Status.PUBLISHED.toString() + ", reindexing in json store");
 				OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
 				store.reindex(object);
+				LOGGER.log(Level.FINE, "key " + key + " reindexed in json store");
 			}
 		} catch (JsonStoreServiceException | OrtolangException | RegistryServiceException | KeyNotFoundException e) {
 			throw new IndexingServiceException("unable to update object in store", e);

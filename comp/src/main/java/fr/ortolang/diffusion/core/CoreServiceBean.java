@@ -722,7 +722,8 @@ public class CoreServiceBean implements CoreService {
 			LOGGER.log(Level.FINEST, "collection [" + key + "] created");
 
 			registry.register(key, collection.getObjectIdentifier(), caller);
-
+			indexing.index(key);
+			
 			authorisation.clonePolicy(key, ws.getHead());
 			LOGGER.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
 
@@ -736,7 +737,6 @@ public class CoreServiceBean implements CoreService {
 			registry.update(ws.getKey());
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
-			indexing.index(key);
 			notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), "");
 		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
 				| MembershipServiceException | TreeBuilderException | IndexingServiceException e) {
@@ -827,8 +827,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
 			}
 			collection.setKey(key);
-			// em.detach(collection);
-
+			
 			PathBuilder pathTarget = PathBuilder.fromPath(path);
 			PathBuilder parentTarget = pathTarget.clone().parent();
 
@@ -894,6 +893,7 @@ public class CoreServiceBean implements CoreService {
 				collection.setDescription(description);
 				em.merge(collection);
 				registry.update(collection.getKey());
+				indexing.reindex(collection.getKey());
 				LOGGER.log(Level.FINEST, "collection updated");
 
 				ws.setChanged(true);
@@ -901,7 +901,6 @@ public class CoreServiceBean implements CoreService {
 				registry.update(ws.getKey());
 				LOGGER.log(Level.FINEST, "workspace set changed");
 
-				indexing.reindex(collection.getKey());
 				notification.throwEvent(collection.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "update"), "");
 			} else {
 				LOGGER.log(Level.FINEST, "no modification detected, doing nothing");
@@ -972,8 +971,7 @@ public class CoreServiceBean implements CoreService {
 			sparent.removeElement(selement);
 			em.merge(sparent);
 			registry.update(sparent.getKey());
-			indexing.reindex(sparent.getKey());
-
+			
 			LOGGER.log(Level.FINEST, "parent [" + sparent.getKey() + "] has been updated");
 
 			Collection dparent = loadCollectionAtPath(ws.getHead(), dppath, ws.getClock());
@@ -990,13 +988,11 @@ public class CoreServiceBean implements CoreService {
 				scollection.setName(dpath.part());
 				em.merge(scollection);
 				registry.update(scollection.getKey());
-				indexing.reindex(scollection.getKey());
 			}
 			dparent.addElement(new CollectionElement(Collection.OBJECT_TYPE, scollection.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, scollection.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
-			indexing.reindex(dparent.getKey());
-
+			
 			LOGGER.log(Level.FINEST, "collection [" + scollection.getKey() + "] added to destination parent [" + dparent.getKey() + "]");
 
 			ws.setChanged(true);
@@ -1005,7 +1001,7 @@ public class CoreServiceBean implements CoreService {
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
 			notification.throwEvent(scollection.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "move"), "");
-		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | CloneException | IndexingServiceException e) {
+		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | CloneException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while moving collection", e);
 			throw new CoreServiceException("unable to move collection into workspace [" + workspace + "] from path [" + source + "] to path [" + destination + "]", e);
@@ -1072,8 +1068,7 @@ public class CoreServiceBean implements CoreService {
 			parent.removeElement(element);
 			em.merge(parent);
 			registry.update(parent.getKey());
-			indexing.reindex(parent.getKey());
-
+			
 			LOGGER.log(Level.FINEST, "parent [" + parent.getKey() + "] has been updated");
 
 			ws.setChanged(true);
@@ -1179,8 +1174,7 @@ public class CoreServiceBean implements CoreService {
 			parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getSize(), object.getMimeType(), key));
 			em.merge(parent);
 			registry.update(parent.getKey());
-			indexing.reindex(parent.getKey());
-
+			
 			LOGGER.log(Level.FINEST, "object [" + key + "] added to parent [" + parent.getKey() + "]");
 
 			ws.setChanged(true);
@@ -1299,7 +1293,6 @@ public class CoreServiceBean implements CoreService {
 					CollectionElement celement = new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey());
 					parent.addElement(celement);
 					registry.update(parent.getKey());
-					indexing.reindex(parent.getKey());
 					object = clone;
 				} else {
 					parent.removeElement(element);
@@ -1387,8 +1380,7 @@ public class CoreServiceBean implements CoreService {
 			sparent.removeElement(selement);
 			em.merge(sparent);
 			registry.update(sparent.getKey());
-			indexing.reindex(sparent.getKey());
-
+			
 			LOGGER.log(Level.FINEST, "parent [" + sparent.getKey() + "] has been updated");
 
 			Collection dparent = loadCollectionAtPath(ws.getHead(), dppath, ws.getClock());
@@ -1405,14 +1397,11 @@ public class CoreServiceBean implements CoreService {
 				sobject.setName(dpath.part());
 				em.merge(sobject);
 				registry.update(sobject.getKey());
-				indexing.reindex(sobject.getKey());
-
 			}
 			dparent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, sobject.getName(), System.currentTimeMillis(), sobject.getSize(), sobject.getMimeType(), sobject.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
-			indexing.reindex(dparent.getKey());
-
+			
 			LOGGER.log(Level.FINEST, "object [" + sobject.getKey() + "] added to destination parent [" + dparent.getKey() + "]");
 
 			ws.setChanged(true);
@@ -1421,7 +1410,7 @@ public class CoreServiceBean implements CoreService {
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
 			notification.throwEvent(sobject.getKey(), caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "move"), "");
-		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | CloneException | IndexingServiceException e) {
+		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | CloneException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while moving object", e);
 			throw new CoreServiceException("unable to move object into workspace [" + workspace + "] from path [" + source + "] to path [" + destination + "]", e);
@@ -1477,8 +1466,7 @@ public class CoreServiceBean implements CoreService {
 			parent.removeElement(element);
 			em.merge(parent);
 			registry.update(parent.getKey());
-			indexing.reindex(parent.getKey());
-
+			
 			LOGGER.log(Level.FINEST, "parent [" + parent.getKey() + "] has been updated");
 
 			ws.setChanged(true);
@@ -1573,7 +1561,6 @@ public class CoreServiceBean implements CoreService {
 			parent.addElement(new CollectionElement(Link.OBJECT_TYPE, link.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, key));
 			em.merge(parent);
 			registry.update(parent.getKey());
-			indexing.reindex(parent.getKey());
 			LOGGER.log(Level.FINEST, "link [" + key + "] added to parent [" + parent.getKey() + "]");
 
 			ws.setChanged(true);
@@ -3086,10 +3073,11 @@ public class CoreServiceBean implements CoreService {
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin.getKey(), true);
+			indexing.index(key);
 			authorisation.clonePolicy(key, root);
 
 			return clone;
-		} catch (RegistryServiceException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | KeyNotFoundException | AuthorisationServiceException e) {
+		} catch (RegistryServiceException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | KeyNotFoundException | AuthorisationServiceException | IndexingServiceException e) {
 			throw new CloneException("unable to clone collection with origin key [" + origin + "]", e);
 		}
 	}
@@ -3119,10 +3107,11 @@ public class CoreServiceBean implements CoreService {
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin.getKey(), true);
+			indexing.index(key);
 			authorisation.clonePolicy(key, root);
 
 			return clone;
-		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | KeyAlreadyExistsException | KeyNotFoundException e) {
+		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | KeyAlreadyExistsException | KeyNotFoundException | IndexingServiceException e) {
 			throw new CloneException("unable to clone object with origin [" + origin + "]", e);
 		}
 	}
@@ -3148,10 +3137,11 @@ public class CoreServiceBean implements CoreService {
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin.getKey(), true);
+			indexing.index(key);
 			authorisation.clonePolicy(key, root);
 
 			return clone;
-		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | KeyAlreadyExistsException | KeyNotFoundException e) {
+		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | KeyAlreadyExistsException | KeyNotFoundException | IndexingServiceException e) {
 			throw new CloneException("unable to clone link with origin [" + origin + "]", e);
 		}
 	}
@@ -3182,10 +3172,11 @@ public class CoreServiceBean implements CoreService {
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
+			indexing.reindex(target);
 			authorisation.clonePolicy(key, root);
 
 			return clone;
-		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | CoreServiceException | KeyNotFoundException | KeyAlreadyExistsException e) {
+		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | CoreServiceException | KeyNotFoundException | KeyAlreadyExistsException | IndexingServiceException e) {
 			throw new CloneException("unable to clone metadata with origin [" + origin + "] and target [" + target + "]", e);
 		}
 	}

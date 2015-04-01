@@ -42,6 +42,7 @@ import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.ejb.Local;
+import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
 import javax.jms.JMSContext;
@@ -60,6 +61,8 @@ public class IndexingServiceBean implements IndexingService {
 	
 	@Resource(mappedName = "java:jboss/exported/jms/topic/indexing")
 	private Topic indexingTopic;
+	@Resource
+	private SessionContext sessionCtx;
 	@Inject
 	private JMSContext context;
 	
@@ -86,7 +89,7 @@ public class IndexingServiceBean implements IndexingService {
 			Message message = context.createMessage();
 			message.setStringProperty("action", action);
 			message.setStringProperty("key", key);
-			context.createProducer().send(indexingTopic, message);                   
+			context.createProducer().send(indexingTopic, message);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "unable to send indexing message", e);
 			throw new IndexingServiceException("unable to send indexing message", e);
