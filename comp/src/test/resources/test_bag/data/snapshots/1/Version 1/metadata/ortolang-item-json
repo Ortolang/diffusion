@@ -1,0 +1,16 @@
+{
+	"type": "Corpus",
+	"title": "Test : un corpus de test",
+	"description": "<p>Le corpus de test... test les corpus</p>",
+	"extent": "pas grand chose de vraiment intéressant",
+	"temporal": "2015",
+	"statusOfUse": "Libre",
+	"conditionsOfUse": "Le corpus est librement téléchargeable.",
+	"datasize": "15 Ko",
+	"language": ["Français"],
+	"developer": ["Sheldon Cooper"],
+	"manager": ["Sheldon Cooper"],
+	"researcher": ["Sheldon Cooper", "Rajesh Kootrapoly"],
+	"producer": ["Laboratoire lorrain de recherche en informatique et ses applications - UMR 7503 (LORIA, Nancy FR)", "Université Cergy-Pontoise (Cergy-Pontoise FR)"],
+	"spacial": ["France"]
+}
