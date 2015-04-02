@@ -22,7 +22,7 @@
 		<c:if test="${parent != null}">
 			<tr>
 				<td><img src="${ctx}/icons/back.png"/></td>
-				<td><a href="${ctx}/html${parent}">..</a></td>
+				<td><a href="${ctx}/content${parent}">..</a></td>
 				<td></td>
 				<td></td>
 			</tr>
@@ -32,7 +32,7 @@
 			<jsp:setProperty name="date" property="time" value="${element.modification}"/>    
     		<tr>
 				<td><img src="${ctx}/icons/${element.type}.png" alt="[${element.type}]"/></td>
-				<td><a href="${ctx}/html${path}/${element.name}">${element.name}</a></td>
+				<td><a href="${ctx}/content${path}/${element.name}">${element.name}</a></td>
 				<td align="right"><fmt:formatDate type="both" dateStyle="short" timeStyle="short" value="${date}"/></td>
 				<c:choose>
 					<c:when test="${element.type eq 'object'}">

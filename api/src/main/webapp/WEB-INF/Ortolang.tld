@@ -8,7 +8,7 @@
 	<uri>http://www.ortolang.fr/jsp/tld/ortolang</uri>
 	<tag>
 		<name>fbytes</name>
-		<tag-class>fr.ortolang.diffusion.api.html.FormatBytesTagHandler</tag-class>
+		<tag-class>fr.ortolang.diffusion.api.content.FormatBytesTagHandler</tag-class>
 		<description>Format Bytes Function.</description>
 		<attribute>
 			<name>value</name>

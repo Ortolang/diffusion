@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.api.html;
+package fr.ortolang.diffusion.api.content;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,9 +33,9 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 @SuppressWarnings("serial")
-public class HtmlViewerServlet extends HttpServlet {
+public class ContentViewerServlet extends HttpServlet {
 	
-	private static final Logger LOGGER = Logger.getLogger(HtmlViewerServlet.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ContentViewerServlet.class.getName());
 	public static final String SERVLET_MAPPING = "/html";
 	
 	@EJB
