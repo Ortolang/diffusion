@@ -2,6 +2,9 @@ package fr.ortolang.diffusion.api.html;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,7 +24,10 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -49,19 +55,30 @@ public class HtmlViewerServlet extends HttpServlet {
 		try {
 			PathBuilder puri = PathBuilder.fromPath(request.getPathInfo());
 			String[] parts = puri.buildParts();
-			if ( puri.depth() > 1 ) {
+			if ( puri.depth() == 1 ) {
+				String wskey = core.resolveWorkspaceAlias(parts[0]);
+				Workspace workspace = core.readWorkspace(wskey);
+				List<CollectionElement> elements = new ArrayList<CollectionElement> ();
+				for ( SnapshotElement snapshot : workspace.getSnapshots() ) {
+					CollectionElement element = new CollectionElement(Collection.OBJECT_TYPE, snapshot.getName(), 0, 0, Collection.MIME_TYPE, snapshot.getKey());
+					elements.add(element);
+				}
+				CollectionElement head = new CollectionElement(Collection.OBJECT_TYPE, "head", 0, 0, Collection.MIME_TYPE, workspace.getHead());
+				elements.add(head);
+				Collections.sort(elements);
+				request.setAttribute("path", puri.build());
+				request.setAttribute("ctx", request.getContextPath());
+				request.setAttribute("elements", elements);
+				request.getRequestDispatcher("/jsp/collection.jsp").forward(request, response);
+			} else if ( puri.depth() > 1 ) {
 				String wskey = core.resolveWorkspaceAlias(parts[0]);
 				String root = parts[1];
-				String path = request.getPathInfo().replaceFirst("/" + parts[0] + "/" + parts[1], "");
-				if ( path.length() == 0 ) {
-					path = "/";
-				}
-				String key = core.resolveWorkspacePath(wskey, root, path);
+				PathBuilder path = PathBuilder.fromPath(request.getPathInfo().replaceFirst("/" + parts[0] + "/" + parts[1], ""));
+				String key = core.resolveWorkspacePath(wskey, root, path.build());
 				
 				OrtolangObject object = browser.findObject(key);
 				response.setStatus(HttpServletResponse.SC_OK);
 				if ( object instanceof DataObject ) {
-					response.setHeader("Content-Disposition", "attachment; filename=" + ((DataObject)object).getName());
 					response.setContentLength((int)((DataObject)object).getSize());
 					response.setContentType(((DataObject)object).getMimeType());
 					InputStream input = core.download(key);
@@ -73,8 +90,12 @@ public class HtmlViewerServlet extends HttpServlet {
 					return;
 				}
 				if ( object instanceof Collection ) {
-					request.setAttribute("path", path);
-					request.setAttribute("collection", object);
+					request.setAttribute("path", puri.build());
+					request.setAttribute("ctx", request.getContextPath());
+					request.setAttribute("parent", puri.clone().parent().build());
+					List<CollectionElement> elements = new ArrayList<CollectionElement> (((Collection) object).getElements());
+					Collections.sort(elements);
+					request.setAttribute("elements", elements);
 					request.getRequestDispatcher("/jsp/collection.jsp").forward(request, response);
 				}
 			} else {

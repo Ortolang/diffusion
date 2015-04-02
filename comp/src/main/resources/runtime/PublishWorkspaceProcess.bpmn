@@ -3,7 +3,7 @@
   <process id="publish-workspace" name="Publish Workspace" isExecutable="true" activiti:candidateStarterGroups="moderators">
     <startEvent id="start" name="Start"></startEvent>
     <serviceTask id="snapshot" name="SnapshotTask" activiti:class="fr.ortolang.diffusion.runtime.engine.task.SnapshotWorkspaceTask"></serviceTask>
-    <serviceTask id="publish" name="PublishWorkspaceTask" activiti:class="fr.ortolang.diffusion.runtime.engine.task.PublishWorkspaceTask"></serviceTask>
+    <serviceTask id="publish" name="PublishSnapshotTask" activiti:class="fr.ortolang.diffusion.runtime.engine.task.PublishSnapshotTask"></serviceTask>
     <endEvent id="end" name="End"></endEvent>
     <sequenceFlow id="flow1" name="Snapshot" sourceRef="start" targetRef="snapshot"></sequenceFlow>
     <sequenceFlow id="flow2" name="Publish" sourceRef="snapshot" targetRef="publish"></sequenceFlow>

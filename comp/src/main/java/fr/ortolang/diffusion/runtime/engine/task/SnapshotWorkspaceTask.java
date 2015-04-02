@@ -74,42 +74,47 @@ public class SnapshotWorkspaceTask extends RuntimeEngineTask {
 			String rootCollection;
 			if (!execution.hasVariable(SNAPSHOT_NAME_PARAM_NAME)) {
 				if (workspace.hasChanged()) {
-					if ( execution.hasVariable(BAG_VERSION_PARAM_NAME) ) {
-						LOGGER.log(Level.INFO, "Bag version variable present, parsing snapshot name");
-						String version = snapshotName = execution.getVariable(BAG_VERSION_PARAM_NAME, String.class);
-						snapshotName = version.substring(version.lastIndexOf("/")+1);
-					} else {
-						LOGGER.log(Level.INFO, "Snapshot name NOT provided and workspace has changed since last snapshot, generating a new snapshot");
-						snapshotName = "Version " + workspace.getClock();
-					}
+					LOGGER.log(Level.FINE, "Snapshot name NOT provided and workspace has changed since last snapshot, generating a new snapshot");
+					snapshotName = "Version " + workspace.getClock();
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Creating a new snapshot with name: " + snapshotName));
-					rootCollection = workspace.getHead();
 					getCoreService().snapshotWorkspace(wskey, snapshotName);
-					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "New snapshot [" + snapshotName + "] created"));	
+					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "New snapshot [" + snapshotName + "] created"));
+					execution.setVariable(SNAPSHOT_NAME_PARAM_NAME, snapshotName);
 				} else {
-					LOGGER.log(Level.INFO, "Snapshot name NOT provided and workspace has not changed since last snapshot, loading latest snapshot");
+					LOGGER.log(Level.FINE, "Snapshot name NOT provided and workspace has not changed since last snapshot, loading latest snapshot");
 					String head = workspace.getHead();
-					rootCollection = getRegistryService().getParent(head);
-					if ( rootCollection == null ) {
-						throw new RuntimeEngineTaskException("unable to find an existing snapshot.");
+					String root = getRegistryService().getParent(head);
+					if ( root == null ) {
+						throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unable to find the latest snapshot for this workspace"));
+						throw new RuntimeEngineTaskException("unable to find an existing snapshot to publish.");
+					}
+					boolean snapshotNameFound = false;
+					for ( SnapshotElement element : workspace.getSnapshots() ) {
+						if( element.getKey().equals(root) ) {
+							execution.setVariable(SNAPSHOT_NAME_PARAM_NAME, element.getName());
+							snapshotNameFound = true;
+							break;
+						}
+					}
+					if ( ! snapshotNameFound ) {
+						throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unable to find the latest snapshot for this workspace"));
+						throw new RuntimeEngineTaskException("unable to find an existing snapshot to publish.");
 					}
 				}
-			} else {
-				snapshotName = execution.getVariable(SNAPSHOT_NAME_PARAM_NAME, String.class);
-				SnapshotElement snapshot = workspace.findSnapshotByName(snapshotName);
-				if (snapshot == null) {
-					throw new RuntimeEngineTaskException("unable to find a snapshot with name " + snapshotName + " in workspace " + wskey);
-				}
-				rootCollection = snapshot.getKey();
+			} 
+			snapshotName = execution.getVariable(SNAPSHOT_NAME_PARAM_NAME, String.class);
+			SnapshotElement snapshot = workspace.findSnapshotByName(snapshotName);
+			if (snapshot == null) {
+				throw new RuntimeEngineTaskException("unable to find a snapshot with name " + snapshotName + " in workspace " + wskey);
 			}
-			String publication = getRegistryService().getPublicationStatus(rootCollection);
-			if (!publication.equals(OrtolangObjectState.Status.DRAFT.value())) {
+			rootCollection = snapshot.getKey();
+			
+			String publicationStatus = getRegistryService().getPublicationStatus(rootCollection);
+			if (!publicationStatus.equals(OrtolangObjectState.Status.DRAFT.value())) {
 				throw new RuntimeEngineTaskException("Snapshot publication status is not " + OrtolangObjectState.Status.DRAFT
 						+ ", maybe already published or involved in another publication process");
 			}
-			LOGGER.log(Level.INFO, "Root collection retreived from snapshot: " + rootCollection);
-			execution.setVariable(ROOT_COLLECTION_PARAM_NAME, rootCollection);
-			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Snapshot loaded, setting the root collection as variable"));
+			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Snapshot loaded and publication status is good for publication, starting publication"));
 
 		} catch (CoreServiceException | KeyNotFoundException | AccessDeniedException | RegistryServiceException e) {
 			throw new RuntimeEngineTaskException("unexpected error during snapshot task execution", e);
