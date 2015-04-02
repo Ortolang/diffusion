@@ -78,7 +78,7 @@ public class OrtolangClientConfig {
     public static synchronized OrtolangClientConfig getInstance() {
         try {
             if (config == null) {
-                String configFilePath = System.getProperty("ortolang.client.config.file");
+                String configFilePath = System.getProperty("client.config");
                 if (configFilePath != null && configFilePath.length() != 0) {
                     config = new OrtolangClientConfig(configFilePath);
                     LOGGER.log(Level.INFO, "using custom config file : " + configFilePath);
