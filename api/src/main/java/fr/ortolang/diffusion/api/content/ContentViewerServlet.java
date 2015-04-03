@@ -94,8 +94,44 @@ public class ContentViewerServlet extends HttpServlet {
 					request.setAttribute("ctx", request.getContextPath());
 					request.setAttribute("parent", puri.clone().parent().build());
 					List<CollectionElement> elements = new ArrayList<CollectionElement> (((Collection) object).getElements());
-					Collections.sort(elements);
+					String sort = "N";
+					boolean asc = true;
+					if ( request.getParameter("C") != null && request.getParameter("C").matches("[MST]") ) {
+						sort = request.getParameter("C");
+					}
+					if ( request.getParameter("O") != null && request.getParameter("O").equals("D") ) {
+						asc = false;
+					}
+					switch ( sort ) {
+						case "M" :
+							if ( asc ) {
+								Collections.sort(elements, CollectionElement.ElementDateAscComparator);
+							} else {
+								Collections.sort(elements, CollectionElement.ElementDateDescComparator);
+							};
+							break;
+						case "S" :
+							if ( asc ) {
+								Collections.sort(elements, CollectionElement.ElementSizeAscComparator);
+							} else {
+								Collections.sort(elements, CollectionElement.ElementSizeDescComparator);
+							};
+						case "T" :
+							if ( asc ) {
+								Collections.sort(elements, CollectionElement.ElementTypeAscComparator);
+							} else {
+								Collections.sort(elements, CollectionElement.ElementTypeDescComparator);
+							};
+						default :
+							if ( asc ) {
+								Collections.sort(elements, CollectionElement.ElementNameAscComparator);
+							} else {
+								Collections.sort(elements, CollectionElement.ElementNameDescComparator);
+							};
+					}
 					request.setAttribute("elements", elements);
+					request.setAttribute("asc", asc);
+					request.setAttribute("sort", sort);
 					request.getRequestDispatcher("/jsp/collection.jsp").forward(request, response);
 				}
 			} else {
@@ -110,13 +146,6 @@ public class ContentViewerServlet extends HttpServlet {
 		} catch (AccessDeniedException e) {
 			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
 		} 
-		
-		
-		//1. Parse URL
-		//2. Load workspace by alias for first segment
-		//3. Find snapshot
-		//4. Load path from snapshot
-		//5. Generate neither an html view for a collection, a redirect for a link, a download for an object
 	}
 
 }

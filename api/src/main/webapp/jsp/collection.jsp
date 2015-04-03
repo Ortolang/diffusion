@@ -13,10 +13,10 @@
 	<table>
 		<tr>
 			<th valign="top"><img src="${ctx}/icons/blank.png" alt="[ICO]"></th>
-			<th><a href="?C=N;O=${(params['O'] eq 'A')?'D':'A'}">Name</a></th>
-			<th><a href="?C=M;O=${(params['O'] eq 'A')?'D':'A'}">Last modified</a></th>
-			<th><a href="?C=S;O=${(params['O'] eq 'A')?'D':'A'}">Size</a></th>
-			<th><a href="?C=D;O=${(params['O'] eq 'A')?'D':'A'}">Type</a></th>
+			<th><a href="?C=N${(sort eq 'N' && asc)?'&O=D':'&O=A'}">Name</a></th>
+			<th><a href="?C=M${(sort eq 'M' && asc)?'&O=D':'&O=A'}">Last modified</a></th>
+			<th><a href="?C=S${(sort eq 'S' && asc)?'&O=D':'&O=A'}">Size</a></th>
+			<th><a href="?C=T${(sort eq 'T' && asc)?'&O=D':'&O=A'}">Type</a></th>
 		</tr>
 		<tr><th colspan="5"><hr></th></tr>
 		<c:if test="${parent != null}">
