@@ -1,0 +1,6 @@
+[{
+    "key": "accepted",
+    "type": "checkbox",
+    "label": "Do you agree the publication ?",
+    "default": false
+}]

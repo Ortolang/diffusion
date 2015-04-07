@@ -3,4 +3,12 @@
     "type": "checkbox",
     "label": "Do we need to say hello again ?",
     "default": false
+},
+{
+   "key": "reason",
+   "type": "textarea",
+   "templateOptions": {
+     "label": "Motivations",
+     "placeholder": "It allows you to give some motivations about your decision"
+   }
 }]

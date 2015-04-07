@@ -1,47 +1,85 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://diffusion.ortolang.fr/process">
-  <process id="publish-workspace" name="Publish Workspace" isExecutable="true" activiti:candidateStarterGroups="moderators">
+  <process id="publish-workspace" name="Publish Workspace" isExecutable="true">
     <startEvent id="start" name="Start"></startEvent>
-    <serviceTask id="snapshot" name="SnapshotTask" activiti:class="fr.ortolang.diffusion.runtime.engine.task.SnapshotWorkspaceTask"></serviceTask>
-    <serviceTask id="publish" name="PublishSnapshotTask" activiti:class="fr.ortolang.diffusion.runtime.engine.task.PublishSnapshotTask"></serviceTask>
+    <serviceTask id="snapshot" name="Load Snapshot" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LoadSnapshotTask"></serviceTask>
+    <serviceTask id="publish" name="Publish Snapshot" activiti:class="fr.ortolang.diffusion.runtime.engine.task.PublishSnapshotTask"></serviceTask>
     <endEvent id="end" name="End"></endEvent>
-    <sequenceFlow id="flow1" name="Snapshot" sourceRef="start" targetRef="snapshot"></sequenceFlow>
-    <sequenceFlow id="flow2" name="Publish" sourceRef="snapshot" targetRef="publish"></sequenceFlow>
-    <sequenceFlow id="flow3" name="Finish" sourceRef="publish" targetRef="end"></sequenceFlow>
+    <sequenceFlow id="flow1" sourceRef="start" targetRef="snapshot"></sequenceFlow>
+    <sequenceFlow id="flow2" sourceRef="snapshot" targetRef="issuperuser"></sequenceFlow>
+    <exclusiveGateway id="issuperuser" name="Is Super User" default="flow4"></exclusiveGateway>
+    <serviceTask id="servicetask1" name="Submit Snapshot" activiti:class="fr.ortolang.diffusion.runtime.engine.task.SubmitSnapshotTask"></serviceTask>
+    <userTask id="reviewsnapshot" name="Review Snapshot" default="flow14" activiti:candidateGroups="moderators" activiti:formKey="review-snapshot-form"></userTask>
+    <sequenceFlow id="flow4" sourceRef="issuperuser" targetRef="servicetask1"></sequenceFlow>
+    <sequenceFlow id="flow8" sourceRef="issuperuser" targetRef="publish">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${initier.equals("root")}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow11" name="accept" sourceRef="reviewsnapshot" targetRef="publish">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${accepted.equals("true")}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow12" sourceRef="servicetask1" targetRef="reviewsnapshot"></sequenceFlow>
+    <sequenceFlow id="flow13" sourceRef="publish" targetRef="end"></sequenceFlow>
+    <sequenceFlow id="flow14" name="reject" sourceRef="reviewsnapshot" targetRef="end"></sequenceFlow>
   </process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_publish-workspace">
     <bpmndi:BPMNPlane bpmnElement="publish-workspace" id="BPMNPlane_publish-workspace">
       <bpmndi:BPMNShape bpmnElement="start" id="BPMNShape_start">
-        <omgdc:Bounds height="35.0" width="35.0" x="60.0" y="120.0"></omgdc:Bounds>
+        <omgdc:Bounds height="35.0" width="35.0" x="271.0" y="10.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="snapshot" id="BPMNShape_snapshot">
-        <omgdc:Bounds height="55.0" width="105.0" x="230.0" y="110.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="117.0" x="230.0" y="110.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="publish" id="BPMNShape_publish">
-        <omgdc:Bounds height="55.0" width="154.0" x="477.0" y="110.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="154.0" x="100.0" y="380.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="end" id="BPMNShape_end">
-        <omgdc:Bounds height="35.0" width="35.0" x="730.0" y="120.0"></omgdc:Bounds>
+        <omgdc:Bounds height="35.0" width="35.0" x="271.0" y="530.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="issuperuser" id="BPMNShape_issuperuser">
+        <omgdc:Bounds height="40.0" width="40.0" x="268.0" y="220.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask1" id="BPMNShape_servicetask1">
+        <omgdc:Bounds height="55.0" width="151.0" x="346.0" y="290.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="reviewsnapshot" id="BPMNShape_reviewsnapshot">
+        <omgdc:Bounds height="55.0" width="151.0" x="346.0" y="380.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
-        <omgdi:waypoint x="95.0" y="137.0"></omgdi:waypoint>
-        <omgdi:waypoint x="230.0" y="137.0"></omgdi:waypoint>
-        <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="13.0" width="45.0" x="105.0" y="137.0"></omgdc:Bounds>
-        </bpmndi:BPMNLabel>
+        <omgdi:waypoint x="288.0" y="45.0"></omgdi:waypoint>
+        <omgdi:waypoint x="288.0" y="110.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
-        <omgdi:waypoint x="335.0" y="137.0"></omgdi:waypoint>
-        <omgdi:waypoint x="477.0" y="137.0"></omgdi:waypoint>
+        <omgdi:waypoint x="288.0" y="165.0"></omgdi:waypoint>
+        <omgdi:waypoint x="288.0" y="220.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+        <omgdi:waypoint x="288.0" y="260.0"></omgdi:waypoint>
+        <omgdi:waypoint x="421.0" y="290.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
+        <omgdi:waypoint x="288.0" y="260.0"></omgdi:waypoint>
+        <omgdi:waypoint x="177.0" y="380.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow11" id="BPMNEdge_flow11">
+        <omgdi:waypoint x="346.0" y="407.0"></omgdi:waypoint>
+        <omgdi:waypoint x="254.0" y="407.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="13.0" width="34.0" x="345.0" y="137.0"></omgdc:Bounds>
+          <omgdc:Bounds height="13.0" width="31.0" x="285.0" y="410.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
-        <omgdi:waypoint x="631.0" y="137.0"></omgdi:waypoint>
-        <omgdi:waypoint x="730.0" y="137.0"></omgdi:waypoint>
+      <bpmndi:BPMNEdge bpmnElement="flow12" id="BPMNEdge_flow12">
+        <omgdi:waypoint x="421.0" y="345.0"></omgdi:waypoint>
+        <omgdi:waypoint x="421.0" y="380.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow13" id="BPMNEdge_flow13">
+        <omgdi:waypoint x="177.0" y="435.0"></omgdi:waypoint>
+        <omgdi:waypoint x="288.0" y="530.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow14" id="BPMNEdge_flow14">
+        <omgdi:waypoint x="421.0" y="435.0"></omgdi:waypoint>
+        <omgdi:waypoint x="288.0" y="530.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="13.0" width="28.0" x="636.0" y="137.0"></omgdc:Bounds>
+          <omgdc:Bounds height="13.0" width="26.0" x="387.0" y="480.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

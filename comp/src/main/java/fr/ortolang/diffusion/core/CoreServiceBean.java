@@ -602,6 +602,35 @@ public class CoreServiceBean implements CoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public Set<String> buildWorkspaceReviewList(String wskey, String snapshot) throws CoreServiceException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "building review list for workspace [" + wskey + "]");
+		try {
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+			checkObjectType(identifier, Workspace.OBJECT_TYPE);
+			authorisation.checkPermission(wskey, subjects, "read");
+
+			Workspace workspace = em.find(Workspace.class, identifier.getId());
+			if (workspace == null) {
+				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+			}
+			if ( !workspace.containsSnapshotName(snapshot) ) {
+				throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + snapshot);
+			}
+			String root = workspace.findSnapshotByName(snapshot).getKey();
+			
+			Set<String> keys = new HashSet<String>();
+			systemListCollectionKeys(root, keys);
+			return keys;
+		} catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occured during building workspace review list", e);
+			throw new CoreServiceException("unexpected error while trying to build workspace review list", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Map<String, Map<String, List<String>>> buildWorkspacePublicationMap(String wskey, String snapshot) throws CoreServiceException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "building publication map for workspace [" + wskey + "]");
 		try {
@@ -609,7 +638,7 @@ public class CoreServiceBean implements CoreService {
 
 			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
 			checkObjectType(identifier, Workspace.OBJECT_TYPE);
-			authorisation.checkPermission(wskey, subjects, "delete");
+			authorisation.checkPermission(wskey, subjects, "read");
 
 			Workspace workspace = em.find(Workspace.class, identifier.getId());
 			if (workspace == null) {

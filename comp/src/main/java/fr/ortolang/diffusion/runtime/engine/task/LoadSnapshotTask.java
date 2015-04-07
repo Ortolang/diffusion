@@ -52,13 +52,13 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
-public class SnapshotWorkspaceTask extends RuntimeEngineTask {
+public class LoadSnapshotTask extends RuntimeEngineTask {
 
 	public static final String NAME = "Snapshot Workspace";
 
-	private static final Logger LOGGER = Logger.getLogger(SnapshotWorkspaceTask.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(LoadSnapshotTask.class.getName());
 
-	public SnapshotWorkspaceTask() {
+	public LoadSnapshotTask() {
 	}
 
 	@Override
