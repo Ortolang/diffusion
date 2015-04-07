@@ -202,8 +202,8 @@ public class RuntimeServiceBean implements RuntimeService {
 			process.setState(State.SUBMITTED);
 			em.persist(process);
 			
-			if ( variables.containsKey("initier") ) {
-				variables.put("initier", process.getInitier());
+			if ( !variables.containsKey(Process.INITIER_VAR_NAME) ) {
+				variables.put(Process.INITIER_VAR_NAME, process.getInitier());
 			}
 			
 			engine.startProcess(process.getType(), process.getId(), variables);

@@ -33,11 +33,7 @@ public class ImportBagsTest {
 		for (String bag : bags.split(",")) {
 			logger.log(Level.INFO, "Create process to import bag: " + bag);
 			String name = bag.substring(bag.lastIndexOf('/') + 1);
-			String key = name.replaceFirst(".zip", "");
 			Map<String, String> params = new HashMap<String, String>();
-			params.put("wskey", key);
-			params.put("wsname", name);
-			params.put("wstype", "import");
 			params.put("bagpath", bag);
 			client.createProcess("import-workspace", "Import " + name, params, Collections.<String, File> emptyMap());
 		}

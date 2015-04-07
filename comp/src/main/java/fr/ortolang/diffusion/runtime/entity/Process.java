@@ -62,6 +62,8 @@ import fr.ortolang.diffusion.runtime.RuntimeService;
 public class Process extends OrtolangObject {
 
 	public static final String OBJECT_TYPE = "process";
+	
+	public static final String INITIER_VAR_NAME = "initier";
 
 	public static enum State {
 		PENDING, SUBMITTED, RUNNING, SUSPENDED, ABORTED, COMPLETED
