@@ -170,11 +170,11 @@ public class MembershipServiceTest {
 		}
 		try {
 			// Create infos
-			membership.setProfileInfo("root", "presentation.prop1", "value1", ProfileDataVisibility.EVERYBODY.getValue(), ProfileDataType.STRING, "");
-			membership.setProfileInfo("root", "presentation.prop2", "value2", ProfileDataVisibility.FRIENDS.getValue(), ProfileDataType.STRING, "");
-			membership.setProfileInfo("root", "presentation.prop3", "value3", ProfileDataVisibility.NOBODY.getValue(), ProfileDataType.STRING, "");
-			membership.setProfileInfo("root", "setting.prop4", "value4", ProfileDataVisibility.EVERYBODY.getValue(), ProfileDataType.STRING, "");
-			membership.setProfileInfo("root", "setting.prop5", "value5", ProfileDataVisibility.NOBODY.getValue(), ProfileDataType.STRING, "");
+			membership.setProfileInfo("root", "presentation.prop1", "value1", ProfileDataVisibility.EVERYBODY, ProfileDataType.STRING, "");
+			membership.setProfileInfo("root", "presentation.prop2", "value2", ProfileDataVisibility.FRIENDS, ProfileDataType.STRING, "");
+			membership.setProfileInfo("root", "presentation.prop3", "value3", ProfileDataVisibility.NOBODY, ProfileDataType.STRING, "");
+			membership.setProfileInfo("root", "setting.prop4", "value4", ProfileDataVisibility.EVERYBODY, ProfileDataType.STRING, "");
+			membership.setProfileInfo("root", "setting.prop5", "value5", ProfileDataVisibility.NOBODY, ProfileDataType.STRING, "");
 			
 			// Get infos with root profile
 			LOGGER.log(Level.INFO, "TEST1 : root should see all infos of his own profile.");

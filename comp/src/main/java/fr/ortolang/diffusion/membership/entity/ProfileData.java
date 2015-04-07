@@ -45,14 +45,14 @@ public class ProfileData {
 	private String name;
 	@Column(length = 7500)
 	private String value;
-	private int visibility;
+	private ProfileDataVisibility visibility;
 	private ProfileDataType type;
 	private String source;
 
 	public ProfileData() {
 	}
 	
-	public ProfileData(String name, String value, int visibility, ProfileDataType type, String source) {
+	public ProfileData(String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) {
 		super();
 		this.name = name;
 		this.value = value;
@@ -77,11 +77,11 @@ public class ProfileData {
 		this.value = value;
 	}
 
-	public int getVisibility() {
+	public ProfileDataVisibility getVisibility() {
 		return visibility;
 	}
 
-	public void setVisibility(int visibility) {
+	public void setVisibility(ProfileDataVisibility visibility) {
 		this.visibility = visibility;
 	}
 

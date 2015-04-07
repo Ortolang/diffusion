@@ -36,14 +36,14 @@ package fr.ortolang.diffusion.api.rest.profile;
  * #L%
  */
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import fr.ortolang.diffusion.membership.entity.Profile;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import fr.ortolang.diffusion.membership.entity.Profile;
-
 @XmlRootElement(name = "profile")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ProfileRepresentation {
 
 	@XmlAttribute(name = "key")
