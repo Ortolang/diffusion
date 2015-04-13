@@ -220,15 +220,15 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createWorkspace(String wskey, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
+	public Workspace createWorkspace(String wskey, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		WorkspaceAlias alias = new WorkspaceAlias();
 		em.persist(alias);
-		createWorkspace(wskey, alias.getValue(), name, type);
+		return createWorkspace(wskey, alias.getValue(), name, type);
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createWorkspace(String wskey, String alias, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
+	public Workspace createWorkspace(String wskey, String alias, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "creating workspace [" + wskey + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -261,7 +261,7 @@ public class CoreServiceBean implements CoreService {
 				ctx.setRollbackOnly();
 				throw new CoreServiceException("a workspace with alias [" + alias + "] already exists in storage");
 			}
-			PathBuilder palias = null;
+			PathBuilder palias;
 			try {
 				palias = PathBuilder.fromPath(alias);
 				if (palias.isRoot() || palias.depth() > 1) {
@@ -274,6 +274,7 @@ public class CoreServiceBean implements CoreService {
 			String id = UUID.randomUUID().toString();
 			Workspace workspace = new Workspace();
 			workspace.setId(id);
+			workspace.setKey(wskey);
 			workspace.setAlias(palias.part());
 			workspace.setName(name);
 			workspace.setType(type);
@@ -291,6 +292,8 @@ public class CoreServiceBean implements CoreService {
 			
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "create"), "");
 			notification.throwEvent(head, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), "");
+
+			return workspace;
 		} catch (KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			throw e;
@@ -602,6 +605,35 @@ public class CoreServiceBean implements CoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public Set<String> buildWorkspaceReviewList(String wskey, String snapshot) throws CoreServiceException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "building review list for workspace [" + wskey + "]");
+		try {
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+			checkObjectType(identifier, Workspace.OBJECT_TYPE);
+			authorisation.checkPermission(wskey, subjects, "read");
+
+			Workspace workspace = em.find(Workspace.class, identifier.getId());
+			if (workspace == null) {
+				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+			}
+			if ( !workspace.containsSnapshotName(snapshot) ) {
+				throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + snapshot);
+			}
+			String root = workspace.findSnapshotByName(snapshot).getKey();
+			
+			Set<String> keys = new HashSet<String>();
+			systemListCollectionKeys(root, keys);
+			return keys;
+		} catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occured during building workspace review list", e);
+			throw new CoreServiceException("unexpected error while trying to build workspace review list", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Map<String, Map<String, List<String>>> buildWorkspacePublicationMap(String wskey, String snapshot) throws CoreServiceException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "building publication map for workspace [" + wskey + "]");
 		try {
@@ -609,7 +641,7 @@ public class CoreServiceBean implements CoreService {
 
 			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
 			checkObjectType(identifier, Workspace.OBJECT_TYPE);
-			authorisation.checkPermission(wskey, subjects, "delete");
+			authorisation.checkPermission(wskey, subjects, "read");
 
 			Workspace workspace = em.find(Workspace.class, identifier.getId());
 			if (workspace == null) {

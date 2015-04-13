@@ -111,6 +111,7 @@ public class MembershipServiceBean implements MembershipService {
 	private AuthorisationService authorisation;
 	@PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;
+	@SuppressWarnings("SpringJavaAutowiringInspection")
 	@Resource
 	private SessionContext ctx;
 	
@@ -222,12 +223,12 @@ public class MembershipServiceBean implements MembershipService {
 
 			authorisation.createPolicy(key, key);
 			Map<String, List<String>> readRules = new HashMap<String, List<String>>();
-			readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[] { "read" }));
+			readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[]{"read"}));
 			authorisation.setPolicyRules(key, readRules);
 			
 			createGroup(friendGroupKey, connectedIdentifier + "'s Collaborators", "List of collaborators of user " + connectedIdentifier);
 			Map<String, List<String>> friendsReadRules = new HashMap<String, List<String>>();
-			friendsReadRules.put(friendGroupKey, Arrays.asList(new String[] { "read" }));
+			friendsReadRules.put(friendGroupKey, Arrays.asList(new String[]{"read"}));
 			authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
 			
 			notification.throwEvent(key, key, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
@@ -265,12 +266,12 @@ public class MembershipServiceBean implements MembershipService {
 			
 			authorisation.createPolicy(key, key);
 			Map<String, List<String>> readRules = new HashMap<String, List<String>>();
-			readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[] { "read" }));
+			readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[]{"read"}));
 			authorisation.setPolicyRules(key, readRules);			
 
 			createGroup(friendGroupKey, identifier + "'s Collaborators", "List of collaborators of user " + identifier);
 			Map<String, List<String>> friendsReadRules = new HashMap<String, List<String>>();
-			friendsReadRules.put(friendGroupKey, Arrays.asList(new String[] { "read" }));
+			friendsReadRules.put(friendGroupKey, Arrays.asList(new String[]{"read"}));
 			authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
 
 			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
@@ -405,7 +406,7 @@ public class MembershipServiceBean implements MembershipService {
 			List<ProfileData> visibleInfos = new ArrayList<ProfileData> ();
 			for ( ProfileData info : profile.getInfos().values() ) {
 				LOGGER.log(Level.FINE, "Traeating info " + info.getName() );
-				if ( visibilityLevel.getValue() >= info.getVisibility() ) {
+				if (visibilityLevel.compareTo(info.getVisibility()) >= 0) {
 					LOGGER.log(Level.FINE, "info is visible");
 					if ( filter != null && filter.length() > 0 ) {
 						if ( info.getName().matches(filter+"(.*)") ) {
@@ -428,7 +429,7 @@ public class MembershipServiceBean implements MembershipService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void setProfileInfo(String key, String name, String value, int visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+	public void setProfileInfo(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "set profile info [" +  name + "] for profile with key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
@@ -457,7 +458,7 @@ public class MembershipServiceBean implements MembershipService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateProfile(String key, String givenName, String familyName, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+	public Profile updateProfile(String key, String givenName, String familyName, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "updating profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
@@ -477,6 +478,7 @@ public class MembershipServiceBean implements MembershipService {
 
 			registry.update(key);
 			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update"), "");
+			return profile;
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("error while trying to update the profile with key [" + key + "]");

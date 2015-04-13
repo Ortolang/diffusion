@@ -24,3 +24,7 @@ caa4a836e783c0dd9e6f9e4123ef296f40c754dd  data/snapshots/1/Version 1/metadata/a/
 cb0c1a13d14ed7d1f86fa04a696800528fa27853  data/head/metadata/a/oa1.txt/ortolang-acl-json
 caa4a836e783c0dd9e6f9e4123ef296f40c754dd  data/snapshots/2/Version 2/metadata/a/ortolang-acl-json
 c08072f196ac14d49cf79069d60c86e7f5063583  data/head/metadata/a/ortolang-acl-json
+570994ddd78c6dc6750ed3b07cd66648d6d78ecc  data/snapshots/3/Version 3/metadata/ortolang-item-json
+570994ddd78c6dc6750ed3b07cd66648d6d78ecc  data/snapshots/2/Version 2/metadata/ortolang-item-json
+570994ddd78c6dc6750ed3b07cd66648d6d78ecc  data/head/metadata/ortolang-item-json
+570994ddd78c6dc6750ed3b07cd66648d6d78ecc  data/snapshots/1/Version 1/metadata/ortolang-item-json

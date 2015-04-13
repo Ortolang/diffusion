@@ -235,8 +235,9 @@ public class ProfileResource {
 	public Response updateProfile(@PathParam(value = "key") String key, ProfileRepresentation representation) throws MembershipServiceException, KeyNotFoundException,
 			AccessDeniedException {
 		LOGGER.log(Level.INFO, "PUT /profiles/" + key);
-		membership.updateProfile(key, representation.getGivenName(), representation.getFamilyName(), representation.getEmail());
-		return Response.noContent().build();
+		Profile profile = membership.updateProfile(key, representation.getGivenName(), representation.getFamilyName(), representation.getEmail());
+		ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
+		return Response.ok(profileRepresentation).build();
 	}
 	
 	/**

@@ -87,7 +87,7 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	private AdminRecord admin;
 
 	public HandleStoreServiceBean() {
-		LOGGER.log(Level.INFO, "Instanciating service");
+		LOGGER.log(Level.INFO, "Instantiating service");
 	}
 
 	@PostConstruct
@@ -114,8 +114,8 @@ public class HandleStoreServiceBean implements HandleStoreService {
 			LOGGER.log(Level.FINE, "building handle resolver");
 			resolver = new HandleResolver();
 
-			auth = new PublicKeyAuthenticationInfo(OrtolangConfig.getInstance().getProperty("handle.admin").getBytes(), Integer.valueOf(
-					OrtolangConfig.getInstance().getProperty("handle.index")).intValue(), privkey);
+			auth = new PublicKeyAuthenticationInfo(OrtolangConfig.getInstance().getProperty("handle.admin").getBytes(), Integer.parseInt(
+					OrtolangConfig.getInstance().getProperty("handle.index")), privkey);
 			admin = new AdminRecord(OrtolangConfig.getInstance().getProperty("handle.admin").getBytes(), 300, true, true, true, true, true, true, true, true, true, true, true,
 					true);
 			LOGGER.log(Level.FINE, "auth info: " + auth.toString());
@@ -128,7 +128,7 @@ public class HandleStoreServiceBean implements HandleStoreService {
 
 	@PreDestroy
 	public void shutdown() {
-		LOGGER.log(Level.INFO, "Shuting down service");
+		LOGGER.log(Level.INFO, "Shutting down service");
 
 	}
 

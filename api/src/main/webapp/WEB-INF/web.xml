@@ -2,42 +2,6 @@
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
-	<!-- <filter>
-		<filter-name>CORS</filter-name>
-		<filter-class>com.thetransactioncompany.cors.CORSFilter</filter-class>
-		<init-param>
-			<param-name>cors.allowGenericHttpRequests</param-name>
-			<param-value>true</param-value>
-		</init-param>
-		<init-param>
-			<param-name>cors.allowOrigin</param-name>
-			<param-value>*</param-value>
-		</init-param>
-		<init-param>
-			<param-name>cors.allowSubdomains</param-name>
-			<param-value>true</param-value>
-		</init-param>
-		<init-param>
-			<param-name>cors.supportedMethods</param-name>
-			<param-value>GET, HEAD, POST, OPTIONS, PUT, DELETE</param-value>
-		</init-param>
-		<init-param>
-			<param-name>cors.supportedHeaders</param-name>
-			<param-value>*</param-value>
-		</init-param>
-		<init-param>
-			<param-name>cors.exposedHeaders</param-name>
-			<param-value>X-Test-1, X-Test-2</param-value>
-		</init-param>
-		<init-param>
-			<param-name>cors.supportsCredentials</param-name>
-			<param-value>true</param-value>
-		</init-param>
-		<init-param>
-			<param-name>cors.maxAge</param-name>
-			<param-value>3600</param-value>
-		</init-param>
-	</filter> -->
 	<filter>
 		<filter-name>CORS</filter-name>
 		<filter-class>fr.ortolang.diffusion.api.rest.filter.CORSFilter</filter-class>
@@ -78,9 +42,9 @@
 		<enabled>true</enabled>
 	</servlet>
 	<servlet>
-		<display-name>HTML Viewer Servlet</display-name>
-		<servlet-name>HtmlViewerServlet</servlet-name>
-		<servlet-class>fr.ortolang.diffusion.api.html.HtmlViewerServlet</servlet-class>
+		<display-name>Content Viewer Servlet</display-name>
+		<servlet-name>ContentViewerServlet</servlet-name>
+		<servlet-class>fr.ortolang.diffusion.api.content.ContentViewerServlet</servlet-class>
 		<load-on-startup>2</load-on-startup>
 		<enabled>true</enabled>
 	</servlet>
@@ -98,8 +62,8 @@
 		<url-pattern>/rest/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
-		<servlet-name>HtmlViewerServlet</servlet-name>
-		<url-pattern>/html/*</url-pattern>
+		<servlet-name>ContentViewerServlet</servlet-name>
+		<url-pattern>/content/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>OAIPMHServlet</servlet-name>
@@ -108,7 +72,7 @@
 	<security-constraint>
         <web-resource-collection>
             <web-resource-name>viewer</web-resource-name>
-            <url-pattern>/html/*</url-pattern>
+            <url-pattern>/view/*</url-pattern>
         </web-resource-collection>
         <user-data-constraint>
 			<transport-guarantee>NONE</transport-guarantee>
