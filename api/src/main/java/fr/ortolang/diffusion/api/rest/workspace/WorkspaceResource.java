@@ -173,8 +173,11 @@ public class WorkspaceResource {
 			cc.setMaxAge(0);
 			cc.setMustRevalidate(true);
 		}
-		Date lmd = new Date((state.getLastModification()/1000)*1000);
-		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+		ResponseBuilder builder = null;
+		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+			builder = request.evaluatePreconditions(lmd);
+		}
 		
 		if(builder == null){
 			Workspace workspace = core.readWorkspace(wskey);
@@ -225,9 +228,12 @@ public class WorkspaceResource {
 			cc.setMaxAge(0);
 			cc.setMustRevalidate(true);
 		}
-		Date lmd = new Date((state.getLastModification()/1000)*1000);
-		ResponseBuilder builder = request.evaluatePreconditions(lmd);
-		
+		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+		ResponseBuilder builder = null;
+		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+			builder = request.evaluatePreconditions(lmd);
+		}
+
 		if(builder == null){
 			OrtolangObject object = browser.findObject(ekey);
 			WorkspaceElementRepresentation representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
