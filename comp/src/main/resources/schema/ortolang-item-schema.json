@@ -158,7 +158,7 @@
       }
     },
     
-    "opearatingSystem": {
+    "operatingSystem": {
       "id": "http://www.ortolang.fr/opearatingSystem",
       "type": "array",
       "items": {
@@ -209,6 +209,22 @@
     "applicationUrl": {
       "id": "http://www.ortolang.fr/applicationUrl",
       "type": "string"
+    },
+    "toolFunctionality": {
+      "id": "http://www.ortolang.fr/toolFunctionality",
+      "type": "array",
+      "items": {
+        "id": "http://www.ortolang.fr/toolFunctionality/0",
+        "type": "string"
+      }
+    },
+    "toolInputData": {
+      "id": "http://www.ortolang.fr/toolInputData",
+      "type": "array",
+      "items": {
+        "id": "http://www.ortolang.fr/toolInputData/0",
+        "type": "string"
+      }
     }
   },
   "required": [
