@@ -115,17 +115,17 @@ public class SSHServlet extends HttpServlet {
 
 	@Override
 	public void destroy() {
-		try {
-			LOGGER.log(Level.INFO, "stopping ssh service...");
-			if ( started ) {
-				sshd.stop(true);
-				LOGGER.log(Level.INFO, "ssh service stopped");
-			} else  {
-				LOGGER.log(Level.INFO, "ssh service not running, nothing to stop");
-			}
-		} catch ( InterruptedException e ) {
-			LOGGER.log(Level.WARNING, "unable to stop ssh service: " + e.getMessage(), e);
-		}
+//		try {
+//			LOGGER.log(Level.INFO, "stopping ssh service...");
+//			if ( started ) {
+//				sshd.stop();
+//				LOGGER.log(Level.INFO, "ssh service stopped");
+//			} else  {
+//				LOGGER.log(Level.INFO, "ssh service not running, nothing to stop");
+//			}
+//		} catch ( InterruptedException e ) {
+//			LOGGER.log(Level.WARNING, "unable to stop ssh service: " + e.getMessage(), e);
+//		}
 	}
 
 }

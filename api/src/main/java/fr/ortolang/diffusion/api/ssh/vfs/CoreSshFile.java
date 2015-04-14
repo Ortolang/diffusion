@@ -79,7 +79,8 @@ public class CoreSshFile implements SshFile {
 	
 	private DiffusionFileSystemView view;
 	private PathBuilder absolutePath;
-	private String workspace;
+	private String wsalias;
+	private String wskey;
 	private PathBuilder path;
 	private boolean exists;
 	private boolean readable;
@@ -95,25 +96,26 @@ public class CoreSshFile implements SshFile {
 	private Path temp = null;
 	
 	protected CoreSshFile(DiffusionFileSystemView view, PathBuilder path) throws OrtolangException {
-		LOGGER.log(Level.INFO, "CoreSshFile created for path: " + path.build());
+		LOGGER.log(Level.FINE, "CoreSshFile created for path: " + path.build());
 		this.view = view;
 		this.path = path;
 		this.load();
 	}
 	
 	private void load() throws OrtolangException {
-		LOGGER.log(Level.INFO, "loading element : " + path.part());
+		LOGGER.log(Level.FINE, "loading element : " + path.part());
 		try {
 			LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 			lc.login();
 			absolutePath = path.clone();
-			workspace = path.buildParts()[0];
-			path.relativize(workspace);
+			wsalias = path.buildParts()[0];
+			wskey = view.getCore().resolveWorkspaceAlias(wsalias);
+			path.relativize(wsalias);
 			readable = true;
 			writable = true;
 			removable = false;
 			executable = false;
-			key = view.getCore().resolveWorkspacePath(workspace, "", path.build());
+			key = view.getCore().resolveWorkspacePath(wskey, "", path.build());
 			type = view.getBrowser().lookup(key).getType();
 			lastModified = view.getBrowser().getInfos(key).getLastModificationDate();
 			exists = true;
@@ -127,6 +129,7 @@ public class CoreSshFile implements SshFile {
 				if ( collection.isRoot() ) {
 					removable = false;
 				}
+				LOGGER.log(Level.FINE, "collection element loaded : " + path.part());
 			}
 			if ( type.equals(DataObject.OBJECT_TYPE) ) {
 				DataObject object = view.getCore().readDataObject(key);
@@ -134,6 +137,7 @@ public class CoreSshFile implements SshFile {
 				size = object.getSize();
 				elements = Collections.emptySet();
 				removable = true;
+				LOGGER.log(Level.FINE, "dataobject element loaded : " + path.part());
 			}
 			lc.logout();
 		} catch (AccessDeniedException | BrowserServiceException | LoginException | OrtolangException | CoreServiceException | KeyNotFoundException e) {
@@ -235,7 +239,7 @@ public class CoreSshFile implements SshFile {
 			try {
 				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();
-				view.getCore().createCollection(workspace, path.build(), "pas de description");
+				view.getCore().createCollection(wskey, path.build(), "pas de description");
 				//TODO maybe reload informations...
 				lc.logout();
 				return true;
@@ -254,10 +258,10 @@ public class CoreSshFile implements SshFile {
 				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();
 				if ( type.equals(Collection.OBJECT_TYPE) ) {
-					view.getCore().deleteCollection(workspace, path.build());
+					view.getCore().deleteCollection(wskey, path.build());
 				}
 				if ( type.equals(DataObject.OBJECT_TYPE) ) {
-					view.getCore().deleteDataObject(workspace, path.build());
+					view.getCore().deleteDataObject(wskey, path.build());
 				}
 				//TODO maybe reload informations...
 				lc.logout();
@@ -276,7 +280,7 @@ public class CoreSshFile implements SshFile {
 			try {
 				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();
-				view.getCore().createDataObject(workspace, path.build(), "pas de description", "");
+				view.getCore().createDataObject(wskey, path.build(), "pas de description", "");
 				//TODO maybe reload informations...
 				lc.logout();
 				return true;
@@ -294,7 +298,7 @@ public class CoreSshFile implements SshFile {
 			try {
 				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();
-				view.getCore().updateDataObject(workspace, path.build(), "pas de description", "");
+				view.getCore().updateDataObject(wskey, path.build(), "pas de description", "");
 				//TODO maybe reload informations...
 				lc.logout();
 			} catch ( LoginException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | OrtolangException e ) {
@@ -373,7 +377,7 @@ public class CoreSshFile implements SshFile {
 				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();
 				String hash = view.getBinaryStore().put(Files.newInputStream(temp));
-				view.getCore().updateDataObject(workspace, path.build(), "pas de description", hash);
+				view.getCore().updateDataObject(wskey, path.build(), "pas de description", hash);
 				lc.logout();
 			} catch ( LoginException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | OrtolangException | BinaryStoreServiceException | DataCollisionException e ) {
 				LOGGER.log(Level.SEVERE, "error while trying to update data with uploaded content", e); 

@@ -289,6 +289,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			String key = registry.lookup(process.getObjectIdentifier());
 			registry.update(key);
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-state"), "state=" + state);
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occured while updating process state", e);
@@ -310,6 +311,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			String key = registry.lookup(process.getObjectIdentifier());
 			registry.update(key);
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "log"), "message=" + log);
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occured while appending log to process", e);
@@ -331,6 +333,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			String key = registry.lookup(process.getObjectIdentifier());
 			registry.update(key);
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-activity"), "activity=" + name);
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occured while updating process activity", e);

@@ -172,7 +172,10 @@ public class WorkspaceResource {
 			cc.setMustRevalidate(true);
 		}
 		Date lmd = new Date((state.getLastModification()/1000)*1000);
-		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		ResponseBuilder builder = null;
+		if ( state.getLastModification() - System.currentTimeMillis() > 1000 ) {
+			builder = request.evaluatePreconditions(lmd);
+		}
 		
 		if(builder == null){
 			Workspace workspace = core.readWorkspace(wskey);

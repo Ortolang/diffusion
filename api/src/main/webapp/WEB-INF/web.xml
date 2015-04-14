@@ -70,14 +70,14 @@
 		<url-pattern>/oai/*</url-pattern>
 	</servlet-mapping>
 	<security-constraint>
-        <web-resource-collection>
-            <web-resource-name>viewer</web-resource-name>
-            <url-pattern>/view/*</url-pattern>
-        </web-resource-collection>
-        <user-data-constraint>
+		<web-resource-collection>
+			<web-resource-name>viewer</web-resource-name>
+			<url-pattern>/view/*</url-pattern>
+		</web-resource-collection>
+		<user-data-constraint>
 			<transport-guarantee>NONE</transport-guarantee>
 		</user-data-constraint>
-    </security-constraint>
+	</security-constraint>
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name>All Access</web-resource-name>
@@ -94,4 +94,8 @@
 			<transport-guarantee>NONE</transport-guarantee>
 		</user-data-constraint>
 	</security-constraint>
+	<error-page>
+		<error-code>401</error-code>
+		<location>/jsp/unauthorized.jsp</location>
+	</error-page>
 </web-app>
