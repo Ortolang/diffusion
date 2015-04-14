@@ -2867,7 +2867,7 @@ public class CoreServiceBean implements CoreService {
 					}
 					try {
 						if (metadata.getStream() != null && metadata.getStream().length() > 0) {
-							content.setStream(binarystore.get(metadata.getStream()));
+							content.put(metadata.getName(), binarystore.get(metadata.getStream()));
 						}
 					} catch (DataNotFoundException | BinaryStoreServiceException e) {
 						LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
@@ -2889,7 +2889,7 @@ public class CoreServiceBean implements CoreService {
 					}
 					try {
 						if (metadata.getStream() != null && metadata.getStream().length() > 0) {
-							content.setStream(binarystore.get(metadata.getStream()));
+							content.put(metadata.getName(), binarystore.get(metadata.getStream()));
 						}
 					} catch (DataNotFoundException | BinaryStoreServiceException e) {
 						LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);

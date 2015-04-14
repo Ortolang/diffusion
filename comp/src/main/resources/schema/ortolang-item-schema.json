@@ -34,7 +34,11 @@
     },
     "spacial": {
       "id": "http://www.ortolang.fr/spacial",
-      "type": "string"
+      "type": "array",
+      "items": {
+        "id": "http://www.ortolang.fr/spacial/0",
+        "type": "string"
+      }
     },
     "temporal": {
       "id": "http://www.ortolang.fr/temporal",
