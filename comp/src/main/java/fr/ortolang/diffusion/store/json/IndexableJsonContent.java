@@ -1,6 +1,8 @@
 package fr.ortolang.diffusion.store.json;
 
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /*
  * #%L
@@ -40,17 +42,17 @@ import java.io.InputStream;
 
 public class IndexableJsonContent {
 	
-	private InputStream stream;
+	private Map<String, InputStream> stream;
 
     public IndexableJsonContent() {
-        
+        this.stream = new HashMap<String, InputStream>();
     }
 
-     public void setStream(InputStream stream) {
-        this.stream = stream;
+     public void put(String name, InputStream stream) {
+        this.stream.put(name, stream);
     }
 
-	public InputStream getStream() {
+	public Map<String, InputStream> getStream() {
 		return stream;
 	}
     

@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.api.rest.profile;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import fr.ortolang.diffusion.membership.entity.ProfileData;
+import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
 
 @XmlRootElement(name = "profile-data")
 public class ProfileDataRepresentation {
@@ -47,7 +48,7 @@ public class ProfileDataRepresentation {
 	private String value;
 	private String type;
 	private String source;
-	private int visibility;
+	private ProfileDataVisibility visibility;
 	
 	public String getName() {
 		return name;
@@ -73,10 +74,10 @@ public class ProfileDataRepresentation {
 	public void setSource(String source) {
 		this.source = source;
 	}
-	public int getVisibility() {
+	public ProfileDataVisibility getVisibility() {
 		return visibility;
 	}
-	public void setVisibility(int visibility) {
+	public void setVisibility(ProfileDataVisibility visibility) {
 		this.visibility = visibility;
 	}
 	public static ProfileDataRepresentation fromProfileData(ProfileData data) {

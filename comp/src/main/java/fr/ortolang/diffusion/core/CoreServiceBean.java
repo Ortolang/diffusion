@@ -220,15 +220,15 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createWorkspace(String wskey, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
+	public Workspace createWorkspace(String wskey, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		WorkspaceAlias alias = new WorkspaceAlias();
 		em.persist(alias);
-		createWorkspace(wskey, alias.getValue(), name, type);
+		return createWorkspace(wskey, alias.getValue(), name, type);
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createWorkspace(String wskey, String alias, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
+	public Workspace createWorkspace(String wskey, String alias, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "creating workspace [" + wskey + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -261,7 +261,7 @@ public class CoreServiceBean implements CoreService {
 				ctx.setRollbackOnly();
 				throw new CoreServiceException("a workspace with alias [" + alias + "] already exists in storage");
 			}
-			PathBuilder palias = null;
+			PathBuilder palias;
 			try {
 				palias = PathBuilder.fromPath(alias);
 				if (palias.isRoot() || palias.depth() > 1) {
@@ -274,6 +274,7 @@ public class CoreServiceBean implements CoreService {
 			String id = UUID.randomUUID().toString();
 			Workspace workspace = new Workspace();
 			workspace.setId(id);
+			workspace.setKey(wskey);
 			workspace.setAlias(palias.part());
 			workspace.setName(name);
 			workspace.setType(type);
@@ -291,6 +292,8 @@ public class CoreServiceBean implements CoreService {
 			
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "create"), "");
 			notification.throwEvent(head, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), "");
+
+			return workspace;
 		} catch (KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			throw e;
@@ -2864,7 +2867,7 @@ public class CoreServiceBean implements CoreService {
 					}
 					try {
 						if (metadata.getStream() != null && metadata.getStream().length() > 0) {
-							content.setStream(binarystore.get(metadata.getStream()));
+							content.put(metadata.getName(), binarystore.get(metadata.getStream()));
 						}
 					} catch (DataNotFoundException | BinaryStoreServiceException e) {
 						LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
@@ -2886,7 +2889,7 @@ public class CoreServiceBean implements CoreService {
 					}
 					try {
 						if (metadata.getStream() != null && metadata.getStream().length() > 0) {
-							content.setStream(binarystore.get(metadata.getStream()));
+							content.put(metadata.getName(), binarystore.get(metadata.getStream()));
 						}
 					} catch (DataNotFoundException | BinaryStoreServiceException e) {
 						LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);

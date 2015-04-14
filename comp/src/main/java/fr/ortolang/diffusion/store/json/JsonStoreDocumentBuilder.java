@@ -1,6 +1,8 @@
 package fr.ortolang.diffusion.store.json;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,10 +36,12 @@ public class JsonStoreDocumentBuilder {
 		doc.field(STATUS_PROPERTY, object.getStatus());
 
 		if (object.getContent() != null && object.getContent().getStream() != null) {
-			try {
-				doc.field(META_PROPERTY, new ODocument(MetadataObject.OBJECT_TYPE).fromJSON(object.getContent().getStream()));
-			} catch (IOException e) {
-				LOGGER.log(Level.SEVERE, "unable to get object json content", e);
+			for(Map.Entry<String, InputStream> entry : object.getContent().getStream().entrySet()) {
+				try {
+					doc.field(META_PROPERTY+"_"+entry.getKey(), new ODocument(MetadataObject.OBJECT_TYPE).fromJSON(entry.getValue()));
+				} catch (IOException e) {
+					LOGGER.log(Level.SEVERE, "unable to get object json content", e);
+				}
 			}
 		}
 

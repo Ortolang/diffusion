@@ -141,9 +141,10 @@ public class WorkspaceResource {
 			throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
 		String key = java.util.UUID.randomUUID().toString();
-		core.createWorkspace(key, name, type);
+		Workspace workspace = core.createWorkspace(key, name, type);
 		URI location = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(key).build();
-		return Response.created(location).build();
+		WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace);
+		return Response.created(location).entity(workspaceRepresentation).build();
 	}
 
 	@POST
@@ -151,9 +152,10 @@ public class WorkspaceResource {
 	public Response createWorkspace(WorkspaceRepresentation representation) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "POST(application/json) /workspaces");
 		String key = UUID.randomUUID().toString();
-		core.createWorkspace(key, representation.getName(), representation.getType());
+		Workspace workspace = core.createWorkspace(key, representation.getName(), representation.getType());
 		URI location = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(key).build();
-		return Response.created(location).build();
+		WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace);
+		return Response.created(location).entity(workspaceRepresentation).build();
 	}
 
 	@GET
@@ -171,9 +173,9 @@ public class WorkspaceResource {
 			cc.setMaxAge(0);
 			cc.setMustRevalidate(true);
 		}
-		Date lmd = new Date((state.getLastModification()/1000)*1000);
+		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
 		ResponseBuilder builder = null;
-		if ( state.getLastModification() - System.currentTimeMillis() > 1000 ) {
+		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
 			builder = request.evaluatePreconditions(lmd);
 		}
 		
@@ -226,9 +228,12 @@ public class WorkspaceResource {
 			cc.setMaxAge(0);
 			cc.setMustRevalidate(true);
 		}
-		Date lmd = new Date((state.getLastModification()/1000)*1000);
-		ResponseBuilder builder = request.evaluatePreconditions(lmd);
-		
+		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+		ResponseBuilder builder = null;
+		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+			builder = request.evaluatePreconditions(lmd);
+		}
+
 		if(builder == null){
 			OrtolangObject object = browser.findObject(ekey);
 			WorkspaceElementRepresentation representation = WorkspaceElementRepresentation.fromOrtolangObject(object);

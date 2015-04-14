@@ -90,7 +90,7 @@ public class JsonStoreServiceTest {
 
 			System.out.println(" =========");
 			
-			String query = "SELECT FROM type WHERE meta.title = 'Dede'";
+			String query = "SELECT FROM type WHERE meta_format1.title = 'Dede'";
 			List<String> results = service.search(query);
 			for(String r : results) {
 				System.out.println(r);
@@ -104,7 +104,7 @@ public class JsonStoreServiceTest {
 			// Changes a little bit
 			IndexableJsonContent jsonContent = object.getContent();
 			try {
-				jsonContent.setStream(new FileInputStream("src/test/resources/json/sample2.json"));
+				jsonContent.put("format1", new FileInputStream("src/test/resources/json/sample2.json"));
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				fail(e.getMessage());
@@ -113,7 +113,7 @@ public class JsonStoreServiceTest {
 			service.reindex(object);
 			System.out.println(" =========");
 			
-			String querySampleV2 = "SELECT FROM type WHERE meta.title = 'Dede2'";
+			String querySampleV2 = "SELECT FROM type WHERE meta_format1.title = 'Dede2'";
 			List<String> resultsSampleV2 = service.search(querySampleV2);
 			for(String r : resultsSampleV2) {
 				System.out.println(r);
@@ -154,7 +154,7 @@ public class JsonStoreServiceTest {
 		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/language", "en"));
 		IndexableJsonContent jsonContent = new IndexableJsonContent();
 		try {
-			jsonContent.setStream(new FileInputStream("src/test/resources/json/sample.json"));
+			jsonContent.put("format1", new FileInputStream("src/test/resources/json/sample.json"));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			fail(e.getMessage());

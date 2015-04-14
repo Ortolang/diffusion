@@ -40,11 +40,7 @@ import java.util.List;
 
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.membership.entity.Group;
-import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.membership.entity.ProfileData;
-import fr.ortolang.diffusion.membership.entity.ProfileDataType;
-import fr.ortolang.diffusion.membership.entity.ProfileStatus;
+import fr.ortolang.diffusion.membership.entity.*;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -73,7 +69,7 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void updateProfile(String key, String givenName, String familyName, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	public Profile updateProfile(String key, String givenName, String familyName, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 	
@@ -83,7 +79,7 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	public List<ProfileData> listProfileInfos(String key, String filter) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void setProfileInfo(String key, String name, String value, int visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	public void setProfileInfo(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 

@@ -201,8 +201,11 @@ public class ProfileResource {
 		cc.setPrivate(true);
 		cc.setMaxAge(0);
 		cc.setMustRevalidate(true);
-		Date lmd = new Date((state.getLastModification()/1000)*1000);
-		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+		ResponseBuilder builder = null;
+		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+			builder = request.evaluatePreconditions(lmd);
+		}
 		
 		if(builder == null){
 			Profile profile = membership.readProfile(key);
@@ -235,8 +238,9 @@ public class ProfileResource {
 	public Response updateProfile(@PathParam(value = "key") String key, ProfileRepresentation representation) throws MembershipServiceException, KeyNotFoundException,
 			AccessDeniedException {
 		LOGGER.log(Level.INFO, "PUT /profiles/" + key);
-		membership.updateProfile(key, representation.getGivenName(), representation.getFamilyName(), representation.getEmail());
-		return Response.noContent().build();
+		Profile profile = membership.updateProfile(key, representation.getGivenName(), representation.getFamilyName(), representation.getEmail());
+		ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
+		return Response.ok(profileRepresentation).build();
 	}
 	
 	/**
@@ -322,8 +326,11 @@ public class ProfileResource {
 		cc.setPrivate(true);
 		cc.setMaxAge(0);
 		cc.setMustRevalidate(true);
-		Date lmd = new Date((state.getLastModification()/1000)*1000);
-		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+		ResponseBuilder builder = null;
+		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+			builder = request.evaluatePreconditions(lmd);
+		}
 		
 		if(builder == null){
 			List<ProfileData> infos = membership.listProfileInfos(key, filter);	
