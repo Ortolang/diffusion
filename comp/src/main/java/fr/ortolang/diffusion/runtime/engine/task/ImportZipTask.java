@@ -83,7 +83,7 @@ public class ImportZipTask extends RuntimeEngineTask {
 								is.close();
 								PathBuilder oppath = opath.clone().parent();
 								if (!oppath.isRoot() && !cache.contains(oppath.build())) {
-									String[] parents = oppath.parent().buildParts();
+									String[] parents = oppath.buildParts();
 									String current = "";
 									for (int i = 0; i < parents.length; i++) {
 										current += "/" + parents[i];

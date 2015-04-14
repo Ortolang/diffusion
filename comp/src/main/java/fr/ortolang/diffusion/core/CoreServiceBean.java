@@ -509,11 +509,6 @@ public class CoreServiceBean implements CoreService {
 			PathBuilder npath = PathBuilder.fromPath(path);
 			PathBuilder ppath = npath.clone().parent();
 
-//			String caller = membership.getProfileKeyForConnectedIdentifier();
-//			List<String> subjects = membership.getConnectedIdentifierSubjects();
-//			authorisation.checkAuthentified(subjects);
-//			LOGGER.log(Level.FINEST, "user [" + caller + "] is authentified");
-
 			OrtolangObjectIdentifier wsidentifier = registry.lookup(wskey);
 			checkObjectType(wsidentifier, Workspace.OBJECT_TYPE);
 			LOGGER.log(Level.FINEST, "workspace with key [" + wskey + "] exists");
@@ -524,9 +519,6 @@ public class CoreServiceBean implements CoreService {
 			}
 			ws.setKey(wskey);
 			LOGGER.log(Level.FINEST, "workspace loaded");
-
-//			authorisation.checkPermission(ws.getHead(), subjects, "read");
-//			LOGGER.log(Level.FINEST, "user [" + caller + "] has 'read' permission on the head collection of this workspace");
 
 			String rroot = ws.getHead();
 			if (root != null && root.length() > 0 && !root.equals(Workspace.HEAD)) {
@@ -551,7 +543,10 @@ public class CoreServiceBean implements CoreService {
 			}
 
 			return element.getKey();
-		} catch (KeyNotFoundException | RegistryServiceException | TreeBuilderException e) {
+		} catch ( TreeBuilderException e ) {
+			LOGGER.log(Level.FINE, "unable to resolve path [" + path + "] : " + e.getMessage());
+			throw new InvalidPathException("path [" + path + "] does not exists in workspace [" + wskey + "]");
+		} catch (KeyNotFoundException | RegistryServiceException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occured during resolving path", e);
 			throw new CoreServiceException("unable to resolve into workspace [" + wskey + "] path [" + path + "]", e);
 		}
