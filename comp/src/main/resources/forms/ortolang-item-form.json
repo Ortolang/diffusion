@@ -1,6 +1,6 @@
 [
 	{
-    	"type": "tabs",
+    	"type": "vertical-tab",
     	"tabs": [
 	      	{
 		        "title": "Descriptif",
@@ -133,102 +133,92 @@
 				]
 			},
 			{
-				"title":"Catégorie",
+				"title": "Corpus",
 				"items": [
 					{
-						"title": "Catégorie de ressource",
-						"type": "tablearray",
-						"items": [
-							{
-								"label": "Corpus",
-								"items": [
-									{
-										"key": "primaryLanguage",
-										"title": "Langue principale du corpus"
-									},
-						        	{
-										"key":"linguisticDataType",
-										"type":"select",
-										"title": "Type linguistique",
-										"titleMap":
-										[
-											{ "value": "primary_text", "name": "primary_text" },
-											{ "value": "lexicon", "name": "lexicon" },
-											{ "value": "language_description", "name": "language_description" }
-										]
-									},
-						        	{
-						        		"key": "discourseType",
-						        		"type": "array",
-						        		"title": "Type discursif"
-						        	},
-						        	{
-						        		"key":"linguisticSubject",
-						        		"type": "array",
-						        		"title": "Domaines linguistiques"
-						        	}
-								]
-							},
-							{
-								"label": "Lexique",
-								"items": [
-									{
-										"key": "language",
-		        						"title": "Langues concernés par cet objet"
-									}
-								]
-							},
-							{
-								"label": "Outil",
-								"items": [
-									{
-						        		"key": "programmingLanguage",
-						        		"title": "Languages de programmation"
-						        	},
-						        	{
-						        		"key": "opearatingSystem",
-						        		"title": "Systèmes d'exploitation compatibles"
-						        	},
-						        	{
-										"key":"toolSupport",
-										"type":"select",
-										"title": "Type de support",
-										"titleMap":
-										[
-											{ "value": "Software", "name": "Software" },
-											{ "value": "Hardware", "name": "Hardware" }
-										]
-									},
-									{
-						        		"key": "toolLanguage",
-						        		"title": "Langues traitées par l'outil"
-						        	},
-									{
-						        		"key": "toolId",
-						        		"title": "Identifiant de l'outil en ligne"
-						        	},
-									{
-						        		"key": "toolUrl",
-						        		"title": "Adresse de l'outil en ligne"
-						        	},
-									{
-						        		"key": "toolHelp",
-						        		"title": "Aide",
-						        		"type": "textarea"
-						        	}
-								]
-							},
-							{
-								"label": "Application",
-								"items": [
-									{
-						        		"key": "applicationUrl",
-		        						"title": "Url de l'application"
-						        	}
-								]
-							}
+						"key": "primaryLanguage",
+						"title": "Langue principale du corpus"
+					},
+		        	{
+						"key":"linguisticDataType",
+						"type":"select",
+						"title": "Type linguistique",
+						"titleMap":
+						[
+							{ "value": "primary_text", "name": "primary_text" },
+							{ "value": "lexicon", "name": "lexicon" },
+							{ "value": "language_description", "name": "language_description" }
 						]
+					},
+		        	{
+		        		"key": "discourseType",
+		        		"type": "array",
+		        		"title": "Type discursif"
+		        	},
+		        	{
+		        		"key":"linguisticSubject",
+		        		"type": "array",
+		        		"title": "Domaines linguistiques"
+		        	}
+				],
+				"condition": "type=='Corpus'"
+			},
+			{
+				"title": "Lexique",
+				"items": [
+					{
+						"key": "language",
+						"title": "Langues concernés par cet objet"
 					}
+				]
+			},
+			{
+				"title": "Outil",
+				"items": [
+					{
+		        		"key": "programmingLanguage",
+		        		"title": "Languages de programmation"
+		        	},
+		        	{
+		        		"key": "opearatingSystem",
+		        		"title": "Systèmes d'exploitation compatibles"
+		        	},
+		        	{
+						"key":"toolSupport",
+						"type":"select",
+						"title": "Type de support",
+						"titleMap":
+						[
+							{ "value": "Software", "name": "Software" },
+							{ "value": "Hardware", "name": "Hardware" }
+						]
+					},
+					{
+		        		"key": "toolLanguage",
+		        		"title": "Langues traitées par l'outil"
+		        	},
+					{
+		        		"key": "toolId",
+		        		"title": "Identifiant de l'outil en ligne"
+		        	},
+					{
+		        		"key": "toolUrl",
+		        		"title": "Adresse de l'outil en ligne"
+		        	},
+					{
+		        		"key": "toolHelp",
+		        		"title": "Aide",
+		        		"type": "textarea"
+		        	}
+				]
+			},
+			{
+				"title": "Application",
+				"items": [
+					{
+		        		"key": "applicationUrl",
+						"title": "Url de l'application"
+		        	}
 				]
 			}						
 		]
