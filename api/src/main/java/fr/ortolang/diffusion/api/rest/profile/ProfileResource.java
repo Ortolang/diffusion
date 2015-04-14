@@ -201,8 +201,11 @@ public class ProfileResource {
 		cc.setPrivate(true);
 		cc.setMaxAge(0);
 		cc.setMustRevalidate(true);
-		Date lmd = new Date((state.getLastModification()/1000)*1000);
-		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+		ResponseBuilder builder = null;
+		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+			builder = request.evaluatePreconditions(lmd);
+		}
 		
 		if(builder == null){
 			Profile profile = membership.readProfile(key);
@@ -323,8 +326,11 @@ public class ProfileResource {
 		cc.setPrivate(true);
 		cc.setMaxAge(0);
 		cc.setMustRevalidate(true);
-		Date lmd = new Date((state.getLastModification()/1000)*1000);
-		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+		ResponseBuilder builder = null;
+		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+			builder = request.evaluatePreconditions(lmd);
+		}
 		
 		if(builder == null){
 			List<ProfileData> infos = membership.listProfileInfos(key, filter);	

@@ -197,8 +197,11 @@ public class ObjectResource {
 			cc.setMaxAge(0);
 			cc.setMustRevalidate(true);
 		}
-		Date lmd = new Date((state.getLastModification() / 1000) * 1000);
-		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+		ResponseBuilder builder = null;
+		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+			builder = request.evaluatePreconditions(lmd);
+		}
 
 		if (builder == null) {
 			OrtolangObject object = browser.findObject(key);
@@ -274,8 +277,11 @@ public class ObjectResource {
 			cc.setMaxAge(0);
 			cc.setMustRevalidate(true);
 		}
-		Date lmd = new Date((state.getLastModification() / 1000) * 1000);
-		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+		ResponseBuilder builder = null;
+		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+			builder = request.evaluatePreconditions(lmd);
+		}
 
 		if (builder == null) {
 			List<OrtolangObjectVersion> versions = browser.getHistory(key);
@@ -324,8 +330,11 @@ public class ObjectResource {
 			cc.setMaxAge(0);
 			cc.setMustRevalidate(true);
 		}
-		Date lmd = new Date((state.getLastModification() / 1000) * 1000);
-		ResponseBuilder builder = request.evaluatePreconditions(lmd);
+		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+		ResponseBuilder builder = null;
+		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+			builder = request.evaluatePreconditions(lmd);
+		}
 		
 		if (builder == null) {
 			builder = Response.ok();
