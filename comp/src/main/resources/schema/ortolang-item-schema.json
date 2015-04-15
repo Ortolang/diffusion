@@ -216,19 +216,103 @@
     },
     "toolFunctionality": {
       "id": "http://www.ortolang.fr/toolFunctionality",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/toolFunctionality/0",
-        "type": "string"
+      "type": "object",
+      "properties": {
+	    "template": {
+	      "id": "http://www.ortolang.fr/toolFunctionality/0",
+	      "type": "string",
+          "enum": [
+	        "extraction de termes",
+	        "bibliométrie",
+	        "recherche par le contenu ",
+	        "résolution de coréférence",
+	        "recherche d'information multilingue",
+	        "diarisation",
+	        "analyse du discours",
+	        "distillation",
+	        "extraction d'entité",
+	        "détection d’événement",
+	        "machine à état fini",
+	        "reconnaissance des gestes",
+	        "synthèse de geste",
+	        "reconnaissance d'écriture manuscrite",
+	        "détection d'information",
+	        "extraction d'information",
+	        "recherche d'information",
+	        "enseignement",
+	        "enrichissement de base de connaissances",
+	        "génération de langage",
+	        "identification des langues",
+	        "modélisation linguistique",
+	        "enseignement des langues",
+	        "analyse linguistique",
+	        "apprentissage automatique",
+	        "compréhension de texte",
+	        "reconnaissance optique de caractères",
+	        "traduction automatique",
+	        "extraction de métadonnées",
+	        "morphologie",
+	        "reconnaissance d'entités nommées",
+	        "traitement automatique de la langue",
+	        "génération d'expression nominale",
+	        "étiquetage morphosyntaxique",
+	        "phonétique",
+	        "phonologie",
+	        "pragmatique",
+	        "modélisation de la prononciation",
+	        "prosodie",
+	        "psycholinguistique",
+	        "systèmes de questions-réponses",
+	        "lisibilité",
+	        "extraction de relation",
+	        "reconnaissance de l'implication textuelle",
+	        "annotation sémantique",
+	        "sociolinguistique",
+	        "analyse spatiale",
+	        "identification du locuteur",
+	        "segmentation de la parole",
+	        "vérification de locuteur",
+	        "détection de l'activité vocale",
+	        "reconnaissance automatique de la parole",
+	        "synthèse vocale",
+	        "modélisation de dialogue vocal",
+	        "systèmes de dialogues vocaux",
+	        "détection de mots parlés",
+	        "langue standard",
+	        "analyse de la subjectivité",
+	        "résumé automatique de texte",
+	        "analyse syntaxique",
+	        "étiquetage",
+	        "analyse temporelle",
+	        "représentation des connaissances",
+	        "raisonnement",
+	        "segmentation en phrases",
+	        "segmentation en mots",
+	        "analyse des sentiments",
+	        "classification et catégorisation de documents",
+	        "désambiguïsation",
+	        "reformulation",
+	        "résolution d'anaphores",
+	        "correction orthographique de texte",
+	        "agent conversationnel"
+          ]
+        }
       }
     },
     "toolInputData": {
       "id": "http://www.ortolang.fr/toolInputData",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/toolInputData/0",
-        "type": "string"
-      }
+      "type": "object",
+	  "properties": {
+	    "template": {
+	      "id": "http://www.ortolang.fr/toolInputData/0",
+	      "type": "string",
+	      "enum": [
+	        "audio",
+        	"video",
+        	"image",
+        	"texte"
+	      ]
+	    }
     }
   },
   "required": [
