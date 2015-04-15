@@ -76,18 +76,19 @@ public class WorkspaceSshFile implements SshFile {
 	private boolean readable;
 	
 	protected WorkspaceSshFile(DiffusionFileSystemView view, PathBuilder path) throws OrtolangException {
-		LOGGER.log(Level.INFO, "WorkspaceSshFile created for path: " + path.build());
+		LOGGER.log(Level.FINE, "WorkspaceSshFile created for path: " + path.build());
 		this.view = view;
 		this.path = path;
 		this.load();
 	}
 	
 	private void load() throws OrtolangException {
-		LOGGER.log(Level.INFO, "loading workspace : " + path.part());
+		LOGGER.log(Level.FINE, "loading workspace : " + path.part());
 		try {
 			LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 			lc.login();
-			ws = view.getCore().readWorkspace(path.part());
+			String wskey = view.getCore().resolveWorkspaceAlias(path.part());
+			ws = view.getCore().readWorkspace(wskey);
 			head = view.getCore().readCollection(ws.getHead());
 			exists = true;
 			readable = true;
@@ -107,8 +108,8 @@ public class WorkspaceSshFile implements SshFile {
 
 	@Override
 	public String getName() {
-		LOGGER.log(Level.INFO, "retreive name: " + ws.getKey());
-		return ws.getKey();
+		LOGGER.log(Level.INFO, "retreive name: " + ws.getAlias());
+		return ws.getAlias();
 	}
 	
 	@Override

@@ -7,7 +7,7 @@
     <endEvent id="end" name="End"></endEvent>
     <sequenceFlow id="flow1" sourceRef="start" targetRef="snapshot"></sequenceFlow>
     <sequenceFlow id="flow2" sourceRef="snapshot" targetRef="issuperuser"></sequenceFlow>
-    <exclusiveGateway id="issuperuser" name="Is Super User" default="flow4"></exclusiveGateway>
+    <exclusiveGateway id="issuperuser" name="IsSuperUser" default="flow4"></exclusiveGateway>
     <serviceTask id="servicetask1" name="Submit Snapshot" activiti:class="fr.ortolang.diffusion.runtime.engine.task.SubmitSnapshotTask"></serviceTask>
     <userTask id="reviewsnapshot" name="Review Snapshot" default="flow14" activiti:candidateGroups="moderators" activiti:formKey="review-snapshot-form"></userTask>
     <sequenceFlow id="flow4" sourceRef="issuperuser" targetRef="servicetask1"></sequenceFlow>

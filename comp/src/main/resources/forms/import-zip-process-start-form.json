@@ -1,0 +1,33 @@
+[
+    {
+        "key": "process-name",
+        "type": "hidden",
+        "default": "Import Zip Process"
+    },
+    {
+        "key": "process-type",
+        "type": "hidden",
+        "default": "import-zip"
+    },
+    {
+        "key": "wskey",
+        "type": "text",
+        "required": true,
+        "label": "Workspace Key",
+        "description": "The workspace key in which you want to import content"
+    },
+    {
+        "key": "root",
+        "type": "text",
+        "required": true,
+        "label": "Root Path",
+        "description": "The path of the root collection you want the files to be imported in"
+    },
+    {
+        "key": "overwrite",
+        "type": "checkbox",
+        "required": true,
+        "label": "Overwrite existing",
+        "description": "Do you want existing files to be overwritten ?"
+    }
+]

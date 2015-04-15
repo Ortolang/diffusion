@@ -115,6 +115,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 	private List<String> searchVersions(Bag bag) {
 		Collection<BagFile> payload = bag.getPayload();
 		Map<Integer, String> snapshots = new HashMap<Integer, String>();
+		boolean headExists = false;
 		for (BagFile bagfile : payload) {
 			if (bagfile.getFilepath().startsWith(SNAPSHOTS_PREFIX)) {
 				String[] parts = bagfile.getFilepath().substring(SNAPSHOTS_PREFIX.length()).split("/");
@@ -136,6 +137,10 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 					LOGGER.log(Level.INFO, "Snapshot index is not a number: " + parts[0]);
 				}
 			}
+			if (!headExists && bagfile.getFilepath().startsWith(HEAD_PREFIX)) {
+				LOGGER.log(Level.INFO, "Found head");
+				headExists = true;
+			}
 		}
 
 		List<String> versions = new ArrayList<String>();
@@ -145,7 +150,9 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 			versions.add("snapshots/" + cpt + "/" + snapshot);
 			cpt++;
 		}
-		versions.add(Workspace.HEAD);
+		if ( headExists ) {
+			versions.add(Workspace.HEAD);
+		}
 		return versions;
 	}
 	

@@ -68,17 +68,24 @@ public class ProfileSshFile implements SshFile {
 	private boolean readable;
 	
 	protected ProfileSshFile(DiffusionFileSystemView view) throws OrtolangException {
-		LOGGER.log(Level.INFO, "ProfileDiffusionSshFile created");
+		LOGGER.log(Level.FINE, "ProfileDiffusionSshFile created");
 		this.view = view; 
+		workspaces = new ArrayList<String> ();
 		this.load();
 	}
 	
 	private void load() throws OrtolangException {
-		LOGGER.log(Level.INFO, "loading profile : " + view.getConnectedUser());
+		LOGGER.log(Level.FINE, "loading profile : " + view.getConnectedUser());
 		try {
 			LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 			lc.login();
-			workspaces = view.getCore().findWorkspacesForProfile(view.getConnectedUser());
+			List<String> wskeys = view.getCore().findWorkspacesForProfile(view.getConnectedUser());
+			for ( String wskey : wskeys ) {
+				String wsalias = view.getCore().readWorkspace(wskey).getAlias();
+				if ( wsalias != null ) {
+					workspaces.add(wsalias);
+				}
+			}
 			exists = true;
 			readable = true;
 			lc.logout();

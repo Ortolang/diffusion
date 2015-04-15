@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.runtime.engine.task;
  * #L%
  */
 
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import org.activiti.engine.delegate.DelegateExecution;
@@ -115,6 +116,10 @@ public class LoadSnapshotTask extends RuntimeEngineTask {
 						+ ", maybe already published or involved in another publication process");
 			}
 			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Snapshot loaded and publication status is good for publication, starting publication"));
+			
+			for ( Entry<String, Object> entry : execution.getVariables().entrySet() ) {
+				LOGGER.log(Level.INFO, "VAR: " + entry.getKey() + " - " + entry.getValue() );
+			}
 
 		} catch (CoreServiceException | KeyNotFoundException | AccessDeniedException | RegistryServiceException e) {
 			throw new RuntimeEngineTaskException("unexpected error during snapshot task execution", e);

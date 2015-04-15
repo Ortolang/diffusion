@@ -50,6 +50,7 @@ import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.publication.PublicationService;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.runtime.RuntimeService;
@@ -58,6 +59,10 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 public abstract class RuntimeEngineTask implements JavaDelegate {
 
 	public static final String PRETEND = "pretend";
+	
+	public static final String ZIP_PATH_PARAM_NAME = "zippath";
+	public static final String ZIP_ROOT_PARAM_NAME = "ziproot";
+	public static final String ZIP_OVERWRITE_PARAM_NAME = "ziproot";
 	
 	public static final String BAG_PATH_PARAM_NAME = "bagpath";
 	public static final String BAG_VERSIONS_PARAM_NAME = "bagversions";
@@ -86,6 +91,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	protected BrowserService browser;
 	protected RegistryService registry;
 	protected PublicationService publication;
+	protected NotificationService notification;
 
 	public MembershipService getMembershipService() throws RuntimeEngineTaskException {
 		try {
@@ -156,9 +162,20 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public PublicationService getPublicationService() throws RuntimeEngineTaskException {
 		try {
 			if (publication == null) {
-				publication = (PublicationService) OrtolangServiceLocator.findService("publication");
+				publication = (PublicationService) OrtolangServiceLocator.findService(PublicationService.SERVICE_NAME);
 			}
 			return publication;
+		} catch (Exception e) {
+			throw new RuntimeEngineTaskException(e);
+		}
+	}
+	
+	public NotificationService getNotificationService() throws RuntimeEngineTaskException {
+		try {
+			if (notification == null) {
+				notification = (NotificationService) OrtolangServiceLocator.lookup(NotificationService.SERVICE_NAME);
+			}
+			return notification;
 		} catch (Exception e) {
 			throw new RuntimeEngineTaskException(e);
 		}

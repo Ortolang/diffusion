@@ -1,7 +1,7 @@
 <%@ page language="java" pageEncoding="UTF-8" session="false"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
-<%@ taglib uri="/WEB-INF/Ortolang.tld" prefix="ortolang"%>
+<%@ taglib uri="/WEB-INF/ortolang.tld" prefix="ortolang"%>
 <!DOCTYPE html>
 <html>
 <head>

@@ -48,13 +48,7 @@
     				},
     				{
     					"key":"keywords",
-    					"title":"Mots clés",
-    					"format": "uiselect",
-    					"items": [
-						    { "value": "1", "label": "Person 1" },
-						    { "value": "2", "label": "Person 2" },
-						    { "value": "3", "label": "Person 3" }
-						  ]
+    					"title":"Mots clés"
     				},
     				{
     					"key":"website",

@@ -51,7 +51,8 @@ public class ImportContentTask extends RuntimeEngineTask {
 		Bag bag = loadBag(bagpath);
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Bag file loaded from local file: " + bag.getFile()));
 		BufferedReader reader = new BufferedReader(new StringReader(execution.getVariable(IMPORT_OPERATIONS_PARAM_NAME, String.class)));
-
+		
+		boolean partial = false;
 		try {
 			String line = null;
 			while ((line = reader.readLine()) != null) {
@@ -87,13 +88,16 @@ public class ImportContentTask extends RuntimeEngineTask {
 							purgeCache();
 							break;
 						default:
+							partial = true;
 							throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unknown operation: " + line));
 					}
 				} catch ( Exception e ) {
+					partial = true;
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Error while executing operation: " + line));
 				}
 			}
 		} catch (IOException e) {
+			partial = true;
 			LOGGER.log(Level.SEVERE, "- unexpected error during reading operations script", e);
 		}
 		
@@ -103,6 +107,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			LOGGER.log(Level.SEVERE, "- error during closing bag", e);
 		}
 		LOGGER.log(Level.FINE, "- import content done");
+		execution.setVariable("partial", partial);
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import content done"));
 	}
 
