@@ -13,6 +13,8 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.transaction.SystemException;
+
 import org.activiti.engine.delegate.DelegateExecution;
 
 import fr.ortolang.diffusion.core.CollectionNotEmptyException;
@@ -46,6 +48,14 @@ public class ImportContentTask extends RuntimeEngineTask {
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
 		LOGGER.log(Level.INFO, "Starting Import Content Task");
+		
+		try {
+			LOGGER.log(Level.INFO, "Setting transaction timeout to 3600");
+			getUserTransaction().setTransactionTimeout(3600);
+		} catch (SystemException e) {
+			LOGGER.log(Level.SEVERE, "- unexpected error during setting transaction timeout", e);
+		}
+		
 		checkParameters(execution);
 		Path bagpath = Paths.get(execution.getVariable(BAG_PATH_PARAM_NAME, String.class));
 		Bag bag = loadBag(bagpath);
