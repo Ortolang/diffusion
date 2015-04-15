@@ -1,326 +1,319 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "http://www.ortolang.fr",
-  "type": "object",
-  "additionalProperties": false,
-  "properties": {
-  	"type": {
-      "id": "http://www.ortolang.fr/type",
-      "type": "string"
-    },
-    "title": {
-      "id": "http://www.ortolang.fr/title",
-      "type": "string"
-    },
-    "description": {
-      "id": "http://www.ortolang.fr/description",
-      "type": "string"
-    },
-    "keywords": {
-      "id": "http://www.ortolang.fr/keywords",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/keywords/0",
-        "type": "string"
-      }
-    },
-    "extent": {
-      "id": "http://www.ortolang.fr/extent",
-      "type": "string"
-    },
-    "datasize": {
-      "id": "http://www.ortolang.fr/datasize",
-      "type": "string"
-    },
-    "spacial": {
-      "id": "http://www.ortolang.fr/spacial",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/spacial/0",
-        "type": "string"
-      }
-    },
-    "temporal": {
-      "id": "http://www.ortolang.fr/temporal",
-      "type": "string"
-    },
-    "website": {
-      "id": "http://www.ortolang.fr/website",
-      "type": "string"
-    },
-    "image": {
-      "id": "http://www.ortolang.fr/image",
-      "type": "string"
-    },
-    "preview": {
-      "id": "http://www.ortolang.fr/preview",
-      "type": "string"
-    },
-    "conditionsOfUse": {
-      "id": "http://www.ortolang.fr/conditionsOfUse",
-      "type": "string"
-    },
-    "statusOfUse": {
-      "id": "http://www.ortolang.fr/statusOfUse",
-      "type": "string"
-    },
-    "license": {
-      "id": "http://www.ortolang.fr/license",
-      "type": "string"
-    },
-    "licenseWebsite": {
-      "id": "http://www.ortolang.fr/licenseWebsite",
-      "type": "string"
-    },
-    "producer": {
-      "id": "http://www.ortolang.fr/producer",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/producer/0",
-        "type": "string",
-        "required": [
-            "0"
-        ]
-      }
-    },
-    "researcher": {
-      "id": "http://www.ortolang.fr/researcher",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/researcher/0",
-        "type": "string"
-      }
-    },
-    "manager": {
-      "id": "http://www.ortolang.fr/manager",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/manager/0",
-        "type": "string"
-      }
-    },
-    "developer": {
-      "id": "http://www.ortolang.fr/developer",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/developer/0",
-        "type": "string"
-      }
-    },
-    "author": {
-      "id": "http://www.ortolang.fr/author",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/author/0",
-        "type": "string"
-      }
-    },
-    "compiler": {
-      "id": "http://www.ortolang.fr/compiler",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/compiler/0",
-        "type": "string"
-      }
-    },
-    
-    "primaryLanguage": {
-      "id": "http://www.ortolang.fr/primaryLanguage",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/primaryLanguage/0",
-        "type": "string"
-      }
-    },
-    "discourseType": {
-      "id": "http://www.ortolang.fr/discourseType",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/discourseType/0",
-        "type": "string"
-      }
-    },
-    "linguisticSubject": {
-      "id": "http://www.ortolang.fr/linguisticSubject",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/linguisticSubject/0",
-        "type": "string"
-      }
-    },
-    "linguisticDataType": {
-      "id": "http://www.ortolang.fr/linguisticDataType",
-      "type": "string"
-    },
-       
-    "language": {
-      "id": "http://www.ortolang.fr/language",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/language/0",
-        "type": "string"
-      }
-    },
-    
-    "operatingSystem": {
-      "id": "http://www.ortolang.fr/opearatingSystem",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/opearatingSystem/0",
-        "type": "string"
-      }
-    },
-    "programmingLanguage": {
-      "id": "http://www.ortolang.fr/programmingLanguage",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/programmingLanguage/0",
-        "type": "string"
-      }
-    },
-    "navigationLanguage": {
-      "id": "http://www.ortolang.fr/navigationLanguage",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/navigationLanguage/0",
-        "type": "string"
-      }
-    },
-    "toolLanguage": {
-      "id": "http://www.ortolang.fr/toolLanguage",
-      "type": "array",
-      "items": {
-        "id": "http://www.ortolang.fr/toolLanguage/0",
-        "type": "string"
-      }
-    },
-    "toolSupport": {
-      "id": "http://www.ortolang.fr/toolSupport",
-      "type": "string"
-    },
-    "toolHelp": {
-      "id": "http://www.ortolang.fr/toolHelp",
-      "type": "string"
-    },
-    "toolId": {
-      "id": "http://www.ortolang.fr/toolId",
-      "type": "string"
-    },
-    "toolUrl": {
-      "id": "http://www.ortolang.fr/toolUrl",
-      "type": "string"
-    },
-    "applicationUrl": {
-      "id": "http://www.ortolang.fr/applicationUrl",
-      "type": "string"
-    },
-    "toolFunctionality": {
-      "id": "http://www.ortolang.fr/toolFunctionality",
-      "type": "object",
-      "properties": {
-	    "template": {
-	      "id": "http://www.ortolang.fr/toolFunctionality/0",
-	      "type": "string",
-          "enum": [
-	        "extraction de termes",
-	        "bibliométrie",
-	        "recherche par le contenu ",
-	        "résolution de coréférence",
-	        "recherche d'information multilingue",
-	        "diarisation",
-	        "analyse du discours",
-	        "distillation",
-	        "extraction d'entité",
-	        "détection d’événement",
-	        "machine à état fini",
-	        "reconnaissance des gestes",
-	        "synthèse de geste",
-	        "reconnaissance d'écriture manuscrite",
-	        "détection d'information",
-	        "extraction d'information",
-	        "recherche d'information",
-	        "enseignement",
-	        "enrichissement de base de connaissances",
-	        "génération de langage",
-	        "identification des langues",
-	        "modélisation linguistique",
-	        "enseignement des langues",
-	        "analyse linguistique",
-	        "apprentissage automatique",
-	        "compréhension de texte",
-	        "reconnaissance optique de caractères",
-	        "traduction automatique",
-	        "extraction de métadonnées",
-	        "morphologie",
-	        "reconnaissance d'entités nommées",
-	        "traitement automatique de la langue",
-	        "génération d'expression nominale",
-	        "étiquetage morphosyntaxique",
-	        "phonétique",
-	        "phonologie",
-	        "pragmatique",
-	        "modélisation de la prononciation",
-	        "prosodie",
-	        "psycholinguistique",
-	        "systèmes de questions-réponses",
-	        "lisibilité",
-	        "extraction de relation",
-	        "reconnaissance de l'implication textuelle",
-	        "annotation sémantique",
-	        "sociolinguistique",
-	        "analyse spatiale",
-	        "identification du locuteur",
-	        "segmentation de la parole",
-	        "vérification de locuteur",
-	        "détection de l'activité vocale",
-	        "reconnaissance automatique de la parole",
-	        "synthèse vocale",
-	        "modélisation de dialogue vocal",
-	        "systèmes de dialogues vocaux",
-	        "détection de mots parlés",
-	        "langue standard",
-	        "analyse de la subjectivité",
-	        "résumé automatique de texte",
-	        "analyse syntaxique",
-	        "étiquetage",
-	        "analyse temporelle",
-	        "représentation des connaissances",
-	        "raisonnement",
-	        "segmentation en phrases",
-	        "segmentation en mots",
-	        "analyse des sentiments",
-	        "classification et catégorisation de documents",
-	        "désambiguïsation",
-	        "reformulation",
-	        "résolution d'anaphores",
-	        "correction orthographique de texte",
-	        "agent conversationnel"
-          ]
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://www.ortolang.fr",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "type": {
+            "id": "http://www.ortolang.fr/type",
+            "type": "string"
+        },
+        "title": {
+            "id": "http://www.ortolang.fr/title",
+            "type": "string"
+        },
+        "description": {
+            "id": "http://www.ortolang.fr/description",
+            "type": "string"
+        },
+        "keywords": {
+            "id": "http://www.ortolang.fr/keywords",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/keywords/0",
+                "type": "string"
+            }
+        },
+        "extent": {
+            "id": "http://www.ortolang.fr/extent",
+            "type": "string"
+        },
+        "datasize": {
+            "id": "http://www.ortolang.fr/datasize",
+            "type": "string"
+        },
+        "spacial": {
+            "id": "http://www.ortolang.fr/spacial",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/spacial/0",
+                "type": "string"
+            }
+        },
+        "temporal": {
+            "id": "http://www.ortolang.fr/temporal",
+            "type": "string"
+        },
+        "website": {
+            "id": "http://www.ortolang.fr/website",
+            "type": "string"
+        },
+        "image": {
+            "id": "http://www.ortolang.fr/image",
+            "type": "string"
+        },
+        "preview": {
+            "id": "http://www.ortolang.fr/preview",
+            "type": "string"
+        },
+        "conditionsOfUse": {
+            "id": "http://www.ortolang.fr/conditionsOfUse",
+            "type": "string"
+        },
+        "statusOfUse": {
+            "id": "http://www.ortolang.fr/statusOfUse",
+            "type": "string"
+        },
+        "license": {
+            "id": "http://www.ortolang.fr/license",
+            "type": "string"
+        },
+        "licenseWebsite": {
+            "id": "http://www.ortolang.fr/licenseWebsite",
+            "type": "string"
+        },
+        "producer": {
+            "id": "http://www.ortolang.fr/producer",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/producer/0",
+                "type": "string",
+                "required": [
+                    "0"
+                ]
+            }
+        },
+        "researcher": {
+            "id": "http://www.ortolang.fr/researcher",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/researcher/0",
+                "type": "string"
+            }
+        },
+        "manager": {
+            "id": "http://www.ortolang.fr/manager",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/manager/0",
+                "type": "string"
+            }
+        },
+        "developer": {
+            "id": "http://www.ortolang.fr/developer",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/developer/0",
+                "type": "string"
+            }
+        },
+        "author": {
+            "id": "http://www.ortolang.fr/author",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/author/0",
+                "type": "string"
+            }
+        },
+        "compiler": {
+            "id": "http://www.ortolang.fr/compiler",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/compiler/0",
+                "type": "string"
+            }
+        },
+        "primaryLanguage": {
+            "id": "http://www.ortolang.fr/primaryLanguage",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/primaryLanguage/0",
+                "type": "string"
+            }
+        },
+        "discourseType": {
+            "id": "http://www.ortolang.fr/discourseType",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/discourseType/0",
+                "type": "string"
+            }
+        },
+        "linguisticSubject": {
+            "id": "http://www.ortolang.fr/linguisticSubject",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/linguisticSubject/0",
+                "type": "string"
+            }
+        },
+        "linguisticDataType": {
+            "id": "http://www.ortolang.fr/linguisticDataType",
+            "type": "string"
+        },
+        "language": {
+            "id": "http://www.ortolang.fr/language",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/language/0",
+                "type": "string"
+            }
+        },
+        "operatingSystem": {
+            "id": "http://www.ortolang.fr/opearatingSystem",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/opearatingSystem/0",
+                "type": "string"
+            }
+        },
+        "programmingLanguage": {
+            "id": "http://www.ortolang.fr/programmingLanguage",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/programmingLanguage/0",
+                "type": "string"
+            }
+        },
+        "navigationLanguage": {
+            "id": "http://www.ortolang.fr/navigationLanguage",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/navigationLanguage/0",
+                "type": "string"
+            }
+        },
+        "toolLanguage": {
+            "id": "http://www.ortolang.fr/toolLanguage",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/toolLanguage/0",
+                "type": "string"
+            }
+        },
+        "toolSupport": {
+            "id": "http://www.ortolang.fr/toolSupport",
+            "type": "string"
+        },
+        "toolHelp": {
+            "id": "http://www.ortolang.fr/toolHelp",
+            "type": "string"
+        },
+        "toolId": {
+            "id": "http://www.ortolang.fr/toolId",
+            "type": "string"
+        },
+        "toolUrl": {
+            "id": "http://www.ortolang.fr/toolUrl",
+            "type": "string"
+        },
+        "applicationUrl": {
+            "id": "http://www.ortolang.fr/applicationUrl",
+            "type": "string"
+        },
+        "toolFunctionality": {
+            "id": "http://www.ortolang.fr/toolFunctionality",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/toolFunctionality",
+                "type": "string",
+                "enum": [
+                    "extraction de termes",
+                    "bibliométrie",
+                    "recherche par le contenu ",
+                    "résolution de coréférence",
+                    "recherche d'information multilingue",
+                    "diarisation",
+                    "analyse du discours",
+                    "distillation",
+                    "extraction d'entité",
+                    "détection d’événement",
+                    "machine à état fini",
+                    "reconnaissance des gestes",
+                    "synthèse de geste",
+                    "reconnaissance d'écriture manuscrite",
+                    "détection d'information",
+                    "extraction d'information",
+                    "recherche d'information",
+                    "enseignement",
+                    "enrichissement de base de connaissances",
+                    "génération de langage",
+                    "identification des langues",
+                    "modélisation linguistique",
+                    "enseignement des langues",
+                    "analyse linguistique",
+                    "apprentissage automatique",
+                    "compréhension de texte",
+                    "reconnaissance optique de caractères",
+                    "traduction automatique",
+                    "extraction de métadonnées",
+                    "morphologie",
+                    "reconnaissance d'entités nommées",
+                    "traitement automatique de la langue",
+                    "génération d'expression nominale",
+                    "étiquetage morphosyntaxique",
+                    "phonétique",
+                    "phonologie",
+                    "pragmatique",
+                    "modélisation de la prononciation",
+                    "prosodie",
+                    "psycholinguistique",
+                    "systèmes de questions-réponses",
+                    "lisibilité",
+                    "extraction de relation",
+                    "reconnaissance de l'implication textuelle",
+                    "annotation sémantique",
+                    "sociolinguistique",
+                    "analyse spatiale",
+                    "identification du locuteur",
+                    "segmentation de la parole",
+                    "vérification de locuteur",
+                    "détection de l'activité vocale",
+                    "reconnaissance automatique de la parole",
+                    "synthèse vocale",
+                    "modélisation de dialogue vocal",
+                    "systèmes de dialogues vocaux",
+                    "détection de mots parlés",
+                    "langue standard",
+                    "analyse de la subjectivité",
+                    "résumé automatique de texte",
+                    "analyse syntaxique",
+                    "étiquetage",
+                    "analyse temporelle",
+                    "représentation des connaissances",
+                    "raisonnement",
+                    "segmentation en phrases",
+                    "segmentation en mots",
+                    "analyse des sentiments",
+                    "classification et catégorisation de documents",
+                    "désambiguïsation",
+                    "reformulation",
+                    "résolution d'anaphores",
+                    "correction orthographique de texte",
+                    "agent conversationnel"
+                ]
+            }
+        },
+        "toolInputData": {
+            "id": "http://www.ortolang.fr/toolLanguage",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/toolInputData",
+                "type": "string",
+                "enum": [
+                    "audio",
+                    "video",
+                    "image",
+                    "texte"
+                ]
+            }
         }
-      }
     },
-    "toolInputData": {
-      "id": "http://www.ortolang.fr/toolInputData",
-      "type": "object",
-	  "properties": {
-	    "template": {
-	      "id": "http://www.ortolang.fr/toolInputData/0",
-	      "type": "string",
-	      "enum": [
-	        "audio",
-        	"video",
-        	"image",
-        	"texte"
-	      ]
-	    }
-	  }
-    }
-  },
-  "required": [
-    "producer",
-    "type",
-    "title",
-    "description",
-    "statusOfUse"
-  ]
+    "required": [
+        "producer",
+        "type",
+        "title",
+        "description",
+        "statusOfUse"
+    ]
 }
