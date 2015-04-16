@@ -164,8 +164,7 @@ public class ObjectResource {
 		representation.setSelf(objects.clone().queryParam("offset", offset).queryParam("limit", limit).build());
 		representation.setNext(objects.clone().queryParam("offset", (nbentries > (offset + limit)) ? (offset + limit) : offset).queryParam("limit", limit).build());
 		representation.setLast(objects.clone().queryParam("offset", ((nbentries - 1) / limit) * limit).queryParam("limit", limit).build());
-		Response response = Response.ok(representation).build();
-		return response;
+		return Response.ok(representation).build();
 	}
 
 	/**
@@ -238,8 +237,7 @@ public class ObjectResource {
 		}
 
 		builder.cacheControl(cc);
-		Response response = builder.build();
-		return response;
+		return builder.build();
 	}
 
 	@GET
@@ -296,8 +294,7 @@ public class ObjectResource {
 		}
 
 		builder.cacheControl(cc);
-		Response response = builder.build();
-		return response;
+		return builder.build();
 	}
 
 	@GET
@@ -373,8 +370,7 @@ public class ObjectResource {
 			}
 		} 
 		builder.cacheControl(cc);
-		Response response = builder.build();
-		return response;
+		return builder.build();
 	}
 
 	@GET

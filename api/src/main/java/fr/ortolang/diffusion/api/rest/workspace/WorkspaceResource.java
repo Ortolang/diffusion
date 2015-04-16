@@ -304,7 +304,6 @@ public class WorkspaceResource {
 				}
 			}
 			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "metadata not found with name: " + metadata + " at path: " + npath.build());
-			return;
 		} else if (object instanceof DataObject) {
 			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
 			response.setContentType(((DataObject) object).getMimeType());

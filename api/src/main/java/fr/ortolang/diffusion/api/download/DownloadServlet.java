@@ -91,7 +91,7 @@ public class DownloadServlet extends HttpServlet {
 			response.setHeader("Content-Disposition", "attachment; filename=" + filename);
 			response.setContentType(contentType);
 			response.setContentLength(size);
-			response.setDateHeader("Expires", System.currentTimeMillis(  ) + 10*365*24*60*60*1000);
+			response.setDateHeader("Expires", System.currentTimeMillis() + 315360000000L);
 			InputStream input = binaryStore.get(hash);
 			try {
 				IOUtils.copy(input, response.getOutputStream());
