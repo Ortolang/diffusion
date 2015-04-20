@@ -58,7 +58,7 @@ public interface RuntimeService extends OrtolangService {
 	
 	/* Process */
 	
-	public void createProcess(String key, String type, String name) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	public Process createProcess(String key, String type, String name) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
 
 	public void startProcess(String key, Map<String, Object> variables) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	

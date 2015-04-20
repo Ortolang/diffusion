@@ -216,10 +216,10 @@ public class RuntimeResource {
 				mparams.put(entry.getKey(), values.substring(0, values.length()-1));
 			}
 		}
-		runtime.createProcess(key, definition, name);
+		Process process = runtime.createProcess(key, definition, name);
 		runtime.startProcess(key, mparams);
 		URI newly = DiffusionUriBuilder.getRestUriBuilder().path(RuntimeResource.class).path("processes").path(key).build();
-		return Response.created(newly).build();
+		return Response.created(newly).entity(ProcessRepresentation.fromProcess(process)).build();
 	}
 	
 	@GET

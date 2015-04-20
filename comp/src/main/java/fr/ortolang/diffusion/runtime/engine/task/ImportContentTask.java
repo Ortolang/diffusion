@@ -13,7 +13,11 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+<<<<<<< HEAD
 import javax.transaction.Status;
+=======
+import javax.transaction.SystemException;
+>>>>>>> b4d16735bfadd258e83bb5b30e05ce27c1aff036
 
 import org.activiti.engine.delegate.DelegateExecution;
 

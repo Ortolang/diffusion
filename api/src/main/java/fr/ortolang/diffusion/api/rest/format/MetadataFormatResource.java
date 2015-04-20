@@ -8,8 +8,10 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -42,21 +44,31 @@ public class MetadataFormatResource {
 	private BinaryStoreService store;
 
 	@GET
-	public Response listMetadataFormat() throws CoreServiceException {
+	public Response listMetadataFormat(@QueryParam(value = "name") String name) throws CoreServiceException {
 		LOGGER.log(Level.INFO, "GET /metadataformats");
 		
-		List<MetadataFormat> mdfs = core.listMetadataFormat();
-		
 		GenericCollectionRepresentation<MetadataFormat> representation = new GenericCollectionRepresentation<MetadataFormat>();
-		for (MetadataFormat mdf : mdfs) {
-			representation.addEntry(mdf);
+		if(name!=null) {
+			MetadataFormat md = core.getMetadataFormat(name);
+			
+			representation.addEntry(md);
+			representation.setSize(1);
+			representation.setLimit(1);
+		} else {
+			List<MetadataFormat> mdfs = core.listMetadataFormat();
+			
+			for (MetadataFormat mdf : mdfs) {
+				representation.addEntry(mdf);
+			}
+			
+			representation.setSize(mdfs.size());
+			representation.setLimit(mdfs.size());
 		}
+		
 		representation.setOffset(0);
-		representation.setSize(mdfs.size());
-		representation.setLimit(mdfs.size());
 		return Response.ok(representation).build();
 	}
-	
+
 	@GET
 	@Path("/download")
 	public void download(final @QueryParam(value = "id") String id, final @QueryParam(value = "name") String name, @Context HttpServletResponse response) throws OrtolangException, CoreServiceException, DataNotFoundException, IOException, BinaryStoreServiceException {
