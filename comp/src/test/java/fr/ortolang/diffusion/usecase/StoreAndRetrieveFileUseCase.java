@@ -108,7 +108,7 @@ public class StoreAndRetrieveFileUseCase {
 				.asFile());
 		ear.addAsLibraries(Maven.resolver().loadPomFromFile("pom.xml").resolve("org.wildfly:wildfly-ejb-client-bom:pom:8.0.0.Beta1")
 				.withTransitivity().asFile());
-		ear.addAsLibraries(Maven.resolver().loadPomFromFile("pom.xml").resolve("org.apache.tika:tika-core:1.4")
+		ear.addAsLibraries(Maven.resolver().loadPomFromFile("pom.xml").resolve("org.apache.tika:tika-core:1.7")
 				.withTransitivity().asFile());
 		LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 

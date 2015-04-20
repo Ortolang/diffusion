@@ -240,14 +240,22 @@ public class WorkspaceResource {
 			if (representation != null) {
 				if (metadata != null && metadata.length() > 0) {
 					LOGGER.log(Level.INFO, "searching element metadata: " + metadata);
+					MetadataElement mdElement = null;
 					for (MetadataElement element : representation.getMetadatas()) {
 						if (element.getName().equals(metadata)) {
 							LOGGER.log(Level.FINE, "element metadata key found, loading...");
-							ekey = element.getKey();
-							object = browser.findObject(ekey);
-							representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
+							mdElement = element;
 							break;
 						}
+					}
+					
+					if(mdElement!=null) {
+						ekey = mdElement.getKey();
+						object = browser.findObject(ekey);
+						representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
+					} else {
+						LOGGER.log(Level.FINE, "unable to find a metadata element at path: " + path);
+						return Response.status(Response.Status.NOT_FOUND).build();
 					}
 				}
 				OrtolangObjectInfos infos = browser.getInfos(ekey);
@@ -304,7 +312,6 @@ public class WorkspaceResource {
 				}
 			}
 			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "metadata not found with name: " + metadata + " at path: " + npath.build());
-			return;
 		} else if (object instanceof DataObject) {
 			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
 			response.setContentType(((DataObject) object).getMimeType());

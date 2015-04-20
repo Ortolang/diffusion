@@ -139,10 +139,6 @@ public class TicketHelper {
             return hash;
         }
 
-        public long getExpiration() {
-            return expiration;
-        }
-
         public boolean validate(String hash) {
             if (!hash.equals(this.hash)) {
                 LOGGER.log(Level.FINE, "Ticket not valid for this hash");

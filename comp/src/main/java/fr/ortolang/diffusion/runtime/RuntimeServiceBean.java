@@ -147,7 +147,7 @@ public class RuntimeServiceBean implements RuntimeService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createProcess(String key, String type, String name) throws RuntimeServiceException, AccessDeniedException {
+	public Process createProcess(String key, String type, String name) throws RuntimeServiceException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "Creating new process of type: " + type);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -172,6 +172,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			authorisation.createPolicy(key, caller);
 
 			notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "create"), "");
+			return process;
 		} catch (RuntimeEngineException | RegistryServiceException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occured while creating process", e);
