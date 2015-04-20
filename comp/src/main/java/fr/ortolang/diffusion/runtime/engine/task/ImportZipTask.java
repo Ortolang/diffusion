@@ -2,8 +2,6 @@ package fr.ortolang.diffusion.runtime.engine.task;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
@@ -39,7 +37,7 @@ public class ImportZipTask extends RuntimeEngineTask {
 		LOGGER.log(Level.INFO, "Starting Import Content Task");
 		checkParameters(execution);
 		String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
-		Path zippath = Paths.get(execution.getVariable(ZIP_PATH_PARAM_NAME, String.class));
+		String zippath = execution.getVariable(ZIP_PATH_PARAM_NAME, String.class);
 		String root = execution.getVariable(ZIP_ROOT_PARAM_NAME, String.class);
 		PathBuilder rootPath;
 		try {
@@ -54,7 +52,7 @@ public class ImportZipTask extends RuntimeEngineTask {
 		LOGGER.log(Level.FINE, "- starting import zip");
 		try {
 			Set<String> cache = new HashSet<String>();
-			ZipFile zip = new ZipFile(zippath.toFile());
+			ZipFile zip = new ZipFile(zippath);
 			boolean partial = false;
 			for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements();) {
 				ZipEntry entry = e.nextElement();
