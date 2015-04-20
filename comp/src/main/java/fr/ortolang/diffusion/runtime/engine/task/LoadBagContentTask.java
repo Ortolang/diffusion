@@ -52,6 +52,8 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 			if (getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
 				LOGGER.log(Level.FINE, "commiting active user transaction.");
 				getUserTransaction().commit();
+			} else {
+				LOGGER.log(Level.FINE, "user transaction in state : " + getUserTransaction().getStatus());
 			}
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
