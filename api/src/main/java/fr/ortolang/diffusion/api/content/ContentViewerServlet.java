@@ -144,7 +144,9 @@ public class ContentViewerServlet extends HttpServlet {
 		} catch (KeyNotFoundException e) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
 		} catch (AccessDeniedException e) {
-			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+			request.setAttribute("message", e.getMessage());
+			request.getRequestDispatcher("/jsp/unauthorized.jsp").forward(request, response);
+			//response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
 		} 
 	}
 

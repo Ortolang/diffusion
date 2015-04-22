@@ -12,8 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.transaction.SystemException;
+import javax.transaction.Status;
 
 import org.activiti.engine.delegate.DelegateExecution;
 
@@ -48,25 +47,28 @@ public class ImportContentTask extends RuntimeEngineTask {
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
 		LOGGER.log(Level.INFO, "Starting Import Content Task");
-		
-		try {
-			LOGGER.log(Level.INFO, "Setting transaction timeout to 3600");
-			getUserTransaction().setTransactionTimeout(3600);
-		} catch (SystemException e) {
-			LOGGER.log(Level.SEVERE, "- unexpected error during setting transaction timeout", e);
-		}
-		
 		checkParameters(execution);
 		Path bagpath = Paths.get(execution.getVariable(BAG_PATH_PARAM_NAME, String.class));
 		Bag bag = loadBag(bagpath);
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Bag file loaded from local file: " + bag.getFile()));
 		BufferedReader reader = new BufferedReader(new StringReader(execution.getVariable(IMPORT_OPERATIONS_PARAM_NAME, String.class)));
+		try {
+			if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
+				LOGGER.log(Level.FINE, "starting new user transaction.");
+				getUserTransaction().begin();
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
+		}
 		
 		boolean partial = false;
 		try {
 			String line = null;
+			boolean needcommit;
+			long tscommit = System.currentTimeMillis();
 			while ((line = reader.readLine()) != null) {
 				LOGGER.log(Level.FINE, "- executing operation: " + line);
+				needcommit = false;
 				String[] operation = line.split("\t");
 				try {
 					switch (operation[0]) {
@@ -74,6 +76,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 							wskey = UUID.randomUUID().toString();
 							createWorkspace(operation[1], operation[2], operation[3]);
 							execution.setVariable(WORKSPACE_KEY_PARAM_NAME, wskey);
+							needcommit = true;
 							break;
 						case "create-object":
 							createObject(bag, operation[1], operation[2], operation[3]);
@@ -96,6 +99,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 						case "snapshot-workspace":
 							snapshotWorkspace(operation[1]);
 							purgeCache();
+							needcommit = true;
 							break;
 						default:
 							partial = true;
@@ -104,6 +108,20 @@ public class ImportContentTask extends RuntimeEngineTask {
 				} catch ( Exception e ) {
 					partial = true;
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Error while executing operation: " + line));
+				}
+				if ( System.currentTimeMillis() - tscommit > 300000 ) {
+					LOGGER.log(Level.FINE, "current transaction exceed 5min, need commit.");
+					needcommit = true;
+				}
+				try {
+					if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
+						LOGGER.log(Level.FINE, "commiting active user transaction.");
+						getUserTransaction().commit();
+						tscommit = System.currentTimeMillis();
+						getUserTransaction().begin();
+					}
+				} catch (Exception e) {
+					LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
 				}
 			}
 		} catch (IOException e) {
