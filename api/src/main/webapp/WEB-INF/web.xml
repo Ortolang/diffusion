@@ -42,13 +42,6 @@
 		<enabled>true</enabled>
 	</servlet>
 	<servlet>
-		<display-name>Content Viewer Servlet</display-name>
-		<servlet-name>ContentViewerServlet</servlet-name>
-		<servlet-class>fr.ortolang.diffusion.api.content.ContentViewerServlet</servlet-class>
-		<load-on-startup>2</load-on-startup>
-		<enabled>true</enabled>
-	</servlet>
-	<servlet>
 		<display-name>OAI-PMH Servlet</display-name>
 		<servlet-name>OAIPMHServlet</servlet-name>
 		<servlet-class>fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet</servlet-class>
@@ -60,10 +53,6 @@
 	<servlet-mapping>
 		<servlet-name>fr.ortolang.diffusion.api.rest.DiffusionApplication</servlet-name>
 		<url-pattern>/rest/*</url-pattern>
-	</servlet-mapping>
-	<servlet-mapping>
-		<servlet-name>ContentViewerServlet</servlet-name>
-		<url-pattern>/content/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>OAIPMHServlet</servlet-name>
@@ -94,8 +83,4 @@
 			<transport-guarantee>NONE</transport-guarantee>
 		</user-data-constraint>
 	</security-constraint>
-	<error-page>
-		<error-code>401</error-code>
-		<location>/jsp/unauthorized.jsp</location>
-	</error-page>
 </web-app>

@@ -10,6 +10,8 @@ import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import javax.transaction.Status;
+
 import org.activiti.engine.delegate.DelegateExecution;
 
 import fr.ortolang.diffusion.core.CoreServiceException;
@@ -49,13 +51,26 @@ public class ImportZipTask extends RuntimeEngineTask {
 		if (execution.hasVariable(ZIP_OVERWRITE_PARAM_NAME)) {
 			overwrite = Boolean.parseBoolean(execution.getVariable(ZIP_OVERWRITE_PARAM_NAME, String.class));
 		}
+		
+		try {
+			if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
+				LOGGER.log(Level.FINE, "starting new user transaction.");
+				getUserTransaction().begin();
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
+		}
+		
 		LOGGER.log(Level.FINE, "- starting import zip");
 		try {
 			Set<String> cache = new HashSet<String>();
 			ZipFile zip = new ZipFile(zippath);
 			boolean partial = false;
+			boolean needcommit;
+			long tscommit = System.currentTimeMillis();
 			for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements();) {
 				ZipEntry entry = e.nextElement();
+				needcommit = false;
 				try {
 					if (!entry.isDirectory()) {
 						PathBuilder opath = rootPath.clone().path(entry.getName());
@@ -104,6 +119,20 @@ public class ImportZipTask extends RuntimeEngineTask {
 					}
 				} catch (InvalidPathException | CoreServiceException | AccessDeniedException e2) {
 					partial = true;
+				}
+				if ( System.currentTimeMillis() - tscommit > 300000 ) {
+					LOGGER.log(Level.FINE, "current transaction exceed 5min, need commit.");
+					needcommit = true;
+				}
+				try {
+					if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
+						LOGGER.log(Level.FINE, "commiting active user transaction.");
+						getUserTransaction().commit();
+						tscommit = System.currentTimeMillis();
+						getUserTransaction().begin();
+					}
+				} catch (Exception e2) {
+					LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e2);
 				}
 			}
 			zip.close();

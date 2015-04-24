@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.core.entity;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -235,6 +236,17 @@ public class Workspace extends OrtolangObject {
 		Matcher matcher = pattern.matcher(snapshotsContent);
 		if ( matcher.matches() ) {
 			return SnapshotElement.deserialize(matcher.group(1));
+		}
+		return null;
+	}
+	
+	public SnapshotElement findSnapshotByKey(String key) {
+		StringTokenizer tok = new StringTokenizer(snapshotsContent, "\r\n");
+		while ( tok.hasMoreTokens() ) {
+			String line = tok.nextToken();
+			if ( line.endsWith("/" + key) ) {
+				return SnapshotElement.deserialize(line);
+			}
 		}
 		return null;
 	}

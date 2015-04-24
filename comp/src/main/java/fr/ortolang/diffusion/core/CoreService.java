@@ -86,6 +86,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	public String resolveWorkspaceMetadata(String wskey, String root, String path, String name) throws CoreServiceException, InvalidPathException, AccessDeniedException;
 	
+	public String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
 	/*Collection*/
 	
 	public void createCollection(String wskey, String path, String description) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;

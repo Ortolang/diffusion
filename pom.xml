@@ -24,6 +24,8 @@
 	<modules>
 		<module>comp</module>
 		<module>api</module>
+		<module>admin</module>
+		<module>content</module>
 		<module>client</module>
 		<module>appli</module>
 	</modules>
@@ -60,6 +62,13 @@
 			<dependency>
 				<groupId>fr.ortolang.diffusion</groupId>
 				<artifactId>server-admin</artifactId>
+				<version>${project.version}</version>
+				<type>war</type>
+				<scope>compile</scope>
+			</dependency>
+			<dependency>
+				<groupId>fr.ortolang.diffusion</groupId>
+				<artifactId>server-content</artifactId>
 				<version>${project.version}</version>
 				<type>war</type>
 				<scope>compile</scope>
