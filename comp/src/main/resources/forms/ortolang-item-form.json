@@ -13,7 +13,8 @@
 						[
 							{ "value": "Corpus", "name": "Corpus" },
 				      		{ "value": "Outil", "name": "Outil" },
-				      		{ "value": "Lexique", "name": "Lexique"}
+				      		{ "value": "Lexique", "name": "Lexique"},
+				      		{ "value": "Application", "name": "Application"}
 						]
 					},
 					{
@@ -60,7 +61,7 @@
       					"helpvalue": "Adresse du site web contenant des informations sur la ressource."
     				},
     				{
-    					"key":"spacial",
+    					"key":"spatial",
     					"title":"Lieu de création des données",
     					"type": "autocomplete"
     				},

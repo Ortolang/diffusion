@@ -73,10 +73,6 @@
 		<url-pattern>/rest/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
-		<servlet-name>ContentViewerServlet</servlet-name>
-		<url-pattern>/content/*</url-pattern>
-	</servlet-mapping>
-	<servlet-mapping>
 		<servlet-name>OAIPMHServlet</servlet-name>
 		<url-pattern>/oai/*</url-pattern>
 	</servlet-mapping>
@@ -108,7 +104,7 @@
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name>All Access</web-resource-name>
-			<url-pattern>/chat/*</url-pattern>
+			<url-pattern>/sub/*</url-pattern>
 			<http-method>DELETE</http-method>
 			<http-method>PUT</http-method>
 			<http-method>HEAD</http-method>
@@ -121,8 +117,4 @@
 			<transport-guarantee>NONE</transport-guarantee>
 		</user-data-constraint>
 	</security-constraint>
-	<error-page>
-		<error-code>401</error-code>
-		<location>/jsp/unauthorized.jsp</location>
-	</error-page>
 </web-app>

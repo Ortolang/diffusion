@@ -32,11 +32,11 @@
             "id": "http://www.ortolang.fr/datasize",
             "type": "string"
         },
-        "spacial": {
-            "id": "http://www.ortolang.fr/spacial",
+        "spatial": {
+            "id": "http://www.ortolang.fr/spatial",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/spacial/0",
+                "id": "http://www.ortolang.fr/spatial/0",
                 "type": "string"
             }
         },
@@ -72,6 +72,10 @@
             "id": "http://www.ortolang.fr/licenseWebsite",
             "type": "string"
         },
+        "derogation": {
+			"id": "http://www.ortolang.fr/derogation",
+			"type": "string"
+		},
         "producer": {
             "id": "http://www.ortolang.fr/producer",
             "type": "array",
@@ -160,10 +164,10 @@
             }
         },
         "operatingSystem": {
-            "id": "http://www.ortolang.fr/opearatingSystem",
+            "id": "http://www.ortolang.fr/operatingSystem",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/opearatingSystem/0",
+                "id": "http://www.ortolang.fr/operatingSystem/0",
                 "type": "string"
             }
         },

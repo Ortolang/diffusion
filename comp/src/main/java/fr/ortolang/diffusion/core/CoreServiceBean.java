@@ -352,7 +352,7 @@ public class CoreServiceBean implements CoreService {
 			workspace.incrementClock();
 
 			if (name.equals(Workspace.HEAD)) {
-				throw new CoreServiceException("head is reserved and cannot be used as snapshot name");
+				throw new CoreServiceException(name + " is reserved and cannot be used as snapshot name");
 			}
 			try {
 				PathBuilder pname = PathBuilder.newInstance().path(name);
@@ -662,6 +662,42 @@ public class CoreServiceBean implements CoreService {
 			for (CollectionElement element : ((Collection)object).getElements()) {
 				builtPublicationMap(element.getKey(), map, current, params);
 			}
+		}
+	}
+	
+	public String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "find workspace [" + wskey + "] latest published snapshot");
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+			checkObjectType(identifier, Workspace.OBJECT_TYPE);
+
+			Workspace workspace = em.find(Workspace.class, identifier.getId());
+			if (workspace == null) {
+				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+			}
+			workspace.setKey(wskey);
+			
+			String current = workspace.getHead();
+			boolean found = false;
+			while (!found && current != null) {
+				String parent = registry.getParent(current);
+				if ( parent != null && registry.getPublicationStatus(parent).equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
+					found = true;
+				}
+				current = parent;
+			}
+			
+			if ( current != null ) {
+				SnapshotElement snapshot = workspace.findSnapshotByKey(current); 
+				if ( snapshot != null ) {
+					return snapshot.getName();
+				}
+			}
+			
+			return null;
+		} catch (RegistryServiceException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occured while finding workspace latest published snapshot", e);
+			throw new CoreServiceException("unable to find latest published snapshot for workspace with key [" + wskey + "]", e);
 		}
 	}
 

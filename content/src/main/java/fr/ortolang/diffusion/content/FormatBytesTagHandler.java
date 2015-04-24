@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.api.content;
+package fr.ortolang.diffusion.content;
 
 import java.io.IOException;
 
