@@ -36,10 +36,11 @@ package fr.ortolang.diffusion.event.entity;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangEvent;
+
 import java.io.Serializable;
 import java.util.Date;
-
-import fr.ortolang.diffusion.OrtolangEvent;
+import java.util.Map;
 
 @SuppressWarnings("serial")
 public class Event extends OrtolangEvent implements Serializable {
@@ -50,7 +51,7 @@ public class Event extends OrtolangEvent implements Serializable {
 	private String objectType;
 	private Date date;
 	private String type;
-	private String args;
+	private Map<String, Object> args;
 
 	public Event() {
 	}
@@ -114,12 +115,25 @@ public class Event extends OrtolangEvent implements Serializable {
 	}
 
 	@Override
-	public String getArguments() {
+	public Map<String, Object> getArguments() {
 		return args;
 	}
 
 	@Override
-	public void setArguments(String args) {
+	public void setArguments(Map<String, Object> args) {
 		this.args = args;
+	}
+
+	@Override
+	public String toString() {
+		return "Event{" +
+				"id=" + id +
+				", fromObject='" + fromObject + '\'' +
+				", throwedBy='" + throwedBy + '\'' +
+				", objectType='" + objectType + '\'' +
+				", date=" + date +
+				", type='" + type + '\'' +
+				", args=" + args +
+				'}';
 	}
 }

@@ -36,15 +36,24 @@ package fr.ortolang.diffusion;
  * #L%
  */
 
+import org.apache.commons.codec.binary.Base64;
+
+import javax.jms.JMSException;
+import javax.jms.Message;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-
-import javax.jms.JMSException;
-import javax.jms.Message;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public abstract class OrtolangEvent {
+
+	private static final Logger LOGGER = Logger.getLogger(OrtolangEvent.class.getName());
 	
 	public static final String DATE = "eventdate";
 	public static final String TYPE = "eventtype";
@@ -53,7 +62,7 @@ public abstract class OrtolangEvent {
 	public static final String OBJECT_TYPE = "objecttype";
 	public static final String ARGUMENTS = "arguments";
 	
-	private static HashMap<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> (); 
+	private static HashMap<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> ();
 	
 	public static SimpleDateFormat getEventDateFormatter() {
 		String key = Thread.currentThread().getId() + "";
@@ -67,11 +76,11 @@ public abstract class OrtolangEvent {
 	
 	public abstract void setDate(Date date);
 	
-	public String getFormatedDate() {
+	public String getFormattedDate() {
 		return getEventDateFormatter().format(getDate());
 	}
 	
-	public void setFormatedDate(String date) throws OrtolangException {
+	public void setFormattedDate(String date) throws OrtolangException {
 		try {
 			this.setDate(getEventDateFormatter().parse(date));
 		} catch ( ParseException e ) {
@@ -95,18 +104,29 @@ public abstract class OrtolangEvent {
 	
 	public abstract void setThrowedBy(String throwedby);
 	
-	public abstract String getArguments();
+	public abstract Map<String, Object> getArguments();
 	
-	public abstract void setArguments (String arguments);
+	public abstract void setArguments (Map<String, Object> arguments);
 	
+	@SuppressWarnings("unchecked")
 	public void fromJMSMessage(Message message) throws OrtolangException {
 		try {
-			setFormatedDate(message.getStringProperty(OrtolangEvent.DATE));
+			setFormattedDate(message.getStringProperty(OrtolangEvent.DATE));
 			setThrowedBy(message.getStringProperty(OrtolangEvent.THROWED_BY));
 			setFromObject(message.getStringProperty(OrtolangEvent.FROM_OBJECT));
 	        setObjectType(message.getStringProperty(OrtolangEvent.OBJECT_TYPE));
 			setType(message.getStringProperty(OrtolangEvent.TYPE));
-			setArguments(message.getStringProperty(OrtolangEvent.ARGUMENTS));
+			String serializedArgs = message.getStringProperty(OrtolangEvent.ARGUMENTS);
+			if (serializedArgs != null) {
+				ByteArrayInputStream bais = new ByteArrayInputStream(Base64.decodeBase64(serializedArgs));
+				try {
+					ObjectInputStream ois = new ObjectInputStream(bais);
+					Map<String, Object> args = (Map<String, Object>) ois.readObject();
+					setArguments(args);
+				} catch (IOException | ClassNotFoundException e) {
+					LOGGER.log(Level.SEVERE, "Unable to deserialize arguments", e);
+				}
+			}
 		} catch ( JMSException e ) {
 			throw new OrtolangException("unable to build event from jms message", e);
 		}
@@ -129,4 +149,30 @@ public abstract class OrtolangEvent {
     	return event.toString();
     }
 
+	public static class ArgumentsBuilder {
+
+		private Map<String, Object> args;
+
+		public ArgumentsBuilder(int initialCapacity) {
+			args = new HashMap<>(initialCapacity);
+		}
+
+		public ArgumentsBuilder(String key, Object value) {
+			this(1);
+			addArgument(key, value);
+		}
+
+		public ArgumentsBuilder(Map<String, Object> args) {
+			this.args = args;
+		}
+
+		public ArgumentsBuilder addArgument(String key, Object value) {
+			args.put(key, value);
+			return this;
+		}
+
+		public Map<String, Object> build() {
+			return args;
+		}
+	}
 }

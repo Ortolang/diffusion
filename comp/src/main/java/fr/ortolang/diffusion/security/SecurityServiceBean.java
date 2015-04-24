@@ -36,27 +36,8 @@ package fr.ortolang.diffusion.security;
  * #L%
  */
 
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.EJB;
-import javax.ejb.Local;
-import javax.ejb.SessionContext;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -67,6 +48,15 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.*;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Local(SecurityService.class)
 @Stateless(name = SecurityService.SERVICE_NAME)
@@ -147,7 +137,8 @@ public class SecurityServiceBean implements SecurityService {
 				throw new SecurityServiceException("new owner must be an object managed by " + MembershipService.SERVICE_NAME);
 			}
 			authorisation.updatePolicyOwner(key, newowner);
-			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "change-owner"), "owner=" + newowner);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("owner", newowner);
+			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "change-owner"), argumentsBuilder.build());
 			LOGGER.log(Level.INFO, "owner changed to [" + newowner + "] for key [" + key + "]");
 		} catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
 			ctx.setRollbackOnly();
@@ -164,7 +155,7 @@ public class SecurityServiceBean implements SecurityService {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 			OrtolangObjectIdentifier keyid = registry.lookup(key);
-			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "get-owner"), "");
+			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "get-owner"));
 			return authorisation.getPolicyOwner(key);
 		} catch (MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | NotificationServiceException | RegistryServiceException e) {
 			throw new SecurityServiceException(e);
@@ -180,7 +171,7 @@ public class SecurityServiceBean implements SecurityService {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 			OrtolangObjectIdentifier keyid = registry.lookup(key);
-			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "list-rules"), "");
+			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "list-rules"));
 			return authorisation.getPolicyRules(key);
 		} catch (MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | RegistryServiceException | NotificationServiceException e) {
 			throw new SecurityServiceException(e);
@@ -207,7 +198,7 @@ public class SecurityServiceBean implements SecurityService {
 				}
 			}
 			authorisation.setPolicyRules(key, rules);
-			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-rules"), "");
+			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-rules"));
 		} catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new SecurityServiceException(e);
@@ -239,7 +230,8 @@ public class SecurityServiceBean implements SecurityService {
 				rules.put(subject, permissions);
 			}
 			authorisation.setPolicyRules(key, rules);
-			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-rule"), "subject=" + subject + ", permissions=" + permissions);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("subject", subject).addArgument("permissions", permissions);
+			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-rule"), argumentsBuilder.build());
 		} catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new SecurityServiceException(e);
