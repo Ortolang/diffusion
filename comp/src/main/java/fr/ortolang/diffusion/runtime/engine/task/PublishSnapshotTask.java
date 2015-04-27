@@ -41,6 +41,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Logger;
 
+import javax.transaction.Status;
+
 import org.activiti.engine.delegate.DelegateExecution;
 import org.jboss.logmanager.Level;
 
@@ -71,6 +73,15 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 		}
 		String snapshot = execution.getVariable(SNAPSHOT_NAME_PARAM_NAME, String.class);
 		
+		try {
+			if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
+				LOGGER.log(Level.FINE, "starting new user transaction.");
+				getUserTransaction().begin();
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
+		}
+		
 		Map<String, Map<String, List<String>>> map;
 		try {
 			LOGGER.log(Level.INFO, "building publication map...");
@@ -91,6 +102,12 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 				LOGGER.log(Level.INFO, "key [" + entry.getKey() + "] failed to publish: " + e.getMessage());
 				report.append("key [").append(entry.getKey()).append("] failed to publish: ").append(e.getMessage()).append("\r\n");
 			}
+		}
+		try {
+			LOGGER.log(Level.FINE, "commiting active user transaction.");
+			getUserTransaction().commit();
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
 		}
 
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "publication done report : \r\n" + report.toString()));
