@@ -41,6 +41,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,6 +54,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
+import javax.transaction.SystemException;
 import javax.transaction.UserTransaction;
 
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -63,6 +68,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 
 @RunWith(Arquillian.class)
@@ -358,6 +364,53 @@ public class RegistryServiceTest {
 		} finally {
 			loginContext.logout();
 		}
+	}
+	
+	@Test
+	public void testConcurrentStateWriteAndRead() throws LoginException, IllegalStateException, SecurityException, SystemException {
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
+		loginContext.login();
+		String key1 = "key1";
+		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
+		String author = "moi";
+		ExecutorService pool = Executors.newFixedThreadPool(1);
+		try {
+			utx.begin();
+			registry.register(key1, doi1, author);
+			utx.commit();
+			utx.begin();
+			registry.setPublicationStatus(key1, OrtolangObjectState.Status.PUBLISHED.value());
+			Future<String> result = pool.submit(new RegistryEntryStateReader(key1));
+			Thread.sleep(1000);
+			utx.commit();
+			assertEquals(OrtolangObjectState.Status.PUBLISHED.value(), result.get());
+		} catch ( Exception e ) {
+			fail(e.getMessage());
+		} finally {
+			loginContext.logout();
+		}
+		
+	}
+	
+	class RegistryEntryStateReader implements Callable<String> {
+		
+		private String key;
+		
+		public RegistryEntryStateReader(String key) {
+			this.key = key;
+		}
+		
+		@Override
+		public String call() throws Exception {
+			LOGGER.log(Level.INFO, "Starting registry entry status reader");
+			LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
+			loginContext.login();
+			String status = registry.getPublicationStatus(key);
+			loginContext.logout();
+			LOGGER.log(Level.INFO, "Registry entry status reader done: status=" + status);
+			return status;
+		}
+		
 	}
 
 }
