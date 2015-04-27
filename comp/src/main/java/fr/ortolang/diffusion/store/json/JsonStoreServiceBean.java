@@ -105,6 +105,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	}
 
 	@Override
+	@Lock(LockType.WRITE)
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException {
 		LOGGER.log(Level.INFO, "Indexing object: " + object.getKey());
@@ -112,6 +113,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	}
 
 	@Override
+	@Lock(LockType.WRITE)
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void reindex(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException {
 		LOGGER.log(Level.FINE, "Reindexing object: " + object.getKey());
@@ -119,13 +121,16 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	}
 
 	@Override
+	@Lock(LockType.WRITE)
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void remove(String key) throws JsonStoreServiceException {
 		LOGGER.log(Level.FINE, "Removing key: " + key);
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			ODocument oldDoc = getDocumentByKey(key);
-			oldDoc.delete();
+			if ( oldDoc != null ) {
+				oldDoc.delete();
+			}
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to remove json ", e);
 		} finally {
@@ -157,9 +162,9 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		try {
 			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
 			OIdentifiable doc = (OIdentifiable) ortolangKeyIdx.get(key);
-			if (doc != null)
+			if (doc != null) {
 				return (ODocument) doc.getRecord();
-
+			}
 		} finally {
 			db.close();
 		}

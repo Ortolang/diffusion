@@ -75,6 +75,7 @@ public class JsonStoreListenerBean implements MessageListener {
 	private void addToStore(String key) throws IndexingServiceException {
 		try {
 			String status = registry.getPublicationStatus(key);
+			LOGGER.log(Level.FINE, "key " + key + " has publication status: " + status);
 			if ( status.equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
 				OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
 				store.index(object);
@@ -88,6 +89,7 @@ public class JsonStoreListenerBean implements MessageListener {
 	private void updateStore(String key) throws IndexingServiceException {
 		try {
 			String status = registry.getPublicationStatus(key);
+			LOGGER.log(Level.FINE, "key " + key + " has publication status: " + status);
 			if ( status.equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
 				OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
 				store.reindex(object);

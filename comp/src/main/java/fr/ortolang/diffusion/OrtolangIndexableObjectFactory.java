@@ -14,7 +14,7 @@ public class OrtolangIndexableObjectFactory<T> {
 			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
 			IndexablePlainTextContent content = service.getIndexablePlainTextContent(key);
 			OrtolangIndexableObject<IndexablePlainTextContent> object = new OrtolangIndexableObject<IndexablePlainTextContent>();
-			loadBasicIndexableObject(key, identifier, object);
+			loadCommonIndexableObject(key, identifier, object);
 			object.setContent(content);
 			return object;
 		} catch (Exception e) {
@@ -29,7 +29,7 @@ public class OrtolangIndexableObjectFactory<T> {
 			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
 			IndexableJsonContent content = service.getIndexableJsonContent(key);
 			OrtolangIndexableObject<IndexableJsonContent> object = new OrtolangIndexableObject<IndexableJsonContent>();
-			loadBasicIndexableObject(key, identifier, object);
+			loadCommonIndexableObject(key, identifier, object);
 			object.setContent(content);
 			return object;
 		} catch (Exception e) {
@@ -44,7 +44,7 @@ public class OrtolangIndexableObjectFactory<T> {
 			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
 			IndexableSemanticContent content = service.getIndexableSemanticContent(key);
 			OrtolangIndexableObject<IndexableSemanticContent> object = new OrtolangIndexableObject<IndexableSemanticContent>();
-			loadBasicIndexableObject(key, identifier, object);
+			loadCommonIndexableObject(key, identifier, object);
 			object.setContent(content);
 			return object;
 		} catch (Exception e) {
@@ -52,7 +52,7 @@ public class OrtolangIndexableObjectFactory<T> {
 		}
 	}
 	
-	private static void loadBasicIndexableObject(String key, OrtolangObjectIdentifier identifier, OrtolangIndexableObject<?> object) throws OrtolangException {
+	private static void loadCommonIndexableObject(String key, OrtolangObjectIdentifier identifier, OrtolangIndexableObject<?> object) throws OrtolangException {
 		try {
 			RegistryService registry = (RegistryService)OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME);
 			object.setKey(key);
