@@ -77,11 +77,11 @@ public class JsonStoreListenerBean implements MessageListener {
 
 	private void addToStore(String key) throws IndexingServiceException {
 		try {
-			//TODO remove this shit !!
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e) {
-			}
+//			//TODO remove this shit !!
+//			try {
+//				Thread.sleep(5000);
+//			} catch (InterruptedException e) {
+//			}
 			String status = registry.getPublicationStatus(key);
 			LOGGER.log(Level.FINE, "key " + key + " has publication status: " + status);
 			if ( status.equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
@@ -96,11 +96,11 @@ public class JsonStoreListenerBean implements MessageListener {
 
 	private void updateStore(String key) throws IndexingServiceException {
 		try {
-			//TODO remove this shit !!
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e) {
-			}
+//			//TODO remove this shit !!
+//			try {
+//				Thread.sleep(5000);
+//			} catch (InterruptedException e) {
+//			}
 			String status = registry.getPublicationStatus(key);
 			LOGGER.log(Level.FINE, "key " + key + " has publication status: " + status);
 			if ( status.equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {

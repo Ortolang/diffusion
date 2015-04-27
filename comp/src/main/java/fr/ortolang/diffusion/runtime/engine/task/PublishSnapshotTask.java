@@ -106,6 +106,7 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 		try {
 			LOGGER.log(Level.FINE, "commiting active user transaction.");
 			getUserTransaction().commit();
+			getUserTransaction().begin();
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
 		}
