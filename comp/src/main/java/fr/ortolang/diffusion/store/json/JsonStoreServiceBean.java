@@ -171,6 +171,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		return null;
 	}
 	
+	@Lock(LockType.WRITE)
 	private void insert(OrtolangIndexableObject<IndexableJsonContent> object) {
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
