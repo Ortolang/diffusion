@@ -72,7 +72,7 @@ public class NotificationServiceBean implements NotificationService {
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, String args) throws NotificationServiceException {
 		try {
 			Message message = context.createMessage();
