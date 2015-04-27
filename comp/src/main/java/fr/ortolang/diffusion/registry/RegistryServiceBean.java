@@ -341,7 +341,7 @@ public class RegistryServiceBean implements RegistryService {
 	}
 	
 	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException {
 		LOGGER.log(Level.FINE, "getting state for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
