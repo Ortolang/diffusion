@@ -161,8 +161,6 @@
 				<version>1.8</version>
 				<configuration>
 					<licenseName>lgpl_v3</licenseName>
-					<header>src/etc/header.txt</header>
-					<strictChecking>true</strictChecking>
 					<encoding>UTF-8</encoding>
 					<includes>
 						<include>**/*.java</include>

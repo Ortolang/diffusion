@@ -36,25 +36,20 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import fr.ortolang.diffusion.OrtolangBinaryService;
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.DataObject;
-import fr.ortolang.diffusion.core.entity.Link;
-import fr.ortolang.diffusion.core.entity.MetadataFormat;
-import fr.ortolang.diffusion.core.entity.MetadataObject;
-import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.core.entity.*;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public interface CoreService extends OrtolangService, OrtolangBinaryService, OrtolangIndexableService {
 	

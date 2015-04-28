@@ -368,7 +368,7 @@ public class MembershipServiceBean implements MembershipService {
 				authorisation.checkOwnership(key, subjects);
 				visibilityLevel = ProfileDataVisibility.NOBODY;
 			} catch(AccessDeniedException e1) {
-				if(profile.getFriends()!=null) {
+				if(profile.getFriends()!= null) {
 					String friendsGroupKey = profile.getFriends();
 					OrtolangObjectIdentifier friendsObject = registry.lookup(friendsGroupKey);
 					checkObjectType(friendsObject, Group.OBJECT_TYPE);

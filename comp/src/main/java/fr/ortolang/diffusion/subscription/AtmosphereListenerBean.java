@@ -53,7 +53,7 @@ import java.util.logging.Logger;
 @MessageDriven(name = "AtmosphereMDB", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/notification"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge"),
-        @ActivationConfigProperty(propertyName = "messageSelector", propertyValue="eventtype LIKE 'core.workspace.%' OR eventtype LIKE 'runtime.process.*'")})
+        @ActivationConfigProperty(propertyName = "messageSelector", propertyValue="eventtype LIKE 'core.workspace.%' OR eventtype LIKE 'runtime.process.%' OR eventtype LIKE 'runtime.task.%'")})
 @SecurityDomain("ortolang")
 public class AtmosphereListenerBean implements MessageListener {
 

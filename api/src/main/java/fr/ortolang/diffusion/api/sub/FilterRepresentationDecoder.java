@@ -36,21 +36,20 @@ package fr.ortolang.diffusion.api.sub;
  * #L%
  */
 
-import fr.ortolang.diffusion.subscription.Filter;
 import org.atmosphere.config.managed.Decoder;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
 
-public class FilterDecoder implements Decoder<String, Filter> {
+public class FilterRepresentationDecoder implements Decoder<String, FilterRepresentation> {
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public Filter decode(String s) {
+    public FilterRepresentation decode(String s) {
         try{
-            return mapper.readValue(s, Filter.class);
-        }catch(IOException e){
+            return mapper.readValue(s, FilterRepresentation.class);
+        } catch(IOException e){
             throw new RuntimeException(e);
         }
     }

@@ -5,7 +5,6 @@ import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.security.authentication.TicketHelper;
 import fr.ortolang.diffusion.subscription.EventMessage;
-import fr.ortolang.diffusion.subscription.Filter;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import org.atmosphere.config.service.*;
 import org.atmosphere.cpr.AtmosphereResource;
@@ -76,11 +75,18 @@ public final class SubscriptionServlet {
         return event;
     }
 
-    @Message(decoders = {FilterDecoder.class})
+    @Message(decoders = {FilterRepresentationDecoder.class})
     @DeliverTo(DeliverTo.DELIVER_TO.RESOURCE)
-    public Filter onAddingFilter(Filter filter) {
-        subscription.addFilter("root", filter);
-        return filter;
+    public FilterRepresentation onFilterMessage(FilterRepresentation filterRepresentation) {
+        switch (filterRepresentation.getAction()) {
+            case ADD:
+                subscription.addFilter(username, filterRepresentation.getFilter());
+                break;
+            case REMOVE:
+                subscription.removeFilter(username, filterRepresentation.getFilter());
+                break;
+        }
+        return filterRepresentation;
     }
 
     private SubscriptionService getSubscription() {
@@ -88,6 +94,7 @@ public final class SubscriptionServlet {
             try {
                 subscription = (SubscriptionService) OrtolangServiceLocator.lookup(SubscriptionService.SERVICE_NAME);
             } catch (OrtolangException e) {
+                LOGGER.log(Level.SEVERE, "unable to inject SubscriptionService");
             }
         }
         return subscription;

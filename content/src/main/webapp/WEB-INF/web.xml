@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
-         version="3.1">
-	
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+		 version="3.1">
+
 	<servlet>
 		<display-name>Latest Content Viewer Servlet</display-name>
 		<servlet-name>LatestContentViewerServlet</servlet-name>
@@ -11,7 +11,7 @@
 		<load-on-startup>2</load-on-startup>
 		<enabled>true</enabled>
 	</servlet>
-	
+
 	<servlet>
 		<display-name>All Content Viewer Servlet</display-name>
 		<servlet-name>AllContentViewerServlet</servlet-name>
@@ -19,15 +19,15 @@
 		<load-on-startup>2</load-on-startup>
 		<enabled>true</enabled>
 	</servlet>
-	
+
 	<servlet-mapping>
 		<servlet-name>LatestContentViewerServlet</servlet-name>
 		<url-pattern>/latest/*</url-pattern>
 	</servlet-mapping>
-	
+
 	<servlet-mapping>
 		<servlet-name>AllContentViewerServlet</servlet-name>
 		<url-pattern>/all/*</url-pattern>
 	</servlet-mapping>
-	
+
 </web-app>

@@ -44,16 +44,9 @@
 	<servlet>
 		<servlet-name>AtmosphereServlet</servlet-name>
 		<servlet-class>org.atmosphere.cpr.AtmosphereServlet</servlet-class>
-		<load-on-startup>2</load-on-startup>
+		<load-on-startup>3</load-on-startup>
 		<enabled>true</enabled>
 		<async-supported>true</async-supported>
-	</servlet>
-	<servlet>
-		<display-name>Content Viewer Servlet</display-name>
-		<servlet-name>ContentViewerServlet</servlet-name>
-		<servlet-class>fr.ortolang.diffusion.api.content.ContentViewerServlet</servlet-class>
-		<load-on-startup>2</load-on-startup>
-		<enabled>true</enabled>
 	</servlet>
 	<servlet>
 		<display-name>OAI-PMH Servlet</display-name>

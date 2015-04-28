@@ -38,31 +38,43 @@ package fr.ortolang.diffusion.subscription;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 
+import java.util.Map;
+
 public class Filter {
 
     private String fromPattern;
 
     private String typePattern;
 
+    private String throwedByPattern;
+
+    private Map<String, String> argumentsPatterns;
+
     public Filter() {
         fromPattern = "";
         typePattern = "";
-    }
-
-    public Filter(String fromPattern, String typePattern) {
-        this.fromPattern = fromPattern;
-        this.typePattern = typePattern;
+        throwedByPattern = "";
+        argumentsPatterns = null;
     }
 
     public boolean matches(OrtolangEvent event) {
-        boolean matches = true;
-        if (fromPattern.length() != 0) {
-            matches = event.getFromObject().matches(fromPattern);
+        if (fromPattern.length() != 0 && !event.getFromObject().matches(fromPattern) ||
+                typePattern.length() != 0 && !event.getType().matches(typePattern) ||
+                throwedByPattern.length() != 0 && !event.getThrowedBy().matches(throwedByPattern)) {
+            return false;
         }
-        if (typePattern.length() != 0 && matches) {
-            matches = event.getType().matches(typePattern);
+        if (argumentsPatterns != null) {
+            for (Map.Entry<String, String> argumentsPattern : argumentsPatterns.entrySet()) {
+                Object o = event.getArguments().get(argumentsPattern.getKey());
+                if (o instanceof String) {
+                    String value = (String) o;
+                    if (!value.matches(argumentsPattern.getValue())) {
+                        return false;
+                    }
+                }
+            }
         }
-        return matches;
+        return true;
     }
 
     public String getFromPattern() {
@@ -81,6 +93,22 @@ public class Filter {
         this.typePattern = typePattern;
     }
 
+    public String getThrowedByPattern() {
+        return throwedByPattern;
+    }
+
+    public void setThrowedByPattern(String throwedByPattern) {
+        this.throwedByPattern = throwedByPattern;
+    }
+
+    public Map<String, String> getArgumentsPatterns() {
+        return argumentsPatterns;
+    }
+
+    public void setArgumentsPatterns(Map<String, String> argumentsPatterns) {
+        this.argumentsPatterns = argumentsPatterns;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -89,19 +117,28 @@ public class Filter {
         Filter filter = (Filter) o;
 
         if (!fromPattern.equals(filter.fromPattern)) return false;
-        return typePattern.equals(filter.typePattern);
+        if (!typePattern.equals(filter.typePattern)) return false;
+        if (!throwedByPattern.equals(filter.throwedByPattern)) return false;
+        return !(argumentsPatterns != null ? !argumentsPatterns.equals(filter.argumentsPatterns) : filter.argumentsPatterns != null);
+
     }
 
     @Override
     public int hashCode() {
-        return 0;
+        int result = fromPattern.hashCode();
+        result = 31 * result + typePattern.hashCode();
+        result = 31 * result + throwedByPattern.hashCode();
+        result = 31 * result + (argumentsPatterns != null ? argumentsPatterns.hashCode() : 0);
+        return result;
     }
 
     @Override
     public String toString() {
         return "Filter{" +
-                "fromPattern='" + fromPattern + '\'' +
-                ", typePattern='" + typePattern + '\'' +
+                "typePattern='" + typePattern + '\'' +
+                ", fromPattern='" + fromPattern + '\'' +
+                ", throwedByPattern='" + throwedByPattern + '\'' +
+                (argumentsPatterns != null ? ", argumentsPatterns=" + argumentsPatterns : "") +
                 '}';
     }
 }

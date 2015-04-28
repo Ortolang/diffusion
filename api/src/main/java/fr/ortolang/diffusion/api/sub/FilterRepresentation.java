@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.subscription;
+package fr.ortolang.diffusion.api.sub;
 
 /*
  * #%L
@@ -36,36 +36,47 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import org.atmosphere.cpr.Broadcaster;
+import fr.ortolang.diffusion.subscription.Filter;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+public class FilterRepresentation {
 
-public class Subscription {
-
-    private Broadcaster broadcaster;
-
-    private Set<Filter> filters;
-
-    public Subscription(Broadcaster broadcaster) {
-        this.broadcaster = broadcaster;
-        filters = new HashSet<>();
+    enum Action {
+        ADD, REMOVE
     }
 
-    public Broadcaster getBroadcaster() {
-        return broadcaster;
+    private Action action;
+
+    private Filter filter;
+
+    public FilterRepresentation() {
     }
 
-    public Collection<Filter> getFilters() {
-        return filters;
+    public FilterRepresentation(Action action, Filter filter) {
+        this.action = action;
+        this.filter = filter;
+    }
+
+    public Action getAction() {
+        return action;
+    }
+
+    public void setAction(Action action) {
+        this.action = action;
+    }
+
+    public Filter getFilter() {
+        return filter;
+    }
+
+    public void setFilter(Filter filter) {
+        this.filter = filter;
     }
 
     @Override
     public String toString() {
-        return "Subscription{" +
-                "broadcaster=" + broadcaster.getID() +
-                " (" + filters.size() + " filter" + (filters.size() > 1 ? "s)" : ")") +
+        return "FilterRepresentation{" +
+                "action=" + action +
+                ", filter=" + filter +
                 '}';
     }
 }
