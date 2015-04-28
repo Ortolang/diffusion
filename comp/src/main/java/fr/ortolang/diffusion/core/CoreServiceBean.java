@@ -251,6 +251,7 @@ public class CoreServiceBean implements CoreService {
 
 			registry.register(head, collection.getObjectIdentifier(), caller);
 			registry.itemify(head);
+			indexing.index(head);
 
 			Map<String, List<String>> rules = new HashMap<String, List<String>>();
 			rules.put(members, Arrays.asList("read", "create", "update", "delete", "download"));
@@ -299,7 +300,7 @@ public class CoreServiceBean implements CoreService {
 			ctx.setRollbackOnly();
 			throw e;
 		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
-				| MembershipServiceException e) {
+				| MembershipServiceException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occured while creating workspace", e);
 			throw new CoreServiceException("unable to create workspace with key [" + wskey + "]", e);
@@ -2048,6 +2049,7 @@ public class CoreServiceBean implements CoreService {
 			}
 
 			registry.update(tkey);
+			indexing.index(tkey);
 
 			ws.setChanged(true);
 			em.merge(ws);
@@ -2058,7 +2060,7 @@ public class CoreServiceBean implements CoreService {
 			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "create"), "");
 
 		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
-				| MembershipServiceException | TreeBuilderException | BinaryStoreServiceException | DataNotFoundException | CloneException e) {
+				| MembershipServiceException | TreeBuilderException | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occured during metadata creation", e);
 			throw new CoreServiceException("unable to create metadata into workspace [" + workspace + "] for path [" + path + "]", e);
@@ -2272,6 +2274,9 @@ public class CoreServiceBean implements CoreService {
 				em.merge(meta);
 
 				registry.update(mdelement.getKey());
+				registry.update(tkey);
+				indexing.index(tkey);
+
 
 				ws.setChanged(true);
 				em.merge(ws);
@@ -2285,7 +2290,7 @@ public class CoreServiceBean implements CoreService {
 				LOGGER.log(Level.FINEST, "no changes detected with current metadata object, nothing to do");
 			}
 		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
-				| TreeBuilderException | BinaryStoreServiceException | DataNotFoundException | CloneException e) {
+				| TreeBuilderException | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occured during metadata creation", e);
 			throw new CoreServiceException("unable to create metadata into workspace [" + workspace + "] for path [" + path + "] and name [" + name + "]", e);
@@ -2409,12 +2414,15 @@ public class CoreServiceBean implements CoreService {
 			meta.setKey(mdelement.getKey());
 
 			registry.delete(mdelement.getKey());
+			registry.update(element.getKey());
+			indexing.index(element.getKey());
+
 
 			notification.throwEvent(mdelement.getKey(), caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "delete"), "");
 			notification.throwEvent(element.getKey(), caller, tidentifier.getType(), OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "remove-metadata"), "key="
 					+ mdelement.getKey());
 		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
-				| TreeBuilderException | CloneException e) {
+				| TreeBuilderException | CloneException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occured during metadata creation", e);
 			throw new CoreServiceException("unable to create metadata into workspace [" + workspace + "] for path [" + path + "]", e);

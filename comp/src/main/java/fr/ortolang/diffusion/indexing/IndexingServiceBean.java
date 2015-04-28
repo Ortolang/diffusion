@@ -44,6 +44,8 @@ import javax.annotation.security.PermitAll;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.inject.Inject;
 import javax.jms.JMSContext;
 import javax.jms.Message;
@@ -84,6 +86,7 @@ public class IndexingServiceBean implements IndexingService {
 		sendMessage("remove", key);
 	}
 
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	private void sendMessage(String action, String key) throws IndexingServiceException {
 		try {
 			Message message = context.createMessage();

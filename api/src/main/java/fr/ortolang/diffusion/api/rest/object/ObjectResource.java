@@ -58,6 +58,7 @@ import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -418,6 +419,14 @@ public class ObjectResource {
         LOGGER.log(Level.INFO, "GET /objects/" + key + "/size");
         OrtolangObjectSize ortolangObjectSize = core.getSize(key);
         return Response.ok(ortolangObjectSize).build();
+    }
+    
+    @POST
+    @Path("/{key}/reindex")
+    public Response reindex(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, KeyNotFoundException, BrowserServiceException {
+        LOGGER.log(Level.INFO, "POST /objects/" + key + "/reindex");
+        browser.reindex(key);
+        return Response.ok().build();
     }
 
 	@GET

@@ -7,6 +7,8 @@ import javax.annotation.security.PermitAll;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.EJB;
 import javax.ejb.MessageDriven;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
@@ -52,6 +54,7 @@ public class JsonStoreListenerBean implements MessageListener {
 
 	@Override
 	@PermitAll
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void onMessage(Message message) {
 		try {
 			String action = message.getStringProperty("action");
@@ -74,7 +77,13 @@ public class JsonStoreListenerBean implements MessageListener {
 
 	private void addToStore(String key) throws IndexingServiceException {
 		try {
+//			//TODO remove this shit !!
+//			try {
+//				Thread.sleep(5000);
+//			} catch (InterruptedException e) {
+//			}
 			String status = registry.getPublicationStatus(key);
+			LOGGER.log(Level.FINE, "key " + key + " has publication status: " + status);
 			if ( status.equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
 				OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
 				store.index(object);
@@ -87,7 +96,13 @@ public class JsonStoreListenerBean implements MessageListener {
 
 	private void updateStore(String key) throws IndexingServiceException {
 		try {
+//			//TODO remove this shit !!
+//			try {
+//				Thread.sleep(5000);
+//			} catch (InterruptedException e) {
+//			}
 			String status = registry.getPublicationStatus(key);
+			LOGGER.log(Level.FINE, "key " + key + " has publication status: " + status);
 			if ( status.equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
 				OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
 				store.reindex(object);
