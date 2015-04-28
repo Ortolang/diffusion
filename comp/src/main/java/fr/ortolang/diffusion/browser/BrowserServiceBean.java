@@ -61,6 +61,8 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.OrtolangObjectVersion;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.indexing.IndexingService;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -93,6 +95,8 @@ public class BrowserServiceBean implements BrowserService {
 	private MembershipService membership;
 	@EJB
 	private AuthorisationService authorisation;
+	@EJB
+	private IndexingService indexing;
 
 	public BrowserServiceBean() {
 	}
@@ -285,6 +289,19 @@ public class BrowserServiceBean implements BrowserService {
 			parent = version.getParent();
 		}
 		return versions;
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void reindex(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "reindexing key [" + key + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			authorisation.checkSuperUser(caller);
+			indexing.reindex(key);
+		} catch (IndexingServiceException | AuthorisationServiceException e) {
+			throw new BrowserServiceException("unable to reindex key " + key, e);
+		}
 	}
 
 	@Override

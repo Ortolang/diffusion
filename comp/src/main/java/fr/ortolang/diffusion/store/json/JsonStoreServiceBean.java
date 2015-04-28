@@ -103,7 +103,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 			LOGGER.log(Level.SEVERE, "unable to shutdown json store", e);
 		}
 	}
-
+	
 	@Override
 	@Lock(LockType.WRITE)
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
