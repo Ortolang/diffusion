@@ -127,6 +127,74 @@
                 "type": "string"
             }
         },
+        "typeOfCorpus": {
+            "id": "http://www.ortolang.fr/typeOfCorpus",
+            "type": "string"
+        },
+        "annotationLevel": {
+            "id": "http://www.ortolang.fr/annotationLevel",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/annotationLevel/0",
+                "type": "string"
+            }
+        },
+        "textFormat": {
+            "id": "http://www.ortolang.fr/textFormat",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/textFormat/0",
+                "type": "string"
+            }
+        },
+        "textEncoding": {
+            "id": "http://www.ortolang.fr/textEncoding",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/textEncoding/0",
+                "type": "string"
+            }
+        },
+        "transcriptionType": {
+            "id": "http://www.ortolang.fr/transcriptionType",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/transcriptionType/0",
+                "type": "string"
+            }
+        },
+        "transcriptionFormat": {
+            "id": "http://www.ortolang.fr/transcriptionFormat",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/transcriptionFormat/0",
+                "type": "string"
+            }
+        },
+        "typeOfSpeech": {
+            "id": "http://www.ortolang.fr/typeOfSpeech",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/typeOfSpeech/0",
+                "type": "string"
+            }
+        },
+        "transcriptionEncoding": {
+            "id": "http://www.ortolang.fr/transcriptionEncoding",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/transcriptionEncoding/0",
+                "type": "string"
+            }
+        },
+        "signal": {
+            "id": "http://www.ortolang.fr/signal",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/signal/0",
+                "type": "string"
+            }
+        },
         "primaryLanguage": {
             "id": "http://www.ortolang.fr/primaryLanguage",
             "type": "array",

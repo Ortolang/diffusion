@@ -154,6 +154,57 @@
 		        		"key":"linguisticSubject",
 		        		"type": "array",
 		        		"title": "Domaines linguistiques"
+		        	},
+		        	{
+						"key":"typeOfCorpus",
+						"type":"select",
+						"title": "Type de corpus",
+						"titleMap":
+						[
+							{ "value": "Ecrit", "name": "Ecrit" },
+							{ "value": "Oral", "name": "Oral" },
+							{ "value": "Multimodal", "name": "Multimodal" }
+						]
+					},
+		        	{
+		        		"key":"annotationLevel",
+		        		"type": "array",
+		        		"title": "Niveau de l'annotation"
+		        	},
+		        	{
+		        		"key":"textFormat",
+		        		"type": "array",
+		        		"title": "Format du texte"
+		        	},
+		        	{
+		        		"key":"textEncoding",
+						"type":"array",
+		        		"title": "Format d'encodage du texte"
+		        	},
+		        	{
+		        		"key":"transcriptionType",
+		        		"type": "array",
+		        		"title": "Type de transcription"
+		        	},
+		        	{
+		        		"key":"transcriptionFormat",
+		        		"type": "array",
+		        		"title": "Format de la transcription"
+		        	},
+		        	{
+		        		"key":"typeOfSpeech",
+		        		"type": "array",
+		        		"title": "Type de parole"
+		        	},
+		        	{
+		        		"key":"transcriptionEncoding",
+		        		"type": "array",
+		        		"title": "Format d'encodage de la transcription"
+		        	},
+		        	{
+		        		"key":"signal",
+		        		"type": "array",
+		        		"title": "Signal"
 		        	}
 				],
 				"condition": "type=='Corpus'"
