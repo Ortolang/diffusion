@@ -36,8 +36,9 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.entity.Process;
@@ -54,6 +55,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
+
 @MessageDriven(name = "AtmosphereMDB", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/notification"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge"),
@@ -63,7 +66,8 @@ public class AtmosphereListenerBean implements MessageListener {
 
     private static final Logger LOGGER = Logger.getLogger(AtmosphereListenerBean.class.getName());
 
-    private static final String PROCESS_UPDATE_STATE_TYPE = OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-state");
+    private static final String PROCESS_UPDATE_STATE_TYPE = buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-state");
+    private static final String WORKSPACE_DELETE_TYPE = buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "delete");
 
     @EJB
     SubscriptionService subscription;
@@ -84,7 +88,7 @@ public class AtmosphereListenerBean implements MessageListener {
                         EventMessage eventMessage = new EventMessage();
                         eventMessage.fromEvent(event);
                         subscriptionRegistryEntry.getValue().getBroadcaster().broadcast(event);
-                        if (hasToBeRemoved(event)) {
+                        if (hasToBeRemoved(filter, event)) {
                             LOGGER.log(Level.INFO, "Removing filter from " + subscriptionRegistryEntry.getKey() + " subscription");
                             iterator.remove();
                         }
@@ -97,9 +101,15 @@ public class AtmosphereListenerBean implements MessageListener {
         }
     }
 
-    private boolean hasToBeRemoved(Event event) {
+    private boolean hasToBeRemoved(Filter filter, Event event) {
         if (event.getType().equals(PROCESS_UPDATE_STATE_TYPE)) {
             if (event.getArguments().containsKey("state") && event.getArguments().get("state").equals(Process.State.COMPLETED)) {
+                return true;
+            }
+        } else if (event.getType().equals(WORKSPACE_DELETE_TYPE)) {
+            // if from pattern equals null then the filter matches any workspace key
+            // and thus is not specific to the deleted workspace
+            if (filter.getFromPattern() != null) {
                 return true;
             }
         }

@@ -39,36 +39,37 @@ package fr.ortolang.diffusion.subscription;
 import fr.ortolang.diffusion.OrtolangEvent;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class Filter {
 
-    private String fromPattern;
+    private Pattern fromPattern;
 
-    private String typePattern;
+    private Pattern typePattern;
 
-    private String throwedByPattern;
+    private Pattern throwedByPattern;
 
-    private Map<String, String> argumentsPatterns;
+    private Map<String, Pattern> argumentsPatterns;
 
     public Filter() {
-        fromPattern = "";
-        typePattern = "";
-        throwedByPattern = "";
+        fromPattern = null;
+        typePattern = null;
+        throwedByPattern = null;
         argumentsPatterns = null;
     }
 
     public boolean matches(OrtolangEvent event) {
-        if (fromPattern.length() != 0 && !event.getFromObject().matches(fromPattern) ||
-                typePattern.length() != 0 && !event.getType().matches(typePattern) ||
-                throwedByPattern.length() != 0 && !event.getThrowedBy().matches(throwedByPattern)) {
+        if (fromPattern != null && !fromPattern.matcher(event.getFromObject()).matches() ||
+                typePattern != null && !typePattern.matcher(event.getType()).matches() ||
+                throwedByPattern != null && !throwedByPattern.matcher(event.getThrowedBy()).matches()) {
             return false;
         }
         if (argumentsPatterns != null) {
-            for (Map.Entry<String, String> argumentsPattern : argumentsPatterns.entrySet()) {
+            for (Map.Entry<String, Pattern> argumentsPattern : argumentsPatterns.entrySet()) {
                 Object o = event.getArguments().get(argumentsPattern.getKey());
                 if (o instanceof String) {
                     String value = (String) o;
-                    if (!value.matches(argumentsPattern.getValue())) {
+                    if (!argumentsPattern.getValue().matcher(value).matches()) {
                         return false;
                     }
                 }
@@ -77,35 +78,35 @@ public class Filter {
         return true;
     }
 
-    public String getFromPattern() {
+    public Pattern getFromPattern() {
         return fromPattern;
     }
 
-    public void setFromPattern(String fromPattern) {
+    public void setFromPattern(Pattern fromPattern) {
         this.fromPattern = fromPattern;
     }
 
-    public String getTypePattern() {
+    public Pattern getTypePattern() {
         return typePattern;
     }
 
-    public void setTypePattern(String typePattern) {
+    public void setTypePattern(Pattern typePattern) {
         this.typePattern = typePattern;
     }
 
-    public String getThrowedByPattern() {
+    public Pattern getThrowedByPattern() {
         return throwedByPattern;
     }
 
-    public void setThrowedByPattern(String throwedByPattern) {
+    public void setThrowedByPattern(Pattern throwedByPattern) {
         this.throwedByPattern = throwedByPattern;
     }
 
-    public Map<String, String> getArgumentsPatterns() {
+    public Map<String, Pattern> getArgumentsPatterns() {
         return argumentsPatterns;
     }
 
-    public void setArgumentsPatterns(Map<String, String> argumentsPatterns) {
+    public void setArgumentsPatterns(Map<String, Pattern> argumentsPatterns) {
         this.argumentsPatterns = argumentsPatterns;
     }
 
@@ -116,18 +117,18 @@ public class Filter {
 
         Filter filter = (Filter) o;
 
-        if (!fromPattern.equals(filter.fromPattern)) return false;
-        if (!typePattern.equals(filter.typePattern)) return false;
-        if (!throwedByPattern.equals(filter.throwedByPattern)) return false;
+        if (fromPattern != null ? !fromPattern.equals(filter.fromPattern) : filter.fromPattern != null) return false;
+        if (typePattern != null ? !typePattern.equals(filter.typePattern) : filter.typePattern != null) return false;
+        if (throwedByPattern != null ? !throwedByPattern.equals(filter.throwedByPattern) : filter.throwedByPattern != null)
+            return false;
         return !(argumentsPatterns != null ? !argumentsPatterns.equals(filter.argumentsPatterns) : filter.argumentsPatterns != null);
-
     }
 
     @Override
     public int hashCode() {
-        int result = fromPattern.hashCode();
-        result = 31 * result + typePattern.hashCode();
-        result = 31 * result + throwedByPattern.hashCode();
+        int result = fromPattern != null ? fromPattern.hashCode() : 0;
+        result = 31 * result + (typePattern != null ? typePattern.hashCode() : 0);
+        result = 31 * result + (throwedByPattern != null ? throwedByPattern.hashCode() : 0);
         result = 31 * result + (argumentsPatterns != null ? argumentsPatterns.hashCode() : 0);
         return result;
     }

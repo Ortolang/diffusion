@@ -51,11 +51,6 @@ public class FilterRepresentation {
     public FilterRepresentation() {
     }
 
-    public FilterRepresentation(Action action, Filter filter) {
-        this.action = action;
-        this.filter = filter;
-    }
-
     public Action getAction() {
         return action;
     }
