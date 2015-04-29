@@ -140,10 +140,10 @@ public abstract class OrtolangEvent {
 	public static String buildEventType(String serviceName, String resourceName, String eventName) {
 		StringBuilder event = new StringBuilder();
     	if ( serviceName != null && serviceName.length() > 0 ) {
-    		event.append(serviceName + ".");
+    		event.append(serviceName).append(".");
     	}
     	if ( resourceName != null && resourceName.length() > 0 ) {
-    		event.append(resourceName + ".");
+    		event.append(resourceName).append(".");
     	}
     	event.append(eventName);
     	return event.toString();

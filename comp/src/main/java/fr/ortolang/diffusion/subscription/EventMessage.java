@@ -38,29 +38,24 @@ package fr.ortolang.diffusion.subscription;
 
 import fr.ortolang.diffusion.event.entity.Event;
 
+import java.util.Date;
 import java.util.Map;
 
 public class EventMessage {
-
-    private String type;
 
     private String fromObject;
 
     private String throwedBy;
 
+    private String objectType;
+
+    private Date date;
+
+    private String type;
+
     private Map<String, Object> args;
 
-    private long date;
-
     public EventMessage() {
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getFromObject() {
@@ -79,6 +74,30 @@ public class EventMessage {
         this.throwedBy = throwedBy;
     }
 
+    public String getObjectType() {
+        return objectType;
+    }
+
+    public void setObjectType(String objectType) {
+        this.objectType = objectType;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public Map<String, Object> getArgs() {
         return args;
     }
@@ -87,19 +106,24 @@ public class EventMessage {
         this.args = args;
     }
 
-    public long getDate() {
-        return date;
-    }
-
-    public void setDate(long date) {
-        this.date = date;
-    }
-
     public void fromEvent(Event event) {
-        setType(event.getType());
         setFromObject(event.getFromObject());
         setThrowedBy(event.getThrowedBy());
+        setObjectType(event.getObjectType());
+        setDate(event.getDate());
+        setType(event.getType());
         setArgs(event.getArguments());
-        setDate(event.getDate().getTime());
+    }
+
+    @Override
+    public String toString() {
+        return "EventMessage{" +
+                "fromObject='" + fromObject + '\'' +
+                ", throwedBy='" + throwedBy + '\'' +
+                ", objectType='" + objectType + '\'' +
+                ", date=" + date +
+                ", type='" + type + '\'' +
+                ", args=" + args +
+                '}';
     }
 }

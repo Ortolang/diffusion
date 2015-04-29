@@ -54,4 +54,5 @@ public interface SubscriptionService {
     void removeFilter(String username, Filter filter);
 
     Map<String, Subscription> getSubscriptions();
+
 }

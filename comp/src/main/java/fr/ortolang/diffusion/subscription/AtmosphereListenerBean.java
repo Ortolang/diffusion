@@ -36,8 +36,11 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.event.entity.Event;
+import fr.ortolang.diffusion.runtime.RuntimeService;
+import fr.ortolang.diffusion.runtime.entity.Process;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.security.PermitAll;
@@ -46,6 +49,7 @@ import javax.ejb.EJB;
 import javax.ejb.MessageDriven;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,6 +63,8 @@ public class AtmosphereListenerBean implements MessageListener {
 
     private static final Logger LOGGER = Logger.getLogger(AtmosphereListenerBean.class.getName());
 
+    private static final String PROCESS_UPDATE_STATE_TYPE = OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-state");
+
     @EJB
     SubscriptionService subscription;
 
@@ -69,17 +75,34 @@ public class AtmosphereListenerBean implements MessageListener {
             Event event = new Event();
             event.fromJMSMessage(message);
             for (Map.Entry<String, Subscription> subscriptionRegistryEntry : subscription.getSubscriptions().entrySet()) {
-                for (Filter filter : subscriptionRegistryEntry.getValue().getFilters()) {
+                Iterator<Filter> iterator = subscriptionRegistryEntry.getValue().getFilters().iterator();
+                while (iterator.hasNext()) {
+                    Filter filter = iterator.next();
                     if (filter.matches(event)) {
+                        LOGGER.log(Level.FINE, "Matching filter " + filter);
                         LOGGER.log(Level.INFO, "Sending atmosphere message to " + subscriptionRegistryEntry.getKey());
-//                        EventMessage eventMessage = new EventMessage();
-//                        eventMessage.fromEvent(event);
+                        EventMessage eventMessage = new EventMessage();
+                        eventMessage.fromEvent(event);
                         subscriptionRegistryEntry.getValue().getBroadcaster().broadcast(event);
+                        if (hasToBeRemoved(event)) {
+                            LOGGER.log(Level.INFO, "Removing filter from " + subscriptionRegistryEntry.getKey() + " subscription");
+                            iterator.remove();
+                        }
                     }
+
                 }
             }
         } catch (OrtolangException e) {
             LOGGER.log(Level.WARNING, "unable to process event", e);
         }
+    }
+
+    private boolean hasToBeRemoved(Event event) {
+        if (event.getType().equals(PROCESS_UPDATE_STATE_TYPE)) {
+            if (event.getArguments().containsKey("state") && event.getArguments().get("state").equals(Process.State.COMPLETED)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

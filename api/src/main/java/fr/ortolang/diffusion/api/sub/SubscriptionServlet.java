@@ -2,7 +2,6 @@ package fr.ortolang.diffusion.api.sub;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
-import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.security.authentication.TicketHelper;
 import fr.ortolang.diffusion.subscription.EventMessage;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
@@ -67,12 +66,6 @@ public final class SubscriptionServlet {
     public final EventMessage onEventMessage(final EventMessage eventMessage) throws IOException {
         LOGGER.log(Level.INFO, "Sending event message");
         return eventMessage;
-    }
-
-    @Message(encoders = {EventEncoder.class})
-    public final Event onEvent(final Event event) throws IOException {
-        LOGGER.log(Level.INFO, "Sending event message");
-        return event;
     }
 
     @Message(decoders = {FilterRepresentationDecoder.class})

@@ -61,6 +61,14 @@ public class Subscription {
         return filters;
     }
 
+    public boolean addFilter(Filter filter) {
+        return filters.add(filter);
+    }
+
+    public boolean removeFilter(Filter filter) {
+        return filters.remove(filter);
+    }
+
     @Override
     public String toString() {
         return "Subscription{" +

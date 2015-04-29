@@ -78,7 +78,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
     @Override
     public void addFilter(String username, Filter filter) {
         LOGGER.log(Level.INFO, "Adding filter to user " + username + " subscription " + filter);
-        if (!subscriptionRegistry.get(username).getFilters().add(filter)) {
+        if (!subscriptionRegistry.get(username).addFilter(filter)) {
             LOGGER.log(Level.FINE, "Filter already present");
         }
     }
@@ -86,7 +86,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
     @Override
     public void removeFilter(String username, Filter filter) {
         LOGGER.log(Level.INFO, "Removing filter from the subscription of user " + username);
-        if (subscriptionRegistry.get(username).getFilters().remove(filter)) {
+        if (subscriptionRegistry.get(username).removeFilter(filter)) {
             LOGGER.log(Level.FINE, "Filter removed from user " + username + " subscription " + filter);
         }
     }
