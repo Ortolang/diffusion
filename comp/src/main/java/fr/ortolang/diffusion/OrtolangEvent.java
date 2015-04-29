@@ -106,7 +106,7 @@ public abstract class OrtolangEvent {
 	
 	public abstract Map<String, Object> getArguments();
 	
-	public abstract void setArguments (Map<String, Object> arguments);
+	public abstract void setArguments(Map<String, Object> arguments);
 	
 	@SuppressWarnings("unchecked")
 	public void fromJMSMessage(Message message) throws OrtolangException {

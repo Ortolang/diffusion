@@ -36,7 +36,6 @@ package fr.ortolang.diffusion.api.sub;
  * #L%
  */
 
-import fr.ortolang.diffusion.subscription.EventMessage;
 import org.atmosphere.config.managed.Encoder;
 import org.codehaus.jackson.map.ObjectMapper;
 

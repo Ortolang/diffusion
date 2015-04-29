@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.subscription;
+package fr.ortolang.diffusion.api.sub;
 
 /*
  * #%L
@@ -53,7 +53,7 @@ public class EventMessage {
 
     private String type;
 
-    private Map<String, Object> args;
+    private Map<String, Object> arguments;
 
     public EventMessage() {
     }
@@ -98,21 +98,22 @@ public class EventMessage {
         this.type = type;
     }
 
-    public Map<String, Object> getArgs() {
-        return args;
+    public Map<String, Object> getArguments() {
+        return arguments;
     }
 
-    public void setArgs(Map<String, Object> args) {
-        this.args = args;
+    public void setArguments(Map<String, Object> arguments) {
+        this.arguments = arguments;
     }
 
-    public void fromEvent(Event event) {
+    public EventMessage fromEvent(Event event) {
         setFromObject(event.getFromObject());
         setThrowedBy(event.getThrowedBy());
         setObjectType(event.getObjectType());
         setDate(event.getDate());
         setType(event.getType());
-        setArgs(event.getArguments());
+        setArguments(event.getArguments());
+        return this;
     }
 
     @Override
@@ -123,7 +124,7 @@ public class EventMessage {
                 ", objectType='" + objectType + '\'' +
                 ", date=" + date +
                 ", type='" + type + '\'' +
-                ", args=" + args +
+                ", arguments=" + arguments +
                 '}';
     }
 }

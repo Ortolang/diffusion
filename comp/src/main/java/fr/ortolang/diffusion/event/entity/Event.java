@@ -51,7 +51,7 @@ public class Event extends OrtolangEvent implements Serializable {
 	private String objectType;
 	private Date date;
 	private String type;
-	private Map<String, Object> args;
+	private Map<String, Object> arguments;
 
 	public Event() {
 	}
@@ -116,12 +116,12 @@ public class Event extends OrtolangEvent implements Serializable {
 
 	@Override
 	public Map<String, Object> getArguments() {
-		return args;
+		return arguments;
 	}
 
 	@Override
 	public void setArguments(Map<String, Object> args) {
-		this.args = args;
+		this.arguments = args;
 	}
 
 	@Override
@@ -133,7 +133,7 @@ public class Event extends OrtolangEvent implements Serializable {
 				", objectType='" + objectType + '\'' +
 				", date=" + date +
 				", type='" + type + '\'' +
-				", args=" + args +
+				", arguments=" + arguments +
 				'}';
 	}
 }
