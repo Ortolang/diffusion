@@ -43,8 +43,6 @@ public abstract class ContentViewer extends HttpServlet {
 	public static final String ASC_ATTRIBUTE_NAME = "asc";
 	public static final String SORT_ATTRIBUTE_NAME = "sort";
 	
-	
-	
 	protected abstract CoreService getCoreService();
 	
 	protected abstract BrowserService getBrowserService();
@@ -90,8 +88,10 @@ public abstract class ContentViewer extends HttpServlet {
 				}
 			} 
 		} catch ( AccessDeniedException e ) {
-			response.setHeader("WWW-Authenticate", "Basic");
-			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+			request.getSession().setAttribute(AuthRedirectServlet.UNAUTHORIZED_PATH_ATTRIBUTE_NAME, request.getAttribute(BASE_URL_ATTRIBUTE_NAME));
+			response.sendRedirect(request.getServletContext().getContextPath()+"/auth");
+//			response.setHeader("WWW-Authenticate", "Basic");
+//			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
 		}
 	}
 

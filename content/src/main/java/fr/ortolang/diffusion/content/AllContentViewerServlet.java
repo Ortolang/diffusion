@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -20,6 +21,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 @SuppressWarnings("serial")
+@WebServlet(name="AllContentViewerServlet", urlPatterns={"/all/*", "/versions/*"}, loadOnStartup=2)
 public class AllContentViewerServlet extends ContentViewer {
 	
 	private static final Logger LOGGER = Logger.getLogger(AllContentViewerServlet.class.getName());
