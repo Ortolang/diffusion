@@ -117,19 +117,33 @@ public class Filter {
 
         Filter filter = (Filter) o;
 
-        if (fromPattern != null ? !fromPattern.equals(filter.fromPattern) : filter.fromPattern != null) return false;
-        if (typePattern != null ? !typePattern.equals(filter.typePattern) : filter.typePattern != null) return false;
-        if (throwedByPattern != null ? !throwedByPattern.equals(filter.throwedByPattern) : filter.throwedByPattern != null)
+        if (fromPattern != null ? !fromPattern.pattern().equals(filter.fromPattern.pattern()) : filter.fromPattern != null) return false;
+        if (typePattern != null ? !typePattern.pattern().equals(filter.typePattern.pattern()) : filter.typePattern != null) return false;
+        if (throwedByPattern != null ? !throwedByPattern.pattern().equals(filter.throwedByPattern.pattern()) : filter.throwedByPattern != null)
             return false;
-        return !(argumentsPatterns != null ? !argumentsPatterns.equals(filter.argumentsPatterns) : filter.argumentsPatterns != null);
+        if (argumentsPatterns != null ? argumentsPatterns.size() != filter.argumentsPatterns.size() : filter.argumentsPatterns != null) {
+            return false;
+        }
+        if (argumentsPatterns != null) {
+            for (Map.Entry<String, Pattern> patternEntry : argumentsPatterns.entrySet()) {
+                if (patternEntry.getValue() != null ? !patternEntry.getValue().pattern().equals(filter.argumentsPatterns.get(patternEntry.getKey()).pattern()) : filter.argumentsPatterns.get(patternEntry.getKey()) != null) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     @Override
     public int hashCode() {
-        int result = fromPattern != null ? fromPattern.hashCode() : 0;
-        result = 31 * result + (typePattern != null ? typePattern.hashCode() : 0);
-        result = 31 * result + (throwedByPattern != null ? throwedByPattern.hashCode() : 0);
-        result = 31 * result + (argumentsPatterns != null ? argumentsPatterns.hashCode() : 0);
+        int result = fromPattern != null ? fromPattern.pattern().hashCode() : 0;
+        result = 31 * result + (typePattern != null ? typePattern.pattern().hashCode() : 0);
+        result = 31 * result + (throwedByPattern != null ? throwedByPattern.pattern().hashCode() : 0);
+        if (argumentsPatterns != null) {
+            for (Pattern pattern : argumentsPatterns.values()) {
+                result = 31 * result + (pattern != null ? pattern.pattern().hashCode() : 0);
+            }
+        }
         return result;
     }
 
