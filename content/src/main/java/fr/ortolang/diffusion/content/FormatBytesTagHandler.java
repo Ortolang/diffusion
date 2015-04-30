@@ -1,10 +1,9 @@
 package fr.ortolang.diffusion.content;
 
-import java.io.IOException;
-
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.tagext.TagSupport;
+import java.io.IOException;
 
 @SuppressWarnings("serial")
 public class FormatBytesTagHandler extends TagSupport {

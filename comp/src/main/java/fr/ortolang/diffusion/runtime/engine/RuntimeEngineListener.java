@@ -36,13 +36,13 @@ package fr.ortolang.diffusion.runtime.engine;
  * #L%
  */
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class RuntimeEngineListener {
 
@@ -64,34 +64,41 @@ public class RuntimeEngineListener {
 	public void onEvent(RuntimeEngineEvent event) {
 		LOGGER.log(Level.FINE, "RuntimeEngineEvent type: " + event.getType());
 		try {
-			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_START)) {
-				getRuntimeService().updateProcessState(event.getPid(), State.RUNNING);
-			}
-			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ABORT)) {
-				getRuntimeService().updateProcessState(event.getPid(), State.ABORTED);
-			}
-			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_COMPLETE)) {
-				getRuntimeService().updateProcessState(event.getPid(), State.COMPLETED);
-			}
-			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_LOG)) {
-				getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
-			}
-			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ACTIVITY_STARTED)) {
-				getRuntimeService().updateProcessActivity(event.getPid(), event.getActivityName());
-				getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
-			}
-			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ACTIVITY_ERROR)) {
-				getRuntimeService().updateProcessActivity(event.getPid(), "");
-				getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
-			}
-			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ACTIVITY_PROGRESS)) {
-				// TODO Increase RuntimeService Process model to include activity progression field
-				getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
-			}
-			if (event.getType().equals(RuntimeEngineEvent.Type.PROCESS_ACTIVITY_COMPLETED)) {
-				getRuntimeService().updateProcessActivity(event.getPid(), "");
-				getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
-			}
+            switch (event.getType()) {
+                case PROCESS_START:
+                    getRuntimeService().updateProcessState(event.getPid(), State.RUNNING);
+                    break;
+                case PROCESS_ABORT:
+                    getRuntimeService().updateProcessState(event.getPid(), State.ABORTED);
+                    break;
+                case PROCESS_COMPLETE:
+                    getRuntimeService().updateProcessState(event.getPid(), State.COMPLETED);
+                    break;
+                case PROCESS_LOG:
+                    getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+                    break;
+                case PROCESS_ACTIVITY_STARTED:
+                    getRuntimeService().updateProcessActivity(event.getPid(), event.getActivityName());
+                    getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+                    break;
+                case PROCESS_ACTIVITY_ERROR:
+                    getRuntimeService().updateProcessActivity(event.getPid(), "");
+                    getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+                    break;
+                case PROCESS_ACTIVITY_PROGRESS:
+                    // TODO Increase RuntimeService Process model to include activity progression field
+                    getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+                    break;
+                case PROCESS_ACTIVITY_COMPLETED:
+                    getRuntimeService().updateProcessActivity(event.getPid(), "");
+                    getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+                    break;
+                case TASK_CREATED:
+                case TASK_ASSIGNED:
+                case TASK_COMPLETED:
+                    getRuntimeService().pushTaskEvent(event.getPid(), event.getCandidates(), event.getType());
+                    break;
+            }
 		} catch (RuntimeServiceException | RuntimeEngineException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error while trying to treat runtime  event", e);
 		}

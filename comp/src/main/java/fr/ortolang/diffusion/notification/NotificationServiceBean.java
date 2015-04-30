@@ -72,8 +72,13 @@ public class NotificationServiceBean implements NotificationService {
 	}
 
 	@Override
+	public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType) throws NotificationServiceException {
+		throwEvent(fromObject, throwedBy, objectType, eventType, null);
+	}
+
+	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, String args) throws NotificationServiceException {
+	public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, Map<String, Object> args) throws NotificationServiceException {
 		try {
 			Message message = context.createMessage();
 			message.setStringProperty(OrtolangEvent.DATE, OrtolangEvent.getEventDateFormatter().format(new Date()));
@@ -81,8 +86,14 @@ public class NotificationServiceBean implements NotificationService {
 			message.setStringProperty(OrtolangEvent.FROM_OBJECT, fromObject);
 			message.setStringProperty(OrtolangEvent.OBJECT_TYPE, objectType);
 			message.setStringProperty(OrtolangEvent.TYPE, eventType);
-			message.setStringProperty(OrtolangEvent.ARGUMENTS, args);
-			context.createProducer().send(notificationTopic, message);                   
+			if (args != null) {
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				ObjectOutputStream oos = new ObjectOutputStream(baos);
+				oos.writeObject(args);
+				oos.close();
+				message.setStringProperty(OrtolangEvent.ARGUMENTS, Base64.encodeBase64String(baos.toByteArray()));
+			}
+			context.createProducer().send(notificationTopic, message);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "unable to throw event", e);
 			throw new NotificationServiceException("unable to throw event", e);

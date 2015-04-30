@@ -36,48 +36,15 @@ package fr.ortolang.diffusion.runtime;
  * #L%
  */
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.EJB;
-import javax.ejb.Local;
-import javax.ejb.SessionContext;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.concurrent.ContextService;
-import javax.enterprise.concurrent.ManagedScheduledExecutorService;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-
-import org.jboss.ejb3.annotation.SecurityDomain;
-import org.jgroups.util.UUID;
-
-import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
-import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
-import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
-import fr.ortolang.diffusion.registry.KeyLockedException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryService;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.registry.*;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngine;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineException;
 import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
@@ -86,6 +53,21 @@ import fr.ortolang.diffusion.runtime.entity.ProcessType;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import org.activiti.engine.task.IdentityLink;
+import org.jboss.ejb3.annotation.SecurityDomain;
+import org.jgroups.util.UUID;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.*;
+import javax.enterprise.concurrent.ContextService;
+import javax.enterprise.concurrent.ManagedScheduledExecutorService;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 @Local(RuntimeService.class)
@@ -128,7 +110,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			String[] types = OrtolangConfig.getInstance().getProperty("runtime.definitions").split(",");
 			engine.deployDefinitions(types);
 		} catch (RuntimeEngineException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured while importing process types", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while importing process types", e);
 			throw new RuntimeServiceException("unable to import configured process types", e);
 		} 
 	}
@@ -140,7 +122,7 @@ public class RuntimeServiceBean implements RuntimeService {
 		try {
 			return engine.listProcessTypes();
 		} catch (RuntimeEngineException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured while listing process types", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while listing process types", e);
 			throw new RuntimeServiceException("unable to list process types", e);
 		} 
 	}
@@ -171,11 +153,11 @@ public class RuntimeServiceBean implements RuntimeService {
 			registry.register(key, new OrtolangObjectIdentifier(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, id), caller);
 			authorisation.createPolicy(key, caller);
 
-			notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "create"), "");
+			notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "create"));
 			return process;
 		} catch (RuntimeEngineException | RegistryServiceException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException e) {
 			ctx.setRollbackOnly();
-			LOGGER.log(Level.SEVERE, "unexpected error occured while creating process", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while creating process", e);
 			throw new RuntimeServiceException("unable to create process ", e);
 		}
 	}
@@ -210,10 +192,10 @@ public class RuntimeServiceBean implements RuntimeService {
 			engine.startProcess(process.getType(), process.getId(), variables);
 			
 			registry.update(key);
-			notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "start"), "");
+			notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "start"));
 		} catch (KeyLockedException | MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | RegistryServiceException | RuntimeEngineException | NotificationServiceException e) {
 			ctx.setRollbackOnly();
-			LOGGER.log(Level.SEVERE, "unexpected error occured while submitting process for start", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while submitting process for start", e);
 			throw new RuntimeServiceException("unable to submit process for start", e);
 		}
 	}
@@ -245,7 +227,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			}
 			return rprocesses;
 		} catch ( RegistryServiceException e ) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured while listing processes", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while listing processes", e);
 			throw new RuntimeServiceException("unable to list processes", e);
 		}
 	}
@@ -258,7 +240,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
-			
+
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Process.OBJECT_TYPE);
 			Process instance = em.find(Process.class, identifier.getId());
@@ -266,11 +248,11 @@ public class RuntimeServiceBean implements RuntimeService {
 				throw new RuntimeServiceException("unable to find a process with id: " + identifier.getId());
 			}
 			instance.setKey(key);
-						
-			notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "read"), "");
+
+			notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "read"));
 			return instance;
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured while reading process", e);
+		} catch (MembershipServiceException | NotificationServiceException | AuthorisationServiceException | RegistryServiceException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while reading process", e);
 			throw new RuntimeServiceException("unable to read process", e);
 		}
 	}
@@ -290,10 +272,11 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			String key = registry.lookup(process.getObjectIdentifier());
 			registry.update(key);
-			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-state"), "state=" + state);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("state", state);
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-state"), argumentsBuilder.build());
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
-			LOGGER.log(Level.SEVERE, "unexpected error occured while updating process state", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while updating process state", e);
 			throw new RuntimeServiceException("unable to update process state", e);
 		}
 	}
@@ -312,10 +295,11 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			String key = registry.lookup(process.getObjectIdentifier());
 			registry.update(key);
-			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "log"), "message=" + log);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("message", log);
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "log"), argumentsBuilder.build());
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
-			LOGGER.log(Level.SEVERE, "unexpected error occured while appending log to process", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while appending log to process", e);
 			throw new RuntimeServiceException("unable to append process log", e);
 		}
 	}
@@ -334,15 +318,37 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			String key = registry.lookup(process.getObjectIdentifier());
 			registry.update(key);
-			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-activity"), "activity=" + name);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("activity", name);
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-activity"), argumentsBuilder.build());
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
-			LOGGER.log(Level.SEVERE, "unexpected error occured while updating process activity", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while updating process activity", e);
 			throw new RuntimeServiceException("unable to update process activity", e);
 		}
 	}
-	
-	
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void pushTaskEvent(String pid, Set<IdentityLink> candidates, RuntimeEngineEvent.Type type) {
+        ArgumentsBuilder argumentsBuilder;
+        String eventName = type.name().substring(type.name().lastIndexOf("_") + 1).toLowerCase();
+        for (IdentityLink candidate : candidates) {
+            try {
+                if (candidate.getUserId() != null) {
+                    LOGGER.log(Level.INFO, "USER CANDIDATE");
+                    argumentsBuilder = new ArgumentsBuilder("user", candidate.getUserId());
+                    notification.throwEvent(pid, RuntimeService.SERVICE_NAME, HumanTask.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, HumanTask.OBJECT_TYPE, eventName), argumentsBuilder.build());
+                } else if (candidate.getGroupId() != null) {
+                    LOGGER.log(Level.INFO, "GROUP CANDIDATE");
+                    argumentsBuilder = new ArgumentsBuilder("group", candidate.getGroupId());
+                    notification.throwEvent(pid, RuntimeService.SERVICE_NAME, HumanTask.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, HumanTask.OBJECT_TYPE, eventName), argumentsBuilder.build());
+                }
+            } catch (NotificationServiceException e) {
+                LOGGER.log(Level.SEVERE, "unexpected error occurred while pushing task event", e);
+            }
+        }
+    }
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<HumanTask> listCandidateTasks() throws RuntimeServiceException {
@@ -354,7 +360,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			List<HumanTask> tasks = engine.listCandidateTasks(caller, groups);
 			return tasks;
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured while listing candidate tasks", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while listing candidate tasks", e);
 			throw new RuntimeServiceException("unable to list candidate tasks", e);
 		}
 	}
@@ -369,7 +375,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			List<HumanTask> tasks = engine.listAssignedTasks(caller);
 			return tasks;
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured while listing assigned tasks", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while listing assigned tasks", e);
 			throw new RuntimeServiceException("unable to list assigned tasks", e);
 		}
 	}
@@ -383,7 +389,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			//TODO Check that the user is allowed to claim the task (or is root)
 			engine.claimTask(id, caller);
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured while claiming task", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while claiming task", e);
 			throw new RuntimeServiceException("unable to claim task with id: " + id, e);
 		}
 	}
@@ -396,7 +402,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			//TODO Check that the user is allowed to complete the task (or is root)
 			engine.completeTask(id, variables);
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured while completing task", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while completing task", e);
 			throw new RuntimeServiceException("unable to complete task with id: " + id, e);
 		}
 	}
