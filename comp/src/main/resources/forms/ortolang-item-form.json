@@ -226,7 +226,7 @@
 		        		"title": "Languages de programmation"
 		        	},
 		        	{
-		        		"key": "opearatingSystem",
+		        		"key": "operatingSystem",
 		        		"title": "Systèmes d'exploitation compatibles"
 		        	},
 		        	{
@@ -242,6 +242,14 @@
 					{
 		        		"key": "toolLanguage",
 		        		"title": "Langues traitées par l'outil"
+		        	},
+					{
+		        		"key": "toolFunctionality",
+		        		"title": "Fonctionnalités"
+		        	},
+					{
+		        		"key": "toolInputData",
+		        		"title": "Données en entrée"
 		        	},
 					{
 		        		"key": "toolId",
