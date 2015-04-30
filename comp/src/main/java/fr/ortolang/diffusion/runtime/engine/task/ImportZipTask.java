@@ -1,19 +1,5 @@
 package fr.ortolang.diffusion.runtime.engine.task;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-import javax.transaction.Status;
-
-import org.activiti.engine.delegate.DelegateExecution;
-
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
@@ -25,6 +11,18 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
+import org.activiti.engine.delegate.DelegateExecution;
+
+import javax.transaction.Status;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class ImportZipTask extends RuntimeEngineTask {
 	private static final Logger LOGGER = Logger.getLogger(ImportZipTask.class.getName());

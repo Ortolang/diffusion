@@ -1,6 +1,8 @@
 [{
-    "key": "accepted",
-    "type": "checkbox",
+  "key": "accepted",
+  "type": "checkbox",
+  "templateOptions": {
     "label": "Do you agree the publication ?",
     "default": false
+  }
 }]

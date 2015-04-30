@@ -1,18 +1,5 @@
 package fr.ortolang.diffusion.content;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.io.IOUtils;
-
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.browser.BrowserService;
@@ -20,14 +7,21 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
-import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.CollectionElement;
-import fr.ortolang.diffusion.core.entity.DataObject;
-import fr.ortolang.diffusion.core.entity.SnapshotElement;
-import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.core.entity.*;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import org.apache.commons.io.IOUtils;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @SuppressWarnings("serial")
 public abstract class ContentViewer extends HttpServlet {

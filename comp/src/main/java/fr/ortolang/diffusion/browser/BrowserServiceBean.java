@@ -142,7 +142,7 @@ public class BrowserServiceBean implements BrowserService {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "lookup"), "");
+			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "lookup"));
 			return identifier;
 		} catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | NotificationServiceException e) {
 			throw new BrowserServiceException("unable to lookup identifier for key [" + key + "]", e);
@@ -213,7 +213,8 @@ public class BrowserServiceBean implements BrowserService {
 			}
 			authorisation.checkPermission(key, subjects, "update");
 			registry.setProperty(key, name, value);
-			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "set-property"), "name=" + name + ", value=" + value);
+			OrtolangEvent.ArgumentsBuilder argumentsBuilder = new OrtolangEvent.ArgumentsBuilder(2).addArgument("name", name).addArgument("value", value);
+			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "set-property"), argumentsBuilder.build());
 		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException | NotificationServiceException e) {
 			throw new BrowserServiceException("error during getting property", e);
 		}

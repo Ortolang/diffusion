@@ -36,28 +36,6 @@ package fr.ortolang.diffusion.api.rest.profile;
  * #L%
  */
 
-import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.ejb.EJB;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
@@ -73,9 +51,21 @@ import fr.ortolang.diffusion.membership.entity.ProfileDataType;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.authentication.TicketHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+
+import javax.ejb.EJB;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * @resourceDescription Operations on Profiles
@@ -431,5 +421,15 @@ public class ProfileResource {
         OrtolangObjectSize size = membership.getSize(key);
         return Response.ok(size).build();
     }
+
+	@GET
+	@Path("/{key}/ticket")
+	public Response getProfileTicket(@PathParam(value = "key") String key) throws AccessDeniedException, OrtolangException, KeyNotFoundException, MembershipServiceException {
+		LOGGER.log(Level.INFO, "GET /profiles/" + key + "/size");
+		Profile profile = membership.readProfile(key);
+		String ticket = TicketHelper.makeTicket(profile.getId(), profile.getKey());
+		JsonObject jsonObject = Json.createObjectBuilder().add("t", ticket).build();
+		return Response.ok(jsonObject).build();
+	}
 
 }

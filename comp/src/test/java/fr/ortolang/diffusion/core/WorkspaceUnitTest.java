@@ -36,20 +36,15 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.Workspace;
+import org.jgroups.util.UUID;
+import org.junit.Test;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jgroups.util.UUID;
-import org.junit.Test;
-
-import fr.ortolang.diffusion.core.entity.SnapshotElement;
-import fr.ortolang.diffusion.core.entity.Workspace;
+import static org.junit.Assert.*;
 
 public class WorkspaceUnitTest {
 

@@ -36,26 +36,17 @@ package fr.ortolang.diffusion.membership.entity;
  * #L%
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.membership.MembershipService;
+import org.hibernate.annotations.Type;
+
+import javax.persistence.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Transient;
-import javax.persistence.Version;
-
-import org.hibernate.annotations.Type;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.membership.MembershipService;
 
 @Entity
 @SuppressWarnings("serial")

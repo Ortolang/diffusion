@@ -36,39 +36,17 @@ package fr.ortolang.diffusion.runtime.engine.activiti;
  * #L%
  */
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.Local;
-import javax.ejb.Lock;
-import javax.ejb.LockType;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.enterprise.concurrent.ContextService;
-import javax.enterprise.concurrent.ManagedExecutorService;
-import javax.enterprise.concurrent.ManagedScheduledExecutorService;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceUnit;
-
-import org.activiti.engine.ActivitiException;
-import org.activiti.engine.ProcessEngine;
-import org.activiti.engine.ProcessEngineConfiguration;
-import org.activiti.engine.RuntimeService;
-import org.activiti.engine.TaskService;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngine;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineException;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineListener;
+import fr.ortolang.diffusion.runtime.entity.HumanTask;
+import fr.ortolang.diffusion.runtime.entity.Process;
+import fr.ortolang.diffusion.runtime.entity.ProcessType;
+import org.activiti.engine.*;
 import org.activiti.engine.delegate.event.ActivitiEntityEvent;
 import org.activiti.engine.delegate.event.ActivitiEvent;
 import org.activiti.engine.delegate.event.ActivitiEventListener;
-import org.activiti.engine.delegate.event.ActivitiEventType;
 import org.activiti.engine.impl.persistence.entity.ExecutionEntity;
 import org.activiti.engine.impl.persistence.entity.TaskEntity;
 import org.activiti.engine.repository.Deployment;
@@ -78,13 +56,22 @@ import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngine;
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngineException;
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngineListener;
-import fr.ortolang.diffusion.runtime.entity.HumanTask;
-import fr.ortolang.diffusion.runtime.entity.Process;
-import fr.ortolang.diffusion.runtime.entity.ProcessType;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.*;
+import javax.enterprise.concurrent.ContextService;
+import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.enterprise.concurrent.ManagedScheduledExecutorService;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Startup
 @Local(RuntimeEngine.class)
@@ -104,10 +91,10 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	private ContextService contextService;
 	@PersistenceUnit(unitName = "ortolangPU")
 	private EntityManagerFactory emf;
-	
+
 	private ProcessEngine engine;
 	private RuntimeEngineListener listener;
-	
+
 	public ActivitiEngineBean() {
 	}
 
@@ -140,15 +127,15 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		}
 		LOGGER.log(Level.INFO, "EngineServiceBean stopped");
 	}
-	
+
 	protected RuntimeService getActivitiRuntimeService() {
 		return engine.getRuntimeService();
 	}
-	
+
 	protected TaskService getActivitiTaskService() {
 		return engine.getTaskService();
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deployDefinitions(String[] resources) {
@@ -175,7 +162,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		}
 		return defs;
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public ProcessType getProcessTypeById(String id) throws RuntimeEngineException {
@@ -183,7 +170,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		String form = engine.getFormService().getStartFormKey(apdef.getId());
 		return toProcessType(apdef, form);
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public ProcessType getProcessTypeByKey(String key) throws RuntimeEngineException {
@@ -191,7 +178,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		String form = engine.getFormService().getStartFormKey(apdef.getId());
 		return toProcessType(apdef, form);
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void startProcess(String type, String key, Map<String, Object> variables) throws RuntimeEngineException {
@@ -210,7 +197,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 			throw new RuntimeEngineException("unexpected error while getting process instance", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public HumanTask getTask(String id) throws RuntimeEngineException {
@@ -228,7 +215,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	public List<HumanTask> listCandidateTasks(String user, List<String> groups) throws RuntimeEngineException {
 		try {
 			List<HumanTask> ctasks = new ArrayList<HumanTask>();
-			
+
 			List<Task> cutasks = engine.getTaskService().createTaskQuery().taskCandidateUser(user).list();
 			for (Task task : cutasks) {
 				String form = engine.getFormService().getTaskFormKey(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
@@ -241,7 +228,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 					ctasks.add(toHumanTask(task, form));
 				}
 			}
-			
+
 			return ctasks;
 		} catch (ActivitiException e) {
 			throw new RuntimeEngineException("unexpected error while listing candidate tasks", e);
@@ -281,29 +268,44 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		Runnable ctxRunnable = contextService.createContextualProxy(runnable, Runnable.class);
 		scheduledExecutor.schedule(ctxRunnable, 3, TimeUnit.SECONDS);
 	}
-	
+
 	@Override
 	@PermitAll
 	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
 	public void notify(RuntimeEngineEvent event) throws RuntimeEngineException {
-		listener.onEvent(event);                   
+		listener.onEvent(event);
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void onEvent(ActivitiEvent event) {
 		try {
-			if (event.getType().equals(ActivitiEventType.PROCESS_COMPLETED)) {
-				LOGGER.log(Level.INFO, "Activiti process completed event received");
-				String pid = ((ExecutionEntity)((ActivitiEntityEvent)event).getEntity()).getBusinessKey();
-				notify(RuntimeEngineEvent.createProcessCompleteEvent(pid));
-			}
-			if (event.getType().equals(ActivitiEventType.TASK_CREATED)) {
-				LOGGER.log(Level.INFO, "Activiti task created event received");
-				TaskEntity task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
-				String pid = task.getExecution().getBusinessKey();
-				notify(RuntimeEngineEvent.createProcessActivityStartEvent(pid, task.getName(), "human task: " + task.getName() + " created"));
-			}
+            String pid;
+            switch (event.getType()) {
+                case PROCESS_COMPLETED:
+                    LOGGER.log(Level.INFO, "Activiti process completed event received");
+                    pid = ((ExecutionEntity)((ActivitiEntityEvent)event).getEntity()).getBusinessKey();
+                    notify(RuntimeEngineEvent.createProcessCompleteEvent(pid));
+                    break;
+                case TASK_CREATED:
+                    LOGGER.log(Level.INFO, "Activiti task created event received");
+                    TaskEntity task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
+                    pid = task.getExecution().getBusinessKey();
+                    notify(RuntimeEngineEvent.createTaskCreatedEvent(pid, task.getName(), task.getCandidates()));
+                    break;
+                case TASK_ASSIGNED:
+                    LOGGER.log(Level.INFO, "Activiti task assigned event received");
+                    task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
+                    pid = task.getExecution().getBusinessKey();
+                    notify(RuntimeEngineEvent.createTaskAssignedEvent(pid, task.getName(), task.getCandidates()));
+                    break;
+                case TASK_COMPLETED:
+                    LOGGER.log(Level.INFO, "Activiti task completed event received");
+                    task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
+                    pid = task.getExecution().getBusinessKey();
+                    notify(RuntimeEngineEvent.createTaskCompletedEvent(pid, task.getName(), task.getCandidates()));
+                    break;
+            }
 		} catch ( RuntimeEngineException e ) {
 			LOGGER.log(Level.WARNING, "unexpected error during treating activiti event", e);
 		}
@@ -313,7 +315,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	public boolean isFailOnException() {
 		return false;
 	}
-	
+
 	private ProcessType toProcessType(ProcessDefinition def, String startform) {
 		ProcessType instance = new ProcessType();
 		instance.setId(def.getId());
@@ -329,7 +331,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		Process instance = new Process();
 		instance.setId(pins.getBusinessKey());
 		instance.setName(pins.getName());
-		
+
 		return instance;
 	}
 
