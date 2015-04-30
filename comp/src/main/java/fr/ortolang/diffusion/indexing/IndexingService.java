@@ -40,10 +40,10 @@ package fr.ortolang.diffusion.indexing;
 public interface IndexingService {
 	
 	public static final String SERVICE_NAME = "indexing";
+	public static final String INDEX_ACTION = "index";
+	public static final String REMOVE_ACTION = "remove";
     
     public void index(String key) throws IndexingServiceException;
-    
-    public void reindex(String key) throws IndexingServiceException;
     
     public void remove(String key) throws IndexingServiceException;
 

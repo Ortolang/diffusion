@@ -7,10 +7,8 @@ import fr.ortolang.diffusion.OrtolangIndexableObject;
 public interface JsonStoreService {
 
 	public static final String SERVICE_NAME = "json-store";
-
-	public void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException;
 	
-	public void reindex(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException;
+	public void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException;
 	
 	public void remove(String key) throws JsonStoreServiceException;
 	

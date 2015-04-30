@@ -142,21 +142,9 @@ public class IndexStoreServiceBean implements IndexStoreService {
 	public void index(OrtolangIndexableObject<IndexablePlainTextContent> object) throws IndexStoreServiceException {
 		LOGGER.log(Level.FINE, "Indexing new object: " + object.getIdentifier());
 		try {
-			writer.addDocument(IndexStoreDocumentBuilder.buildDocument(object));
-			writer.commit();
-		} catch (IOException e) {
-			LOGGER.log(Level.WARNING, "unable to index object " + object, e);
-			throw new IndexStoreServiceException("Can't index an object", e);
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void reindex(OrtolangIndexableObject<IndexablePlainTextContent> object) throws IndexStoreServiceException {
-		LOGGER.log(Level.FINE, "Reindexing object: " + object.getIdentifier());
-		try {
 			Term term = new Term("KEY", object.getKey());
-			writer.updateDocument(term, IndexStoreDocumentBuilder.buildDocument(object));
+			writer.deleteDocuments(term);
+			writer.addDocument(IndexStoreDocumentBuilder.buildDocument(object));
 			writer.commit();
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to index object " + object, e);

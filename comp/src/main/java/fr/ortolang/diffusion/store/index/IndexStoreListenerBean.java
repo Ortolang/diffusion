@@ -43,16 +43,13 @@ import javax.annotation.security.PermitAll;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.EJB;
 import javax.ejb.MessageDriven;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
-
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangIndexableObject;
-import fr.ortolang.diffusion.OrtolangIndexableObjectFactory;
-import fr.ortolang.diffusion.indexing.IndexingServiceException;
-import fr.ortolang.diffusion.registry.RegistryService;
 
 @MessageDriven(name = "PlainTextIndexingTopicMDB", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
 		@ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
@@ -63,71 +60,20 @@ public class IndexStoreListenerBean implements MessageListener {
 	private static final Logger LOGGER = Logger.getLogger(IndexStoreListenerBean.class.getName());
 
 	@EJB
-	private IndexStoreService indexStore;
-	@EJB
-	private RegistryService registry;
-
-	public void setIndexStoreService(IndexStoreService store) {
-		this.indexStore = store;
-	}
-
-	public IndexStoreService getIndexStoreService() {
-		return indexStore;
-	}
-
-	public RegistryService getRegistry() {
-		return registry;
-	}
-
-	public void setRegistry(RegistryService registry) {
-		this.registry = registry;
-	}
-
+	private IndexStoreServiceWorker worker;
+	
 	@Override
 	@PermitAll
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void onMessage(Message message) {
 		try {
+			LOGGER.log(Level.FINE, "indexation message received");
 			String action = message.getStringProperty("action");
 			String key = message.getStringProperty("key");
-			LOGGER.log(Level.FINE, action + " action called on key: " + key);
-			try {
-				if (action.equals("index"))
-					this.addToStore(key);
-				if (action.equals("reindex"))
-					this.updateStore(key);
-				if (action.equals("remove"))
-					this.removeFromStore(key);
-			} catch (Exception e) {
-				LOGGER.log(Level.WARNING, "error during indexation of key " + key, e);
-			}
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "unable to index content", e);
-		}
-	}
-
-	private void addToStore(String key) throws IndexingServiceException {
-		try {
-			OrtolangIndexableObject<IndexablePlainTextContent> object = OrtolangIndexableObjectFactory.buildPlainTextIndexableObject(key);
-			indexStore.index(object);
-		} catch (IndexStoreServiceException | OrtolangException e) {
-			throw new IndexingServiceException("unable to insert object in store", e);
-		}
-	}
-
-	private void updateStore(String key) throws IndexingServiceException {
-		try {
-			OrtolangIndexableObject<IndexablePlainTextContent> object = OrtolangIndexableObjectFactory.buildPlainTextIndexableObject(key);
-			indexStore.reindex(object);
-		} catch (IndexStoreServiceException | OrtolangException e) {
-			throw new IndexingServiceException("unable to update object in store", e);
-		}
-	}
-
-	private void removeFromStore(String key) throws IndexingServiceException {
-		try {
-			indexStore.remove(key);
-		} catch (IndexStoreServiceException e) {
-			throw new IndexingServiceException("unable to remove object from store", e);
+			LOGGER.log(Level.FINE, "submitting action to plain text indexation service worker");
+			worker.submit(key, action);
+		} catch (JMSException | IndexStoreServiceException e) {
+			LOGGER.log(Level.WARNING, "unable to handle indexation message", e);
 		}
 	}
 

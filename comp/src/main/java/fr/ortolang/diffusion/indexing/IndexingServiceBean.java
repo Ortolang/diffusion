@@ -77,11 +77,6 @@ public class IndexingServiceBean implements IndexingService {
 	}
 
 	@Override
-	public void reindex(String key) throws IndexingServiceException {
-		sendMessage("reindex", key);
-	}
-
-	@Override
 	public void remove(String key) throws IndexingServiceException {
 		sendMessage("remove", key);
 	}

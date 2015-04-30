@@ -293,14 +293,14 @@ public class BrowserServiceBean implements BrowserService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void reindex(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "reindexing key [" + key + "]");
+	public void index(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "indexing key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			authorisation.checkSuperUser(caller);
-			indexing.reindex(key);
+			indexing.index(key);
 		} catch (IndexingServiceException | AuthorisationServiceException e) {
-			throw new BrowserServiceException("unable to reindex key " + key, e);
+			throw new BrowserServiceException("unable to index key " + key, e);
 		}
 	}
 

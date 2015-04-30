@@ -422,10 +422,10 @@ public class ObjectResource {
     }
     
     @POST
-    @Path("/{key}/reindex")
+    @Path("/{key}/index")
     public Response reindex(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, KeyNotFoundException, BrowserServiceException {
-        LOGGER.log(Level.INFO, "POST /objects/" + key + "/reindex");
-        browser.reindex(key);
+        LOGGER.log(Level.INFO, "POST /objects/" + key + "/index");
+        browser.index(key);
         return Response.ok().build();
     }
 

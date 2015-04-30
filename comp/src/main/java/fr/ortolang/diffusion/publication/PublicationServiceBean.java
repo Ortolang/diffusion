@@ -187,7 +187,7 @@ public class PublicationServiceBean implements PublicationService {
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
 				registry.update(key);
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
-				indexing.reindex(key);
+				indexing.index(key);
 				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "publish"), "");
 			}
 		} catch (KeyLockedException | AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException | IndexingServiceException e) {
@@ -214,7 +214,7 @@ public class PublicationServiceBean implements PublicationService {
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.REVIEW.value());
 				registry.update(key);
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
-				indexing.reindex(key);
+				indexing.index(key);
 				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "review"), "");
 			}
 		} catch (KeyLockedException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IndexingServiceException e) {

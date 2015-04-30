@@ -973,7 +973,7 @@ public class CoreServiceBean implements CoreService {
 				collection.setDescription(description);
 				em.merge(collection);
 				registry.update(collection.getKey());
-				indexing.reindex(collection.getKey());
+				indexing.index(collection.getKey());
 				LOGGER.log(Level.FINEST, "collection updated");
 
 				ws.setChanged(true);
@@ -1382,7 +1382,7 @@ public class CoreServiceBean implements CoreService {
 				em.merge(parent);
 				em.merge(object);
 				registry.update(object.getKey());
-				indexing.reindex(object.getKey());
+				indexing.index(object.getKey());
 				LOGGER.log(Level.FINEST, "object updated");
 
 				ws.setChanged(true);
@@ -1742,7 +1742,7 @@ public class CoreServiceBean implements CoreService {
 			sparent.removeElement(selement);
 			em.merge(sparent);
 			registry.update(sparent.getKey());
-			indexing.reindex(sparent.getKey());
+			indexing.index(sparent.getKey());
 
 			LOGGER.log(Level.FINEST, "parent [" + sparent.getKey() + "] has been updated");
 
@@ -1759,13 +1759,13 @@ public class CoreServiceBean implements CoreService {
 				slink.setName(dpath.part());
 				em.merge(slink);
 				registry.update(slink.getKey());
-				indexing.reindex(slink.getKey());
+				indexing.index(slink.getKey());
 
 			}
 			dparent.addElement(new CollectionElement(Link.OBJECT_TYPE, slink.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, slink.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
-			indexing.reindex(dparent.getKey());
+			indexing.index(dparent.getKey());
 
 			LOGGER.log(Level.FINEST, "link [" + slink.getKey() + "] added to destination parent [" + dparent.getKey() + "]");
 
@@ -1831,7 +1831,7 @@ public class CoreServiceBean implements CoreService {
 			parent.removeElement(element);
 			em.merge(parent);
 			registry.update(parent.getKey());
-			indexing.reindex(parent.getKey());
+			indexing.index(parent.getKey());
 			LOGGER.log(Level.FINEST, "parent [" + parent.getKey() + "] has been updated");
 
 			ws.setChanged(true);
@@ -3259,7 +3259,7 @@ public class CoreServiceBean implements CoreService {
 			em.persist(clone);
 
 			registry.register(key, clone.getObjectIdentifier(), origin, true);
-			indexing.reindex(target);
+			indexing.index(target);
 			authorisation.clonePolicy(key, root);
 
 			return clone;
