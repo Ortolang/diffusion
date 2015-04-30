@@ -36,7 +36,10 @@ package fr.ortolang.diffusion.notification;
  * #L%
  */
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.Date;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,6 +54,7 @@ import javax.jms.JMSContext;
 import javax.jms.Message;
 import javax.jms.Topic;
 
+import org.apache.commons.codec.binary.Base64;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
@@ -78,7 +82,7 @@ public class NotificationServiceBean implements NotificationService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, Map<String, Object> args) throws NotificationServiceException {
+	public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, Map<String, Object> arguments) throws NotificationServiceException {
 		try {
 			Message message = context.createMessage();
 			message.setStringProperty(OrtolangEvent.DATE, OrtolangEvent.getEventDateFormatter().format(new Date()));
@@ -86,10 +90,10 @@ public class NotificationServiceBean implements NotificationService {
 			message.setStringProperty(OrtolangEvent.FROM_OBJECT, fromObject);
 			message.setStringProperty(OrtolangEvent.OBJECT_TYPE, objectType);
 			message.setStringProperty(OrtolangEvent.TYPE, eventType);
-			if (args != null) {
+			if (arguments != null) {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				ObjectOutputStream oos = new ObjectOutputStream(baos);
-				oos.writeObject(args);
+				oos.writeObject(arguments);
 				oos.close();
 				message.setStringProperty(OrtolangEvent.ARGUMENTS, Base64.encodeBase64String(baos.toByteArray()));
 			}
