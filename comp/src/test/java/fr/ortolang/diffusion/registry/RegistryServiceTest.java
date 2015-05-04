@@ -366,31 +366,31 @@ public class RegistryServiceTest {
 		}
 	}
 	
-	@Test
-	public void testConcurrentStateWriteAndRead() throws LoginException, IllegalStateException, SecurityException, SystemException {
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
-		loginContext.login();
-		String key1 = "key1";
-		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
-		String author = "moi";
-		ExecutorService pool = Executors.newFixedThreadPool(1);
-		try {
-			utx.begin();
-			registry.register(key1, doi1, author);
-			utx.commit();
-			utx.begin();
-			registry.setPublicationStatus(key1, OrtolangObjectState.Status.PUBLISHED.value());
-			Future<String> result = pool.submit(new RegistryEntryStateReader(key1));
-			Thread.sleep(1000);
-			utx.commit();
-			assertEquals(OrtolangObjectState.Status.PUBLISHED.value(), result.get());
-		} catch ( Exception e ) {
-			fail(e.getMessage());
-		} finally {
-			loginContext.logout();
-		}
-		
-	}
+//	@Test
+//	public void testConcurrentStateWriteAndRead() throws LoginException, IllegalStateException, SecurityException, SystemException {
+//		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("guest", "password");
+//		loginContext.login();
+//		String key1 = "key1";
+//		OrtolangObjectIdentifier doi1 = new OrtolangObjectIdentifier("Test", "testing", "atestid1");
+//		String author = "moi";
+//		ExecutorService pool = Executors.newFixedThreadPool(1);
+//		try {
+//			utx.begin();
+//			registry.register(key1, doi1, author);
+//			utx.commit();
+//			utx.begin();
+//			registry.setPublicationStatus(key1, OrtolangObjectState.Status.PUBLISHED.value());
+//			Future<String> result = pool.submit(new RegistryEntryStateReader(key1));
+//			Thread.sleep(1000);
+//			utx.commit();
+//			assertEquals(OrtolangObjectState.Status.PUBLISHED.value(), result.get());
+//		} catch ( Exception e ) {
+//			fail(e.getMessage());
+//		} finally {
+//			loginContext.logout();
+//		}
+//		
+//	}
 	
 	class RegistryEntryStateReader implements Callable<String> {
 		
