@@ -61,17 +61,17 @@ public class JsonStoreServiceWorker {
 		LOGGER.log(Level.FINE, "submit new job action: " + action + " for key: " + key);
 		StoreWorkerJob existingJob = getJob(key);
 		if ( existingJob != null ) {
-			LOGGER.log(Level.FINE, "a job already exists for this key");
+			LOGGER.log(Level.FINE, "a job already exists for key: " + key);
 			if ( existingJob.getAction().equals(action) ) {
-				LOGGER.log(Level.FINE, "existing job action is the same, removing old job");
+				LOGGER.log(Level.FINE, "existing job action is the same, removing old job for key: " + key);
 				queue.remove(existingJob);
 				queue.put(new StoreWorkerJob(key, action, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
 			} else if ( existingJob.getAction().equals(IndexingService.INDEX_ACTION) ) {
-				LOGGER.log(Level.FINE, "existing job action is stale, removing old job");
+				LOGGER.log(Level.FINE, "existing job action is stale, removing old job for key: " + key);
 				queue.remove(existingJob);
 				queue.put(new StoreWorkerJob(key, action, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
 			} else {
-				LOGGER.log(Level.WARNING, "existing job action is conflicting, dropping new job");
+				LOGGER.log(Level.WARNING, "existing job action is conflicting, dropping new job for key: " + key);
 			}
 		} else {
 			queue.put(new StoreWorkerJob(key, action, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
@@ -103,7 +103,7 @@ public class JsonStoreServiceWorker {
 					LOGGER.log(Level.FINE, "treating action: " + job.getAction() + " for key: " + job.getKey());
 					try {
 						String status = registry.getPublicationStatus(job.getKey());
-						if ( status.equals(OrtolangObjectState.Status.PUBLISHED) ) {
+						if ( status.equals(OrtolangObjectState.Status.PUBLISHED.value()) ) {
 							LOGGER.log(Level.FINE, "key: " + job.getKey() + " is in state: " + status);
 							switch ( job.getAction() ) {
 								case IndexingService.INDEX_ACTION :
@@ -119,7 +119,7 @@ public class JsonStoreServiceWorker {
 									LOGGER.log(Level.WARNING, "unknown job action: " + job.getAction());
 							}
 						} else {
-							LOGGER.log(Level.FINE, "key is not in state: " + OrtolangObjectState.Status.PUBLISHED + ", nothing to do" );
+							LOGGER.log(Level.FINE, "key is not in state: " + OrtolangObjectState.Status.PUBLISHED.value() + ", nothing to do" );
 						}
 					} catch ( KeyNotFoundException | RegistryServiceException | JsonStoreServiceException | OrtolangException e ) {
 						LOGGER.log(Level.WARNING, "unable to perform job action " + job.getAction() + " for key " + job.getKey(), e);

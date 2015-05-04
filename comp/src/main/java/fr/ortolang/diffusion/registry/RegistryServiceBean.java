@@ -342,7 +342,7 @@ public class RegistryServiceBean implements RegistryService {
 	}
 	
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException {
 		LOGGER.log(Level.FINE, "getting state for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
@@ -353,7 +353,7 @@ public class RegistryServiceBean implements RegistryService {
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void setPublicationStatus(String key, String state) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
 		LOGGER.log(Level.FINE, "setting key [" + key + "] with state [" + state + "]");
-		RegistryEntry entry = findEntryByKey(key, LockModeType.PESSIMISTIC_WRITE);
+		RegistryEntry entry = findEntryByKey(key);
 		if ( entry.isLocked() ) {
 			throw new KeyLockedException("Key [" + key + "] is locked, publication status cannot be modified");
 		}

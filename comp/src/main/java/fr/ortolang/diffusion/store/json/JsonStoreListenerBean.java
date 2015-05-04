@@ -31,10 +31,10 @@ public class JsonStoreListenerBean implements MessageListener {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void onMessage(Message message) {
 		try {
-			LOGGER.log(Level.FINE, "indexation message received");
+			LOGGER.log(Level.FINEST, "indexation message received");
 			String action = message.getStringProperty("action");
 			String key = message.getStringProperty("key");
-			LOGGER.log(Level.FINE, "submitting action to json indexation service worker");
+			LOGGER.log(Level.FINEST, "submitting action to json indexation service worker");
 			worker.submit(key, action);
 		} catch (JMSException | JsonStoreServiceException e) {
 			LOGGER.log(Level.WARNING, "unable to handle indexation message", e);
