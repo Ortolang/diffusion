@@ -25,23 +25,23 @@
 			<version>7.0</version>
 		</dependency>
 		<dependency>
-            <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-core</artifactId>
-            <version>1.1.0.Final</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-adapter-core</artifactId>
-            <version>1.1.0.Final</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-servlet-oauth-client</artifactId>
-            <version>1.1.0.Final</version>
-        </dependency>
-        <dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-core</artifactId>
+			<version>1.1.0.Final</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-adapter-core</artifactId>
+			<version>1.1.0.Final</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-servlet-oauth-client</artifactId>
+			<version>1.1.0.Final</version>
+		</dependency>
+		<dependency>
 			<groupId>jstl</groupId>
 			<artifactId>jstl</artifactId>
 			<version>1.2</version>
@@ -56,6 +56,16 @@
 				<version>${version.war.plugin}</version>
 				<configuration>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
+					<webResources>
+						<resource>
+							<directory>${basedir}/src/main/webapp/jsp</directory>
+							<filtering>true</filtering>
+							<targetPath>jsp</targetPath>
+							<includes>
+								<include>**/*.jsp</include>
+							</includes>
+						</resource>
+					</webResources>
 				</configuration>
 			</plugin>
 		</plugins>

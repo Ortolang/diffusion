@@ -55,6 +55,6 @@
 		</c:forEach>
 		<tr><th colspan="5"><hr></th></tr>
 	</table>
-	<address>Ortolang/1.6.0 Server</address>
+	<address>Ortolang/@project.version@ Server</address>
 </body>
 </html> 
