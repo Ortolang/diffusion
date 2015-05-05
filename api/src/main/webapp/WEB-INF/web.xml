@@ -28,13 +28,6 @@
 	</listener>
 
 	<servlet>
-		<display-name>Download Servlet</display-name>
-		<servlet-name>DownloadServlet</servlet-name>
-		<servlet-class>fr.ortolang.diffusion.api.download.DownloadServlet</servlet-class>
-		<load-on-startup>1</load-on-startup>
-		<enabled>true</enabled>
-	</servlet>
-	<servlet>
 		<display-name>SSH Server Servlet</display-name>
 		<servlet-name>SSHServlet</servlet-name>
 		<servlet-class>fr.ortolang.diffusion.api.ssh.SSHServlet</servlet-class>
@@ -53,10 +46,6 @@
 		<servlet-name>OAIPMHServlet</servlet-name>
 		<servlet-class>fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet</servlet-class>
 	</servlet>
-	<servlet-mapping>
-		<servlet-name>DownloadServlet</servlet-name>
-		<url-pattern>/download/*</url-pattern>
-	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>AtmosphereServlet</servlet-name>
 		<url-pattern>/sub/*</url-pattern>

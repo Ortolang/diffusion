@@ -62,7 +62,11 @@ public abstract class ContentViewer extends HttpServlet {
 			if ( object instanceof DataObject ) {
 				response.setContentLength((int)((DataObject)object).getSize());
 				response.setContentType(((DataObject)object).getMimeType());
-				response.setHeader("Content-Disposition", "filename=" + ((DataObject)object).getName());
+				if ( request.getAttribute(OBJECTKEY_ATTRIBUTE_NAME) != null ) {
+					response.setHeader("Content-Disposition", "attachment; filename=\"" + ((DataObject)object).getName() + "\"");
+				} else {
+					response.setHeader("Content-Disposition", "filename=\"" + ((DataObject)object).getName() + "\"");
+				}
 				InputStream input = getCoreService().download(key);
 				try {
 					IOUtils.copy(input, response.getOutputStream());
