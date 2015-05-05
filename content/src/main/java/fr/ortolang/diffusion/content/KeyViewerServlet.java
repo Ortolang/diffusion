@@ -21,19 +21,19 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 @SuppressWarnings("serial")
-@WebServlet(name="LatestContentViewerServlet", urlPatterns={"/latest/*", "/last/*"}, loadOnStartup=2) 
-public class LatestContentViewerServlet extends ContentViewer {
+@WebServlet(name="KeyViewerServlet", urlPatterns={"/key/*"}, loadOnStartup=2)
+public class KeyViewerServlet extends ContentViewer {
 	
-private static final Logger LOGGER = Logger.getLogger(LatestContentViewerServlet.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(KeyViewerServlet.class.getName());
 	
 	@EJB
-	protected CoreService core;
+	private CoreService core;
 	@EJB
-	protected BrowserService browser;
-
+	private BrowserService browser;
+	
 	@Override
 	public void init() throws ServletException {
-		LOGGER.log(Level.FINE, "LatestContentViewerServlet Initialized");
+		LOGGER.log(Level.FINE, "KeyViewerServlet Initialized");
 		super.init();
 	}
 	
@@ -55,24 +55,12 @@ private static final Logger LOGGER = Logger.getLogger(LatestContentViewerServlet
 			String[] parts = puri.buildParts();
 			
 			if ( parts.length < 1 ) {
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "missing workspace alias in url");
+				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "missing key in url");
 				return;
 			}
 			request.setAttribute(CTX_ATTRIBUTE_NAME, request.getContextPath());
-			request.setAttribute(WSALIAS_ATTRIBUTE_NAME, parts[0]);
-			String wskey = core.resolveWorkspaceAlias(parts[0]);
-			request.setAttribute(WSKEY_ATTRIBUTE_NAME, wskey);
-			String root = null;
-			root = core.findWorkspaceLatestPublishedSnapshot(wskey);
-			if ( root == null ) {
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, "no content has been published for this workspace's alias");
-				return;
-			}
-			request.setAttribute(ROOT_ATTRIBUTE_NAME, root);
-			PathBuilder path = ( parts.length > 1 )?puri.clone().relativize("/"+parts[0]):PathBuilder.fromPath("/"); 
-			request.setAttribute(PATH_ATTRIBUTE_NAME, path.build());
-			request.setAttribute(PARENT_PATH_ATTRIBUTE_NAME, path.parent().build());
-			request.setAttribute(BASE_URL_ATTRIBUTE_NAME, "/latest/" + parts[0]);
+			request.setAttribute(OBJECTKEY_ATTRIBUTE_NAME, parts[0]);
+			request.setAttribute(BASE_URL_ATTRIBUTE_NAME, "/key/");
 			
 			handleContent(request, response);
 
@@ -83,9 +71,9 @@ private static final Logger LOGGER = Logger.getLogger(LatestContentViewerServlet
 		} catch (KeyNotFoundException e) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
 		} catch (AccessDeniedException e) {
-			request.getSession().setAttribute(AuthRedirectServlet.UNAUTHORIZED_PATH_ATTRIBUTE_NAME, request.getAttribute(BASE_URL_ATTRIBUTE_NAME));
+			request.getSession().setAttribute(AuthRedirectServlet.UNAUTHORIZED_PATH_ATTRIBUTE_NAME, request.getAttribute(BASE_URL_ATTRIBUTE_NAME) + request.getPathInfo());
 			response.sendRedirect(request.getServletContext().getContextPath()+"/auth");
-		} 
+		}
 	}
-
+	
 }

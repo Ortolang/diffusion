@@ -76,8 +76,8 @@ public class AllContentViewerServlet extends ContentViewer {
 		} catch (KeyNotFoundException e) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
 		} catch (AccessDeniedException e) {
-			response.setHeader("WWW-Authenticate", "Basic");
-			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage());
+			request.getSession().setAttribute(AuthRedirectServlet.UNAUTHORIZED_PATH_ATTRIBUTE_NAME, request.getAttribute(BASE_URL_ATTRIBUTE_NAME));
+			response.sendRedirect(request.getServletContext().getContextPath()+"/auth");
 		} 
 	}
 	

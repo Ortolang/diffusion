@@ -55,17 +55,17 @@ public class IndexStoreServiceWorker {
 		LOGGER.log(Level.FINE, "submit new job action: " + action + " for key: " + key);
 		StoreWorkerJob existingJob = getJob(key);
 		if ( existingJob != null ) {
-			LOGGER.log(Level.FINE, "a job already exists for this key");
+			LOGGER.log(Level.FINEST, "a job already exists for this key: " + key);
 			if ( existingJob.getAction().equals(action) ) {
-				LOGGER.log(Level.FINE, "existing job action is the same, removing old job");
+				LOGGER.log(Level.FINEST, "existing job action is the same, removing old job for key: " + key);
 				queue.remove(existingJob);
 				queue.put(new StoreWorkerJob(key, action, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
 			} else if ( existingJob.getAction().equals(IndexingService.INDEX_ACTION) ) {
-				LOGGER.log(Level.FINE, "existing job action is stale, removing old job");
+				LOGGER.log(Level.FINEST, "existing job action is stale, removing old job for key: " + key);
 				queue.remove(existingJob);
 				queue.put(new StoreWorkerJob(key, action, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
 			} else {
-				LOGGER.log(Level.WARNING, "existing job action is conflicting, dropping new job");
+				LOGGER.log(Level.WARNING, "existing job action is conflicting, dropping new job for key: " + key);
 			}
 		} else {
 			queue.put(new StoreWorkerJob(key, action, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
