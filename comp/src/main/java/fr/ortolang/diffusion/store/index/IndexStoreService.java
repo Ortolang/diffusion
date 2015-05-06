@@ -47,8 +47,6 @@ public interface IndexStoreService {
 	
 	public void index(OrtolangIndexableObject<IndexablePlainTextContent> object) throws IndexStoreServiceException;
 	
-	public void reindex(OrtolangIndexableObject<IndexablePlainTextContent> object) throws IndexStoreServiceException;
-	
 	public void remove(String key) throws IndexStoreServiceException;
 	
 	public List<OrtolangSearchResult> search(String query) throws IndexStoreServiceException;

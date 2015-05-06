@@ -36,37 +36,6 @@ package fr.ortolang.diffusion.api.rest.runtime;
  * #L%
  */
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.annotation.Resource;
-import javax.ejb.EJB;
-import javax.transaction.UserTransaction;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
-import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
-
 import fr.ortolang.diffusion.api.rest.DiffusionUriBuilder;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.core.CoreService;
@@ -81,6 +50,29 @@ import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.runtime.entity.ProcessType;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
+
+import javax.annotation.Resource;
+import javax.ejb.EJB;
+import javax.transaction.UserTransaction;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Path("/runtime")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -166,10 +158,10 @@ public class RuntimeResource {
 		}
 		
 		try {
-			runtime.createProcess(key, definition, name);
+			Process process = runtime.createProcess(key, definition, name);
 			runtime.startProcess(key, mparams);
 			URI newly = DiffusionUriBuilder.getRestUriBuilder().path(RuntimeResource.class).path("processes").path(key).build();
-			return Response.created(newly).build();
+			return Response.created(newly).entity(ProcessRepresentation.fromProcess(process)).build();
 		} catch (SecurityException | IllegalStateException e) {
 			throw new RuntimeServiceException(e);
 		}
@@ -255,16 +247,19 @@ public class RuntimeResource {
 	@Consumes( MediaType.APPLICATION_JSON)
 	public Response performTaskAction(@PathParam("id") String id, ProcessTaskActionRepresentation action) throws RuntimeServiceException {
 		LOGGER.log(Level.INFO, "POST /runtime/tasks");
-		if ( action.getAction().equals("claim") ) {
-			runtime.claimTask(id);
-		} else if ( action.getAction().equals("complete") ) {
-			Map<String, Object> params = new HashMap<String, Object> ();
-			for ( ProcessVariableRepresentation variable : action.getVariables() ) {
-				params.put(variable.getName(), variable.getTypedValue());
-			}
-			runtime.completeTask(id, params);
-		} else {
-			return Response.status(Status.BAD_REQUEST).entity("action unavailable").build();
+		switch (action.getAction()) {
+			case "claim":
+				runtime.claimTask(id);
+				break;
+			case "complete":
+				Map<String, Object> params = new HashMap<String, Object>();
+				for (ProcessVariableRepresentation variable : action.getVariables()) {
+					params.put(variable.getName(), variable.getTypedValue());
+				}
+				runtime.completeTask(id, params);
+				break;
+			default:
+				return Response.status(Status.BAD_REQUEST).entity("action unavailable").build();
 		}
 		return Response.ok().build();
 	}

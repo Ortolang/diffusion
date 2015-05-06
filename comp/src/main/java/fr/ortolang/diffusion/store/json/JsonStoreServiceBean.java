@@ -43,14 +43,13 @@ import fr.ortolang.diffusion.store.DeleteFileVisitor;
 @PermitAll
 public class JsonStoreServiceBean implements JsonStoreService {
 
-	public static final String DEFAULT_JSON_HOME = "/json-store";
-
 	private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceBean.class.getName());
-
+	public static final String DEFAULT_JSON_HOME = "/json-store";
+	
 	private Path base;
 	private OServer server;
 	private OPartitionedDatabasePool pool;
-
+	
 	public JsonStoreServiceBean() {
 		LOGGER.log(Level.FINE, "Instanciating json store service");
 		this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_JSON_HOME);
@@ -69,23 +68,18 @@ public class JsonStoreServiceBean implements JsonStoreService {
 				Files.walkFileTree(base, new DeleteFileVisitor());
 			}
 			Files.createDirectories(base);
-
 			server = OServerMain.create();
 			server.startup(this.getClass().getResourceAsStream("/orientdb-config.xml"));
 			server.activate();
-
 			ODatabaseDocumentTx db = new ODatabaseDocumentTx("plocal:" + this.base.toFile().getAbsolutePath());
-
 			try {
 				if (!db.exists()) {
 					db.create();
-
 					db.command(new OCommandSQL("CREATE INDEX ortolangKey unique string")).execute();
 				}
 			} finally {
 				db.close();
 			}
-
 			pool = new OPartitionedDatabasePool("plocal:" + this.base.toFile().getAbsolutePath(), "admin", "admin");
 
 		} catch (Exception e) {
@@ -101,35 +95,6 @@ public class JsonStoreServiceBean implements JsonStoreService {
 			server.shutdown();
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to shutdown json store", e);
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException {
-		LOGGER.log(Level.INFO, "Indexing object: " + object.getKey());
-		insert(object);
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void reindex(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException {
-		LOGGER.log(Level.FINE, "Reindexing object: " + object.getKey());
-		insert(object);
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void remove(String key) throws JsonStoreServiceException {
-		LOGGER.log(Level.FINE, "Removing key: " + key);
-		ODatabaseDocumentTx db = pool.acquire();
-		try {
-			ODocument oldDoc = getDocumentByKey(key);
-			oldDoc.delete();
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to remove json ", e);
-		} finally {
-			db.close();
 		}
 	}
 
@@ -152,26 +117,16 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		return jsonResults;
 	}
 
-	protected ODocument getDocumentByKey(String key) {
-		ODatabaseDocumentTx db = pool.acquire();
-		try {
-			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
-			OIdentifiable doc = (OIdentifiable) ortolangKeyIdx.get(key);
-			if (doc != null)
-				return (ODocument) doc.getRecord();
-
-		} finally {
-			db.close();
-		}
-		return null;
-	}
-	
-	private void insert(OrtolangIndexableObject<IndexableJsonContent> object) {
+	@Override
+	@Lock(LockType.WRITE)
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException {
+		LOGGER.log(Level.FINE, "Indexing object with key: " + object.getKey());
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
 			ODocument oldDoc = getDocumentByKey(object.getKey());
-			if ( oldDoc != null ) {
+			if (oldDoc != null) {
 				oldDoc.delete();
 			}
 			db.save(doc);
@@ -179,10 +134,41 @@ public class JsonStoreServiceBean implements JsonStoreService {
 			ortolangKeyIdx.remove(object.getKey());
 			ortolangKeyIdx.put(object.getKey(), doc);
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to index json ", e);
+			LOGGER.log(Level.SEVERE, "unable to index object ", e);
 		} finally {
 			db.close();
 		}
+	}
+
+	@Lock(LockType.WRITE)
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void remove(String key) throws JsonStoreServiceException {
+		LOGGER.log(Level.FINE, "Removing object with key: " + key);
+		ODatabaseDocumentTx db = pool.acquire();
+		try {
+			ODocument oldDoc = getDocumentByKey(key);
+			if (oldDoc != null) {
+				oldDoc.delete();
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to remove object ", e);
+		} finally {
+			db.close();
+		}
+	}
+
+	protected ODocument getDocumentByKey(String key) {
+		ODatabaseDocumentTx db = pool.acquire();
+		try {
+			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
+			OIdentifiable doc = (OIdentifiable) ortolangKeyIdx.get(key);
+			if (doc != null) {
+				return (ODocument) doc.getRecord();
+			}
+		} finally {
+			db.close();
+		}
+		return null;
 	}
 
 }

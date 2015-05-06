@@ -1,8 +1,10 @@
 [{
     "key": "helloAgain",
     "type": "checkbox",
-    "label": "Do we need to say hello again ?",
-    "default": false
+    "templateOptions": {
+      "label": "Do we need to say hello again ?",
+      "default": false
+    }
 },
 {
    "key": "reason",

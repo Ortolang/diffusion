@@ -36,20 +36,15 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.Workspace;
+import org.jgroups.util.UUID;
+import org.junit.Test;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jgroups.util.UUID;
-import org.junit.Test;
-
-import fr.ortolang.diffusion.core.entity.SnapshotElement;
-import fr.ortolang.diffusion.core.entity.Workspace;
+import static org.junit.Assert.*;
 
 public class WorkspaceUnitTest {
 
@@ -106,6 +101,42 @@ public class WorkspaceUnitTest {
 		assertTrue(w.containsSnapshot(se2));
 		assertNotNull(w.findSnapshotByName(sn2));
 		assertEquals(se2, w.findSnapshotByName(sn2));
+		
+	}
+	
+	@Test
+	public void testFindSnapshotByNameOrKey() {
+		Workspace w = new Workspace();
+		w.setId("wid");
+		w.setHead("head");
+		w.setKey("wkey");
+		w.setMembers("members");
+		w.setChanged(true);
+		w.setType("test");
+		
+		String sk1 = UUID.randomUUID().toString();
+		String sn1 = "Version 1";
+		SnapshotElement se1 = new SnapshotElement(sn1, sk1);
+		w.addSnapshot(se1);
+		LOGGER.log(Level.INFO, "Workspace Snapshot Content : \r\n" + w.getSnapshotsContent());
+				
+		String sk2 = UUID.randomUUID().toString();
+		String sn2 = "Version 2";
+		SnapshotElement se2 = new SnapshotElement(sn2, sk2);
+		w.addSnapshot(se2);
+		LOGGER.log(Level.INFO, "Workspace Snapshot Content : \r\n" + w.getSnapshotsContent());
+		
+		String sk3 = UUID.randomUUID().toString();
+		String sn3 = "Version 3";
+		SnapshotElement se3 = new SnapshotElement(sn3, sk3);
+		w.addSnapshot(se3);
+		LOGGER.log(Level.INFO, "Workspace Snapshot Content : \r\n" + w.getSnapshotsContent());
+		
+		SnapshotElement f1 = w.findSnapshotByName("Version 3");
+		assertTrue(f1.equals(se3));
+		
+		SnapshotElement f2 = w.findSnapshotByKey(sk2);
+		assertTrue(f2.equals(se2));
 		
 	}
 

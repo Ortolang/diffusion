@@ -36,25 +36,8 @@ package fr.ortolang.diffusion.search;
  * #L%
  */
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.EJB;
-import javax.ejb.Local;
-import javax.ejb.SessionContext;
-import javax.ejb.Stateless;
-
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.OrtolangSearchResult;
+import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -69,6 +52,18 @@ import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.store.triple.TripleStoreService;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Local(SearchService.class)
 @Stateless(name = SearchService.SERVICE_NAME)
@@ -194,7 +189,8 @@ public class SearchServiceBean implements SearchService {
 				} catch ( AccessDeniedException e ) {
 				}
 			}
-			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "index-search"), "query=" + query);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("query", query);
+			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "index-search"), argumentsBuilder.build());
 			return checkedResults;
 		} catch ( IndexStoreServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | NotificationServiceException e ) {
 			throw new SearchServiceException("unable to perform index search", e);
@@ -207,7 +203,8 @@ public class SearchServiceBean implements SearchService {
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			String result = tripleStore.query("SPARQL", query, languageResult);
-			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "triple-search"), "query=" + query);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("query", query);
+			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "triple-search"), argumentsBuilder.build());
 			return result;
 		} catch ( TripleStoreServiceException | NotificationServiceException e ) {
 			throw new SearchServiceException("unable to perform semantic search", e);
@@ -220,7 +217,8 @@ public class SearchServiceBean implements SearchService {
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> result = jsonStore.search(query);
-			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "json-search"), "query=" + query);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("query", query);
+			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "json-search"), argumentsBuilder.build());
 			return result;
 		} catch ( JsonStoreServiceException | NotificationServiceException e ) {
 			throw new SearchServiceException("unable to perform json search", e);

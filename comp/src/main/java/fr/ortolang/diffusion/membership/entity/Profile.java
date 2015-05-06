@@ -36,24 +36,17 @@ package fr.ortolang.diffusion.membership.entity;
  * #L%
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.membership.MembershipService;
+import org.hibernate.annotations.Type;
+
+import javax.persistence.*;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Transient;
-import javax.persistence.Version;
-
-import org.hibernate.annotations.Type;
-
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.membership.MembershipService;
 
 @Entity
 @SuppressWarnings("serial")
@@ -76,7 +69,7 @@ public class Profile extends OrtolangObject {
 	private String groupsList;
 	private String friends;
 	private ProfileStatus status;
-	@ElementCollection
+	@ElementCollection(fetch = FetchType.LAZY)
 	private Set<ProfileKey> keys;
 	@ElementCollection(fetch = FetchType.LAZY)
 	private Map<String, ProfileData> infos;
@@ -148,6 +141,7 @@ public class Profile extends OrtolangObject {
 		this.status = status;
 	}
 
+	@JsonIgnore
 	public String getGroupsList() {
 		return groupsList;
 	}
@@ -182,6 +176,7 @@ public class Profile extends OrtolangObject {
 		keys.remove(new ProfileKey(pubkey, pubkey.split(" ")[1]));
 	}
 
+	@JsonIgnore
 	public Set<String> getPublicKeys() {
 		Set<String> pkeys = new HashSet<String> ();
 		for ( ProfileKey pkey : keys ) {
@@ -196,6 +191,7 @@ public class Profile extends OrtolangObject {
 		}
 	}
 	
+	@JsonIgnore
 	public Set<ProfileKey> getKeys() {
 		return keys;
 	}
@@ -220,6 +216,7 @@ public class Profile extends OrtolangObject {
 		}
 	}
 
+	@JsonIgnore
 	public String[] getGroups() {
 		if (groupsList.equals("")) {
 			return new String[0];
@@ -227,6 +224,7 @@ public class Profile extends OrtolangObject {
 		return groupsList.split(",");
 	}
 		
+	@JsonIgnore
 	public Map<String, ProfileData> getInfos() {
 		return infos;
 	}

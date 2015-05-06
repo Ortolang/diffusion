@@ -37,11 +37,13 @@ package fr.ortolang.diffusion.notification;
  */
 
 
+import java.util.Map;
+
 public interface NotificationService {
 	
 	public static final String SERVICE_NAME = "notification";
     
-    public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, String args) throws NotificationServiceException;
-    
+    public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType) throws NotificationServiceException;
 
+    public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, Map<String, Object> args) throws NotificationServiceException;
 }

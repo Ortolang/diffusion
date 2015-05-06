@@ -61,6 +61,8 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.OrtolangObjectVersion;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.indexing.IndexingService;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -93,6 +95,8 @@ public class BrowserServiceBean implements BrowserService {
 	private MembershipService membership;
 	@EJB
 	private AuthorisationService authorisation;
+	@EJB
+	private IndexingService indexing;
 
 	public BrowserServiceBean() {
 	}
@@ -138,7 +142,7 @@ public class BrowserServiceBean implements BrowserService {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "lookup"), "");
+			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "lookup"));
 			return identifier;
 		} catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | NotificationServiceException e) {
 			throw new BrowserServiceException("unable to lookup identifier for key [" + key + "]", e);
@@ -209,7 +213,8 @@ public class BrowserServiceBean implements BrowserService {
 			}
 			authorisation.checkPermission(key, subjects, "update");
 			registry.setProperty(key, name, value);
-			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "set-property"), "name=" + name + ", value=" + value);
+			OrtolangEvent.ArgumentsBuilder argumentsBuilder = new OrtolangEvent.ArgumentsBuilder(2).addArgument("name", name).addArgument("value", value);
+			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "set-property"), argumentsBuilder.build());
 		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException | NotificationServiceException e) {
 			throw new BrowserServiceException("error during getting property", e);
 		}
@@ -285,6 +290,19 @@ public class BrowserServiceBean implements BrowserService {
 			parent = version.getParent();
 		}
 		return versions;
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void index(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "indexing key [" + key + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			authorisation.checkSuperUser(caller);
+			indexing.index(key);
+		} catch (IndexingServiceException | AuthorisationServiceException e) {
+			throw new BrowserServiceException("unable to index key " + key, e);
+		}
 	}
 
 	@Override

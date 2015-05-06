@@ -36,17 +36,20 @@ package fr.ortolang.diffusion.runtime;
  * #L%
  */
 
-import java.util.List;
-import java.util.Map;
-
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.runtime.entity.ProcessType;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import org.activiti.engine.task.IdentityLink;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public interface RuntimeService extends OrtolangService {
 
@@ -81,5 +84,6 @@ public interface RuntimeService extends OrtolangService {
 	public void claimTask(String id) throws RuntimeServiceException;
 
 	public void completeTask(String id, Map<String, Object> variables) throws RuntimeServiceException;
-	
+
+	void pushTaskEvent(String pid, Set<IdentityLink> candidates, RuntimeEngineEvent.Type type);
 }

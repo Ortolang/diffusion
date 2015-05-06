@@ -36,27 +36,7 @@ package fr.ortolang.diffusion.publication;
  * #L%
  */
 
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.EJB;
-import javax.ejb.Local;
-import javax.ejb.SessionContext;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
@@ -72,6 +52,15 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.*;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Local(PublicationService.class)
 @Stateless(name = PublicationService.SERVICE_NAME)
@@ -187,8 +176,8 @@ public class PublicationServiceBean implements PublicationService {
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
 				registry.update(key);
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
-				indexing.reindex(key);
-				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "publish"), "");
+				indexing.index(key);
+				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "publish"));
 			}
 		} catch (KeyLockedException | AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException | IndexingServiceException e) {
 			LOGGER.log(Level.SEVERE, "error during publication of key", e);
@@ -214,8 +203,8 @@ public class PublicationServiceBean implements PublicationService {
 				registry.setPublicationStatus(key, OrtolangObjectState.Status.REVIEW.value());
 				registry.update(key);
 				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
-				indexing.reindex(key);
-				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "review"), "");
+				indexing.index(key);
+				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "review"));
 			}
 		} catch (KeyLockedException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IndexingServiceException e) {
 			ctx.setRollbackOnly();

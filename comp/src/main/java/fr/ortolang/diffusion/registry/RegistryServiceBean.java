@@ -51,6 +51,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
@@ -519,6 +520,19 @@ public class RegistryServiceBean implements RegistryService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private RegistryEntry findEntryByKey(String key) throws KeyNotFoundException {
 		RegistryEntry entry = em.find(RegistryEntry.class, key);
+		if ( entry == null ) {
+			throw new KeyNotFoundException("no entry found for key [" + key + "]");
+		}
+		if ( entry.isDeleted() ) {
+			throw new KeyNotFoundException("entry for key [" + key + "] has been deleted");
+		}
+		
+		return entry;
+	}
+	
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	private RegistryEntry findEntryByKey(String key, LockModeType lock) throws KeyNotFoundException {
+		RegistryEntry entry = em.find(RegistryEntry.class, key, lock);
 		if ( entry == null ) {
 			throw new KeyNotFoundException("no entry found for key [" + key + "]");
 		}

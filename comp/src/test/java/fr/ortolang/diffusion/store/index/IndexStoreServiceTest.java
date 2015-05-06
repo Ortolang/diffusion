@@ -191,7 +191,7 @@ public class IndexStoreServiceTest {
 			assertEquals(0, results.size());
 			
 			object.getContent().addContentPart("avec des bidules en plus !");
-			service.reindex(object);
+			service.index(object);
 			
 			results = service.search("bidules");
 			dumpResults(results);

@@ -53,11 +53,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.ejb.EJB;
-import javax.json.Json;
-import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -101,7 +100,6 @@ import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.search.SearchServiceException;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
-import fr.ortolang.diffusion.security.authentication.TicketHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
@@ -303,7 +301,6 @@ public class ObjectResource {
 		LOGGER.log(Level.INFO, "list keys contains in object " + key);
 
 		List<String> keys = this.listKeys(key, new ArrayList<String>());
-
 		GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String>();
 		for (String keyE : keys) {
 			representation.addEntry(keyE);
@@ -374,26 +371,6 @@ public class ObjectResource {
 	}
 
 	@GET
-	@Path("/{key}/download/ticket")
-	public Response downloadTicket(@PathParam(value = "key") String key, @QueryParam(value = "hash") String hash, @Context HttpServletResponse response) throws AccessDeniedException,
-			OrtolangException, KeyNotFoundException, BrowserServiceException {
-		LOGGER.log(Level.INFO, "GET /objects/" + key + "/download/ticket");
-		if (hash != null) {
-			browser.lookup(key);
-		} else {
-			OrtolangObject object = browser.findObject(key);
-			if (object instanceof DataObject) {
-				hash = ((DataObject) object).getStream();
-			} else if (object instanceof MetadataObject) {
-				hash = ((MetadataObject) object).getStream();
-			}
-		}
-		String ticket = TicketHelper.makeTicket(membership.getProfileKeyForConnectedIdentifier(), hash);
-		JsonObject jsonObject = Json.createObjectBuilder().add("t", ticket).build();
-		return Response.ok(jsonObject).build();
-	}
-
-	@GET
 	@Path("/{key}/preview")
 	public void preview(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException,
 			DataNotFoundException, IOException, CoreServiceException {
@@ -418,6 +395,14 @@ public class ObjectResource {
         LOGGER.log(Level.INFO, "GET /objects/" + key + "/size");
         OrtolangObjectSize ortolangObjectSize = core.getSize(key);
         return Response.ok(ortolangObjectSize).build();
+    }
+    
+    @POST
+    @Path("/{key}/index")
+    public Response reindex(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, KeyNotFoundException, BrowserServiceException {
+        LOGGER.log(Level.INFO, "POST /objects/" + key + "/index");
+        browser.index(key);
+        return Response.ok().build();
     }
 
 	@GET

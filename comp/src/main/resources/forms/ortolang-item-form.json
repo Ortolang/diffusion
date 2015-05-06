@@ -1,280 +1,221 @@
 [
-	{
-    	"type": "vertical-tab",
-    	"tabs": [
-	      	{
-		        "title": "Descriptif",
-		        "items": [
-					{
-						"key":"type",
-						"title":"Catégorie",
-						"type":"select",
-						"titleMap":
-						[
-							{ "value": "Corpus", "name": "Corpus" },
-				      		{ "value": "Outil", "name": "Outil" },
-				      		{ "value": "Lexique", "name": "Lexique"},
-				      		{ "value": "Application", "name": "Application"}
-						]
-					},
-					{
-						"key":"title",
-						"title":"Nom de la ressource"
-					},
-					{
-						"key":"description",
-						"title":"Description détaillée",
-						"type":"textarea"
-					},
-					{
-						"key":"extent",
-						"title":"Contenu",
-						"type":"textarea"
-					},
-					{
-      					"type": "help",
-      					"helpvalue": "Description technique de la ressource. Préciser le nombre de fichier et le format."
-    				},
-					{
-						"key":"datasize",
-						"title":"Taille des données à télécharger"
-					},
-					{
-      					"type": "help",
-      					"helpvalue": "Permet de prévenir l'utilisateur de la taille des données avant le téléchargement."
-    				},
-					{
-      					"type": "help",
-      					"helpvalue": "<span class=\"text-danger fa fa-exclamation-circle\"></span> Si le champs est vide, le bouton de téléchargement n'est pas visible."
-    				},
-    				{
-    					"key":"keywords",
-    					"title":"Mots clés"
-    				},
-    				{
-    					"key":"website",
-    					"title":"Site web",
-    					"placeholder": "http://..."
-    				},
-					{
-      					"type": "help",
-      					"helpvalue": "Adresse du site web contenant des informations sur la ressource."
-    				},
-    				{
-    					"key":"spatial",
-    					"title":"Lieu de création des données",
-    					"type": "autocomplete"
-    				},
-    				{
-    					"key":"temporal",
-    					"title":"Période de création des données"
-    				},
-    				{
-    					"key":"image",
-    					"title":"Illustration"
-    				},
-    				{
-    					"key":"preview",
-    					"title":"Aperçu"
-    				}
-				]
-			},
-			{
-				"title": "Droits",
-				"items": [
-					{
-						"key":"statusOfUse",
-						"type":"select",
-						"title": "Droit d'utilisation",
-						"titleMap":
-						[
-							{ "value": "Libre", "name": "Libre" },
-				      		{ "value": "Libre sans utilisation commerciale", "name": "Libre sans utilisation commerciale" },
-				      		{ "value": "Négociation nécessaire", "name": "Négociation nécessaire"}
-						]
-					},
-					{
-						"key": "conditionsOfUse",
-						"title": "Description des conditions d'utilisation"
-					},
-					{
-						"key": "license",
-						"title": "Licence à accepter"
-					},
-					{
-						"key": "licenseWebsite",
-						"title": "Site web de la licence"
-					},
-					{
-						"key":"derogation",
-						"type":"select",
-						"title": "Code du patrimoine attaché à cette ressource",
-						"titleMap":
-						[
-							{ "value": "AR038", "name": "AR038" }
-						]
-					}
-				]
-			},
-			{
-				"title": "Contributions",
-				"items": [
-					"producer",
-					"researcher",
-					"manager",
-					"developer",
-					"author",
-					"compiler"
-				]
-			},
-			{
-				"title": "Corpus",
-				"items": [
-					{
-						"key": "primaryLanguage",
-						"title": "Langue principale du corpus"
-					},
-		        	{
-						"key":"linguisticDataType",
-						"type":"select",
-						"title": "Type linguistique",
-						"titleMap":
-						[
-							{ "value": "primary_text", "name": "primary_text" },
-							{ "value": "lexicon", "name": "lexicon" },
-							{ "value": "language_description", "name": "language_description" }
-						]
-					},
-		        	{
-		        		"key": "discourseType",
-		        		"type": "array",
-		        		"title": "Type discursif"
-		        	},
-		        	{
-		        		"key":"linguisticSubject",
-		        		"type": "array",
-		        		"title": "Domaines linguistiques"
-		        	},
-		        	{
-						"key":"typeOfCorpus",
-						"type":"select",
-						"title": "Type de corpus",
-						"titleMap":
-						[
-							{ "value": "Ecrit", "name": "Ecrit" },
-							{ "value": "Oral", "name": "Oral" },
-							{ "value": "Multimodal", "name": "Multimodal" }
-						]
-					},
-		        	{
-		        		"key":"annotationLevel",
-		        		"type": "array",
-		        		"title": "Niveau de l'annotation"
-		        	},
-		        	{
-		        		"key":"textFormat",
-		        		"type": "array",
-		        		"title": "Format du texte"
-		        	},
-		        	{
-		        		"key":"textEncoding",
-						"type":"array",
-		        		"title": "Format d'encodage du texte"
-		        	},
-		        	{
-		        		"key":"transcriptionType",
-		        		"type": "array",
-		        		"title": "Type de transcription"
-		        	},
-		        	{
-		        		"key":"transcriptionFormat",
-		        		"type": "array",
-		        		"title": "Format de la transcription"
-		        	},
-		        	{
-		        		"key":"typeOfSpeech",
-		        		"type": "array",
-		        		"title": "Type de parole"
-		        	},
-		        	{
-		        		"key":"transcriptionEncoding",
-		        		"type": "array",
-		        		"title": "Format d'encodage de la transcription"
-		        	},
-		        	{
-		        		"key":"signal",
-		        		"type": "array",
-		        		"title": "Signal"
-		        	}
-				],
-				"condition": "type=='Corpus'"
-			},
-			{
-				"title": "Lexique",
-				"items": [
-					{
-						"key": "language",
-						"title": "Langues concernés par cet objet"
-					}
-				]
-			},
-			{
-				"title": "Outil",
-				"items": [
-					{
-		        		"key": "programmingLanguage",
-		        		"title": "Languages de programmation"
-		        	},
-		        	{
-		        		"key": "operatingSystem",
-		        		"title": "Systèmes d'exploitation compatibles"
-		        	},
-		        	{
-						"key":"toolSupport",
-						"type":"select",
-						"title": "Type de support",
-						"titleMap":
-						[
-							{ "value": "Software", "name": "Software" },
-							{ "value": "Hardware", "name": "Hardware" }
-						]
-					},
-					{
-		        		"key": "toolLanguage",
-		        		"title": "Langues traitées par l'outil"
-		        	},
-					{
-		        		"key": "toolFunctionality",
-		        		"title": "Fonctionnalités"
-		        	},
-					{
-		        		"key": "toolInputData",
-		        		"title": "Données en entrée"
-		        	},
-					{
-		        		"key": "toolId",
-		        		"title": "Identifiant de l'outil en ligne"
-		        	},
-					{
-		        		"key": "toolUrl",
-		        		"title": "Adresse de l'outil en ligne"
-		        	},
-					{
-		        		"key": "toolHelp",
-		        		"title": "Aide",
-		        		"type": "textarea"
-		        	}
-				]
-			},
-			{
-				"title": "Application",
-				"items": [
-					{
-		        		"key": "applicationUrl",
-						"title": "Url de l'application"
-		        	}
-				]
-			}						
+  {
+	"type": "vertical-tab",
+	"tabs": [
+	  {
+		"title": "Descriptif",
+		"items": [
+		  {
+			"key":"type",
+			"title":"Catégorie",
+			"type":"select",
+			"titleMap":
+			[
+			  { "value": "Corpus", "name": "Corpus" },
+			  { "value": "Outil", "name": "Outil" },
+			  { "value": "Lexique", "name": "Lexique"},
+			  { "value": "Application", "name": "Application"}
+			]
+		  },
+		  {
+			"key":"title",
+			"title":"Nom de la ressource"
+		  },
+		  {
+			"key":"description",
+			"title":"Description détaillée",
+			"type":"textarea"
+		  },
+		  {
+			"key":"extent",
+			"title":"Contenu",
+			"type":"textarea"
+		  },
+		  {
+			"type": "help",
+			"helpvalue": "Description technique de la ressource. Préciser le nombre de fichier et le format."
+		  },
+		  {
+			"key":"datasize",
+			"title":"Taille des données à télécharger"
+		  },
+		  {
+			"type": "help",
+			"helpvalue": "Permet de prévenir l'utilisateur de la taille des données avant le téléchargement."
+		  },
+		  {
+			"type": "help",
+			"helpvalue": "<span class=\"text-danger fa fa-exclamation-circle\"></span> Si le champs est vide, le bouton de téléchargement n'est pas visible."
+		  },
+		  {
+			"key":"keywords",
+			"title":"Mots clés"
+		  },
+		  {
+			"key":"website",
+			"title":"Site web",
+			"placeholder": "http://..."
+		  },
+		  {
+			"type": "help",
+			"helpvalue": "Adresse du site web contenant des informations sur la ressource."
+		  },
+		  {
+			"key":"spatial",
+			"title":"Lieu de création des données",
+			"type": "autocomplete"
+		  },
+		  {
+			"key":"temporal",
+			"title":"Période de création des données"
+		  },
+		  {
+			"key":"image",
+			"title":"Illustration"
+		  },
+		  {
+			"key":"preview",
+			"title":"Aperçu"
+		  }
 		]
-	}
+	  },
+	  {
+		"title": "Droits",
+		"items": [
+		  {
+			"key":"statusOfUse",
+			"type":"select",
+			"title": "Droit d'utilisation",
+			"titleMap":
+			[
+			  { "value": "Libre", "name": "Libre" },
+			  { "value": "Libre sans utilisation commerciale", "name": "Libre sans utilisation commerciale" },
+			  { "value": "Négociation nécessaire", "name": "Négociation nécessaire"}
+			]
+		  },
+		  {
+			"key": "conditionsOfUse",
+			"title": "Description des conditions d'utilisation"
+		  },
+		  {
+			"key": "license",
+			"title": "Licence à accepter"
+		  },
+		  {
+			"key": "licenseWebsite",
+			"title": "Site web de la licence"
+		  },
+		  {
+			"key":"derogation",
+			"type":"select",
+			"title": "Code du patrimoine attaché à cette ressource",
+			"titleMap":
+			[
+			  { "value": "AR038", "name": "AR038" }
+			]
+		  }
+		]
+	  },
+	  {
+		"title": "Contributions",
+		"items": [
+		  "producer",
+		  "researcher",
+		  "manager",
+		  "developer",
+		  "author",
+		  "compiler"
+		]
+	  },
+	  {
+		"title": "Corpus",
+		"items": [
+		  {
+			"key": "primaryLanguage",
+			"title": "Langue principale du corpus"
+		  },
+		  {
+			"key":"linguisticDataType",
+			"type":"select",
+			"title": "Type linguistique",
+			"titleMap":
+			[
+			  { "value": "primary_text", "name": "primary_text" },
+			  { "value": "lexicon", "name": "lexicon" },
+			  { "value": "language_description", "name": "language_description" }
+			]
+		  },
+		  {
+			"key": "discourseType",
+			"type": "array",
+			"title": "Type discursif"
+		  },
+		  {
+			"key":"linguisticSubject",
+			"type": "array",
+			"title": "Domaines linguistiques"
+		  }
+		],
+		"condition": "type=='Corpus'"
+	  },
+	  {
+		"title": "Lexique",
+		"items": [
+		  {
+			"key": "language",
+			"title": "Langues concernés par cet objet"
+		  }
+		]
+	  },
+	  {
+		"title": "Outil",
+		"items": [
+		  {
+			"key": "programmingLanguage",
+			"title": "Languages de programmation"
+		  },
+		  {
+			"key": "opearatingSystem",
+			"title": "Systèmes d'exploitation compatibles"
+		  },
+		  {
+			"key":"toolSupport",
+			"type":"select",
+			"title": "Type de support",
+			"titleMap":
+			[
+			  { "value": "Software", "name": "Software" },
+			  { "value": "Hardware", "name": "Hardware" }
+			]
+		  },
+		  {
+			"key": "toolLanguage",
+			"title": "Langues traitées par l'outil"
+		  },
+		  {
+			"key": "toolId",
+			"title": "Identifiant de l'outil en ligne"
+		  },
+		  {
+			"key": "toolUrl",
+			"title": "Adresse de l'outil en ligne"
+		  },
+		  {
+			"key": "toolHelp",
+			"title": "Aide",
+			"type": "textarea"
+		  }
+		]
+	  },
+	  {
+		"title": "Application",
+		"items": [
+		  {
+			"key": "applicationUrl",
+			"title": "Url de l'application"
+		  }
+		]
+	  }
+	]
+  }
 ]

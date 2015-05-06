@@ -36,47 +36,15 @@ package fr.ortolang.diffusion.membership;
  * #L%
  */
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.EJB;
-import javax.ejb.Local;
-import javax.ejb.SessionContext;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.membership.entity.Group;
-import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.membership.entity.ProfileData;
-import fr.ortolang.diffusion.membership.entity.ProfileDataType;
-import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
-import fr.ortolang.diffusion.membership.entity.ProfileStatus;
+import fr.ortolang.diffusion.membership.entity.*;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
-import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
-import fr.ortolang.diffusion.registry.KeyLockedException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryService;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.registry.*;
 import fr.ortolang.diffusion.security.authentication.AuthenticationService;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
@@ -87,6 +55,18 @@ import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
 import fr.ortolang.diffusion.store.triple.Triple;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 import fr.ortolang.diffusion.store.triple.URIHelper;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.*;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
 
 @Local(MembershipService.class)
 @Stateless(name = MembershipService.SERVICE_NAME)
@@ -231,7 +211,7 @@ public class MembershipServiceBean implements MembershipService {
 			friendsReadRules.put(friendGroupKey, Arrays.asList(new String[]{"read"}));
 			authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
 			
-			notification.throwEvent(key, key, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
+			notification.throwEvent(key, key, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"));
 			return profile;
 		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
@@ -274,7 +254,7 @@ public class MembershipServiceBean implements MembershipService {
 			friendsReadRules.put(friendGroupKey, Arrays.asList(new String[]{"read"}));
 			authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
 
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"), "");
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"));
 		} catch (KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			throw new ProfileAlreadyExistsException("a profile already exists for identifier " + identifier, e);
@@ -360,7 +340,7 @@ public class MembershipServiceBean implements MembershipService {
 			}
 			profile.setKey(key);
 
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read"), "");
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read"));
 			return profile;
 		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to read the profile with key [" + key + "]", e);
@@ -388,7 +368,7 @@ public class MembershipServiceBean implements MembershipService {
 				authorisation.checkOwnership(key, subjects);
 				visibilityLevel = ProfileDataVisibility.NOBODY;
 			} catch(AccessDeniedException e1) {
-				if(profile.getFriends()!=null) {
+				if(profile.getFriends()!= null) {
 					String friendsGroupKey = profile.getFriends();
 					OrtolangObjectIdentifier friendsObject = registry.lookup(friendsGroupKey);
 					checkObjectType(friendsObject, Group.OBJECT_TYPE);
@@ -420,7 +400,7 @@ public class MembershipServiceBean implements MembershipService {
 				}
 			}
 			
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "list-infos"), "");
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "list-infos"));
 			return visibleInfos;
 		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to listy profile infos for profile with key [" + key + "]", e);
@@ -449,8 +429,9 @@ public class MembershipServiceBean implements MembershipService {
 			}
 			profile.setInfo(name, info);
 			em.merge(profile);
-						
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "set-info"), "name=" + name);
+
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("name", name);
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "set-info"), argumentsBuilder.build());
 		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to set profile info for profile with key [" + key + "]", e);
 		}
@@ -477,7 +458,7 @@ public class MembershipServiceBean implements MembershipService {
 			em.merge(profile);
 
 			registry.update(key);
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update"), "");
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update"));
 			return profile;
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
@@ -504,7 +485,7 @@ public class MembershipServiceBean implements MembershipService {
 			em.merge(profile);
 			
 			registry.update(key);
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "delete"), "");
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "delete"));
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to delete object with key [" + key + "]", e);
@@ -531,7 +512,7 @@ public class MembershipServiceBean implements MembershipService {
 
 			registry.update(key);
 
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "add-key"), "");
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "add-key"));
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("error while trying to add public key to profile with key [" + key + "]");
@@ -558,7 +539,7 @@ public class MembershipServiceBean implements MembershipService {
 
 			registry.update(key);
 
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "remove-key"), "");
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "remove-key"));
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("error while trying to remove public key to profile with key [" + key + "]");
@@ -588,7 +569,7 @@ public class MembershipServiceBean implements MembershipService {
 			
 			authorisation.createPolicy(key, caller);
 
-			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "create"), "");
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "create"));
 		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | KeyNotFoundException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to create group with key [" + key + "]", e);
@@ -612,7 +593,7 @@ public class MembershipServiceBean implements MembershipService {
 			}
 			group.setKey(key);
 
-			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "read"), "");
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "read"));
 			return group;
 		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to read the group with key [" + key + "]", e);
@@ -640,7 +621,7 @@ public class MembershipServiceBean implements MembershipService {
 
 			registry.update(key);
 
-			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "update"), "");
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "update"));
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("error while trying to update the group with key [" + key + "]");
@@ -679,7 +660,7 @@ public class MembershipServiceBean implements MembershipService {
 			}
 			
 			registry.delete(key);
-			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "delete"), "");
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "delete"));
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to delete group with key [" + key + "]", e);
@@ -717,8 +698,8 @@ public class MembershipServiceBean implements MembershipService {
 			registry.update(key);
 			registry.update(member);
 
-			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "add-member"), "member="
-					+ member);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", member);
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "add-member"), argumentsBuilder.build());
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to add member in group with key [" + key + "]", e);
@@ -759,8 +740,8 @@ public class MembershipServiceBean implements MembershipService {
 			registry.update(key);
 			registry.update(member);
 
-			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "remove-member"), "member="
-					+ member);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", member);
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "remove-member"), argumentsBuilder.build());
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to remove member from group with key [" + key + "]", e);
@@ -797,7 +778,8 @@ public class MembershipServiceBean implements MembershipService {
 			registry.update(key);
 			registry.update(caller);
 
-			notification.throwEvent(caller, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "join"), "group=" + key);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("group", key);
+			notification.throwEvent(caller, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "join"), argumentsBuilder.build());
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to join group with key [" + key + "]", e);
@@ -837,8 +819,9 @@ public class MembershipServiceBean implements MembershipService {
 			registry.update(key);
 			registry.update(caller);
 
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("group", key);
 			notification
-					.throwEvent(caller, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "leave"), "group=" + key);
+					.throwEvent(caller, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "leave"), argumentsBuilder.build());
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to leave group with key [" + key + "]", e);
@@ -863,7 +846,7 @@ public class MembershipServiceBean implements MembershipService {
 			}
 			String[] members = group.getMembers();
 
-			notification.throwEvent(key, caller, Group.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "list-members"), "");
+			notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "list-members"));
 			return Arrays.asList(members);
 		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to list members in group with key [" + key + "]", e);
@@ -888,7 +871,7 @@ public class MembershipServiceBean implements MembershipService {
 			}
 			String[] groups = profile.getGroups();
 
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "list-groups"), "");
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "list-groups"));
 			return Arrays.asList(groups);
 		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to list groups of profile with key [" + key + "]", e);
@@ -919,8 +902,8 @@ public class MembershipServiceBean implements MembershipService {
 				isMember = true;
 			}
 
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, OrtolangEvent.buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "is-member"), "member="
-					+ member);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", member);
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "is-member"), argumentsBuilder.build());
 			return isMember;
 		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to check membership in group with key [" + key + "]", e);

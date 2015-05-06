@@ -41,6 +41,12 @@ public class JsonStoreDocumentBuilder {
 					doc.field(META_PROPERTY+"_"+entry.getKey(), new ODocument(MetadataObject.OBJECT_TYPE).fromJSON(entry.getValue()));
 				} catch (IOException e) {
 					LOGGER.log(Level.SEVERE, "unable to get object json content", e);
+				} finally {
+					try {
+						entry.getValue().close();
+					} catch (IOException e) {
+						LOGGER.log(Level.SEVERE, "unable to close the stream", e);
+					}
 				}
 			}
 		}

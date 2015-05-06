@@ -67,7 +67,6 @@ public class EventLoggerFormater {
 		builder.append(e.getThrowedBy());
 		builder.append(fieldSeparator);
 		builder.append(e.getArguments());
-		builder.append(fieldSeparator);
 		return builder.toString();
 	}
 

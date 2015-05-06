@@ -128,6 +128,12 @@ public class ImportContentTask extends RuntimeEngineTask {
 			partial = true;
 			LOGGER.log(Level.SEVERE, "- unexpected error during reading operations script", e);
 		}
+		try {
+			LOGGER.log(Level.FINE, "commiting active user transaction.");
+			getUserTransaction().commit();
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
+		}
 		
 		try {
 			bag.close();

@@ -1,17 +1,5 @@
 package fr.ortolang.diffusion.runtime.engine.task;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-import org.activiti.engine.delegate.DelegateExecution;
-
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
@@ -23,6 +11,18 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
+import org.activiti.engine.delegate.DelegateExecution;
+
+import javax.transaction.Status;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class ImportZipTask extends RuntimeEngineTask {
 	private static final Logger LOGGER = Logger.getLogger(ImportZipTask.class.getName());
@@ -49,13 +49,26 @@ public class ImportZipTask extends RuntimeEngineTask {
 		if (execution.hasVariable(ZIP_OVERWRITE_PARAM_NAME)) {
 			overwrite = Boolean.parseBoolean(execution.getVariable(ZIP_OVERWRITE_PARAM_NAME, String.class));
 		}
+		
+		try {
+			if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
+				LOGGER.log(Level.FINE, "starting new user transaction.");
+				getUserTransaction().begin();
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
+		}
+		
 		LOGGER.log(Level.FINE, "- starting import zip");
 		try {
 			Set<String> cache = new HashSet<String>();
 			ZipFile zip = new ZipFile(zippath);
 			boolean partial = false;
+			boolean needcommit;
+			long tscommit = System.currentTimeMillis();
 			for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements();) {
 				ZipEntry entry = e.nextElement();
+				needcommit = false;
 				try {
 					if (!entry.isDirectory()) {
 						PathBuilder opath = rootPath.clone().path(entry.getName());
@@ -104,6 +117,20 @@ public class ImportZipTask extends RuntimeEngineTask {
 					}
 				} catch (InvalidPathException | CoreServiceException | AccessDeniedException e2) {
 					partial = true;
+				}
+				if ( System.currentTimeMillis() - tscommit > 300000 ) {
+					LOGGER.log(Level.FINE, "current transaction exceed 5min, need commit.");
+					needcommit = true;
+				}
+				try {
+					if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
+						LOGGER.log(Level.FINE, "commiting active user transaction.");
+						getUserTransaction().commit();
+						tscommit = System.currentTimeMillis();
+						getUserTransaction().begin();
+					}
+				} catch (Exception e2) {
+					LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e2);
 				}
 			}
 			zip.close();

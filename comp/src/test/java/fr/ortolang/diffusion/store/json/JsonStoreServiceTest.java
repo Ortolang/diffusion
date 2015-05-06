@@ -110,7 +110,7 @@ public class JsonStoreServiceTest {
 				fail(e.getMessage());
 			}
 			
-			service.reindex(object);
+			service.index(object);
 			System.out.println(" =========");
 			
 			String querySampleV2 = "SELECT FROM type WHERE meta_format1.title = 'Dede2'";
