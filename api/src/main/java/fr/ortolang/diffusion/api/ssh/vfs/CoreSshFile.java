@@ -59,6 +59,7 @@ import org.apache.sshd.common.file.SshFile;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
+import fr.ortolang.diffusion.core.AliasNotFoundException;
 import fr.ortolang.diffusion.core.CollectionNotEmptyException;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
@@ -143,9 +144,9 @@ public class CoreSshFile implements SshFile {
 		} catch (AccessDeniedException | BrowserServiceException | LoginException | OrtolangException | CoreServiceException | KeyNotFoundException e) {
 			LOGGER.log(Level.SEVERE, "error while trying to load element for path " + path, e);
 			throw new OrtolangException("unable to load core object associated with path: " + path.build(), e);
-		} catch (InvalidPathException e) {
+		} catch (AliasNotFoundException | InvalidPathException e) {
 			exists = false;
-		}
+		} 
 	}
 
 	@Override
