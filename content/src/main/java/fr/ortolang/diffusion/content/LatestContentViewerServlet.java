@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.browser.BrowserService;
+import fr.ortolang.diffusion.core.AliasNotFoundException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
@@ -80,7 +81,7 @@ private static final Logger LOGGER = Logger.getLogger(LatestContentViewerServlet
 			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
 		} catch (DataNotFoundException | OrtolangException | CoreServiceException e) {
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-		} catch (KeyNotFoundException e) {
+		} catch (AliasNotFoundException | KeyNotFoundException e) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
 		} catch (AccessDeniedException e) {
 			request.getSession().setAttribute(AuthRedirectServlet.UNAUTHORIZED_PATH_ATTRIBUTE_NAME, request.getAttribute(BASE_URL_ATTRIBUTE_NAME));
