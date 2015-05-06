@@ -40,7 +40,12 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
@@ -170,6 +175,33 @@ public class OrtolangClient {
 			JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
 			response.close();
 			return jsonObject;
+		} else {
+			response.close();
+			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+		}
+	}
+	
+	public Path downloadObject(String key) throws OrtolangClientException, OrtolangClientAccountException {
+		updateAuthorization();
+		WebTarget target = base.path("objects").path(key).path("download");
+		Response response = injectAuthHeader(target.request()).accept(MediaType.WILDCARD_TYPE).get();
+		if (response.getStatus() == Status.OK.getStatusCode()) {
+			try {
+				Path temp = Files.createTempFile("ortolang-client", ".tmp");
+				try (InputStream is = response.readEntity(InputStream.class); OutputStream os = Files.newOutputStream(temp)) {
+					byte[] buffer = new byte[1024];
+					int nbreads = 0;
+					while ( (nbreads = is.read(buffer)) > -1 ) {
+						os.write(buffer, 0, nbreads);
+					}
+					return temp;
+				} finally {
+					response.close();
+				}
+			} catch (IOException e) {
+				LOGGER.log(Level.SEVERE, "unable to download file for key: " + key, e);
+				throw new OrtolangClientException("unable to download file for key: " + key, e);
+			} 
 		} else {
 			response.close();
 			throw new OrtolangClientException("unexpected response code: " + response.getStatus());

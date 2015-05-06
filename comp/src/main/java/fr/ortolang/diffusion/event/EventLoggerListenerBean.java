@@ -48,6 +48,7 @@ import javax.jms.MessageListener;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.event.entity.Event;
 
 @MessageDriven(name = "EventLoggerTopicMDB", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
@@ -61,7 +62,7 @@ public class EventLoggerListenerBean implements MessageListener {
 	static {
 		LOGGER.setLevel(Level.FINEST);
 		try {
-			String pattern = "%h/OrtolangEvents%g.log";
+			String pattern = OrtolangConfig.getInstance().getHome() + "/OrtolangEvents%g.log";
 			FileHandler handler = new FileHandler(pattern, 10000000, 5, true);
 			LOGGER.addHandler(handler);
 		} catch (Exception e) {

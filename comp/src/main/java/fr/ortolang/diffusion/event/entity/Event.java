@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.event.entity;
 import fr.ortolang.diffusion.OrtolangEvent;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 
@@ -54,6 +55,7 @@ public class Event extends OrtolangEvent implements Serializable {
 	private Map<String, Object> arguments;
 
 	public Event() {
+		arguments = Collections.emptyMap();
 	}
 
 	public Long getId() {
