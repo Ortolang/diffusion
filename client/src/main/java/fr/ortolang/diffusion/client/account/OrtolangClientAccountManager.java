@@ -176,12 +176,15 @@ public class OrtolangClientAccountManager {
 		
 		WebTarget target = client.target(authurl).path("realms").path(authrealm).path("protocol/openid-connect/refresh");
 		Form form = new Form().param("refresh_token", account.getRefreshToken());
+		LOGGER.log(Level.INFO, account.getRefreshToken());
 		Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON_TYPE);
 		if ( appsecret != null && appsecret.length() > 0 ) {
 			String authz = Base64.encodeBytes((appname + ":" + appsecret).getBytes());
 			invocationBuilder.header("Authorization", authz);
+			LOGGER.log(Level.INFO, authz);
 		} else {
 			form.param("client_id", appname);
+			LOGGER.log(Level.INFO, appname);
 		}
 		Response response = invocationBuilder.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
 		if (response.getStatus() == Status.OK.getStatusCode()) {
