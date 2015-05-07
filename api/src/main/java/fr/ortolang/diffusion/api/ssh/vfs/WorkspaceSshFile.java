@@ -54,6 +54,7 @@ import org.apache.sshd.common.file.SshFile;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
+import fr.ortolang.diffusion.core.AliasNotFoundException;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.entity.Collection;
@@ -97,6 +98,9 @@ public class WorkspaceSshFile implements SshFile {
 		} catch (BrowserServiceException | LoginException | OrtolangException | CoreServiceException e) {
 			LOGGER.log(Level.SEVERE, "error while trying to load workspace for path " + path, e);
 			throw new OrtolangException("error while trying to load workspace for path " + path, e);
+		} catch (AliasNotFoundException e) {
+			LOGGER.log(Level.WARNING, "unable to read workspace for path " + path + ", alias not found");
+			exists = false;
 		} catch (KeyNotFoundException e) {
 			LOGGER.log(Level.WARNING, "unable to read workspace for path " + path + ", key not found");
 			exists = false;

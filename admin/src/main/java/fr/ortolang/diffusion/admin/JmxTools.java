@@ -1,5 +1,8 @@
 package fr.ortolang.diffusion.admin;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.management.AttributeNotFoundException;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
@@ -7,22 +10,19 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 /**
  * 
  * @author Vlad Ilyushchenko
  */
 public class JmxTools {
 
-    private static Log logger = LogFactory.getLog(JmxTools.class);
+    private static Logger LOGGER = Logger.getLogger(JmxTools.class.getName());
 
     public static Object getAttribute(MBeanServer mBeanServer, ObjectName oName, String attrName) throws Exception {
         try {
             return mBeanServer.getAttribute(oName, attrName);
         } catch (AttributeNotFoundException e) {
-            logger.error(oName + " does not have \""+attrName+"\" attribute");
+            LOGGER.log(Level.WARNING, oName + " does not have \""+attrName+"\" attribute");
             return null;
         }
     }

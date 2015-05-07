@@ -183,25 +183,24 @@ public class OrtolangClient {
 	
 	public Path downloadObject(String key) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
-		LOGGER.log(Level.INFO, "authorization : " + authorization);
-		WebTarget target = base.path("/objects/" + key + "/download");
-		target.register(OrtolangClientFileBodyReader.class);
-		LOGGER.log(Level.INFO, "target : " + target.getUri().toString());
-		Response response = injectAuthHeader(target.request()).get();
+		WebTarget target = base.path("objects").path(key).path("download");
+		Response response = injectAuthHeader(target.request()).accept(MediaType.WILDCARD_TYPE).get();
 		if (response.getStatus() == Status.OK.getStatusCode()) {
 			try {
-				Path file = Files.createTempFile("download", ".download");
-				try (InputStream is = (InputStream) response.getEntity(); OutputStream os = Files.newOutputStream(file)) {
+				Path temp = Files.createTempFile("ortolang-client", ".tmp");
+				try (InputStream is = response.readEntity(InputStream.class); OutputStream os = Files.newOutputStream(temp)) {
 					byte[] buffer = new byte[1024];
 					int nbreads = 0;
-					while ( (nbreads = is.read(buffer)) != -1 ) {
+					while ( (nbreads = is.read(buffer)) > -1 ) {
 						os.write(buffer, 0, nbreads);
 					}
+					return temp;
+				} finally {
+					response.close();
 				}
-				return file;
-			} catch ( IOException e ) { 
-				LOGGER.log(Level.SEVERE, "unable to download file for key " + key, e);
-				throw new OrtolangClientException("unable to download file for key " + key, e);
+			} catch (IOException e) {
+				LOGGER.log(Level.SEVERE, "unable to download file for key: " + key, e);
+				throw new OrtolangClientException("unable to download file for key: " + key, e);
 			} 
 		} else {
 			response.close();
