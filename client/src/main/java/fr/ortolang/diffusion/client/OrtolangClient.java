@@ -329,6 +329,36 @@ public class OrtolangClient {
 		}
 		response.close();
 	}
+	
+	public String createRemoteProcess(String toolId, String name, Map<String, String> params, Map<String, File> attachments) throws OrtolangClientException, OrtolangClientAccountException {
+		updateAuthorization();
+		WebTarget target = base.path("/runtime/remote-processes");
+		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
+		mdo.addFormData("tool-id", new ByteArrayInputStream(toolId.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+		mdo.addFormData("tool-name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+		mdo.addFormData("name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+		for (Entry<String, String> param : params.entrySet()) {
+			mdo.addFormData(param.getKey(), new ByteArrayInputStream(param.getValue().getBytes()), MediaType.TEXT_PLAIN_TYPE);
+		}
+		try {
+			for (Entry<String, File> attachment : attachments.entrySet()) {
+				mdo.addFormData(attachment.getKey(), new FileInputStream(attachment.getValue()), MediaType.APPLICATION_OCTET_STREAM_TYPE);
+			}
+		} catch (FileNotFoundException e) {
+			throw new OrtolangClientException("unable to read file " + e.getMessage(), e);
+		}
+		GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
+		};
+		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
+		if (response.getStatus() != Status.CREATED.getStatusCode()) {
+			response.close();
+			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+		} else {
+			String path = response.getLocation().getPath();
+			response.close();
+			return path.substring(path.lastIndexOf("/") + 1);
+		}
+	}
 
 	public String createProcess(String type, String name, Map<String, String> params, Map<String, File> attachments) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
