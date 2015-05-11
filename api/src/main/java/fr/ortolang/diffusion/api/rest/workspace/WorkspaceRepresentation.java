@@ -50,6 +50,7 @@ public class WorkspaceRepresentation {
 
 	@XmlAttribute
 	private String key;
+	private String alias;
 	private String name = "No Name Provided";
 	private String type = "default";
 	private int clock;
@@ -68,6 +69,14 @@ public class WorkspaceRepresentation {
 
 	public void setKey(String key) {
 		this.key = key;
+	}
+
+	public String getAlias() {
+		return alias;
+	}
+
+	public void setAlias(String alias) {
+		this.alias = alias;
 	}
 
 	public String getName() {
@@ -129,6 +138,7 @@ public class WorkspaceRepresentation {
 	public static WorkspaceRepresentation fromWorkspace(Workspace workspace) {
 		WorkspaceRepresentation representation = new WorkspaceRepresentation();
 		representation.setKey(workspace.getKey());
+		representation.setAlias(workspace.getAlias());
 		representation.setName(workspace.getName());
 		representation.setType(workspace.getType());
 		representation.setClock(workspace.getClock());

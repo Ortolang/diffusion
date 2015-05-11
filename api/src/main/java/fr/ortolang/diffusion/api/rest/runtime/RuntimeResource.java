@@ -48,8 +48,10 @@ import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.runtime.entity.ProcessType;
+import fr.ortolang.diffusion.runtime.entity.RemoteProcess;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
+
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
@@ -61,6 +63,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -264,4 +267,77 @@ public class RuntimeResource {
 		return Response.ok().build();
 	}
 	
+
+	@GET
+	@Path("/remote-processes")
+	public Response listRemoteJobs(@QueryParam("state") String state) throws RuntimeServiceException, AccessDeniedException {
+		LOGGER.log(Level.INFO, "GET /runtime/remote-processes");
+		List<RemoteProcess> instances;
+		if ( state != null ) {
+			instances = runtime.listRemoteProcesses(State.valueOf(state));
+		} else {
+			instances = runtime.listRemoteProcesses(null);
+		}
+		
+		GenericCollectionRepresentation<RemoteProcessRepresentation> representation = new GenericCollectionRepresentation<RemoteProcessRepresentation>();
+		for (RemoteProcess instance : instances) {
+			RemoteProcessRepresentation rep = RemoteProcessRepresentation.fromRemoteProcess(instance);
+			representation.addEntry(rep);
+		}
+		representation.setOffset(0);
+		representation.setSize(instances.size());
+		representation.setLimit(instances.size());
+		return Response.ok(representation).build();
+	}
+
+	
+	@POST
+	@Path("/remote-processes")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public Response createRemoteProcess(MultivaluedMap<String, String> params) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException {
+		LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /runtime/remote-processes");
+		String key = UUID.randomUUID().toString();
+		
+		String tool = null;
+		if ( !params.containsKey("tool-id") ) {
+			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'tool-id' is mandatory").build();
+		} else {
+			tool = params.remove("tool-id").get(0);
+		}
+		String name = null;
+		if ( !params.containsKey("tool-name") ) {
+			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'tool-name' is mandatory").build();
+		} else {
+			name = params.remove("tool-name").get(0);
+		}
+		
+		Map<String, Object> mparams = new HashMap<String, Object> ();
+		for ( Entry<String, List<String>> entry : params.entrySet() ) {
+			if ( entry.getValue().size() > 0 ) {
+				StringBuilder values = new StringBuilder();
+				for ( String value : entry.getValue() ) {
+					values.append(value).append(",");
+				}
+				mparams.put(entry.getKey(), values.substring(0, values.length()-1));
+			}
+		}
+		
+		try {
+			RemoteProcess remoteProcess = runtime.createRemoteProcess(key, tool, name);
+			URI newly = DiffusionUriBuilder.getRestUriBuilder().path(RuntimeResource.class).path("remote-processes").path(key).build();
+			return Response.created(newly).entity(RemoteProcessRepresentation.fromRemoteProcess(remoteProcess)).build();
+		} catch (SecurityException | IllegalStateException e) {
+			throw new RuntimeServiceException(e);
+		}
+	}
+	
+
+	@GET
+	@Path("/remote-processes/{key}")
+	public Response readRemoteProcesses(@PathParam("key") String key) throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
+		LOGGER.log(Level.INFO, "GET /runtime/remote-processes/" + key);
+		RemoteProcess remoteProcess = runtime.readRemoteProcess(key);
+		RemoteProcessRepresentation representation = RemoteProcessRepresentation.fromRemoteProcess(remoteProcess);
+		return Response.ok(representation).build();
+	}
 }

@@ -48,11 +48,13 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineException;
 import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
+import fr.ortolang.diffusion.runtime.entity.RemoteProcess;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.runtime.entity.ProcessType;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+
 import org.activiti.engine.task.IdentityLink;
 import org.jboss.ejb3.annotation.SecurityDomain;
 import org.jgroups.util.UUID;
@@ -65,6 +67,7 @@ import javax.enterprise.concurrent.ManagedScheduledExecutorService;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -404,6 +407,95 @@ public class RuntimeServiceBean implements RuntimeService {
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while completing task", e);
 			throw new RuntimeServiceException("unable to complete task with id: " + id, e);
+		}
+	}
+		
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public RemoteProcess createRemoteProcess(String key, String toolId, String toolName) throws RuntimeServiceException, AccessDeniedException {
+		LOGGER.log(Level.INFO, "Creating new remote process for tool: " + toolName);
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
+			String id = UUID.randomUUID().toString();
+			RemoteProcess remoteProcess = new RemoteProcess();
+			remoteProcess.setId(id);
+			remoteProcess.setInitier(caller);
+			remoteProcess.setKey(key);
+			remoteProcess.setToolName(toolName);
+			remoteProcess.setToolId(toolId);
+			remoteProcess.setState(State.PENDING);
+			remoteProcess.appendLog("## REMOTE PROCESS FOR TOOL " + toolName + " CREATED BY " + caller + " ON " + new Date());
+			em.persist(remoteProcess);
+			
+			registry.register(key, new OrtolangObjectIdentifier(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, id), caller);
+			authorisation.createPolicy(key, caller);
+
+			notification.throwEvent(key, caller, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "create"));
+			return remoteProcess;
+		} catch (RegistryServiceException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException e) {
+			ctx.setRollbackOnly();
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while creating remote process", e);
+			throw new RuntimeServiceException("unable to create remote process ", e);
+		}
+	}
+	
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<RemoteProcess> listRemoteProcesses(State state) throws RuntimeServiceException, AccessDeniedException {
+		LOGGER.log(Level.INFO, "Listing " + ((state != null)?state:"all") + " remote processes");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			
+			TypedQuery<RemoteProcess> query;
+			if ( state != null ) {
+				query = em.createNamedQuery("findRemoteProcessByIniterAndState", RemoteProcess.class).setParameter("state", state).setParameter("initier", caller);
+			} else {
+				query = em.createNamedQuery("findRemoteProcessByInitier", RemoteProcess.class).setParameter("initier", caller);
+			}
+			
+			List<RemoteProcess> remoteProcesses = query.getResultList();
+			List<RemoteProcess> rRemoteProcesses = new ArrayList<RemoteProcess>();
+			for (RemoteProcess remoteProcess : remoteProcesses) {
+				try {
+					String ikey = registry.lookup(remoteProcess.getObjectIdentifier());
+					remoteProcess.setKey(ikey);
+					rRemoteProcesses.add(remoteProcess);
+				} catch ( IdentifierNotRegisteredException e ) {
+					LOGGER.log(Level.WARNING, "unregistered remote process found in storage for id: " + remoteProcess.getId());
+				}
+			}
+			return rRemoteProcesses;
+			
+		} catch ( RegistryServiceException e ) {
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while listing remote processes", e);
+			throw new RuntimeServiceException("unable to list remote processes", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public RemoteProcess readRemoteProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException {
+		LOGGER.log(Level.INFO, "Reading remote process with key: " + key);
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkPermission(key, subjects, "read");
+
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, RemoteProcess.OBJECT_TYPE);
+			RemoteProcess instance = em.find(RemoteProcess.class, identifier.getId());
+			if ( instance == null )  {
+				throw new RuntimeServiceException("unable to find a remote process with id: " + identifier.getId());
+			}
+			instance.setKey(key);
+
+			notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "read"));
+			return instance;
+		} catch (MembershipServiceException | NotificationServiceException | AuthorisationServiceException | RegistryServiceException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while reading remote process", e);
+			throw new RuntimeServiceException("unable to read remote process", e);
 		}
 	}
 	
