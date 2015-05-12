@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.runtime;
 
 import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -412,8 +413,8 @@ public class RuntimeServiceBean implements RuntimeService {
 		
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public RemoteProcess createRemoteProcess(String key, String toolId, String toolName) throws RuntimeServiceException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "Creating new remote process for tool: " + toolName);
+	public RemoteProcess createRemoteProcess(String key, String toolId, String toolName, String toolKey) throws RuntimeServiceException, AccessDeniedException {
+		LOGGER.log(Level.INFO, "Creating new remote process for tool " + toolName + " with key : " + toolKey);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			
@@ -423,7 +424,8 @@ public class RuntimeServiceBean implements RuntimeService {
 			remoteProcess.setInitier(caller);
 			remoteProcess.setKey(key);
 			remoteProcess.setToolName(toolName);
-			remoteProcess.setToolId(toolId);
+			remoteProcess.setToolKey(toolKey);
+			remoteProcess.setToolJobId(toolId);
 			remoteProcess.setState(State.PENDING);
 			remoteProcess.appendLog("## REMOTE PROCESS FOR TOOL " + toolName + " CREATED BY " + caller + " ON " + new Date());
 			em.persist(remoteProcess);
@@ -491,11 +493,38 @@ public class RuntimeServiceBean implements RuntimeService {
 			}
 			instance.setKey(key);
 
-			notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "read"));
+			notification.throwEvent(key, caller, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "read"));
 			return instance;
 		} catch (MembershipServiceException | NotificationServiceException | AuthorisationServiceException | RegistryServiceException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while reading remote process", e);
 			throw new RuntimeServiceException("unable to read remote process", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void updateRemoteProcessState(String key, State state) throws RuntimeServiceException {
+		LOGGER.log(Level.INFO, "Updating state of remote process with key: " + key);
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, RemoteProcess.OBJECT_TYPE);
+			RemoteProcess remoteProcess = em.find(RemoteProcess.class, identifier.getId());
+			if ( remoteProcess == null )  {
+				throw new RuntimeServiceException("unable to find a remote process with id: " + identifier.getId());
+			}
+			
+			remoteProcess.setState(state);
+			remoteProcess.appendLog("## REMOTE PROCESS STATE CHANGED TO " + state + " ON " + new Date());
+			em.merge(remoteProcess);
+			
+			registry.update(key);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("state", state);
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "update-state"), argumentsBuilder.build());
+		
+		} catch (Exception e) {
+			ctx.setRollbackOnly();
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while updating remote process state", e);
+			throw new RuntimeServiceException("unable to update remote process state", e);
 		}
 	}
 	

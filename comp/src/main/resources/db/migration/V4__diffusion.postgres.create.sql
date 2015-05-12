@@ -154,7 +154,8 @@
         toolName varchar(255),
         progress int4 not null,
         state int4,
-        toolId varchar(255),
+        toolJobId varchar(255),
+        toolKey varchar(255),
         version int8 not null,
         primary key (id)
     );

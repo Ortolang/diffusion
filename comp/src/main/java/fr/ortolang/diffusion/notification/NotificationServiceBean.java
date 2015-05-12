@@ -98,6 +98,7 @@ public class NotificationServiceBean implements NotificationService {
 				message.setStringProperty(OrtolangEvent.ARGUMENTS, Base64.encodeBase64String(baos.toByteArray()));
 			}
 			context.createProducer().send(notificationTopic, message);
+			
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "unable to throw event", e);
 			throw new NotificationServiceException("unable to throw event", e);

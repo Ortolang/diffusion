@@ -89,9 +89,11 @@ public interface RuntimeService extends OrtolangService {
 
 	void pushTaskEvent(String pid, Set<IdentityLink> candidates, RuntimeEngineEvent.Type type);
 
-	public RemoteProcess createRemoteProcess(String key, String tool, String name) throws RuntimeServiceException, AccessDeniedException;
+	public RemoteProcess createRemoteProcess(String key, String tool, String name, String toolKey) throws RuntimeServiceException, AccessDeniedException;
 
 	public List<RemoteProcess> listRemoteProcesses(State state) throws RuntimeServiceException, AccessDeniedException;
 
 	public RemoteProcess readRemoteProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
+
+	public void updateRemoteProcessState(String pid, State state) throws RuntimeServiceException;
 }
