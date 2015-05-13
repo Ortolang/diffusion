@@ -528,6 +528,58 @@ public class RuntimeServiceBean implements RuntimeService {
 		}
 	}
 	
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void appendRemoteProcessLog(String key, String log) throws RuntimeServiceException {
+		LOGGER.log(Level.INFO, "Appending log to remote process with key: " + key);
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, RemoteProcess.OBJECT_TYPE);
+			RemoteProcess remoteProcess = em.find(RemoteProcess.class, identifier.getId());
+			if ( remoteProcess == null )  {
+				throw new RuntimeServiceException("unable to find a remote process with id: " + identifier.getId());
+			}
+			
+			remoteProcess.appendLog(log);
+			em.merge(remoteProcess);
+			
+			registry.update(key);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("message", log);
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "log"), argumentsBuilder.build());
+		} catch (Exception e) {
+			ctx.setRollbackOnly();
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while appending log to process", e);
+			throw new RuntimeServiceException("unable to append process log", e);
+		}
+	}
+
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void updateRemoteProcessActivity(String key, String name) throws RuntimeServiceException {
+		LOGGER.log(Level.INFO, "Updating activity of remote process with key: " + key);
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, RemoteProcess.OBJECT_TYPE);
+			RemoteProcess remoteProcess = em.find(RemoteProcess.class, identifier.getId());
+			if ( remoteProcess == null )  {
+				throw new RuntimeServiceException("unable to find a remote process with id: " + identifier.getId());
+			}
+			
+			remoteProcess.setActivity(name);
+			em.merge(remoteProcess);
+			
+			registry.update(key);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("activity", name);
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "update-activity"), argumentsBuilder.build());
+		} catch (Exception e) {
+			ctx.setRollbackOnly();
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while updating remote process activity", e);
+			throw new RuntimeServiceException("unable to update remote process activity", e);
+		}
+	}
+	
 	@Override
 	public String getServiceName() {
 		return RuntimeService.SERVICE_NAME;

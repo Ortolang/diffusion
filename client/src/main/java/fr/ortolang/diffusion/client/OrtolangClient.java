@@ -352,10 +352,19 @@ public class OrtolangClient {
 	}
 
 
-	public void updateRemoteProcess(String pid, String state) throws OrtolangClientException, OrtolangClientAccountException {
+	public void updateRemoteProcess(String pid, String state, String log, String activity) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/runtime/remote-processes/").path(pid);
-		Form form = new Form().param("status", state);
+		Form form = new Form();
+		if(state != null){
+			form.param("status", state);
+		}
+		if(log != null){
+			form.param("log", log);
+		}
+		if(activity != null){
+			form.param("activity", activity);
+		}
 		
 		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
 		if (response.getStatus() != Status.OK.getStatusCode()) {
