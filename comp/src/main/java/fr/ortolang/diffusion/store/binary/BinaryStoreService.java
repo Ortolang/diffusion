@@ -121,6 +121,19 @@ public interface BinaryStoreService {
 	public String type(String hash) throws BinaryStoreServiceException, DataNotFoundException;
 	
 	/**
+	 * Retrieve the data mime type associated with this identifier and a filename for better resolution.<br/>
+	 * 
+	 * @param hash
+	 *            The hash of the data
+	 * @param filename
+	 *            The filename corresponding to that hash
+	 * @return a String representing the mime type
+	 * @throws DataNotFoundException
+	 *             if the hash does not exists in the storage
+	 */
+	public String type(String hash, String filename) throws BinaryStoreServiceException, DataNotFoundException;
+	
+	/**
 	 * Extract the plain text part of the data associated with this identifier.<br/>
 	 * 
 	 * @param hash

@@ -200,6 +200,22 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public String type(String identifier, String filename) throws BinaryStoreServiceException, DataNotFoundException {
+		Path path = getPathForIdentifier(identifier);
+		if (!Files.exists(path)) {
+			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
+		}
+		try (InputStream is = Files.newInputStream(path)) {
+			Tika tika = new Tika();
+			String type = tika.detect(is, filename); 
+			return type;
+		} catch (Exception e) {
+			throw new BinaryStoreServiceException(e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String extract(String identifier) throws BinaryStoreServiceException, DataNotFoundException {
 		Path path = getPathForIdentifier(identifier);
 		if (!Files.exists(path)) {

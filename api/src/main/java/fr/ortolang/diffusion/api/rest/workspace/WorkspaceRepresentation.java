@@ -50,6 +50,8 @@ public class WorkspaceRepresentation {
 
 	@XmlAttribute
 	private String key;
+	private String author;
+	private String owner;
 	private String alias;
 	private String name = "No Name Provided";
 	private String type = "default";
@@ -93,6 +95,22 @@ public class WorkspaceRepresentation {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+
+	public String getAuthor() {
+		return author;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
+	}
+
+	public String getOwner() {
+		return owner;
+	}
+
+	public void setOwner(String owner) {
+		this.owner = owner;
 	}
 
 	public int getClock() {

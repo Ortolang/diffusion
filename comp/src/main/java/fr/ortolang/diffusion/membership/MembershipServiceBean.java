@@ -91,7 +91,6 @@ public class MembershipServiceBean implements MembershipService {
 	private AuthorisationService authorisation;
 	@PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;
-	@SuppressWarnings("SpringJavaAutowiringInspection")
 	@Resource
 	private SessionContext ctx;
 	
@@ -253,6 +252,7 @@ public class MembershipServiceBean implements MembershipService {
 			Map<String, List<String>> friendsReadRules = new HashMap<String, List<String>>();
 			friendsReadRules.put(friendGroupKey, Arrays.asList(new String[]{"read"}));
 			authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
+			authorisation.updatePolicyOwner(friendGroupKey, key);
 
 			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"));
 		} catch (KeyAlreadyExistsException e) {

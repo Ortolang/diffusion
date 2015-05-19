@@ -1237,7 +1237,7 @@ public class CoreServiceBean implements CoreService {
 			object.setDescription(description);
 			if (hash != null && hash.length() > 0) {
 				object.setSize(binarystore.size(hash));
-				object.setMimeType(binarystore.type(hash));
+				object.setMimeType(binarystore.type(hash, npath.part()));
 				object.setStream(hash);
 			} else {
 				object.setSize(0);
@@ -1367,7 +1367,7 @@ public class CoreServiceBean implements CoreService {
 				object.setKey(element.getKey());
 				if (hash != null && hash.length() > 0) {
 					object.setSize(binarystore.size(hash));
-					object.setMimeType(binarystore.type(hash));
+					object.setMimeType(binarystore.type(hash, object.getName()));
 					object.setStream(hash);
 				} else {
 					object.setSize(0);
@@ -2423,6 +2423,7 @@ public class CoreServiceBean implements CoreService {
 			meta.setKey(mdelement.getKey());
 
 			registry.delete(mdelement.getKey());
+			indexing.remove(mdelement.getKey());
 			registry.update(element.getKey());
 			indexing.index(element.getKey());
 

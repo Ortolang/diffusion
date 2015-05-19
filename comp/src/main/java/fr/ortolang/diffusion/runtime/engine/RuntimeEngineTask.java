@@ -49,11 +49,13 @@ import org.activiti.engine.delegate.JavaDelegate;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.publication.PublicationService;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.runtime.RuntimeService;
+import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 
 public abstract class RuntimeEngineTask implements JavaDelegate {
@@ -62,7 +64,10 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	
 	public static final String ZIP_PATH_PARAM_NAME = "zippath";
 	public static final String ZIP_ROOT_PARAM_NAME = "ziproot";
-	public static final String ZIP_OVERWRITE_PARAM_NAME = "ziproot";
+	public static final String ZIP_OVERWRITE_PARAM_NAME = "zipoverwrites";
+	
+	public static final String PROFILES_PATH_PARAM_NAME = "profilespath";
+	public static final String PROFILES_OVERWRITE_PARAM_NAME = "profilesoverwrites";
 	
 	public static final String BAG_PATH_PARAM_NAME = "bagpath";
 	public static final String BAG_VERSIONS_PARAM_NAME = "bagversions";
@@ -90,8 +95,10 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	protected CoreService core;
 	protected BrowserService browser;
 	protected RegistryService registry;
+	protected SecurityService security;
 	protected PublicationService publication;
 	protected NotificationService notification;
+	protected IndexingService indexing;
 
 	public MembershipService getMembershipService() throws RuntimeEngineTaskException {
 		try {
@@ -158,6 +165,17 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 			throw new RuntimeEngineTaskException(e);
 		}
 	}
+	
+	public SecurityService getSecurityService() throws RuntimeEngineTaskException {
+		try {
+			if (security == null) {
+				security = (SecurityService) OrtolangServiceLocator.findService(SecurityService.SERVICE_NAME);
+			}
+			return security;
+		} catch (Exception e) {
+			throw new RuntimeEngineTaskException(e);
+		}
+	}
 
 	public PublicationService getPublicationService() throws RuntimeEngineTaskException {
 		try {
@@ -176,6 +194,17 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 				notification = (NotificationService) OrtolangServiceLocator.lookup(NotificationService.SERVICE_NAME);
 			}
 			return notification;
+		} catch (Exception e) {
+			throw new RuntimeEngineTaskException(e);
+		}
+	}
+	
+	public IndexingService getIndexingService() throws RuntimeEngineTaskException {
+		try {
+			if (indexing == null) {
+				indexing = (IndexingService) OrtolangServiceLocator.lookup(IndexingService.SERVICE_NAME);
+			}
+			return indexing;
 		} catch (Exception e) {
 			throw new RuntimeEngineTaskException(e);
 		}

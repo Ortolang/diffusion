@@ -189,6 +189,8 @@ public class WorkspaceResource {
 		if(builder == null){
 			Workspace workspace = core.readWorkspace(wskey);
 			WorkspaceRepresentation representation = WorkspaceRepresentation.fromWorkspace(workspace);
+			OrtolangObjectInfos infos = browser.getInfos(wskey);
+			representation.setAuthor(infos.getAuthor());
 			builder = Response.ok(representation);
     		builder.lastModified(lmd);
         }

@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.transaction.Status;
 
 import org.activiti.engine.delegate.DelegateExecution;
@@ -22,6 +23,7 @@ import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
@@ -74,7 +76,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 					switch (operation[0]) {
 						case "create-workspace":
 							wskey = UUID.randomUUID().toString();
-							createWorkspace(operation[1], operation[2], operation[3]);
+							createWorkspace(operation[1], operation[2], operation[3], operation[4], operation[5]);
 							execution.setVariable(WORKSPACE_KEY_PARAM_NAME, wskey);
 							needcommit = true;
 							break;
@@ -131,6 +133,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		try {
 			LOGGER.log(Level.FINE, "commiting active user transaction.");
 			getUserTransaction().commit();
+			getUserTransaction().begin();
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
 		}
@@ -177,9 +180,19 @@ public class ImportContentTask extends RuntimeEngineTask {
 		collectionCreationCache = new HashSet<String>();
 	}
 	
-	private void createWorkspace(String alias, String name, String type) throws RuntimeEngineTaskException {
+	private void createWorkspace(String alias, String name, String type, String owner, String members) throws RuntimeEngineTaskException {
 		try {
-			getCoreService().createWorkspace(wskey, alias, name, type);
+			Workspace ws = getCoreService().createWorkspace(wskey, alias, name, type);
+			if ( members != null && members.length() > 0 ) {
+				for ( String member : members.split(",") ) {
+					getMembershipService().addMemberInGroup(ws.getMembers(), member);
+				}
+			}
+			if ( owner != null && owner.length() > 0 ) {
+				getSecurityService().changeOwner(ws.getMembers(), owner);
+				getSecurityService().changeOwner(wskey, owner);
+				getMembershipService().removeMemberFromGroup(ws.getMembers(), MembershipService.SUPERUSER_IDENTIFIER);
+			}
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to create workspace", e);
 			throw new RuntimeEngineTaskException("unable to create workspace", e);

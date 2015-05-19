@@ -214,10 +214,14 @@ public class BootstrapServiceBean implements BootstrapService {
 				InputStream is3 = getClass().getClassLoader().getResourceAsStream("forms/import-zip-process-start-form.json");
 				String jsonDefinition3 = IOUtils.toString(is3);
 				form.createForm("import-zip-process-start-form", "Import Zip Process Start Form", jsonDefinition3);
+				LOGGER.log(Level.FINE, "import form : review-snapshot-form");
+				InputStream is4 = getClass().getClassLoader().getResourceAsStream("forms/review-snapshot-form.json");
+				String jsonDefinition4 = IOUtils.toString(is4);
+				form.createForm("review-snashot-form", "Review Snapshot Form", jsonDefinition4);
 				LOGGER.log(Level.FINE, "import form : test-process-confirm-form");
-				InputStream isFormItem = getClass().getClassLoader().getResourceAsStream("forms/ortolang-item-form.json");
-				String jsonDefinitionItem = IOUtils.toString(isFormItem);
-				form.createForm("ortolang-item-form", "Schema Form for an ORTOLANG item", jsonDefinitionItem);
+				InputStream is5 = getClass().getClassLoader().getResourceAsStream("forms/ortolang-item-form.json");
+				String jsonDefinition5 = IOUtils.toString(is5);
+				form.createForm("ortolang-item-form", "Schema Form for an ORTOLANG item", jsonDefinition5);
 				
 				LOGGER.log(Level.FINE, "import metadataformat schemas");
 				InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");

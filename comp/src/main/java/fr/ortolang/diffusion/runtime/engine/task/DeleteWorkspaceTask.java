@@ -11,6 +11,7 @@ import org.activiti.engine.delegate.DelegateExecution;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
@@ -50,9 +51,10 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 				for ( String key : keys ) {
 					LOGGER.log(Level.FINE, "Deleting content key: " + key);
 					getRegistryService().delete(key, true);
+					getIndexingService().remove(key);
 				}
 				getCoreService().deleteWorkspace(wskey);
-			} catch (KeyNotFoundException | AccessDeniedException | CoreServiceException | RegistryServiceException | KeyLockedException e) {
+			} catch (KeyNotFoundException | IndexingServiceException | AccessDeniedException | CoreServiceException | RegistryServiceException | KeyLockedException e) {
 				getUserTransaction().rollback();
 				throw new RuntimeEngineTaskException("unexpected error during delete workspace task", e);
 			} 

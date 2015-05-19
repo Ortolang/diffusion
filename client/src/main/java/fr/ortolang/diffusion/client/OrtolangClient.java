@@ -149,7 +149,7 @@ public class OrtolangClient {
 			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
 		}
 	}
-
+	
 	public boolean isObjectExists(String key) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("objects").path(key);

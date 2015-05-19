@@ -16,16 +16,17 @@ import fr.ortolang.diffusion.client.OrtolangClient;
 import fr.ortolang.diffusion.client.OrtolangClientException;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
 
-public class ImportWorkspaceCommand extends Command {
+public class ImportProfilesCommand extends Command {
 
 	private Options options = new Options();
 
-	public ImportWorkspaceCommand() {
+	public ImportProfilesCommand() {
 		options.addOption("h", "help", false, "show help.");
 		options.addOption("U", "username", true, "username for login");
 		options.addOption("P", "password", true, "password for login");
-		options.addOption("f", "file", true, "bag file to import");
-		options.addOption("upload", false, "bag file is local and need upload");
+		options.addOption("f", "file", true, "profiles file to import");
+		options.addOption("upload", false, "profiles file is local and need upload");
+		options.addOption("overwrite", false, "overwrite existing files");
 	}
 
 	@Override
@@ -56,13 +57,17 @@ public class ImportWorkspaceCommand extends Command {
 			
 			if ( cmd.hasOption("f") ) {
 				if (cmd.hasOption("upload")) {
-					files.put("bagpath", new File(cmd.getOptionValue("f")));
+					files.put("profilespath", new File(cmd.getOptionValue("f")));
 				} else {
-					params.put("bagpath", cmd.getOptionValue("f"));
+					params.put("profilespath", cmd.getOptionValue("f"));
 				}
 			} else {
 				help();
 			}
+			
+			if ( cmd.hasOption("overwrite") ) {
+				params.put("profilesoverwrites", "true");
+			} 
 			
 			OrtolangClient client = OrtolangClient.getInstance();
 			if ( username.length() > 0 ) {
@@ -70,8 +75,8 @@ public class ImportWorkspaceCommand extends Command {
 				client.login(username);
 			}
 			System.out.println("Connected as user: " + client.connectedProfile());
-			String pkey = client.createProcess("import-workspace", "Import Bag '" + cmd.getOptionValue("f").substring(cmd.getOptionValue("f").lastIndexOf("/")+1) + "'", params, files);
-			System.out.println("Import-Workspace process created with key : " + pkey);
+			String pkey = client.createProcess("import-profiles", "Import Profiles", params, files);
+			System.out.println("Import-Profiles process created with key : " + pkey);
 			
 			client.logout();
 			client.close();
@@ -87,7 +92,7 @@ public class ImportWorkspaceCommand extends Command {
 
 	private void help() {
 		HelpFormatter formater = new HelpFormatter();
-		formater.printHelp("Import Workspace", options);
+		formater.printHelp("Import Profiles", options);
 		System.exit(0);
 	}
 
