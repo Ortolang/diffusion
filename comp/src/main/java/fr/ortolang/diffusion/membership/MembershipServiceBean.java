@@ -55,6 +55,7 @@ import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
 import fr.ortolang.diffusion.store.triple.Triple;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 import fr.ortolang.diffusion.store.triple.URIHelper;
+
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.Resource;
@@ -62,6 +63,7 @@ import javax.annotation.security.PermitAll;
 import javax.ejb.*;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -568,6 +570,9 @@ public class MembershipServiceBean implements MembershipService {
 			registry.register(key, group.getObjectIdentifier(), caller);
 			
 			authorisation.createPolicy(key, caller);
+			Map<String, List<String>> rules = new HashMap<String, List<String>>();
+			rules.put(key, Arrays.asList("read"));
+			authorisation.setPolicyRules(key, rules);
 
 			notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "create"));
 		} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | KeyNotFoundException e) {
