@@ -63,7 +63,8 @@ public class WorkspaceElementRepresentation {
 	private int clock;
 	private long size;
 	private String description;
-	private String preview;
+	private String largePreview;
+	private String smallPreview;
 	private String stream;
 	private String type;
 	private String mimeType;
@@ -198,12 +199,20 @@ public class WorkspaceElementRepresentation {
 		this.format = format;
 	}
 
-	public String getPreview() {
-		return preview;
+	public String getLargePreview() {
+		return largePreview;
 	}
 
-	public void setPreview(String preview) {
-		this.preview = preview;
+	public void setLargePreview(String largePreview) {
+		this.largePreview = largePreview;
+	}
+
+	public String getSmallPreview() {
+		return smallPreview;
+	}
+
+	public void setSmallPreview(String smallPreview) {
+		this.smallPreview = smallPreview;
 	}
 
 	public String getStream() {
@@ -267,7 +276,8 @@ public class WorkspaceElementRepresentation {
 		representation.setMimeType(dataobject.getMimeType());
 		representation.setStream(dataobject.getStream());
 		representation.setMetadatas(dataobject.getMetadatas());
-		representation.setPreview(dataobject.getPreview());
+		representation.setSmallPreview(dataobject.getSmallPreview());
+		representation.setLargePreview(dataobject.getLargePreview());
 		representation.setDescription(dataobject.getDescription());
 		return representation;
 	}

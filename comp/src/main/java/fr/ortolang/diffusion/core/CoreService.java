@@ -159,12 +159,14 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	public InputStream download(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException;
 	
-	public InputStream preview(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException;
+	public InputStream preview(String key, boolean large) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException;
 	
 	public String put(InputStream data) throws CoreServiceException, DataCollisionException;
 	
 	/*System*/
 	
 	public Set<String> systemListWorkspaceKeys(String wskey) throws CoreServiceException, KeyNotFoundException;
+	
+	public void systemSetObjectPreview(String key, String smallPreview, String largePreview) throws CoreServiceException, KeyNotFoundException;
 	
 }

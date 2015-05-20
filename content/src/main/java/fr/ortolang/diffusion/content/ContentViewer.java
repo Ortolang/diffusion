@@ -1,5 +1,18 @@
 package fr.ortolang.diffusion.content;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.io.IOUtils;
+
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.browser.BrowserService;
@@ -7,23 +20,14 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
-import fr.ortolang.diffusion.core.entity.*;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.CollectionElement;
+import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
-
-import org.apache.commons.io.IOUtils;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 @SuppressWarnings("serial")
 public abstract class ContentViewer extends HttpServlet {
@@ -40,6 +44,9 @@ public abstract class ContentViewer extends HttpServlet {
 	public static final String ASC_ATTRIBUTE_NAME = "asc";
 	public static final String SORT_ATTRIBUTE_NAME = "sort";
 	public static final String LINKTYPE_ATTRIBUTE_NAME = "linktype";
+	public static final String PREVIEW_PARAM_NAME = "preview";
+	public static final String LARGE_PREVIEW_VALUE = "large";
+	public static final String SMALL_PREVIEW_VALUE = "small";
 	
 	protected abstract CoreService getCoreService();
 	
@@ -67,7 +74,15 @@ public abstract class ContentViewer extends HttpServlet {
 				} else {
 					response.setHeader("Content-Disposition", "filename=\"" + ((DataObject)object).getName() + "\"");
 				}
-				InputStream input = getCoreService().download(key);
+				InputStream input;
+				if ( request.getParameter(PREVIEW_PARAM_NAME) != null && request.getParameter(PREVIEW_PARAM_NAME).equals(LARGE_PREVIEW_VALUE) ) {
+					input = getCoreService().preview(key, true);
+				} else if ( request.getParameter(PREVIEW_PARAM_NAME) != null && request.getParameter(PREVIEW_PARAM_NAME).equals(SMALL_PREVIEW_VALUE) ) {
+					input = getCoreService().preview(key, false);
+				} else {
+					input = getCoreService().download(key);
+				}
+				
 				try {
 					IOUtils.copy(input, response.getOutputStream());
 				} finally {

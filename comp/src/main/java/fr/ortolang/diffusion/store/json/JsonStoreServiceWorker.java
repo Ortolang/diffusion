@@ -16,11 +16,11 @@ import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangIndexableObjectFactory;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.OrtolangWorkerJob;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.store.StoreWorkerJob;
 
 @Singleton
 @Startup
@@ -36,11 +36,11 @@ public class JsonStoreServiceWorker {
 	@Resource
 	private ManagedThreadFactory managedThreadFactory;
 	private JsonStoreWorkerThread worker;
-	private DelayQueue<StoreWorkerJob> queue;
+	private DelayQueue<OrtolangWorkerJob> queue;
 
 	public JsonStoreServiceWorker() {
 		this.worker = new JsonStoreWorkerThread();
-		this.queue = new DelayQueue<StoreWorkerJob>();
+		this.queue = new DelayQueue<OrtolangWorkerJob>();
 	}
 
 	@PostConstruct
@@ -59,27 +59,27 @@ public class JsonStoreServiceWorker {
 
 	public void submit(String key, String action) throws JsonStoreServiceException {
 		LOGGER.log(Level.FINE, "submit new job action: " + action + " for key: " + key);
-		StoreWorkerJob existingJob = getJob(key);
+		OrtolangWorkerJob existingJob = getJob(key);
 		if (existingJob != null) {
 			LOGGER.log(Level.FINE, "a job already exists for key: " + key);
 			if (existingJob.getAction().equals(action)) {
 				LOGGER.log(Level.FINE, "existing job action is the same, removing old job for key: " + key);
 				queue.remove(existingJob);
-				queue.put(new StoreWorkerJob(key, action, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
+				queue.put(new OrtolangWorkerJob(key, action, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
 			} else if (existingJob.getAction().equals(IndexingService.INDEX_ACTION)) {
 				LOGGER.log(Level.FINE, "existing job action is stale, removing old job for key: " + key);
 				queue.remove(existingJob);
-				queue.put(new StoreWorkerJob(key, action, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
+				queue.put(new OrtolangWorkerJob(key, action, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
 			} else {
 				LOGGER.log(Level.WARNING, "existing job action is conflicting, dropping new job for key: " + key);
 			}
 		} else {
-			queue.put(new StoreWorkerJob(key, action, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
+			queue.put(new OrtolangWorkerJob(key, action, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
 		}
 	}
 
-	private StoreWorkerJob getJob(String key) {
-		for (StoreWorkerJob job : queue) {
+	private OrtolangWorkerJob getJob(String key) {
+		for (OrtolangWorkerJob job : queue) {
 			if (job.getKey().equals(key)) {
 				return job;
 			}
@@ -99,7 +99,7 @@ public class JsonStoreServiceWorker {
 		public void run() {
 			while (run) {
 				try {
-					StoreWorkerJob job = queue.take();
+					OrtolangWorkerJob job = queue.take();
 					LOGGER.log(Level.FINE, "treating action: " + job.getAction() + " for key: " + job.getKey());
 					try {
 						switch (job.getAction()) {

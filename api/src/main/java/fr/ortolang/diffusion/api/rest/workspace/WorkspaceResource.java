@@ -339,7 +339,7 @@ public class WorkspaceResource {
 	@GET
 	@Path("/{wskey}/preview")
 	public void preview(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
-			@Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, DataNotFoundException,
+			@QueryParam(value = "large") @DefaultValue(value = "true") boolean large, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, DataNotFoundException,
 			IOException, CoreServiceException, InvalidPathException {
 		LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/preview?root=" + root + "&path=" + path);
 		if (path == null) {
@@ -355,7 +355,7 @@ public class WorkspaceResource {
 			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
 			response.setContentType(((DataObject) object).getMimeType());
 			response.setContentLength((int) ((DataObject) object).getSize());
-			InputStream input = core.preview(ekey);
+			InputStream input = core.preview(ekey, large);
 			try {
 				IOUtils.copy(input, response.getOutputStream());
 			} finally {

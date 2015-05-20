@@ -32,11 +32,12 @@
         id varchar(255) not null,
         clock int4 not null,
         description varchar(2500),
+        largePreview varchar(255),
         metadatasContent text,
         mimeType varchar(255),
         name varchar(255),
-        preview varchar(255),
         size int8 not null,
+        smallPreview varchar(255),
         stream varchar(255),
         version int8 not null,
         primary key (id)

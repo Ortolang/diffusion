@@ -36,15 +36,49 @@ package fr.ortolang.diffusion.membership;
  * #L%
  */
 
+import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
+
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.membership.entity.*;
+import fr.ortolang.diffusion.membership.entity.Group;
+import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.membership.entity.ProfileData;
+import fr.ortolang.diffusion.membership.entity.ProfileDataType;
+import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
+import fr.ortolang.diffusion.membership.entity.ProfileStatus;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.registry.*;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyLockedException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authentication.AuthenticationService;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
@@ -55,20 +89,6 @@ import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
 import fr.ortolang.diffusion.store.triple.Triple;
 import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
 import fr.ortolang.diffusion.store.triple.URIHelper;
-
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.*;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
 
 @Local(MembershipService.class)
 @Stateless(name = MembershipService.SERVICE_NAME)
@@ -273,10 +293,10 @@ public class MembershipServiceBean implements MembershipService {
 	public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "listing profiles");
 		try {
+			List<String> subjects = getConnectedIdentifierSubjects();
 			List<Profile> ProfilesList = new ArrayList<Profile>();
 			List<String> listKeys = registry.list(1, 100, OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null, false);
 			for (String key : listKeys) {
-				List<String> subjects = getConnectedIdentifierSubjects();
 				authorisation.checkPermission(key, subjects, "read");
 	
 				OrtolangObjectIdentifier identifier = registry.lookup(key);

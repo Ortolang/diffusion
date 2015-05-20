@@ -54,6 +54,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -95,6 +96,7 @@ import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
+import fr.ortolang.diffusion.core.preview.PreviewService;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -1365,6 +1367,8 @@ public class CoreServiceBean implements CoreService {
 				object.setKey(element.getKey());
 				object.setDescription(description);
 				object.setKey(element.getKey());
+				object.setSmallPreview("");
+				object.setLargePreview("");
 				if (hash != null && hash.length() > 0) {
 					object.setSize(binarystore.size(hash));
 					object.setMimeType(binarystore.type(hash, object.getName()));
@@ -1397,7 +1401,10 @@ public class CoreServiceBean implements CoreService {
 				registry.update(ws.getKey());
 				LOGGER.log(Level.FINEST, "workspace set changed");
 
-				notification.throwEvent(object.getKey(), caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "update"));
+				ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("wskey", ws.getKey()).addArgument("members", ws.getMembers());
+				notification.throwEvent(object.getKey(), caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "update"), argumentsBuilder.build());
+				ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(2).addArgument("oKey", object.getKey()).addArgument("path", path);
+				notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder2.build());
 			} else {
 				LOGGER.log(Level.FINEST, "no changes detected with current object, nothing to do");
 			}
@@ -1497,6 +1504,7 @@ public class CoreServiceBean implements CoreService {
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
 			notification.throwEvent(sobject.getKey(), caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "move"));
+			//TODO update event to propagate workspace modification
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | CloneException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while moving object", e);
@@ -1570,7 +1578,10 @@ public class CoreServiceBean implements CoreService {
 				indexing.remove(leaf.getKey());
 			}
 
-			notification.throwEvent(leaf.getKey(), caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "delete"));
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("wskey", ws.getKey()).addArgument("path", path).addArgument("members", ws.getMembers());
+			notification.throwEvent(leaf.getKey(), caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "delete"), argumentsBuilder.build());
+			ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(2).addArgument("oKey", leaf.getKey()).addArgument("path", path);
+			notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder2.build());
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while deleting object", e);
@@ -2589,7 +2600,7 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public InputStream preview(String key) throws CoreServiceException, DataNotFoundException, KeyNotFoundException, AccessDeniedException {
+	public InputStream preview(String key, boolean large) throws CoreServiceException, DataNotFoundException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "preview content from store for object with key [" + key + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -2603,7 +2614,11 @@ public class CoreServiceBean implements CoreService {
 			if (object == null) {
 				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 			}
-			String hash = object.getPreview();
+			String hash = object.getSmallPreview();
+			if ( large ) {
+				if ( object.getLargePreview().length() > 0 )
+				hash = object.getLargePreview();
+			} 
 			if (hash != null && hash.length() > 0) {
 				InputStream stream = binarystore.get(hash);
 				ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("hash", hash);
@@ -2993,7 +3008,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to list keys for workspace with key [" + wskey + "]", e);
 		}
 	}
-
+	
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private Set<String> systemListCollectionKeys(String key, Set<String> keys) throws RegistryServiceException, KeyNotFoundException, CoreServiceException {
 		OrtolangObjectIdentifier cidentifier = registry.lookup(key);
@@ -3040,6 +3055,29 @@ public class CoreServiceBean implements CoreService {
 		}
 
 		return keys;
+	}
+	
+	@Override
+	@RolesAllowed(PreviewService.SERVICE_NAME)
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void systemSetObjectPreview(String key, String smallPreview, String largePreview) throws CoreServiceException, KeyNotFoundException {
+		LOGGER.log(Level.FINE, "setting preview for object with key[" + key + "]");
+		try {
+			OrtolangObjectIdentifier identifier = registry.lookup(key);
+			checkObjectType(identifier, DataObject.OBJECT_TYPE);
+			DataObject object = em.find(DataObject.class, identifier.getId());
+			if (object == null) {
+				throw new CoreServiceException("unable to load data object with id [" + identifier.getId() + "] from storage");
+			}
+			object.setSmallPreview(smallPreview);
+			object.setLargePreview(largePreview);
+			em.merge(object);
+			
+			notification.throwEvent(key, PreviewService.SERVICE_NAME, identifier.getType(), OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, identifier.getType(), "generate-preview"));
+		} catch (NotificationServiceException | RegistryServiceException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while setting data object preview streams", e);
+			throw new CoreServiceException("unable to set preview streams for data object with key [" + key + "]", e);
+		}
 	}
 
 	/* ### Internal operations ### */
@@ -3195,7 +3233,8 @@ public class CoreServiceBean implements CoreService {
 			clone.setSize(origin.getSize());
 			clone.setMimeType(origin.getMimeType());
 			clone.setStream(origin.getStream());
-			clone.setPreview(origin.getPreview());
+			clone.setSmallPreview(origin.getSmallPreview());
+			clone.setLargePreview(origin.getLargePreview());
 			clone.setClock(clock);
 			Set<MetadataElement> metadatas = new HashSet<MetadataElement>();
 			for (MetadataElement mde : origin.getMetadatas()) {
