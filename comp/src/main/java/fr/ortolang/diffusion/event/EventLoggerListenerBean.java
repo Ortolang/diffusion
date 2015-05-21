@@ -36,7 +36,6 @@ package fr.ortolang.diffusion.event;
  * #L%
  */
 
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,7 +47,6 @@ import javax.jms.MessageListener;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.event.entity.Event;
 
 @MessageDriven(name = "EventLoggerTopicMDB", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
@@ -59,24 +57,13 @@ public class EventLoggerListenerBean implements MessageListener {
 
 	private static final Logger LOGGER = Logger.getLogger(EventLoggerListenerBean.class.getName());
 
-	static {
-		LOGGER.setLevel(Level.FINEST);
-		try {
-			String pattern = OrtolangConfig.getInstance().getHome() + "/OrtolangEvents%g.log";
-			FileHandler handler = new FileHandler(pattern, 10000000, 5, true);
-			LOGGER.addHandler(handler);
-		} catch (Exception e) {
-			//
-		} 
-	}
-
 	@Override
 	@PermitAll
 	public void onMessage(Message message) {
 		try {
 			Event e = new Event();
 			e.fromJMSMessage(message);
-			LOGGER.log(Level.FINEST, EventLoggerFormater.formatEvent(e));
+			LOGGER.log(Level.INFO, EventLoggerFormater.formatEvent(e));
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "unable to log event", e);
 		}
