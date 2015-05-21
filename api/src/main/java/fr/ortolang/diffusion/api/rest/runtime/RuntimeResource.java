@@ -270,7 +270,7 @@ public class RuntimeResource {
 
 	@GET
 	@Path("/remote-processes")
-	public Response listRemoteJobs(@QueryParam("state") String state) throws RuntimeServiceException, AccessDeniedException {
+	public Response listRemoteProcesses(@QueryParam("state") String state) throws RuntimeServiceException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "GET /runtime/remote-processes");
 		List<RemoteProcess> instances;
 		if ( state != null ) {
@@ -293,40 +293,48 @@ public class RuntimeResource {
 	
 	@POST
 	@Path("/remote-processes")
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response createRemoteProcess(MultivaluedMap<String, String> params) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException {
-		LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /runtime/remote-processes");
-		String key = UUID.randomUUID().toString();
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	public Response startRemoteProcess(MultipartFormDataInput input) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException, IOException, CoreServiceException, DataCollisionException {
+		LOGGER.log(Level.INFO, "POST(multipart/form-data) /runtime/remote-processes");
+		String id = UUID.randomUUID().toString();
+				
+		Map<String, Object> mparams = new HashMap<String, Object> ();
+		Map<String, List<InputPart>> form = input.getFormDataMap();
 		
 		String tool = null;
-		if ( !params.containsKey("tool-id") ) {
+		if ( !form.containsKey("tool-jobid") ) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'tool-id' is mandatory").build();
 		} else {
-			tool = params.remove("tool-id").get(0);
+			tool = form.remove("tool-jobid").get(0).getBodyAsString();
+		}
+		String toolKey = null;
+		if ( !form.containsKey("tool-key") ) {
+			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'tool-key' is mandatory").build();
+		} else {
+			toolKey = form.remove("tool-key").get(0).getBodyAsString();
 		}
 		String name = null;
-		if ( !params.containsKey("tool-name") ) {
+		if ( !form.containsKey("tool-name") ) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'tool-name' is mandatory").build();
 		} else {
-			name = params.remove("tool-name").get(0);
+			name = form.remove("tool-name").get(0).getBodyAsString();
 		}
-		
-		Map<String, Object> mparams = new HashMap<String, Object> ();
-		for ( Entry<String, List<String>> entry : params.entrySet() ) {
+				
+		for ( Entry<String, List<InputPart>> entry : form.entrySet() ) {
 			if ( entry.getValue().size() > 0 ) {
 				StringBuilder values = new StringBuilder();
-				for ( String value : entry.getValue() ) {
-					values.append(value).append(",");
+				for ( InputPart value : entry.getValue() ) {
+					LOGGER.log(Level.FINE, "seems this part  [" + entry.getKey() + "] is a simple text value");
+					values.append(value.getBodyAsString()).append(",");
 				}
 				mparams.put(entry.getKey(), values.substring(0, values.length()-1));
 			}
 		}
-		
 		try {
-			RemoteProcess remoteProcess = runtime.createRemoteProcess(key, tool, name);
-			URI newly = DiffusionUriBuilder.getRestUriBuilder().path(RuntimeResource.class).path("remote-processes").path(key).build();
-			return Response.created(newly).entity(RemoteProcessRepresentation.fromRemoteProcess(remoteProcess)).build();
-		} catch (SecurityException | IllegalStateException e) {
+			RemoteProcess remoteProcess = runtime.createRemoteProcess(id, tool, name, toolKey);
+			URI newly = DiffusionUriBuilder.getRestUriBuilder().path(RuntimeResource.class).path("remote-processes").path(id).build();
+			return Response.created(newly).entity(RemoteProcessRepresentation.fromRemoteProcess(remoteProcess).getKey()).build();
+		} catch(SecurityException | IllegalStateException e) {
 			throw new RuntimeServiceException(e);
 		}
 	}
@@ -340,4 +348,28 @@ public class RuntimeResource {
 		RemoteProcessRepresentation representation = RemoteProcessRepresentation.fromRemoteProcess(remoteProcess);
 		return Response.ok(representation).build();
 	}
+	
+	@POST
+	@Path("/remote-processes/{pid}")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public Response updateRemoteProcess(@PathParam(value = "pid") String pid, @FormParam(value = "status") String state, @FormParam(value = "activity") String activity, @FormParam(value = "log") String log) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException {
+		LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /runtime/remote-processes/" + pid);
+		
+		try {
+			if(activity != null) {
+				runtime.updateRemoteProcessActivity(pid, activity);
+			}
+			if(log != null) {
+				runtime.appendRemoteProcessLog(pid, log);
+			}
+			if(state != null) {
+				runtime.updateRemoteProcessState(pid, State.valueOf(state));
+			}
+			return Response.ok().build();
+		} catch(SecurityException | IllegalStateException e) {
+			throw new RuntimeServiceException(e);
+		}
+		
+	}
+	
 }

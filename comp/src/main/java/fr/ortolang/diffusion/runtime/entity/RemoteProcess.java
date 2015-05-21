@@ -62,7 +62,7 @@ import fr.ortolang.diffusion.runtime.entity.Process.State;
 @SuppressWarnings("serial")
 public class RemoteProcess extends OrtolangObject {
 
-	public static final String OBJECT_TYPE = "remote-process";
+	public static final String OBJECT_TYPE = "remote";
 	
 	public static final String INITIER_VAR_NAME = "initier";
 
@@ -73,7 +73,8 @@ public class RemoteProcess extends OrtolangObject {
 	@Transient
 	private String key;
 	private String toolName;
-	private String toolId;
+	private String toolKey;
+	private String toolJobId;
 	private String initier;
 	private State state;
 	private int progress;
@@ -119,12 +120,12 @@ public class RemoteProcess extends OrtolangObject {
 		this.initier = initier;
 	}
 
-	public String getToolId() {
-		return toolId;
+	public String getToolJobId() {
+		return toolJobId;
 	}
 
-	public void setToolId(String toolId) {
-		this.toolId = toolId;
+	public void setToolJobId(String toolJobId) {
+		this.toolJobId = toolJobId;
 	}
 
 	public State getState() {
@@ -176,5 +177,13 @@ public class RemoteProcess extends OrtolangObject {
 	@Override
 	public OrtolangObjectIdentifier getObjectIdentifier() {
 		return new OrtolangObjectIdentifier(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, id);
+	}
+
+	public String getToolKey() {
+		return toolKey;
+	}
+
+	public void setToolKey(String toolKey) {
+		this.toolKey = toolKey;
 	}
 }

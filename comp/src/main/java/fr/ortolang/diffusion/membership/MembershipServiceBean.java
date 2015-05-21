@@ -451,10 +451,11 @@ public class MembershipServiceBean implements MembershipService {
 			}
 			profile.setInfo(name, info);
 			em.merge(profile);
+			registry.update(key);
 
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("name", name);
 			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "set-info"), argumentsBuilder.build());
-		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException e) {
+		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException | KeyLockedException e) {
 			throw new MembershipServiceException("unable to set profile info for profile with key [" + key + "]", e);
 		}
 	}

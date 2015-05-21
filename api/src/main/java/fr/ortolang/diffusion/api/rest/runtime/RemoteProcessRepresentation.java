@@ -45,17 +45,19 @@ import fr.ortolang.diffusion.runtime.entity.RemoteProcess;
 public class RemoteProcessRepresentation {
 
 	@XmlAttribute
+	private String id;
 	private String key;
 	private String name;
 	private String initier;
-	private String tool;
+	private String jobId;
+	private String toolKey;
 	private String log;
 	private String state;
 	private String activity;
 	
 	public RemoteProcessRepresentation() {
 	}
-
+	
 	public String getKey() {
 		return key;
 	}
@@ -80,12 +82,12 @@ public class RemoteProcessRepresentation {
 		this.initier = initier;
 	}
 
-	public String getTool() {
-		return tool;
+	public String getJobId() {
+		return jobId;
 	}
 
-	public void setTool(String tool) {
-		this.tool = tool;
+	public void setJobId(String jobId) {
+		this.jobId = jobId;
 	}
 
 	public String getLog() {
@@ -120,8 +122,17 @@ public class RemoteProcessRepresentation {
 		representation.setLog(instance.getLog());
 		representation.setState(instance.getState().name());
 		representation.setActivity(instance.getActivity());
-		representation.setTool(instance.getToolId());
+		representation.setJobId(instance.getToolJobId());
+		representation.setToolKey(instance.getToolKey());
 		return representation;
+	}
+
+	public String getToolKey() {
+		return toolKey;
+	}
+
+	public void setToolKey(String toolKey) {
+		this.toolKey = toolKey;
 	}
 
 }
