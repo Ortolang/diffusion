@@ -2566,7 +2566,7 @@ public class CoreServiceBean implements CoreService {
 				JsonSchema schema = factory.getJsonSchema(jsonSchema);
 
 				ProcessingReport report = schema.validate(jsonFile);
-				LOGGER.log(Level.INFO, report.toString());
+				LOGGER.log(Level.FINE, report.toString());
 
 				if (!report.isSuccess()) {
 					throw new MetadataFormatException("invalid metadata format");
@@ -2641,9 +2641,7 @@ public class CoreServiceBean implements CoreService {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 
-			LOGGER.log(Level.INFO, "searching key " + key);
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			LOGGER.log(Level.INFO, "found key " + key);
 			String hash;
 			if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
 				authorisation.checkPermission(key, subjects, "download");
