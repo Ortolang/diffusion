@@ -24,25 +24,21 @@
                 "type": "string"
             }
         },
-        "extent": {
-            "id": "http://www.ortolang.fr/extent",
+        "bibliographicCitation": {
+            "id": "http://www.ortolang.fr/bibliographicCitation",
             "type": "string"
         },
         "datasize": {
             "id": "http://www.ortolang.fr/datasize",
             "type": "string"
         },
-        "spatial": {
-            "id": "http://www.ortolang.fr/spatial",
+        "publications": {
+            "id": "http://www.ortolang.fr/publications",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/spatial/0",
+                "id": "http://www.ortolang.fr/publications/0",
                 "type": "string"
             }
-        },
-        "temporal": {
-            "id": "http://www.ortolang.fr/temporal",
-            "type": "string"
         },
         "website": {
             "id": "http://www.ortolang.fr/website",
@@ -56,62 +52,67 @@
             "id": "http://www.ortolang.fr/preview",
             "type": "string"
         },
-        "conditionsOfUse": {
-            "id": "http://www.ortolang.fr/conditionsOfUse",
-            "type": "string"
-        },
         "statusOfUse": {
             "id": "http://www.ortolang.fr/statusOfUse",
             "type": "string"
         },
-        "license": {
-            "id": "http://www.ortolang.fr/license",
+        "conditionsOfUse": {
+            "id": "http://www.ortolang.fr/conditionsOfUse",
             "type": "string"
         },
         "licenseWebsite": {
             "id": "http://www.ortolang.fr/licenseWebsite",
             "type": "string"
         },
+        "license": {
+            "id": "http://www.ortolang.fr/license",
+            "type": "string"
+        },
         "derogation": {
-			"id": "http://www.ortolang.fr/derogation",
-			"type": "string"
-		},
-        "producer": {
-            "id": "http://www.ortolang.fr/producer",
-            "type": "array",
-            "items": {
-                "id": "http://www.ortolang.fr/producer/0",
-                "type": "string",
-                "required": [
-                    "0"
-                ]
-            }
+            "id": "http://www.ortolang.fr/derogation",
+            "type": "string"
         },
-        "researcher": {
-            "id": "http://www.ortolang.fr/researcher",
+        "producers": {
+            "id": "http://www.ortolang.fr/producers",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/researcher/0",
+                "id": "http://www.ortolang.fr/producers/0",
                 "type": "string"
             }
         },
-        "manager": {
-            "id": "http://www.ortolang.fr/manager",
+        "researchers": {
+            "id": "http://www.ortolang.fr/researchers",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/manager/0",
+                "id": "http://www.ortolang.fr/researchers/0",
                 "type": "string"
             }
         },
-        "developer": {
-            "id": "http://www.ortolang.fr/developer",
+        "developers": {
+            "id": "http://www.ortolang.fr/developers",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/developer/0",
+                "id": "http://www.ortolang.fr/developers/0",
                 "type": "string"
             }
         },
-        "author": {
+        "designers": {
+            "id": "http://www.ortolang.fr/designers",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/designers/0",
+                "type": "string"
+            }
+        },
+        "managers": {
+            "id": "http://www.ortolang.fr/managers",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/managers/0",
+                "type": "string"
+            }
+        },
+        "authors": {
             "id": "http://www.ortolang.fr/author",
             "type": "array",
             "items": {
@@ -119,7 +120,7 @@
                 "type": "string"
             }
         },
-        "compiler": {
+        "compilers": {
             "id": "http://www.ortolang.fr/compiler",
             "type": "array",
             "items": {
@@ -127,139 +128,115 @@
                 "type": "string"
             }
         },
-        "typeOfCorpus": {
-            "id": "http://www.ortolang.fr/typeOfCorpus",
+        "creationLocations": {
+            "id": "http://www.ortolang.fr/creationLocations",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/creationLocations/0",
+                "type": "string"
+            }
+        },
+        "creationDate": {
+            "id": "http://www.ortolang.fr/creationDate",
             "type": "string"
         },
-        "annotationLevel": {
-            "id": "http://www.ortolang.fr/annotationLevel",
+        "publicationDate": {
+            "id": "http://www.ortolang.fr/publicationDate",
+            "type": "string"
+        },
+        "corporaType": {
+            "id": "http://www.ortolang.fr/corporaType",
+            "type": "string"
+        },
+        "corporaLanguages": {
+            "id": "http://www.ortolang.fr/corporaLanguages",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/annotationLevel/0",
+                "id": "http://www.ortolang.fr/corporaLanguages/0",
                 "type": "string"
             }
         },
-        "textFormat": {
-            "id": "http://www.ortolang.fr/textFormat",
+        "corporaStyles": {
+            "id": "http://www.ortolang.fr/corporaStyles",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/textFormat/0",
+                "id": "http://www.ortolang.fr/corporaStyles/0",
                 "type": "string"
             }
         },
-        "textEncoding": {
-            "id": "http://www.ortolang.fr/textEncoding",
+        "annotationLevels": {
+            "id": "http://www.ortolang.fr/annotationLevels",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/textEncoding/0",
+                "id": "http://www.ortolang.fr/annotationLevels/0",
                 "type": "string"
             }
         },
-        "transcriptionType": {
-            "id": "http://www.ortolang.fr/transcriptionType",
+        "corporaFormats": {
+            "id": "http://www.ortolang.fr/corporaFormats",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/transcriptionType/0",
+                "id": "http://www.ortolang.fr/corporaFormats/0",
                 "type": "string"
             }
         },
-        "transcriptionFormat": {
-            "id": "http://www.ortolang.fr/transcriptionFormat",
+        "corporaFileEncodings": {
+            "id": "http://www.ortolang.fr/corporaFileEncodings",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/transcriptionFormat/0",
+                "id": "http://www.ortolang.fr/corporaFileEncodings/0",
                 "type": "string"
             }
         },
-        "typeOfSpeech": {
-            "id": "http://www.ortolang.fr/typeOfSpeech",
+        "corporaDataTypes": {
+            "id": "http://www.ortolang.fr/corporaDataTypes",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/typeOfSpeech/0",
+                "id": "http://www.ortolang.fr/corporaDataTypes/0",
                 "type": "string"
             }
         },
-        "transcriptionEncoding": {
-            "id": "http://www.ortolang.fr/transcriptionEncoding",
-            "type": "array",
-            "items": {
-                "id": "http://www.ortolang.fr/transcriptionEncoding/0",
-                "type": "string"
-            }
+        "corporaLanguageType": {
+            "id": "http://www.ortolang.fr/corporaLanguageType",
+            "type": "string"
         },
-        "signal": {
-            "id": "http://www.ortolang.fr/signal",
-            "type": "array",
-            "items": {
-                "id": "http://www.ortolang.fr/signal/0",
-                "type": "string"
-            }
-        },
-        "primaryLanguage": {
-            "id": "http://www.ortolang.fr/primaryLanguage",
-            "type": "array",
-            "items": {
-                "id": "http://www.ortolang.fr/primaryLanguage/0",
-                "type": "string"
-            }
-        },
-        "discourseType": {
-            "id": "http://www.ortolang.fr/discourseType",
-            "type": "array",
-            "items": {
-                "id": "http://www.ortolang.fr/discourseType/0",
-                "type": "string"
-            }
-        },
-        "linguisticSubject": {
-            "id": "http://www.ortolang.fr/linguisticSubject",
-            "type": "array",
-            "items": {
-                "id": "http://www.ortolang.fr/linguisticSubject/0",
-                "type": "string"
-            }
+        "wordCount": {
+            "id": "http://www.ortolang.fr/wordCount",
+            "type": "string"
         },
         "linguisticDataType": {
             "id": "http://www.ortolang.fr/linguisticDataType",
             "type": "string"
         },
-        "language": {
-            "id": "http://www.ortolang.fr/language",
+        "discourseTypes": {
+            "id": "http://www.ortolang.fr/discourseTypes",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/language/0",
+                "id": "http://www.ortolang.fr/discourseTypes/0",
                 "type": "string"
             }
         },
-        "operatingSystem": {
-            "id": "http://www.ortolang.fr/operatingSystem",
+        "linguisticSubjects": {
+            "id": "http://www.ortolang.fr/linguisticSubjects",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/operatingSystem/0",
+                "id": "http://www.ortolang.fr/linguisticSubjects/0",
                 "type": "string"
             }
         },
-        "programmingLanguage": {
-            "id": "http://www.ortolang.fr/programmingLanguage",
+        "programmingLanguages": {
+            "id": "http://www.ortolang.fr/programmingLanguages",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/programmingLanguage/0",
+                "id": "http://www.ortolang.fr/programmingLanguages/0",
                 "type": "string"
             }
         },
-        "navigationLanguage": {
-            "id": "http://www.ortolang.fr/navigationLanguage",
+        "operatingSystems": {
+            "id": "http://www.ortolang.fr/operatingSystems",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/navigationLanguage/0",
-                "type": "string"
-            }
-        },
-        "toolLanguage": {
-            "id": "http://www.ortolang.fr/toolLanguage",
-            "type": "array",
-            "items": {
-                "id": "http://www.ortolang.fr/toolLanguage/0",
+                "id": "http://www.ortolang.fr/operatingSystems/0",
                 "type": "string"
             }
         },
@@ -267,9 +244,53 @@
             "id": "http://www.ortolang.fr/toolSupport",
             "type": "string"
         },
-        "toolHelp": {
-            "id": "http://www.ortolang.fr/toolHelp",
-            "type": "string"
+        "navigationLanguages": {
+            "id": "http://www.ortolang.fr/navigationLanguages",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/navigationLanguages/0",
+                "type": "string"
+            }
+        },
+        "toolLanguages": {
+            "id": "http://www.ortolang.fr/toolLanguages",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/toolLanguages/0",
+                "type": "string"
+            }
+        },
+        "toolFunctionalities": {
+            "id": "http://www.ortolang.fr/toolFunctionalities",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/toolFunctionalities/0",
+                "type": "string"
+            }
+        },
+        "toolInputData": {
+            "id": "http://www.ortolang.fr/toolInputData",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/toolInputData/0",
+                "type": "string"
+            }
+        },
+        "toolOutputData": {
+            "id": "http://www.ortolang.fr/toolOutputData",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/toolOutputData/0",
+                "type": "string"
+            }
+        },
+        "toolFileEncodings": {
+            "id": "http://www.ortolang.fr/toolFileEncodings",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/toolFileEncodings/0",
+                "type": "string"
+            }
         },
         "toolId": {
             "id": "http://www.ortolang.fr/toolId",
@@ -279,110 +300,61 @@
             "id": "http://www.ortolang.fr/toolUrl",
             "type": "string"
         },
+        "toolHelp": {
+            "id": "http://www.ortolang.fr/toolHelp",
+            "type": "string"
+        },
+        "lexiconInputType": {
+            "id": "http://www.ortolang.fr/lexiconInputType",
+            "type": "string"
+        },
+        "lexiconInputLanguages": {
+            "id": "http://www.ortolang.fr/lexiconInputLanguages",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/lexiconInputLanguages/0",
+                "type": "string"
+            }
+        },
+        "lexiconInputCount": {
+            "id": "http://www.ortolang.fr/lexiconInputCount",
+            "type": "string"
+        },
+        "lexiconDescriptionTypes": {
+            "id": "http://www.ortolang.fr/lexiconDescriptionTypes",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/lexiconDescriptionTypes/0",
+                "type": "string"
+            }
+        },
+        "lexiconDescriptionLanguages": {
+            "id": "http://www.ortolang.fr/lexiconDescriptionLanguages",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/lexiconDescriptionLanguages/0",
+                "type": "string"
+            }
+        },
+        "lexiconLanguageType": {
+            "id": "http://www.ortolang.fr/lexiconLanguageType",
+            "type": "string"
+        },
+        "lexiconFormats": {
+            "id": "http://www.ortolang.fr/lexiconFormats",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/lexiconFormats/0",
+                "type": "string"
+            }
+        },
         "applicationUrl": {
             "id": "http://www.ortolang.fr/applicationUrl",
             "type": "string"
-        },
-        "toolFunctionality": {
-            "id": "http://www.ortolang.fr/toolFunctionality",
-            "type": "array",
-            "items": {
-                "id": "http://www.ortolang.fr/toolFunctionality",
-                "type": "string",
-                "enum": [
-                    "extraction de termes",
-                    "bibliométrie",
-                    "recherche par le contenu ",
-                    "résolution de coréférence",
-                    "recherche d'information multilingue",
-                    "diarisation",
-                    "analyse du discours",
-                    "distillation",
-                    "extraction d'entité",
-                    "détection d’événement",
-                    "machine à état fini",
-                    "reconnaissance des gestes",
-                    "synthèse de geste",
-                    "reconnaissance d'écriture manuscrite",
-                    "détection d'information",
-                    "extraction d'information",
-                    "recherche d'information",
-                    "enseignement",
-                    "enrichissement de base de connaissances",
-                    "génération de langage",
-                    "identification des langues",
-                    "modélisation linguistique",
-                    "enseignement des langues",
-                    "analyse linguistique",
-                    "apprentissage automatique",
-                    "compréhension de texte",
-                    "reconnaissance optique de caractères",
-                    "traduction automatique",
-                    "extraction de métadonnées",
-                    "morphologie",
-                    "reconnaissance d'entités nommées",
-                    "traitement automatique de la langue",
-                    "génération d'expression nominale",
-                    "étiquetage morphosyntaxique",
-                    "phonétique",
-                    "phonologie",
-                    "pragmatique",
-                    "modélisation de la prononciation",
-                    "prosodie",
-                    "psycholinguistique",
-                    "systèmes de questions-réponses",
-                    "lisibilité",
-                    "extraction de relation",
-                    "reconnaissance de l'implication textuelle",
-                    "annotation sémantique",
-                    "sociolinguistique",
-                    "analyse spatiale",
-                    "identification du locuteur",
-                    "segmentation de la parole",
-                    "vérification de locuteur",
-                    "détection de l'activité vocale",
-                    "reconnaissance automatique de la parole",
-                    "synthèse vocale",
-                    "modélisation de dialogue vocal",
-                    "systèmes de dialogues vocaux",
-                    "détection de mots parlés",
-                    "langue standard",
-                    "analyse de la subjectivité",
-                    "résumé automatique de texte",
-                    "analyse syntaxique",
-                    "étiquetage",
-                    "analyse temporelle",
-                    "représentation des connaissances",
-                    "raisonnement",
-                    "segmentation en phrases",
-                    "segmentation en mots",
-                    "analyse des sentiments",
-                    "classification et catégorisation de documents",
-                    "désambiguïsation",
-                    "reformulation",
-                    "résolution d'anaphores",
-                    "correction orthographique de texte",
-                    "agent conversationnel"
-                ]
-            }
-        },
-        "toolInputData": {
-            "id": "http://www.ortolang.fr/toolLanguage",
-            "type": "array",
-            "items": {
-                "id": "http://www.ortolang.fr/toolInputData",
-                "type": "string",
-                "enum": [
-                    "audio",
-                    "video",
-                    "image",
-                    "texte"
-                ]
-            }
         }
     },
     "required": [
-        "producer",
+        "producers",
         "type",
         "title",
         "description",
