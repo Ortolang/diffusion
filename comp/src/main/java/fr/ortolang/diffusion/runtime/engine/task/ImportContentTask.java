@@ -71,7 +71,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			while ((line = reader.readLine()) != null) {
 				LOGGER.log(Level.FINE, "- executing operation: " + line);
 				needcommit = false;
-				String[] operation = line.split("\t");
+				String[] operation = line.split("\t", -1);
 				try {
 					switch (operation[0]) {
 						case "create-workspace":
