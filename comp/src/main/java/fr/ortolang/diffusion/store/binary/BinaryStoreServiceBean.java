@@ -208,8 +208,15 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 		}
 		try (InputStream is = Files.newInputStream(path)) {
 			Tika tika = new Tika();
-			TikaInputStream tis = TikaInputStream.get(is);
-			String type = tika.detect(tis, filename); 
+			String type;
+			if ( Files.size(path) < 50000000 ) {
+				LOGGER.log(Level.FINEST, "file size is not too large, trying to detect also containers");
+				TikaInputStream tis = TikaInputStream.get(is);
+				type = tika.detect(tis, filename);
+			} else {
+				LOGGER.log(Level.FINEST, "file size is TOO large, does not detect types inside containers");
+				type = tika.detect(is, filename);
+			}
 			return type;
 		} catch (Exception e) {
 			throw new BinaryStoreServiceException(e);
