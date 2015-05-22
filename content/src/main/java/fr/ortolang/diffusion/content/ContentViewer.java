@@ -25,8 +25,10 @@ import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.core.preview.PreviewService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 @SuppressWarnings("serial")
@@ -47,8 +49,11 @@ public abstract class ContentViewer extends HttpServlet {
 	public static final String PREVIEW_PARAM_NAME = "preview";
 	public static final String LARGE_PREVIEW_VALUE = "large";
 	public static final String SMALL_PREVIEW_VALUE = "small";
+	public static final String FORCE_DOWNLOAD_PARAM_NAME = "download";
 	
 	protected abstract CoreService getCoreService();
+	
+	protected abstract BinaryStoreService getBinaryStoreService();
 	
 	protected abstract BrowserService getBrowserService();
 	
@@ -67,24 +72,34 @@ public abstract class ContentViewer extends HttpServlet {
 			OrtolangObject object = getBrowserService().findObject(key);
 			response.setStatus(HttpServletResponse.SC_OK);
 			if ( object instanceof DataObject ) {
-				response.setContentLength((int)((DataObject)object).getSize());
-				response.setContentType(((DataObject)object).getMimeType());
-				if ( request.getAttribute(OBJECTKEY_ATTRIBUTE_NAME) != null ) {
+				if ( request.getParameter(FORCE_DOWNLOAD_PARAM_NAME) != null && request.getParameter(FORCE_DOWNLOAD_PARAM_NAME).length() > 0 ) {
 					response.setHeader("Content-Disposition", "attachment; filename=\"" + ((DataObject)object).getName() + "\"");
 				} else {
 					response.setHeader("Content-Disposition", "filename=\"" + ((DataObject)object).getName() + "\"");
 				}
 				InputStream input;
+				long size = 0;
 				if ( request.getParameter(PREVIEW_PARAM_NAME) != null && request.getParameter(PREVIEW_PARAM_NAME).equals(LARGE_PREVIEW_VALUE) ) {
+					size = ((DataObject)object).getLargePreviewSize();
+					response.setContentType(PreviewService.PREVIEW_MIMETYPE);
 					input = getCoreService().preview(key, true);
 				} else if ( request.getParameter(PREVIEW_PARAM_NAME) != null && request.getParameter(PREVIEW_PARAM_NAME).equals(SMALL_PREVIEW_VALUE) ) {
+					size = ((DataObject)object).getSmallPreviewSize();
+					response.setContentType(PreviewService.PREVIEW_MIMETYPE);
 					input = getCoreService().preview(key, false);
 				} else {
+					size = ((DataObject)object).getSize();
+					response.setContentType(((DataObject)object).getMimeType());
 					input = getCoreService().download(key);
 				}
+				response.setContentLength((int)size);
 				
 				try {
-					IOUtils.copy(input, response.getOutputStream());
+					if ( size > 2000000000 ) {
+						IOUtils.copyLarge(input, response.getOutputStream());	
+					} else {
+						IOUtils.copy(input, response.getOutputStream());
+					}
 				} finally {
 					IOUtils.closeQuietly(input);
 				}

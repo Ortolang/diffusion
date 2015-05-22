@@ -19,6 +19,7 @@ import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 @SuppressWarnings("serial")
@@ -31,6 +32,8 @@ public class AllContentViewerServlet extends ContentViewer {
 	private CoreService core;
 	@EJB
 	private BrowserService browser;
+	@EJB
+	private BinaryStoreService binary;
 	
 	@Override
 	public void init() throws ServletException {
@@ -46,6 +49,11 @@ public class AllContentViewerServlet extends ContentViewer {
 	@Override 
 	protected BrowserService getBrowserService() {
 		return browser;
+	}
+	
+	@Override 
+	protected BinaryStoreService getBinaryStoreService() {
+		return binary;
 	}
 
 	@Override

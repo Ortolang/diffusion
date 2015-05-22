@@ -3058,7 +3058,7 @@ public class CoreServiceBean implements CoreService {
 	@Override
 	@RolesAllowed(PreviewService.SERVICE_NAME)
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void systemSetObjectPreview(String key, String smallPreview, String largePreview) throws CoreServiceException, KeyNotFoundException {
+	public void systemSetObjectPreview(String key, String smallPreview, long smallPreviewSize, String largePreview, long largePreviewSize) throws CoreServiceException, KeyNotFoundException {
 		LOGGER.log(Level.FINE, "setting preview for object with key[" + key + "]");
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -3068,7 +3068,9 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load data object with id [" + identifier.getId() + "] from storage");
 			}
 			object.setSmallPreview(smallPreview);
+			object.setSmallPreviewSize(smallPreviewSize);
 			object.setLargePreview(largePreview);
+			object.setLargePreviewSize(largePreviewSize);
 			em.merge(object);
 			
 			notification.throwEvent(key, PreviewService.SERVICE_NAME, identifier.getType(), OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, identifier.getType(), "generate-preview"));

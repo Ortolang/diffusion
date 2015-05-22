@@ -88,7 +88,7 @@ public class PreviewServiceBean implements PreviewService {
 						LOGGER.log(Level.FINE, "previews generated for key: " + key + " in file: " + smallOutput);
 						break;
 					} catch ( PreviewGeneratorException e ) {
-						LOGGER.log(Level.WARNING, "generator failed to produce previews for key: " + key, e);
+						LOGGER.log(Level.FINE, "generator failed to produce previews for key: " + key, e);
 					}
 				}
 			}
@@ -96,8 +96,10 @@ public class PreviewServiceBean implements PreviewService {
 				LOGGER.log(Level.FINE, "storing previews in object");
 				try (InputStream iss = Files.newInputStream(smallOutput); InputStream isl = Files.newInputStream(largeOutput)) {
 					String hashs = binaryStore.put(iss);
+					long sizes = binaryStore.size(hashs);
 					String hashl = binaryStore.put(isl);
-					core.systemSetObjectPreview(key, hashs, hashl);
+					long sizel = binaryStore.size(hashl);
+					core.systemSetObjectPreview(key, hashs, sizes, hashl, sizel);
 				} catch (DataCollisionException e) {
 					LOGGER.log(Level.WARNING, "unable to store previews for object with key: " + key, e);
 				} 
