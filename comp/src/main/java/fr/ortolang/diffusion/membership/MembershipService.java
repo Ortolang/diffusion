@@ -94,7 +94,7 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	public void deleteGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void addMemberInGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	public Group addMemberInGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void removeMemberFromGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 

@@ -988,6 +988,8 @@ public class CoreServiceBean implements CoreService {
 				LOGGER.log(Level.FINEST, "workspace set changed");
 
 				notification.throwEvent(collection.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "update"));
+				ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("oKey", collection.getKey()).addArgument("path", path);
+				notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder.build());
 			} else {
 				LOGGER.log(Level.FINEST, "no modification detected, doing nothing");
 			}
@@ -1174,6 +1176,8 @@ public class CoreServiceBean implements CoreService {
 			deleteCollectionContent(leaf, ws.getClock());
 
 			notification.throwEvent(leaf.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "delete"));
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("oKey", leaf.getKey()).addArgument("path", path);
+			notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder.build());
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | TreeBuilderException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error while deleting collection", e);
