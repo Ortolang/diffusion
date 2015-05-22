@@ -60,17 +60,17 @@ public class DiffusionPasswordAuthenticator implements PasswordAuthenticator {
         	LOGGER.log(Level.INFO, "performing jaas authentication...");
         	LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(username, password);
             lc.login();
-            LOGGER.log(Level.INFO, "try a call to membreship service to validate credentials");
+            LOGGER.log(Level.FINE, "try a call to membreship service to validate credentials");
             MembershipService membership = (MembershipService)OrtolangServiceLocator.findService("membership");
             String expected = membership.getProfileKeyForIdentifier(username);
     		String key = membership.getProfileKeyForConnectedIdentifier();
     		lc.logout();
-    		LOGGER.log(Level.INFO, "expected: " + expected);
-    		LOGGER.log(Level.INFO, "key: " + key);
+    		LOGGER.log(Level.FINEST, "expected: " + expected);
+    		LOGGER.log(Level.FINEST, "key: " + key);
     		
     		if (key.equals(expected)) {
     			session.setAttribute(new AttributeKey<UsernamePassword>(), new UsernamePassword(username, password));
-    			LOGGER.log(Level.INFO, "connected profile [" + key + "] is the expected one [" + expected + "], login OK");
+    			LOGGER.log(Level.FINE, "connected profile [" + key + "] is the expected one [" + expected + "], login OK");
     			if (session instanceof SSHSession) {
     				((SSHSession) session).setLogin(username);
     				((SSHSession) session).setPassword(password);
@@ -80,11 +80,11 @@ public class DiffusionPasswordAuthenticator implements PasswordAuthenticator {
                 }
     			return true;
     		} else {
-    			LOGGER.log(Level.INFO, "connected profile [" + key + "] is NOT the expected one [" + expected + "], login KO");
+    			LOGGER.log(Level.FINE, "connected profile [" + key + "] is NOT the expected one [" + expected + "], login KO");
     			return false;
     		}
         } catch (Exception e) {
-        	LOGGER.log(Level.INFO, "login failed ", e);
+        	LOGGER.log(Level.WARNING, "login failed ", e);
             return false;
         }
     }

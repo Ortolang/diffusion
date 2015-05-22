@@ -48,6 +48,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -68,6 +70,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import fr.ortolang.diffusion.core.*;
 import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
@@ -81,12 +84,6 @@ import fr.ortolang.diffusion.api.rest.filter.CORSFilter;
 import fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
-import fr.ortolang.diffusion.core.CollectionNotEmptyException;
-import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.core.InvalidPathException;
-import fr.ortolang.diffusion.core.MetadataFormatException;
-import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
@@ -137,11 +134,16 @@ public class WorkspaceResource {
 
 	@POST
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response createWorkspace(@FormParam("type") @DefaultValue("default") String type, @FormParam("name") @DefaultValue("No Name Provided") String name)
+	public Response createWorkspace(@FormParam("type") @DefaultValue("default") String type, @FormParam("name") @DefaultValue("No Name Provided") String name, @FormParam("alias") String alias)
 			throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
 		String key = java.util.UUID.randomUUID().toString();
-		Workspace workspace = core.createWorkspace(key, name, type);
+		Workspace workspace;
+		if (alias != null && alias.length() > 0) {
+		 	workspace = core.createWorkspace(key, alias, name, type);
+		} else {
+		 	workspace = core.createWorkspace(key, name, type);
+		}
 		URI location = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(key).build();
 		WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace);
 		return Response.created(location).entity(workspaceRepresentation).build();
@@ -152,7 +154,12 @@ public class WorkspaceResource {
 	public Response createWorkspace(WorkspaceRepresentation representation) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "POST(application/json) /workspaces");
 		String key = UUID.randomUUID().toString();
-		Workspace workspace = core.createWorkspace(key, representation.getName(), representation.getType());
+		Workspace workspace;
+		if (representation.getAlias() != null && representation.getAlias().length() > 0) {
+			workspace = core.createWorkspace(key, representation.getAlias(), representation.getName(), representation.getType());
+		} else {
+			workspace = core.createWorkspace(key, representation.getName(), representation.getType());
+		}
 		URI location = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(key).build();
 		WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace);
 		return Response.created(location).entity(workspaceRepresentation).build();
@@ -182,6 +189,8 @@ public class WorkspaceResource {
 		if(builder == null){
 			Workspace workspace = core.readWorkspace(wskey);
 			WorkspaceRepresentation representation = WorkspaceRepresentation.fromWorkspace(workspace);
+			OrtolangObjectInfos infos = browser.getInfos(wskey);
+			representation.setAuthor(infos.getAuthor());
 			builder = Response.ok(representation);
     		builder.lastModified(lmd);
         }
@@ -239,7 +248,7 @@ public class WorkspaceResource {
 			WorkspaceElementRepresentation representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
 			if (representation != null) {
 				if (metadata != null && metadata.length() > 0) {
-					LOGGER.log(Level.INFO, "searching element metadata: " + metadata);
+					LOGGER.log(Level.FINE, "searching element metadata: " + metadata);
 					MetadataElement mdElement = null;
 					for (MetadataElement element : representation.getMetadatas()) {
 						if (element.getName().equals(metadata)) {
@@ -330,7 +339,7 @@ public class WorkspaceResource {
 	@GET
 	@Path("/{wskey}/preview")
 	public void preview(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
-			@Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, DataNotFoundException,
+			@QueryParam(value = "large") @DefaultValue(value = "true") boolean large, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, DataNotFoundException,
 			IOException, CoreServiceException, InvalidPathException {
 		LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/preview?root=" + root + "&path=" + path);
 		if (path == null) {
@@ -346,7 +355,7 @@ public class WorkspaceResource {
 			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
 			response.setContentType(((DataObject) object).getMimeType());
 			response.setContentLength((int) ((DataObject) object).getSize());
-			InputStream input = core.preview(ekey);
+			InputStream input = core.preview(ekey, large);
 			try {
 				IOUtils.copy(input, response.getOutputStream());
 			} finally {
@@ -390,7 +399,7 @@ public class WorkspaceResource {
 			PathBuilder npath = PathBuilder.fromPath(form.getPath());
 			try {
 				String ekey = core.resolveWorkspacePath(wskey, "head", npath.build());
-				LOGGER.log(Level.INFO, "element found at path: " + npath.build());
+				LOGGER.log(Level.FINE, "element found at path: " + npath.build());
 				OrtolangObject object = browser.findObject(ekey);
 				switch (form.getType()) {
 				case Collection.OBJECT_TYPE:
@@ -458,7 +467,7 @@ public class WorkspaceResource {
 		PathBuilder npath = PathBuilder.fromPath(representation.getPath());
 		try {
 			core.resolveWorkspacePath(wskey, "head", npath.build());
-			LOGGER.log(Level.INFO, "element found at path: " + npath.build());
+			LOGGER.log(Level.FINE, "element found at path: " + npath.build());
 			if (representation.getType().equals(Collection.OBJECT_TYPE)) {
 				core.updateCollection(wskey, npath.build(), representation.getDescription());
 				return Response.ok().build();
@@ -519,6 +528,31 @@ public class WorkspaceResource {
 		}
 		core.snapshotWorkspace(wskey, name);
 		return Response.ok().build();
+	}
+
+    @GET
+    @Path("/{alias}/key")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getKey(@PathParam(value = "alias") String alias) throws AccessDeniedException, KeyNotFoundException, CoreServiceException, AliasNotFoundException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + alias + "/key");
+        String key = core.resolveWorkspaceAlias(alias);
+        JsonObject jsonObject = Json.createObjectBuilder().add("key", key).build();
+        return Response.ok(jsonObject).build();
+    }
+
+	@GET
+	@Path("/{alias}/available")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response checkAvailability(@PathParam(value = "alias") String alias) throws AccessDeniedException, KeyNotFoundException, CoreServiceException {
+		LOGGER.log(Level.INFO, "GET /workspaces/" + alias + "/available");
+		boolean available = false;
+		try {
+			core.resolveWorkspaceAlias(alias);
+		} catch (AliasNotFoundException e) {
+			available = true;
+		}
+		JsonObject jsonObject = Json.createObjectBuilder().add("available", available).build();
+		return Response.ok(jsonObject).build();
 	}
 
 }

@@ -40,7 +40,12 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
@@ -144,7 +149,7 @@ public class OrtolangClient {
 			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
 		}
 	}
-
+	
 	public boolean isObjectExists(String key) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("objects").path(key);
@@ -170,6 +175,33 @@ public class OrtolangClient {
 			JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
 			response.close();
 			return jsonObject;
+		} else {
+			response.close();
+			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+		}
+	}
+	
+	public Path downloadObject(String key) throws OrtolangClientException, OrtolangClientAccountException {
+		updateAuthorization();
+		WebTarget target = base.path("objects").path(key).path("download");
+		Response response = injectAuthHeader(target.request()).accept(MediaType.WILDCARD_TYPE).get();
+		if (response.getStatus() == Status.OK.getStatusCode()) {
+			try {
+				Path temp = Files.createTempFile("ortolang-client", ".tmp");
+				try (InputStream is = response.readEntity(InputStream.class); OutputStream os = Files.newOutputStream(temp)) {
+					byte[] buffer = new byte[1024];
+					int nbreads = 0;
+					while ( (nbreads = is.read(buffer)) > -1 ) {
+						os.write(buffer, 0, nbreads);
+					}
+					return temp;
+				} finally {
+					response.close();
+				}
+			} catch (IOException e) {
+				LOGGER.log(Level.SEVERE, "unable to download file for key: " + key, e);
+				throw new OrtolangClientException("unable to download file for key: " + key, e);
+			} 
 		} else {
 			response.close();
 			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
@@ -297,7 +329,53 @@ public class OrtolangClient {
 		}
 		response.close();
 	}
+	
+	public String createRemoteProcess(String toolId, String name, String toolKey) throws OrtolangClientException, OrtolangClientAccountException {
+		updateAuthorization();
+		WebTarget target = base.path("/runtime/remote-processes");
+		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
+		mdo.addFormData("tool-jobid", new ByteArrayInputStream(toolId.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+		mdo.addFormData("tool-key", new ByteArrayInputStream(toolKey.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+		mdo.addFormData("tool-name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+		mdo.addFormData("name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+		
+		GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {};
+		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA));
+		if (response.getStatus() != Status.CREATED.getStatusCode()) {
+			response.close();
+			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+		} else {
+			String path = response.getLocation().getPath();
+			response.close();
+			return path.substring(path.lastIndexOf("/") + 1);
+		}
+	}
 
+
+	public void updateRemoteProcess(String pid, String state, String log, String activity) throws OrtolangClientException, OrtolangClientAccountException {
+		updateAuthorization();
+		WebTarget target = base.path("/runtime/remote-processes/").path(pid);
+		Form form = new Form();
+		if(state != null){
+			form.param("status", state);
+		}
+		if(log != null){
+			form.param("log", log);
+		}
+		if(activity != null){
+			form.param("activity", activity);
+		}
+		
+		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
+		if (response.getStatus() != Status.OK.getStatusCode()) {
+			response.close();
+			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+		} else {
+			response.close();
+		}
+	}
+
+	
 	public String createProcess(String type, String name, Map<String, String> params, Map<String, File> attachments) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/runtime/processes");

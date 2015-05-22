@@ -59,6 +59,7 @@ import org.apache.sshd.common.file.SshFile;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
+import fr.ortolang.diffusion.core.AliasNotFoundException;
 import fr.ortolang.diffusion.core.CollectionNotEmptyException;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
@@ -143,9 +144,9 @@ public class CoreSshFile implements SshFile {
 		} catch (AccessDeniedException | BrowserServiceException | LoginException | OrtolangException | CoreServiceException | KeyNotFoundException e) {
 			LOGGER.log(Level.SEVERE, "error while trying to load element for path " + path, e);
 			throw new OrtolangException("unable to load core object associated with path: " + path.build(), e);
-		} catch (InvalidPathException e) {
+		} catch (AliasNotFoundException | InvalidPathException e) {
 			exists = false;
-		}
+		} 
 	}
 
 	@Override
@@ -372,7 +373,7 @@ public class CoreSshFile implements SshFile {
 	public void handleClose() throws IOException {
 		LOGGER.log(Level.FINE, "handle close called");
 		if ( temp != null ) {
-			LOGGER.log(Level.INFO, "we have a temp file uploaded, maybe update data object according to this !!");
+			LOGGER.log(Level.FINE, "we have a temp file uploaded, maybe update data object according to this !!");
 			try {
 				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();

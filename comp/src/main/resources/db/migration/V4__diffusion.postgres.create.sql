@@ -32,11 +32,14 @@
         id varchar(255) not null,
         clock int4 not null,
         description varchar(2500),
+        largePreview varchar(255),
+        largePreviewSize int8 not null,
         metadatasContent text,
         mimeType varchar(255),
         name varchar(255),
-        preview varchar(255),
         size int8 not null,
+        smallPreview varchar(255),
+        smallPreviewSize int8 not null,
         stream varchar(255),
         version int8 not null,
         primary key (id)
@@ -146,6 +149,20 @@
         primary key (key)
     );
 
+    create table RemoteProcess (
+        id varchar(255) not null,
+        activity varchar(255),
+        initier varchar(255),
+        log text,
+        toolName varchar(255),
+        progress int4 not null,
+        state int4,
+        toolJobId varchar(255),
+        toolKey varchar(255),
+        version int8 not null,
+        primary key (id)
+    );
+
     create table Workspace (
         id varchar(255) not null,
         alias varchar(255),
@@ -181,6 +198,8 @@
     create index UK_1y5xufstwuf5398odn1vl3ykw on Process (initier, state);
 
     create index UK_8vv92rpgi9suidc96s1b88rw1 on RegistryEntry (identifier);
+
+    create index UK_pwitg71wnp1ktf8bdbtuxg4mp on RemoteProcess (initier, state);
 
     alter table Workspace 
         add constraint UK_48cyeq9y05tbu0dgn64iswitn  unique (alias);

@@ -36,8 +36,8 @@ package fr.ortolang.diffusion.api.sub;
  * #L%
  */
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.atmosphere.config.managed.Encoder;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
 

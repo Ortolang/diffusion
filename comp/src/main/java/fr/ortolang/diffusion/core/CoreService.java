@@ -75,7 +75,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	public Set<String> buildWorkspaceReviewList(String wskey, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public String resolveWorkspaceAlias(String alias) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	public String resolveWorkspaceAlias(String alias) throws CoreServiceException, AccessDeniedException, AliasNotFoundException;
 	
 	public String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, AccessDeniedException;
 	
@@ -159,12 +159,14 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	public InputStream download(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException;
 	
-	public InputStream preview(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException;
+	public InputStream preview(String key, boolean large) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException;
 	
 	public String put(InputStream data) throws CoreServiceException, DataCollisionException;
 	
 	/*System*/
 	
 	public Set<String> systemListWorkspaceKeys(String wskey) throws CoreServiceException, KeyNotFoundException;
+	
+	public void systemSetObjectPreview(String key, String smallPreview, long smallPreviewSize, String largePreview, long largePreviewSize) throws CoreServiceException, KeyNotFoundException;
 	
 }

@@ -69,31 +69,31 @@ public class SSHShell implements Command, Runnable, SessionAware {
 
     @Override
     public void setInputStream(InputStream in) {
-        lOGGER.log(Level.INFO, "setting input stream");
+        lOGGER.log(Level.FINE, "setting input stream");
         this.in = in;
     }
 
     @Override
     public void setOutputStream(OutputStream out) {
-    	lOGGER.log(Level.INFO, "setting output stream");
+    	lOGGER.log(Level.FINE, "setting output stream");
         this.out = out;
     }
 
     @Override
     public void setErrorStream(OutputStream err) {
-    	lOGGER.log(Level.INFO, "setting error stream");
+    	lOGGER.log(Level.FINE, "setting error stream");
         this.err = err;
     }
 
     @Override
     public void setExitCallback(ExitCallback callback) {
-    	lOGGER.log(Level.INFO, "setting exit callback");
+    	lOGGER.log(Level.FINE, "setting exit callback");
         this.callback = callback;
     }
     
     @Override
     public void setSession(ServerSession session) {
-    	lOGGER.log(Level.INFO, "setting session");
+    	lOGGER.log(Level.FINE, "setting session");
         this.session = session;
     }
 

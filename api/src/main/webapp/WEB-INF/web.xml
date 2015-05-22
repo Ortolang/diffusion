@@ -27,13 +27,13 @@
 		<listener-class>net.bull.javamelody.SessionListener</listener-class>
 	</listener>
 
-	<servlet>
+	<!-- <servlet>
 		<display-name>SSH Server Servlet</display-name>
 		<servlet-name>SSHServlet</servlet-name>
 		<servlet-class>fr.ortolang.diffusion.api.ssh.SSHServlet</servlet-class>
 		<load-on-startup>2</load-on-startup>
 		<enabled>true</enabled>
-	</servlet>
+	</servlet> -->
 	<servlet>
 		<servlet-name>AtmosphereServlet</servlet-name>
 		<servlet-class>org.atmosphere.cpr.AtmosphereServlet</servlet-class>

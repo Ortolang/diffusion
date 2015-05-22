@@ -42,6 +42,7 @@ import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.entity.Process;
+
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.security.PermitAll;
@@ -50,6 +51,7 @@ import javax.ejb.EJB;
 import javax.ejb.MessageDriven;
 import javax.jms.Message;
 import javax.jms.MessageListener;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
@@ -60,7 +62,7 @@ import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
 @MessageDriven(name = "AtmosphereMDB", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/notification"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge"),
-        @ActivationConfigProperty(propertyName = "messageSelector", propertyValue="eventtype LIKE 'core.workspace.%' OR eventtype LIKE 'runtime.process.%' OR eventtype LIKE 'runtime.task.%'")})
+        @ActivationConfigProperty(propertyName = "messageSelector", propertyValue="eventtype LIKE 'core.workspace.%' OR eventtype LIKE 'runtime.process.%' OR eventtype LIKE 'runtime.task.%' OR eventtype LIKE 'runtime.remote.%' OR eventtype LIKE 'membership.group.%'")})
 @SecurityDomain("ortolang")
 public class AtmosphereListenerBean implements MessageListener {
 
@@ -78,7 +80,7 @@ public class AtmosphereListenerBean implements MessageListener {
         try {
             Event event = new Event();
             event.fromJMSMessage(message);
-            for (Map.Entry<String, Subscription> subscriptionRegistryEntry : subscription.getSubscriptions().entrySet()) {
+           for (Map.Entry<String, Subscription> subscriptionRegistryEntry : subscription.getSubscriptions().entrySet()) {
                 Iterator<Filter> iterator = subscriptionRegistryEntry.getValue().getFilters().iterator();
                 while (iterator.hasNext()) {
                     Filter filter = iterator.next();

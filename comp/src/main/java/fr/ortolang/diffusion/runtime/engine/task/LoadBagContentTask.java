@@ -50,7 +50,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		LOGGER.log(Level.INFO, "Starting Load Bag Content Task");
 		try {
 			if (getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
-				LOGGER.log(Level.FINE, "commiting active user transaction.");
+				LOGGER.log(Level.FINE, "committing active user transaction.");
 				getUserTransaction().commit();
 			} else {
 				LOGGER.log(Level.FINE, "user transaction in state : " + getUserTransaction().getStatus());
@@ -91,6 +91,16 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 			bag.close();
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, "- error during closing bag", e);
+		}
+		try {
+			if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
+				LOGGER.log(Level.FINE, "starting new user transaction.");
+				getUserTransaction().begin();
+			} else {
+				LOGGER.log(Level.FINE, "user transaction in state : " + getUserTransaction().getStatus());
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
 		}
 		LOGGER.log(Level.INFO, "- import script generated : \r\n" + builder.toString());
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import script generated"));
@@ -191,7 +201,11 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		try {
 			Properties props = new Properties();
 			props.load(propFile.newInputStream());
-			builder.append("create-workspace\t").append(props.getProperty("alias")).append("\t").append(props.getProperty("name")).append("\t").append(props.getProperty("type")).append("\r\n");
+			builder.append("create-workspace\t").append(props.getProperty("alias"))
+					.append("\t").append(props.getProperty("name"))
+					.append("\t").append(props.getProperty("type"))
+					.append("\t").append(props.getProperty("owner") != null ? props.getProperty("owner") : "")
+					.append("\t").append(props.getProperty("members") != null ? props.getProperty("members") : "").append("\r\n");
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to append workspace informations", e);
 			throw new RuntimeEngineTaskException("unable to append workspace informations", e);

@@ -13,6 +13,7 @@ public class OrtolangCli {
 		commands.put("delete-workspace", DeleteWorkspaceCommand.class.getName());
 		commands.put("import-workspace", ImportWorkspaceCommand.class.getName());
 		commands.put("import-zip", ImportZipCommand.class.getName());
+		commands.put("import-profiles", ImportProfilesCommand.class.getName());
 	}
 	
 	public static OrtolangCli getInstance() {

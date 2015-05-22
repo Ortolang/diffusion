@@ -58,7 +58,7 @@ public class ContentTypeSetterPreProcessorInterceptor implements PreProcessInter
 
 	@Override
 	public ServerResponse preProcess(HttpRequest request, ResourceMethodInvoker method) throws Failure, WebApplicationException {
-		LOGGER.log(Level.INFO, "content type setter for Input Part");
+		LOGGER.log(Level.FINE, "content type setter for Input Part");
 		request.setAttribute(InputPart.DEFAULT_CHARSET_PROPERTY, "UTF-8");
 		return null;
 	}

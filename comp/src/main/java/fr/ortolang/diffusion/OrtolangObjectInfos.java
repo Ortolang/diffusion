@@ -44,7 +44,7 @@ public class OrtolangObjectInfos implements Serializable {
 	private String author;
 	private long creationDate;
 	private long lastModificationDate;
-
+	
 	public OrtolangObjectInfos() {
 	}
 

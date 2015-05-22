@@ -80,7 +80,7 @@ public class ImportZipCommand extends Command {
 			}
 			
 			if ( cmd.hasOption("overwrite") ) {
-				params.put("overwrite", "true");
+				params.put("zipoverwrites", "true");
 			} 
 			
 			OrtolangClient client = OrtolangClient.getInstance();

@@ -58,6 +58,7 @@ import javax.ejb.TransactionAttributeType;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.tika.Tika;
+import org.apache.tika.io.TikaInputStream;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
@@ -193,6 +194,30 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 		try {
 			Tika tika = new Tika();
 			return tika.detect(path.toFile()); 
+		} catch (Exception e) {
+			throw new BinaryStoreServiceException(e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public String type(String identifier, String filename) throws BinaryStoreServiceException, DataNotFoundException {
+		Path path = getPathForIdentifier(identifier);
+		if (!Files.exists(path)) {
+			throw new DataNotFoundException("Unable to find an object with id [" + identifier + "] in the storage");
+		}
+		try (InputStream is = Files.newInputStream(path)) {
+			Tika tika = new Tika();
+			String type;
+			if ( Files.size(path) < 50000000 ) {
+				LOGGER.log(Level.FINEST, "file size is not too large, trying to detect also containers");
+				TikaInputStream tis = TikaInputStream.get(is);
+				type = tika.detect(tis, filename);
+			} else {
+				LOGGER.log(Level.FINEST, "file size is TOO large, does not detect types inside containers");
+				type = tika.detect(is, filename);
+			}
+			return type;
 		} catch (Exception e) {
 			throw new BinaryStoreServiceException(e);
 		}

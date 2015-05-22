@@ -38,10 +38,6 @@ package fr.ortolang.diffusion.client;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -84,18 +80,28 @@ public class OrtolangClientTest {
 		client.logout();
 	}
 	
+//	@Test
+//	public void testImportWorkspace() throws OrtolangClientException, OrtolangClientAccountException {
+//		client.login("root");
+//		String profile = client.connectedProfile();
+//		logger.log(Level.INFO, "connected profile: {0}", profile);
+//		assertEquals(MembershipService.SUPERUSER_IDENTIFIER, profile);
+//		Map<String, String> params = new HashMap<String, String> ();
+//		params.put("wskey", "SLDR000745");
+//		params.put("wstype", "test");
+//		params.put("wsname", "SLDR 000 745");
+//		params.put("bagpath", "/media/space/jerome/Data/newbags/sldr000745");
+//		client.createProcess("import-workspace", "Import SLDR 745", params, Collections.<String, File> emptyMap());
+//		client.logout();
+//	}
+	
 	@Test
-	public void testImportWorkspace() throws OrtolangClientException, OrtolangClientAccountException {
+	public void testDownloadFile() throws OrtolangClientException, OrtolangClientAccountException {
 		client.login("root");
 		String profile = client.connectedProfile();
 		logger.log(Level.INFO, "connected profile: {0}", profile);
 		assertEquals(MembershipService.SUPERUSER_IDENTIFIER, profile);
-		Map<String, String> params = new HashMap<String, String> ();
-		params.put("wskey", "SLDR000745");
-		params.put("wstype", "test");
-		params.put("wsname", "SLDR 000 745");
-		params.put("bagpath", "/media/space/jerome/Data/newbags/sldr000745");
-		client.createProcess("import-workspace", "Import SLDR 745", params, Collections.<String, File> emptyMap());
+		client.downloadObject("7a88c874-6992-4e4b-bc80-f817e59f53a1");
 		client.logout();
 	}
 
