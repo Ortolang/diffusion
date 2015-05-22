@@ -217,7 +217,7 @@ public class BootstrapServiceBean implements BootstrapService {
 				LOGGER.log(Level.FINE, "import form : review-snapshot-form");
 				InputStream is4 = getClass().getClassLoader().getResourceAsStream("forms/review-snapshot-form.json");
 				String jsonDefinition4 = IOUtils.toString(is4);
-				form.createForm("review-snashot-form", "Review Snapshot Form", jsonDefinition4);
+				form.createForm("review-snapshot-form", "Review Snapshot Form", jsonDefinition4);
 				LOGGER.log(Level.FINE, "import form : test-process-confirm-form");
 				InputStream is5 = getClass().getClassLoader().getResourceAsStream("forms/ortolang-item-form.json");
 				String jsonDefinition5 = IOUtils.toString(is5);
