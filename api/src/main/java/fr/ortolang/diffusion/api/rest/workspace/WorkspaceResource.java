@@ -532,7 +532,7 @@ public class WorkspaceResource {
 
     @GET
     @Path("/{alias}/key")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response getKey(@PathParam(value = "alias") String alias) throws AccessDeniedException, KeyNotFoundException, CoreServiceException, AliasNotFoundException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + alias + "/key");
         String key = core.resolveWorkspaceAlias(alias);
@@ -542,7 +542,7 @@ public class WorkspaceResource {
 
 	@GET
 	@Path("/{alias}/available")
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Produces(MediaType.APPLICATION_JSON)
 	public Response checkAvailability(@PathParam(value = "alias") String alias) throws AccessDeniedException, KeyNotFoundException, CoreServiceException {
 		LOGGER.log(Level.INFO, "GET /workspaces/" + alias + "/available");
 		boolean available = false;

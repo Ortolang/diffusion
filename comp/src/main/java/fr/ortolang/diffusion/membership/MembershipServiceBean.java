@@ -695,7 +695,7 @@ public class MembershipServiceBean implements MembershipService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void addMemberInGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+	public Group addMemberInGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "adding member in group for key [" + key + "] and member [" + member + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
@@ -726,6 +726,8 @@ public class MembershipServiceBean implements MembershipService {
 
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", member);
 			notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "add-member"), argumentsBuilder.build());
+
+			return group;
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to add member in group with key [" + key + "]", e);

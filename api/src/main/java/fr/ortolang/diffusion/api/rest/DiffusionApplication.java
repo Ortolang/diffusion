@@ -45,6 +45,7 @@ import javax.ws.rs.core.Application;
 import fr.ortolang.diffusion.api.rest.filter.ContentTypeSetterPreProcessorInterceptor;
 import fr.ortolang.diffusion.api.rest.form.FormResource;
 import fr.ortolang.diffusion.api.rest.format.MetadataFormatResource;
+import fr.ortolang.diffusion.api.rest.group.GroupResource;
 import fr.ortolang.diffusion.api.rest.mapper.*;
 import fr.ortolang.diffusion.api.rest.object.ObjectResource;
 import fr.ortolang.diffusion.api.rest.profile.ProfileResource;
@@ -60,6 +61,7 @@ public class DiffusionApplication extends Application {
 		classes.add(ObjectResource.class);
 		classes.add(WorkspaceResource.class);
 		classes.add(ProfileResource.class);
+		classes.add(GroupResource.class);
 		classes.add(RuntimeResource.class);
 		classes.add(FormResource.class);
 		classes.add(MetadataFormatResource.class);
