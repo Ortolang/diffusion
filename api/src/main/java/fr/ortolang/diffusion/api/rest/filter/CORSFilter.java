@@ -77,7 +77,7 @@ public class CORSFilter implements Filter {
 		HttpServletRequest hrequest = (HttpServletRequest)request;
 		String origin = hrequest.getHeader(ORIGIN_PROPERTY);
         if(origin != null && !origin.isEmpty()) {
-        	LOGGER.log(Level.INFO, "Origin found in headers : " + origin);
+        	LOGGER.log(Level.FINEST, "Origin found in headers : " + origin);
 //        	((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ORIGIN_PROPERTY, origin);
             // TODO remove dev hack allowing Cross-origin
         	((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ORIGIN_PROPERTY, "*");

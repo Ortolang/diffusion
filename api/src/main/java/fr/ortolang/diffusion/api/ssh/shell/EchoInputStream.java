@@ -62,7 +62,7 @@ public class EchoInputStream extends FilterInputStream {
 			echo.write('\r');
 		} else if ( c == 127 ) {
 			echo.write('\b');
-			LOGGER.log(Level.INFO, "Value of character \\b" + (int) 'b');
+			LOGGER.log(Level.FINEST, "Value of character \\b" + (int) 'b');
 		} else {
 			echo.write(c);
 		}

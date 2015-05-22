@@ -261,7 +261,7 @@ public class ObjectResource {
 	@GET
 	@Path("/{key}/history")
 	public Response history(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "get history of object " + key);
+		LOGGER.log(Level.INFO, "GET /objects/" + key + "/history");
 
 		OrtolangObjectState state = browser.getState(key);
 		CacheControl cc = new CacheControl();
@@ -298,7 +298,7 @@ public class ObjectResource {
 	@GET
 	@Path("/{key}/keys")
 	public Response listKeys(@PathParam(value = "key") String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "list keys contains in object " + key);
+		LOGGER.log(Level.INFO, "GET /objects/" + key + "/keys");
 
 		List<String> keys = this.listKeys(key, new ArrayList<String>());
 		GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String>();
@@ -416,7 +416,7 @@ public class ObjectResource {
 			} catch (UnsupportedEncodingException e) {
 				LOGGER.log(Level.WARNING, "cannot decode URL " + query);
 			}
-			LOGGER.log(Level.INFO, "searching objects with semantic query: " + queryEncoded);
+			LOGGER.log(Level.FINE, "searching objects with semantic query: " + queryEncoded);
 			String results = search.semanticSearch(queryEncoded, "json");
 			return Response.ok(results).build();
 		} else {
@@ -427,7 +427,7 @@ public class ObjectResource {
 	@GET
 	@Path("/index")
 	public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
-		LOGGER.log(Level.INFO, "searching objects with plain text query: " + query);
+		LOGGER.log(Level.INFO, "GET /objects/index?query=" + query);
 		List<OrtolangSearchResult> results;
 		if (query != null && query.length() > 0) {
 			results = search.indexSearch(query);
@@ -440,7 +440,7 @@ public class ObjectResource {
 	@GET
 	@Path("/json")
 	public Response jsonSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
-		LOGGER.log(Level.INFO, "searching objects with json query: " + query);
+		LOGGER.log(Level.INFO, "GET /objects/json?query=" + query);
 		List<String> results;
 		if (query != null && query.length() > 0) {
 			results = search.jsonSearch(query);
@@ -481,7 +481,7 @@ public class ObjectResource {
 		OrtolangObject object = browser.findObject(key);
 		String type = object.getObjectIdentifier().getType();
 
-		LOGGER.log(Level.INFO, "export collection to zip : " + path.build() + " (" + key + ")");
+		LOGGER.log(Level.FINE, "export collection to zip : " + path.build() + " (" + key + ")");
 
 		ZipEntry ze = new ZipEntry(path.build() + PathBuilder.PATH_SEPARATOR);
 
@@ -504,7 +504,7 @@ public class ObjectResource {
 
 							DataObject dataObject = (DataObject) browser.findObject(element.getKey());
 
-							LOGGER.log(Level.INFO, "export dataobject to zip : " + pathElement.build() + " (" + element.getKey() + ")");
+							LOGGER.log(Level.FINE, "export dataobject to zip : " + pathElement.build() + " (" + element.getKey() + ")");
 							ZipEntry entry = new ZipEntry(pathElement.build());
 							entry.setTime(element.getModification());
 							entry.setSize(dataObject.getSize());

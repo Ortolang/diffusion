@@ -103,120 +103,120 @@ public class ProfileSshFile implements SshFile {
 	
 	@Override
 	public String getName() {
-		LOGGER.log(Level.INFO, "retreive name: " + view.getConnectedUser());
+		LOGGER.log(Level.FINE, "retreive name: " + view.getConnectedUser());
 		return view.getConnectedUser();
 	}
 	
 	@Override
 	public String getAbsolutePath() {
-		LOGGER.log(Level.INFO, "retreive absolute path: ");
+		LOGGER.log(Level.FINE, "retreive absolute path: ");
 		return "/";
 	}
 
 	@Override
 	public String getOwner() {
-		LOGGER.log(Level.INFO, "retreive owner : " + view.getConnectedUser());
+		LOGGER.log(Level.FINE, "retreive owner : " + view.getConnectedUser());
 		return view.getConnectedUser();
 	}
 
 	@Override
 	public boolean isDirectory() {
-		LOGGER.log(Level.INFO, "check if isDirectory: true");
+		LOGGER.log(Level.FINE, "check if isDirectory: true");
 		return true;
 	}
 
 	@Override
 	public boolean isFile() {
-		LOGGER.log(Level.INFO, "check if isFile: false");
+		LOGGER.log(Level.FINE, "check if isFile: false");
 		return false;
 	}
 
 	@Override
 	public boolean doesExist() {
-		LOGGER.log(Level.INFO, "check if doesExists: " + exists);
+		LOGGER.log(Level.FINE, "check if doesExists: " + exists);
 		return exists;
 	}
 
 	@Override
 	public boolean isReadable() {
-		LOGGER.log(Level.INFO, "check if isReadable: " + readable);
+		LOGGER.log(Level.FINE, "check if isReadable: " + readable);
 		return readable;
 	}
 
 	@Override
 	public boolean isWritable() {
-		LOGGER.log(Level.INFO, "check if isWritable: false");
+		LOGGER.log(Level.FINE, "check if isWritable: false");
 		return false;
 	}
 
 	@Override
 	public boolean isExecutable() {
-		LOGGER.log(Level.INFO, "check if isExecutable: true"); 
+		LOGGER.log(Level.FINE, "check if isExecutable: true"); 
 		return true;
 	}
 
 	@Override
 	public boolean isRemovable() {
-		LOGGER.log(Level.INFO, "check if isRemovable: false"); 
+		LOGGER.log(Level.FINE, "check if isRemovable: false"); 
 		return false;
 	}
 
 	@Override
 	public SshFile getParentFile() {
-		LOGGER.log(Level.INFO, "retreive parent file: this"); 
+		LOGGER.log(Level.FINE, "retreive parent file: this"); 
 		return this;
 	}
 	
 	@Override
 	public long getLastModified() {
-		LOGGER.log(Level.INFO, "retreive last modified: 0");
+		LOGGER.log(Level.FINE, "retreive last modified: 0");
 		return 0;
 	}
 
 	@Override
 	public boolean setLastModified(long time) {
-		LOGGER.log(Level.INFO, "set last modified: " + time);
+		LOGGER.log(Level.FINE, "set last modified: " + time);
 		return false;
 	}
 
 	@Override
 	public long getSize() {
-		LOGGER.log(Level.INFO, "get size: 0");
+		LOGGER.log(Level.FINE, "get size: 0");
 		return 0;
 	}
 
 	@Override
 	public boolean mkdir() {
-		LOGGER.log(Level.INFO, "mkdir called");
+		LOGGER.log(Level.FINE, "mkdir called");
 		return false;
 	}
 
 	@Override
 	public boolean delete() {
-		LOGGER.log(Level.INFO, "delete called");
+		LOGGER.log(Level.FINE, "delete called");
 		return false;
 	}
 
 	@Override
 	public boolean create() throws IOException {
-		LOGGER.log(Level.INFO, "create called");
+		LOGGER.log(Level.FINE, "create called");
 		return false;
 	}
 
 	@Override
 	public void truncate() throws IOException {
-		LOGGER.log(Level.INFO, "truncate called");
+		LOGGER.log(Level.FINE, "truncate called");
 	}
 
 	@Override
 	public boolean move(SshFile destination) {
-		LOGGER.log(Level.INFO, "move called to : " + destination.getAbsolutePath());
+		LOGGER.log(Level.FINE, "move called to : " + destination.getAbsolutePath());
 		return false;
 	}
 
 	@Override
 	public List<SshFile> listSshFiles() {
-		LOGGER.log(Level.INFO, "listing user workspaces");
+		LOGGER.log(Level.FINE, "listing user workspaces");
 		List<SshFile> children = new ArrayList<SshFile>();
 		for ( String workspace : workspaces ) {
 			children.add(view.getFile(this, workspace));
@@ -226,25 +226,25 @@ public class ProfileSshFile implements SshFile {
 
 	@Override
 	public OutputStream createOutputStream(long offset) throws IOException {
-		LOGGER.log(Level.INFO, "create ouput stream called with offset : " + offset);
+		LOGGER.log(Level.FINE, "create ouput stream called with offset : " + offset);
 		throw new IOException();
 	}
 
 	@Override
 	public InputStream createInputStream(long offset) throws IOException {
-		LOGGER.log(Level.INFO, "create input stream called with offset : " + offset);
+		LOGGER.log(Level.FINE, "create input stream called with offset : " + offset);
 		throw new IOException();
 	}
 
 	@Override
 	public void handleClose() throws IOException {
-		LOGGER.log(Level.INFO, "handle close called");
+		LOGGER.log(Level.FINE, "handle close called");
 		//Noop
 	}
 	
 	@Override
 	public Map<Attribute, Object> getAttributes(boolean followLinks) throws IOException {
-		LOGGER.log(Level.INFO, "trying to get attributes ");
+		LOGGER.log(Level.FINE, "trying to get attributes ");
 		Map<Attribute, Object> map = new HashMap<Attribute, Object>();
         map.put(Attribute.Size, getSize());
         map.put(Attribute.IsDirectory, isDirectory());
@@ -276,7 +276,7 @@ public class ProfileSshFile implements SshFile {
 
 	@Override
 	public void setAttributes(Map<Attribute, Object> attributes) throws IOException {
-		LOGGER.log(Level.INFO, "trying to set attributes ");
+		LOGGER.log(Level.FINE, "trying to set attributes ");
 		if ( !attributes.isEmpty() ) {
 			throw new IOException();
 		}
@@ -284,13 +284,13 @@ public class ProfileSshFile implements SshFile {
 
 	@Override
 	public Object getAttribute(Attribute attribute, boolean followLinks) throws IOException {
-		LOGGER.log(Level.INFO, "trying to get attribute : " + attribute.name());
+		LOGGER.log(Level.FINE, "trying to get attribute : " + attribute.name());
 		return getAttributes(followLinks).get(attribute);
 	}
 
 	@Override
 	public void setAttribute(Attribute attribute, Object value) throws IOException {
-		LOGGER.log(Level.INFO, "trying to set attribute : " + attribute.name());
+		LOGGER.log(Level.FINE, "trying to set attribute : " + attribute.name());
 		Map<Attribute, Object> map = new HashMap<Attribute, Object> ();
 		map.put(attribute, value);
 		setAttributes(map);
@@ -298,13 +298,13 @@ public class ProfileSshFile implements SshFile {
 
 	@Override
 	public String readSymbolicLink() throws IOException {
-		LOGGER.log(Level.INFO, "trying to read symlink ");
+		LOGGER.log(Level.FINE, "trying to read symlink ");
 		throw new IOException();
 	}
 
 	@Override
 	public void createSymbolicLink(SshFile destination) throws IOException {
-		LOGGER.log(Level.INFO, "trying to create symlink for destination : " + destination.getAbsolutePath());
+		LOGGER.log(Level.FINE, "trying to create symlink for destination : " + destination.getAbsolutePath());
 		throw new IOException();
 	}
 

@@ -72,7 +72,7 @@ public class FormResource {
 	
 	@GET
 	public Response list() throws FormServiceException {
-		LOGGER.log(Level.INFO, "list availables forms");
+		LOGGER.log(Level.INFO, "GET /forms");
 		
 		List<Form> forms = form.listForms();
 		
@@ -91,7 +91,7 @@ public class FormResource {
 	@GET
 	@Path("/{key}")
 	public Response get(@PathParam(value = "key") String key) throws FormServiceException, KeyNotFoundException {
-		LOGGER.log(Level.INFO, "read form for key: " + key);
+		LOGGER.log(Level.INFO, "GET /forms/" + key);
 				
 		Form representation = form.readForm(key);
 		

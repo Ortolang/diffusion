@@ -248,7 +248,7 @@ public class WorkspaceResource {
 			WorkspaceElementRepresentation representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
 			if (representation != null) {
 				if (metadata != null && metadata.length() > 0) {
-					LOGGER.log(Level.INFO, "searching element metadata: " + metadata);
+					LOGGER.log(Level.FINE, "searching element metadata: " + metadata);
 					MetadataElement mdElement = null;
 					for (MetadataElement element : representation.getMetadatas()) {
 						if (element.getName().equals(metadata)) {
@@ -399,7 +399,7 @@ public class WorkspaceResource {
 			PathBuilder npath = PathBuilder.fromPath(form.getPath());
 			try {
 				String ekey = core.resolveWorkspacePath(wskey, "head", npath.build());
-				LOGGER.log(Level.INFO, "element found at path: " + npath.build());
+				LOGGER.log(Level.FINE, "element found at path: " + npath.build());
 				OrtolangObject object = browser.findObject(ekey);
 				switch (form.getType()) {
 				case Collection.OBJECT_TYPE:
@@ -467,7 +467,7 @@ public class WorkspaceResource {
 		PathBuilder npath = PathBuilder.fromPath(representation.getPath());
 		try {
 			core.resolveWorkspacePath(wskey, "head", npath.build());
-			LOGGER.log(Level.INFO, "element found at path: " + npath.build());
+			LOGGER.log(Level.FINE, "element found at path: " + npath.build());
 			if (representation.getType().equals(Collection.OBJECT_TYPE)) {
 				core.updateCollection(wskey, npath.build(), representation.getDescription());
 				return Response.ok().build();

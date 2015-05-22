@@ -58,6 +58,7 @@ import javax.ejb.TransactionAttributeType;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.tika.Tika;
+import org.apache.tika.io.TikaInputStream;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
@@ -207,7 +208,8 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 		}
 		try (InputStream is = Files.newInputStream(path)) {
 			Tika tika = new Tika();
-			String type = tika.detect(is, filename); 
+			TikaInputStream tis = TikaInputStream.get(is);
+			String type = tika.detect(tis, filename); 
 			return type;
 		} catch (Exception e) {
 			throw new BinaryStoreServiceException(e);

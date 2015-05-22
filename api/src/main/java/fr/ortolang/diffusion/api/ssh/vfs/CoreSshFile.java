@@ -373,7 +373,7 @@ public class CoreSshFile implements SshFile {
 	public void handleClose() throws IOException {
 		LOGGER.log(Level.FINE, "handle close called");
 		if ( temp != null ) {
-			LOGGER.log(Level.INFO, "we have a temp file uploaded, maybe update data object according to this !!");
+			LOGGER.log(Level.FINE, "we have a temp file uploaded, maybe update data object according to this !!");
 			try {
 				LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(view.getSession().getLogin(), view.getSession().getPassword());
 				lc.login();

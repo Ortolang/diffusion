@@ -64,7 +64,7 @@ public final class SubscriptionServlet {
 
     @Message(encoders = {EventMessageEncoder.class})
     public final EventMessage onEventMessage(final Event event) throws IOException {
-        LOGGER.log(Level.INFO, "Sending event message");
+        LOGGER.log(Level.FINEST, "Sending event message");
         EventMessage eventMessage = new EventMessage();
         return eventMessage.fromEvent(event);
     }
