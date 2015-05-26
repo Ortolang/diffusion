@@ -17,6 +17,8 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
+import fr.ortolang.diffusion.preview.PreviewService;
+import fr.ortolang.diffusion.preview.PreviewServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
@@ -32,6 +34,8 @@ public class AllContentViewerServlet extends ContentViewer {
 	private CoreService core;
 	@EJB
 	private BrowserService browser;
+	@EJB
+	private PreviewService preview;
 	@EJB
 	private BinaryStoreService binary;
 	
@@ -49,6 +53,11 @@ public class AllContentViewerServlet extends ContentViewer {
 	@Override 
 	protected BrowserService getBrowserService() {
 		return browser;
+	}
+	
+	@Override 
+	protected PreviewService getPreviewService() {
+		return preview;
 	}
 	
 	@Override 
@@ -80,7 +89,7 @@ public class AllContentViewerServlet extends ContentViewer {
 
 		} catch (InvalidPathException e) {
 			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-		} catch (DataNotFoundException | OrtolangException | CoreServiceException e) {
+		} catch (DataNotFoundException | OrtolangException | CoreServiceException | PreviewServiceException e) {
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 		} catch (AliasNotFoundException | KeyNotFoundException e) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());

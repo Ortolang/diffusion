@@ -25,7 +25,9 @@ import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
-import fr.ortolang.diffusion.core.preview.PreviewService;
+import fr.ortolang.diffusion.preview.PreviewService;
+import fr.ortolang.diffusion.preview.PreviewServiceException;
+import fr.ortolang.diffusion.preview.entity.Preview;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
@@ -55,9 +57,11 @@ public abstract class ContentViewer extends HttpServlet {
 	
 	protected abstract BinaryStoreService getBinaryStoreService();
 	
+	protected abstract PreviewService getPreviewService();
+	
 	protected abstract BrowserService getBrowserService();
 	
-	protected void handleContent(HttpServletRequest request, HttpServletResponse response) throws InvalidPathException, CoreServiceException, KeyNotFoundException, ServletException, IOException, OrtolangException, DataNotFoundException, AccessDeniedException {
+	protected void handleContent(HttpServletRequest request, HttpServletResponse response) throws InvalidPathException, CoreServiceException, KeyNotFoundException, ServletException, IOException, OrtolangException, DataNotFoundException, AccessDeniedException, PreviewServiceException {
 		if ( request.getAttribute(ROOT_ATTRIBUTE_NAME) == null && request.getAttribute(OBJECTKEY_ATTRIBUTE_NAME) == null ) {
 			List<CollectionElement> elements = loadWorkspaceCatalog((String)request.getAttribute(WSKEY_ATTRIBUTE_NAME));
 			request.setAttribute("elements", elements);
@@ -79,14 +83,15 @@ public abstract class ContentViewer extends HttpServlet {
 				}
 				InputStream input;
 				long size = 0;
-				if ( request.getParameter(PREVIEW_PARAM_NAME) != null && request.getParameter(PREVIEW_PARAM_NAME).equals(LARGE_PREVIEW_VALUE) ) {
-					size = ((DataObject)object).getLargePreviewSize();
-					response.setContentType(PreviewService.PREVIEW_MIMETYPE);
-					input = getCoreService().preview(key, true);
-				} else if ( request.getParameter(PREVIEW_PARAM_NAME) != null && request.getParameter(PREVIEW_PARAM_NAME).equals(SMALL_PREVIEW_VALUE) ) {
-					size = ((DataObject)object).getSmallPreviewSize();
-					response.setContentType(PreviewService.PREVIEW_MIMETYPE);
-					input = getCoreService().preview(key, false);
+				if ( request.getParameter(PREVIEW_PARAM_NAME) != null ) {
+					size = getPreviewService().getPreviewSize(key, request.getParameter(PREVIEW_PARAM_NAME));
+					if ( size < 0 ) {
+						response.sendError(HttpServletResponse.SC_NOT_FOUND);
+						return;
+					} else {
+						response.setContentType(Preview.MIMETYPE);
+						input = getPreviewService().getPreviewContent(key, request.getParameter(PREVIEW_PARAM_NAME));
+					}
 				} else {
 					size = ((DataObject)object).getSize();
 					response.setContentType(((DataObject)object).getMimeType());

@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core.preview.generator;
+package fr.ortolang.diffusion.preview.generator;
 
 import java.io.File;
 import java.util.List;

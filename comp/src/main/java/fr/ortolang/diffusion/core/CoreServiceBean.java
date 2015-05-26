@@ -54,7 +54,6 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -96,7 +95,6 @@ import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
-import fr.ortolang.diffusion.core.preview.PreviewService;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -1272,7 +1270,7 @@ public class CoreServiceBean implements CoreService {
 			registry.update(ws.getKey());
 			LOGGER.log(Level.FINEST, "workspace set changed");
 
-			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("wskey", ws.getKey()).addArgument("members", ws.getMembers());
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(5).addArgument("wskey", ws.getKey()).addArgument("path", npath.build()).addArgument("hash", object.getStream()).addArgument("mimetype", object.getMimeType()).addArgument("members", ws.getMembers());
 			notification.throwEvent(key, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "create"), argumentsBuilder.build());
 			ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(2).addArgument("oKey", key).addArgument("path", path);
 			notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder2.build());
@@ -1371,8 +1369,6 @@ public class CoreServiceBean implements CoreService {
 				object.setKey(element.getKey());
 				object.setDescription(description);
 				object.setKey(element.getKey());
-				object.setSmallPreview("");
-				object.setLargePreview("");
 				if (hash != null && hash.length() > 0) {
 					object.setSize(binarystore.size(hash));
 					object.setMimeType(binarystore.type(hash, object.getName()));
@@ -1405,7 +1401,7 @@ public class CoreServiceBean implements CoreService {
 				registry.update(ws.getKey());
 				LOGGER.log(Level.FINEST, "workspace set changed");
 
-				ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("wskey", ws.getKey()).addArgument("members", ws.getMembers());
+				ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(5).addArgument("wskey", ws.getKey()).addArgument("path", npath.build()).addArgument("hash", object.getStream()).addArgument("mimetype", object.getMimeType()).addArgument("members", ws.getMembers());
 				notification.throwEvent(object.getKey(), caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "update"), argumentsBuilder.build());
 				ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(2).addArgument("oKey", object.getKey()).addArgument("path", path);
 				notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder2.build());
@@ -2604,41 +2600,6 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public InputStream preview(String key, boolean large) throws CoreServiceException, DataNotFoundException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "preview content from store for object with key [" + key + "]");
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, DataObject.OBJECT_TYPE);
-			authorisation.checkPermission(key, subjects, "read");
-
-			DataObject object = em.find(DataObject.class, identifier.getId());
-			if (object == null) {
-				throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
-			}
-			String hash = object.getSmallPreview();
-			if ( large ) {
-				if ( object.getLargePreview().length() > 0 )
-				hash = object.getLargePreview();
-			} 
-			if (hash != null && hash.length() > 0) {
-				InputStream stream = binarystore.get(hash);
-				ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("hash", hash);
-				notification.throwEvent(key, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "preview"), argumentsBuilder.build());
-				return stream;
-			} else {
-				throw new DataNotFoundException("there is no preview available for this data object");
-			}
-		} catch (NotificationServiceException | BinaryStoreServiceException | MembershipServiceException | RegistryServiceException | AuthorisationServiceException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occurred during getting preview content", e);
-			throw new CoreServiceException("unable to get preview content", e);
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public InputStream download(String key) throws CoreServiceException, DataNotFoundException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "download content from store for object with key [" + key + "]");
 		try {
@@ -3059,31 +3020,6 @@ public class CoreServiceBean implements CoreService {
 		return keys;
 	}
 	
-	@Override
-	@RolesAllowed(PreviewService.SERVICE_NAME)
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void systemSetObjectPreview(String key, String smallPreview, long smallPreviewSize, String largePreview, long largePreviewSize) throws CoreServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "setting preview for object with key[" + key + "]");
-		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			checkObjectType(identifier, DataObject.OBJECT_TYPE);
-			DataObject object = em.find(DataObject.class, identifier.getId());
-			if (object == null) {
-				throw new CoreServiceException("unable to load data object with id [" + identifier.getId() + "] from storage");
-			}
-			object.setSmallPreview(smallPreview);
-			object.setSmallPreviewSize(smallPreviewSize);
-			object.setLargePreview(largePreview);
-			object.setLargePreviewSize(largePreviewSize);
-			em.merge(object);
-			
-			notification.throwEvent(key, PreviewService.SERVICE_NAME, identifier.getType(), OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, identifier.getType(), "generate-preview"));
-		} catch (NotificationServiceException | RegistryServiceException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occurred while setting data object preview streams", e);
-			throw new CoreServiceException("unable to set preview streams for data object with key [" + key + "]", e);
-		}
-	}
-
 	/* ### Internal operations ### */
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -3237,8 +3173,6 @@ public class CoreServiceBean implements CoreService {
 			clone.setSize(origin.getSize());
 			clone.setMimeType(origin.getMimeType());
 			clone.setStream(origin.getStream());
-			clone.setSmallPreview(origin.getSmallPreview());
-			clone.setLargePreview(origin.getLargePreview());
 			clone.setClock(clock);
 			Set<MetadataElement> metadatas = new HashSet<MetadataElement>();
 			for (MetadataElement mde : origin.getMetadatas()) {

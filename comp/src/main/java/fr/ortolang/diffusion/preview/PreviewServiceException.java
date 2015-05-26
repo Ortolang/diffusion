@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core.preview;
+package fr.ortolang.diffusion.preview;
 
 @SuppressWarnings("serial")
 public class PreviewServiceException extends Exception {

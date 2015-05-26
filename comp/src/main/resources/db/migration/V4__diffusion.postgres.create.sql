@@ -32,14 +32,10 @@
         id varchar(255) not null,
         clock int4 not null,
         description varchar(2500),
-        largePreview varchar(255),
-        largePreviewSize int8 not null,
         metadatasContent text,
         mimeType varchar(255),
         name varchar(255),
         size int8 not null,
-        smallPreview varchar(255),
-        smallPreviewSize int8 not null,
         stream varchar(255),
         version int8 not null,
         primary key (id)
@@ -86,6 +82,14 @@
         target varchar(255),
         version int8 not null,
         primary key (id)
+    );
+    
+    create table Preview (
+        key varchar(255) not null,
+        generationDate int8 not null,
+        large varchar(255),
+        small varchar(255),
+        primary key (key)
     );
 
     create table Process (

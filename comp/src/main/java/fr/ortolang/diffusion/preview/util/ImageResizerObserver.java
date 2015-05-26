@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core.preview.util;
+package fr.ortolang.diffusion.preview.util;
 
 import java.awt.Image;
 import java.awt.image.ImageObserver;
