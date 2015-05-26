@@ -370,24 +370,24 @@ public class ObjectResource {
 		return builder.build();
 	}
 
-	@GET
-	@Path("/{key}/preview")
-	public void preview(@PathParam(value = "key") String key, @QueryParam(value = "large") @DefaultValue(value = "false") boolean large, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException,
-			DataNotFoundException, IOException, CoreServiceException {
-		LOGGER.log(Level.INFO, "GET /objects/" + key + "/preview");
-		OrtolangObject object = browser.findObject(key);
-		if (object instanceof DataObject) {
-			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
-			response.setContentType(((DataObject) object).getMimeType());
-			response.setContentLength((int) ((DataObject) object).getSize());
-		}
-		InputStream input = core.preview(key, large);
-		try {
-			IOUtils.copy(input, response.getOutputStream());
-		} finally {
-			IOUtils.closeQuietly(input);
-		}
-	}
+//	@GET
+//	@Path("/{key}/preview")
+//	public void preview(@PathParam(value = "key") String key, @QueryParam(value = "large") @DefaultValue(value = "false") boolean large, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException,
+//			DataNotFoundException, IOException, CoreServiceException {
+//		LOGGER.log(Level.INFO, "GET /objects/" + key + "/preview");
+//		OrtolangObject object = browser.findObject(key);
+//		if (object instanceof DataObject) {
+//			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
+//			response.setContentType(((DataObject) object).getMimeType());
+//			response.setContentLength((int) ((DataObject) object).getSize());
+//		}
+//		InputStream input = core.preview(key, large);
+//		try {
+//			IOUtils.copy(input, response.getOutputStream());
+//		} finally {
+//			IOUtils.closeQuietly(input);
+//		}
+//	}
 
     @GET
     @Path("/{key}/size")

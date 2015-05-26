@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core.preview.generator;
+package fr.ortolang.diffusion.preview.generator;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -10,7 +10,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import fr.ortolang.diffusion.core.preview.util.ImageResizer;
+import fr.ortolang.diffusion.preview.util.ImageResizer;
 
 public class OpenOfficePreviewGenerator implements PreviewGenerator {
 

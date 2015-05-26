@@ -79,17 +79,11 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 	private long size;
 	private String mimeType;
 	private String stream;
-	private String smallPreview;
-	private long smallPreviewSize;
-	private String largePreview;
-	private long largePreviewSize;
 	@Lob
 	@Type(type = "org.hibernate.type.TextType")
 	private String metadatasContent = "";
 	
 	public DataObject() {
-		smallPreview = "";
-		largePreview = "";
 		stream = "";
 	}
 
@@ -149,40 +143,8 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 		this.mimeType = mimeType;
 	}
 
-	public String getSmallPreview() {
-		return smallPreview;
-	}
-
-	public void setSmallPreview(String smallPreview) {
-		this.smallPreview = smallPreview;
-	}
-	
-	public long getSmallPreviewSize() {
-		return smallPreviewSize;
-	}
-
-	public void setSmallPreviewSize(long smallPreviewSize) {
-		this.smallPreviewSize = smallPreviewSize;
-	}
-
-	public String getLargePreview() {
-		return largePreview;
-	}
-
-	public void setLargePreview(String largePreview) {
-		this.largePreview = largePreview;
-	}
-
 	public String getStream() {
 		return stream;
-	}
-
-	public long getLargePreviewSize() {
-		return largePreviewSize;
-	}
-
-	public void setLargePreviewSize(long largePreviewSize) {
-		this.largePreviewSize = largePreviewSize;
 	}
 
 	public void setStream(String stream) {

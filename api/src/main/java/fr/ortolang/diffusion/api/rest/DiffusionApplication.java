@@ -46,8 +46,17 @@ import fr.ortolang.diffusion.api.rest.filter.ContentTypeSetterPreProcessorInterc
 import fr.ortolang.diffusion.api.rest.form.FormResource;
 import fr.ortolang.diffusion.api.rest.format.MetadataFormatResource;
 import fr.ortolang.diffusion.api.rest.group.GroupResource;
-import fr.ortolang.diffusion.api.rest.mapper.*;
+import fr.ortolang.diffusion.api.rest.mapper.AccessDeniedExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.AliasNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.BrowserServiceExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.InvalidPathExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.KeyAlreadyExistsExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.KeyNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.PropertyNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.SearchServiceExceptionMapper;
+import fr.ortolang.diffusion.api.rest.mapper.SecurityServiceExceptionMapper;
 import fr.ortolang.diffusion.api.rest.object.ObjectResource;
+import fr.ortolang.diffusion.api.rest.preview.PreviewResource;
 import fr.ortolang.diffusion.api.rest.profile.ProfileResource;
 import fr.ortolang.diffusion.api.rest.runtime.RuntimeResource;
 import fr.ortolang.diffusion.api.rest.workspace.WorkspaceResource;
@@ -65,6 +74,7 @@ public class DiffusionApplication extends Application {
 		classes.add(RuntimeResource.class);
 		classes.add(FormResource.class);
 		classes.add(MetadataFormatResource.class);
+		classes.add(PreviewResource.class);
 	}
 
 	@Override

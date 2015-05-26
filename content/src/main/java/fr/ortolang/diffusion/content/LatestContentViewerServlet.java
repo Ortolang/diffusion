@@ -17,6 +17,8 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
+import fr.ortolang.diffusion.preview.PreviewService;
+import fr.ortolang.diffusion.preview.PreviewServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
@@ -32,6 +34,8 @@ private static final Logger LOGGER = Logger.getLogger(LatestContentViewerServlet
 	protected CoreService core;
 	@EJB
 	protected BrowserService browser;
+	@EJB
+	private PreviewService preview;
 	@EJB
 	private BinaryStoreService binary;
 
@@ -51,6 +55,11 @@ private static final Logger LOGGER = Logger.getLogger(LatestContentViewerServlet
 		return browser;
 	}
 
+	@Override 
+	protected PreviewService getPreviewService() {
+		return preview;
+	}
+	
 	@Override 
 	protected BinaryStoreService getBinaryStoreService() {
 		return binary;
@@ -87,7 +96,7 @@ private static final Logger LOGGER = Logger.getLogger(LatestContentViewerServlet
 
 		} catch (InvalidPathException e) {
 			response.sendError(HttpServletResponse.SC_BAD_REQUEST);
-		} catch (DataNotFoundException | OrtolangException | CoreServiceException e) {
+		} catch (DataNotFoundException | OrtolangException | CoreServiceException | PreviewServiceException e) {
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 		} catch (AliasNotFoundException | KeyNotFoundException e) {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());

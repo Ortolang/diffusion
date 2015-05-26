@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core.preview.generator;
+package fr.ortolang.diffusion.preview.generator;
 
 import java.io.File;
 import java.util.Arrays;
@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import fr.ortolang.diffusion.core.preview.util.ImageResizer;
+import fr.ortolang.diffusion.preview.util.ImageResizer;
 
 public class ImagePreviewGenerator implements PreviewGenerator {
 

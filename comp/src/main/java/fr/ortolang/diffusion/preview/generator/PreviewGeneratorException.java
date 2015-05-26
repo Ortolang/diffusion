@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core.preview.generator;
+package fr.ortolang.diffusion.preview.generator;
 
 @SuppressWarnings("serial")
 public class PreviewGeneratorException extends Exception {

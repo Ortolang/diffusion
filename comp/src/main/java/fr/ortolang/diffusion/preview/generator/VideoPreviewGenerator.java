@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core.preview.generator;
+package fr.ortolang.diffusion.preview.generator;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,7 +12,7 @@ import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameConverter;
 
-import fr.ortolang.diffusion.core.preview.util.ImageResizer;
+import fr.ortolang.diffusion.preview.util.ImageResizer;
 
 public class VideoPreviewGenerator implements PreviewGenerator {
 

@@ -9,8 +9,8 @@ import java.util.logging.Logger;
 
 import org.junit.Test;
 
-import fr.ortolang.diffusion.core.preview.generator.PreviewGeneratorException;
-import fr.ortolang.diffusion.core.preview.generator.VideoPreviewGenerator;
+import fr.ortolang.diffusion.preview.generator.PreviewGeneratorException;
+import fr.ortolang.diffusion.preview.generator.VideoPreviewGenerator;
 
 public class VideoPreviewGeneratorTest {
 
