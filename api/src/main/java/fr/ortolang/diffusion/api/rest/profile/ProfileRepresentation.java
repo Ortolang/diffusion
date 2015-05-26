@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.api.rest.profile;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -51,6 +52,8 @@ public class ProfileRepresentation {
 	private String givenName;
 	private String familyName;
 	private String email;
+	private String emailHash;
+	private ProfileDataVisibility emailVisibility;
 	private boolean emailVerified;
 	private String status;
 	private String[] groups;
@@ -91,6 +94,22 @@ public class ProfileRepresentation {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	public String getEmailHash() {
+		return emailHash;
+	}
+
+	public void setEmailHash(String emailHash) {
+		this.emailHash = emailHash;
+	}
+
+	public ProfileDataVisibility getEmailVisibility() {
+		return emailVisibility;
+	}
+
+	public void setEmailVisibility(ProfileDataVisibility emailVisibility) {
+		this.emailVisibility = emailVisibility;
 	}
 
 	public boolean isEmailVerified() {
@@ -138,6 +157,8 @@ public class ProfileRepresentation {
 		ProfileRepresentation representation = new ProfileRepresentation();
 		representation.setKey(profile.getKey());
 		representation.setEmail(profile.getEmail());
+		representation.setEmailHash(profile.getEmailHash());
+		representation.setEmailVisibility(profile.getEmailVisibility());
 		representation.setEmailVerified(profile.isEmailVerified());
 		representation.setGivenName(profile.getGivenName());
 		representation.setFamilyName(profile.getFamilyName());

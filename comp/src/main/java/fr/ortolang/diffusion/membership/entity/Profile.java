@@ -63,6 +63,8 @@ public class Profile extends OrtolangObject {
 	private String givenName;
 	private String familyName;
 	private String email;
+	private String emailHash;
+	private ProfileDataVisibility emailVisibility;
 	private boolean emailVerified;
 	@Lob
 	@Type(type = "org.hibernate.type.TextType")
@@ -78,6 +80,7 @@ public class Profile extends OrtolangObject {
 		groupsList = "";
 		keys = new HashSet<ProfileKey> ();
 		infos = new HashMap<String, ProfileData> ();
+		emailVisibility = ProfileDataVisibility.EVERYBODY;
 	}
 
 	public String getId() {
@@ -119,6 +122,22 @@ public class Profile extends OrtolangObject {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	public String getEmailHash() {
+		return emailHash;
+	}
+
+	public void setEmailHash(String emailHash) {
+		this.emailHash = emailHash;
+	}
+
+	public ProfileDataVisibility getEmailVisibility() {
+		return emailVisibility;
+	}
+
+	public void setEmailVisibility(ProfileDataVisibility emailVisibility) {
+		this.emailVisibility = emailVisibility;
 	}
 
 	public boolean isEmailVerified() {

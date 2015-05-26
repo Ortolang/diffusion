@@ -108,6 +108,8 @@
     create table Profile (
         id varchar(255) not null,
         email varchar(255),
+        emailHash varchar(255),
+        emailVisibility int4 not null,
         emailVerified boolean not null,
         familyName varchar(255),
         friends varchar(255),

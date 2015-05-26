@@ -38,6 +38,9 @@ package fr.ortolang.diffusion.membership;
 
 import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -216,6 +219,7 @@ public class MembershipServiceBean implements MembershipService {
 			profile.setGivenName(givenName);
 			profile.setFamilyName(familyName);
 			profile.setEmail(email);
+			profile.setEmailHash(hashEmail(email));
 			profile.setFriends(friendGroupKey);
 			profile.setStatus(ProfileStatus.ACTIVE);
 			em.persist(profile);
@@ -234,7 +238,7 @@ public class MembershipServiceBean implements MembershipService {
 			
 			notification.throwEvent(key, key, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"));
 			return profile;
-		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | KeyAlreadyExistsException e) {
+		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | KeyAlreadyExistsException | NoSuchAlgorithmException | UnsupportedEncodingException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to create profile with key [" + key + "]", e);
 		}
@@ -259,6 +263,7 @@ public class MembershipServiceBean implements MembershipService {
 			profile.setGivenName(givenName);
 			profile.setFamilyName(familyName);
 			profile.setEmail(email);
+			profile.setEmailHash(hashEmail(email));
 			profile.setFriends(friendGroupKey);
 			profile.setStatus(ProfileStatus.ACTIVE);
 			em.persist(profile);			
@@ -280,7 +285,7 @@ public class MembershipServiceBean implements MembershipService {
 		} catch (KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			throw new ProfileAlreadyExistsException("a profile already exists for identifier " + identifier, e);
-		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException e) {
+		} catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | NoSuchAlgorithmException | UnsupportedEncodingException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to create profile with key [" + key + "]", e);
 		}
@@ -462,7 +467,7 @@ public class MembershipServiceBean implements MembershipService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public Profile updateProfile(String key, String givenName, String familyName, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+	public Profile updateProfile(String key, String givenName, String familyName, String email, ProfileDataVisibility emailVisibility) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "updating profile for key [" + key + "]");
 		try {
 			String caller = getProfileKeyForConnectedIdentifier();
@@ -478,12 +483,16 @@ public class MembershipServiceBean implements MembershipService {
 			profile.setGivenName(givenName);
 			profile.setFamilyName(familyName);
 			profile.setEmail(email);
+			profile.setEmailHash(hashEmail(email));
+			if (emailVisibility != null) {
+				profile.setEmailVisibility(emailVisibility);
+			}
 			em.merge(profile);
 
 			registry.update(key);
 			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update"));
 			return profile;
-		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
+		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | NoSuchAlgorithmException | UnsupportedEncodingException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("error while trying to update the profile with key [" + key + "]");
 		}
@@ -1101,6 +1110,17 @@ public class MembershipServiceBean implements MembershipService {
 		if (!identifier.getType().equals(objectType)) {
 			throw new MembershipServiceException("object identifier " + identifier + " does not refer to an object of type " + objectType);
 		}
+	}
+
+	private String hashEmail(String email) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		MessageDigest digest = MessageDigest.getInstance("MD5");
+		byte[] hashedBytes = digest.digest(email.getBytes("UTF-8"));
+		StringBuilder stringBuilder = new StringBuilder();
+		for (byte b : hashedBytes) {
+			stringBuilder.append(Integer.toString((b & 0xff) + 0x100, 16)
+					.substring(1));
+		}
+		return stringBuilder.toString();
 	}
 
 }
