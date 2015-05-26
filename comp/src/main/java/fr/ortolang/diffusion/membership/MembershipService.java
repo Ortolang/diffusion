@@ -69,7 +69,7 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public Profile updateProfile(String key, String givenName, String familyName, String email) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	public Profile updateProfile(String key, String givenName, String familyName, String email, ProfileDataVisibility emailVisibility) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 	

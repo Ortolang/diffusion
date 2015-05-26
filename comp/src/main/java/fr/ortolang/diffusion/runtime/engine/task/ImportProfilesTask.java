@@ -67,7 +67,7 @@ public class ImportProfilesTask extends RuntimeEngineTask {
 				}
 				if ( exists && overwrite ) {
 					try {
-						getMembershipService().updateProfile(profile.pro_login, profile.pro_firstname, profile.pro_lastname, profile.pro_emailt);
+						getMembershipService().updateProfile(profile.pro_login, profile.pro_firstname, profile.pro_lastname, profile.pro_emailt, null);
 					} catch (KeyNotFoundException | AccessDeniedException | MembershipServiceException e) {
 						partial = true;
 						LOGGER.log(Level.SEVERE, "  unable to update profile: " + profile.pro_login, e);
