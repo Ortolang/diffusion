@@ -100,6 +100,8 @@
         name varchar(255),
         progress int4 not null,
         state int4,
+        start int8 not null,
+        stop int8 not null,
         type varchar(255),
         version int8 not null,
         primary key (id)

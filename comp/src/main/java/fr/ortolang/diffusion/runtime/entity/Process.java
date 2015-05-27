@@ -81,6 +81,8 @@ public class Process extends OrtolangObject {
 	private State state;
 	private int progress;
 	private String activity;
+	private long start;
+	private long stop;
 	@Lob
 	@Type(type = "org.hibernate.type.TextType")
 	private String log;
@@ -164,6 +166,22 @@ public class Process extends OrtolangObject {
 
 	public void setActivity(String activity) {
 		this.activity = activity;
+	}
+	
+	public long getStart() {
+		return start;
+	}
+
+	public void setStart(long start) {
+		this.start = start;
+	}
+	
+	public long getStop() {
+		return stop;
+	}
+
+	public void setStop(long stop) {
+		this.stop = stop;
 	}
 
 	@Override

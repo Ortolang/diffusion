@@ -38,7 +38,6 @@ package fr.ortolang.diffusion.runtime;
 
 import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
-import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -187,6 +186,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			process.setKey(key);
 			process.appendLog("## PROCESS STATE CHANGED TO " + State.SUBMITTED + " BY " + caller + " ON " + new Date());
 			process.setState(State.SUBMITTED);
+			process.setStart(System.currentTimeMillis());
 			em.persist(process);
 			
 			if ( !variables.containsKey(Process.INITIER_VAR_NAME) ) {
@@ -271,6 +271,9 @@ public class RuntimeServiceBean implements RuntimeService {
 				throw new RuntimeServiceException("unable to find a process with id: " + pid);
 			}
 			process.setState(state);
+			if(state.equals(State.ABORTED) || state.equals(State.COMPLETED) || state.equals(State.SUSPENDED)) {
+				process.setStop(System.currentTimeMillis());
+			}
 			process.appendLog("## PROCESS STATE CHANGED TO " + state + " ON " + new Date());
 			em.merge(process);
 			

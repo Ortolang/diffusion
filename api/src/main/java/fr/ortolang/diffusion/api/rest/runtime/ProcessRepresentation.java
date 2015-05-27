@@ -52,6 +52,8 @@ public class ProcessRepresentation {
 	private String log;
 	private String state;
 	private String activity;
+	private long start;
+	private long stop;
 	
 	public ProcessRepresentation() {
 	}
@@ -112,6 +114,21 @@ public class ProcessRepresentation {
 		this.activity = activity;
 	}
 
+	public long getStart() {
+		return this.start;
+	}	
+
+	public void setStart(long start) {
+		this.start = start;
+	}
+
+	public long getStop() {
+		return this.stop;
+	}
+
+	public void setStop(long stop) {
+		this.stop = stop;
+	}
 	public static ProcessRepresentation fromProcess(Process instance) {
 		ProcessRepresentation representation = new ProcessRepresentation();
 		representation.setKey(instance.getKey());
@@ -121,7 +138,10 @@ public class ProcessRepresentation {
 		representation.setState(instance.getState().name());
 		representation.setActivity(instance.getActivity());
 		representation.setType(instance.getType());
+		representation.setStart(instance.getStart());
+		representation.setStop(instance.getStop());
 		return representation;
 	}
+
 
 }
