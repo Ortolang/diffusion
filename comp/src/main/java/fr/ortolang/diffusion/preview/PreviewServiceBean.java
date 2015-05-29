@@ -275,8 +275,8 @@ public class PreviewServiceBean implements PreviewService {
 					} catch (Exception e) {
 						LOGGER.log(Level.FINE, "unable to generate preview for key: " + job.getTarget(), e);
 					}
-				} catch (InterruptedException e) {
-					LOGGER.log(Level.SEVERE, "interrupted while trying to take next preview generation job", e);
+				} catch (InterruptedException  e) {
+					LOGGER.log(Level.SEVERE, "error occured while trying to take next preview generation job", e);
 				}
 
 			}
