@@ -351,8 +351,18 @@ public class OrtolangClient {
 		}
 	}
 
-
-	public void updateRemoteProcess(String pid, String state, String log, String activity) throws OrtolangClientException, OrtolangClientAccountException {
+	 /**
+	  * Update a remote process on diffusion server
+	  * @param pid
+	  * @param state
+	  * @param log
+	  * @param start
+	  * @param stop
+	  * @param activity
+	  * @throws OrtolangClientException
+	  * @throws OrtolangClientAccountException
+	  */
+	public void updateRemoteProcess(String pid, String state, String log, long start, long stop, String activity) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/runtime/remote-processes/").path(pid);
 		Form form = new Form();
@@ -361,6 +371,12 @@ public class OrtolangClient {
 		}
 		if(log != null){
 			form.param("log", log);
+		}
+		if(start != 0){
+			form.param("start", Long.toString(start));
+		}
+		if(stop != 0){
+			form.param("stop", Long.toString(stop));
 		}
 		if(activity != null){
 			form.param("activity", activity);

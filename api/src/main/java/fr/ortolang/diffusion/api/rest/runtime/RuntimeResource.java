@@ -352,7 +352,7 @@ public class RuntimeResource {
 	@POST
 	@Path("/remote-processes/{pid}")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response updateRemoteProcess(@PathParam(value = "pid") String pid, @FormParam(value = "status") String state, @FormParam(value = "activity") String activity, @FormParam(value = "log") String log) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException {
+	public Response updateRemoteProcess(@PathParam(value = "pid") String pid, @FormParam(value = "status") String state, @FormParam(value = "activity") String activity, @FormParam(value = "log") String log, @FormParam(value = "start") Long start, @FormParam(value = "stop") Long stop) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException {
 		LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /runtime/remote-processes/" + pid);
 		
 		try {
@@ -363,7 +363,7 @@ public class RuntimeResource {
 				runtime.appendRemoteProcessLog(pid, log);
 			}
 			if(state != null) {
-				runtime.updateRemoteProcessState(pid, State.valueOf(state));
+				runtime.updateRemoteProcessState(pid, State.valueOf(state), start, stop);
 			}
 			return Response.ok().build();
 		} catch(SecurityException | IllegalStateException e) {
