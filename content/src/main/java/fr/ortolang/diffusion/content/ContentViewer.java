@@ -76,7 +76,7 @@ public abstract class ContentViewer extends HttpServlet {
 			OrtolangObject object = getBrowserService().findObject(key);
 			response.setStatus(HttpServletResponse.SC_OK);
 			if ( object instanceof DataObject ) {
-				if ( request.getParameter(FORCE_DOWNLOAD_PARAM_NAME) != null && request.getParameter(FORCE_DOWNLOAD_PARAM_NAME).length() > 0 ) {
+				if ( request.getParameter(FORCE_DOWNLOAD_PARAM_NAME) != null ) {
 					response.setHeader("Content-Disposition", "attachment; filename=\"" + ((DataObject)object).getName() + "\"");
 				} else {
 					response.setHeader("Content-Disposition", "filename=\"" + ((DataObject)object).getName() + "\"");
