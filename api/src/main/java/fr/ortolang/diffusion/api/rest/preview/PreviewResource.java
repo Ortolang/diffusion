@@ -72,8 +72,7 @@ public class PreviewResource {
 					for ( Preview preview : previews ) {
 						representation.add(new PreviewRepresentation(preview.getKey(), getLargePreviewUrl(key), getSmallPreviewUrl(key)));
 					}
-				}
-				if ( object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE ) ) {
+				} else if ( object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE ) ) {
 					Preview prev = preview.getPreview(key);
 					representation.add(new PreviewRepresentation(prev.getKey(), getLargePreviewUrl(key), getSmallPreviewUrl(key)));
 				}

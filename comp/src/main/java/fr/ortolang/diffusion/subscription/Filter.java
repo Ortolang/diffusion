@@ -110,6 +110,14 @@ public class Filter {
         this.argumentsPatterns = argumentsPatterns;
     }
 
+    /**
+     * For privacy reasons you should not be able to have a filter consisting only in a typePattern
+     * @return true if the filter is conform
+     */
+    public boolean isConform() {
+        return fromPattern != null || throwedByPattern != null || argumentsPatterns != null;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
