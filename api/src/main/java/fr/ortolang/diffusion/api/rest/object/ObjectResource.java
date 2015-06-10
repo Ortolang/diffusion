@@ -439,11 +439,15 @@ public class ObjectResource {
 
 	@GET
 	@Path("/json")
-	public Response jsonSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
+	public Response jsonSearch(@QueryParam(value = "query") String query) {
 		LOGGER.log(Level.INFO, "GET /objects/json?query=" + query);
 		List<String> results;
 		if (query != null && query.length() > 0) {
-			results = search.jsonSearch(query);
+			try {
+				results = search.jsonSearch(query);
+			} catch(SearchServiceException e) {
+				results = Collections.emptyList();
+			}
 		} else {
 			results = Collections.emptyList();
 		}
