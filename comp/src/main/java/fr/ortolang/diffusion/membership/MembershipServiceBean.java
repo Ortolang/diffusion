@@ -366,6 +366,12 @@ public class MembershipServiceBean implements MembershipService {
 				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
 			}
 			profile.setKey(key);
+			if (profile.getEmailVisibility() != ProfileDataVisibility.EVERYBODY) {
+				ProfileDataVisibility visibilityLevel = getVisibilityLevel(caller, key, subjects, profile);
+				if (visibilityLevel.compareTo(profile.getEmailVisibility()) < 0) {
+					profile.setEmail(null);
+				}
+			}
 
 			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read"));
 			return profile;
@@ -390,29 +396,12 @@ public class MembershipServiceBean implements MembershipService {
 				throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
 			}
 			
-			ProfileDataVisibility visibilityLevel = ProfileDataVisibility.EVERYBODY;
-			try {
-				authorisation.checkOwnership(key, subjects);
-				visibilityLevel = ProfileDataVisibility.NOBODY;
-			} catch(AccessDeniedException e1) {
-				if(profile.getFriends()!= null) {
-					String friendsGroupKey = profile.getFriends();
-					OrtolangObjectIdentifier friendsObject = registry.lookup(friendsGroupKey);
-					checkObjectType(friendsObject, Group.OBJECT_TYPE);
-					try {
-						if (isMember(friendsGroupKey, caller)){
-							visibilityLevel = ProfileDataVisibility.FRIENDS;
-						} 
-					} catch (AccessDeniedException e2){
-						LOGGER.log(Level.FINE, caller + " is not authorized to read friend list of profile with key [" + key + "]");						
-					}
-				}
-			}
+			ProfileDataVisibility visibilityLevel = getVisibilityLevel(caller, key, subjects, profile);
 			LOGGER.log(Level.FINE, "Visibility level set to " + visibilityLevel);
 			
 			List<ProfileData> visibleInfos = new ArrayList<ProfileData> ();
 			for ( ProfileData info : profile.getInfos().values() ) {
-				LOGGER.log(Level.FINE, "Traeating info " + info.getName() );
+				LOGGER.log(Level.FINE, "Treating info " + info.getName() );
 				if (visibilityLevel.compareTo(info.getVisibility()) >= 0) {
 					LOGGER.log(Level.FINE, "info is visible");
 					if ( filter != null && filter.length() > 0 ) {
@@ -432,6 +421,28 @@ public class MembershipServiceBean implements MembershipService {
 		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to listy profile infos for profile with key [" + key + "]", e);
 		}
+	}
+
+	private ProfileDataVisibility getVisibilityLevel(String caller, String key, List<String> subjects, Profile profile) throws AuthorisationServiceException, MembershipServiceException, KeyNotFoundException, RegistryServiceException {
+		ProfileDataVisibility visibilityLevel = ProfileDataVisibility.EVERYBODY;
+		try {
+			authorisation.checkOwnership(key, subjects);
+			visibilityLevel = ProfileDataVisibility.NOBODY;
+		} catch(AccessDeniedException e1) {
+			if(profile.getFriends()!= null) {
+				String friendsGroupKey = profile.getFriends();
+				OrtolangObjectIdentifier friendsObject = registry.lookup(friendsGroupKey);
+				checkObjectType(friendsObject, Group.OBJECT_TYPE);
+				try {
+					if (isMember(friendsGroupKey, caller)){
+						visibilityLevel = ProfileDataVisibility.FRIENDS;
+					}
+				} catch (AccessDeniedException e2){
+					LOGGER.log(Level.FINE, caller + " is not authorized to read friend list of profile with key [" + key + "]");
+				}
+			}
+		}
+		return visibilityLevel;
 	}
 	
 	@Override
