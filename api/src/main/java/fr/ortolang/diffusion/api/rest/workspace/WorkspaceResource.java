@@ -116,7 +116,7 @@ public class WorkspaceResource {
 	}
 
 	@GET
-	public Response listWorkspaces() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	public Response listWorkspaces() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, BrowserServiceException {
 		LOGGER.log(Level.INFO, "GET /workspaces");
 		String profile = membership.getProfileKeyForConnectedIdentifier();
 
@@ -124,7 +124,12 @@ public class WorkspaceResource {
 		GenericCollectionRepresentation<WorkspaceRepresentation> representation = new GenericCollectionRepresentation<WorkspaceRepresentation>();
 		for (String key : keys) {
 			Workspace workspace = core.readWorkspace(key);
-			representation.addEntry(WorkspaceRepresentation.fromWorkspace(workspace));
+			OrtolangObjectInfos infos = browser.getInfos(key);
+			WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace);
+			workspaceRepresentation.setAuthor(infos.getAuthor());
+			workspaceRepresentation.setCreationDate(infos.getCreationDate());
+			workspaceRepresentation.setLastModificationDate(infos.getLastModificationDate());
+			representation.addEntry(workspaceRepresentation);
 		}
 		representation.setOffset(0);
 		representation.setSize(keys.size());
@@ -191,6 +196,8 @@ public class WorkspaceResource {
 			WorkspaceRepresentation representation = WorkspaceRepresentation.fromWorkspace(workspace);
 			OrtolangObjectInfos infos = browser.getInfos(wskey);
 			representation.setAuthor(infos.getAuthor());
+			representation.setCreationDate(infos.getCreationDate());
+			representation.setLastModificationDate(infos.getLastModificationDate());
 			builder = Response.ok(representation);
     		builder.lastModified(lmd);
         }
@@ -432,18 +439,26 @@ public class WorkspaceResource {
 	@Path("/{wskey}/elements")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response writeWorkspaceElementRepresentation(@PathParam(value = "wskey") String wskey, WorkspaceElementRepresentation representation) throws CoreServiceException,
-			KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException {
+			KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException {
 		LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements");
 		PathBuilder npath = PathBuilder.fromPath(representation.getPath());
 		try {
 			core.resolveWorkspacePath(wskey, "head", npath.build());
 			LOGGER.log(Level.FINE, "element found at path: " + npath.build());
-			if (representation.getType().equals(Collection.OBJECT_TYPE)) {
-				core.updateCollection(wskey, npath.build(), representation.getDescription());
-				return Response.ok().build();
-			} else {
-				return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + representation.getType()).build();
+			switch (representation.getType()) {
+				case Collection.OBJECT_TYPE:
+					core.updateCollection(wskey, npath.build(), representation.getDescription());
+					break;
+				case DataObject.OBJECT_TYPE:
+					core.updateDataObject(wskey, npath.build(), representation.getDescription(), representation.getStream());
+					break;
+				case MetadataObject.OBJECT_TYPE:
+					core.updateMetadataObject(wskey, npath.build(), representation.getName(), representation.getStream());
+					break;
+				default:
+					return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + representation.getType()).build();
 			}
+			return Response.ok().build();
 		} catch (InvalidPathException e) {
 			if (representation.getType().equals(Collection.OBJECT_TYPE)) {
 				core.createCollection(wskey, npath.build(), representation.getDescription());

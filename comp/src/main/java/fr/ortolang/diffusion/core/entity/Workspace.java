@@ -202,24 +202,15 @@ public class Workspace extends OrtolangObject {
 	}
 	
 	public boolean containsSnapshot(SnapshotElement snapshot) {
-		if ( snapshotsContent.length() > 0 && snapshotsContent.indexOf(snapshot.serialize()) != -1 ) {
-			return true;
-		}
-		return false;
+		return snapshotsContent.length() > 0 && snapshotsContent.contains(snapshot.serialize());
 	}
 	
 	public boolean containsSnapshotName(String name) {
-		if ( snapshotsContent.indexOf(name + "/") != -1 ) {
-			return true;
-		}
-		return false;
+		return snapshotsContent.contains(name + "/");
 	}
 	
 	public boolean containsSnapshotKey(String key) {
-		if ( snapshotsContent.indexOf("/" + key) != -1 ) {
-			return true;
-		}
-		return false;
+		return snapshotsContent.contains("/" + key);
 	}
 	
 	public SnapshotElement findSnapshotByName(String name) {

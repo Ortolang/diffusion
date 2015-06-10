@@ -420,7 +420,8 @@ public class CoreServiceBean implements CoreService {
 
 			registry.update(wskey);
 
-			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "snapshot"));
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(1).addArgument("group", workspace.getMembers());
+			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "snapshot"), argumentsBuilder.build());
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CloneException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while snapshoting workspace", e);
@@ -885,6 +886,8 @@ public class CoreServiceBean implements CoreService {
 				for (SnapshotElement snapshotElement : workspace.getSnapshots()) {
 					ortolangObjectSize = getCollectionSize(snapshotElement.getKey(), registry.lookup(snapshotElement.getKey()), ortolangObjectSize, subjects);
 				}
+				ortolangObjectSize.addElement("members", workspace.getMembers().split(",").length);
+				ortolangObjectSize.addElement("snapshots", workspace.getSnapshots().size());
 				break;
 			}
 			}

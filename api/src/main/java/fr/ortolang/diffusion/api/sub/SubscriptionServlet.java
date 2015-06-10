@@ -74,7 +74,11 @@ public final class SubscriptionServlet {
     public FilterRepresentation onFilterMessage(FilterRepresentation filterRepresentation) {
         switch (filterRepresentation.getAction()) {
             case ADD:
-                subscription.addFilter(username, filterRepresentation.getFilter());
+                if (filterRepresentation.getFilter().isConform()) {
+                    subscription.addFilter(username, filterRepresentation.getFilter());
+                } else {
+                    LOGGER.log(Level.SEVERE, "User " + username + " tried to register a non-conform filter: " + filterRepresentation.getFilter());
+                }
                 break;
             case REMOVE:
                 subscription.removeFilter(username, filterRepresentation.getFilter());

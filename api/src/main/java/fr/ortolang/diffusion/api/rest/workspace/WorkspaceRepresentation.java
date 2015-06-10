@@ -56,6 +56,8 @@ public class WorkspaceRepresentation {
 	private String name = "No Name Provided";
 	private String type = "default";
 	private int clock;
+	private long creationDate;
+	private long lastModificationDate;
 	private String members;
 	private String head;
 	private boolean changed;
@@ -119,6 +121,22 @@ public class WorkspaceRepresentation {
 
 	public void setClock(int clock) {
 		this.clock = clock;
+	}
+
+	public long getCreationDate() {
+		return creationDate;
+	}
+
+	public long getLastModificationDate() {
+		return lastModificationDate;
+	}
+
+	public void setLastModificationDate(long lastModificationDate) {
+		this.lastModificationDate = lastModificationDate;
+	}
+
+	public void setCreationDate(long creationDate) {
+		this.creationDate = creationDate;
 	}
 
 	public String getMembers() {
