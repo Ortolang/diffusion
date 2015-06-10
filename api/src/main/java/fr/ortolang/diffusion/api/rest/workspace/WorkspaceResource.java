@@ -116,7 +116,7 @@ public class WorkspaceResource {
 	}
 
 	@GET
-	public Response listWorkspaces() throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	public Response listWorkspaces() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, BrowserServiceException {
 		LOGGER.log(Level.INFO, "GET /workspaces");
 		String profile = membership.getProfileKeyForConnectedIdentifier();
 
@@ -124,7 +124,12 @@ public class WorkspaceResource {
 		GenericCollectionRepresentation<WorkspaceRepresentation> representation = new GenericCollectionRepresentation<WorkspaceRepresentation>();
 		for (String key : keys) {
 			Workspace workspace = core.readWorkspace(key);
-			representation.addEntry(WorkspaceRepresentation.fromWorkspace(workspace));
+			OrtolangObjectInfos infos = browser.getInfos(key);
+			WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace);
+			workspaceRepresentation.setAuthor(infos.getAuthor());
+			workspaceRepresentation.setCreationDate(infos.getCreationDate());
+			workspaceRepresentation.setLastModificationDate(infos.getLastModificationDate());
+			representation.addEntry(workspaceRepresentation);
 		}
 		representation.setOffset(0);
 		representation.setSize(keys.size());
@@ -191,6 +196,8 @@ public class WorkspaceResource {
 			WorkspaceRepresentation representation = WorkspaceRepresentation.fromWorkspace(workspace);
 			OrtolangObjectInfos infos = browser.getInfos(wskey);
 			representation.setAuthor(infos.getAuthor());
+			representation.setCreationDate(infos.getCreationDate());
+			representation.setLastModificationDate(infos.getLastModificationDate());
 			builder = Response.ok(representation);
     		builder.lastModified(lmd);
         }

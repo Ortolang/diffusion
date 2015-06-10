@@ -64,6 +64,7 @@ import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -200,8 +201,13 @@ public class ProfileResource {
 		if(builder == null){
 			Profile profile = membership.readProfile(key);
 			ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
-			List<String> friends = membership.listMembers(profile.getFriends());
-			representation.setFriends(friends.toArray(new String[friends.size()]));
+			List<String> friends = null;
+			try {
+				friends = membership.listMembers(profile.getFriends());
+				representation.setFriends(friends.toArray(new String[friends.size()]));
+			} catch (AccessDeniedException e) {
+				representation.setFriends(new String[0]);
+			}
 			builder = Response.ok(representation);
     		builder.lastModified(lmd);
         }

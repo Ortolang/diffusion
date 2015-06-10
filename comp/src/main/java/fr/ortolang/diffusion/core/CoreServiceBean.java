@@ -886,6 +886,8 @@ public class CoreServiceBean implements CoreService {
 				for (SnapshotElement snapshotElement : workspace.getSnapshots()) {
 					ortolangObjectSize = getCollectionSize(snapshotElement.getKey(), registry.lookup(snapshotElement.getKey()), ortolangObjectSize, subjects);
 				}
+				ortolangObjectSize.addElement("members", workspace.getMembers().split(",").length);
+				ortolangObjectSize.addElement("snapshots", workspace.getSnapshots().size());
 				break;
 			}
 			}

@@ -78,4 +78,12 @@ public class OrtolangObjectInfos implements Serializable {
 		this.lastModificationDate = lastModificationDate;
 	}
 
+	@Override
+	public String toString() {
+		return "OrtolangObjectInfos{" +
+				"author='" + author + '\'' +
+				", creationDate=" + creationDate +
+				", lastModificationDate=" + lastModificationDate +
+				'}';
+	}
 }
