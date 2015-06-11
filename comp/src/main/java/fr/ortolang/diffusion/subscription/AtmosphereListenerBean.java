@@ -83,6 +83,7 @@ public class AtmosphereListenerBean implements MessageListener {
            for (Map.Entry<String, Subscription> subscriptionRegistryEntry : subscription.getSubscriptions().entrySet()) {
                 Iterator<Filter> iterator = subscriptionRegistryEntry.getValue().getFilters().iterator();
                 while (iterator.hasNext()) {
+                	LOGGER.log(Level.INFO, "### FILTER = " + event.getObjectType() + ", " + event.getFromObject() + ", " + event.getThrowedBy() + ", " + event.getType());
                     Filter filter = iterator.next();
                     if (filter.matches(event)) {
                         LOGGER.log(Level.FINE, "Matching filter " + filter);

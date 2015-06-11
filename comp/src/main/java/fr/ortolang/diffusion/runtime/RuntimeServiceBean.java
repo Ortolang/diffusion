@@ -545,10 +545,11 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			remoteProcess.setState(state);
 			remoteProcess.appendLog("## REMOTE PROCESS STATE CHANGED TO " + state + " ON " + new Date());
-			if(start != 0){
+			if(start !=null && start != 0){
 				remoteProcess.setStart(start);
 			}
-			if(stop != 0){
+			if(stop !=null && stop != 0){
+				LOGGER.log(Level.INFO, "Stop : " + stop);
 				remoteProcess.setStop(stop);
 			}
 			em.merge(remoteProcess);
