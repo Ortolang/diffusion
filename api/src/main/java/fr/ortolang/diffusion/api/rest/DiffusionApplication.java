@@ -56,6 +56,7 @@ import fr.ortolang.diffusion.api.rest.mapper.PropertyNotFoundExceptionMapper;
 import fr.ortolang.diffusion.api.rest.mapper.SearchServiceExceptionMapper;
 import fr.ortolang.diffusion.api.rest.mapper.SecurityServiceExceptionMapper;
 import fr.ortolang.diffusion.api.rest.object.ObjectResource;
+import fr.ortolang.diffusion.api.rest.organization.OrganizationResource;
 import fr.ortolang.diffusion.api.rest.preview.PreviewResource;
 import fr.ortolang.diffusion.api.rest.profile.ProfileResource;
 import fr.ortolang.diffusion.api.rest.runtime.RuntimeResource;
@@ -75,6 +76,7 @@ public class DiffusionApplication extends Application {
 		classes.add(FormResource.class);
 		classes.add(MetadataFormatResource.class);
 		classes.add(PreviewResource.class);
+		classes.add(OrganizationResource.class);
 	}
 
 	@Override

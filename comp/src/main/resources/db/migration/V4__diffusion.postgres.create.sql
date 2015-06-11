@@ -49,6 +49,19 @@
         primary key (id)
     );
 
+    create table Organization (
+        id varchar(255) not null,
+        name varchar(255),
+        fullname varchar(255),
+        acronym varchar(255),
+        city varchar(255),
+        country varchar(255),
+        homepage varchar(255),
+        img varchar(255),
+        version int8 not null,
+        primary key (id)
+    );
+
     create table Link (
         id varchar(255) not null,
         clock int4 not null,

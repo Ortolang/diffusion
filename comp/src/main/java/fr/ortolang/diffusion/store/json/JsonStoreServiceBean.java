@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.store.json;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -98,6 +100,24 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		}
 	}
 
+	@Override
+	@Lock(LockType.WRITE)
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void importDocument(String type, InputStream stream) throws JsonStoreServiceException {
+		LOGGER.log(Level.FINE, "Importing document type "+type);
+		ODatabaseDocumentTx db = pool.acquire();
+		
+		try {
+			ODocument doc = new ODocument(type).fromJSON(stream);
+			
+			db.save(doc);
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "unable to import document", e);
+		} finally {
+			db.close();
+		}
+	}
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> search(String query) throws JsonStoreServiceException {
