@@ -113,18 +113,90 @@
             }
         },
         "authors": {
-            "id": "http://www.ortolang.fr/author",
+            "id": "http://www.ortolang.fr/authors",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/author/0",
+                "id": "http://www.ortolang.fr/authors/0",
                 "type": "string"
             }
         },
         "compilers": {
-            "id": "http://www.ortolang.fr/compiler",
+            "id": "http://www.ortolang.fr/compilers",
             "type": "array",
             "items": {
-                "id": "http://www.ortolang.fr/compiler/0",
+                "id": "http://www.ortolang.fr/compilers/0",
+                "type": "string"
+            }
+        },
+        "transcribers": {
+            "id": "http://www.ortolang.fr/transcribers",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/transcribers/0",
+                "type": "string"
+            }
+        },
+        "sponsors": {
+            "id": "http://www.ortolang.fr/sponsors",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/sponsors/0",
+                "type": "string"
+            }
+        },
+        "speakers": {
+            "id": "http://www.ortolang.fr/speakers",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/speakers/0",
+                "type": "string"
+            }
+        },
+        "recorders": {
+            "id": "http://www.ortolang.fr/recorders",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/recorders/0",
+                "type": "string"
+            }
+        },
+        "translators": {
+            "id": "http://www.ortolang.fr/translators",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/translators/0",
+                "type": "string"
+            }
+        },
+        "responders": {
+            "id": "http://www.ortolang.fr/responders",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/responders/0",
+                "type": "string"
+            }
+        },
+        "photographers": {
+            "id": "http://www.ortolang.fr/photographers",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/photographers/0",
+                "type": "string"
+            }
+        },
+        "depositors": {
+            "id": "http://www.ortolang.fr/depositors",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/depositors/0",
+                "type": "string"
+            }
+        },
+        "annotators": {
+            "id": "http://www.ortolang.fr/annotators",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/annotators/0",
                 "type": "string"
             }
         },

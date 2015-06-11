@@ -52,6 +52,14 @@
 			"title":"Mots clés"
 		  },
 		  {
+			"key":"bibliographicCitation",
+			"title":"Citation bibliographique"
+		  },
+		  {
+			"key":"publications",
+			"title":"Publications"
+		  },
+		  {
 			"key":"website",
 			"title":"Site web",
 			"placeholder": "http://..."
@@ -61,13 +69,17 @@
 			"helpvalue": "Adresse du site web contenant des informations sur la ressource."
 		  },
 		  {
-			"key":"spatial",
+			"key":"creationLocations",
 			"title":"Lieu de création des données",
 			"type": "autocomplete"
 		  },
 		  {
-			"key":"temporal",
+			"key":"creationDate",
 			"title":"Période de création des données"
+		  },
+		  {
+			"key":"publicationDate",
+			"title":"Date de première mise en ligne"
 		  },
 		  {
 			"key":"image",
@@ -119,20 +131,62 @@
 	  {
 		"title": "Contributions",
 		"items": [
-		  "producer",
-		  "researcher",
-		  "manager",
-		  "developer",
-		  "author",
-		  "compiler"
+		  "producers",
+		  "researchers",
+		  "managers",
+		  "designers",
+		  "developers",
+		  "authors",
+		  "compilers",
+		  "transcribers",
+		  "sponsors",
+		  "speakers",
+		  "recorders",
+		  "translators",
+		  "responders",
+		  "photographers",
+		  "depositors",
+		  "annotators"
 		]
 	  },
 	  {
 		"title": "Corpus",
 		"items": [
 		  {
-			"key": "primaryLanguage",
+			"key": "corporaType",
+			"title": "Type de corpus"
+		  },
+		  {
+			"key": "corporaStyles",
+			"title": "Nature du corpus"
+		  },
+		  {
+			"key": "corporaLanguages",
 			"title": "Langue principale du corpus"
+		  },
+		  {
+			"key": "annotationLevels",
+			"title": "Niveau d'annotation"
+		  },
+		  {
+			"key": "corporaFormats",
+			"title": "Format"
+		  },
+		  {
+			"key": "corporaFileEncodings",
+			"title": "Type d'encodage"
+		  },
+		  {
+			"key": "corporaDataTypes",
+			"title": "Type de source"
+		  },
+		  {
+			"key": "corporaLanguageType",
+			"title": "Type de langue"
+		  },
+		  {
+			"key": "wordCount",
+			"title": "Nombre de mots"
 		  },
 		  {
 			"key":"linguisticDataType",
@@ -146,12 +200,12 @@
 			]
 		  },
 		  {
-			"key": "discourseType",
+			"key": "discourseTypes",
 			"type": "array",
 			"title": "Type discursif"
 		  },
 		  {
-			"key":"linguisticSubject",
+			"key":"linguisticSubjects",
 			"type": "array",
 			"title": "Domaines linguistiques"
 		  }
@@ -162,8 +216,32 @@
 		"title": "Lexique",
 		"items": [
 		  {
-			"key": "language",
-			"title": "Langues concernés par cet objet"
+			"key": "lexiconInputType",
+			"title": "Type d'entrée"
+		  },
+		  {
+			"key": "lexiconInputLanguages",
+			"title": "Langues des entrées"
+		  },
+		  {
+			"key": "lexiconInputCount",
+			"title": "Nombre d'entrée"
+		  },
+		  {
+			"key": "lexiconDescriptionTypes",
+			"title": "Type de description"
+		  },
+		  {
+			"key": "lexiconDescriptionLanguages",
+			"title": "Langues de description"
+		  },
+		  {
+			"key": "lexiconLanguageType",
+			"title": "Type de langue"
+		  },
+		  {
+			"key": "lexiconFormats",
+			"title": "Format du lexique"
 		  }
 		]
 	  },
@@ -171,11 +249,11 @@
 		"title": "Outil",
 		"items": [
 		  {
-			"key": "programmingLanguage",
+			"key": "programmingLanguages",
 			"title": "Languages de programmation"
 		  },
 		  {
-			"key": "opearatingSystem",
+			"key": "operatingSystems",
 			"title": "Systèmes d'exploitation compatibles"
 		  },
 		  {
@@ -189,8 +267,28 @@
 			]
 		  },
 		  {
-			"key": "toolLanguage",
+			"key": "navigationLanguages",
+			"title": "Langues de navigation de l'outil"
+		  },
+		  {
+			"key": "toolLanguages",
 			"title": "Langues traitées par l'outil"
+		  },
+		  {
+			"key": "toolFunctionalities",
+			"title": "Functionnalités"
+		  },
+		  {
+			"key": "toolInputData",
+			"title": "Format en entrée"
+		  },
+		  {
+			"key": "toolOutputData",
+			"title": "Format en sortie"
+		  },
+		  {
+			"key": "toolFileEncodings",
+			"title": "Encodage de la donnée en entrée"
 		  },
 		  {
 			"key": "toolId",
