@@ -74,6 +74,8 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
 import fr.ortolang.diffusion.membership.entity.ProfileStatus;
+import fr.ortolang.diffusion.referentiel.ReferentielService;
+import fr.ortolang.diffusion.referentiel.ReferentielServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -85,6 +87,8 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
+import fr.ortolang.diffusion.store.json.JsonStoreService;
+import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 
 @Startup
 @Singleton(name = BootstrapService.SERVICE_NAME)
@@ -108,6 +112,10 @@ public class BootstrapServiceBean implements BootstrapService {
 	private RuntimeService runtime;
 	@EJB
 	private FormService form;
+	@EJB
+	private ReferentielService referentiel;
+	@EJB
+	private JsonStoreService jsonStore;
 	@Resource
 	private SessionContext ctx;
 
@@ -230,10 +238,18 @@ public class BootstrapServiceBean implements BootstrapService {
 				InputStream schemaInputStream2 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-acl-schema.json");
 				String schemaHash2 = core.put(schemaInputStream2);
 				core.createMetadataFormat(MetadataFormat.ACL, "Les métadonnées de contrôle d'accès permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, "");
+//				InputStream schemaInputStream3 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-organization-schema.json");
+//				String schemaHash3 = core.put(schemaInputStream3);
+//				core.createMetadataFormat(MetadataFormat.ORGANIZATION, "Les métadonnées de présentation d'un laboratoire producteur.", schemaHash3, "");
+				
+//				InputStream orgATILFInputStream = getClass().getClassLoader().getResourceAsStream("referentiels/organisations/atilf.json");
+//				jsonStore.importDocument("Organization", orgATILFInputStream);
+				
+				referentiel.createOrganization("atilf", "Analyse et traitement informatique de la langue française - UMR 7118", "Analyse et Traitement Informatique de la Langue Française - UMR 7118 (ATILF, Nancy FR)", "ATILF", "Nancy", "FR", "http://www.atilf.fr", "http://atilf.atilf.fr/atilf.gif");
 				
 				LOGGER.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException
-					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | RuntimeServiceException | FormServiceException e1) {
+					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | RuntimeServiceException | FormServiceException | ReferentielServiceException e1) {
 				LOGGER.log(Level.SEVERE, "unexpected error occured while bootstraping plateform", e1);
 				throw new BootstrapServiceException("unable to bootstrap plateform", e1);
 			}
