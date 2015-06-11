@@ -140,7 +140,7 @@ public class WorkspaceResource {
 	@POST
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	public Response createWorkspace(@FormParam("type") @DefaultValue("default") String type, @FormParam("name") @DefaultValue("No Name Provided") String name, @FormParam("alias") String alias)
-			throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
+			throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException {
 		LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
 		String key = java.util.UUID.randomUUID().toString();
 		Workspace workspace;
@@ -151,12 +151,16 @@ public class WorkspaceResource {
 		}
 		URI location = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(key).build();
 		WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace);
+		OrtolangObjectInfos infos = browser.getInfos(workspace.getKey());
+		workspaceRepresentation.setAuthor(infos.getAuthor());
+		workspaceRepresentation.setCreationDate(infos.getCreationDate());
+		workspaceRepresentation.setLastModificationDate(infos.getLastModificationDate());
 		return Response.created(location).entity(workspaceRepresentation).build();
 	}
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response createWorkspace(WorkspaceRepresentation representation) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
+	public Response createWorkspace(WorkspaceRepresentation representation) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException {
 		LOGGER.log(Level.INFO, "POST(application/json) /workspaces");
 		String key = UUID.randomUUID().toString();
 		Workspace workspace;
@@ -167,6 +171,10 @@ public class WorkspaceResource {
 		}
 		URI location = DiffusionUriBuilder.getRestUriBuilder().path(WorkspaceResource.class).path(key).build();
 		WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace);
+		OrtolangObjectInfos infos = browser.getInfos(workspace.getKey());
+		workspaceRepresentation.setAuthor(infos.getAuthor());
+		workspaceRepresentation.setCreationDate(infos.getCreationDate());
+		workspaceRepresentation.setLastModificationDate(infos.getLastModificationDate());
 		return Response.created(location).entity(workspaceRepresentation).build();
 	}
 
