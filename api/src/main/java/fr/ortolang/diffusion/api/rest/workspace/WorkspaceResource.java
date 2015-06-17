@@ -446,7 +446,7 @@ public class WorkspaceResource {
 	@PUT
 	@Path("/{wskey}/elements")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response writeWorkspaceElementRepresentation(@PathParam(value = "wskey") String wskey, WorkspaceElementRepresentation representation) throws CoreServiceException,
+	public Response writeWorkspaceElementRepresentation(@PathParam(value = "wskey") String wskey, WorkspaceElementRepresentation representation, @QueryParam(value = "destination") String destination) throws CoreServiceException,
 			KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException {
 		LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements");
 		PathBuilder npath = PathBuilder.fromPath(representation.getPath());
@@ -455,10 +455,18 @@ public class WorkspaceResource {
 			LOGGER.log(Level.FINE, "element found at path: " + npath.build());
 			switch (representation.getType()) {
 				case Collection.OBJECT_TYPE:
-					core.updateCollection(wskey, npath.build(), representation.getDescription());
+					if (destination != null && destination.length() > 0) {
+						core.moveCollection(wskey, representation.getPath(), destination);
+					} else {
+						core.updateCollection(wskey, npath.build(), representation.getDescription());
+					}
 					break;
 				case DataObject.OBJECT_TYPE:
-					core.updateDataObject(wskey, npath.build(), representation.getDescription(), representation.getStream());
+					if (destination != null && destination.length() > 0) {
+						core.moveDataObject(wskey, representation.getPath(), destination);
+					} else {
+						core.updateDataObject(wskey, npath.build(), representation.getDescription(), representation.getStream());
+					}
 					break;
 				case MetadataObject.OBJECT_TYPE:
 					core.updateMetadataObject(wskey, npath.build(), representation.getName(), representation.getStream());
