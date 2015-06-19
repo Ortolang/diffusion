@@ -95,9 +95,10 @@ public interface RuntimeService extends OrtolangService {
 
 	public RemoteProcess readRemoteProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void updateRemoteProcessState(String pid, State state) throws RuntimeServiceException;
+//	public void updateRemoteProcessState(String pid, State state) throws RuntimeServiceException;
+	
+	public void updateRemoteProcessState(String pid, State state, Long start, Long stop) throws RuntimeServiceException;
 
 	public void updateRemoteProcessActivity(String key, String name) throws RuntimeServiceException;
 
-	public void appendRemoteProcessLog(String key, String log) throws RuntimeServiceException;
-}
+	public void appendRemoteProcessLog(String key, String log) throws RuntimeServiceException;}

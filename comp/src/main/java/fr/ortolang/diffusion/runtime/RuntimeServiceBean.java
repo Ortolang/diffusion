@@ -287,7 +287,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			throw new RuntimeServiceException("unable to update process state", e);
 		}
 	}
-	
+		
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void appendProcessLog(String pid, String log) throws RuntimeServiceException {
@@ -504,9 +504,36 @@ public class RuntimeServiceBean implements RuntimeService {
 		}
 	}
 	
+//	@Override
+//	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+//	public void updateRemoteProcessState(String key, State state) throws RuntimeServiceException {
+//		LOGGER.log(Level.INFO, "Updating state of remote process with key: " + key);
+//		try {
+//			OrtolangObjectIdentifier identifier = registry.lookup(key);
+//			checkObjectType(identifier, RemoteProcess.OBJECT_TYPE);
+//			RemoteProcess remoteProcess = em.find(RemoteProcess.class, identifier.getId());
+//			if ( remoteProcess == null )  {
+//				throw new RuntimeServiceException("unable to find a remote process with id: " + identifier.getId());
+//			}
+//			
+//			remoteProcess.setState(state);
+//			remoteProcess.appendLog("## REMOTE PROCESS STATE CHANGED TO " + state + " ON " + new Date());
+//			em.merge(remoteProcess);
+//			
+//			registry.update(key);
+//			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("state", state);
+//			notification.throwEvent(key, RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "update-state"), argumentsBuilder.build());
+//		
+//		} catch (Exception e) {
+//			ctx.setRollbackOnly();
+//			LOGGER.log(Level.SEVERE, "unexpected error occurred while updating remote process state", e);
+//			throw new RuntimeServiceException("unable to update remote process state", e);
+//		}
+//	}
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateRemoteProcessState(String key, State state) throws RuntimeServiceException {
+	public void updateRemoteProcessState(String key, State state, Long start, Long stop) throws RuntimeServiceException {
 		LOGGER.log(Level.INFO, "Updating state of remote process with key: " + key);
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -518,6 +545,13 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			remoteProcess.setState(state);
 			remoteProcess.appendLog("## REMOTE PROCESS STATE CHANGED TO " + state + " ON " + new Date());
+			if(start !=null && start != 0){
+				remoteProcess.setStart(start);
+			}
+			if(stop !=null && stop != 0){
+				LOGGER.log(Level.INFO, "Stop : " + stop);
+				remoteProcess.setStop(stop);
+			}
 			em.merge(remoteProcess);
 			
 			registry.update(key);

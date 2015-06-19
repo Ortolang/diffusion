@@ -54,6 +54,8 @@ public class RemoteProcessRepresentation {
 	private String log;
 	private String state;
 	private String activity;
+	private long start;
+	private long stop;
 	
 	public RemoteProcessRepresentation() {
 	}
@@ -113,6 +115,22 @@ public class RemoteProcessRepresentation {
 	public void setActivity(String activity) {
 		this.activity = activity;
 	}
+	
+	public long getStart() {
+		return this.start;
+	}	
+
+	public void setStart(long start) {
+		this.start = start;
+	}
+
+	public long getStop() {
+		return this.stop;
+	}
+
+	public void setStop(long stop) {
+		this.stop = stop;
+	}
 
 	public static RemoteProcessRepresentation fromRemoteProcess(RemoteProcess instance) {
 		RemoteProcessRepresentation representation = new RemoteProcessRepresentation();
@@ -124,6 +142,8 @@ public class RemoteProcessRepresentation {
 		representation.setActivity(instance.getActivity());
 		representation.setJobId(instance.getToolJobId());
 		representation.setToolKey(instance.getToolKey());
+		representation.setStart(instance.getStart());
+		representation.setStop(instance.getStop());
 		return representation;
 	}
 
