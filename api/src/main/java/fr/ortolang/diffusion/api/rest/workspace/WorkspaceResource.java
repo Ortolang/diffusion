@@ -136,7 +136,7 @@ public class WorkspaceResource {
 		representation.setLimit(keys.size());
 		return Response.ok(representation).build();
 	}
-
+	
 	@POST
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	public Response createWorkspace(@FormParam("type") @DefaultValue("default") String type, @FormParam("name") @DefaultValue("No Name Provided") String name, @FormParam("alias") String alias)

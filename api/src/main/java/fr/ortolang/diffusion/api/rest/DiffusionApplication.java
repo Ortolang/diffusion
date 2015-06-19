@@ -42,6 +42,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import fr.ortolang.diffusion.api.rest.content.ContentResource;
 import fr.ortolang.diffusion.api.rest.filter.ContentTypeSetterPreProcessorInterceptor;
 import fr.ortolang.diffusion.api.rest.form.FormResource;
 import fr.ortolang.diffusion.api.rest.format.MetadataFormatResource;
@@ -77,6 +78,7 @@ public class DiffusionApplication extends Application {
 		classes.add(MetadataFormatResource.class);
 		classes.add(PreviewResource.class);
 		classes.add(OrganizationResource.class);
+		classes.add(ContentResource.class);
 	}
 
 	@Override

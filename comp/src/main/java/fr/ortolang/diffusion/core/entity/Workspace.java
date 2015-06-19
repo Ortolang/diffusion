@@ -59,6 +59,7 @@ public class Workspace extends OrtolangObject {
 
 	public static final String OBJECT_TYPE = "workspace";
 	public static final String HEAD = "head";
+	public static final String LATEST = "latest";
 	
 	@Id
 	private String id;
