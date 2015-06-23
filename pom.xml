@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.ortolang.diffusion</groupId>
 	<artifactId>ortolang-diffusion</artifactId>
@@ -25,7 +27,7 @@
 		<module>comp</module>
 		<module>api</module>
 		<module>admin</module>
-		<module>content</module>
+		<module>oaipmh</module>
 		<module>client</module>
 		<module>appli</module>
 	</modules>
@@ -52,6 +54,9 @@
 		<version.fasterxml.jackson>2.5.3</version.fasterxml.jackson>
 		<version.commons-io>2.4</version.commons-io>
 		<version.springframework.spring-context>4.0.9.RELEASE</version.springframework.spring-context>
+		<version.lyncode.xoai>4.1.0</version.lyncode.xoai>
+		<version.json>20141113</version.json>
+		<version.thetransactioncompany.cors-filter>2.4</version.thetransactioncompany.cors-filter>
 	</properties>
 
 	<dependencyManagement>
@@ -72,13 +77,6 @@
 			<dependency>
 				<groupId>fr.ortolang.diffusion</groupId>
 				<artifactId>diffusion-oaipmh</artifactId>
-				<version>${project.version}</version>
-				<type>war</type>
-				<scope>compile</scope>
-			</dependency>
-			<dependency>
-				<groupId>fr.ortolang.diffusion</groupId>
-				<artifactId>diffusion-ftp</artifactId>
 				<version>${project.version}</version>
 				<type>war</type>
 				<scope>compile</scope>

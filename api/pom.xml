@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>diffusion-api</artifactId>
 	<name>Ortolang Diffusion Server API</name>
@@ -11,12 +12,6 @@
 		<artifactId>ortolang-diffusion</artifactId>
 		<version>2.3.0-SNAPSHOT</version>
 	</parent>
-
-	<properties>
-		<version.lyncode.xoai>4.1.0</version.lyncode.xoai>
-		<version.json>20141113</version.json>
-		<version.thetransactioncompany.cors-filter>2.4</version.thetransactioncompany.cors-filter>
-	</properties>
 
 	<dependencies>
 		<dependency>
@@ -40,22 +35,6 @@
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-core</artifactId>
 			<version>${version.apache.tika}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.lyncode</groupId>
-			<artifactId>xoai-common</artifactId>
-			<version>${version.lyncode.xoai}</version>
-			<exclusions>
-				<exclusion>  <!-- declare the exclusion here -->
-					<groupId>commons-codec</groupId>
-					<artifactId>commons-codec</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.lyncode</groupId>
-			<artifactId>xoai-data-provider</artifactId>
-			<version>${version.lyncode.xoai}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>
@@ -85,7 +64,6 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -125,7 +103,7 @@
 						</tag>
 					</tags>
 				</configuration>
-				<executions>
+				<!-- <executions>
 					<execution>
 						<id>generate-service-docs</id>
 						<phase>generate-resources</phase>
@@ -145,7 +123,7 @@
 							<goal>javadoc</goal>
 						</goals>
 					</execution>
-				</executions>
+				</executions> -->
 			</plugin>
 		</plugins>
 		<pluginManagement>
