@@ -238,6 +238,9 @@ public class BootstrapServiceBean implements BootstrapService {
 				InputStream schemaInputStream2 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-acl-schema.json");
 				String schemaHash2 = core.put(schemaInputStream2);
 				core.createMetadataFormat(MetadataFormat.ACL, "Les métadonnées de contrôle d'accès permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, "");
+				InputStream schemaWorkspaceInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-workspace-schema.json");
+				String schemaWorkspaceHash = core.put(schemaWorkspaceInputStream);
+				core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "");
 //				InputStream schemaInputStream3 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-organization-schema.json");
 //				String schemaHash3 = core.put(schemaInputStream3);
 //				core.createMetadataFormat(MetadataFormat.ORGANIZATION, "Les métadonnées de présentation d'un laboratoire producteur.", schemaHash3, "");

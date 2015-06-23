@@ -18,6 +18,7 @@ public class JsonStoreDocumentBuilder {
 	public static final String KEY_PROPERTY = "key";
 	public static final String STATUS_PROPERTY = "status";
 	public static final String META_PROPERTY = "meta";
+	public static final String LAST_MODIFICATION_DATE_PROPERTY = "lastModificationDate";
 
 	public static ODocument buildDocument(OrtolangIndexableObject<IndexableJsonContent> object) {
 		return buildDocument(object, null);
@@ -34,6 +35,7 @@ public class JsonStoreDocumentBuilder {
 
 		doc.field(KEY_PROPERTY, object.getKey());
 		doc.field(STATUS_PROPERTY, object.getStatus());
+		doc.field(LAST_MODIFICATION_DATE_PROPERTY, object.getLastModificationDate());
 
 		if (object.getContent() != null && object.getContent().getStream() != null) {
 			for(Map.Entry<String, InputStream> entry : object.getContent().getStream().entrySet()) {

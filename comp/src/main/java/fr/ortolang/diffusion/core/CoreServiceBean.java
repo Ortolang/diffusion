@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -62,6 +63,7 @@ import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -382,6 +384,29 @@ public class CoreServiceBean implements CoreService {
 			if (workspace == null) {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
+			try {
+//				long current = System.currentTimeMillis();
+				JsonObjectBuilder builder = Json.createObjectBuilder();
+				builder.add("wskey", wskey);
+				builder.add("versionName", name);
+//				builder.add("versionDate", current);
+				
+				JsonObject jsonObject = builder.build();
+				String hash = binarystore.put(new ByteArrayInputStream(jsonObject.toString().getBytes()));
+				
+				List<String> mds = findMetadataObjectsForTargetAndName(workspace.getHead(), MetadataFormat.WORKSPACE);
+				
+				if(mds.size()>0) {
+					LOGGER.log(Level.INFO, "updating workspace metadata for root collection");
+					updateMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
+				} else {
+					LOGGER.log(Level.INFO, "creating workspace metadata for root collection");
+					createMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
+				}
+			} catch (BinaryStoreServiceException | DataCollisionException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | MetadataFormatException e) {
+				throw new CoreServiceException("cannot create workspace metadata for collection root");
+			}
+			
 			if (!workspace.hasChanged()) {
 				throw new CoreServiceException("unable to snapshot because workspace has no pending modifications since last snapshot");
 			}
@@ -2470,6 +2495,31 @@ public class CoreServiceBean implements CoreService {
 				results.add(key);
 			}
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("target", target);
+			notification.throwEvent("", caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "find"), argumentsBuilder.build());
+			return results;
+		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occurred during finding metadata", e);
+			throw new CoreServiceException("unable to find metadata for target [" + target + "]", e);
+		}
+	}
+
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<String> findMetadataObjectsForTargetAndName(String target, String name) throws CoreServiceException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "finding metadata for target [" + target + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkPermission(target, subjects, "read");
+
+			TypedQuery<MetadataObject> query = em.createNamedQuery("findMetadataObjectsForTargetAndName", MetadataObject.class).setParameter("target", target).setParameter("name", name);
+			List<MetadataObject> mdos = query.getResultList();
+			List<String> results = new ArrayList<String>();
+			for (MetadataObject mdo : mdos) {
+				String key = registry.lookup(mdo.getObjectIdentifier());
+				results.add(key);
+			}
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("target", target).addArgument("name", name);
 			notification.throwEvent("", caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "find"), argumentsBuilder.build());
 			return results;
 		} catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {

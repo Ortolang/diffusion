@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "http://jsonschema.net",
+  "type": "object",
+  "properties": {
+    "wskey": {
+      "id": "http://jsonschema.net/wskey",
+      "type": "string"
+    },
+    "wsalias": {
+      "id": "http://jsonschema.net/wsalias",
+      "type": "string"
+    },
+    "versionName": {
+      "id": "http://jsonschema.net/versionName",
+      "type": "string"
+    },
+    "versionDate": {
+      "id": "http://jsonschema.net/versionName",
+      "type": "string"
+    }
+  },
+  "required": [
+    "wskey"
+  ]
+}
