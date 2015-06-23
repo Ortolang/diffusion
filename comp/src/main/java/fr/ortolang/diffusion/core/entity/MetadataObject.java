@@ -59,6 +59,7 @@ import fr.ortolang.diffusion.core.CoreService;
 @Table(indexes = {@Index(columnList="target")})
 @NamedQueries({
 	@NamedQuery(name="findMetadataObjectsForTarget", query="select r from MetadataObject r where r.target = :target"),
+	@NamedQuery(name="findMetadataObjectsForTargetAndName", query="select r from MetadataObject r where r.target = :target and r.name = :name"),
 	@NamedQuery(name="findMetadataObjectByBinaryHash", query="select o from MetadataObject o where :hash = o.stream")
 })
 @SuppressWarnings("serial")

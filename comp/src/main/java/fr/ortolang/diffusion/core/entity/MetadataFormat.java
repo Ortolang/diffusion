@@ -15,6 +15,7 @@ public class MetadataFormat {
 	public static final String ACL = "ortolang-acl-json";
 	public static final String ITEM = "ortolang-item-json";
 	public static final String ORGANIZATION = "ortolang-organization-json";
+	public static final String WORKSPACE = "ortolang-workspace-json";
 	
 
 	@Id
