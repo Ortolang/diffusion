@@ -55,7 +55,7 @@ import fr.ortolang.diffusion.api.profile.ProfileResource;
 import fr.ortolang.diffusion.api.runtime.RuntimeResource;
 import fr.ortolang.diffusion.api.workspace.WorkspaceResource;
 
-@ApplicationPath("/rest/*")
+@ApplicationPath("/*")
 public class ApiApplication extends Application {
 	
 	private HashSet<Class<?>> classes = new HashSet<Class<?>>();

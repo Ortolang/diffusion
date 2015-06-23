@@ -46,15 +46,14 @@ public class ApiUriBuilder {
 	
 	public static UriBuilder getApiUriBuilder() {
 		try {
-			StringBuilder path = new StringBuilder();
-			if ( OrtolangConfig.getInstance().getProperty("api.context") != null && OrtolangConfig.getInstance().getProperty("api.context").length() > 0 ) {
-				path.append(OrtolangConfig.getInstance().getProperty("api.context"));
-			}
 			URI uri;
-			if ( OrtolangConfig.getInstance().getProperty("api.port") != null && OrtolangConfig.getInstance().getProperty("api.port").length() > 0 ) {
-				uri = new URI(OrtolangConfig.getInstance().getProperty("api.protocol"), null, OrtolangConfig.getInstance().getProperty("api.host"), Integer.parseInt(OrtolangConfig.getInstance().getProperty("api.port")), path.toString(), null, null);
+			String protocol = OrtolangConfig.getInstance().getProperty("api.protocol.default");
+			String host = OrtolangConfig.getInstance().getProperty("api.host");
+			String context = OrtolangConfig.getInstance().getProperty("api.context"); 
+			if ( OrtolangConfig.getInstance().getProperty("api.port." + protocol) != null && OrtolangConfig.getInstance().getProperty("api.port." + protocol).length() > 0 ) {
+				uri = new URI(protocol, null, host, Integer.parseInt(OrtolangConfig.getInstance().getProperty("api.port." + protocol)), context, null, null);
 			} else {
-				uri = new URI(OrtolangConfig.getInstance().getProperty("api.protocol"), OrtolangConfig.getInstance().getProperty("api.host"), path.toString(), null);
+				uri = new URI(protocol, host, context, null);
 			}
 			return UriBuilder.fromUri(uri);
 		} catch (Exception e) {

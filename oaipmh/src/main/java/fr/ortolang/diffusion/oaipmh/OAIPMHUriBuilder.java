@@ -46,15 +46,14 @@ public class OAIPMHUriBuilder {
 	
 	public static UriBuilder getOAIPMHUriBuilder() {
 		try {
-			StringBuilder path = new StringBuilder();
-			if ( OrtolangConfig.getInstance().getProperty("oai.context") != null && OrtolangConfig.getInstance().getProperty("oai.context").length() > 0 ) {
-				path.append(OrtolangConfig.getInstance().getProperty("oai.context"));
-			}
 			URI uri;
-			if ( OrtolangConfig.getInstance().getProperty("oai.port") != null && OrtolangConfig.getInstance().getProperty("oai.port").length() > 0 ) {
-				uri = new URI(OrtolangConfig.getInstance().getProperty("oai.protocol"), null, OrtolangConfig.getInstance().getProperty("oai.host"), Integer.parseInt(OrtolangConfig.getInstance().getProperty("oai.port")), path.toString(), null, null);
+			String protocol = OrtolangConfig.getInstance().getProperty("oai.protocol.default");
+			String host = OrtolangConfig.getInstance().getProperty("oai.host");
+			String context = OrtolangConfig.getInstance().getProperty("oai.context"); 
+			if ( OrtolangConfig.getInstance().getProperty("oai.port." + protocol) != null && OrtolangConfig.getInstance().getProperty("oai.port." + protocol).length() > 0 ) {
+				uri = new URI(protocol, null, host, Integer.parseInt(OrtolangConfig.getInstance().getProperty("oai.port." + protocol)), context, null, null);
 			} else {
-				uri = new URI(OrtolangConfig.getInstance().getProperty("oai.protocol"), OrtolangConfig.getInstance().getProperty("oai.host"), path.toString(), null);
+				uri = new URI(protocol, host, context, null);
 			}
 			return UriBuilder.fromUri(uri);
 		} catch (Exception e) {
