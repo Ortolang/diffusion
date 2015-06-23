@@ -26,7 +26,7 @@
             <useTransitiveDependencies>true</useTransitiveDependencies>
             <useTransitiveFiltering>true</useTransitiveFiltering>
             <includes>
-                <include>fr.ortolang.diffusion:server-client:jar</include>
+                <include>fr.ortolang.diffusion:diffusion-client:jar</include>
             </includes>
             <outputDirectory>lib</outputDirectory>
         </dependencySet>

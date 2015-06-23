@@ -369,6 +369,15 @@ public class CoreServiceBean implements CoreService {
 	}
 	
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<String> listAllWorkspaceAlias() throws CoreServiceException {
+		LOGGER.log(Level.FINE, "listing all workspaces alias");
+		TypedQuery<String> query = em.createNamedQuery("listAllWorkspaceAlias", String.class);
+		List<String> alias = query.getResultList();
+		return alias;
+	}
+	
+	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void snapshotWorkspace(String wskey, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "snapshoting workspace [" + wskey + "]");

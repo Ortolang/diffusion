@@ -75,6 +75,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	public Set<String> buildWorkspaceReviewList(String wskey, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
+	public List<String> listAllWorkspaceAlias() throws CoreServiceException;
+	
 	public String resolveWorkspaceAlias(String alias) throws CoreServiceException, AccessDeniedException, AliasNotFoundException;
 	
 	public String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, AccessDeniedException;

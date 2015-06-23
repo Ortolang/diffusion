@@ -1,35 +1,35 @@
 <?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>server-application</artifactId>
+	<artifactId>diffusion-application</artifactId>
 	<name>Ortolang Diffusion Server Application Package</name>
 	<packaging>ear</packaging>
 
 	<parent>
 		<groupId>fr.ortolang.diffusion</groupId>
-		<artifactId>server</artifactId>
+		<artifactId>ortolang-diffusion</artifactId>
 		<version>2.3.0-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>fr.ortolang.diffusion</groupId>
-			<artifactId>server-components</artifactId>
+			<artifactId>diffusion-components</artifactId>
 			<type>ejb</type>
 		</dependency>
 		<dependency>
 			<groupId>fr.ortolang.diffusion</groupId>
-			<artifactId>server-api</artifactId>
+			<artifactId>diffusion-api</artifactId>
 			<type>war</type>
 		</dependency>
 		<dependency>
 			<groupId>fr.ortolang.diffusion</groupId>
-			<artifactId>server-admin</artifactId>
+			<artifactId>diffusion-admin</artifactId>
 			<type>war</type>
 		</dependency>
 		<dependency>
 			<groupId>fr.ortolang.diffusion</groupId>
-			<artifactId>server-content</artifactId>
+			<artifactId>diffusion-oaipmh</artifactId>
 			<type>war</type>
 		</dependency>
 		<dependency>
@@ -57,26 +57,26 @@
 					<modules>
 						<ejbModule>
 							<groupId>fr.ortolang.diffusion</groupId>
-							<artifactId>server-components</artifactId>
+							<artifactId>diffusion-components</artifactId>
 							<bundleFileName>components.jar</bundleFileName>
 						</ejbModule>
 						<webModule>
 							<groupId>fr.ortolang.diffusion</groupId>
-							<artifactId>server-api</artifactId>
+							<artifactId>diffusion-api</artifactId>
 							<bundleFileName>api.war</bundleFileName>
 							<contextRoot>/api</contextRoot>
 						</webModule>
 						<webModule>
 							<groupId>fr.ortolang.diffusion</groupId>
-							<artifactId>server-admin</artifactId>
+							<artifactId>diffusion-admin</artifactId>
 							<bundleFileName>admin.war</bundleFileName>
 							<contextRoot>/admin</contextRoot>
 						</webModule>
 						<webModule>
 							<groupId>fr.ortolang.diffusion</groupId>
-							<artifactId>server-content</artifactId>
-							<bundleFileName>content.war</bundleFileName>
-							<contextRoot>/content</contextRoot>
+							<artifactId>diffusion-oaipmh</artifactId>
+							<bundleFileName>oaipmh.war</bundleFileName>
+							<contextRoot>/oaipmh</contextRoot>
 						</webModule>
 					</modules>
 					<fileNameMapping>no-version</fileNameMapping>

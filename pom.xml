@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.ortolang.diffusion</groupId>
-	<artifactId>server</artifactId>
+	<artifactId>ortolang-diffusion</artifactId>
 	<name>Ortolang Diffusion Server Parent</name>
 	<version>2.3.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
@@ -58,27 +58,34 @@
 		<dependencies>
 			<dependency>
 				<groupId>fr.ortolang.diffusion</groupId>
-				<artifactId>server-components</artifactId>
+				<artifactId>diffusion-components</artifactId>
 				<version>${project.version}</version>
 				<type>ejb</type>
 			</dependency>
 			<dependency>
 				<groupId>fr.ortolang.diffusion</groupId>
-				<artifactId>server-api</artifactId>
+				<artifactId>diffusion-api</artifactId>
 				<version>${project.version}</version>
 				<type>war</type>
 				<scope>compile</scope>
 			</dependency>
 			<dependency>
 				<groupId>fr.ortolang.diffusion</groupId>
-				<artifactId>server-admin</artifactId>
+				<artifactId>diffusion-oaipmh</artifactId>
 				<version>${project.version}</version>
 				<type>war</type>
 				<scope>compile</scope>
 			</dependency>
 			<dependency>
 				<groupId>fr.ortolang.diffusion</groupId>
-				<artifactId>server-content</artifactId>
+				<artifactId>diffusion-ftp</artifactId>
+				<version>${project.version}</version>
+				<type>war</type>
+				<scope>compile</scope>
+			</dependency>
+			<dependency>
+				<groupId>fr.ortolang.diffusion</groupId>
+				<artifactId>diffusion-admin</artifactId>
 				<version>${project.version}</version>
 				<type>war</type>
 				<scope>compile</scope>
@@ -101,13 +108,6 @@
 				<groupId>org.jboss.arquillian</groupId>
 				<artifactId>arquillian-bom</artifactId>
 				<version>1.1.5.Final</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.sshd</groupId>
-				<artifactId>apache-sshd</artifactId>
-				<version>0.14.0</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
