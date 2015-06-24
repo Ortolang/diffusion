@@ -24,8 +24,10 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.concurrent.ManagedThreadFactory;
+import javax.naming.InitialContext;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.transaction.UserTransaction;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -69,6 +71,8 @@ public class PreviewServiceBean implements PreviewService {
 	private NotificationService notification;
 	@Resource
 	private ManagedThreadFactory managedThreadFactory;
+//	@Resource
+//	private UserTransaction userTx;
 	@PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;
 	@Resource
@@ -96,6 +100,7 @@ public class PreviewServiceBean implements PreviewService {
 				LOGGER.log(Level.WARNING, "Unable to instanciate generator for class: " + clazz, e);
 			}
 		}
+		//Runnable ctxRunnable = contextService.createContextualProxy(worker, Runnable.class);
 		Thread thread = managedThreadFactory.newThread(worker);
 		thread.setName("Preview Worker Thread");
 		thread.start();
@@ -259,6 +264,9 @@ public class PreviewServiceBean implements PreviewService {
 	class PreviewServiceWorker implements Runnable {
 
 		private boolean run = true;
+		
+		public PreviewServiceWorker() {
+		}
 
 		public void stop() {
 			this.run = false;
@@ -271,11 +279,15 @@ public class PreviewServiceBean implements PreviewService {
 					OrtolangJob job = queue.take();
 					LOGGER.log(Level.FINE, "trying to generate preview for key: " + job.getTarget());
 					try {
+						InitialContext ctx = new InitialContext();
+						UserTransaction ut = (UserTransaction) ctx.lookup("java:comp/UserTransaction");
+						ut.begin();
 						generate(job.getTarget(), (String) job.getParameter("mimetype"), (String) job.getParameter("hash"), (String) job.getParameter("wskey"), (String) job.getParameter("path"));
+						ut.commit();
 					} catch (Exception e) {
 						LOGGER.log(Level.FINE, "unable to generate preview for key: " + job.getTarget(), e);
 					}
-				} catch (InterruptedException  e) {
+				} catch (InterruptedException e) {
 					LOGGER.log(Level.SEVERE, "error occured while trying to take next preview generation job", e);
 				}
 

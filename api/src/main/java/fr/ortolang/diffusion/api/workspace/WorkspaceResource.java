@@ -306,7 +306,7 @@ public class WorkspaceResource {
 	@POST
 	@Path("/{wskey}/elements")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	public Response writeWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form, @Context HttpHeaders headers)
+	public Response createWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form, @Context HttpHeaders headers)
 			throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException {
 		LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/elements");
 		try {
@@ -398,7 +398,7 @@ public class WorkspaceResource {
 	@PUT
 	@Path("/{wskey}/elements")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Response writeWorkspaceElementRepresentation(@PathParam(value = "wskey") String wskey, WorkspaceElementRepresentation representation, @QueryParam(value = "destination") String destination) throws CoreServiceException,
+	public Response updateWorkspaceElement(@PathParam(value = "wskey") String wskey, WorkspaceElementRepresentation representation, @QueryParam(value = "destination") String destination) throws CoreServiceException,
 			KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException {
 		LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements");
 		PathBuilder npath = PathBuilder.fromPath(representation.getPath());
