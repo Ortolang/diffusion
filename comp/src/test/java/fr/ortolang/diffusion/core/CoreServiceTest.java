@@ -134,6 +134,7 @@ public class CoreServiceTest {
 		jar.addAsResource("ontology/lexvo-ontology.xml");
 		jar.addAsResource("ontology/rdfs.xml");
 		jar.addAsResource("schema/ortolang-item-schema.json");
+		jar.addAsResource("schema/ortolang-workspace-schema.json");
 		jar.addAsResource("json/meta.json");
 		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
 		LOGGER.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
@@ -346,8 +347,50 @@ public class CoreServiceTest {
 	}
 
 	@Test
+	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException, InvalidPathException, MetadataFormatException {
+		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+		loginContext.login();
+		try {
+			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+			try {
+				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+			} catch (ProfileAlreadyExistsException e) {
+				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
+			}
+
+			InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
+			String schemaHash = core.put(schemaInputStream);
+			String id = core.createMetadataFormat("ortolang-item-json", "ORTOLANG Item", schemaHash, null);
+			
+			List<MetadataFormat> mfs = core.listMetadataFormat();
+			assertEquals(1, mfs.size());
+			
+			MetadataFormat mf = core.getMetadataFormat("ortolang-item-json");
+			assertEquals("ortolang-item-json", mf.getName());
+			assertEquals("ORTOLANG Item", mf.getDescription());
+			assertEquals(schemaHash, mf.getSchema());
+			
+			MetadataFormat mfid = core.findMetadataFormatById(id);
+			assertEquals("ortolang-item-json", mfid.getName());
+
+			String wsk = UUID.randomUUID().toString();
+			core.createWorkspace(wsk, "WorkspaceCollection", "test");
+
+			String metak = UUID.randomUUID().toString();
+			InputStream metadataInputStream = getClass().getClassLoader().getResourceAsStream("json/meta.json");
+			String metadataHash = core.put(metadataInputStream);
+			core.createMetadataObject(wsk, metak, "/", mf.getName(), metadataHash);
+			MetadataObject metadata = core.readMetadataObject(metak);
+			assertEquals("ortolang-item-json:1", metadata.getFormat());
+			
+		} finally {
+			loginContext.logout();
+		}
+	}
+
+	@Test
 	public void testCRUDCollection() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException,
-			KeyNotFoundException, InvalidPathException, CollectionNotEmptyException {
+			KeyNotFoundException, InvalidPathException, CollectionNotEmptyException, DataCollisionException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -405,6 +448,10 @@ public class CoreServiceTest {
 
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
+			InputStream schemaWorkspaceInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-workspace-schema.json");
+			String schemaWorkspaceHash = core.put(schemaWorkspaceInputStream);
+			core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "");
+			
 			Workspace workspace = core.readWorkspace(wsk);
 			assertEquals(0, workspace.getSnapshots().size());
 			assertEquals(1, workspace.getClock());
@@ -548,48 +595,6 @@ public class CoreServiceTest {
 
 			assertEquals(expectedSize, col.getElements().size());
 
-		} finally {
-			loginContext.logout();
-		}
-	}
-
-	@Test
-	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException, InvalidPathException, MetadataFormatException {
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
-		loginContext.login();
-		try {
-			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			try {
-				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
-			} catch (ProfileAlreadyExistsException e) {
-				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
-			}
-
-			InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
-			String schemaHash = core.put(schemaInputStream);
-			String id = core.createMetadataFormat("ortolang-item-json", "ORTOLANG Item", schemaHash, null);
-			
-			List<MetadataFormat> mfs = core.listMetadataFormat();
-			assertEquals(1, mfs.size());
-			
-			MetadataFormat mf = core.getMetadataFormat("ortolang-item-json");
-			assertEquals("ortolang-item-json", mf.getName());
-			assertEquals("ORTOLANG Item", mf.getDescription());
-			assertEquals(schemaHash, mf.getSchema());
-			
-			MetadataFormat mfid = core.findMetadataFormatById(id);
-			assertEquals("ortolang-item-json", mfid.getName());
-
-			String wsk = UUID.randomUUID().toString();
-			core.createWorkspace(wsk, "WorkspaceCollection", "test");
-
-			String metak = UUID.randomUUID().toString();
-			InputStream metadataInputStream = getClass().getClassLoader().getResourceAsStream("json/meta.json");
-			String metadataHash = core.put(metadataInputStream);
-			core.createMetadataObject(wsk, metak, "/", mf.getName(), metadataHash);
-			MetadataObject metadata = core.readMetadataObject(metak);
-			assertEquals("ortolang-item-json:1", metadata.getFormat());
-			
 		} finally {
 			loginContext.logout();
 		}

@@ -395,6 +395,11 @@ public class CoreServiceBean implements CoreService {
 			if (workspace == null) {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
+
+			if (!workspace.hasChanged()) {
+				throw new CoreServiceException("unable to snapshot because workspace has no pending modifications since last snapshot");
+			}
+			
 			try {
 //				long current = System.currentTimeMillis();
 				JsonObjectBuilder builder = Json.createObjectBuilder();
@@ -415,12 +420,9 @@ public class CoreServiceBean implements CoreService {
 					createMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
 				}
 			} catch (BinaryStoreServiceException | DataCollisionException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | MetadataFormatException e) {
-				throw new CoreServiceException("cannot create workspace metadata for collection root");
+				throw new CoreServiceException("cannot create workspace metadata for collection root : "+e.getMessage());
 			}
 			
-			if (!workspace.hasChanged()) {
-				throw new CoreServiceException("unable to snapshot because workspace has no pending modifications since last snapshot");
-			}
 			workspace.setKey(wskey);
 			workspace.incrementClock();
 
