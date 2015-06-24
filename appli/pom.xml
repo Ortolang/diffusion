@@ -30,11 +30,6 @@
 			<type>war</type>
 		</dependency>
 		<dependency>
-			<groupId>fr.ortolang.diffusion</groupId>
-			<artifactId>diffusion-oaipmh</artifactId>
-			<type>war</type>
-		</dependency>
-		<dependency>
 			<groupId>net.bull.javamelody</groupId>
 			<artifactId>javamelody-core</artifactId>
 			<version>1.56.0</version>
@@ -73,12 +68,6 @@
 							<artifactId>diffusion-admin</artifactId>
 							<bundleFileName>admin.war</bundleFileName>
 							<contextRoot>/admin</contextRoot>
-						</webModule>
-						<webModule>
-							<groupId>fr.ortolang.diffusion</groupId>
-							<artifactId>diffusion-oaipmh</artifactId>
-							<bundleFileName>oaipmh.war</bundleFileName>
-							<contextRoot>/oaipmh</contextRoot>
 						</webModule>
 					</modules>
 					<fileNameMapping>no-version</fileNameMapping>

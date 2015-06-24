@@ -103,9 +103,6 @@ import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
-/**
- * @resourceDescription Operations on Objects
- */
 @Path("/objects")
 @Produces({ MediaType.APPLICATION_JSON })
 public class ObjectResource {
@@ -126,21 +123,6 @@ public class ObjectResource {
 	public ObjectResource() {
 	}
 
-	/**
-	 * List objects
-	 * 
-	 * @responseType fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation
-	 * @param offset
-	 *            Offset of the first row to return
-	 * @param limit
-	 *            Maximum number of rows to return
-	 * @param itemsOnly
-	 *            Only get top items (items displayed in market home)
-	 * @param status
-	 *            {@link fr.ortolang.diffusion.OrtolangObjectState.Status}
-	 * @return {@link fr.ortolang.diffusion.api.object.GenericCollectionRepresentation}
-	 * @throws BrowserServiceException
-	 */
 	@GET
 	public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit,
 			@QueryParam(value = "service") String service, @QueryParam(value = "type") String type,
@@ -165,19 +147,6 @@ public class ObjectResource {
 		return Response.ok(representation).build();
 	}
 
-	/**
-	 * Get Object by key
-	 * 
-	 * @responseType fr.ortolang.diffusion.api.rest.object.ObjectRepresentation
-	 * @param key
-	 *            The object key
-	 * @return ObjectRepresentation
-	 * @throws BrowserServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 * @throws SecurityServiceException
-	 * @throws OrtolangException
-	 */
 	@GET
 	@Path("/{key}")
 	public Response get(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, SecurityServiceException,
@@ -247,17 +216,6 @@ public class ObjectResource {
 		return get(core.resolvePathFromCollection(key, relativePath), request);
 	}
 
-	/**
-	 * Get Object history by key
-	 * 
-	 * @responseType fr.ortolang.diffusion.api.rest.object.ObjectRepresentation
-	 * @param key
-	 *            The object key
-	 * @return ObjectRepresentation
-	 * @throws BrowserServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 */
 	@GET
 	@Path("/{key}/history")
 	public Response history(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {

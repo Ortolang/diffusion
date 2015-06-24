@@ -27,7 +27,6 @@
 		<module>comp</module>
 		<module>api</module>
 		<module>admin</module>
-		<module>oaipmh</module>
 		<module>client</module>
 		<module>appli</module>
 	</modules>
@@ -70,13 +69,6 @@
 			<dependency>
 				<groupId>fr.ortolang.diffusion</groupId>
 				<artifactId>diffusion-api</artifactId>
-				<version>${project.version}</version>
-				<type>war</type>
-				<scope>compile</scope>
-			</dependency>
-			<dependency>
-				<groupId>fr.ortolang.diffusion</groupId>
-				<artifactId>diffusion-oaipmh</artifactId>
 				<version>${project.version}</version>
 				<type>war</type>
 				<scope>compile</scope>

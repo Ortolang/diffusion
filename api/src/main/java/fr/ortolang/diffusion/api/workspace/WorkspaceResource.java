@@ -36,8 +36,6 @@ package fr.ortolang.diffusion.api.workspace;
  * #L%
  */
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -50,7 +48,6 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.json.Json;
 import javax.json.JsonObject;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -70,9 +67,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import fr.ortolang.diffusion.core.*;
-
-import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import fr.ortolang.diffusion.OrtolangException;
@@ -85,6 +79,13 @@ import fr.ortolang.diffusion.api.filter.CORSFilter;
 import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
+import fr.ortolang.diffusion.core.AliasNotFoundException;
+import fr.ortolang.diffusion.core.CollectionNotEmptyException;
+import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.InvalidPathException;
+import fr.ortolang.diffusion.core.MetadataFormatException;
+import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
@@ -98,7 +99,6 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
-import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 @Path("/workspaces")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -117,7 +117,7 @@ public class WorkspaceResource {
 	}
 
 	@GET
-	public Response listWorkspaces() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, BrowserServiceException {
+	public Response listProfileWorkspaces() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, BrowserServiceException {
 		LOGGER.log(Level.INFO, "GET /workspaces");
 		String profile = membership.getProfileKeyForConnectedIdentifier();
 
@@ -301,55 +301,6 @@ public class WorkspaceResource {
 		builder.cacheControl(cc);
         Response response = builder.build();
         return response;
-	}
-
-	@GET
-	@Path("/{wskey}/download")
-	public void download(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
-			@QueryParam(value = "metadata") String metadata, @Context HttpServletResponse response) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException,
-			OrtolangException, DataNotFoundException, IOException, CoreServiceException, InvalidPathException {
-		LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/download?root=" + root + "&path=" + path + "&metadata=" + metadata);
-		if (path == null) {
-			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "parameter 'path' is mandatory");
-			return;
-		}
-
-		PathBuilder npath = PathBuilder.fromPath(path);
-		String ekey = core.resolveWorkspacePath(wskey, root, npath.build());
-		OrtolangObject object = browser.findObject(ekey);
-
-		if (metadata != null && metadata.length() > 0) {
-			for (MetadataElement element : ((MetadataSource) object).getMetadatas()) {
-				if (element.getName().equals(metadata)) {
-					LOGGER.log(Level.FINE, "element metadata key found, loading...");
-					ekey = element.getKey();
-					object = browser.findObject(ekey);
-					response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
-					response.setContentType(((MetadataObject) object).getContentType());
-					response.setContentLength((int) ((MetadataObject) object).getSize());
-					InputStream input = core.download(ekey);
-					try {
-						IOUtils.copy(input, response.getOutputStream());
-					} finally {
-						IOUtils.closeQuietly(input);
-					}
-					return;
-				}
-			}
-			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "metadata not found with name: " + metadata + " at path: " + npath.build());
-		} else if (object instanceof DataObject) {
-			response.setHeader("Content-Disposition", "attachment; filename=" + object.getObjectName());
-			response.setContentType(((DataObject) object).getMimeType());
-			response.setContentLength((int) ((DataObject) object).getSize());
-			InputStream input = core.download(ekey);
-			try {
-				IOUtils.copy(input, response.getOutputStream());
-			} finally {
-				IOUtils.closeQuietly(input);
-			}
-		} else {
-			response.sendError(Response.Status.BAD_REQUEST.ordinal(), "no content to download for this path");
-		}
 	}
 
 	@POST
@@ -545,7 +496,7 @@ public class WorkspaceResource {
 	@GET
 	@Path("/{alias}/available")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response checkAvailability(@PathParam(value = "alias") String alias) throws AccessDeniedException, KeyNotFoundException, CoreServiceException {
+	public Response checkAliasAvailability(@PathParam(value = "alias") String alias) throws AccessDeniedException, KeyNotFoundException, CoreServiceException {
 		LOGGER.log(Level.INFO, "GET /workspaces/" + alias + "/available");
 		boolean available = false;
 		try {

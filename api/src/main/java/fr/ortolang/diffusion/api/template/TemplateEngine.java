@@ -22,6 +22,8 @@ public class TemplateEngine {
         cfg.setClassLoaderForTemplateLoading(TemplateEngine.class.getClassLoader(), "templates");
         cfg.setDefaultEncoding("UTF-8");
         cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+        cfg.setSharedVariable("formatsize", new FormatSizeMethod());
+        cfg.setSharedVariable("fileicon", new FileIconMethod());
 	}
 
 	public static TemplateEngine getInstance() {

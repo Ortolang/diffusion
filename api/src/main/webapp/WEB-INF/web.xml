@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
 
-    <filter>
+	<filter>
 		<filter-name>CORS</filter-name>
 		<filter-class>fr.ortolang.diffusion.api.filter.CORSFilter</filter-class>
 	</filter>
@@ -15,7 +15,7 @@
 			<param-value>(?&lt;=/objects).*</param-value>
 		</init-param>
 	</filter>
-	
+
 	<filter-mapping>
 		<filter-name>monitoring</filter-name>
 		<url-pattern>/*</url-pattern>
@@ -24,7 +24,7 @@
 		<filter-name>CORS</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
-	
+
 	<listener>
 		<listener-class>net.bull.javamelody.SessionListener</listener-class>
 	</listener>
@@ -36,15 +36,39 @@
 		<enabled>true</enabled>
 		<async-supported>true</async-supported>
 	</servlet>
+	<servlet>
+		<display-name>OAI-PMH Servlet</display-name>
+		<servlet-name>OAIPMHServlet</servlet-name>
+		<servlet-class>fr.ortolang.diffusion.oaipmh.OAIPMHServlet</servlet-class>
+	</servlet>
+	<servlet>
+		<servlet-name>default</servlet-name>
+		<servlet-class>io.undertow.servlet.handlers.DefaultServlet</servlet-class>
+		<init-param>
+			<param-name>resolve-against-context-root</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>OAIPMHServlet</servlet-name>
+		<url-pattern>/oai/*</url-pattern>
+	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>AtmosphereServlet</servlet-name>
 		<url-pattern>/sub/*</url-pattern>
 	</servlet-mapping>
 	<servlet-mapping>
+		<servlet-name>default</servlet-name>
+		<url-pattern>/css/*</url-pattern>
+		<url-pattern>/icons/*</url-pattern>
+		<url-pattern>/index.html</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
 		<servlet-name>fr.ortolang.diffusion.api.ApiApplication</servlet-name>
 		<url-pattern>/*</url-pattern>
 	</servlet-mapping>
-	
+
 	<security-constraint>
 		<web-resource-collection>
 			<web-resource-name>api</web-resource-name>
@@ -64,7 +88,7 @@
 			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
 		</user-data-constraint>
 	</security-constraint>
-	
+
 	<login-config>
 		<auth-method>KEYCLOAK</auth-method>
 	</login-config>

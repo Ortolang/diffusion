@@ -25,7 +25,7 @@
 			</tr>
 			<#if parentPath?length gt 0>
 				<tr>
-					<td><img src="${context}/icons/folder-parent.png"/></td>
+					<td><img src="${context}/icons/folder-parent-old.png"/></td>
 					<td><a href="${context}${base}${parentPath}">..</a></td>
 					<td></td>
 					<td></td>
@@ -37,7 +37,7 @@
 			</#if>
 			<#list elements as element>
 				<tr>
-					<td><img src="${context}/icons/${element.type}.png" alt="[${element.type}]"/></td>
+					<td><img src="${context}/icons/${fileicon(element.name, element.mimeType)}" alt="[${element.type}]"/></td>
 					<td><a href="${context}${base}${path}/${element.name}">${element.name}</a></td>
 					<td>${element.mimeType}</td>
 					<#if element.modification gt 0>
@@ -46,7 +46,7 @@
 						<td align="right">-</td>	
 					</#if>
 					<#if element.type == 'object'>
-						<td align="right">${element.size}</td>
+						<td align="right">${formatsize(element.size)}</td>
 					<#else>
 						<td align="right">-</td>
 					</#if>

@@ -252,7 +252,7 @@ public class CollectionElement implements Serializable, Comparable<CollectionEle
 		@Override
 		public int compare(CollectionElement element1, CollectionElement element2) {
 			if (element2.getType().equals(element1.getType())) {
-				return element1.getMimeType().compareToIgnoreCase(element2.getMimeType());
+				return element2.getMimeType().compareToIgnoreCase(element1.getMimeType());
 			} else {
 				return element1.getType().compareToIgnoreCase(element2.getType());
 			}
