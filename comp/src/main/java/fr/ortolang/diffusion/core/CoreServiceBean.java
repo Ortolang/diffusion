@@ -137,6 +137,8 @@ public class CoreServiceBean implements CoreService {
 	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { { Workspace.OBJECT_TYPE, "read,update,delete,snapshot" }, { DataObject.OBJECT_TYPE, "read,update,delete,download" },
 			{ Collection.OBJECT_TYPE, "read,update,delete,download" }, { Link.OBJECT_TYPE, "read,update,delete" }, { MetadataObject.OBJECT_TYPE, "read,update,delete,download" } };
 
+	private static final String[] RESERVED_SNAPSHOT_NAMES = new String[] { Workspace.HEAD, Workspace.LATEST };
+	
 	@EJB
 	private RegistryService registry;
 	@EJB
@@ -369,6 +371,15 @@ public class CoreServiceBean implements CoreService {
 	}
 	
 	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<String> listAllWorkspaceAlias() throws CoreServiceException {
+		LOGGER.log(Level.FINE, "listing all workspaces alias");
+		TypedQuery<String> query = em.createNamedQuery("listAllWorkspaceAlias", String.class);
+		List<String> alias = query.getResultList();
+		return alias;
+	}
+	
+	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void snapshotWorkspace(String wskey, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "snapshoting workspace [" + wskey + "]");
@@ -415,7 +426,7 @@ public class CoreServiceBean implements CoreService {
 			workspace.setKey(wskey);
 			workspace.incrementClock();
 
-			if (name.equals(Workspace.HEAD)) {
+			if ( Arrays.asList(RESERVED_SNAPSHOT_NAMES).contains(name) ) {
 				throw new CoreServiceException(name + " is reserved and cannot be used as snapshot name");
 			}
 			try {

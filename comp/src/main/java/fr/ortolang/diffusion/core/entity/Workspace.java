@@ -51,14 +51,16 @@ import java.util.regex.Pattern;
 
 @Entity
 @NamedQueries(value= {
-		@NamedQuery(name="findWorkspaceByMember", query="select w from Workspace w where w.members IN :groups"),
-		@NamedQuery(name="findWorkspaceByAlias", query="select w from Workspace w where w.alias = :alias")
+		@NamedQuery(name="findWorkspaceByMember", query="select w from Workspace w where w.members in :groups"),
+		@NamedQuery(name="findWorkspaceByAlias", query="select w from Workspace w where w.alias = :alias"),
+		@NamedQuery(name="listAllWorkspaceAlias", query="select w.alias from Workspace w where w.alias not like ''")
 })
 @SuppressWarnings("serial")
 public class Workspace extends OrtolangObject {
 
 	public static final String OBJECT_TYPE = "workspace";
 	public static final String HEAD = "head";
+	public static final String LATEST = "latest";
 	
 	@Id
 	private String id;

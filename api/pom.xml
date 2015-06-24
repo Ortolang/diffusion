@@ -1,26 +1,22 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>server-api</artifactId>
+	<artifactId>diffusion-api</artifactId>
 	<name>Ortolang Diffusion Server API</name>
 	<packaging>war</packaging>
 
 	<parent>
 		<groupId>fr.ortolang.diffusion</groupId>
-		<artifactId>server</artifactId>
+		<artifactId>ortolang-diffusion</artifactId>
 		<version>2.3.0-SNAPSHOT</version>
 	</parent>
-
-	<properties>
-		<version.lyncode.xoai>4.1.0</version.lyncode.xoai>
-		<version.json>20141113</version.json>
-		<version.thetransactioncompany.cors-filter>2.4</version.thetransactioncompany.cors-filter>
-	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>fr.ortolang.diffusion</groupId>
-			<artifactId>server-components</artifactId>
+			<artifactId>diffusion-components</artifactId>
 			<type>ejb</type>
 			<scope>provided</scope>
 		</dependency>
@@ -39,32 +35,6 @@
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-core</artifactId>
 			<version>${version.apache.tika}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.velocity</groupId>
-			<artifactId>velocity</artifactId>
-			<version>${version.apache.velocity}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.velocity</groupId>
-			<artifactId>velocity-tools</artifactId>
-			<version>${version.apache.velocity-tools}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.lyncode</groupId>
-			<artifactId>xoai-common</artifactId>
-			<version>${version.lyncode.xoai}</version>
-			<exclusions>
-				<exclusion>  <!-- declare the exclusion here -->
-					<groupId>commons-codec</groupId>
-					<artifactId>commons-codec</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>com.lyncode</groupId>
-			<artifactId>xoai-data-provider</artifactId>
-			<version>${version.lyncode.xoai}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>
@@ -87,13 +57,28 @@
 			<version>${version.fasterxml.jackson}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.sshd</groupId>
-			<artifactId>sshd-core</artifactId>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+			<version>2.3.22</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
 	<build>
 		<finalName>${project.artifactId}</finalName>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.ftl</include>
+				</includes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
@@ -118,7 +103,7 @@
 						</tag>
 					</tags>
 				</configuration>
-				<executions>
+				<!-- <executions>
 					<execution>
 						<id>generate-service-docs</id>
 						<phase>generate-resources</phase>
@@ -138,7 +123,7 @@
 							<goal>javadoc</goal>
 						</goals>
 					</execution>
-				</executions>
+				</executions> -->
 			</plugin>
 		</plugins>
 		<pluginManagement>
