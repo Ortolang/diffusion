@@ -68,8 +68,6 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	private boolean root;
 	private int clock; 
 	private String name;
-	@Column(length=2500)
-	private String description;
 	@Column(length=8000)
 	@ElementCollection(fetch=FetchType.EAGER)
 	private Set<String> segments;
@@ -123,15 +121,7 @@ public class Collection extends OrtolangObject implements MetadataSource {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
-	public String getDescription() {
-		return description;
-	}
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	
 	public void setSegments(Set<String> segments) {
 		this.segments = segments;
 	}

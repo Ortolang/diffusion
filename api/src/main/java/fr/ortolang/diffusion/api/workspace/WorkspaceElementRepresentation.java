@@ -231,7 +231,6 @@ public class WorkspaceElementRepresentation {
 		representation.setMimeType(Collection.MIME_TYPE);
 		representation.setElements(collection.getElements());
 		representation.setMetadatas(collection.getMetadatas());
-		representation.setDescription(collection.getDescription());
 		return representation;
 	}
 
@@ -258,7 +257,6 @@ public class WorkspaceElementRepresentation {
 		representation.setMimeType(dataobject.getMimeType());
 		representation.setStream(dataobject.getStream());
 		representation.setMetadatas(dataobject.getMetadatas());
-		representation.setDescription(dataobject.getDescription());
 		return representation;
 	}
 

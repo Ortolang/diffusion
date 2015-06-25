@@ -74,8 +74,6 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 	private String key;
 	private int clock;
 	private String name;
-	@Column(length=2500)
-	private String description;
 	private long size;
 	private String mimeType;
 	private String stream;
@@ -117,14 +115,6 @@ public class DataObject extends OrtolangObject implements MetadataSource {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-	
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
 	}
 
 	public long getSize() {
