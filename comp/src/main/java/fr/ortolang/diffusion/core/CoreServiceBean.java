@@ -252,7 +252,6 @@ public class CoreServiceBean implements CoreService {
 			collection.setName("root");
 			collection.setRoot(true);
 			collection.setClock(1);
-			collection.setDescription("Root collection of workspace '" + name + "'");
 			em.persist(collection);
 
 			registry.register(head, collection.getObjectIdentifier(), caller);
@@ -784,10 +783,10 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createCollection(String wskey, String path, String description) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException {
+	public void createCollection(String wskey, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException {
 		String key = UUID.randomUUID().toString();
 		try {
-			createCollection(wskey, key, path, description);
+			createCollection(wskey, key, path);
 		} catch (KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.WARNING, "the generated key already exists : " + key);
@@ -796,7 +795,7 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createCollection(String wskey, String key, String path, String description) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
+	public void createCollection(String wskey, String key, String path) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
 			AccessDeniedException {
 		LOGGER.log(Level.FINE, "creating collection with key [" + key + "] into workspace [" + wskey + "] at path [" + path + "]");
 		try {
@@ -838,7 +837,6 @@ public class CoreServiceBean implements CoreService {
 			collection.setName(npath.part());
 			collection.setRoot(false);
 			collection.setClock(ws.getClock());
-			collection.setDescription(description);
 			em.persist(collection);
 			LOGGER.log(Level.FINEST, "collection [" + key + "] created");
 
@@ -970,72 +968,6 @@ public class CoreServiceBean implements CoreService {
 		} catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException | TreeBuilderException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error while reading collection", e);
 			throw new CoreServiceException("unable to resolve path " + path + " from collection with key [" + key + "]", e);
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateCollection(String workspace, String path, String description) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "updating collection into workspace [" + workspace + "] at path [" + path + "]");
-		try {
-			PathBuilder npath = PathBuilder.fromPath(path);
-			if (npath.isRoot()) {
-				throw new InvalidPathException("unable to update the root collection");
-			}
-
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			authorisation.checkAuthentified(subjects);
-			LOGGER.log(Level.FINEST, "user [" + caller + "] is authentified");
-
-			OrtolangObjectIdentifier wsidentifier = registry.lookup(workspace);
-			checkObjectType(wsidentifier, Workspace.OBJECT_TYPE);
-			LOGGER.log(Level.FINEST, "workspace with key [" + workspace + "] exists");
-
-			Workspace ws = em.find(Workspace.class, wsidentifier.getId());
-			if (ws == null) {
-				throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
-			}
-			ws.setKey(workspace);
-			LOGGER.log(Level.FINEST, "workspace loaded");
-
-			authorisation.checkPermission(ws.getHead(), subjects, "update");
-			LOGGER.log(Level.FINEST, "user [" + caller + "] has 'update' permission on the head collection of this workspace");
-
-			String current = resolveWorkspacePath(workspace, Workspace.HEAD, npath.build());
-			OrtolangObjectIdentifier cidentifier = registry.lookup(current);
-			checkObjectType(cidentifier, Collection.OBJECT_TYPE);
-			Collection ccollection = em.find(Collection.class, cidentifier.getId());
-			if (ccollection == null) {
-				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
-			}
-			LOGGER.log(Level.FINEST, "current collection loaded");
-
-			if (!description.equals(ccollection.getDescription())) {
-				Collection collection = loadCollectionAtPath(ws.getHead(), npath, ws.getClock());
-				LOGGER.log(Level.FINEST, "collection loaded for path " + npath.build());
-
-				collection.setDescription(description);
-				em.merge(collection);
-				registry.update(collection.getKey());
-				indexing.index(collection.getKey());
-				LOGGER.log(Level.FINEST, "collection updated");
-
-				ws.setChanged(true);
-				em.merge(ws);
-				registry.update(ws.getKey());
-				LOGGER.log(Level.FINEST, "workspace set changed");
-
-				notification.throwEvent(collection.getKey(), caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "update"));
-				ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("oKey", collection.getKey()).addArgument("path", path);
-				notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder.build());
-			} else {
-				LOGGER.log(Level.FINEST, "no modification detected, doing nothing");
-			}
-		} catch (KeyLockedException | NotificationServiceException | MembershipServiceException | AuthorisationServiceException | RegistryServiceException | TreeBuilderException | IndexingServiceException e) {
-			ctx.setRollbackOnly();
-			LOGGER.log(Level.SEVERE, "unexpected error while updating collection", e);
-			throw new CoreServiceException("unable to update collection into workspace [" + workspace + "] at path [" + path + "]", e);
 		}
 	}
 
@@ -1228,10 +1160,10 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createDataObject(String workspace, String path, String description, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException {
+	public void createDataObject(String workspace, String path, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException {
 		String key = UUID.randomUUID().toString();
 		try {
-			createDataObject(workspace, key, path, description, hash);
+			createDataObject(workspace, key, path, hash);
 		} catch (KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.WARNING, "the generated key already exists : " + key);
@@ -1240,7 +1172,7 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createDataObject(String workspace, String key, String path, String description, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException,
+	public void createDataObject(String workspace, String key, String path, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException,
 			InvalidPathException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "create data objetc with key [" + key + "] into workspace [" + workspace + "] at path [" + path + "]");
 		try {
@@ -1279,7 +1211,6 @@ public class CoreServiceBean implements CoreService {
 			DataObject object = new DataObject();
 			object.setId(UUID.randomUUID().toString());
 			object.setName(npath.part());
-			object.setDescription(description);
 			if (hash != null && hash.length() > 0) {
 				object.setSize(binarystore.size(hash));
 				object.setMimeType(binarystore.type(hash, npath.part()));
@@ -1351,7 +1282,7 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void updateDataObject(String workspace, String path, String description, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException {
+	public void updateDataObject(String workspace, String path, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "updating object into workspace [" + workspace + "] at path [" + path + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
@@ -1388,7 +1319,7 @@ public class CoreServiceBean implements CoreService {
 			}
 			LOGGER.log(Level.FINEST, "current object loaded");
 
-			if (!description.equals(cobject.getDescription()) || !hash.equals(cobject.getStream())) {
+			if (!hash.equals(cobject.getStream())) {
 				Collection parent = loadCollectionAtPath(ws.getHead(), ppath, ws.getClock());
 				LOGGER.log(Level.FINEST, "parent collection loaded for path " + npath.build());
 
@@ -1408,9 +1339,8 @@ public class CoreServiceBean implements CoreService {
 					throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
 				}
 				object.setKey(element.getKey());
-				object.setDescription(description);
 				object.setKey(element.getKey());
-				if (hash != null && hash.length() > 0) {
+				if (hash.length() > 0) {
 					object.setSize(binarystore.size(hash));
 					object.setMimeType(binarystore.type(hash, object.getName()));
 					object.setStream(hash);
@@ -2804,9 +2734,6 @@ public class CoreServiceBean implements CoreService {
 				if (object.getName() != null) {
 					content.addContentPart(object.getName());
 				}
-				if (object.getDescription() != null) {
-					content.addContentPart(object.getDescription());
-				}
 				if (object.getMimeType() != null) {
 					content.addContentPart(object.getMimeType());
 				}
@@ -2833,7 +2760,6 @@ public class CoreServiceBean implements CoreService {
 					throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
 				}
 				content.addContentPart(collection.getName());
-				content.addContentPart(collection.getDescription());
 
 				for (MetadataElement mde : collection.getMetadatas()) {
 					OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
@@ -3201,7 +3127,6 @@ public class CoreServiceBean implements CoreService {
 			Collection clone = new Collection();
 			clone.setId(UUID.randomUUID().toString());
 			clone.setName(origin.getName());
-			clone.setDescription(origin.getDescription());
 			clone.setRoot(origin.isRoot());
 			clone.setClock(clock);
 			Set<CollectionElement> elements = new HashSet<CollectionElement>();
@@ -3235,7 +3160,6 @@ public class CoreServiceBean implements CoreService {
 			DataObject clone = new DataObject();
 			clone.setId(UUID.randomUUID().toString());
 			clone.setName(origin.getName());
-			clone.setDescription(origin.getDescription());
 			clone.setSize(origin.getSize());
 			clone.setMimeType(origin.getMimeType());
 			clone.setStream(origin.getStream());

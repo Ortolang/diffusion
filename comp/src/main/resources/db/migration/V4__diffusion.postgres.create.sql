@@ -15,7 +15,6 @@
     create table Collection (
         id varchar(255) not null,
         clock int4 not null,
-        description varchar(2500),
         metadatasContent text,
         name varchar(255),
         root boolean not null,
@@ -31,7 +30,6 @@
     create table DataObject (
         id varchar(255) not null,
         clock int4 not null,
-        description varchar(2500),
         metadatasContent text,
         mimeType varchar(255),
         name varchar(255),

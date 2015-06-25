@@ -81,7 +81,7 @@ public class ImportZipTask extends RuntimeEngineTask {
 									String hash = getCoreService().put(is);
 									is.close();
 									DataObject object = getCoreService().readDataObject(okey);
-									getCoreService().updateDataObject(wskey, opath.build(), object.getDescription(), hash);
+									getCoreService().updateDataObject(wskey, opath.build(), hash);
 								} catch ( InvalidPathException | DataCollisionException | KeyNotFoundException e4 ) {
 									partial = true;
 								}
@@ -102,14 +102,14 @@ public class ImportZipTask extends RuntimeEngineTask {
 											try {
 												getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, current);
 											} catch (InvalidPathException e2) {
-												getCoreService().createCollection(wskey, current, "");
+												getCoreService().createCollection(wskey, current);
 											}
 											cache.add(current);
 										}
 									}
 								}
 								String current = opath.build();
-								getCoreService().createDataObject(wskey, current, "", hash);
+								getCoreService().createDataObject(wskey, current, hash);
 							} catch ( InvalidPathException | DataCollisionException | KeyNotFoundException e4 ) {
 								partial = true;
 							}
