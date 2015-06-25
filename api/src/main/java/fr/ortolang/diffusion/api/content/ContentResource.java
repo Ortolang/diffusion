@@ -131,7 +131,8 @@ public class ContentResource {
 		} catch ( AccessDeniedException e ) {
 			if ( security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
 				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
-				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath())).build();
+				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, false);
+				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(rcookie).build();
 			} else {
 				LOGGER.log(Level.FINE, "user is already authentified, access denied");
 				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
@@ -193,7 +194,8 @@ public class ContentResource {
 		} catch ( AccessDeniedException e ) {
 			if ( security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
 				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
-				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath())).build();
+				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, false);
+				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(rcookie).build();
 			} else {
 				LOGGER.log(Level.FINE, "user is already authentified, access denied");
 				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
@@ -261,7 +263,8 @@ public class ContentResource {
 		} catch ( AccessDeniedException e ) {
 			if ( security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
 				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
-				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath())).build();
+				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, false);
+				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(rcookie).build();
 			} else {
 				LOGGER.log(Level.FINE, "user is already authentified, access denied");
 				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
@@ -310,7 +313,8 @@ public class ContentResource {
 		} catch ( AccessDeniedException e ) {
 			if ( security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
 				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
-				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(new NewCookie(REDIRECT_PATH_PARAM_NAME, "/key/" + key)).build();
+				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/key/" + key, OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, false);
+				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(rcookie).build();
 			} else {
 				LOGGER.log(Level.FINE, "user is already authentified, access denied");
 				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
