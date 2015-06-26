@@ -50,7 +50,26 @@
         },
         "preview": {
             "id": "http://www.ortolang.fr/preview",
-            "type": "string"
+            "type": "object",
+            "properties": {
+                "type": {
+                    "id": "http://www.ortolang.fr/preview/type",
+                    "type": "string",
+                    "default": "line",
+                    "enum": [
+                        "line",
+                        "slideshow"
+                    ]
+                },
+                "paths": {
+                    "id": "http://www.ortolang.fr/preview/paths",
+                    "type": "array",
+                    "items": {
+                        "id": "http://www.ortolang.fr/preview/paths/item",
+                        "type": "string"
+                    }
+                }
+            }
         },
         "statusOfUse": {
             "id": "http://www.ortolang.fr/statusOfUse",

@@ -87,7 +87,24 @@
 		  },
 		  {
 			"key":"preview",
-			"title":"Aperçu"
+			"title":"Aperçu",
+			"items": [
+				{
+					"key":"type",
+					"type":"select",
+					"title":"Type de preview",
+					"titleMap":
+					[
+					  { "value": "line", "name": "Liste" },
+					  { "value": "slideshow", "name": "Carousel" }
+					]
+				},
+				{
+					"key":"paths",
+					"title":"Chemins",
+					"type": "array"
+				}
+			]
 		  }
 		]
 	  },
