@@ -318,11 +318,10 @@ public class OrtolangClient {
 		}
 	}
 
-	public void snapshotWorkspace(String workspace, String name) throws OrtolangClientException, OrtolangClientAccountException {
+	public void snapshotWorkspace(String workspace) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("workspaces").path(workspace).path("snapshots");
-		Form form = new Form().param("snapshotname", name);
-		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
+		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(null, "text/plain"));
 		if (response.getStatus() != Status.OK.getStatusCode()) {
 			response.close();
 			throw new OrtolangClientException("unexpected response code: " + response.getStatus());

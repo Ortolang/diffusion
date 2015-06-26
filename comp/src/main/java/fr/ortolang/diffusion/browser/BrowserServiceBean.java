@@ -179,8 +179,7 @@ public class BrowserServiceBean implements BrowserService {
 		try {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
-			List<OrtolangObjectProperty> properties = registry.getProperties(key); 
-			return properties;
+			return registry.getProperties(key);
 		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
 			throw new BrowserServiceException("error during listing entries", e);
 		}
@@ -194,8 +193,7 @@ public class BrowserServiceBean implements BrowserService {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 			String value = registry.getProperty(key, name);
-			OrtolangObjectProperty property = new OrtolangObjectProperty(name, value);
-			return property;
+			return new OrtolangObjectProperty(name, value);
 		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
 			throw new BrowserServiceException("error during getting property", e);
 		}
@@ -231,8 +229,7 @@ public class BrowserServiceBean implements BrowserService {
 			String lock = registry.getLock(key);
 			String status = registry.getPublicationStatus(key);
 			long lastModification = registry.getLastModificationDate(key);
-			OrtolangObjectState state = new OrtolangObjectState(hidden, lock, status, lastModification);
-			return state;
+			return new OrtolangObjectState(hidden, lock, status, lastModification);
 		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
 			throw new BrowserServiceException("error during getting state", e);
 		}
@@ -248,8 +245,7 @@ public class BrowserServiceBean implements BrowserService {
 			String author = registry.getAuthor(key);
 			long creationDate = registry.getCreationDate(key);
 			long lastModificationDate = registry.getLastModificationDate(key);
-			OrtolangObjectInfos infos = new OrtolangObjectInfos(author, creationDate, lastModificationDate);
-			return infos;
+			return new OrtolangObjectInfos(author, creationDate, lastModificationDate);
 		} catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
 			throw new BrowserServiceException("error during getting infos", e);
 		}

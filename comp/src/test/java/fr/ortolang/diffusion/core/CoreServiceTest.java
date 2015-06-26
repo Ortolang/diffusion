@@ -439,7 +439,7 @@ public class CoreServiceTest {
 			assertEquals(0, workspace.getSnapshots().size());
 			assertEquals(1, workspace.getClock());
 			assertTrue(workspace.hasChanged());
-			core.snapshotWorkspace(wsk, "v1");
+			core.snapshotWorkspace(wsk);
 			workspace = core.readWorkspace(wsk);
 			assertEquals(1, workspace.getSnapshots().size());
 			assertEquals(2, workspace.getClock());
@@ -449,7 +449,7 @@ public class CoreServiceTest {
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
 			try {
-				core.snapshotWorkspace(wsk, "v2");
+				core.snapshotWorkspace(wsk);
 				fail("A second snapshot without changes should produce an exception");
 			} catch (Exception e) {
 				LOGGER.log(Level.INFO, e.getMessage());
@@ -458,7 +458,7 @@ public class CoreServiceTest {
 			core.createCollection(wsk, "/a/d");
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-			core.snapshotWorkspace(wsk, "v2");
+			core.snapshotWorkspace(wsk);
 			workspace = core.readWorkspace(wsk);
 			assertEquals(2, workspace.getSnapshots().size());
 			assertEquals(3, workspace.getClock());
@@ -468,7 +468,7 @@ public class CoreServiceTest {
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
 			core.createCollection(wsk, "/a/e");
-			core.snapshotWorkspace(wsk, "v3");
+			core.snapshotWorkspace(wsk);
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
 			core.createCollection(wsk, "/a/c/f");
@@ -482,7 +482,7 @@ public class CoreServiceTest {
 			assertEquals(acfclock, collection.getClock());
 			assertEquals("f", collection.getName());
 
-			core.snapshotWorkspace(wsk, "v4");
+			core.snapshotWorkspace(wsk);
 			core.createCollection(wsk, "/a/e/f/h");
 			acfclock = core.readCollection(acfkey).getClock();
 			core.moveCollection(wsk, "/a/e/f", "/a/c/g");
@@ -493,7 +493,7 @@ public class CoreServiceTest {
 			assertEquals(acfclock + 1, collection.getClock());
 			assertEquals("g", collection.getName());
 			
-			core.snapshotWorkspace(wsk, "v5");
+			core.snapshotWorkspace(wsk);
 			core.createCollection(wsk, "/a/c/g/d1");
 			core.createCollection(wsk, "/a/c/g/d1/d2");
 			core.createCollection(wsk, "/a/c/g/d1/d2/d3");

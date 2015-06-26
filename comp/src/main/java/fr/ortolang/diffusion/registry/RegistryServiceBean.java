@@ -395,16 +395,14 @@ public class RegistryServiceBean implements RegistryService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public OrtolangObjectIdentifier lookup(String key) throws RegistryServiceException, KeyNotFoundException {
 		LOGGER.log(Level.FINE, "lookup identifier for key [" + key + "]");
-		OrtolangObjectIdentifier identifier =  OrtolangObjectIdentifier.deserialize(findEntryByKey(key).getIdentifier());
-		return identifier;
+		return OrtolangObjectIdentifier.deserialize(findEntryByKey(key).getIdentifier());
 	}
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String lookup(OrtolangObjectIdentifier identifier) throws RegistryServiceException, IdentifierNotRegisteredException {
 		LOGGER.log(Level.FINE, "lookup key for identifier [" + identifier + "]");
-		String key = findEntryByIdentifier(identifier).getKey();
-		return key;
+		return findEntryByIdentifier(identifier).getKey();
 	}
 
 	@Override
@@ -436,8 +434,7 @@ public class RegistryServiceBean implements RegistryService {
 			LOGGER.log(Level.FINE, "listing all keys only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
 			query = em.createNamedQuery("listVisibleKeys", String.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString()).setFirstResult(offset).setMaxResults(limit);
 		}
-		List<String> entries = query.getResultList();
-		return entries;
+		return query.getResultList();
 	}
 
 	@Override
@@ -461,8 +458,7 @@ public class RegistryServiceBean implements RegistryService {
 		} else {
 			query = em.createNamedQuery("countVisibleKeys", Long.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString());
 		}
-		long cpt = query.getSingleResult().longValue();
-		return cpt;
+		return query.getSingleResult().longValue();
 	}
 	
 	@Override

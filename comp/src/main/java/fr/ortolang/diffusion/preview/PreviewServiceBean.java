@@ -137,26 +137,21 @@ public class PreviewServiceBean implements PreviewService {
 	public boolean exists(String key) throws PreviewServiceException {
 		LOGGER.log(Level.FINE, "check if preview exists for key [" + key + "]");
 		Preview preview = em.find(Preview.class, key);
-		if (preview != null) {
-			return true;
-		}
-		return false;
+		return preview != null;
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<Preview> list(List<String> keys) throws PreviewServiceException {
 		LOGGER.log(Level.FINE, "listing existing previews for key set");
-		List<Preview> existing = em.createNamedQuery("findExistingPreviews", Preview.class).setParameter("keysList", keys).getResultList();
-		return existing;
+		return em.createNamedQuery("findExistingPreviews", Preview.class).setParameter("keysList", keys).getResultList();
 	}
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Preview getPreview(String key) throws PreviewServiceException {
 		LOGGER.log(Level.FINE, "get preview for key [" + key + "]");
-		Preview preview = em.find(Preview.class, key);
-		return preview;
+		return em.find(Preview.class, key);
 	}
 	
 	@Override
@@ -194,9 +189,8 @@ public class PreviewServiceBean implements PreviewService {
 			String hash = preview.getSmall();
 			if ( size.equals(Preview.LARGE) ) {
 				hash = preview.getLarge();
-			} 
-			InputStream stream = store.get(hash);
-			return stream;
+			}
+			return store.get(hash);
 
 		} catch (BinaryStoreServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | DataNotFoundException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occurred during getting preview", e);

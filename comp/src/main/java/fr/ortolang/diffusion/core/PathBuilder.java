@@ -98,8 +98,7 @@ public class PathBuilder {
 			return 0;
 		} 
 		String path = builder.toString();
-		int depth = path.length() - path.replace(PATH_SEPARATOR, "").length();
-		return depth;
+		return path.length() - path.replace(PATH_SEPARATOR, "").length();
 	}
 	
 	public PathBuilder parent() {

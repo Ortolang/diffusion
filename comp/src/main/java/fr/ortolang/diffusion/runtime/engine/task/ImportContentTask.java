@@ -305,7 +305,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 
 	private void snapshotWorkspace(String name) throws RuntimeEngineTaskException {
 		try {
-			getCoreService().snapshotWorkspace(wskey, name);
+			getCoreService().snapshotWorkspace(wskey);
 		} catch ( CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error snapshoting workspace", e);
 		} 

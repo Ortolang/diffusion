@@ -74,7 +74,7 @@ public class OrtolangServiceLocator {
 			NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/");
 			List<String> results = new ArrayList<String>();
 			while (enumeration.hasMoreElements()) {
-				String name = ((NameClassPair) enumeration.next()).getName();
+				String name = enumeration.next().getName();
 				if (name.endsWith(OrtolangServiceLocator.SERVICE_SUFFIX)) {
 					LOGGER.log(Level.INFO, "jndi service name found : " + name);
 					results.add(name.substring(0, name.indexOf("!")));
@@ -91,12 +91,10 @@ public class OrtolangServiceLocator {
 			if ( !services.containsKey(serviceName) ) {
 				NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/");
 				while (enumeration.hasMoreElements()) {
-					String name = ((NameClassPair) enumeration.next()).getName();
-					if (name.endsWith(OrtolangServiceLocator.SERVICE_SUFFIX)) {
-						if (name.substring(0, name.indexOf("!")).equals(serviceName)) {
-							services.put(serviceName, (OrtolangService)getJndiContext().lookup(NAMESPACE + "/" + name));
-							return services.get(serviceName);
-						}
+					String name = enumeration.next().getName();
+					if (name.endsWith(OrtolangServiceLocator.SERVICE_SUFFIX) && name.substring(0, name.indexOf("!")).equals(serviceName)) {
+						services.put(serviceName, (OrtolangService) getJndiContext().lookup(NAMESPACE + "/" + name));
+						return services.get(serviceName);
 					}
 				}
 				throw new OrtolangException("service not found: " + serviceName);
@@ -123,12 +121,10 @@ public class OrtolangServiceLocator {
 			if ( !indexableServices.containsKey(serviceName) ) {
 				NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/");
 				while (enumeration.hasMoreElements()) {
-					String name = ((NameClassPair) enumeration.next()).getName();
-					if (name.endsWith(OrtolangServiceLocator.SERVICE_SUFFIX)) {
-						if (name.substring(0, name.indexOf("!")).equals(serviceName)) {
-							indexableServices.put(serviceName, (OrtolangIndexableService)getJndiContext().lookup(NAMESPACE + "/" + name));
-							return indexableServices.get(serviceName);
-						}
+					String name = enumeration.next().getName();
+					if (name.endsWith(OrtolangServiceLocator.SERVICE_SUFFIX) && name.substring(0, name.indexOf("!")).equals(serviceName)) {
+						indexableServices.put(serviceName, (OrtolangIndexableService) getJndiContext().lookup(NAMESPACE + "/" + name));
+						return indexableServices.get(serviceName);
 					}
 				}
 				throw new OrtolangException("service not found: " + serviceName);

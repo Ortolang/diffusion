@@ -363,9 +363,8 @@ public class RuntimeServiceBean implements RuntimeService {
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> groups = membership.getProfileGroups(caller);
-			
-			List<HumanTask> tasks = engine.listCandidateTasks(caller, groups);
-			return tasks;
+
+			return engine.listCandidateTasks(caller, groups);
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while listing candidate tasks", e);
 			throw new RuntimeServiceException("unable to list candidate tasks", e);
@@ -378,9 +377,7 @@ public class RuntimeServiceBean implements RuntimeService {
 		LOGGER.log(Level.INFO, "Listing assigned tasks");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
-			
-			List<HumanTask> tasks = engine.listAssignedTasks(caller);
-			return tasks;
+			return engine.listAssignedTasks(caller);
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while listing assigned tasks", e);
 			throw new RuntimeServiceException("unable to list assigned tasks", e);

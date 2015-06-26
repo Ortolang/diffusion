@@ -138,7 +138,7 @@ public class CoreServiceBean implements CoreService {
 			{ Collection.OBJECT_TYPE, "read,update,delete,download" }, { Link.OBJECT_TYPE, "read,update,delete" }, { MetadataObject.OBJECT_TYPE, "read,update,delete,download" } };
 
 	private static final String[] RESERVED_SNAPSHOT_NAMES = new String[] { Workspace.HEAD, Workspace.LATEST };
-	
+
 	@EJB
 	private RegistryService registry;
 	@EJB
@@ -374,13 +374,12 @@ public class CoreServiceBean implements CoreService {
 	public List<String> listAllWorkspaceAlias() throws CoreServiceException {
 		LOGGER.log(Level.FINE, "listing all workspaces alias");
 		TypedQuery<String> query = em.createNamedQuery("listAllWorkspaceAlias", String.class);
-		List<String> alias = query.getResultList();
-		return alias;
+		return query.getResultList();
 	}
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void snapshotWorkspace(String wskey, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	public void snapshotWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "snapshoting workspace [" + wskey + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -391,6 +390,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.checkPermission(wskey, subjects, "update");
 
 			Workspace workspace = em.find(Workspace.class, identifier.getId());
+			String name = String.valueOf(workspace.getClock());
 			if (workspace == null) {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
@@ -400,12 +400,10 @@ public class CoreServiceBean implements CoreService {
 			}
 			
 			try {
-//				long current = System.currentTimeMillis();
 				JsonObjectBuilder builder = Json.createObjectBuilder();
 				builder.add("wskey", wskey);
 				builder.add("versionName", name);
-//				builder.add("versionDate", current);
-				
+
 				JsonObject jsonObject = builder.build();
 				String hash = binarystore.put(new ByteArrayInputStream(jsonObject.toString().getBytes()));
 				
@@ -766,7 +764,7 @@ public class CoreServiceBean implements CoreService {
 			}
 			
 			if ( current != null ) {
-				SnapshotElement snapshot = workspace.findSnapshotByKey(current); 
+				SnapshotElement snapshot = workspace.findSnapshotByKey(current);
 				if ( snapshot != null ) {
 					return snapshot.getName();
 				}
@@ -2526,8 +2524,7 @@ public class CoreServiceBean implements CoreService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<MetadataFormat> listAllMetadataFormat() throws CoreServiceException {
 		TypedQuery<MetadataFormat> query = em.createNamedQuery("listMetadataFormat", MetadataFormat.class);
-		List<MetadataFormat> formats = query.getResultList();
-		return formats;
+		return query.getResultList();
 	}
 
 	@Override

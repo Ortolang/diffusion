@@ -212,8 +212,7 @@ public class WorkspaceResource {
         }
 
         builder.cacheControl(cc);
-        Response response = builder.build();
-        return response;
+		return builder.build();
 	}
 
 	@PUT
@@ -299,8 +298,7 @@ public class WorkspaceResource {
 		}
 		
 		builder.cacheControl(cc);
-        Response response = builder.build();
-        return response;
+		return builder.build();
 	}
 
 	@POST
@@ -467,14 +465,9 @@ public class WorkspaceResource {
 
 	@POST
 	@Path("/{wskey}/snapshots")
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey, @FormParam(value = "snapshotname") String name) throws CoreServiceException, KeyNotFoundException,
-			AccessDeniedException {
+	public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/snapshots");
-		if (name == null) {
-			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'snapshotname' is mandatory").build();
-		}
-		core.snapshotWorkspace(wskey, name);
+		core.snapshotWorkspace(wskey);
 		return Response.ok().build();
 	}
 

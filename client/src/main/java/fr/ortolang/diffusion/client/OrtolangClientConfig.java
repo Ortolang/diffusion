@@ -45,8 +45,8 @@ import java.util.logging.Logger;
 
 public class OrtolangClientConfig {
 	
-	public static final String CONFIG_FILENAME = "client.properties"; 
-	
+	public static final String CONFIG_FILENAME = "client.properties";
+
 	private static final Logger LOGGER = Logger.getLogger(OrtolangClientConfig.class.getName());
 	private static OrtolangClientConfig config;
 	private Properties props;
@@ -73,7 +73,9 @@ public class OrtolangClientConfig {
             		Properties clientconfig = new Properties();
             		clientconfig.load(in);
                    	clientname = clientconfig.getProperty("client.name");
-                } 
+                } catch (NullPointerException e) {
+                    LOGGER.log(Level.SEVERE, "Cannot find custom config file");
+                }
             	if ( clientname == null ) {
             		clientname = "client";
             	}
