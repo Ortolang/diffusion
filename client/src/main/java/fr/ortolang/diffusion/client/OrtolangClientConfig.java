@@ -77,9 +77,11 @@ public class OrtolangClientConfig {
                     LOGGER.log(Level.SEVERE, "Cannot find custom config file");
                 }
             	if ( clientname == null ) {
-            		clientname = "client";
+            		clientname = "";
+            	} else {
+            		clientname = clientname + ".";
             	}
-                String configFilePath = System.getProperty(clientname + ".client.config.file");
+                String configFilePath = System.getProperty(clientname + "client.config.file");
                 if (configFilePath != null && configFilePath.length() != 0) {
                     config = new OrtolangClientConfig(configFilePath);
                     LOGGER.log(Level.INFO, "using custom config file : " + configFilePath);
