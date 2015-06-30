@@ -88,7 +88,6 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
-import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 
 @Startup
 @Singleton(name = BootstrapService.SERVICE_NAME)
@@ -168,8 +167,7 @@ public class BootstrapServiceBean implements BootstrapService {
 				props.setProperty("bootstrap.timestamp", System.currentTimeMillis() + "");
 				props.setProperty("bootstrap.version", BootstrapService.VERSION);
 				String hash = core.put(new ByteArrayInputStream(props.toString().getBytes()));
-				core.createDataObject(BootstrapService.WORKSPACE_KEY, "/bootstrap.txt", "bootstrap file", hash);
-								
+				core.createDataObject(BootstrapService.WORKSPACE_KEY, "/bootstrap.txt", hash);
 				LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.FORALL + "] authorisation policy template");
 				String forallPolicyKey = UUID.randomUUID().toString();
 				authorisation.createPolicy(forallPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
