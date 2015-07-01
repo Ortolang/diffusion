@@ -73,6 +73,70 @@ public class ContentResource {
 	private UriInfo uriInfo;
 	
 	@GET
+	@Path("/auth")
+	public Response authenticate(@CookieParam(REDIRECT_PATH_PARAM_NAME) String credirect, @QueryParam(REDIRECT_PATH_PARAM_NAME) String qredirect) {
+		LOGGER.log(Level.INFO, "GET /content/auth");
+		UriBuilder builder = uriInfo.getBaseUriBuilder().path(ContentResource.class);
+		if ( credirect != null && credirect.length() > 0 ) {
+			LOGGER.log(Level.FINE, "redirecting to path found in cookie : " + credirect);
+			builder.path(credirect);
+		} else if ( qredirect != null && qredirect.length() > 0 ) {
+			LOGGER.log(Level.FINE, "redirecting to path found in query : " + qredirect);
+			builder.path(qredirect);
+		} 
+		return Response.seeOther(builder.build()).build();
+	}
+	
+	@GET
+	@Path("/key/{key}")
+	public Response key(@PathParam("key") String key, @QueryParam("fd") boolean download, @Context SecurityContext security, @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, InvalidPathException, OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException {
+		LOGGER.log(Level.INFO, "GET /key/" + key);
+		try {
+			OrtolangObjectState state = browser.getState(key);
+			CacheControl cc = new CacheControl();
+			cc.setPrivate(true);
+			if (state.isLocked()) {
+				cc.setMaxAge(691200);
+				cc.setMustRevalidate(false);
+			} else {
+				cc.setMaxAge(0);
+				cc.setMustRevalidate(true);
+			}
+			Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+			ResponseBuilder builder = null;
+			if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+				builder = request.evaluatePreconditions(lmd);
+			}
+			if ( builder == null ) {
+				OrtolangObject object = browser.findObject(key);
+				if ( object instanceof DataObject ) {
+					File content = store.getFile(((DataObject)object).getStream());
+					builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject)object).getSize()).header("Accept-Ranges", "bytes");
+					if ( download ) {
+						builder = builder.header("Content-Disposition", "attachment; filename=" + object.getObjectName());
+					} else {
+						builder = builder.header("Content-Disposition", "filename=" + object.getObjectName());
+					}
+					builder.lastModified(lmd);
+				} else {
+					return Response.serverError().entity("only data object can be downloaded using key").build();
+				}
+			}
+			builder.cacheControl(cc);
+			return builder.build();
+		} catch ( AccessDeniedException e ) {
+			if ( security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
+				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
+				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/key/" + key, OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, false);
+				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(rcookie).build();
+			} else {
+				LOGGER.log(Level.FINE, "user is already authentified, access denied");
+				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
+			}
+		}
+	}
+	
+	@GET
 	public Response workspaces(@QueryParam("O") @DefaultValue("A") String asc) throws TemplateEngineException, CoreServiceException {
 		LOGGER.log(Level.INFO, "GET /content");
 		ContentRepresentation representation = new ContentRepresentation();
@@ -272,69 +336,4 @@ public class ContentResource {
 		}
 	}
 	
-	@GET
-	@Path("/key/{key}")
-	@Produces({ MediaType.MEDIA_TYPE_WILDCARD })
-	public Response key(@PathParam("key") String key, @QueryParam("fd") boolean download, @Context SecurityContext security, @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, AliasNotFoundException, InvalidPathException, OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException {
-		LOGGER.log(Level.INFO, "GET /key/" + key);
-		try {
-			OrtolangObjectState state = browser.getState(key);
-			CacheControl cc = new CacheControl();
-			cc.setPrivate(true);
-			if (state.isLocked()) {
-				cc.setMaxAge(691200);
-				cc.setMustRevalidate(false);
-			} else {
-				cc.setMaxAge(0);
-				cc.setMustRevalidate(true);
-			}
-			Date lmd = new Date(state.getLastModification() / 1000 * 1000);
-			ResponseBuilder builder = null;
-			if (System.currentTimeMillis() - state.getLastModification() > 1000) {
-				builder = request.evaluatePreconditions(lmd);
-			}
-			if ( builder == null ) {
-				OrtolangObject object = browser.findObject(key);
-				if ( object instanceof DataObject ) {
-					File content = store.getFile(((DataObject)object).getStream());
-					builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject)object).getSize()).header("Accept-Ranges", "bytes");
-					if ( download ) {
-						builder = builder.header("Content-Disposition", "attachment; filename=" + object.getObjectName());
-					} else {
-						builder = builder.header("Content-Disposition", "filename=" + object.getObjectName());
-					}
-					builder.lastModified(lmd);
-				} else {
-					return Response.serverError().entity("only data object can be downloaded using key").build();
-				}
-			}
-			builder.cacheControl(cc);
-			return builder.build();
-		} catch ( AccessDeniedException e ) {
-			if ( security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
-				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
-				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/key/" + key, OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, false);
-				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(rcookie).build();
-			} else {
-				LOGGER.log(Level.FINE, "user is already authentified, access denied");
-				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
-			}
-		}
-	}
-	
-	@GET
-	@Path("/auth")
-	public Response authenticate(@CookieParam(REDIRECT_PATH_PARAM_NAME) String credirect, @QueryParam(REDIRECT_PATH_PARAM_NAME) String qredirect) {
-		LOGGER.log(Level.INFO, "GET /content/auth");
-		UriBuilder builder = uriInfo.getBaseUriBuilder().path(ContentResource.class);
-		if ( credirect != null && credirect.length() > 0 ) {
-			LOGGER.log(Level.FINE, "redirecting to path found in cookie : " + credirect);
-			builder.path(credirect);
-		} else if ( qredirect != null && qredirect.length() > 0 ) {
-			LOGGER.log(Level.FINE, "redirecting to path found in query : " + qredirect);
-			builder.path(qredirect);
-		} 
-		return Response.seeOther(builder.build()).build();
-	}
-
 }
