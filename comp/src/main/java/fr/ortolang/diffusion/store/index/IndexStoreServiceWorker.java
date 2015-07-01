@@ -23,7 +23,7 @@ import fr.ortolang.diffusion.indexing.IndexingService;
 public class IndexStoreServiceWorker {
 	
 	private static final Logger LOGGER = Logger.getLogger(IndexStoreServiceWorker.class.getName());
-	private static final long DEFAULT_INDEXATION_DELAY = 300000;
+	private static final long DEFAULT_INDEXATION_DELAY = 15000;
 	
 	@EJB
 	private IndexStoreService store;

@@ -108,6 +108,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 							throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unknown operation: " + line));
 					}
 				} catch ( Exception e ) {
+					LOGGER.log(Level.SEVERE, "ImportContentTask exception raised", e);
 					partial = true;
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Error while executing operation: " + line));
 				}

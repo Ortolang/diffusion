@@ -376,10 +376,17 @@ public class CoreServiceBean implements CoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> listAllWorkspaceAlias() throws CoreServiceException {
+	public List<String> listAllWorkspaceAlias() throws CoreServiceException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "listing all workspaces alias");
-		TypedQuery<String> query = em.createNamedQuery("listAllWorkspaceAlias", String.class);
-		return query.getResultList();
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			authorisation.checkSuperUser(caller);
+			TypedQuery<String> query = em.createNamedQuery("listAllWorkspaceAlias", String.class);
+			return query.getResultList();
+		} catch (AuthorisationServiceException e) {
+			LOGGER.log(Level.SEVERE, "unable to list all workspace aliases", e);
+			throw new CoreServiceException("unable to list all workspace aliases", e);
+		}
 	}
 	
 	@Override
@@ -746,6 +753,8 @@ public class CoreServiceBean implements CoreService {
 		}
 	}
 	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "find workspace [" + wskey + "] latest published snapshot");
 		try {

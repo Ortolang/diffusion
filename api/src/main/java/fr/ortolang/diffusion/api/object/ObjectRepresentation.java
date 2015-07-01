@@ -64,13 +64,13 @@ public class ObjectRepresentation {
 	private Map<String, String> properties;
 	private String owner;
 	private Map<String, List<String>> permissions;
-	private List<OrtolangObjectVersion> versions;
+	private List<OrtolangObjectVersion> history;
 	private OrtolangObject object;
 
 	public ObjectRepresentation() {
 		properties = new HashMap<String, String>();
 		permissions = new HashMap<String, List<String>>();
-		versions = new ArrayList<OrtolangObjectVersion>();
+		history = new ArrayList<OrtolangObjectVersion>();
 	}
 
 	public String getKey() {
@@ -185,12 +185,12 @@ public class ObjectRepresentation {
 		this.lastModificationDate = lastModificationDate;
 	}
 
-	public List<OrtolangObjectVersion> getVersions() {
-		return versions;
+	public List<OrtolangObjectVersion> getHistory() {
+		return history;
 	}
 
-	public void setVersions(List<OrtolangObjectVersion> versions) {
-		this.versions = versions;
+	public void setHistory(List<OrtolangObjectVersion> history) {
+		this.history = history;
 	}
 	
 }
