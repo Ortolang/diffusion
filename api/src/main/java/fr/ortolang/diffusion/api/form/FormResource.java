@@ -83,9 +83,8 @@ public class FormResource {
 		representation.setOffset(0);
 		representation.setSize(forms.size());
 		representation.setLimit(forms.size());
-		
-		Response response = Response.ok(representation).build();
-		return response;
+
+		return Response.ok(representation).build();
 	}
 	
 	@GET

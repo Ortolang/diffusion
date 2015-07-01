@@ -404,9 +404,9 @@ public class CoreServiceTest {
 			String wsk = UUID.randomUUID().toString();
 			core.createWorkspace(wsk, "WorkspaceCollection", "test");
 
-			core.createCollection(wsk, "/a", "Collection A");
-			core.createCollection(wsk, "/a/b", "Collection B inside A");
-			core.createCollection(wsk, "/a/c", "Collection C inside A");
+			core.createCollection(wsk, "/a");
+			core.createCollection(wsk, "/a/b");
+			core.createCollection(wsk, "/a/c");
 
 			LOGGER.log(Level.INFO, "Workspace created with 3 collections");
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
@@ -415,29 +415,12 @@ public class CoreServiceTest {
 			Collection collection = core.readCollection(akey);
 			assertEquals(1, collection.getClock());
 			assertEquals("a", collection.getName());
-			assertEquals("Collection A", collection.getDescription());
 			assertEquals(1, collection.getClock());
 			assertEquals(2, collection.getElements().size());
 			String bkey = core.resolveWorkspacePath(wsk, "head", "/a/b");
 			String ckey = core.resolveWorkspacePath(wsk, "head", "/a/c");
 			assertTrue(collection.findElementByName("b").getKey().equals(bkey));
 			assertTrue(collection.findElementByName("c").getKey().equals(ckey));
-
-			core.updateCollection(wsk, "/a", "COLLECTION A");
-			collection = core.readCollection(akey);
-			assertEquals(1, collection.getClock());
-			assertEquals("a", collection.getName());
-			assertEquals("COLLECTION A", collection.getDescription());
-			assertEquals(2, collection.getElements().size());
-			assertTrue(collection.findElementByName("b").getKey().equals(bkey));
-			assertTrue(collection.findElementByName("c").getKey().equals(ckey));
-
-			core.updateCollection(wsk, "/a/c", "Collection C INSIDE A");
-			collection = core.readCollection(akey);
-			assertTrue(collection.findElementByName("c").getKey().equals(ckey));
-			collection = core.readCollection(ckey);
-			assertEquals("c", collection.getName());
-			assertEquals("Collection C INSIDE A", collection.getDescription());
 
 			core.deleteCollection(wsk, "/a/b");
 			collection = core.readCollection(akey);
@@ -456,7 +439,7 @@ public class CoreServiceTest {
 			assertEquals(0, workspace.getSnapshots().size());
 			assertEquals(1, workspace.getClock());
 			assertTrue(workspace.hasChanged());
-			core.snapshotWorkspace(wsk, "v1");
+			core.snapshotWorkspace(wsk);
 			workspace = core.readWorkspace(wsk);
 			assertEquals(1, workspace.getSnapshots().size());
 			assertEquals(2, workspace.getClock());
@@ -466,17 +449,16 @@ public class CoreServiceTest {
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
 			try {
-				core.snapshotWorkspace(wsk, "v2");
+				core.snapshotWorkspace(wsk);
 				fail("A second snapshot without changes should produce an exception");
 			} catch (Exception e) {
 				LOGGER.log(Level.INFO, e.getMessage());
 			}
 
-			core.updateCollection(wsk, "/a/c", "Collection C INSIDE A, updated");
-			core.createCollection(wsk, "/a/d", "New Collection D INSIDE A");
+			core.createCollection(wsk, "/a/d");
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-			core.snapshotWorkspace(wsk, "v2");
+			core.snapshotWorkspace(wsk);
 			workspace = core.readWorkspace(wsk);
 			assertEquals(2, workspace.getSnapshots().size());
 			assertEquals(3, workspace.getClock());
@@ -485,24 +467,36 @@ public class CoreServiceTest {
 			core.deleteCollection(wsk, "/a/d");
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-			core.createCollection(wsk, "/a/e", "Collection E");
-			core.snapshotWorkspace(wsk, "v3");
+			core.createCollection(wsk, "/a/e");
+			core.snapshotWorkspace(wsk);
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-			core.createCollection(wsk, "/a/c/f", "Third level Collection F");
+			core.createCollection(wsk, "/a/c/f");
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
+			String acfkey = core.resolveWorkspacePath(wsk, "head", "/a/c/f");
+			int acfclock = core.readCollection(acfkey).getClock();
 			core.moveCollection(wsk, "/a/c/f", "/a/e/f");
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
+			collection = core.readCollection(acfkey);
+			assertEquals(acfclock, collection.getClock());
+			assertEquals("f", collection.getName());
 
-			core.snapshotWorkspace(wsk, "v4");
+			core.snapshotWorkspace(wsk);
+			core.createCollection(wsk, "/a/e/f/h");
+			acfclock = core.readCollection(acfkey).getClock();
 			core.moveCollection(wsk, "/a/e/f", "/a/c/g");
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
+			acfkey = core.resolveWorkspacePath(wsk, "head", "/a/c/g");
+			collection = core.readCollection(acfkey);
+			assertEquals(1, collection.getElements().size());
+			assertEquals(acfclock + 1, collection.getClock());
+			assertEquals("g", collection.getName());
 			
-			core.snapshotWorkspace(wsk, "v5");
-			core.createCollection(wsk, "/a/c/g/d1", "Collection to delete");
-			core.createCollection(wsk, "/a/c/g/d1/d2", "Collection to delete also");
-			core.createCollection(wsk, "/a/c/g/d1/d2/d3", "Collection to delete again");
+			core.snapshotWorkspace(wsk);
+			core.createCollection(wsk, "/a/c/g/d1");
+			core.createCollection(wsk, "/a/c/g/d1/d2");
+			core.createCollection(wsk, "/a/c/g/d1/d2/d3");
 			try {
 				core.deleteCollection(wsk, "/a/c/g");
 				fail("collection is not empty and should have raised an exception");
@@ -534,17 +528,17 @@ public class CoreServiceTest {
 			String wsk = UUID.randomUUID().toString();
 			core.createWorkspace(wsk, "WorkspaceCollection", "test");
 
-			core.createCollection(wsk, "/a", "Collection A");
-			core.createCollection(wsk, "/a/a", "Collection A inside A");
-			core.createCollection(wsk, "/a/b", "Collection B inside A");
-			core.createCollection(wsk, "/a/c", "Collection C inside A");
-			core.createCollection(wsk, "/a/d", "Collection D inside A");
-			core.createCollection(wsk, "/a/e", "Collection E inside A");
-			core.createCollection(wsk, "/a/f", "Collection F inside A");
-			core.createCollection(wsk, "/a/g", "Collection G inside A");
-			core.createCollection(wsk, "/a/h", "Collection H inside A");
-			core.createCollection(wsk, "/a/i", "Collection I inside A");
-			core.createCollection(wsk, "/a/j", "Collection J inside A");
+			core.createCollection(wsk, "/a");
+			core.createCollection(wsk, "/a/a");
+			core.createCollection(wsk, "/a/b");
+			core.createCollection(wsk, "/a/c");
+			core.createCollection(wsk, "/a/d");
+			core.createCollection(wsk, "/a/e");
+			core.createCollection(wsk, "/a/f");
+			core.createCollection(wsk, "/a/g");
+			core.createCollection(wsk, "/a/h");
+			core.createCollection(wsk, "/a/i");
+			core.createCollection(wsk, "/a/j");
 
 			LOGGER.log(Level.INFO, "Workspace created");
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));

@@ -233,8 +233,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 		try {
 			Tika tika = new Tika();
 			tika.setMaxStringLength(20000000);
-			String result = tika.parseToString(path.toFile());
-			return  result;
+			return tika.parseToString(path.toFile());
 		} catch (Exception e) {
 			throw new BinaryStoreServiceException(e);
 		}

@@ -81,7 +81,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 			Set<String> metadata = listMetadata(version, bag.getPayload());
 			appendMetadataOperations(builder, bag, pversion, version, pmetadata, metadata);
 			if (!version.equals(Workspace.HEAD)) {
-				builder.append("snapshot-workspace\t").append(version.substring(version.lastIndexOf("/") + 1)).append("\r\n");
+				builder.append("snapshot-workspace\t").append("\r\n");
 			}
 			pversion = version;
 			pobjects = objects;
@@ -136,7 +136,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 
 	private List<String> searchVersions(Bag bag) {
 		Collection<BagFile> payload = bag.getPayload();
-		Map<Integer, String> snapshots = new HashMap<Integer, String>();
+		Set<Integer> snapshots = new HashSet<>();
 		boolean headExists = false;
 		for (BagFile bagfile : payload) {
 			if (bagfile.getFilepath().startsWith(SNAPSHOTS_PREFIX)) {
@@ -147,14 +147,8 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 				Integer index = -1;
 				try {
 					index = Integer.decode(parts[0]);
-					if (snapshots.containsKey(index)) {
-						if (!snapshots.get(index).equals(parts[1])) {
-							LOGGER.log(Level.WARNING, "Found a version with existing index but different name!! " + snapshots.get(index) + " - " + parts[1]);
-						}
-					} else {
-						LOGGER.log(Level.INFO, "Found new version with index: " + index + " and name: " + parts[1]);
-						snapshots.put(index, parts[1]);
-					}
+					LOGGER.log(Level.INFO, "Found new version with index: " + index);
+					snapshots.add(index);
 				} catch (Exception e) {
 					LOGGER.log(Level.INFO, "Snapshot index is not a number: " + parts[0]);
 				}
@@ -166,11 +160,8 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 		}
 
 		List<String> versions = new ArrayList<String>();
-		String snapshot = null;
-		Integer cpt = 1;
-		while ((snapshot = snapshots.get(cpt)) != null) {
-			versions.add("snapshots/" + cpt + "/" + snapshot);
-			cpt++;
+		for (Integer snapshot : snapshots) {
+			versions.add("snapshots/" + snapshot);
 		}
 		if (headExists) {
 			versions.add(Workspace.HEAD);

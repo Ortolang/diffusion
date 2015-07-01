@@ -49,23 +49,23 @@ public class ImportContentTaskUnitTest {
 		task.browser = browser;
 		task.publication = publication;
 		
-		final String operations = "create-object	data/snapshots/1/Version 1/objects/o1.txt	2b141ff6e12af000c045d5cb05a8ebd2d4e62e41	/o1.txt\r\n" +
-						"create-object	data/snapshots/1/Version 1/objects/a/b/oab1.txt	7dfac70c9d61453d1506c6104338c28449d14b6f	/a/b/oab1.txt\r\n" + 
-						"create-object	data/snapshots/1/Version 1/objects/a/oa1.txt	964bc67ade85531675e9c3b999ad0d15a4522801	/a/oa1.txt\r\n" +
-						"create-metadata	data/snapshots/1/Version 1/metadata/md1.txt	/md1.txt\r\n" +
-						"snapshot-workspace	/Version 1\r\n" +
-						"create-object	data/snapshots/2/Version 2/objects/b/c/d/obcd1.txt	4ad279e6ec016823e1186210afa37ba37d9d236b	/b/c/d/obcd1.txt\r\n" +
-						"snapshot-workspace	/Version 2\r\n" +
-						"create-object	data/snapshots/3/Version 3/objects/a/b/oab2.txt	85d55c09649c78ea612c488e77e1ef164b2e15ec	/a/b/oab2.txt\r\n" +
-						"create-object	data/snapshots/3/Version 3/objects/a/oa2.txt	964bc67ade85531675e9c3b999ad0d15a4522801	/a/oa2.txt\r\n" +
-						"create-object	data/snapshots/3/Version 3/objects/b/cece/d/obcd1.txt	4ad279e6ec016823e1186210afa37ba37d9d236b	/b/cece/d/obcd1.txt\r\n" +
-						"create-object	data/snapshots/3/Version 3/objects/o2.txt	6f70ce2a783986fe58c0cc370e0c7114c812e04d	/o2.txt\r\n" +
-						"update-object	data/snapshots/3/Version 3/objects/a/oa1.txt	/a/oa1.txt\r\n" +
-						"delete-object	data/snapshots/3/Version 3/objects/o1.txt	/o1.txt\r\n" +
-						"delete-object	data/snapshots/3/Version 3/objects/a/b/oab1.txt	/a/b/oab1.txt\r\n" +
-						"delete-object	data/snapshots/3/Version 3/objects/b/c/d/obcd1.txt	/b/c/d/obcd1.txt\r\n" +
-						"update-metadata	data/snapshots/3/Version 3/metadata/md1.txt	/md1.txt\r\n" +
-						"create-metadata	data/snapshots/3/Version 3/metadata/a/oa1.txt/md1.txt	/a/oa1.txt/md1.txt";
+		final String operations = "create-object	data/snapshots/1/objects/o1.txt	2b141ff6e12af000c045d5cb05a8ebd2d4e62e41	/o1.txt\r\n" +
+						"create-object	data/snapshots/1/objects/a/b/oab1.txt	7dfac70c9d61453d1506c6104338c28449d14b6f	/a/b/oab1.txt\r\n" +
+						"create-object	data/snapshots/1/objects/a/oa1.txt	964bc67ade85531675e9c3b999ad0d15a4522801	/a/oa1.txt\r\n" +
+						"create-metadata	data/snapshots/1/metadata/md1.txt	/md1.txt\r\n" +
+						"snapshot-workspace\r\n" +
+						"create-object	data/snapshots/2/objects/b/c/d/obcd1.txt	4ad279e6ec016823e1186210afa37ba37d9d236b	/b/c/d/obcd1.txt\r\n" +
+						"snapshot-workspace\r\n" +
+						"create-object	data/snapshots/3/objects/a/b/oab2.txt	85d55c09649c78ea612c488e77e1ef164b2e15ec	/a/b/oab2.txt\r\n" +
+						"create-object	data/snapshots/3/objects/a/oa2.txt	964bc67ade85531675e9c3b999ad0d15a4522801	/a/oa2.txt\r\n" +
+						"create-object	data/snapshots/3/objects/b/cece/d/obcd1.txt	4ad279e6ec016823e1186210afa37ba37d9d236b	/b/cece/d/obcd1.txt\r\n" +
+						"create-object	data/snapshots/3/objects/o2.txt	6f70ce2a783986fe58c0cc370e0c7114c812e04d	/o2.txt\r\n" +
+						"update-object	data/snapshots/3/objects/a/oa1.txt	/a/oa1.txt\r\n" +
+						"delete-object	data/snapshots/3/objects/o1.txt	/o1.txt\r\n" +
+						"delete-object	data/snapshots/3/objects/a/b/oab1.txt	/a/b/oab1.txt\r\n" +
+						"delete-object	data/snapshots/3/objects/b/c/d/obcd1.txt	/b/c/d/obcd1.txt\r\n" +
+						"update-metadata	data/snapshots/3/metadata/md1.txt	/md1.txt\r\n" +
+						"create-metadata	data/snapshots/3/metadata/a/oa1.txt/md1.txt	/a/oa1.txt/md1.txt";
 		
 		
 		mockery.checking(new Expectations() {{

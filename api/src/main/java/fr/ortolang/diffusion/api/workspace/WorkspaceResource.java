@@ -212,8 +212,7 @@ public class WorkspaceResource {
         }
 
         builder.cacheControl(cc);
-        Response response = builder.build();
-        return response;
+		return builder.build();
 	}
 
 	@PUT
@@ -299,8 +298,7 @@ public class WorkspaceResource {
 		}
 		
 		builder.cacheControl(cc);
-        Response response = builder.build();
-        return response;
+		return builder.build();
 	}
 
 	@POST
@@ -339,11 +337,8 @@ public class WorkspaceResource {
 				LOGGER.log(Level.FINE, "element found at path: " + npath.build());
 				OrtolangObject object = browser.findObject(ekey);
 				switch (form.getType()) {
-				case Collection.OBJECT_TYPE:
-					core.updateCollection(wskey, npath.build(), form.getDescription());
-					return Response.ok().build();
 				case DataObject.OBJECT_TYPE:
-					core.updateDataObject(wskey, npath.build(), form.getDescription(), form.getStreamHash());
+					core.updateDataObject(wskey, npath.build(), form.getStreamHash());
 					return Response.ok().build();
 				case MetadataObject.OBJECT_TYPE:
 					boolean mdexists = false;
@@ -374,10 +369,10 @@ public class WorkspaceResource {
 				} else {
 					switch (form.getType()) {
 					case DataObject.OBJECT_TYPE:
-						core.createDataObject(wskey, npath.build(), form.getDescription(), form.getStreamHash());
+						core.createDataObject(wskey, npath.build(), form.getStreamHash());
 						break;
 					case Collection.OBJECT_TYPE:
-						core.createCollection(wskey, npath.build(), form.getDescription());
+						core.createCollection(wskey, npath.build());
 						break;
 					case Link.OBJECT_TYPE:
 						core.createLink(wskey, npath.build(), form.getTarget());
@@ -409,15 +404,13 @@ public class WorkspaceResource {
 				case Collection.OBJECT_TYPE:
 					if (destination != null && destination.length() > 0) {
 						core.moveCollection(wskey, representation.getPath(), destination);
-					} else {
-						core.updateCollection(wskey, npath.build(), representation.getDescription());
 					}
 					break;
 				case DataObject.OBJECT_TYPE:
 					if (destination != null && destination.length() > 0) {
 						core.moveDataObject(wskey, representation.getPath(), destination);
 					} else {
-						core.updateDataObject(wskey, npath.build(), representation.getDescription(), representation.getStream());
+						core.updateDataObject(wskey, npath.build(), representation.getStream());
 					}
 					break;
 				case MetadataObject.OBJECT_TYPE:
@@ -429,7 +422,7 @@ public class WorkspaceResource {
 			return Response.ok().build();
 		} catch (InvalidPathException e) {
 			if (representation.getType().equals(Collection.OBJECT_TYPE)) {
-				core.createCollection(wskey, npath.build(), representation.getDescription());
+				core.createCollection(wskey, npath.build());
 			} else {
 				return Response.status(Response.Status.BAD_REQUEST).entity("unable to create element of type: " + representation.getType()).build();
 			}
@@ -472,14 +465,9 @@ public class WorkspaceResource {
 
 	@POST
 	@Path("/{wskey}/snapshots")
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey, @FormParam(value = "snapshotname") String name) throws CoreServiceException, KeyNotFoundException,
-			AccessDeniedException {
+	public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/snapshots");
-		if (name == null) {
-			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'snapshotname' is mandatory").build();
-		}
-		core.snapshotWorkspace(wskey, name);
+		core.snapshotWorkspace(wskey);
 		return Response.ok().build();
 	}
 

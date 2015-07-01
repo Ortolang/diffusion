@@ -42,9 +42,8 @@ public class OrganizationResource {
 		representation.setOffset(0);
 		representation.setSize(orgs.size());
 		representation.setLimit(orgs.size());
-		
-		Response response = Response.ok(representation).build();
-		return response;
+
+		return Response.ok(representation).build();
 	}
 	
 }

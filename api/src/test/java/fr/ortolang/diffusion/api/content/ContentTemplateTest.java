@@ -13,7 +13,7 @@ public class ContentTemplateTest {
 	public void TestCollectionTemplate() throws TemplateEngineException {
 		ContentRepresentation representation = new ContentRepresentation();
 		representation.setContext("/api");
-		representation.setBase("/rest/content");
+		representation.setBase("/content");
 		String result = TemplateEngine.getInstance().process("collection", representation);
 		System.out.println(result);
 	}
@@ -22,7 +22,7 @@ public class ContentTemplateTest {
 	public void TestCollectionTemplate2() throws TemplateEngineException {
 		ContentRepresentation representation = new ContentRepresentation();
 		representation.setContext("/api");
-		representation.setBase("/rest/content");
+		representation.setBase("/content");
 		representation.setAlias("system");
 		representation.setSnapshot("head");
 		representation.setPath("/system/head");

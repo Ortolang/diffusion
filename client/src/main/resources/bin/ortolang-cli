@@ -5,4 +5,4 @@ do
   CLASSPATH=${CLASSPATH}:${i}
 done
 
-java -cp ".:${CLASSPATH}" -Dclient.config=./conf/client-config.properties fr.ortolang.diffusion.client.cmd.OrtolangCli $* 
+java -cp ".:${CLASSPATH}" -Dclient.config.file=./conf/client-config.properties fr.ortolang.diffusion.client.cmd.OrtolangCli $* 

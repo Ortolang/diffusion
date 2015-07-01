@@ -78,7 +78,7 @@ public class LoadSnapshotTask extends RuntimeEngineTask {
 					LOGGER.log(Level.FINE, "Snapshot name NOT provided and workspace has changed since last snapshot, generating a new snapshot");
 					snapshotName = "Version " + workspace.getClock();
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Creating a new snapshot with name: " + snapshotName));
-					getCoreService().snapshotWorkspace(wskey, snapshotName);
+					getCoreService().snapshotWorkspace(wskey);
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "New snapshot [" + snapshotName + "] created"));
 					execution.setVariable(SNAPSHOT_NAME_PARAM_NAME, snapshotName);
 				} else {

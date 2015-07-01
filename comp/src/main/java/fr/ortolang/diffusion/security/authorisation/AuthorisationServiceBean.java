@@ -125,8 +125,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	public List<AuthorisationPolicyTemplate> listPolicyTemplates() throws AuthorisationServiceException {
 		LOGGER.log(Level.FINE, "listing all authorisation policy templates");
 		TypedQuery<AuthorisationPolicyTemplate> query = em.createNamedQuery("findAllAuthorisationPolicyTemplate", AuthorisationPolicyTemplate.class);
-		List<AuthorisationPolicyTemplate> results = query.getResultList();
-		return results;
+		return query.getResultList();
 	}
 
 	@Override

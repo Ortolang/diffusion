@@ -219,20 +219,24 @@ public class ContentResource {
 		try {
 			String wskey = core.resolveWorkspaceAlias(alias);
 			Workspace workspace = core.readWorkspace(wskey);
-			String rkey = null;
-			if ( snapshot.equals(Workspace.LATEST) ) {
-				rkey = core.findWorkspaceLatestPublishedSnapshot(wskey);
-				if ( rkey == null ) {
-					return Response.status(Status.NOT_FOUND).entity("No version of this workspace has been published").type("text/plain").build();
-				}
-			} else if ( snapshot.equals(Workspace.HEAD) ) {
-				rkey = workspace.getHead();
-			} else {
-				SnapshotElement selement = workspace.findSnapshotByName(snapshot);
-				if ( selement == null ) {
-					return Response.status(Status.NOT_FOUND).entity("Unable to find a snapshot with name [" + snapshot + "] in this workspace").type("text/plain").build();
-				}
-				rkey = selement.getKey();
+			String rkey;
+			switch (snapshot) {
+				case Workspace.LATEST:
+					rkey = core.findWorkspaceLatestPublishedSnapshot(wskey);
+					if (rkey == null) {
+						return Response.status(Status.NOT_FOUND).entity("No version of this workspace has been published").type("text/plain").build();
+					}
+					break;
+				case Workspace.HEAD:
+					rkey = workspace.getHead();
+					break;
+				default:
+					SnapshotElement selement = workspace.findSnapshotByName(snapshot);
+					if (selement == null) {
+						return Response.status(Status.NOT_FOUND).entity("Unable to find a snapshot with name [" + snapshot + "] in this workspace").type("text/plain").build();
+					}
+					rkey = selement.getKey();
+					break;
 			}
 			
 			Collection collection = core.readCollection(rkey);

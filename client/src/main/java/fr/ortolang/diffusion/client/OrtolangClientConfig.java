@@ -45,40 +45,43 @@ import java.util.logging.Logger;
 
 public class OrtolangClientConfig {
 	
+	public static final String CONFIG_FILENAME = "client.properties";
+
 	private static final Logger LOGGER = Logger.getLogger(OrtolangClientConfig.class.getName());
 	private static OrtolangClientConfig config;
 	private Properties props;
 	
 	private OrtolangClientConfig(String configFilePath) throws Exception {
-        props = new Properties();
-        FileInputStream in = null;
-        try {
-        	in = new FileInputStream(configFilePath);
+		props = new Properties();
+        try (FileInputStream in = new FileInputStream(configFilePath)) {
         	props.load(in);
-        } finally {
-        	if ( in != null ) {
-        		in.close();
-        	}
         }
     }
 
     private OrtolangClientConfig(URL configFileURL) throws Exception {
-        props = new Properties();
-        InputStream in = null;
-        try {
-        	in = configFileURL.openStream();
+    	props = new Properties();
+        try (InputStream in = configFileURL.openStream()) {
         	props.load(in);
-        } finally {
-        	if ( in != null ) {
-        		in.close();
-        	}
-        }
+        } 
     }
 
     public static synchronized OrtolangClientConfig getInstance() {
         try {
             if (config == null) {
-                String configFilePath = System.getProperty("client.config");
+            	String clientname = null;
+            	try ( InputStream in = OrtolangClientConfig.class.getClassLoader().getResource(CONFIG_FILENAME).openStream(); )  {
+            		Properties clientconfig = new Properties();
+            		clientconfig.load(in);
+                   	clientname = clientconfig.getProperty("client.name");
+                } catch (NullPointerException e) {
+                    LOGGER.log(Level.SEVERE, "Cannot find custom config file");
+                }
+            	if ( clientname == null ) {
+            		clientname = "";
+            	} else {
+            		clientname = clientname + ".";
+            	}
+                String configFilePath = System.getProperty(clientname + "client.config.file");
                 if (configFilePath != null && configFilePath.length() != 0) {
                     config = new OrtolangClientConfig(configFilePath);
                     LOGGER.log(Level.INFO, "using custom config file : " + configFilePath);

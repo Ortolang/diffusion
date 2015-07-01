@@ -217,14 +217,14 @@ public class ImportContentTask extends RuntimeEngineTask {
 						try {
 							getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, current);
 						} catch (InvalidPathException e) {
-							getCoreService().createCollection(wskey, current, "");
+							getCoreService().createCollection(wskey, current);
 						}
 						collectionCreationCache.add(current);
 					}
 				}
 			}
 			String current = opath.build();
-			getCoreService().createDataObject(wskey, current, "", sha1);
+			getCoreService().createDataObject(wskey, current, sha1);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
@@ -238,7 +238,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			String hash = getCoreService().put(is);
 			is.close();
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
-			getCoreService().updateDataObject(wskey, path, "", hash);
+			getCoreService().updateDataObject(wskey, path, hash);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
@@ -305,7 +305,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 
 	private void snapshotWorkspace(String name) throws RuntimeEngineTaskException {
 		try {
-			getCoreService().snapshotWorkspace(wskey, name);
+			getCoreService().snapshotWorkspace(wskey);
 		} catch ( CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error snapshoting workspace", e);
 		} 

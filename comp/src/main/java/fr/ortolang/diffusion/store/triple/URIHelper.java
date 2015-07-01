@@ -49,13 +49,13 @@ public class URIHelper {
 				return null;
 			} else {
 				StringBuilder path = new StringBuilder();
-				if ( OrtolangConfig.getInstance().getProperty("server.context") != null && OrtolangConfig.getInstance().getProperty("server.context").length() > 0 ) {
-					path.append(OrtolangConfig.getInstance().getProperty("server.context"));
+				if ( OrtolangConfig.getInstance().getProperty("api.context") != null && OrtolangConfig.getInstance().getProperty("api.context").length() > 0 ) {
+					path.append(OrtolangConfig.getInstance().getProperty("api.context"));
 				}
-				if ( OrtolangConfig.getInstance().getProperty("api.rest.objects.path") != null && OrtolangConfig.getInstance().getProperty("api.rest.objects.path").length() > 0 ) {
-					path.append(OrtolangConfig.getInstance().getProperty("api.rest.objects.path"));
+				if ( OrtolangConfig.getInstance().getProperty("api.objects.path") != null && OrtolangConfig.getInstance().getProperty("api.objects.path").length() > 0 ) {
+					path.append(OrtolangConfig.getInstance().getProperty("api.objects.path"));
 				}
-				URI uri = new URI("http", null, OrtolangConfig.getInstance().getProperty("server.host"), Integer.parseInt(OrtolangConfig.getInstance().getProperty("server.port")), path.append("/").append(key).toString(), null, null);
+				URI uri = new URI("http", null, OrtolangConfig.getInstance().getProperty("api.host"), Integer.parseInt(OrtolangConfig.getInstance().getProperty("api.port.http")), path.append("/").append(key).toString(), null, null);
 				return uri.toString();
 			}
 		} catch ( URISyntaxException use ) {

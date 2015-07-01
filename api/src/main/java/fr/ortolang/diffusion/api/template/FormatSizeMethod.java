@@ -22,8 +22,7 @@ public class FormatSizeMethod implements TemplateMethodModelEx {
 		if (arguments.size() != 1) {
 			throw new TemplateModelException("This method nedd one parameter.");
 		}
-		String value = parse(((SimpleNumber)arguments.get(0)).getAsNumber().longValue());
-		return value;
+		return parse(((SimpleNumber)arguments.get(0)).getAsNumber().longValue());
 	}
 
 }

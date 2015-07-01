@@ -90,7 +90,7 @@ public class ProfileResource {
 
 	/**
 	 * @description Connect to current profile
-	 * @responseType fr.ortolang.diffusion.api.rest.profile.ProfileRepresentation
+	 * @responseType fr.ortolang.diffusion.api.profile.ProfileRepresentation
 	 * @return {@link ProfileRepresentation}
 	 * @throws MembershipServiceException
 	 * @throws KeyNotFoundException
@@ -116,7 +116,7 @@ public class ProfileResource {
 	
 	/**
 	 * @description List profiles
-	 * @responseType fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation
+	 * @responseType fr.ortolang.diffusion.api.object.GenericCollectionRepresentation
 	 * @return {@link GenericCollectionRepresentation}&lt;{@link ProfileRepresentation}&gt;
 	 * @throws MembershipServiceException
 	 * @throws KeyNotFoundException
@@ -143,7 +143,7 @@ public class ProfileResource {
 	
 	/**
 	 * @description Search in profile for a fullName matching data
-	 * @responseType fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation
+	 * @responseType fr.ortolang.diffusion.api.object.GenericCollectionRepresentation
 	 * @param data {@link String}
 	 * 		String to find in profiles
 	 * @return {@link GenericCollectionRepresentation}&lt;{@link ProfileRepresentation}&gt;
@@ -173,7 +173,7 @@ public class ProfileResource {
 
 	/**
 	 * @description Return profile for a given key
-	 * @responseType fr.ortolang.diffusion.api.rest.profile.ProfileRepresentation
+	 * @responseType fr.ortolang.diffusion.api.profile.ProfileRepresentation
 	 * @param key {@link String}
 	 * 		Key of wanted profile
 	 * @param request {@link Request} 		 

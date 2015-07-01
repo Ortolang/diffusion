@@ -144,8 +144,7 @@ public class CollectionUnitTest {
 //		c.setKey("K1");
 //		c.setRoot(false);
 //		c.setName("collection");
-//		c.setDescription("description");
-//		
+//
 //		
 //		for ( int j=1; j<=10; j++) {
 //			for ( int i=1; i<=2000; i++) {
@@ -189,7 +188,6 @@ public class CollectionUnitTest {
 		c.setKey("K1");
 		c.setRoot(false);
 		c.setName("collection");
-		c.setDescription("description");
 		long tsk1 = System.currentTimeMillis();
 		long tsk2 = System.currentTimeMillis();
 		long tsk3 = System.currentTimeMillis();
@@ -296,7 +294,6 @@ public class CollectionUnitTest {
         c.setKey("K1");
         c.setRoot(false);
         c.setName("collection");
-        c.setDescription("description");
         long tsk1 = System.currentTimeMillis();
         long tsk2 = System.currentTimeMillis();
 
@@ -342,8 +339,7 @@ public class CollectionUnitTest {
 		c.setKey("K1");
 		c.setRoot(false);
 		c.setName("collection");
-		c.setDescription("description");
-		
+
 		String key1 = UUID.randomUUID().toString();
 		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", System.currentTimeMillis(), 1024, Collection.MIME_TYPE, key1));
 		String key2 = UUID.randomUUID().toString();
