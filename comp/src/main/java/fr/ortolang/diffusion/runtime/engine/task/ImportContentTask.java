@@ -111,8 +111,8 @@ public class ImportContentTask extends RuntimeEngineTask {
 					partial = true;
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Error while executing operation: " + line));
 				}
-				if ( System.currentTimeMillis() - tscommit > 300000 ) {
-					LOGGER.log(Level.FINE, "current transaction exceed 5min, need commit.");
+				if ( System.currentTimeMillis() - tscommit > 30000 ) {
+					LOGGER.log(Level.FINE, "current transaction exceed 30sec, need commit.");
 					needcommit = true;
 				}
 				try {
