@@ -27,7 +27,7 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 public class JsonStoreServiceWorker {
 
 	private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceWorker.class.getName());
-	private static final long DEFAULT_INDEXATION_DELAY = 20000;
+	private static final long DEFAULT_INDEXATION_DELAY = 15000;
 
 	@EJB
 	private JsonStoreService store;

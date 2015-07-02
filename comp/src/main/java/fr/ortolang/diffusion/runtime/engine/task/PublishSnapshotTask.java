@@ -92,15 +92,32 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 		LOGGER.log(Level.INFO, "publication map built containing " + map.size() + " keys");
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "PublicationMap built, containing " + map.size() + " elements"));
 
+		boolean needcommit;
+		long tscommit = System.currentTimeMillis();
 		StringBuilder report = new StringBuilder();
 		LOGGER.log(Level.INFO, "starting publication");
 		for (Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
+			needcommit = false;
 			try {
 				getPublicationService().publish(entry.getKey(), entry.getValue());
 				report.append("key [").append(entry.getKey()).append("] published successfully\r\n");
 			} catch (Exception e) {
 				LOGGER.log(Level.INFO, "key [" + entry.getKey() + "] failed to publish: " + e.getMessage());
 				report.append("key [").append(entry.getKey()).append("] failed to publish: ").append(e.getMessage()).append("\r\n");
+			}
+			if ( System.currentTimeMillis() - tscommit > 30000 ) {
+				LOGGER.log(Level.FINE, "current transaction exceed 30sec, need commit.");
+				needcommit = true;
+			}
+			try {
+				if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
+					LOGGER.log(Level.FINE, "commiting active user transaction.");
+					getUserTransaction().commit();
+					tscommit = System.currentTimeMillis();
+					getUserTransaction().begin();
+				}
+			} catch (Exception e) {
+				LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
 			}
 		}
 		try {

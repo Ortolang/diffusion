@@ -137,6 +137,7 @@ public class CoreServiceBean implements CoreService {
 	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { { Workspace.OBJECT_TYPE, "read,update,delete,snapshot" }, { DataObject.OBJECT_TYPE, "read,update,delete,download" },
 			{ Collection.OBJECT_TYPE, "read,update,delete,download" }, { Link.OBJECT_TYPE, "read,update,delete" }, { MetadataObject.OBJECT_TYPE, "read,update,delete,download" } };
 
+	private static final String[] RESERVED_ALIASES = new String[] { "key", "auth" };
 	private static final String[] RESERVED_SNAPSHOT_NAMES = new String[] { Workspace.HEAD, Workspace.LATEST };
 
 	@EJB
@@ -263,6 +264,10 @@ public class CoreServiceBean implements CoreService {
 			authorisation.createPolicy(head, members);
 			authorisation.setPolicyRules(head, rules);
 
+			if ( Arrays.asList(RESERVED_ALIASES).contains(alias) ) {
+				throw new CoreServiceException(alias + " is reserved and cannot be used as an alias");
+			}
+			
 			List<Workspace> results = em.createNamedQuery("findWorkspaceByAlias", Workspace.class).setParameter("alias", alias).getResultList();
 			if (results.size() > 0) {
 				ctx.setRollbackOnly();
@@ -372,10 +377,17 @@ public class CoreServiceBean implements CoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> listAllWorkspaceAlias() throws CoreServiceException {
+	public List<String> listAllWorkspaceAlias() throws CoreServiceException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "listing all workspaces alias");
-		TypedQuery<String> query = em.createNamedQuery("listAllWorkspaceAlias", String.class);
-		return query.getResultList();
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			authorisation.checkSuperUser(caller);
+			TypedQuery<String> query = em.createNamedQuery("listAllWorkspaceAlias", String.class);
+			return query.getResultList();
+		} catch (AuthorisationServiceException e) {
+			LOGGER.log(Level.SEVERE, "unable to list all workspace aliases", e);
+			throw new CoreServiceException("unable to list all workspace aliases", e);
+		}
 	}
 	
 	@Override
@@ -391,11 +403,11 @@ public class CoreServiceBean implements CoreService {
 			authorisation.checkPermission(wskey, subjects, "update");
 
 			Workspace workspace = em.find(Workspace.class, identifier.getId());
-			String name = String.valueOf(workspace.getClock());
 			if (workspace == null) {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
-
+			String name = String.valueOf(workspace.getClock());
+			
 			if (!workspace.hasChanged()) {
 				throw new CoreServiceException("unable to snapshot because workspace has no pending modifications since last snapshot");
 			}
@@ -742,6 +754,8 @@ public class CoreServiceBean implements CoreService {
 		}
 	}
 	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "find workspace [" + wskey + "] latest published snapshot");
 		try {
