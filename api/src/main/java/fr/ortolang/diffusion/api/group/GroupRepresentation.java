@@ -36,12 +36,11 @@ package fr.ortolang.diffusion.api.group;
  * #L%
  */
 
-import fr.ortolang.diffusion.api.profile.ProfileRepresentation;
+import fr.ortolang.diffusion.api.profile.ProfileCardRepresentation;
 import fr.ortolang.diffusion.membership.entity.Group;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +52,7 @@ public class GroupRepresentation {
 
     private String name;
 
-    private List<ProfileRepresentation> members;
+    private List<ProfileCardRepresentation> members;
 
     public GroupRepresentation() {
         members = new ArrayList<>();
@@ -75,15 +74,15 @@ public class GroupRepresentation {
         this.name = name;
     }
 
-    public List<ProfileRepresentation> getMembers() {
+    public List<ProfileCardRepresentation> getMembers() {
         return members;
     }
 
-    public void setMembers(List<ProfileRepresentation> members) {
+    public void setMembers(List<ProfileCardRepresentation> members) {
         this.members = members;
     }
 
-    public boolean addMember(ProfileRepresentation member) {
+    public boolean addMember(ProfileCardRepresentation member) {
         return members.add(member);
     }
 

@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.api.group;
  * #L%
  */
 
+import fr.ortolang.diffusion.api.profile.ProfileCardRepresentation;
 import fr.ortolang.diffusion.api.profile.ProfileRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -49,7 +50,6 @@ import javax.ejb.EJB;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -76,7 +76,19 @@ public class GroupResource {
         Group group = membership.readGroup(key);
         GroupRepresentation representation = GroupRepresentation.fromGroup(group);
         for (String member : group.getMembers()) {
-            representation.addMember(ProfileRepresentation.fromProfile(membership.readProfile(member)));
+            representation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(member)));
+        }
+        return Response.ok(representation).build();
+    }
+
+    @GET
+    @Path("/{key}/cards")
+    public Response getGroupCards(@PathParam(value = "key") String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "GET /groups/" + key + "/cards");
+        Group group = membership.readGroup(key);
+        GroupRepresentation representation = GroupRepresentation.fromGroup(group);
+        for (String member : group.getMembers()) {
+            representation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(member)));
         }
         return Response.ok(representation).build();
     }

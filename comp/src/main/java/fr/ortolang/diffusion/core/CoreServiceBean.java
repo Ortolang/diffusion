@@ -269,7 +269,7 @@ public class CoreServiceBean implements CoreService {
 			}
 			
 			List<Workspace> results = em.createNamedQuery("findWorkspaceByAlias", Workspace.class).setParameter("alias", alias).getResultList();
-			if (results.size() > 0) {
+			if (!results.isEmpty()) {
 				ctx.setRollbackOnly();
 				throw new CoreServiceException("a workspace with alias [" + alias + "] already exists in storage");
 			}
@@ -301,7 +301,7 @@ public class CoreServiceBean implements CoreService {
 			wsrules.put(members, Arrays.asList("read"));
 			authorisation.createPolicy(wskey, caller);
 			authorisation.setPolicyRules(wskey, wsrules);
-			
+
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "create"));
 			notification.throwEvent(head, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"));
 
@@ -314,7 +314,7 @@ public class CoreServiceBean implements CoreService {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while creating workspace", e);
 			throw new CoreServiceException("unable to create workspace with key [" + wskey + "]", e);
-		} 
+		}
 	}
 
 	@Override
@@ -350,7 +350,7 @@ public class CoreServiceBean implements CoreService {
 			authorisation.checkAuthentified(subjects);
 
 			List<String> groups = membership.getProfileGroups(profile);
-			if (groups.size() == 0) {
+			if (groups.isEmpty()) {
 				return Collections.emptyList();
 			}
 
@@ -373,7 +373,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to find workspaces for profile", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> listAllWorkspaceAlias() throws CoreServiceException, AccessDeniedException {
@@ -388,7 +388,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to list all workspace aliases", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void snapshotWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
@@ -410,7 +410,7 @@ public class CoreServiceBean implements CoreService {
 			if (!workspace.hasChanged()) {
 				throw new CoreServiceException("unable to snapshot because workspace has no pending modifications since last snapshot");
 			}
-			
+
 			try {
 				JsonObjectBuilder builder = Json.createObjectBuilder();
 				builder.add("wskey", wskey);
@@ -418,20 +418,20 @@ public class CoreServiceBean implements CoreService {
 
 				JsonObject jsonObject = builder.build();
 				String hash = binarystore.put(new ByteArrayInputStream(jsonObject.toString().getBytes()));
-				
+
 				List<String> mds = findMetadataObjectsForTargetAndName(workspace.getHead(), MetadataFormat.WORKSPACE);
-				
-				if(mds.size()>0) {
-					LOGGER.log(Level.INFO, "updating workspace metadata for root collection");
-					updateMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
-				} else {
-					LOGGER.log(Level.INFO, "creating workspace metadata for root collection");
-					createMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
-				}
-			} catch (BinaryStoreServiceException | DataCollisionException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | MetadataFormatException e) {
+
+                if (mds.isEmpty()) {
+                    LOGGER.log(Level.INFO, "creating workspace metadata for root collection");
+                    createMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
+                } else {
+                    LOGGER.log(Level.INFO, "updating workspace metadata for root collection");
+                    updateMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
+                }
+            } catch (BinaryStoreServiceException | DataCollisionException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | MetadataFormatException e) {
 				throw new CoreServiceException("cannot create workspace metadata for collection root : "+e.getMessage());
 			}
-			
+
 			workspace.setKey(wskey);
 			workspace.incrementClock();
 
@@ -496,7 +496,7 @@ public class CoreServiceBean implements CoreService {
 			em.merge(workspace);
 
 			registry.update(wskey);
-			
+
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"));
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
@@ -526,7 +526,7 @@ public class CoreServiceBean implements CoreService {
 
 			membership.deleteGroup(workspace.getMembers());
 			registry.delete(wskey);
-			
+
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "delete"));
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
@@ -534,7 +534,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to delete workspace with key [" + wskey + "]", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String resolveWorkspaceAlias(String alias) throws CoreServiceException, AccessDeniedException, AliasNotFoundException {
@@ -649,7 +649,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to resolve into workspace [" + wskey + "] metadata name [" + name + "] at [" + path + "]", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Set<String> buildWorkspaceReviewList(String wskey, String snapshot) throws CoreServiceException, AccessDeniedException {
@@ -669,7 +669,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + snapshot);
 			}
 			String root = workspace.findSnapshotByName(snapshot).getKey();
-			
+
 			Set<String> keys = new HashSet<String>();
 			systemListCollectionKeys(root, keys);
 			return keys;
@@ -678,7 +678,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unexpected error while trying to build workspace review list", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Map<String, Map<String, List<String>>> buildWorkspacePublicationMap(String wskey, String snapshot) throws CoreServiceException, AccessDeniedException {
@@ -698,7 +698,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + snapshot);
 			}
 			String root = workspace.findSnapshotByName(snapshot).getKey();
-			
+
 			Map<String, Map<String, List<String>>> map = new HashMap<String, Map<String, List<String>>>();
 			AuthorisationPolicyTemplate defaultTemplate = authorisation.getPolicyTemplate(AuthorisationPolicyTemplate.DEFAULT);
 			Map<String, String> aclParams = new HashMap<String, String> ();
@@ -710,7 +710,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unexpected error while trying to build workspace publication map", e);
 		}
 	}
-	
+
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private void builtPublicationMap(String key, Map<String, Map<String, List<String>>> map, Map<String, List<String>> current, Map<String, String> params) throws KeyNotFoundException, AccessDeniedException, CoreServiceException, OrtolangException {
 		Object object = findObject(key);
@@ -766,7 +766,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
 			workspace.setKey(wskey);
-			
+
 			String current = workspace.getHead();
 			boolean found = false;
 			while (!found && current != null) {
@@ -776,14 +776,14 @@ public class CoreServiceBean implements CoreService {
 				}
 				current = parent;
 			}
-			
+
 			if ( current != null ) {
 				SnapshotElement snapshot = workspace.findSnapshotByKey(current);
 				if ( snapshot != null ) {
 					return snapshot.getName();
 				}
 			}
-			
+
 			return null;
 		} catch (RegistryServiceException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while finding workspace latest published snapshot", e);
@@ -854,7 +854,7 @@ public class CoreServiceBean implements CoreService {
 
 			registry.register(key, collection.getObjectIdentifier(), caller);
 			indexing.index(key);
-			
+
 			authorisation.clonePolicy(key, ws.getHead());
 			LOGGER.log(Level.FINEST, "security policy cloned from head collection to key [" + key + "]");
 
@@ -896,7 +896,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
 			}
 			collection.setKey(key);
-			
+
 			notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "read"));
 			return collection;
 		} catch (NotificationServiceException | MembershipServiceException | AuthorisationServiceException | RegistryServiceException e) {
@@ -962,7 +962,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
 			}
 			collection.setKey(key);
-			
+
 			PathBuilder pathTarget = PathBuilder.fromPath(path);
 			PathBuilder parentTarget = pathTarget.clone().parent();
 
@@ -1042,7 +1042,7 @@ public class CoreServiceBean implements CoreService {
 			sparent.removeElement(selement);
 			em.merge(sparent);
 			registry.update(sparent.getKey());
-			
+
 			LOGGER.log(Level.FINEST, "parent [" + sparent.getKey() + "] has been updated");
 
 			Collection dparent = loadCollectionAtPath(ws.getHead(), dppath, ws.getClock());
@@ -1063,7 +1063,7 @@ public class CoreServiceBean implements CoreService {
 			dparent.addElement(new CollectionElement(Collection.OBJECT_TYPE, scollection.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, scollection.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
-			
+
 			LOGGER.log(Level.FINEST, "collection [" + scollection.getKey() + "] added to destination parent [" + dparent.getKey() + "]");
 
 			ws.setChanged(true);
@@ -1139,7 +1139,7 @@ public class CoreServiceBean implements CoreService {
 			parent.removeElement(element);
 			em.merge(parent);
 			registry.update(parent.getKey());
-			
+
 			LOGGER.log(Level.FINEST, "parent [" + parent.getKey() + "] has been updated");
 
 			ws.setChanged(true);
@@ -1246,7 +1246,7 @@ public class CoreServiceBean implements CoreService {
 			parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getSize(), object.getMimeType(), key));
 			em.merge(parent);
 			registry.update(parent.getKey());
-			
+
 			LOGGER.log(Level.FINEST, "object [" + key + "] added to parent [" + parent.getKey() + "]");
 
 			ws.setChanged(true);
@@ -1457,7 +1457,7 @@ public class CoreServiceBean implements CoreService {
 			sparent.removeElement(selement);
 			em.merge(sparent);
 			registry.update(sparent.getKey());
-			
+
 			LOGGER.log(Level.FINEST, "parent [" + sparent.getKey() + "] has been updated");
 
 			Collection dparent = loadCollectionAtPath(ws.getHead(), dppath, ws.getClock());
@@ -1478,7 +1478,7 @@ public class CoreServiceBean implements CoreService {
 			dparent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, sobject.getName(), System.currentTimeMillis(), sobject.getSize(), sobject.getMimeType(), sobject.getKey()));
 			em.merge(dparent);
 			registry.update(dparent.getKey());
-			
+
 			LOGGER.log(Level.FINEST, "object [" + sobject.getKey() + "] added to destination parent [" + dparent.getKey() + "]");
 
 			ws.setChanged(true);
@@ -1544,7 +1544,7 @@ public class CoreServiceBean implements CoreService {
 			parent.removeElement(element);
 			em.merge(parent);
 			registry.update(parent.getKey());
-			
+
 			LOGGER.log(Level.FINEST, "parent [" + parent.getKey() + "] has been updated");
 
 			ws.setChanged(true);
@@ -2516,7 +2516,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unexpected error during create metadata format", e);
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<MetadataFormat> listMetadataFormat() throws CoreServiceException {
@@ -2547,13 +2547,12 @@ public class CoreServiceBean implements CoreService {
 		LOGGER.log(Level.FINE, "reading metadata format for name [" + name + "]");
 		TypedQuery<MetadataFormat> query = em.createNamedQuery("findMetadataFormatForName", MetadataFormat.class).setParameter("name", name);
 		List<MetadataFormat> formats = query.getResultList();
-		if (formats.size() > 0) {
-			return formats.get(0);
-		} else {
+		if (formats.isEmpty()) {
 			return null;
 		}
+		return formats.get(0);
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public MetadataFormat findMetadataFormatById(String id) throws CoreServiceException {
@@ -2974,7 +2973,7 @@ public class CoreServiceBean implements CoreService {
 			throw new CoreServiceException("unable to list keys for workspace with key [" + wskey + "]", e);
 		}
 	}
-	
+
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private Set<String> systemListCollectionKeys(String key, Set<String> keys) throws RegistryServiceException, KeyNotFoundException, CoreServiceException {
 		OrtolangObjectIdentifier cidentifier = registry.lookup(key);
