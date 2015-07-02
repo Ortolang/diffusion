@@ -82,6 +82,11 @@
 			<artifactId>xoai-data-provider</artifactId>
 			<version>${version.lyncode.xoai}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-compress</artifactId>
+			<version>1.9</version>
+		</dependency>
 	</dependencies>
 
 	<build>

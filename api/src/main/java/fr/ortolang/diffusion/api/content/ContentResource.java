@@ -1,19 +1,27 @@
 package fr.ortolang.diffusion.api.content;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.ejb.EJB;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -29,6 +37,8 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+
+import org.apache.commons.io.IOUtils;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangException;
@@ -87,6 +97,74 @@ public class ContentResource {
 		return Response.seeOther(builder.build()).build();
 	}
 	
+	@POST
+	@Path("/export")
+	@Consumes({MediaType.APPLICATION_FORM_URLENCODED})
+	public Response export(@FormParam("followsymlink") @DefaultValue("false") String followSymlink, @FormParam("filename") @DefaultValue("download") String filename, @FormParam("format") @DefaultValue("zip") String format, @FormParam("paths") List<String> paths, @Context SecurityContext security, @Context Request request) {
+		LOGGER.log(Level.INFO, "POST /export");
+		for ( String path : paths ) {
+			LOGGER.log(Level.INFO, "path: " + path);
+		}
+		
+		return Response.serverError().entity("not implemented !!").build();
+	}
+	
+	protected ZipOutputStream exportToZip(String key, ZipOutputStream zos, PathBuilder path) throws OrtolangException, KeyNotFoundException, AccessDeniedException, IOException {
+
+		OrtolangObject object = browser.findObject(key);
+		String type = object.getObjectIdentifier().getType();
+
+		LOGGER.log(Level.FINE, "export collection to zip : " + path.build() + " (" + key + ")");
+
+		ZipEntry ze = new ZipEntry(path.build() + PathBuilder.PATH_SEPARATOR);
+
+		zos.putNextEntry(ze);
+		zos.closeEntry();
+
+		if (type.equals(Collection.OBJECT_TYPE)) {
+			Set<CollectionElement> elements = ((Collection) object).getElements();
+
+			for (CollectionElement element : elements) {
+
+				try {
+					PathBuilder pathElement = path.clone().path(element.getName());
+					if (element.getType().equals(Collection.OBJECT_TYPE)) {
+
+						exportToZip(element.getKey(), zos, pathElement);
+
+					} else if (element.getType().equals(DataObject.OBJECT_TYPE)) {
+						try {
+
+							DataObject dataObject = (DataObject) browser.findObject(element.getKey());
+
+							LOGGER.log(Level.FINE, "export dataobject to zip : " + pathElement.build() + " (" + element.getKey() + ")");
+							ZipEntry entry = new ZipEntry(pathElement.build());
+							entry.setTime(element.getModification());
+							entry.setSize(dataObject.getSize());
+							zos.putNextEntry(entry);
+							InputStream input = core.download(element.getKey());
+							try {
+								IOUtils.copy(input, zos);
+							} catch (IOException e) {
+
+							} finally {
+								IOUtils.closeQuietly(input);
+								zos.closeEntry();
+							}
+						} catch (CoreServiceException | DataNotFoundException e1) {
+							LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e1);
+						}
+					}
+				} catch (InvalidPathException e) {
+					LOGGER.log(Level.SEVERE, "invalid path during export to zip !!", e);
+				}
+
+			}
+		}
+
+		return zos;
+	}
+	
 	@GET
 	@Path("/key/{key}")
 	public Response key(@PathParam("key") String key, @QueryParam("fd") boolean download, @Context SecurityContext security, @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, InvalidPathException, OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException {
@@ -127,8 +205,8 @@ public class ContentResource {
 		} catch ( AccessDeniedException e ) {
 			if ( security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
 				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
-				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/key/" + key, OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, false);
-				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(rcookie).build();
+				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/key/" + key, OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
+				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").queryParam(REDIRECT_PATH_PARAM_NAME, "/key/" + key).build()).cookie(rcookie).build();
 			} else {
 				LOGGER.log(Level.FINE, "user is already authentified, access denied");
 				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
@@ -162,8 +240,8 @@ public class ContentResource {
 		} catch ( AccessDeniedException e ) {
 			if ( security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
 				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
-				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/", OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, false);
-				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(rcookie).build();
+				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/", OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
+				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").queryParam(REDIRECT_PATH_PARAM_NAME, "/").build()).cookie(rcookie).build();
 			} else {
 				LOGGER.log(Level.FINE, "user is already authentified, access denied");
 				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
@@ -226,8 +304,8 @@ public class ContentResource {
 		} catch ( AccessDeniedException e ) {
 			if ( security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
 				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
-				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, false);
-				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(rcookie).build();
+				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
+				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").queryParam(REDIRECT_PATH_PARAM_NAME, representation.getPath()).build()).cookie(rcookie).build();
 			} else {
 				LOGGER.log(Level.FINE, "user is already authentified, access denied");
 				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
@@ -314,8 +392,8 @@ public class ContentResource {
 		} catch ( AccessDeniedException e ) {
 			if ( security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
 				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
-				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, false);
-				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(rcookie).build();
+				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
+				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").queryParam(REDIRECT_PATH_PARAM_NAME, representation.getPath()).build()).cookie(rcookie).build();
 			} else {
 				LOGGER.log(Level.FINE, "user is already authentified, access denied");
 				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
@@ -403,8 +481,8 @@ public class ContentResource {
 		} catch ( AccessDeniedException e ) {
 			if ( security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
 				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
-				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, false);
-				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").build()).cookie(rcookie).build();
+				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
+				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").queryParam(REDIRECT_PATH_PARAM_NAME, representation.getPath()).build()).cookie(rcookie).build();
 			} else {
 				LOGGER.log(Level.FINE, "user is already authentified, access denied");
 				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
