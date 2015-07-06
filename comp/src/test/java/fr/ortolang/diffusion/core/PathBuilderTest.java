@@ -333,9 +333,10 @@ public class PathBuilderTest {
 		assertEquals("/ccc/d/e", PathBuilder.fromPath(path).relativize(2).build());
 		assertEquals("/e", PathBuilder.fromPath(path).relativize(4).build());
 		assertEquals("/b/ccc/d/e", PathBuilder.fromPath(path).relativize(1).build());
+		assertEquals("/", PathBuilder.fromPath(path).relativize(5).build());
 		
 		try {
-			PathBuilder.fromPath(path).relativize(5);
+			PathBuilder.fromPath(path).relativize(-1);
 			fail("Should fail...");
 		} catch ( InvalidPathException e ) {
 			//
