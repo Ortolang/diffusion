@@ -183,7 +183,7 @@ public class OrtolangClient {
 	
 	public Path downloadObject(String key) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
-		WebTarget target = base.path("objects").path(key).path("download");
+		WebTarget target = base.path("content").path("key").path(key).queryParam("fd", "true");
 		Response response = injectAuthHeader(target.request()).accept(MediaType.WILDCARD_TYPE).get();
 		if (response.getStatus() == Status.OK.getStatusCode()) {
 			try {
@@ -350,18 +350,7 @@ public class OrtolangClient {
 		}
 	}
 
-	 /**
-	  * Update a remote process on diffusion server
-	  * @param pid
-	  * @param state
-	  * @param log
-	  * @param start
-	  * @param stop
-	  * @param activity
-	  * @throws OrtolangClientException
-	  * @throws OrtolangClientAccountException
-	  */
-	public void updateRemoteProcess(String pid, String state, String log, long start, long stop, String activity) throws OrtolangClientException, OrtolangClientAccountException {
+	 public void updateRemoteProcess(String pid, String state, String log, long start, long stop, String activity) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/runtime/remote-processes/").path(pid);
 		Form form = new Form();
