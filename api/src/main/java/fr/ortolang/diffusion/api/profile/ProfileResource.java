@@ -216,6 +216,45 @@ public class ProfileResource {
         builder.cacheControl(cc);
         return builder.build();
 	}
+
+	/**
+	 * @description Return the profile card for a given key
+	 * @responseType fr.ortolang.diffusion.api.profile.ProfileCardRepresentation
+	 * @param key {@link String}
+	 * 		Key of wanted profile
+	 * @param request {@link Request}
+	 * @return {@link ProfileCardRepresentation}
+	 * @throws MembershipServiceException
+	 * @throws BrowserServiceException
+	 * @throws KeyNotFoundException
+	 * @throws AccessDeniedException
+	 */
+	@GET
+	@Path("/{key}/card")
+	public Response getProfileCard(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+		LOGGER.log(Level.INFO, "GET /profiles/" + key + "/card");
+
+		OrtolangObjectState state = browser.getState(key);
+		CacheControl cc = new CacheControl();
+		cc.setPrivate(true);
+		cc.setMaxAge(600);
+		cc.setMustRevalidate(true);
+		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+		ResponseBuilder builder = null;
+		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+			builder = request.evaluatePreconditions(lmd);
+		}
+
+		if(builder == null){
+			Profile profile = membership.readProfile(key);
+			ProfileCardRepresentation representation = ProfileCardRepresentation.fromProfile(profile);
+			builder = Response.ok(representation);
+			builder.lastModified(lmd);
+		}
+
+		builder.cacheControl(cc);
+		return builder.build();
+	}
 	
 	/**
 	 * @description Update a profile
