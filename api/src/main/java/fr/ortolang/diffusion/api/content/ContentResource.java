@@ -41,8 +41,13 @@ import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveOutputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.io.IOUtils;
 
 import fr.ortolang.diffusion.OrtolangConfig;
@@ -112,7 +117,7 @@ public class ContentResource {
 		ResponseBuilder builder = handleExport(false, filename, format, paths);
 		return builder.build();
 	}
-	
+
 	@GET
 	@Path("/export")
 	public Response exportGet(final @QueryParam("followsymlink") @DefaultValue("false") String followSymlink, @QueryParam("filename") @DefaultValue("download") String filename,
@@ -121,11 +126,11 @@ public class ContentResource {
 		ResponseBuilder builder = handleExport(false, filename, format, paths);
 		return builder.build();
 	}
-	
+
 	private ResponseBuilder handleExport(boolean followSymlink, String filename, String format, final List<String> paths) throws UnsupportedEncodingException {
-		ResponseBuilder builder; 
+		ResponseBuilder builder;
 		switch (format) {
-		case "zip":
+		case "zip": {
 			LOGGER.log(Level.FINE, "exporting using format zip");
 			builder = Response.ok();
 			builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(filename, "utf-8") + ".zip");
@@ -133,31 +138,82 @@ public class ContentResource {
 			StreamingOutput stream = new StreamingOutput() {
 				public void write(OutputStream output) throws IOException, WebApplicationException {
 					try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(output)) {
-						for ( String path : paths ) {
+						for (String path : paths) {
 							try {
 								String key = resolveContentPath(path);
-								exportToZip(key, out, PathBuilder.fromPath(path), false);
-							} catch ( InvalidPathException | BrowserServiceException | CoreServiceException | AliasNotFoundException | KeyNotFoundException | OrtolangException e ) {
+								ArchiveEntryFactory factory = new ArchiveEntryFactory() {
+									@Override
+									public ArchiveEntry createArchiveEntry(String name, long time, long size) {
+										ZipArchiveEntry entry = new ZipArchiveEntry(name);
+										if ( time != -1 ) {
+											entry.setTime(time);
+										}
+										if ( size != -1 ) {
+											entry.setSize(size);
+										}
+										return entry;
+									}
+								};
+								exportToArchive(key, out, factory, PathBuilder.fromPath(path), false);
+							} catch (InvalidPathException | BrowserServiceException | CoreServiceException | AliasNotFoundException | KeyNotFoundException | OrtolangException e) {
 								LOGGER.log(Level.INFO, "unable to export path to zip", e);
-							} catch ( AccessDeniedException e ) {
+							} catch (AccessDeniedException e) {
 								LOGGER.log(Level.FINE, "access denied during export to zip", e);
-							} 
+							}
 						}
-					} 
+					}
 				}
 			};
 			builder.entity(stream);
 			break;
+		}
+		case "tar": {
+			LOGGER.log(Level.FINE, "exporting using format tar");
+			builder = Response.ok();
+			builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(filename, "utf-8") + ".tar.gz");
+			builder.type("application/x-gzip");
+			StreamingOutput stream = new StreamingOutput() {
+				public void write(OutputStream output) throws IOException, WebApplicationException {
+					try (GzipCompressorOutputStream gout = new GzipCompressorOutputStream(output); TarArchiveOutputStream out = new TarArchiveOutputStream(gout)) {
+						for (String path : paths) {
+							try {
+								String key = resolveContentPath(path);
+								ArchiveEntryFactory factory = new ArchiveEntryFactory() {
+									@Override
+									public ArchiveEntry createArchiveEntry(String name, long time, long size) {
+										TarArchiveEntry entry = new TarArchiveEntry(name);
+										if ( time != -1 ) {
+											entry.setModTime(time);
+										}
+										if ( size != -1 ) {
+											entry.setSize(size);
+										}
+										return entry;
+									}
+								};
+								exportToArchive(key, out, factory, PathBuilder.fromPath(path), false);
+							} catch (InvalidPathException | BrowserServiceException | CoreServiceException | AliasNotFoundException | KeyNotFoundException | OrtolangException e) {
+								LOGGER.log(Level.INFO, "unable to export path to tar", e);
+							} catch (AccessDeniedException e) {
+								LOGGER.log(Level.FINE, "access denied during export to tar", e);
+							}
+						}
+					}
+				}
+			};
+			builder.entity(stream);
+			break;
+		}
 		default:
-			builder = Response.status(Status.BAD_REQUEST).entity("export format [" + format + "] is not supported"); 
+			builder = Response.status(Status.BAD_REQUEST).entity("export format [" + format + "] is not supported");
 		}
 		return builder;
 	}
-	
+
 	private String resolveContentPath(String path) throws CoreServiceException, InvalidPathException, AccessDeniedException, AliasNotFoundException, KeyNotFoundException {
 		PathBuilder pbuilder = PathBuilder.fromPath(path);
 		String[] pparts = pbuilder.buildParts();
-		if ( pparts.length < 2 ) {
+		if (pparts.length < 2) {
 			throw new InvalidPathException("invalid path, format is : /{alias}/{snapshot}/{path}");
 		}
 		String wskey = core.resolveWorkspaceAlias(pparts[0]);
@@ -171,48 +227,46 @@ public class ContentResource {
 		return okey;
 	}
 
-	//TODO in case of following symlink, add cyclic detection
-	private void exportToZip(String key, ZipArchiveOutputStream zos, PathBuilder path, boolean followsymlink) throws OrtolangException, KeyNotFoundException, AccessDeniedException, IOException, BrowserServiceException {
+	// TODO in case of following symlink, add cyclic detection
+	private void exportToArchive(String key, ArchiveOutputStream aos, ArchiveEntryFactory factory, PathBuilder path, boolean followsymlink) throws OrtolangException, KeyNotFoundException,
+			AccessDeniedException, IOException, BrowserServiceException {
 		OrtolangObject object = browser.findObject(key);
 		OrtolangObjectInfos infos = browser.getInfos(key);
 		String type = object.getObjectIdentifier().getType();
-		
-		switch ( type ) {
-		case Collection.OBJECT_TYPE : 
+
+		switch (type) {
+		case Collection.OBJECT_TYPE:
 			Set<CollectionElement> elements = ((Collection) object).getElements();
-			ZipArchiveEntry centry = new ZipArchiveEntry(path.build() + "/");
-			centry.setTime(infos.getLastModificationDate());
-			zos.putArchiveEntry(centry);
-			zos.closeArchiveEntry();
+			ArchiveEntry centry = factory.createArchiveEntry(path.build() + "/", infos.getLastModificationDate(), 0l);
+			aos.putArchiveEntry(centry);
+			aos.closeArchiveEntry();
 			for (CollectionElement element : elements) {
 				try {
 					PathBuilder pelement = path.clone().path(element.getName());
-					exportToZip(element.getKey(), zos, pelement, followsymlink);
-				} catch ( InvalidPathException e ) {
+					exportToArchive(element.getKey(), aos, factory, pelement, followsymlink);
+				} catch (InvalidPathException e) {
 					LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e);
 				}
 			}
 			break;
-		case DataObject.OBJECT_TYPE : 
+		case DataObject.OBJECT_TYPE:
 			try {
 				DataObject dataObject = (DataObject) object;
-				ZipArchiveEntry oentry = new ZipArchiveEntry(path.build());
-				oentry.setTime(infos.getLastModificationDate());
-				oentry.setSize(dataObject.getSize());
-				zos.putArchiveEntry(oentry);
+				ArchiveEntry oentry = factory.createArchiveEntry(path.build(), infos.getLastModificationDate(), dataObject.getSize());
+				aos.putArchiveEntry(oentry);
 				InputStream input = core.download(object.getObjectKey());
 				try {
-					IOUtils.copy(input, zos);
+					IOUtils.copy(input, aos);
 				} finally {
 					IOUtils.closeQuietly(input);
 				}
-				zos.closeArchiveEntry();
+				aos.closeArchiveEntry();
 			} catch (CoreServiceException | DataNotFoundException e1) {
 				LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e1);
 			}
 			break;
-		case Link.OBJECT_TYPE : 
-			if ( followsymlink ) {
+		case Link.OBJECT_TYPE:
+			if (followsymlink) {
 				LOGGER.log(Level.SEVERE, "link export is not managed yet");
 			}
 			break;
@@ -530,11 +584,11 @@ public class ContentResource {
 				if (object instanceof DataObject) {
 					File content = store.getFile(((DataObject) object).getStream());
 					if (download) {
-						return Response.ok(content).header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(object.getObjectName(), "utf-8")).header("Content-Type", ((DataObject) object).getMimeType())
+						return Response.ok(content).header("Content-Disposition", "attachment;").header("Content-Type", ((DataObject) object).getMimeType())
 								.header("Content-Length", ((DataObject) object).getSize()).build();
 					} else {
-						return Response.ok(content).header("Content-Disposition", "filename*=UTF-8''" + URLEncoder.encode(object.getObjectName(), "utf-8")).header("Content-Type", ((DataObject) object).getMimeType())
-								.header("Content-Length", ((DataObject) object).getSize()).header("Accept-Ranges", "bytes").build();
+						return Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize())
+								.header("Accept-Ranges", "bytes").build();
 					}
 				} else if (object instanceof Collection) {
 					representation.setElements(new ArrayList<CollectionElement>(((Collection) object).getElements()));
@@ -593,6 +647,11 @@ public class ContentResource {
 				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
 			}
 		}
+	}
+
+	interface ArchiveEntryFactory {
+
+		public ArchiveEntry createArchiveEntry(String name, long modificationDate, long size);
 	}
 
 }
