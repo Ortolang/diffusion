@@ -112,9 +112,9 @@ public class ThumbnailServiceBean implements ThumbnailService {
 			}
 			return getFile(key, size);
 		} catch (DataNotFoundException | IOException | OrtolangException | BrowserServiceException e) {
-			
+			LOGGER.log(Level.WARNING, "unexpected error while retreiving thumbnail", e);
+			throw new ThumbnailServiceException("error while retreiving thumbnail", e);
 		}
-		return null;
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)

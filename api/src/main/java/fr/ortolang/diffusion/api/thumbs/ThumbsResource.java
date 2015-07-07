@@ -33,13 +33,17 @@ import fr.ortolang.diffusion.thumbnail.ThumbnailServiceException;
 public class ThumbsResource {
 	
 	private static final Logger LOGGER = Logger.getLogger(ThumbsResource.class.getName());
+	private static final String DEFAULT_IMAGE = "empty.png";
 	
 	@EJB
 	private BrowserService browser;
 	@EJB
 	private ThumbnailService service;
+	
+	private File empty; 
 
 	public ThumbsResource() {
+		empty = new File(this.getClass().getClassLoader().getResource(DEFAULT_IMAGE).getFile());
 	}
 	
 	@GET
@@ -63,10 +67,15 @@ public class ThumbsResource {
 			builder = request.evaluatePreconditions(lmd);
 		}
 		if (builder == null) {
-			//TODO execute this in async !!
-			File thumb = service.getThumbnail(key, size);
-			builder = Response.ok(thumb).header("Content-Type", ThumbnailService.THUMBS_MIMETYPE);
-			builder.lastModified(lmd);
+			try {
+				File thumb = service.getThumbnail(key, size);
+				builder = Response.ok(thumb).header("Content-Type", ThumbnailService.THUMBS_MIMETYPE);
+				builder.lastModified(lmd);
+			} catch ( Exception e ) {
+				LOGGER.log(Level.FINE, "unable to generate thumbnail, sending transparent image");
+				builder = Response.ok(empty).header("Content-Type", "image/png");
+				builder.lastModified(lmd);
+			}
 		}
 
 		builder.cacheControl(cc);
