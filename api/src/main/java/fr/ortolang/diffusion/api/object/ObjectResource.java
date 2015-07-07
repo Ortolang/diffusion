@@ -263,43 +263,43 @@ public class ObjectResource {
 		return get(core.resolvePathFromCollection(key, relativePath), request);
 	}
 
-	@GET
-	@Path("/{key}/history")
-	@Deprecated
-	public Response history(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "GET /objects/" + key + "/history");
-
-		OrtolangObjectState state = browser.getState(key);
-		CacheControl cc = new CacheControl();
-		cc.setPrivate(true);
-		if (state.isLocked()) {
-			cc.setMaxAge(691200);
-			cc.setMustRevalidate(false);
-		} else {
-			cc.setMaxAge(0);
-			cc.setMustRevalidate(true);
-		}
-		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
-		ResponseBuilder builder = null;
-		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
-			builder = request.evaluatePreconditions(lmd);
-		}
-
-		if (builder == null) {
-			List<OrtolangObjectVersion> versions = browser.getHistory(key);
-
-			GenericCollectionRepresentation<OrtolangObjectVersion> representation = new GenericCollectionRepresentation<OrtolangObjectVersion>();
-			for (OrtolangObjectVersion version : versions) {
-				representation.addEntry(version);
-			}
-
-			builder = Response.ok(representation);
-			builder.lastModified(lmd);
-		}
-
-		builder.cacheControl(cc);
-		return builder.build();
-	}
+//	@GET
+//	@Path("/{key}/history")
+//	@Deprecated
+//	public Response history(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+//		LOGGER.log(Level.INFO, "GET /objects/" + key + "/history");
+//
+//		OrtolangObjectState state = browser.getState(key);
+//		CacheControl cc = new CacheControl();
+//		cc.setPrivate(true);
+//		if (state.isLocked()) {
+//			cc.setMaxAge(691200);
+//			cc.setMustRevalidate(false);
+//		} else {
+//			cc.setMaxAge(0);
+//			cc.setMustRevalidate(true);
+//		}
+//		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+//		ResponseBuilder builder = null;
+//		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+//			builder = request.evaluatePreconditions(lmd);
+//		}
+//
+//		if (builder == null) {
+//			List<OrtolangObjectVersion> versions = browser.getHistory(key);
+//
+//			GenericCollectionRepresentation<OrtolangObjectVersion> representation = new GenericCollectionRepresentation<OrtolangObjectVersion>();
+//			for (OrtolangObjectVersion version : versions) {
+//				representation.addEntry(version);
+//			}
+//
+//			builder = Response.ok(representation);
+//			builder.lastModified(lmd);
+//		}
+//
+//		builder.cacheControl(cc);
+//		return builder.build();
+//	}
 
 	// @GET
 	// @Path("/{key}/keys")

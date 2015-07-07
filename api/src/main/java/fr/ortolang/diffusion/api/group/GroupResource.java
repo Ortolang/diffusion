@@ -86,10 +86,7 @@ public class GroupResource {
     public Response getGroupCards(@PathParam(value = "key") String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /groups/" + key + "/cards");
         Group group = membership.readGroup(key);
-        GroupRepresentation representation = GroupRepresentation.fromGroup(group);
-        for (String member : group.getMembers()) {
-            representation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(member)));
-        }
+        GroupRepresentation representation = buildGroupRepresentation(group);
         return Response.ok(representation).build();
     }
 
@@ -99,7 +96,7 @@ public class GroupResource {
     public Response addMember(@PathParam(value = "key") String key, @FormParam(value = "member") String member) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /groups/" + key);
         Group group = membership.addMemberInGroup(key, member);
-        GroupRepresentation representation = GroupRepresentation.fromGroup(group);
+        GroupRepresentation representation = buildGroupRepresentation(group);
         return Response.ok(representation).build();
     }
 
@@ -109,7 +106,25 @@ public class GroupResource {
     public Response addMemberRepresentation(@PathParam(value = "key") String key, ProfileRepresentation profileRepresentation) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /groups/" + key);
         Group group = membership.addMemberInGroup(key, profileRepresentation.getKey());
-        GroupRepresentation representation = GroupRepresentation.fromGroup(group);
+        GroupRepresentation representation = buildGroupRepresentation(group);
         return Response.ok(representation).build();
+    }
+
+    @PUT
+    @Path("/{key}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response addMemberRepresentation(@PathParam(value = "key") String key, ProfileCardRepresentation profileCardRepresentation) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "PUT /groups/" + key);
+        Group group = membership.addMemberInGroup(key, profileCardRepresentation.getKey());
+        GroupRepresentation representation = buildGroupRepresentation(group);
+        return Response.ok(representation).build();
+    }
+
+    private GroupRepresentation buildGroupRepresentation(Group group) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
+        GroupRepresentation groupRepresentation = GroupRepresentation.fromGroup(group);
+        for (String member : group.getMembers()) {
+            groupRepresentation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(member)));
+        }
+        return groupRepresentation;
     }
 }
