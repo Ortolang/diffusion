@@ -325,7 +325,7 @@ public class ContentResource {
 			}
 		}
 	}
-
+	
 	@GET
 	public Response workspaces(@QueryParam("O") @DefaultValue("A") String asc, @Context SecurityContext security) throws TemplateEngineException, CoreServiceException {
 		LOGGER.log(Level.INFO, "GET /content");
