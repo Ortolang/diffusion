@@ -100,10 +100,13 @@ public class ContentResource {
 	@Context
 	private UriInfo uriInfo;
 	
-	private File defaultThumb;
+	private File defaultThumb = null;
 	
-	public ContentResource() {
-		defaultThumb = new File(this.getClass().getClassLoader().getResource(DEFAULT_THUMBNAIL_IMAGE).getFile());
+	private File getDefaultThumb() {
+		if (defaultThumb == null) {
+			defaultThumb = new File(this.getClass().getClassLoader().getResource(DEFAULT_THUMBNAIL_IMAGE).getFile());
+		}
+		return defaultThumb;
 	}
 
 	@GET
@@ -149,7 +152,7 @@ public class ContentResource {
 					builder.lastModified(lmd);
 				} catch ( Exception e ) {
 					LOGGER.log(Level.FINE, "unable to generate thumbnail, sending transparent image");
-					builder = Response.ok(defaultThumb).header("Content-Type", DEFAULT_THUMBNAIL_MIMETYPE);
+					builder = Response.ok(getDefaultThumb()).header("Content-Type", DEFAULT_THUMBNAIL_MIMETYPE);
 					builder.lastModified(lmd);
 				}
 			}
