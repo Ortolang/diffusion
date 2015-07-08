@@ -122,6 +122,9 @@ public class PathBuilder {
 	}
 	
 	public PathBuilder relativize(int level) throws InvalidPathException {
+		if ( level <= 0 ) {
+			throw new InvalidPathException("level cannot be less or equal to 0");
+		}
 		if ( this.depth() < level ) {
 			throw new InvalidPathException("path does not contains enough level to relativize");
 		}

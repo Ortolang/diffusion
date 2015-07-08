@@ -58,7 +58,7 @@ public class ProfileRepresentation {
 	private String status;
 	private String[] groups;
 	private boolean complete;
-	private String[] friends;
+	private String friends;
 	
 	public ProfileRepresentation() {
 		groups = new String[0];
@@ -136,14 +136,13 @@ public class ProfileRepresentation {
 		this.groups = groups;
 	}	
 
-	public String[] getFriends() {
+	public String getFriends() {
 		return friends;
 	}
 	
-	public void setFriends(String[] friends) {
+	public void setFriends(String friends) {
 		this.friends = friends;		
 	}
-
 	
 	public boolean isComplete() {
 		return complete;
@@ -165,6 +164,7 @@ public class ProfileRepresentation {
 		representation.setStatus(profile.getStatus().name());
 		representation.setGroups(profile.getGroups());
 		representation.setComplete(profile.isComplete());
+		representation.setFriends(profile.getFriends());
 		return representation;
 	}
 
