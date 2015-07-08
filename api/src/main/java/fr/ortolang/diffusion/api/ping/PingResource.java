@@ -46,6 +46,7 @@ import javax.ws.rs.core.Response;
 @Produces({ MediaType.APPLICATION_JSON })
 public class PingResource {
 
+    // @Todo return server version
     @GET
     public Response ping() {
         return Response.ok().build();

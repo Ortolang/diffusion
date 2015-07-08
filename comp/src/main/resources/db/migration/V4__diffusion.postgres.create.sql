@@ -95,14 +95,6 @@
         primary key (id)
     );
     
-    create table Preview (
-        key varchar(255) not null,
-        generationDate int8 not null,
-        large varchar(255),
-        small varchar(255),
-        primary key (key)
-    );
-
     create table Process (
         id varchar(255) not null,
         activity varchar(255),

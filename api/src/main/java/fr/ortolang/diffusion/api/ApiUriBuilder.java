@@ -57,8 +57,8 @@ public class ApiUriBuilder {
 			}
 			return UriBuilder.fromUri(uri);
 		} catch (Exception e) {
+			return null;
 		}
-		return null;
 	}
 	
 }
