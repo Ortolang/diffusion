@@ -76,22 +76,35 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import fr.ortolang.diffusion.thumbnail.ThumbnailService;
+import fr.ortolang.diffusion.thumbnail.ThumbnailServiceException;
 
 @Path("/content")
 @Produces({ MediaType.TEXT_HTML })
 public class ContentResource {
 
-	private static final String REDIRECT_PATH_PARAM_NAME = "redirect";
 	private static final Logger LOGGER = Logger.getLogger(ContentResource.class.getName());
 
+	private static final String REDIRECT_PATH_PARAM_NAME = "redirect";
+	private static final String DEFAULT_THUMBNAIL_IMAGE = "empty.png";
+	private static final String DEFAULT_THUMBNAIL_MIMETYPE = "image/png";
+	
 	@EJB
 	private CoreService core;
 	@EJB
 	private BrowserService browser;
 	@EJB
 	private BinaryStoreService store;
+	@EJB
+	private ThumbnailService service;
 	@Context
 	private UriInfo uriInfo;
+	
+	private File defaultThumb;
+	
+	public ContentResource() {
+		defaultThumb = new File(this.getClass().getClassLoader().getResource(DEFAULT_THUMBNAIL_IMAGE).getFile());
+	}
 
 	@GET
 	@Path("/auth")
@@ -106,6 +119,54 @@ public class ContentResource {
 			builder.path(qredirect);
 		}
 		return Response.seeOther(builder.build()).build();
+	}
+	
+	@GET
+	@Path("/thumb/{key}")
+	public Response get(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size, @Context SecurityContext security, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, ThumbnailServiceException {
+		LOGGER.log(Level.INFO, "GET /content/thumb/" + key);
+
+		try {
+			OrtolangObjectState state = browser.getState(key);
+			CacheControl cc = new CacheControl();
+			cc.setPrivate(true);
+			if (state.isLocked()) {
+				cc.setMaxAge(691200);
+				cc.setMustRevalidate(false);
+			} else {
+				cc.setMaxAge(0);
+				cc.setMustRevalidate(true);
+			}
+			Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+			ResponseBuilder builder = null;
+			if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+				builder = request.evaluatePreconditions(lmd);
+			}
+			if (builder == null) {
+				try {
+					File thumb = service.getThumbnail(key, size);
+					builder = Response.ok(thumb).header("Content-Type", ThumbnailService.THUMBS_MIMETYPE);
+					builder.lastModified(lmd);
+				} catch ( Exception e ) {
+					LOGGER.log(Level.FINE, "unable to generate thumbnail, sending transparent image");
+					builder = Response.ok(defaultThumb).header("Content-Type", DEFAULT_THUMBNAIL_MIMETYPE);
+					builder.lastModified(lmd);
+				}
+			}
+	
+			builder.cacheControl(cc);
+			return builder.build();
+		} catch ( AccessDeniedException e ) {
+			if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
+				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/thumb/" + key, OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1,
+						"Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
+				return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").queryParam(REDIRECT_PATH_PARAM_NAME, "/thumb/" + key).build()).cookie(rcookie).build();
+			} else {
+				LOGGER.log(Level.FINE, "user is already authentified, access denied");
+				return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
+			}
+		}
 	}
 
 	@POST
