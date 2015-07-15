@@ -8,6 +8,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -104,7 +106,13 @@ public class ContentResource {
 
 	private File getDefaultThumb() {
 		if (defaultThumb == null) {
-			defaultThumb = new File(this.getClass().getClassLoader().getResource(DEFAULT_THUMBNAIL_IMAGE).getFile());
+			try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(DEFAULT_THUMBNAIL_IMAGE)) {
+				java.nio.file.Path thumbPath = Files.createTempFile("default_thumb", ".png");
+				Files.copy(is, thumbPath, StandardCopyOption.REPLACE_EXISTING);
+				defaultThumb = thumbPath.toFile();
+			} catch (IOException e) {
+				LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			}
 		}
 		return defaultThumb;
 	}
@@ -182,7 +190,7 @@ public class ContentResource {
 		ResponseBuilder builder = handleExport(false, filename, format, paths);
 		return builder.build();
 	}
-
+	
 	@GET
 	@Path("/export")
 	public Response exportGet(final @QueryParam("followsymlink") @DefaultValue("false") String followSymlink, @QueryParam("filename") @DefaultValue("download") String filename,
@@ -337,7 +345,7 @@ public class ContentResource {
 			break;
 		}
 	}
-
+	
 	@GET
 	@Path("/key/{key}")
 	public Response key(@PathParam("key") String key, @QueryParam("fd") boolean download, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order,
