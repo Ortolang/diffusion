@@ -88,7 +88,7 @@ public class ContentResource {
 	private static final String REDIRECT_PATH_PARAM_NAME = "redirect";
 	private static final String DEFAULT_THUMBNAIL_IMAGE = "empty.png";
 	private static final String DEFAULT_THUMBNAIL_MIMETYPE = "image/png";
-	
+
 	@EJB
 	private CoreService core;
 	@EJB
@@ -99,9 +99,9 @@ public class ContentResource {
 	private ThumbnailService service;
 	@Context
 	private UriInfo uriInfo;
-	
+
 	private File defaultThumb = null;
-	
+
 	private File getDefaultThumb() {
 		if (defaultThumb == null) {
 			defaultThumb = new File(this.getClass().getClassLoader().getResource(DEFAULT_THUMBNAIL_IMAGE).getFile());
@@ -123,10 +123,11 @@ public class ContentResource {
 		}
 		return Response.seeOther(builder.build()).build();
 	}
-	
+
 	@GET
 	@Path("/thumb/{key}")
-	public Response get(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size, @Context SecurityContext security, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, ThumbnailServiceException {
+	public Response get(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size, @Context SecurityContext security, @Context Request request)
+			throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, ThumbnailServiceException {
 		LOGGER.log(Level.INFO, "GET /content/thumb/" + key);
 
 		try {
@@ -150,16 +151,16 @@ public class ContentResource {
 					File thumb = service.getThumbnail(key, size);
 					builder = Response.ok(thumb).header("Content-Type", ThumbnailService.THUMBS_MIMETYPE);
 					builder.lastModified(lmd);
-				} catch ( Exception e ) {
+				} catch (Exception e) {
 					LOGGER.log(Level.FINE, "unable to generate thumbnail, sending transparent image");
 					builder = Response.ok(getDefaultThumb()).header("Content-Type", DEFAULT_THUMBNAIL_MIMETYPE);
 					builder.lastModified(lmd);
 				}
 			}
-	
+
 			builder.cacheControl(cc);
 			return builder.build();
-		} catch ( AccessDeniedException e ) {
+		} catch (AccessDeniedException e) {
 			if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
 				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
 				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/thumb/" + key, OrtolangConfig.getInstance().getProperty("api.context"), uriInfo.getBaseUri().getHost(), 1,
@@ -209,10 +210,10 @@ public class ContentResource {
 									@Override
 									public ArchiveEntry createArchiveEntry(String name, long time, long size) {
 										ZipArchiveEntry entry = new ZipArchiveEntry(name);
-										if ( time != -1 ) {
+										if (time != -1) {
 											entry.setTime(time);
 										}
-										if ( size != -1 ) {
+										if (size != -1) {
 											entry.setSize(size);
 										}
 										return entry;
@@ -246,10 +247,10 @@ public class ContentResource {
 									@Override
 									public ArchiveEntry createArchiveEntry(String name, long time, long size) {
 										TarArchiveEntry entry = new TarArchiveEntry(name);
-										if ( time != -1 ) {
+										if (time != -1) {
 											entry.setModTime(time);
 										}
-										if ( size != -1 ) {
+										if (size != -1) {
 											entry.setSize(size);
 										}
 										return entry;
@@ -339,9 +340,9 @@ public class ContentResource {
 
 	@GET
 	@Path("/key/{key}")
-	public Response key(@PathParam("key") String key, @QueryParam("fd") boolean download, @Context SecurityContext security, @Context Request request) throws TemplateEngineException,
-			CoreServiceException, KeyNotFoundException, AccessDeniedException, InvalidPathException, OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException,
-			BrowserServiceException, UnsupportedEncodingException {
+	public Response key(@PathParam("key") String key, @QueryParam("fd") boolean download, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order,
+			@Context SecurityContext security, @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, InvalidPathException,
+			OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException {
 		LOGGER.log(Level.INFO, "GET /key/" + key);
 		try {
 			OrtolangObjectState state = browser.getState(key);
@@ -371,8 +372,56 @@ public class ContentResource {
 						builder = builder.header("Content-Disposition", "filename*=UTF-8''" + URLEncoder.encode(object.getObjectName(), "utf-8"));
 					}
 					builder.lastModified(lmd);
+				} else if (object instanceof Collection) {
+					ContentRepresentation representation = new ContentRepresentation();
+					representation.setContext(OrtolangConfig.getInstance().getProperty("api.context"));
+					representation.setBase("/content/key");
+					representation.setAlias("");
+					representation.setSnapshot("");
+					representation.setPath("/" + key);
+					representation.setParentPath("");
+					representation.setOrder(order);
+					representation.setLinkbykey(true);
+					representation.setElements(new ArrayList<CollectionElement>(((Collection) object).getElements()));
+					if (asc.equals("D")) {
+						switch (order) {
+						case "T":
+							Collections.sort(representation.getElements(), CollectionElement.ElementTypeDescComparator);
+							break;
+						case "M":
+							Collections.sort(representation.getElements(), CollectionElement.ElementDateDescComparator);
+							break;
+						case "S":
+							Collections.sort(representation.getElements(), CollectionElement.ElementSizeDescComparator);
+							break;
+						default:
+							Collections.sort(representation.getElements(), CollectionElement.ElementNameDescComparator);
+							break;
+						}
+						representation.setAsc(false);
+					} else {
+						switch (order) {
+						case "T":
+							Collections.sort(representation.getElements(), CollectionElement.ElementTypeAscComparator);
+							break;
+						case "M":
+							Collections.sort(representation.getElements(), CollectionElement.ElementDateAscComparator);
+							break;
+						case "S":
+							Collections.sort(representation.getElements(), CollectionElement.ElementSizeAscComparator);
+							break;
+						default:
+							Collections.sort(representation.getElements(), CollectionElement.ElementNameAscComparator);
+							break;
+						}
+						representation.setAsc(true);
+					}
+					builder = Response.ok(TemplateEngine.getInstance().process("collection", representation));
+					builder.lastModified(lmd);
+				} else if (object instanceof Link) {
+					return Response.seeOther(new URI(((Link) object).getTarget())).build();
 				} else {
-					return Response.serverError().entity("only data object can be downloaded using key").build();
+					return Response.serverError().entity("object type not supported").build();
 				}
 			}
 			builder.cacheControl(cc);
@@ -389,7 +438,7 @@ public class ContentResource {
 			}
 		}
 	}
-	
+
 	@GET
 	public Response workspaces(@QueryParam("O") @DefaultValue("A") String asc, @Context SecurityContext security) throws TemplateEngineException, CoreServiceException {
 		LOGGER.log(Level.INFO, "GET /content");

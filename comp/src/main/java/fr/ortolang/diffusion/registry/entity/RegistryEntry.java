@@ -63,7 +63,8 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 		@NamedQuery(name = "listVisibleKeys", query = "SELECT e.key FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter ORDER BY e.lastModificationDate DESC"),
 		@NamedQuery(name = "countVisibleKeys", query = "SELECT count(e) FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter"),
 		@NamedQuery(name = "listVisibleItems", query = "SELECT e.key FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.item = true AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter ORDER BY e.lastModificationDate DESC"),
-		@NamedQuery(name = "countVisibleItems", query = "SELECT count(e) FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.item = true AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter") })
+		@NamedQuery(name = "countVisibleItems", query = "SELECT count(e) FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.item = true AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter"),
+		@NamedQuery(name = "findEntryByKey", query = "SELECT e FROM RegistryEntry e WHERE e.key LIKE :keyFilter")})
 @SuppressWarnings("serial")
 public class RegistryEntry implements Serializable {
 

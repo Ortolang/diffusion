@@ -38,7 +38,11 @@
 			<#list elements as element>
 				<tr>
 					<td><img src="${context}/icons/${fileicon(element.name, element.mimeType)}" alt="[${element.type}]"/></td>
-					<td><a href="${context}${base}${path}/${element.name}">${element.name}</a></td>
+					<#if linkbykey == true> 
+						<td><a href="${context}${base}/${element.key}">${element.name}</a></td>
+					<#else>
+						<td><a href="${context}${base}${path}/${element.name}">${element.name}</a></td>
+					</#if>
 					<td>${element.mimeType}</td>
 					<#if element.modification gt 0>
 						<td align="right">${element.modification?number_to_datetime}</td>
