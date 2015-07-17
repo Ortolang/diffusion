@@ -14,6 +14,7 @@ public class ContentRepresentation {
 	private String path;
 	private String order;
 	private boolean asc;
+	private boolean linkbykey;
 	private String parentPath;
 	private List<CollectionElement> elements;
 
@@ -24,6 +25,7 @@ public class ContentRepresentation {
 		snapshot = "";
 		path = "";
 		order = "N";
+		linkbykey = false;
 		asc = true;
 		parentPath = "";
 		elements = new ArrayList<CollectionElement> ();
@@ -83,6 +85,14 @@ public class ContentRepresentation {
 
 	public void setAsc(boolean asc) {
 		this.asc = asc;
+	}
+	
+	public boolean isLinkbykey() {
+		return linkbykey;
+	}
+
+	public void setLinkbykey(boolean linkbykey) {
+		this.linkbykey = linkbykey;
 	}
 
 	public String getParentPath() {
