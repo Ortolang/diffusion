@@ -122,7 +122,7 @@ public class OrtolangClient {
 		currentUser = null;
 	}
 	
-	private void updateAuthorization() throws OrtolangClientAccountException {
+	private synchronized void updateAuthorization() throws OrtolangClientAccountException {
 		if (currentUser != null) {
 			authorization = accountManager.getHttpAuthorisationHeader(currentUser);
 		}
@@ -135,7 +135,7 @@ public class OrtolangClient {
 		return builder;
 	}
 
-	public String connectedProfile() throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized String connectedProfile() throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/profiles/connected");
 		Response response = injectAuthHeader(target.request(MediaType.APPLICATION_JSON_TYPE)).get();
@@ -150,7 +150,7 @@ public class OrtolangClient {
 		}
 	}
 	
-	public boolean isObjectExists(String key) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized boolean isObjectExists(String key) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("objects").path(key);
 		Response response = injectAuthHeader(target.request()).accept(MediaType.MEDIA_TYPE_WILDCARD).get();
@@ -166,7 +166,7 @@ public class OrtolangClient {
 		}
 	}
 
-	public JsonObject getObject(String key) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized JsonObject getObject(String key) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/objects").path(key);
 		Response response = injectAuthHeader(target.request()).accept(MediaType.APPLICATION_JSON_TYPE).get();
@@ -181,7 +181,7 @@ public class OrtolangClient {
 		}
 	}
 	
-	public Path downloadObject(String key) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized Path downloadObject(String key) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("content").path("key").path(key).queryParam("fd", "true");
 		Response response = injectAuthHeader(target.request()).accept(MediaType.WILDCARD_TYPE).get();
@@ -208,7 +208,7 @@ public class OrtolangClient {
 		}
 	}
 
-	public void createWorkspace(String key, String type, String name) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized void createWorkspace(String key, String type, String name) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/workspaces");
 		Form form = new Form().param("key", key).param("type", type).param("name", name);
@@ -219,7 +219,7 @@ public class OrtolangClient {
 		}
 	}
 
-	public JsonObject readWorkspace(String key) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized JsonObject readWorkspace(String key) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/workspaces").path(key);
 		Response response = injectAuthHeader(target.request()).accept(MediaType.APPLICATION_JSON_TYPE).get();
@@ -234,7 +234,7 @@ public class OrtolangClient {
 		}
 	}
 
-	public void writeCollection(String workspace, String path, String description) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized void writeCollection(String workspace, String path, String description) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/workspaces/" + workspace + "/elements");
 		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
@@ -251,7 +251,7 @@ public class OrtolangClient {
 		response.close();
 	}
 
-	public void writeDataObject(String workspace, String path, String description, File content, File preview) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized void writeDataObject(String workspace, String path, String description, File content, File preview) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/workspaces/" + workspace + "/elements");
 		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
@@ -278,7 +278,7 @@ public class OrtolangClient {
 		response.close();
 	}
 
-	public void writeMetaData(String workspace, String path, String name, String format, File content) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized void writeMetaData(String workspace, String path, String name, String format, File content) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/workspaces/" + workspace + "/elements");
 		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
@@ -303,7 +303,7 @@ public class OrtolangClient {
 		response.close();
 	}
 
-	public JsonObject getWorkspaceElement(String workspace, String root, String path) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized JsonObject getWorkspaceElement(String workspace, String root, String path) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("workspaces").path(workspace).path("elements");
 		Response response = injectAuthHeader(target.queryParam("path", path).queryParam("root", root).request(MediaType.APPLICATION_JSON_TYPE)).get();
@@ -318,7 +318,7 @@ public class OrtolangClient {
 		}
 	}
 
-	public void snapshotWorkspace(String workspace) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized void snapshotWorkspace(String workspace) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("workspaces").path(workspace).path("snapshots");
 		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(null, "text/plain"));
@@ -329,7 +329,7 @@ public class OrtolangClient {
 		response.close();
 	}
 	
-	public String createRemoteProcess(String toolId, String name, String toolKey) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized String createRemoteProcess(String toolId, String name, String toolKey) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/runtime/remote-processes");
 		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
@@ -350,7 +350,7 @@ public class OrtolangClient {
 		}
 	}
 
-	 public void updateRemoteProcess(String pid, String state, String log, long start, long stop, String activity) throws OrtolangClientException, OrtolangClientAccountException {
+	 public synchronized void updateRemoteProcess(String pid, String state, String log, long start, long stop, String activity) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/runtime/remote-processes/").path(pid);
 		Form form = new Form();
@@ -380,7 +380,7 @@ public class OrtolangClient {
 	}
 
 	
-	public String createProcess(String type, String name, Map<String, String> params, Map<String, File> attachments) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized String createProcess(String type, String name, Map<String, String> params, Map<String, File> attachments) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/runtime/processes");
 		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
@@ -410,7 +410,7 @@ public class OrtolangClient {
 		}
 	}
 
-	public JsonObject getProcess(String key) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized JsonObject getProcess(String key) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/runtime/processes").path(key);
 		Response response = injectAuthHeader(target.request(MediaType.APPLICATION_JSON_TYPE)).get();
@@ -425,7 +425,7 @@ public class OrtolangClient {
 		}
 	}
 
-	public void submitToolJob(String key, String name, String status) throws OrtolangClientException, OrtolangClientAccountException {
+	public synchronized void submitToolJob(String key, String name, String status) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
 		WebTarget target = base.path("/tools/" + key + "/job-new");
 		Form form = new Form().param("key", key).param("status", status).param("name", name);

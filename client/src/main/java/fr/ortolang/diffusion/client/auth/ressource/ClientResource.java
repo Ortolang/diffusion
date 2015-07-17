@@ -42,6 +42,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Singleton;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.ws.rs.GET;
@@ -59,6 +60,7 @@ import fr.ortolang.diffusion.client.OrtolangClientConfig;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
 
 @Path("/client")
+@Singleton
 @Produces({ MediaType.APPLICATION_JSON })
 public class ClientResource {
 
@@ -98,6 +100,19 @@ public class ClientResource {
 		}
 		if ( !client.getAccountManager().exists(user) ) {
 			LOGGER.log(Level.FINE, "Generating authentication url");
+			String state = UUID.randomUUID().toString();
+			states.put(state, user);
+			StringBuilder url = new StringBuilder();
+			url.append(authUrl).append("/realms/").append(authRealm);
+			url.append("/tokens/login?client_id=").append(appName);
+			url.append("&state=").append(state);
+			url.append("&response_type=code");
+			url.append("&redirect_uri=").append(callbackUrl);
+			JsonObject jsonObject = Json.createObjectBuilder().add("url", url.toString()).build();
+			return Response.ok(jsonObject).build();
+		
+		} else if( client.getAccountManager().sessionExpired(user) ){
+			LOGGER.log(Level.FINE, "Re-generating authentication url");
 			String state = UUID.randomUUID().toString();
 			states.put(state, user);
 			StringBuilder url = new StringBuilder();
