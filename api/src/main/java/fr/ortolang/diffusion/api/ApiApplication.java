@@ -49,9 +49,9 @@ import fr.ortolang.diffusion.api.format.MetadataFormatResource;
 import fr.ortolang.diffusion.api.group.GroupResource;
 import fr.ortolang.diffusion.api.mapper.*;
 import fr.ortolang.diffusion.api.object.ObjectResource;
-import fr.ortolang.diffusion.api.organization.OrganizationResource;
 import fr.ortolang.diffusion.api.preview.PreviewResource;
 import fr.ortolang.diffusion.api.profile.ProfileResource;
+import fr.ortolang.diffusion.api.referentiel.ReferentielEntityResource;
 import fr.ortolang.diffusion.api.runtime.RuntimeResource;
 import fr.ortolang.diffusion.api.workspace.WorkspaceResource;
 
@@ -69,7 +69,7 @@ public class ApiApplication extends Application {
 		classes.add(FormResource.class);
 		classes.add(MetadataFormatResource.class);
 		classes.add(PreviewResource.class);
-		classes.add(OrganizationResource.class);
+		classes.add(ReferentielEntityResource.class);
 		classes.add(ContentResource.class);
 	}
 

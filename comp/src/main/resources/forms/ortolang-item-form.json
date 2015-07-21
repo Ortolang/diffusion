@@ -27,11 +27,6 @@
 			"type":"textarea"
 		  },
 		  {
-			"key":"extent",
-			"title":"Contenu",
-			"type":"textarea"
-		  },
-		  {
 			"type": "help",
 			"helpvalue": "Description technique de la ressource. Préciser le nombre de fichier et le format."
 		  },
@@ -140,7 +135,9 @@
 			"title": "Code du patrimoine attaché à cette ressource",
 			"titleMap":
 			[
-			  { "value": "AR038", "name": "AR038" }
+			  { "value": "AR038", "name": "AR038" },
+			  { "value": "AR042", "name": "AR042" },
+			  { "value": "AR048", "name": "AR048" }
 			]
 		  }
 		]

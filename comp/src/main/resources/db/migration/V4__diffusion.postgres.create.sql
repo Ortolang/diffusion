@@ -47,15 +47,12 @@
         primary key (id)
     );
 
-    create table Organization (
+    create table ReferentielEntity (
         id varchar(255) not null,
         name varchar(255),
-        fullname varchar(255),
-        acronym varchar(255),
-        city varchar(255),
-        country varchar(255),
-        homepage varchar(255),
-        img varchar(255),
+        content text,
+        status varchar(255),
+        type int4,
         version int8 not null,
         primary key (id)
     );

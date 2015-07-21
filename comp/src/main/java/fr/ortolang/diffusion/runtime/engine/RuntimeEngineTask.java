@@ -53,6 +53,7 @@ import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.publication.PublicationService;
+import fr.ortolang.diffusion.referentiel.ReferentielService;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.security.SecurityService;
@@ -85,6 +86,9 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public static final String WORKSPACE_ALIAS_PARAM_NAME = "wsalias";
 	public static final String WORKSPACE_MEMBERS_PARAM_NAME = "wsmembers";
 
+	public static final String REFERENTIEL_PATH_PARAM_NAME = "referentielpath";
+	public static final String REFERENTIEL_TYPE_PARAM_NAME = "referentieltype";
+	
 	private static final Logger LOGGER = Logger.getLogger(RuntimeEngineTask.class.getName());
 
 	protected UserTransaction userTx;
@@ -99,6 +103,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	protected PublicationService publication;
 	protected NotificationService notification;
 	protected IndexingService indexing;
+	protected ReferentielService referentiel;
 
 	public MembershipService getMembershipService() throws RuntimeEngineTaskException {
 		try {
@@ -205,6 +210,17 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 				indexing = (IndexingService) OrtolangServiceLocator.lookup(IndexingService.SERVICE_NAME);
 			}
 			return indexing;
+		} catch (Exception e) {
+			throw new RuntimeEngineTaskException(e);
+		}
+	}
+
+	public ReferentielService getReferentielService() throws RuntimeEngineTaskException {
+		try {
+			if (referentiel == null) {
+				referentiel = (ReferentielService) OrtolangServiceLocator.findService(ReferentielService.SERVICE_NAME);
+			}
+			return referentiel;
 		} catch (Exception e) {
 			throw new RuntimeEngineTaskException(e);
 		}
