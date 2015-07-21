@@ -86,10 +86,6 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	private PublicKeyAuthenticationInfo auth;
 	private AdminRecord admin;
 
-	public HandleStoreServiceBean() {
-		LOGGER.log(Level.INFO, "Instantiating service");
-	}
-
 	@PostConstruct
 	public void init() {
 		LOGGER.log(Level.INFO, "Initializing service");

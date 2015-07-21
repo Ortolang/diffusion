@@ -121,6 +121,23 @@ public class PathBuilder {
 		return this;
 	}
 	
+	public PathBuilder relativize(int level) throws InvalidPathException {
+		if ( level <= 0 ) {
+			throw new InvalidPathException("level cannot be less or equal to 0");
+		}
+		if ( this.depth() < level ) {
+			throw new InvalidPathException("path does not contains enough level to relativize");
+		}
+		if ( this.depth() == level ) {
+			return new PathBuilder();
+		}
+		for ( int i=0; i<level; i++) {
+			builder = builder.delete(0, builder.indexOf(PATH_SEPARATOR)+1);
+			builder = builder.delete(0, builder.indexOf(PATH_SEPARATOR));
+		}
+		return this;
+	}
+	
 	public String part() {
 		if ( builder.length() <= 1 ) {
 			return "";

@@ -164,7 +164,6 @@ public class BootstrapServiceBean implements BootstrapService {
 				props.setProperty("bootstrap.version", BootstrapService.VERSION);
 				String hash = core.put(new ByteArrayInputStream(props.toString().getBytes()));
 				core.createDataObject(BootstrapService.WORKSPACE_KEY, "/bootstrap.txt", hash);
-				
 				LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.FORALL + "] authorisation policy template");
 				String forallPolicyKey = UUID.randomUUID().toString();
 				authorisation.createPolicy(forallPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);

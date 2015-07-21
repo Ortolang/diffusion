@@ -80,8 +80,30 @@ public class OrtolangClientAccountManager {
 	public boolean exists(String user) {
 		return accounts.containsKey(user);
 	}
+	
+	public void removeExpired(String user) {
+		LOGGER.log(Level.FINE, "Removing expired user");
+		accounts.remove(user);
+	}
+	
+	public boolean sessionExpired(String user) {
+		LOGGER.log(Level.INFO, "Checking validity of session");
+		OrtolangClientAccount account = accounts.get(user);
+		if (account.getExpires() < System.currentTimeMillis()) {
+			LOGGER.log(Level.FINE, "AccessToken expired for user: " + user);
+			try {
+				this.refresh(account);
+				return false;
+			} catch (OrtolangClientAccountException e) {
+				LOGGER.log(Level.SEVERE, "RefreshToken expired for user: " + user);
+				this.removeExpired(user);
+				return true;
+			}
+		}
+		return false;
+	}
 
-	public void setAuthorisationCode(String user, String code) throws OrtolangClientAccountException {
+	public synchronized void setAuthorisationCode(String user, String code) throws OrtolangClientAccountException {
 		LOGGER.log(Level.INFO, "Asking AccessToken using authorisation code for user: " + user);
 		
 		WebTarget target = client.target(authurl).path("realms").path(authrealm).path("protocol/openid-connect/access/codes");
@@ -115,7 +137,7 @@ public class OrtolangClientAccountManager {
 		}
 	}
 
-	public void setCredentials(String user, String password) throws OrtolangClientAccountException {
+	public synchronized void setCredentials(String user, String password) throws OrtolangClientAccountException {
 		LOGGER.log(Level.INFO, "Asking AccessToken using credential grant for user: " + user);
 			
 		WebTarget target = client.target(authurl).path("realms").path(authrealm).path("protocol/openid-connect/grants/access");
@@ -171,12 +193,12 @@ public class OrtolangClientAccountManager {
 		}
 	}
 	
-	private void refresh(OrtolangClientAccount account) throws OrtolangClientAccountException {
+	private synchronized void refresh(OrtolangClientAccount account) throws OrtolangClientAccountException {
 		LOGGER.log(Level.INFO, "Refreshing AccessToken for user: " + account.getUsername());
 		
 		WebTarget target = client.target(authurl).path("realms").path(authrealm).path("protocol/openid-connect/refresh");
 		Form form = new Form().param("refresh_token", account.getRefreshToken());
-		LOGGER.log(Level.INFO, account.getRefreshToken());
+		LOGGER.log(Level.INFO, account.getRefreshToken() + " - expire_in : " + account.getExpires());
 		Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON_TYPE);
 		if ( appsecret != null && appsecret.length() > 0 ) {
 			String authz = Base64.encodeBytes((appname + ":" + appsecret).getBytes());

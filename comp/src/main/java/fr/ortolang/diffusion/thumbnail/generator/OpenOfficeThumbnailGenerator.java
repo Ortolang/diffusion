@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.preview.generator;
+package fr.ortolang.diffusion.thumbnail.generator;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -10,15 +10,15 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import fr.ortolang.diffusion.preview.util.ImageResizer;
+import fr.ortolang.diffusion.thumbnail.util.ImageResizer;
 
-public class OpenOfficePreviewGenerator implements PreviewGenerator {
+public class OpenOfficeThumbnailGenerator implements ThumbnailGenerator {
 
-	public void generate(File input, File output, int width, int height) throws PreviewGeneratorException {
+	public void generate(File input, File output, int width, int height) throws ThumbnailGeneratorException {
 		try (ZipFile zipFile = new ZipFile(input)) {
 			ZipEntry entry = zipFile.getEntry("Thumbnails/thumbnail.png");
 			if (entry == null) {
-				throw new PreviewGeneratorException("Zip file does not contain 'Thumbnails/thumbnail.png' . Is this really an OpenOffice-File?");
+				throw new ThumbnailGeneratorException("Zip file does not contain 'Thumbnails/thumbnail.png' . Is this really an OpenOffice-File?");
 			}
 			
 			try (InputStream is = new BufferedInputStream(zipFile.getInputStream(entry)) ) {
@@ -26,12 +26,12 @@ public class OpenOfficePreviewGenerator implements PreviewGenerator {
 				resizer.setInputImage(is);
 				resizer.writeOutput(output);
 			} catch (Exception e) {
-				throw new PreviewGeneratorException("Error during reading zip entry", e);
+				throw new ThumbnailGeneratorException("Error during reading zip entry", e);
 			}
 		} catch ( ZipException e ) {
-			throw new PreviewGeneratorException("This is not a zipped file. Is this really an OpenOffice-File?", e);
+			throw new ThumbnailGeneratorException("This is not a zipped file. Is this really an OpenOffice-File?", e);
 		} catch ( IOException e ) {
-			throw new PreviewGeneratorException("Error during reading zip file", e);
+			throw new ThumbnailGeneratorException("Error during reading zip file", e);
 		}
 	}
 

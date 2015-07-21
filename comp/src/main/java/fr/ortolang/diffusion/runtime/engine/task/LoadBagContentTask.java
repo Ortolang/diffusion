@@ -8,10 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Level;
@@ -147,8 +145,9 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 				Integer index = -1;
 				try {
 					index = Integer.decode(parts[0]);
-					LOGGER.log(Level.INFO, "Found new version with index: " + index);
-					snapshots.add(index);
+					if ( snapshots.add(index) ) {
+						LOGGER.log(Level.INFO, "Found new version with index: " + index);
+					}
 				} catch (Exception e) {
 					LOGGER.log(Level.INFO, "Snapshot index is not a number: " + parts[0]);
 				}

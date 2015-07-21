@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.preview.util;
+package fr.ortolang.diffusion.thumbnail.util;
 
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;

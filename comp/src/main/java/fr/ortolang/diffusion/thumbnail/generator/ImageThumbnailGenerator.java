@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.preview.generator;
+package fr.ortolang.diffusion.thumbnail.generator;
 
 import java.io.File;
 import java.util.Arrays;
@@ -6,17 +6,17 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import fr.ortolang.diffusion.preview.util.ImageResizer;
+import fr.ortolang.diffusion.thumbnail.util.ImageResizer;
 
-public class ImagePreviewGenerator implements PreviewGenerator {
+public class ImageThumbnailGenerator implements ThumbnailGenerator {
 
-	public void generate(File input, File output, int width, int height) throws PreviewGeneratorException {
+	public void generate(File input, File output, int width, int height) throws ThumbnailGeneratorException {
 		ImageResizer resizer = new ImageResizer(width, height);
 		try {
 			resizer.setInputImage(input);
 			resizer.writeOutput(output);
 		} catch (Exception e) {
-			throw new PreviewGeneratorException("unable to generate an image preview", e);
+			throw new ThumbnailGeneratorException("unable to generate an image preview", e);
 		}
 	}
 

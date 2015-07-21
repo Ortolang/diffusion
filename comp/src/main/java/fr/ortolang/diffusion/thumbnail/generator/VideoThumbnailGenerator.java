@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.preview.generator;
+package fr.ortolang.diffusion.thumbnail.generator;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,11 +12,11 @@ import org.bytedeco.javacv.FFmpegFrameGrabber;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.Java2DFrameConverter;
 
-import fr.ortolang.diffusion.preview.util.ImageResizer;
+import fr.ortolang.diffusion.thumbnail.util.ImageResizer;
 
-public class VideoPreviewGenerator implements PreviewGenerator {
+public class VideoThumbnailGenerator implements ThumbnailGenerator {
 
-	public void generate(File input, File output, int width, int height) throws PreviewGeneratorException {
+	public void generate(File input, File output, int width, int height) throws ThumbnailGeneratorException {
 		FFmpegFrameGrabber g = new FFmpegFrameGrabber(input);
 		try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 			g.start();
@@ -29,7 +29,7 @@ public class VideoPreviewGenerator implements PreviewGenerator {
 			resizer.setInputImage(new ByteArrayInputStream(baos.toByteArray()));
 			resizer.writeOutput(output);
 		} catch (Exception e) {
-			throw new PreviewGeneratorException("unable to generate video preview", e);
+			throw new ThumbnailGeneratorException("unable to generate video preview", e);
 		}
 	}
 

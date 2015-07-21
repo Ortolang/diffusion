@@ -36,21 +36,14 @@ package fr.ortolang.diffusion.api.object;
  * #L%
  */
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import javax.ejb.EJB;
 import javax.servlet.http.HttpServletResponse;
@@ -61,17 +54,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
-
-import org.apache.commons.io.IOUtils;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
@@ -87,13 +76,6 @@ import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
-import fr.ortolang.diffusion.core.PathBuilder;
-import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.CollectionElement;
-import fr.ortolang.diffusion.core.entity.DataObject;
-import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.core.entity.MetadataObject;
-import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.search.SearchService;
@@ -101,7 +83,6 @@ import fr.ortolang.diffusion.search.SearchServiceException;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 @Path("/objects")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -125,11 +106,13 @@ public class ObjectResource {
 
 	@GET
 	public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit,
-			@QueryParam(value = "service") String service, @QueryParam(value = "type") String type,
-			@DefaultValue(value = "false") @QueryParam(value = "items") boolean itemsOnly, @QueryParam(value = "status") String status) throws BrowserServiceException {
+			@QueryParam(value = "service") String service, @QueryParam(value = "type") String type, @DefaultValue(value = "false") @QueryParam(value = "items") boolean itemsOnly,
+			@QueryParam(value = "status") String status) throws BrowserServiceException {
 		LOGGER.log(Level.INFO, "GET /objects?offset=" + offset + "&limit=" + limit + "&items-only=" + itemsOnly + "&status=" + status);
-		List<String> keys = browser.list(offset, limit, (service!=null && service.length()>0)?service:"", (type!=null && type.length()>0)?type:"", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
-		long nbentries = browser.count((service!=null && service.length()>0)?service:"", (type!=null && type.length()>0)?type:"", (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
+		List<String> keys = browser.list(offset, limit, (service != null && service.length() > 0) ? service : "", (type != null && type.length() > 0) ? type : "",
+				(status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
+		long nbentries = browser.count((service != null && service.length() > 0) ? service : "", (type != null && type.length() > 0) ? type : "",
+				(status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
 		UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(ObjectResource.class);
 
 		GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String>();
@@ -173,10 +156,10 @@ public class ObjectResource {
 			OrtolangObject object = browser.findObject(key);
 			OrtolangObjectInfos infos = browser.getInfos(key);
 			List<OrtolangObjectProperty> properties = browser.listProperties(key);
+			List<OrtolangObjectVersion> versions = browser.getHistory(key);
 			String owner = security.getOwner(key);
 			Map<String, List<String>> permissions = security.listRules(key);
-			// TODO add history of object into representation
-
+			
 			ObjectRepresentation representation = new ObjectRepresentation();
 			representation.setKey(key);
 			representation.setService(object.getObjectIdentifier().getService());
@@ -198,6 +181,7 @@ public class ObjectResource {
 			for (OrtolangObjectProperty property : properties) {
 				representation.getProperties().put(property.getName(), property.getValue());
 			}
+			representation.setHistory(versions);
 
 			builder = Response.ok(representation);
 			builder.lastModified(lmd);
@@ -206,6 +190,69 @@ public class ObjectResource {
 		builder.cacheControl(cc);
 		return builder.build();
 	}
+
+//	@GET
+//	@Path("/{key}")
+//	@Produces({ MediaType.APPLICATION_JSON })
+//	public Response download(final @PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException,
+//			DataNotFoundException, IOException, CoreServiceException {
+//		LOGGER.log(Level.INFO, "GET /objects/" + key + "/download");
+//
+//		OrtolangObjectState state = browser.getState(key);
+//		CacheControl cc = new CacheControl();
+//		cc.setPrivate(true);
+//		if (state.isLocked()) {
+//			cc.setMaxAge(691200);
+//			cc.setMustRevalidate(false);
+//		} else {
+//			cc.setMaxAge(0);
+//			cc.setMustRevalidate(true);
+//		}
+//		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+//		ResponseBuilder builder = null;
+//		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+//			builder = request.evaluatePreconditions(lmd);
+//		}
+//
+//		if (builder == null) {
+//			builder = Response.ok();
+//			OrtolangObject object = browser.findObject(key);
+//			if (object instanceof DataObject) {
+//				builder.header("Content-Disposition", "attachment; filename=" + object.getObjectName());
+//				builder.type(((DataObject) object).getMimeType());
+//				builder.lastModified(lmd);
+//			}
+//			if (object instanceof MetadataObject) {
+//				builder.header("Content-Disposition", "attachment; filename=" + object.getObjectName());
+//				builder.type(((MetadataObject) object).getContentType());
+//				builder.lastModified(lmd);
+//			}
+//			if (object instanceof Collection) {
+//				builder.header("Content-Disposition", "attachment; filename=" + key + ".zip");
+//				builder.type("application/zip");
+//				builder.lastModified(lmd);
+//
+//				StreamingOutput stream = new StreamingOutput() {
+//					public void write(OutputStream output) throws IOException, WebApplicationException {
+//						try {
+//							ZipOutputStream out = exportToZip(key, new ZipOutputStream(output), PathBuilder.newInstance());
+//							out.flush();
+//							out.close();
+//						} catch (OrtolangException | KeyNotFoundException | AccessDeniedException e) {
+//							throw new IOException(e);
+//						}
+//					}
+//				};
+//				builder.entity(stream);
+//
+//			} else {
+//				InputStream input = core.download(key);
+//				builder.entity(input);
+//			}
+//		}
+//		builder.cacheControl(cc);
+//		return builder.build();
+//	}
 
 	@GET
 	@Path("/{key}/element")
@@ -216,133 +263,73 @@ public class ObjectResource {
 		return get(core.resolvePathFromCollection(key, relativePath), request);
 	}
 
+//	@GET
+//	@Path("/{key}/history")
+//	@Deprecated
+//	public Response history(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+//		LOGGER.log(Level.INFO, "GET /objects/" + key + "/history");
+//
+//		OrtolangObjectState state = browser.getState(key);
+//		CacheControl cc = new CacheControl();
+//		cc.setPrivate(true);
+//		if (state.isLocked()) {
+//			cc.setMaxAge(691200);
+//			cc.setMustRevalidate(false);
+//		} else {
+//			cc.setMaxAge(0);
+//			cc.setMustRevalidate(true);
+//		}
+//		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+//		ResponseBuilder builder = null;
+//		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+//			builder = request.evaluatePreconditions(lmd);
+//		}
+//
+//		if (builder == null) {
+//			List<OrtolangObjectVersion> versions = browser.getHistory(key);
+//
+//			GenericCollectionRepresentation<OrtolangObjectVersion> representation = new GenericCollectionRepresentation<OrtolangObjectVersion>();
+//			for (OrtolangObjectVersion version : versions) {
+//				representation.addEntry(version);
+//			}
+//
+//			builder = Response.ok(representation);
+//			builder.lastModified(lmd);
+//		}
+//
+//		builder.cacheControl(cc);
+//		return builder.build();
+//	}
+
+	// @GET
+	// @Path("/{key}/keys")
+	// public Response listKeys(@PathParam(value = "key") String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+	// LOGGER.log(Level.INFO, "GET /objects/" + key + "/keys");
+	//
+	// List<String> keys = this.listKeys(key, new ArrayList<String>());
+	// GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String>();
+	// for (String keyE : keys) {
+	// representation.addEntry(keyE);
+	// }
+	// return Response.ok(representation).build();
+	// }
+
 	@GET
-	@Path("/{key}/history")
-	public Response history(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "GET /objects/" + key + "/history");
-
-		OrtolangObjectState state = browser.getState(key);
-		CacheControl cc = new CacheControl();
-		cc.setPrivate(true);
-		if (state.isLocked()) {
-			cc.setMaxAge(691200);
-			cc.setMustRevalidate(false);
-		} else {
-			cc.setMaxAge(0);
-			cc.setMustRevalidate(true);
-		}
-		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
-		ResponseBuilder builder = null;
-		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
-			builder = request.evaluatePreconditions(lmd);
-		}
-
-		if (builder == null) {
-			List<OrtolangObjectVersion> versions = browser.getHistory(key);
-
-			GenericCollectionRepresentation<OrtolangObjectVersion> representation = new GenericCollectionRepresentation<OrtolangObjectVersion>();
-			for (OrtolangObjectVersion version : versions) {
-				representation.addEntry(version);
-			}
-
-			builder = Response.ok(representation);
-			builder.lastModified(lmd);
-		}
-
-		builder.cacheControl(cc);
-		return builder.build();
+	@Path("/{key}/size")
+	public Response getObjectSize(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, OrtolangException, KeyNotFoundException,
+			CoreServiceException {
+		LOGGER.log(Level.INFO, "GET /objects/" + key + "/size");
+		OrtolangObjectSize ortolangObjectSize = core.getSize(key);
+		return Response.ok(ortolangObjectSize).build();
 	}
 
-	@GET
-	@Path("/{key}/keys")
-	public Response listKeys(@PathParam(value = "key") String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "GET /objects/" + key + "/keys");
-
-		List<String> keys = this.listKeys(key, new ArrayList<String>());
-		GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String>();
-		for (String keyE : keys) {
-			representation.addEntry(keyE);
-		}
-		return Response.ok(representation).build();
+	@POST
+	@Path("/{key}/index")
+	public Response reindex(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, KeyNotFoundException, BrowserServiceException {
+		LOGGER.log(Level.INFO, "POST /objects/" + key + "/index");
+		browser.index(key);
+		return Response.ok().build();
 	}
-
-	@GET
-	@Path("/{key}/download")
-	public Response download(final @PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException,
-			AccessDeniedException, OrtolangException, DataNotFoundException, IOException, CoreServiceException {
-		LOGGER.log(Level.INFO, "GET /objects/" + key + "/download");
-		
-		OrtolangObjectState state = browser.getState(key);
-		CacheControl cc = new CacheControl();
-		cc.setPrivate(true);
-		if (state.isLocked()) {
-			cc.setMaxAge(691200);
-			cc.setMustRevalidate(false);
-		} else {
-			cc.setMaxAge(0);
-			cc.setMustRevalidate(true);
-		}
-		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
-		ResponseBuilder builder = null;
-		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
-			builder = request.evaluatePreconditions(lmd);
-		}
-		
-		if (builder == null) {
-			builder = Response.ok();
-			OrtolangObject object = browser.findObject(key);
-			if (object instanceof DataObject) {
-				builder.header("Content-Disposition", "attachment; filename=" + object.getObjectName());
-				builder.type(((DataObject) object).getMimeType());
-				builder.lastModified(lmd);
-			}
-			if (object instanceof MetadataObject) {
-				builder.header("Content-Disposition", "attachment; filename=" + object.getObjectName());
-				builder.type(((MetadataObject) object).getContentType());
-				builder.lastModified(lmd);
-			}
-			if (object instanceof Collection) {
-				builder.header("Content-Disposition", "attachment; filename=" + key + ".zip");
-				builder.type("application/zip");
-				builder.lastModified(lmd);
-				
-				StreamingOutput stream = new StreamingOutput() {
-			        public void write(OutputStream output) throws IOException, WebApplicationException {
-			        	try {
-			        		ZipOutputStream out = exportToZip(key, new ZipOutputStream(output), PathBuilder.newInstance());
-			        		out.flush();
-			        		out.close();
-						} catch (OrtolangException | KeyNotFoundException | AccessDeniedException e) {
-							throw new IOException(e);
-						}
-			        }
-				};
-				builder.entity(stream);
-				
-			} else {
-				InputStream input = core.download(key);
-				builder.entity(input);
-			}
-		} 
-		builder.cacheControl(cc);
-		return builder.build();
-	}
-
-    @GET
-    @Path("/{key}/size")
-    public Response getObjectSize(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, OrtolangException, KeyNotFoundException, CoreServiceException {
-        LOGGER.log(Level.INFO, "GET /objects/" + key + "/size");
-        OrtolangObjectSize ortolangObjectSize = core.getSize(key);
-        return Response.ok(ortolangObjectSize).build();
-    }
-    
-    @POST
-    @Path("/{key}/index")
-    public Response reindex(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, KeyNotFoundException, BrowserServiceException {
-        LOGGER.log(Level.INFO, "POST /objects/" + key + "/index");
-        browser.index(key);
-        return Response.ok().build();
-    }
 
 	@GET
 	@Path("/semantic")
@@ -384,7 +371,7 @@ public class ObjectResource {
 		if (query != null && query.length() > 0) {
 			try {
 				results = search.jsonSearch(query);
-			} catch(SearchServiceException e) {
+			} catch (SearchServiceException e) {
 				results = Collections.emptyList();
 			}
 		} else {
@@ -393,85 +380,4 @@ public class ObjectResource {
 		return Response.ok(results).build();
 	}
 
-	protected List<String> listKeys(String key, List<String> keys) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
-
-		OrtolangObject object = browser.findObject(key);
-		String type = object.getObjectIdentifier().getType();
-
-		keys.add(key);
-
-		if (type.equals(Collection.OBJECT_TYPE)) {
-			Set<CollectionElement> elements = ((Collection) object).getElements();
-
-			for (CollectionElement element : elements) {
-				listKeys(element.getKey(), keys);
-			}
-		}
-
-		if (object instanceof MetadataSource) {
-			Set<MetadataElement> metadatas = ((MetadataSource) object).getMetadatas();
-
-			for (MetadataElement metadata : metadatas) {
-				keys.add(metadata.getKey());
-			}
-		}
-
-		return keys;
-	}
-
-	protected ZipOutputStream exportToZip(String key, ZipOutputStream zos, PathBuilder path) throws OrtolangException, KeyNotFoundException, AccessDeniedException, IOException {
-
-		OrtolangObject object = browser.findObject(key);
-		String type = object.getObjectIdentifier().getType();
-
-		LOGGER.log(Level.FINE, "export collection to zip : " + path.build() + " (" + key + ")");
-
-		ZipEntry ze = new ZipEntry(path.build() + PathBuilder.PATH_SEPARATOR);
-
-		zos.putNextEntry(ze);
-		zos.closeEntry();
-
-		if (type.equals(Collection.OBJECT_TYPE)) {
-			Set<CollectionElement> elements = ((Collection) object).getElements();
-
-			for (CollectionElement element : elements) {
-
-				try {
-					PathBuilder pathElement = path.clone().path(element.getName());
-					if (element.getType().equals(Collection.OBJECT_TYPE)) {
-
-						exportToZip(element.getKey(), zos, pathElement);
-
-					} else if (element.getType().equals(DataObject.OBJECT_TYPE)) {
-						try {
-
-							DataObject dataObject = (DataObject) browser.findObject(element.getKey());
-
-							LOGGER.log(Level.FINE, "export dataobject to zip : " + pathElement.build() + " (" + element.getKey() + ")");
-							ZipEntry entry = new ZipEntry(pathElement.build());
-							entry.setTime(element.getModification());
-							entry.setSize(dataObject.getSize());
-							zos.putNextEntry(entry);
-							InputStream input = core.download(element.getKey());
-							try {
-								IOUtils.copy(input, zos);
-							} catch (IOException e) {
-
-							} finally {
-								IOUtils.closeQuietly(input);
-								zos.closeEntry();
-							}
-						} catch (CoreServiceException | DataNotFoundException e1) {
-							LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e1);
-						}
-					}
-				} catch (InvalidPathException e) {
-					LOGGER.log(Level.SEVERE, "invalid path during export to zip !!", e);
-				}
-
-			}
-		}
-
-		return zos;
-	}
 }

@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.api.group;
+package fr.ortolang.diffusion.api.ping;
 
 /*
  * #%L
@@ -36,60 +36,19 @@ package fr.ortolang.diffusion.api.group;
  * #L%
  */
 
-import fr.ortolang.diffusion.api.profile.ProfileCardRepresentation;
-import fr.ortolang.diffusion.membership.entity.Group;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
-import java.util.List;
+@Path("/ping")
+@Produces({ MediaType.APPLICATION_JSON })
+public class PingResource {
 
-@XmlRootElement(name = "group")
-public class GroupRepresentation {
-
-    @XmlAttribute(name = "key")
-    private String key;
-
-    private String name;
-
-    private List<ProfileCardRepresentation> members;
-
-    public GroupRepresentation() {
-        members = new ArrayList<>();
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<ProfileCardRepresentation> getMembers() {
-        return members;
-    }
-
-    public void setMembers(List<ProfileCardRepresentation> members) {
-        this.members = members;
-    }
-
-    public boolean addMember(ProfileCardRepresentation member) {
-        return members.add(member);
-    }
-
-    public static GroupRepresentation fromGroup(Group group) {
-        GroupRepresentation representation = new GroupRepresentation();
-        representation.setKey(group.getKey());
-        representation.setName(group.getName());
-        return representation;
+    // @Todo return server version
+    @GET
+    public Response ping() {
+        return Response.ok().build();
     }
 }

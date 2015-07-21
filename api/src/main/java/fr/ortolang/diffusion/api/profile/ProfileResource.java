@@ -76,351 +76,306 @@ import java.util.logging.Logger;
 @Produces({ MediaType.APPLICATION_JSON })
 public class ProfileResource {
 
-	private static final Logger LOGGER = Logger.getLogger(ProfileResource.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ProfileResource.class.getName());
 
-	@EJB
-	private BrowserService browser;
-	@EJB
-	private MembershipService membership;
-	@EJB
-	private AuthorisationService authorisation;
+    @EJB
+    private BrowserService browser;
+    @EJB
+    private MembershipService membership;
+    @EJB
+    private AuthorisationService authorisation;
 
-	public ProfileResource() {
-	}
+    public ProfileResource() {
+    }
 
-	/**
-	 * @description Connect to current profile
-	 * @responseType fr.ortolang.diffusion.api.profile.ProfileRepresentation
-	 * @return {@link ProfileRepresentation}
-	 * @throws MembershipServiceException
-	 * @throws KeyNotFoundException
-	 * @throws ProfileAlreadyExistsException
-	 * @throws AccessDeniedException
-	 */
-	@GET
-	@Path("/connected")
-	public Response getConnected() throws MembershipServiceException, KeyNotFoundException, ProfileAlreadyExistsException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "GET /profiles/connected");
-		String key = membership.getProfileKeyForConnectedIdentifier();
-		Profile profile;
-		try {
-			profile = membership.readProfile(key);
-		} catch (KeyNotFoundException e) {
-			profile = membership.createProfile("", "", "");
-		}
-		ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
-		List<String> friends = membership.listMembers(profile.getFriends());
-		representation.setFriends(friends.toArray(new String[friends.size()]));
-		return Response.ok(representation).build();
-	}
-	
-	/**
-	 * @description List profiles
-	 * @responseType fr.ortolang.diffusion.api.object.GenericCollectionRepresentation
-	 * @return {@link GenericCollectionRepresentation}&lt;{@link ProfileRepresentation}&gt;
-	 * @throws MembershipServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 * @throws AuthorisationServiceException
-	 */
-	@GET
-	@Path("/list")
-	public Response getProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, AuthorisationServiceException {
-		LOGGER.log(Level.INFO, "GET /profiles/list");
-		GenericCollectionRepresentation<ProfileRepresentation> representation = new GenericCollectionRepresentation<ProfileRepresentation>();
-		List<Profile> results = membership.listProfiles();
-		for (Profile profile : results) {
-			ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
-			List<String> friends = membership.listMembers(profile.getFriends());
-			profileRepresentation.setFriends(friends.toArray(new String[friends.size()]));
-			representation.addEntry(profileRepresentation);	
-		}
-		representation.setOffset(0);
-		representation.setSize(results.size());
-		representation.setLimit(results.size());
-		return Response.ok(representation).build();
-	}
-	
-	/**
-	 * @description Search in profile for a fullName matching data
-	 * @responseType fr.ortolang.diffusion.api.object.GenericCollectionRepresentation
-	 * @param data {@link String}
-	 * 		String to find in profiles
-	 * @return {@link GenericCollectionRepresentation}&lt;{@link ProfileRepresentation}&gt;
-	 * @throws MembershipServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 * @throws KeyLockedException
-	 * @throws AuthorisationServiceException
-	 */
-	@POST
-	@Path("/search")
-	public Response searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException, AuthorisationServiceException {
-		LOGGER.log(Level.INFO, "POST /profiles/search");
-		GenericCollectionRepresentation<ProfileRepresentation> representation = new GenericCollectionRepresentation<ProfileRepresentation>();
-		List<Profile> results = membership.searchProfile(data);
-		for (Profile profile : results) {
-			ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
-			List<String> friends = membership.listMembers(profile.getFriends());
-			profileRepresentation.setFriends(friends.toArray(new String[friends.size()]));
-			representation.addEntry(profileRepresentation);			
-		}
-		representation.setOffset(0);
-		representation.setSize(results.size());
-		representation.setLimit(results.size());
-		return Response.ok(representation).build();
-	}
+    /**
+     * @description Connect to current profile
+     * @responseType fr.ortolang.diffusion.api.profile.ProfileRepresentation
+     * @return {@link ProfileRepresentation}
+     * @throws MembershipServiceException
+     * @throws KeyNotFoundException
+     * @throws ProfileAlreadyExistsException
+     * @throws AccessDeniedException
+     */
+    @GET
+    @Path("/connected")
+    public Response getConnected() throws MembershipServiceException, KeyNotFoundException, ProfileAlreadyExistsException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "GET /profiles/connected");
+        String key = membership.getProfileKeyForConnectedIdentifier();
+        Profile profile;
+        try {
+            profile = membership.readProfile(key);
+        } catch (KeyNotFoundException e) {
+            profile = membership.createProfile("", "", "");
+        }
+        ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
+        return Response.ok(representation).build();
+    }
 
-	/**
-	 * @description Return profile for a given key
-	 * @responseType fr.ortolang.diffusion.api.profile.ProfileRepresentation
-	 * @param key {@link String}
-	 * 		Key of wanted profile
-	 * @param request {@link Request} 		 
-	 * @return {@link ProfileRepresentation}
-	 * @throws MembershipServiceException
-	 * @throws BrowserServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 */
-	@GET
-	@Path("/{key}")
-	public Response getProfile(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "GET /profiles/" + key);
-		
-		OrtolangObjectState state = browser.getState(key);
-		CacheControl cc = new CacheControl();
-		cc.setPrivate(true);
-		cc.setMaxAge(0);
-		cc.setMustRevalidate(true);
-		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
-		ResponseBuilder builder = null;
-		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
-			builder = request.evaluatePreconditions(lmd);
-		}
-		
-		if(builder == null){
-			Profile profile = membership.readProfile(key);
-			ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
-			List<String> friends = null;
-			try {
-				friends = membership.listMembers(profile.getFriends());
-				representation.setFriends(friends.toArray(new String[friends.size()]));
-			} catch (AccessDeniedException e) {
-				representation.setFriends(new String[0]);
-			}
-			builder = Response.ok(representation);
-    		builder.lastModified(lmd);
+    /**
+     * @description List profiles
+     * @responseType fr.ortolang.diffusion.api.object.GenericCollectionRepresentation
+     * @return {@link GenericCollectionRepresentation}&lt;{@link ProfileRepresentation}&gt;
+     * @throws MembershipServiceException
+     * @throws KeyNotFoundException
+     * @throws AccessDeniedException
+     * @throws AuthorisationServiceException
+     */
+    @GET
+    @Path("/list")
+    public Response getProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, AuthorisationServiceException {
+        LOGGER.log(Level.INFO, "GET /profiles/list");
+        GenericCollectionRepresentation<ProfileRepresentation> representation = new GenericCollectionRepresentation<ProfileRepresentation>();
+        List<Profile> results = membership.listProfiles();
+        for (Profile profile : results) {
+            ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
+            representation.addEntry(profileRepresentation);
+        }
+        representation.setOffset(0);
+        representation.setSize(results.size());
+        representation.setLimit(results.size());
+        return Response.ok(representation).build();
+    }
+
+    /**
+     * @description Return profile for a given key
+     * @responseType fr.ortolang.diffusion.api.profile.ProfileRepresentation
+     * @param key {@link String}
+     * 		Key of wanted profile
+     * @param request {@link Request}
+     * @return {@link ProfileRepresentation}
+     * @throws MembershipServiceException
+     * @throws BrowserServiceException
+     * @throws KeyNotFoundException
+     * @throws AccessDeniedException
+     */
+    @GET
+    @Path("/{key}")
+    public Response getProfile(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "GET /profiles/" + key);
+
+        OrtolangObjectState state = browser.getState(key);
+        CacheControl cc = new CacheControl();
+        cc.setPrivate(true);
+        cc.setMaxAge(0);
+        cc.setMustRevalidate(true);
+        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        ResponseBuilder builder = null;
+        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+            builder = request.evaluatePreconditions(lmd);
+        }
+
+        if(builder == null){
+            Profile profile = membership.readProfile(key);
+            ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
+            builder = Response.ok(representation);
+            builder.lastModified(lmd);
         }
 
         builder.cacheControl(cc);
         return builder.build();
-	}
-	
-	/**
-	 * @description Update a profile
-	 * @param key {@link String}
-	 * 		Key of the profile to update {@link String}
-	 * @param representation {@link ProfileRepresentation}
-	 * 		New value
-	 * @return {@link Response}
-	 * 		Empty response
-	 * @throws MembershipServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 */
-	@PUT
-	@Path("/{key}")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public Response updateProfile(@PathParam(value = "key") String key, ProfileRepresentation representation) throws MembershipServiceException, KeyNotFoundException,
-			AccessDeniedException {
-		LOGGER.log(Level.INFO, "PUT /profiles/" + key);
-		Profile profile = membership.updateProfile(key, representation.getGivenName(), representation.getFamilyName(), representation.getEmail(), representation.getEmailVisibility());
-		ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
-		return Response.ok(profileRepresentation).build();
-	}
-	
-	/**
-	 * @description Return public keys of a profile
-	 * @param key {@link String}
-	 * 		Key of the profile {@link String}
-	 * @return {@link Set}&lt;{@link String}&gt;
-	 * @throws MembershipServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 */
-	@GET
-	@Path("/{key}/keys")
-	public Response getProfilePublicKeys(@PathParam(value = "key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "GET /profiles/" + key + "/keys");
-		Profile profile = membership.readProfile(key);
-		return Response.ok(profile.getPublicKeys()).build();
-	}
-	
-	/**
-	 * @description Add a Public key to a profile
-	 * @param key {@link String}
-	 * 		Key of the profile {@link String}
-	 * @param pubkey {@link ProfileKeyRepresentation}
-	 * 		New public key value
-	 * @return {@link Response}
-	 * 		Response with OK status
-	 * @throws MembershipServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 */
-	@POST
-	@Path("/{key}/keys")
-	@Consumes({ MediaType.APPLICATION_JSON })
-	public Response addProfilePublicKey(@PathParam(value = "key") String key, ProfileKeyRepresentation pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "POST /profiles/" + key + "/keys");
-		membership.addProfilePublicKey(key, pubkey.getPublicKey());
-		return Response.ok().build();
-	}
-	
-	/**
-	 * @description Delete a public key of a profile
-	 * @param key {@link String}
-	 * 		Key of the profile {@link String}
-	 * @param pubkey {@link ProfileKeyRepresentation}
-	 * 		New public key value
-	 * @return {@link Response}
-	 * 		Response with OK status
-	 * @throws MembershipServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 */
-	@DELETE
-	@Path("/{key}/keys")
-	@Consumes({ MediaType.APPLICATION_JSON })
-	public Response removeProfilePublicKey(@PathParam(value = "key") String key, ProfileKeyRepresentation pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "DELETE /profiles/" + key + "/keys");
-		membership.removeProfilePublicKey(key, pubkey.getPublicKey());
-		return Response.ok().build();
-	}
-	
-	/**
-	 * @description Return collection of infos of a given profile
-	 * @responseType fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation
-	 * @param key {@link String}
-	 * 		Key of the profile {@link String}
-	 * @param filter {@link String}
-	 * 		Category of infos to return
-	 * @param request {@link Request}
-	 * @return {@link GenericCollectionRepresentation}&lt;{@link ProfileDataRepresentation}&gt;
-	 * @throws MembershipServiceException
-	 * @throws BrowserServiceException
-	 * @throws AccessDeniedException
-	 * @throws KeyNotFoundException
-	 */
-	@GET
-	@Path("/{key}/infos")
-	public Response getInfos(@PathParam(value = "key") String key, @QueryParam(value = "filter") String filter, @Context Request request) throws MembershipServiceException, BrowserServiceException, AccessDeniedException, KeyNotFoundException {
-		LOGGER.log(Level.INFO, "GET /profiles/" + key + "/infos");
-				
-		OrtolangObjectState state = browser.getState(key);
-		CacheControl cc = new CacheControl();
-		cc.setPrivate(true);
-		cc.setMaxAge(0);
-		cc.setMustRevalidate(true);
-		Date lmd = new Date(state.getLastModification() / 1000 * 1000);
-		ResponseBuilder builder = null;
-		if (System.currentTimeMillis() - state.getLastModification() > 1000) {
-			builder = request.evaluatePreconditions(lmd);
-		}
-		
-		if(builder == null){
-			List<ProfileData> infos = membership.listProfileInfos(key, filter);	
-			GenericCollectionRepresentation<ProfileDataRepresentation> representation = new GenericCollectionRepresentation<ProfileDataRepresentation>();
-			for (ProfileData info : infos) {
-				representation.addEntry(ProfileDataRepresentation.fromProfileData(info));
-			}
-			representation.setOffset(0);
-			representation.setSize(infos.size());
-			representation.setLimit(infos.size());
-			builder = Response.ok(representation);
-    		builder.lastModified(lmd);
+    }
+
+    /**
+     * @description Return the profile card for a given key
+     * @responseType fr.ortolang.diffusion.api.profile.ProfileCardRepresentation
+     * @param key {@link String}
+     * 		Key of wanted profile
+     * @param request {@link Request}
+     * @return {@link ProfileCardRepresentation}
+     * @throws MembershipServiceException
+     * @throws BrowserServiceException
+     * @throws KeyNotFoundException
+     * @throws AccessDeniedException
+     */
+    @GET
+    @Path("/{key}/card")
+    public Response getProfileCard(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "GET /profiles/" + key + "/card");
+
+        OrtolangObjectState state = browser.getState(key);
+        CacheControl cc = new CacheControl();
+        cc.setPrivate(true);
+        cc.setMaxAge(600);
+        cc.setMustRevalidate(true);
+        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        ResponseBuilder builder = null;
+        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+            builder = request.evaluatePreconditions(lmd);
+        }
+
+        if(builder == null){
+            Profile profile = membership.readProfile(key);
+            ProfileCardRepresentation representation = ProfileCardRepresentation.fromProfile(profile);
+            builder = Response.ok(representation);
+            builder.lastModified(lmd);
         }
 
         builder.cacheControl(cc);
         return builder.build();
-	}
-	
-	/**
-	 * @description Update infos for a given profile
-	 * @param key {@link String}
-	 * 		Key of the profile
-	 * @param info {@link ProfileDataRepresentation}
-	 * 		New infos values
-	 * @return {@link Response}
-	 * 		Response with OK status
-	 * @throws MembershipServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 * @throws KeyLockedException
-	 */
-	@POST
-	@Path("/{key}/infos")
-	@Consumes({ MediaType.APPLICATION_JSON })
-	public Response updateInfos(@PathParam(value = "key") String key, ProfileDataRepresentation info) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException {
-		LOGGER.log(Level.INFO, "POST /profiles/" + key + "/infos");
-		membership.setProfileInfo(key, info.getName(), info.getValue(), info.getVisibility(), ProfileDataType.valueOf(info.getType()), info.getSource());
-		return Response.ok().build();
-	}
+    }
 
-	/**
-	 * @description Add a friend to a profile
-	 * @param key {@link String}
-	 * 		Key of the profile
-	 * @param friendKey {@link String}
-	 * 		Key of the profile of the friend to add
-	 * @return {@link Response}
-	 * 		Response with OK status
-	 * @throws MembershipServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 * @throws KeyAlreadyExistsException
-	 * @throws AuthorisationServiceException
-	 */
-	@POST
-	@Path("/{key}/friend")
-	public Response addFriend(@PathParam(value = "key") String key, String friendKey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyAlreadyExistsException, AuthorisationServiceException {
-		LOGGER.log(Level.INFO, "POST /profiles/" + key + "/friend");
-		String friendGroupKey = membership.readProfile(key).getFriends();
-		membership.addMemberInGroup(friendGroupKey, friendKey);
-		return Response.ok().build();
-	}
-	
-	/**
-	 * @description Remove a friend from a profile
-	 * @param key {@link String}
-	 * 		Key of the profile
-	 * @param friendKey {@link String}
-	 * 		Key of the profile of the friend to add
-	 * @return {@link Response}
-	 * 		Response with OK status
-	 * @throws MembershipServiceException
-	 * @throws KeyNotFoundException
-	 * @throws AccessDeniedException
-	 */
-	@DELETE
-	@Path("/{key}/friend")
-	public Response removeFriend(@PathParam(value = "key") String key, String friendKey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "DELETE /profiles/" + key + "/friend");
-		membership.removeMemberFromGroup(key, friendKey);
-		return Response.ok().build();
-	}
-	
-	/**
-	 * @description Return the size of a profile
-	 * @param key {@link String}
-	 * 		Key of the profile
-	 * @return {@link OrtolangObjectSize}
-	 * 		Size of the profile
-	 * @throws AccessDeniedException
-	 * @throws OrtolangException
-	 * @throws KeyNotFoundException
-	 */
+    /**
+     * @description Update a profile
+     * @param key {@link String}
+     * 		Key of the profile to update {@link String}
+     * @param representation {@link ProfileRepresentation}
+     * 		New value
+     * @return {@link Response}
+     * 		Empty response
+     * @throws MembershipServiceException
+     * @throws KeyNotFoundException
+     * @throws AccessDeniedException
+     */
+    @PUT
+    @Path("/{key}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateProfile(@PathParam(value = "key") String key, ProfileRepresentation representation) throws MembershipServiceException, KeyNotFoundException,
+            AccessDeniedException {
+        LOGGER.log(Level.INFO, "PUT /profiles/" + key);
+        Profile profile = membership.updateProfile(key, representation.getGivenName(), representation.getFamilyName(), representation.getEmail(), representation.getEmailVisibility());
+        ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
+        return Response.ok(profileRepresentation).build();
+    }
+
+    /**
+     * @description Return public keys of a profile
+     * @param key {@link String}
+     * 		Key of the profile {@link String}
+     * @return {@link Set}&lt;{@link String}&gt;
+     * @throws MembershipServiceException
+     * @throws KeyNotFoundException
+     * @throws AccessDeniedException
+     */
+    @GET
+    @Path("/{key}/keys")
+    public Response getProfilePublicKeys(@PathParam(value = "key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "GET /profiles/" + key + "/keys");
+        Profile profile = membership.readProfile(key);
+        return Response.ok(profile.getPublicKeys()).build();
+    }
+
+    /**
+     * @description Add a Public key to a profile
+     * @param key {@link String}
+     * 		Key of the profile {@link String}
+     * @param pubkey {@link ProfileKeyRepresentation}
+     * 		New public key value
+     * @return {@link Response}
+     * 		Response with OK status
+     * @throws MembershipServiceException
+     * @throws KeyNotFoundException
+     * @throws AccessDeniedException
+     */
+    @POST
+    @Path("/{key}/keys")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    public Response addProfilePublicKey(@PathParam(value = "key") String key, ProfileKeyRepresentation pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "POST /profiles/" + key + "/keys");
+        membership.addProfilePublicKey(key, pubkey.getPublicKey());
+        return Response.ok().build();
+    }
+
+    /**
+     * @description Delete a public key of a profile
+     * @param key {@link String}
+     * 		Key of the profile {@link String}
+     * @param pubkey {@link ProfileKeyRepresentation}
+     * 		New public key value
+     * @return {@link Response}
+     * 		Response with OK status
+     * @throws MembershipServiceException
+     * @throws KeyNotFoundException
+     * @throws AccessDeniedException
+     */
+    @DELETE
+    @Path("/{key}/keys")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    public Response removeProfilePublicKey(@PathParam(value = "key") String key, ProfileKeyRepresentation pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "DELETE /profiles/" + key + "/keys");
+        membership.removeProfilePublicKey(key, pubkey.getPublicKey());
+        return Response.ok().build();
+    }
+
+    /**
+     * @description Return collection of infos of a given profile
+     * @responseType fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation
+     * @param key {@link String}
+     * 		Key of the profile {@link String}
+     * @param filter {@link String}
+     * 		Category of infos to return
+     * @param request {@link Request}
+     * @return {@link GenericCollectionRepresentation}&lt;{@link ProfileDataRepresentation}&gt;
+     * @throws MembershipServiceException
+     * @throws BrowserServiceException
+     * @throws AccessDeniedException
+     * @throws KeyNotFoundException
+     */
+    @GET
+    @Path("/{key}/infos")
+    public Response getInfos(@PathParam(value = "key") String key, @QueryParam(value = "filter") String filter, @Context Request request) throws MembershipServiceException, BrowserServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "GET /profiles/" + key + "/infos");
+
+        OrtolangObjectState state = browser.getState(key);
+        CacheControl cc = new CacheControl();
+        cc.setPrivate(true);
+        cc.setMaxAge(0);
+        cc.setMustRevalidate(true);
+        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        ResponseBuilder builder = null;
+        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+            builder = request.evaluatePreconditions(lmd);
+        }
+
+        if(builder == null){
+            List<ProfileData> infos = membership.listProfileInfos(key, filter);
+            GenericCollectionRepresentation<ProfileDataRepresentation> representation = new GenericCollectionRepresentation<ProfileDataRepresentation>();
+            for (ProfileData info : infos) {
+                representation.addEntry(ProfileDataRepresentation.fromProfileData(info));
+            }
+            representation.setOffset(0);
+            representation.setSize(infos.size());
+            representation.setLimit(infos.size());
+            builder = Response.ok(representation);
+            builder.lastModified(lmd);
+        }
+
+        builder.cacheControl(cc);
+        return builder.build();
+    }
+
+    /**
+     * @description Update infos for a given profile
+     * @param key {@link String}
+     * 		Key of the profile
+     * @param info {@link ProfileDataRepresentation}
+     * 		New infos values
+     * @return {@link Response}
+     * 		Response with OK status
+     * @throws MembershipServiceException
+     * @throws KeyNotFoundException
+     * @throws AccessDeniedException
+     * @throws KeyLockedException
+     */
+    @POST
+    @Path("/{key}/infos")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    public Response updateInfos(@PathParam(value = "key") String key, ProfileDataRepresentation info) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, KeyLockedException {
+        LOGGER.log(Level.INFO, "POST /profiles/" + key + "/infos");
+        membership.setProfileInfo(key, info.getName(), info.getValue(), info.getVisibility(), ProfileDataType.valueOf(info.getType()), info.getSource());
+        return Response.ok().build();
+    }
+
+    /**
+     * @description Return the size of a profile
+     * @param key {@link String}
+     * 		Key of the profile
+     * @return {@link OrtolangObjectSize}
+     * 		Size of the profile
+     * @throws AccessDeniedException
+     * @throws OrtolangException
+     * @throws KeyNotFoundException
+     */
     @GET
     @Path("/{key}/size")
     public Response getProfileSize(@PathParam(value = "key") String key) throws AccessDeniedException, OrtolangException, KeyNotFoundException {
@@ -429,14 +384,14 @@ public class ProfileResource {
         return Response.ok(size).build();
     }
 
-	@GET
-	@Path("/{key}/ticket")
-	public Response getProfileTicket(@PathParam(value = "key") String key) throws AccessDeniedException, OrtolangException, KeyNotFoundException, MembershipServiceException {
-		LOGGER.log(Level.INFO, "GET /profiles/" + key + "/size");
-		Profile profile = membership.readProfile(key);
-		String ticket = TicketHelper.makeTicket(profile.getId(), profile.getKey());
-		JsonObject jsonObject = Json.createObjectBuilder().add("t", ticket).build();
-		return Response.ok(jsonObject).build();
-	}
+    @GET
+    @Path("/{key}/ticket")
+    public Response getProfileTicket(@PathParam(value = "key") String key) throws AccessDeniedException, OrtolangException, KeyNotFoundException, MembershipServiceException {
+        LOGGER.log(Level.INFO, "GET /profiles/" + key + "/size");
+        Profile profile = membership.readProfile(key);
+        String ticket = TicketHelper.makeTicket(profile.getId(), profile.getKey());
+        JsonObject jsonObject = Json.createObjectBuilder().add("t", ticket).build();
+        return Response.ok(jsonObject).build();
+    }
 
 }
