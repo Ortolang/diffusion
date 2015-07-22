@@ -47,19 +47,6 @@
         primary key (id)
     );
 
-    create table Organization (
-        id varchar(255) not null,
-        name varchar(255),
-        fullname varchar(255),
-        acronym varchar(255),
-        city varchar(255),
-        country varchar(255),
-        homepage varchar(255),
-        img varchar(255),
-        version int8 not null,
-        primary key (id)
-    );
-
     create table Link (
         id varchar(255) not null,
         clock int4 not null,
@@ -94,7 +81,20 @@
         version int8 not null,
         primary key (id)
     );
-    
+
+    create table Organization (
+        id varchar(255) not null,
+        acronym varchar(255),
+        city varchar(255),
+        country varchar(255),
+        fullname varchar(255),
+        homepage varchar(255),
+        img varchar(255),
+        name varchar(255),
+        version int8 not null,
+        primary key (id)
+    );
+
     create table Process (
         id varchar(255) not null,
         activity varchar(255),
@@ -102,8 +102,8 @@
         log text,
         name varchar(255),
         progress int4 not null,
-        state int4,
         start int8 not null,
+        state int4,
         stop int8 not null,
         type varchar(255),
         version int8 not null,
@@ -114,8 +114,8 @@
         id varchar(255) not null,
         email varchar(255),
         emailHash varchar(255),
-        emailVisibility int4 not null,
         emailVerified boolean not null,
+        emailVisibility int4,
         familyName varchar(255),
         friends varchar(255),
         givenName varchar(255),
@@ -131,7 +131,7 @@
         source varchar(255),
         type int4,
         value varchar(7500),
-        visibility int4 not null,
+        visibility int4,
         infos_KEY varchar(255),
         primary key (Profile_id, infos_KEY)
     );
@@ -150,7 +150,6 @@
         deleted boolean not null,
         hidden boolean not null,
         identifier varchar(255),
-        item boolean not null,
         lastModificationDate int8 not null,
         lock varchar(255),
         parent varchar(255),
@@ -165,13 +164,13 @@
         activity varchar(255),
         initier varchar(255),
         log text,
-        toolName varchar(255),
         progress int4 not null,
-        state int4,
         start int8 not null,
+        state int4,
         stop int8 not null,
         toolJobId varchar(255),
         toolKey varchar(255),
+        toolName varchar(255),
         version int8 not null,
         primary key (id)
     );
@@ -204,6 +203,28 @@
         primary key (id)
     );
 
+    create table handles (
+        handle bytea not null,
+        idx int4 not null,
+        admin_read boolean,
+        admin_write boolean,
+        data bytea,
+        key varchar(255),
+        pub_read boolean,
+        pub_write boolean,
+        refs text,
+        timestamp int4,
+        ttl int4,
+        ttl_type int2,
+        type bytea,
+        primary key (handle, idx)
+    );
+
+    create table nas (
+        na bytea not null,
+        primary key (na)
+    );
+
     create index UK_pm0pof2ncp68yq82tb498mfwd on Link (target);
 
     create index UK_qau89io9hls4vb0j9flmnvbry on MetadataObject (target);
@@ -212,10 +233,12 @@
 
     create index UK_8vv92rpgi9suidc96s1b88rw1 on RegistryEntry (identifier);
 
-    create index UK_pwitg71wnp1ktf8bdbtuxg4mp on RemoteProcess (initier, state);
+    create index UK_e8d1rgq9atuhoyan68niihj67 on RemoteProcess (initier, state);
 
     alter table Workspace 
         add constraint UK_48cyeq9y05tbu0dgn64iswitn  unique (alias);
+
+    create index UK_m242bwr2hjd7k1lcy2dnsx1x9 on handles (handle, data);
 
     alter table Collection_segments 
         add constraint FK_qtkd8pouce5ufvwfwj4bgsk8u 

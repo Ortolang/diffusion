@@ -36,198 +36,104 @@ package fr.ortolang.diffusion.store.handle;
  * #L%
  */
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.net.URL;
-import java.security.PrivateKey;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.annotation.security.PermitAll;
 import javax.ejb.Local;
-import javax.ejb.Lock;
-import javax.ejb.LockType;
-import javax.ejb.Singleton;
+import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
-import net.handle.hdllib.AbstractMessage;
-import net.handle.hdllib.AbstractResponse;
 import net.handle.hdllib.AdminRecord;
 import net.handle.hdllib.Common;
-import net.handle.hdllib.CreateHandleRequest;
-import net.handle.hdllib.DeleteHandleRequest;
 import net.handle.hdllib.Encoder;
-import net.handle.hdllib.HandleException;
-import net.handle.hdllib.HandleResolver;
 import net.handle.hdllib.HandleValue;
-import net.handle.hdllib.PublicKeyAuthenticationInfo;
-import net.handle.hdllib.ResolutionRequest;
-import net.handle.hdllib.ResolutionResponse;
-import net.handle.hdllib.Util;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.store.handle.entity.Handle;
 
 @Local(HandleStoreService.class)
-@Singleton(name = HandleStoreService.SERVICE_NAME)
+@Stateless(name=HandleStoreService.SERVICE_NAME)
 @SecurityDomain("ortolang")
-@Lock(LockType.READ)
 @PermitAll
 public class HandleStoreServiceBean implements HandleStoreService {
 
 	private static final Logger LOGGER = Logger.getLogger(HandleStoreServiceBean.class.getName());
+	private static byte[] admin = null;
+	
+	@PersistenceContext(unitName = "ortolangPU")
+	private EntityManager em;
 
-	private PrivateKey privkey = null;
-	private HandleResolver resolver;
-	private PublicKeyAuthenticationInfo auth;
-	private AdminRecord admin;
-
-	@PostConstruct
-	public void init() {
-		LOGGER.log(Level.INFO, "Initializing service");
-		try {
-			URL keyFileURL = HandleStoreServiceBean.class.getClassLoader().getResource(OrtolangConfig.getInstance().getProperty("handle.key"));
-			LOGGER.log(Level.FINE, "using private key file : " + keyFileURL.getPath());
-			File f = new File(keyFileURL.getPath());
-			FileInputStream fs = new FileInputStream(f);
-			byte[] key = new byte[(int) f.length()];
-			int n = 0;
-			while (n < key.length) {
-				key[n++] = (byte) fs.read();
-			}
-			fs.read(key);
-			fs.close();
-
-			LOGGER.log(Level.FINE, "decrypting key");
-			byte[] secKey = OrtolangConfig.getInstance().getProperty("handle.key.passphrase").getBytes();
-			key = Util.decrypt(key, secKey);
-			privkey = Util.getPrivateKeyFromBytes(key, 0);
-
-			LOGGER.log(Level.FINE, "building handle resolver");
-			resolver = new HandleResolver();
-
-			auth = new PublicKeyAuthenticationInfo(OrtolangConfig.getInstance().getProperty("handle.admin").getBytes(), Integer.parseInt(
-					OrtolangConfig.getInstance().getProperty("handle.index")), privkey);
-			admin = new AdminRecord(OrtolangConfig.getInstance().getProperty("handle.admin").getBytes(), 300, true, true, true, true, true, true, true, true, true, true, true,
-					true);
-			LOGGER.log(Level.FINE, "auth info: " + auth.toString());
-			LOGGER.log(Level.FINE, "admin record: " + admin.toString());
-
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "Unable to initialize Handle Store : " + e.getMessage(), e);
+	private byte[] getAdminValue() {
+		if ( admin == null ) {
+			String adminHandle = OrtolangConfig.getInstance().getProperty("handle.admin");
+			admin = Encoder.encodeAdminRecord(new AdminRecord(adminHandle.getBytes(), 300, true, true, true, true, true, true, true, true, true, true, true, true));
 		}
-	}
-
-	@PreDestroy
-	public void shutdown() {
-		LOGGER.log(Level.INFO, "Shutting down service");
-
+		return admin;
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public String create(String suffix, String... values) throws HandleStoreServiceException {
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void recordHandle(String handle, String key, String url) throws HandleStoreServiceException {
+		String name = handle.toUpperCase(Locale.ENGLISH);
+		LOGGER.log(Level.FINE, "recording handle : " + handle);
+		try {
+			List<Handle> oldHandles = listHandleValues(name);
+			for ( Handle old : oldHandles ) {
+				LOGGER.log(Level.FINE, "deleting previously recorded handle for this name: " + old);
+				em.remove(old);
+				em.flush();
+			}
+		} catch (HandleNotFoundException e) {
+			//
+		}
 		int timestamp = (int) (System.currentTimeMillis() / 1000);
-		String name = OrtolangConfig.getInstance().getProperty("handle.prefix") + "/" + suffix;
-		LOGGER.log(Level.FINE, "complete handle name : " + name);
-		HandleValue[] val = new HandleValue[values.length + 1];
-		val[0] = new HandleValue(100, "HS_ADMIN".getBytes(), Encoder.encodeAdminRecord(admin), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
-		LOGGER.log(Level.FINE, "handle value created for admin : " + val[0]);
-		for (int i = 1; i <= values.length; i++) {
-			val[i] = new HandleValue(i, Common.STD_TYPE_URL, values[i - 1].getBytes(), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
-			LOGGER.log(Level.FINE, "handle value created for index " + i + " : " + val[i]);
-		}
-		try {
-			LOGGER.log(Level.FINE, "building create request");
-			CreateHandleRequest req = new CreateHandleRequest(name.getBytes(), val, auth);
-			LOGGER.log(Level.FINE, "processing request...");
-			AbstractResponse response = resolver.processRequest(req);
-			LOGGER.log(Level.FINE, "response received");
-			if (response.responseCode != AbstractMessage.RC_SUCCESS) {
-				throw new HandleStoreServiceException("handle server response error code: " + response.responseCode);
-			}
-			return "hdl:" + name;
-		} catch (HandleException e) {
-			throw new HandleStoreServiceException("error during creating handle", e);
-		}
+		Handle adminValue = new Handle(name.getBytes(), 100, key, Common.ADMIN_TYPE, getAdminValue(), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
+		Handle urlValue = new Handle(name.getBytes(), 1, key, Common.STD_TYPE_URL, url.getBytes(), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
+		em.persist(adminValue);
+		em.persist(urlValue);
 	}
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public boolean exists(String suffix) throws HandleStoreServiceException {
-		String name = OrtolangConfig.getInstance().getProperty("handle.prefix") + "/" + suffix;
-		LOGGER.log(Level.FINE, "complete handle name : " + name);
-		try {
-			LOGGER.log(Level.FINE, "building resolution request");
-			ResolutionRequest req = new ResolutionRequest(name.getBytes(), null, null, null);
-			LOGGER.log(Level.FINE, "processing request...");
-			AbstractResponse response = resolver.processRequest(req);
-			LOGGER.log(Level.FINE, "response received");
-			if (response.responseCode == AbstractMessage.RC_HANDLE_NOT_FOUND) {
-				return false;
-			}
-			if (response.responseCode != AbstractMessage.RC_SUCCESS) {
-				throw new HandleStoreServiceException("handle server response error code: " + response.responseCode);
-			}
-			return true;
-		} catch (HandleException e) {
-			throw new HandleStoreServiceException("error during creating handle", e);
+	public List<Handle> listHandleValues(String handle) throws HandleStoreServiceException, HandleNotFoundException {
+		String name = handle.toUpperCase(Locale.ENGLISH);
+		List<Handle> handles = null;
+		TypedQuery<Handle> query = em.createNamedQuery("findHandleByName", Handle.class).setParameter("name", name.getBytes()); 
+		handles = query.getResultList();
+		if ( handles == null || handles.size() == 0 ) {
+			throw new HandleNotFoundException("no values found with handle [" + handle + "]");
 		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public String read(String suffix) throws HandleStoreServiceException {
-		String name = OrtolangConfig.getInstance().getProperty("handle.prefix") + "/" + suffix;
-		LOGGER.log(Level.FINE, "complete handle name : " + name);
-		try {
-			LOGGER.log(Level.FINE, "building resolution request");
-			ResolutionRequest req = new ResolutionRequest(name.getBytes(), null, null, null);
-			LOGGER.log(Level.FINE, "processing request...");
-			AbstractResponse response = resolver.processRequest(req);
-			LOGGER.log(Level.FINE, "response received");
-			if (response.responseCode != AbstractMessage.RC_SUCCESS) {
-				throw new HandleStoreServiceException("handle server response error code: " + response.responseCode);
-			}
-			if (response instanceof ResolutionResponse) {
-				HandleValue[] values = ((ResolutionResponse) response).getHandleValues();
-				for (int i = 0; values != null && i < values.length; i++) {
-					if (values[i] != null && values[i].hasType(Common.STD_TYPE_URL)) {
-						return values[i].getDataAsString();
-					}
-				}
-			}
-			return null;
-		} catch (HandleException e) {
-			throw new HandleStoreServiceException("error during creating handle", e);
-		}
+		return handles;
 	}
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void delete(String suffix) throws HandleStoreServiceException {
-		String name = OrtolangConfig.getInstance().getProperty("handle.prefix") + "/" + suffix;
-		LOGGER.log(Level.FINE, "complete handle name : " + name);
-		try {
-			LOGGER.log(Level.FINE, "building delete request");
-			DeleteHandleRequest req = new DeleteHandleRequest(name.getBytes(), auth);
-			LOGGER.log(Level.FINE, "processing request...");
-			AbstractResponse response = resolver.processRequest(req);
-			LOGGER.log(Level.FINE, "response received");
-			if (response.responseCode != AbstractMessage.RC_SUCCESS) {
-				throw new HandleStoreServiceException("handle server response error code: " + response.responseCode);
-			}
-		} catch (HandleException e) {
-			throw new HandleStoreServiceException("error during deleting handle", e);
+	public List<String> findHandlesForKey(String key) throws HandleStoreServiceException, HandleNotFoundException {
+		List<String> names = new ArrayList<String> ();
+		TypedQuery<byte[]> query = em.createNamedQuery("findHandleNameForKey", byte[].class).setParameter("key", key);
+		List<byte[]> bnames = query.getResultList(); 
+		if ( bnames == null || bnames.size() == 0 ) {
+			throw new HandleNotFoundException("no name found for key [" + key + "]");
 		}
+		try {
+			for (byte[] bname : bnames) {
+				names.add(new String(bname, "UTF-8"));
+			}
+		} catch ( UnsupportedEncodingException e ) {
+			throw new HandleStoreServiceException("unable to decode name", e);
+		}
+		return names;
 	}
-
-	public void setTraceEnabled() {
-		resolver.traceMessages = true;
-	}
-
+	
 }

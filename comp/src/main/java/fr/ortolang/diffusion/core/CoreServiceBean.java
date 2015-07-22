@@ -256,7 +256,6 @@ public class CoreServiceBean implements CoreService {
 			em.persist(collection);
 
 			registry.register(head, collection.getObjectIdentifier(), caller);
-			registry.itemify(head);
 			indexing.index(head);
 
 			Map<String, List<String>> rules = new HashMap<String, List<String>>();
@@ -309,7 +308,7 @@ public class CoreServiceBean implements CoreService {
 		} catch (KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			throw e;
-		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
+		} catch (KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
 				| MembershipServiceException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while creating workspace", e);

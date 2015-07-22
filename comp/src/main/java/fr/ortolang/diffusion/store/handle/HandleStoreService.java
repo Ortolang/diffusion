@@ -1,5 +1,9 @@
 package fr.ortolang.diffusion.store.handle;
 
+import java.util.List;
+
+import fr.ortolang.diffusion.store.handle.entity.Handle;
+
 /*
  * #%L
  * ORTOLANG
@@ -41,12 +45,10 @@ public interface HandleStoreService {
 	
 	public static final String SERVICE_NAME = "handle-store";
 	
-	public String create(String suffix, String... values) throws HandleStoreServiceException;
+	public void recordHandle(String handle, String key, String url) throws HandleStoreServiceException;
 	
-	public String read(String suffix) throws HandleStoreServiceException;
+	public List<Handle> listHandleValues(String handle) throws HandleStoreServiceException, HandleNotFoundException;
 	
-	public boolean exists(String suffix) throws HandleStoreServiceException;
+	public List<String> findHandlesForKey(String key) throws HandleStoreServiceException, HandleNotFoundException;
 	
-	public void delete(String suffix) throws HandleStoreServiceException;
-
 }

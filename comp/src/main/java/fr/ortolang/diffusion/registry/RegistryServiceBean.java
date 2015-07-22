@@ -157,7 +157,6 @@ public class RegistryServiceBean implements RegistryService {
 			entry.setIdentifier(identifier.serialize());
 			entry.setParent(parent);
 			entry.setAuthor(pentry.getAuthor());
-			entry.setItem(pentry.isItem());
 			entry.setCreationDate(pentry.getCreationDate());
 			entry.setLastModificationDate(System.currentTimeMillis());
 			if ( inherit ) {
@@ -201,14 +200,6 @@ public class RegistryServiceBean implements RegistryService {
 		LOGGER.log(Level.FINE, "checking visibility state for key [" + key + "]");
 		RegistryEntry entry = findEntryByKey(key);
 		return entry.isHidden();
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public boolean isItem(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "checking if key [" + key + "] is an item");
-		RegistryEntry entry = findEntryByKey(key);
-		return entry.isItem();
 	}
 	
 	@Override
@@ -315,24 +306,6 @@ public class RegistryServiceBean implements RegistryService {
 		}
 		try {
 			entry.setLock(owner);
-			em.merge(entry);
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			ctx.setRollbackOnly();
-			throw new RegistryServiceException(e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void itemify(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		LOGGER.log(Level.FINE, "itemify key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		if ( entry.isLocked() ) {
-			throw new KeyLockedException("Key [" + key + "] is locked and cannot be itemified");
-		}
-		try {
-			entry.setItem(true);
 			em.merge(entry);
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);

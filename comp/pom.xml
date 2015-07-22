@@ -235,6 +235,12 @@
 			<artifactId>ftpserver-core</artifactId>
 			<version>1.0.6</version>
 		</dependency>
+		<dependency>
+			<groupId>com.sleepycat</groupId>
+			<artifactId>je</artifactId>
+			<version>5.0.73</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>

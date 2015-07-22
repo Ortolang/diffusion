@@ -36,53 +36,127 @@ package fr.ortolang.diffusion.store.handle;
  * #L%
  */
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.Resource;
+import javax.ejb.EJB;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.security.auth.login.LoginException;
+import javax.transaction.UserTransaction;
+
+import org.jboss.arquillian.container.test.api.Deployment;
+import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
+import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+import fr.ortolang.diffusion.store.handle.entity.Handle;
+
+@RunWith(Arquillian.class)
 public class HandleStoreServiceTest {
 	
 	private static final Logger LOGGER = Logger.getLogger(HandleStoreServiceTest.class.getName());
-	private HandleStoreServiceBean service;
 	
+	@PersistenceContext
+    private EntityManager em;
+    
+    @Resource(name="java:jboss/UserTransaction")
+    private UserTransaction utx;
+    
+    @EJB
+    private HandleStoreService service;
+	
+	@Deployment
+    public static EnterpriseArchive createDeployment() {
+		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "handle-store.jar");
+		jar.addPackage("fr.ortolang.diffusion");
+		jar.addPackage("fr.ortolang.diffusion.store.handle");
+		jar.addPackage("fr.ortolang.diffusion.store.handle.entity");
+		jar.addClass("fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory");
+		jar.addAsResource("config.properties");
+		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
+        LOGGER.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
+        
+        PomEquippedResolveStage pom = Maven.resolver().loadPomFromFile("pom.xml");
+
+		EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class, "test-handle-store.ear");
+		ear.addAsModule(jar);
+		ear.addAsLibraries(pom.resolve("net.handle:hdlnet-hclj:7.3.1").withTransitivity().asFile());
+		LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
+
+		return ear;
+    }
+ 
 	@Before
-	public void setup() {
-		try {
-			service = new HandleStoreServiceBean();
-			service.init();
-			service.setTraceEnabled();
-		} catch (Exception e) {
-			fail(e.getMessage());
-		}
+	public void setup() throws Exception {
+		LOGGER.log(Level.INFO, "Setting up test environment, clearing data");
+		utx.begin();
+	    em.joinTransaction();
+		em.createQuery("delete from Handle").executeUpdate();
+	    utx.commit();
 	}
 	
 	@After
 	public void tearDown() {
-		
+		LOGGER.log(Level.INFO, "clearing environment");
 	}
 
 	@Test
-	public void testCreate() {
+	public void testRecord() throws LoginException {
 		try {
-			service.create("test-666", "http://home.jayblanc.fr/photo");
-			
-			assertTrue(service.exists("test-666"));
-			assertFalse(service.exists("test-777"));
-			
-			String res = service.read("test-666");
-			LOGGER.log(Level.INFO, "received handle value: " + res);
-			service.delete("test-666");
-		} catch ( Exception e ) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+			service.recordHandle("11403/666", "mykey", "http://www.free.fr");
+			List<Handle> values = service.listHandleValues("11403/666");
+			assertEquals(2, values.size());
+			for ( Handle handle : values ) {
+				LOGGER.log(Level.INFO, "VALUE " + handle);
+			}
+		} catch (HandleStoreServiceException | HandleNotFoundException e) {
 			fail(e.getMessage());
 		}
 	}
-
+	
+	@Test
+	public void testFind() throws LoginException {
+		try {
+			service.recordHandle("11403/111", "K1", "http://www.free.fr");
+			service.recordHandle("11403/222", "K1", "http://www.google.com");
+			service.recordHandle("11403/333", "K2", "http://www.atilf.fr");
+			service.recordHandle("11403/444", "K2", "http://www.cnrs.fr");
+			service.recordHandle("11403/555", "K3", "http://www.facebook.com");
+			List<String> namesK1 = service.findHandlesForKey("K1");
+			List<String> namesK2 = service.findHandlesForKey("K2");
+			List<String> namesK3 = service.findHandlesForKey("K3");
+			assertEquals(2, namesK1.size());
+			assertTrue(namesK1.contains("11403/111"));
+			assertTrue(namesK1.contains("11403/222"));
+			assertEquals(2, namesK2.size());
+			assertEquals(1, namesK3.size());
+			
+			service.recordHandle("11403/444", "K3", "http://www.cnrs.fr");
+			namesK1 = service.findHandlesForKey("K1");
+			namesK2 = service.findHandlesForKey("K2");
+			namesK3 = service.findHandlesForKey("K3");
+			assertEquals(2, namesK1.size());
+			assertEquals(1, namesK2.size());
+			assertFalse(namesK2.contains("11403/444"));
+			assertEquals(2, namesK3.size());
+		} catch (HandleStoreServiceException | HandleNotFoundException e) {
+			fail(e.getMessage());
+		}
+	}
+	
 }
