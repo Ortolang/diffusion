@@ -97,6 +97,7 @@
 				<filtering>true</filtering>
 				<includes>
 					<include>**/*.ftl</include>
+					<include>**/*.properties</include>
 				</includes>
 			</resource>
 		</resources>

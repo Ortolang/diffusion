@@ -41,14 +41,34 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Path("/ping")
 @Produces({ MediaType.APPLICATION_JSON })
 public class PingResource {
 
-    // @Todo return server version
+    private static String apiVersion = null;
+
+    private static final Logger LOGGER = Logger.getLogger(PingResource.class.getName());
+
+    static {
+        InputStream apiPropertiesStream = PingResource.class.getClassLoader().getResourceAsStream("api.properties");
+        Properties properties = new Properties();
+        try {
+            properties.load(apiPropertiesStream);
+            apiVersion = (String) properties.get("api.version");
+            apiPropertiesStream.close();
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Unable to load properties from api.properties file", e);
+        }
+    }
+
     @GET
     public Response ping() {
-        return Response.ok().build();
+        return Response.ok(apiVersion).build();
     }
 }
