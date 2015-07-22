@@ -1,9 +1,14 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "http://www.ortolang.fr",
+    "id": "http://www.ortolang.fr/schema/012#",
+    "description": "Schema for ORTOLANG item",
     "type": "object",
     "additionalProperties": false,
     "properties": {
+        "schema": {
+            "id": "http://www.ortolang.fr/schema",
+            "type": "string"
+        },
         "type": {
             "id": "http://www.ortolang.fr/type",
             "type": "string"
