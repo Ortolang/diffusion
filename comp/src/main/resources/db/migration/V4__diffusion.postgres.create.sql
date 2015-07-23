@@ -47,6 +47,16 @@
         primary key (id)
     );
 
+    create table ReferentielEntity (
+        id varchar(255) not null,
+        name varchar(255),
+        content text,
+        status varchar(255),
+        type int4,
+        version int8 not null,
+        primary key (id)
+    );
+
     create table Link (
         id varchar(255) not null,
         clock int4 not null,

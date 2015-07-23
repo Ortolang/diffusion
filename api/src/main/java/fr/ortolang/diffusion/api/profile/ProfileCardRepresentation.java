@@ -97,7 +97,6 @@ public class ProfileCardRepresentation {
 	public static ProfileCardRepresentation fromProfile(Profile profile) {
 		ProfileCardRepresentation representation = new ProfileCardRepresentation();
 		representation.setKey(profile.getKey());
-		// TODO check email visibility
 		representation.setEmail(profile.getEmail());
 		representation.setEmailHash(profile.getEmailHash());
 		representation.setGivenName(profile.getGivenName());

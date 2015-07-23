@@ -294,6 +294,7 @@ public class CoreServiceBean implements CoreService {
 
 			Map<String, List<String>> wsrules = new HashMap<String, List<String>>();
 			wsrules.put(members, Arrays.asList("read"));
+			wsrules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
 			authorisation.createPolicy(wskey, caller);
 			authorisation.setPolicyRules(wskey, wsrules);
 
@@ -1221,7 +1222,7 @@ public class CoreServiceBean implements CoreService {
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createDataObject(String workspace, String key, String path, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException,
 			InvalidPathException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "create data objetc with key [" + key + "] into workspace [" + workspace + "] at path [" + path + "]");
+		LOGGER.log(Level.FINE, "create data object with key [" + key + "] into workspace [" + workspace + "] at path [" + path + "]");
 		try {
 			PathBuilder npath = PathBuilder.fromPath(path);
 			if (npath.isRoot()) {
