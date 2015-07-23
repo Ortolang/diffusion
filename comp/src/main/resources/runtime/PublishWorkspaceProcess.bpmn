@@ -18,8 +18,10 @@
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${accepted.equals("true")}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="flow12" sourceRef="servicetask1" targetRef="reviewsnapshot"></sequenceFlow>
-    <sequenceFlow id="flow13" sourceRef="publish" targetRef="end"></sequenceFlow>
+    <sequenceFlow id="flow13" sourceRef="handle" targetRef="end"></sequenceFlow>
     <sequenceFlow id="flow14" name="reject" sourceRef="reviewsnapshot" targetRef="end"></sequenceFlow>
+    <serviceTask id="handle" name="Handle Snapshot" activiti:class="fr.ortolang.diffusion.runtime.engine.task.HandleSnapshotTask"></serviceTask>
+    <sequenceFlow id="flow15" sourceRef="publish" targetRef="handle"></sequenceFlow>
   </process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_publish-workspace">
     <bpmndi:BPMNPlane bpmnElement="publish-workspace" id="BPMNPlane_publish-workspace">
@@ -33,7 +35,7 @@
         <omgdc:Bounds height="55.0" width="154.0" x="100.0" y="380.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="end" id="BPMNShape_end">
-        <omgdc:Bounds height="35.0" width="35.0" x="271.0" y="530.0"></omgdc:Bounds>
+        <omgdc:Bounds height="35.0" width="35.0" x="290.0" y="580.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="issuperuser" id="BPMNShape_issuperuser">
         <omgdc:Bounds height="40.0" width="40.0" x="268.0" y="220.0"></omgdc:Bounds>
@@ -43,6 +45,9 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="reviewsnapshot" id="BPMNShape_reviewsnapshot">
         <omgdc:Bounds height="55.0" width="151.0" x="346.0" y="380.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="handle" id="BPMNShape_handle">
+        <omgdc:Bounds height="55.0" width="154.0" x="100.0" y="459.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
         <omgdi:waypoint x="288.0" y="45.0"></omgdi:waypoint>
@@ -72,15 +77,19 @@
         <omgdi:waypoint x="421.0" y="380.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow13" id="BPMNEdge_flow13">
-        <omgdi:waypoint x="177.0" y="435.0"></omgdi:waypoint>
-        <omgdi:waypoint x="288.0" y="530.0"></omgdi:waypoint>
+        <omgdi:waypoint x="177.0" y="514.0"></omgdi:waypoint>
+        <omgdi:waypoint x="307.0" y="580.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow14" id="BPMNEdge_flow14">
         <omgdi:waypoint x="421.0" y="435.0"></omgdi:waypoint>
-        <omgdi:waypoint x="288.0" y="530.0"></omgdi:waypoint>
+        <omgdi:waypoint x="307.0" y="580.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="13.0" width="26.0" x="387.0" y="480.0"></omgdc:Bounds>
+          <omgdc:Bounds height="13.0" width="26.0" x="387.0" y="508.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow15" id="BPMNEdge_flow15">
+        <omgdi:waypoint x="177.0" y="435.0"></omgdi:waypoint>
+        <omgdi:waypoint x="177.0" y="459.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

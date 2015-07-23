@@ -62,7 +62,6 @@ import org.apache.tika.io.TikaInputStream;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.store.DeleteFileVisitor;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStream;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStreamFactory;
 import fr.ortolang.diffusion.store.binary.hash.SHA1FilterInputStreamFactory;
@@ -98,16 +97,12 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	
 	@PostConstruct
 	public void init() {
-		this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_BINARY_HOME);
+		this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_BINARY_HOME);
 		this.working = Paths.get(base.toString(), "work");
 		this.collide = Paths.get(base.toString(), "collide");
 		this.factory = new SHA1FilterInputStreamFactory();
 		LOGGER.log(Level.FINEST, "Initializing service with base folder: " + base);
 		try {
-			if ( Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.binary.purge")) ) {
-				LOGGER.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
-				Files.walkFileTree(base, new DeleteFileVisitor());
-			}
 			Files.createDirectories(base);
 			Files.createDirectories(working);
 			Files.createDirectories(collide);

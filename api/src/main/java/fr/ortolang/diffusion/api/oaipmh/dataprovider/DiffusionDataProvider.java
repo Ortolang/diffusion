@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.oaipmh.dataprovider;
+package fr.ortolang.diffusion.api.oaipmh.dataprovider;
 
 /*
  * #%L
@@ -69,10 +69,10 @@ import com.lyncode.xoai.model.oaipmh.Request;
 import com.lyncode.xoai.services.api.DateProvider;
 import com.lyncode.xoai.services.impl.UTCDateProvider;
 
-import fr.ortolang.diffusion.oaipmh.handlers.DiffusionGetRecordHandler;
-import fr.ortolang.diffusion.oaipmh.handlers.DiffusionListIdentifiersHandler;
-import fr.ortolang.diffusion.oaipmh.handlers.DiffusionListMetadataFormatsHandler;
-import fr.ortolang.diffusion.oaipmh.handlers.DiffusionListRecordsHandler;
+import fr.ortolang.diffusion.api.oaipmh.handlers.DiffusionGetRecordHandler;
+import fr.ortolang.diffusion.api.oaipmh.handlers.DiffusionListIdentifiersHandler;
+import fr.ortolang.diffusion.api.oaipmh.handlers.DiffusionListMetadataFormatsHandler;
+import fr.ortolang.diffusion.api.oaipmh.handlers.DiffusionListRecordsHandler;
 
 public class DiffusionDataProvider {
 	private Logger log = Logger.getLogger(this.getClass().getName());

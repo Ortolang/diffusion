@@ -74,7 +74,6 @@ import org.openrdf.sail.nativerdf.NativeStore;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
-import fr.ortolang.diffusion.store.DeleteFileVisitor;
 
 @Local(TripleStoreService.class)
 @Startup
@@ -93,17 +92,13 @@ public class TripleStoreServiceBean implements TripleStoreService {
     
     public TripleStoreServiceBean() {
     	LOGGER.log(Level.FINE, "Instanciating service");
-    	this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_TRIPLE_HOME);
+    	this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_TRIPLE_HOME);
     }
 
     @PostConstruct
     public void init() {
     	LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
     	try {
-    		if ( Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.triple.purge")) ) {
-				LOGGER.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
-				Files.walkFileTree(base, new DeleteFileVisitor());
-			} 
     		Files.createDirectories(base);
     		repository = new SailRepository(new NativeStore(base.toFile()));
             repository.initialize();

@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.oaipmh.handlers;
+package fr.ortolang.diffusion.api.oaipmh.handlers;
 
 /*
  * #%L
@@ -65,8 +65,8 @@ import com.lyncode.xoai.model.oaipmh.Metadata;
 import com.lyncode.xoai.model.oaipmh.Record;
 import com.lyncode.xoai.model.oaipmh.ResumptionToken;
 
-import fr.ortolang.diffusion.oaipmh.handlers.helpers.MultiMetadataItemRepositoryHelper;
-import fr.ortolang.diffusion.oaipmh.repository.MultiMetadataItemRepository;
+import fr.ortolang.diffusion.api.oaipmh.handlers.helpers.MultiMetadataItemRepositoryHelper;
+import fr.ortolang.diffusion.api.oaipmh.repository.MultiMetadataItemRepository;
 
 public class DiffusionListRecordsHandler extends VerbHandler<ListRecords> {
 	

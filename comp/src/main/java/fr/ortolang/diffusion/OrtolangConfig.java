@@ -36,83 +36,103 @@ package fr.ortolang.diffusion;
  * #L%
  */
 
-import java.io.FileInputStream;
 import java.io.InputStream;
-import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class OrtolangConfig {
-
+	
+	private static final String CURRENT_CONFIG_VERSION = "2";
 	private static final Logger LOGGER = Logger.getLogger(OrtolangConfig.class.getName());
 	private static OrtolangConfig config;
 	private Properties props;
+	private Path home;
 	
-	private OrtolangConfig(String configFilePath) throws Exception {
-        props = new Properties();
-        FileInputStream in = null;
-        try {
-        	in = new FileInputStream(configFilePath);
+	private OrtolangConfig() throws Exception {
+		if ( System.getenv("ORTOLANG_HOME") != null ) {
+    		home = Paths.get(System.getenv("ORTOLANG_HOME"));
+    	} else {
+    		home = Paths.get(System.getProperty("user.dir"), ".ortolang");
+    	}
+    	if ( !Files.exists(home) ) {
+			Files.createDirectories(home);
+		}
+    	LOGGER.log(Level.INFO, "ORTOLANG_HOME set to : " + home);
+    	
+    	props = new Properties();
+        Path configFilePath = Paths.get(home.toString(), "config.properties");
+    	if ( !Files.exists(configFilePath) ) {
+    		Files.copy(OrtolangConfig.class.getClassLoader().getResourceAsStream("config.properties"), configFilePath);
+    	}
+    	try (InputStream in = Files.newInputStream(configFilePath) ) {
         	props.load(in);
-        } finally {
-        	if ( in != null ) {
-        		in.close();
-        	}
-        }
-    }
-
-    private OrtolangConfig(URL configFileURL) throws Exception {
-        props = new Properties();
-        InputStream in = null;
-        try {
-        	in = configFileURL.openStream();
-        	props.load(in);
-        } finally {
-        	if ( in != null ) {
-        		in.close();
+        	String fileVersion = this.getProperty(Property.CONFIG_VERSION);
+        	if ( !fileVersion.equals(CURRENT_CONFIG_VERSION) ) {
+        		LOGGER.log(Level.SEVERE, "Configuration File Version mismatch with Current Config Version: " + fileVersion + " != " + CURRENT_CONFIG_VERSION + "  --> UPDATE CONFIGURATION FILE");
+        		throw new Exception("Version mismatch between config file version: " + fileVersion + " and current config verison: " + CURRENT_CONFIG_VERSION + " !! Please update your config file");
         	}
         }
     }
 
     public static synchronized OrtolangConfig getInstance() {
-        try {
-            if (config == null) {
-                String configFilePath = System.getProperty("ortolang.config.file");
-                if (configFilePath != null && configFilePath.length() != 0) {
-                    config = new OrtolangConfig(configFilePath);
-                    LOGGER.log(Level.INFO, "using custom config file : " + configFilePath);
-                } else {
-                    URL configFileURL = OrtolangConfig.class.getClassLoader().getResource("config.properties");
-                    config = new OrtolangConfig(configFileURL);
-                    LOGGER.log(Level.INFO, "using default config file : " + configFileURL.getPath());
-                }
-            }
-
-            return config;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "unable to load configuration", e);
+        if (config == null) {
+         	try {
+				config = new OrtolangConfig();
+			} catch (Exception e) {
+				LOGGER.log(Level.SEVERE, "unable to load configuration", e);
+				throw new RuntimeException("unable to load configuration", e);
+			}
         }
-        return null;
+        return config;
     }
     
-    public String getHome() {
-    	String home = this.getProperty("home");
-		if ( home.startsWith("~") ) {
-			home = System.getProperty("user.home") + home.substring(1);
-		}
-		if ( home.startsWith("$HOME") ) {
-			home = System.getProperty("user.home") + home.substring(5);
-		}
-		return home;
+    public Path getHomePath() {
+    	return home;
     }
-
-	public String getProperty(String name) {
-		return props.getProperty(name);
-	}
-	
-	public Properties getProperties() {
-		return props;
-	}
+    
+    public String getProperty(OrtolangConfig.Property property) {
+    	return props.getProperty(property.key());
+    }
+    
+    public enum Property {
+    	
+    	CONFIG_VERSION ("config.version"),
+    	HANDLE_PREFIX ("handle.prefix"),
+    	DATE_FORMAT_PATTERN ("date.format.pattern"),
+    	
+    	API_URL_SSL ("api.url.ssl"),
+    	API_URL_NOSSL ("api.url.nossl"),
+    	API_CONTEXT ("api.context"),
+    	API_PATH_OBJECTS ("api.path.objects"),
+    	API_PATH_CONTENT ("api.path.content"),
+    	API_PATH_SUB ("api.path.sub"),
+    	API_PATH_OAI ("api.path.oai"),
+    	
+    	AUTH_SERVER_URL ("auth.server.url"),
+    	AUTH_CLIENT_PUBKEY ("auth.pubkey"),
+    	AUTH_REALM ("auth.realm"),
+    	AUTH_CLIENT ("auth.client"),
+    	AUTH_LOGOUT_REDIRECT ("auth.logout.redirect"),
+    	
+    	RUNTIME_DEFINITIONS ("runtime.definitions"),
+    	
+    	THUMBNAIL_GENERATORS ("thumbnail.generators");
+    	
+    	
+    	private final String key;
+    	
+    	private Property(String name) {
+    		this.key = name;
+    	}
+    	
+    	public String key() {
+    		return key;
+    	}
+    	
+    }
 
 }

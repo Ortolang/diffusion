@@ -36,12 +36,10 @@ package fr.ortolang.diffusion.api.profile;
  * #L%
  */
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
-
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import fr.ortolang.diffusion.membership.entity.Profile;
 
 @XmlRootElement(name = "profile-card")
 public class ProfileCardRepresentation {

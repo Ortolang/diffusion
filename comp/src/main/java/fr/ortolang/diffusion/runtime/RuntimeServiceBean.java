@@ -110,7 +110,7 @@ public class RuntimeServiceBean implements RuntimeService {
 	public void importProcessTypes() throws RuntimeServiceException {
 		LOGGER.log(Level.INFO, "Importing configured process types");
 		try {
-			String[] types = OrtolangConfig.getInstance().getProperty("runtime.definitions").split(",");
+			String[] types = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.RUNTIME_DEFINITIONS).split(",");
 			engine.deployDefinitions(types);
 		} catch (RuntimeEngineException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while importing process types", e);

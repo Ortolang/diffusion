@@ -49,13 +49,10 @@ public class URIHelper {
 				return null;
 			} else {
 				StringBuilder path = new StringBuilder();
-				if ( OrtolangConfig.getInstance().getProperty("api.context") != null && OrtolangConfig.getInstance().getProperty("api.context").length() > 0 ) {
-					path.append(OrtolangConfig.getInstance().getProperty("api.context"));
-				}
-				if ( OrtolangConfig.getInstance().getProperty("api.objects.path") != null && OrtolangConfig.getInstance().getProperty("api.objects.path").length() > 0 ) {
-					path.append(OrtolangConfig.getInstance().getProperty("api.objects.path"));
-				}
-				URI uri = new URI("http", null, OrtolangConfig.getInstance().getProperty("api.host"), Integer.parseInt(OrtolangConfig.getInstance().getProperty("api.port.http")), path.append("/").append(key).toString(), null, null);
+				path.append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL));
+				path.append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_OBJECTS));
+				path.append("/").append(key);
+				URI uri = new URI(path.toString());
 				return uri.toString();
 			}
 		} catch ( URISyntaxException use ) {

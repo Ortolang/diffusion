@@ -57,6 +57,7 @@ import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
+import fr.ortolang.diffusion.store.handle.HandleStoreService;
 
 public abstract class RuntimeEngineTask implements JavaDelegate {
 
@@ -92,6 +93,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	protected RuntimeService runtime;
 	protected MembershipService membership;
 	protected BinaryStoreService store;
+	protected HandleStoreService hdlstore;
 	protected CoreService core;
 	protected BrowserService browser;
 	protected RegistryService registry;
@@ -117,6 +119,17 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 				store = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME);
 			}
 			return store;
+		} catch (Exception e) {
+			throw new RuntimeEngineTaskException(e);
+		}
+	}
+	
+	public HandleStoreService getHandleStore() throws RuntimeEngineTaskException {
+		try {
+			if (hdlstore == null) {
+				hdlstore = (HandleStoreService) OrtolangServiceLocator.lookup(HandleStoreService.SERVICE_NAME);
+			}
+			return hdlstore;
 		} catch (Exception e) {
 			throw new RuntimeEngineTaskException(e);
 		}

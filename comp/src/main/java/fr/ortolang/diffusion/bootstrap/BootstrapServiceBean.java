@@ -63,6 +63,7 @@ import org.jboss.ejb3.annotation.RunAsPrincipal;
 import org.jboss.ejb3.annotation.SecurityDomain;
 import org.jgroups.util.UUID;
 
+import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
@@ -123,8 +124,13 @@ public class BootstrapServiceBean implements BootstrapService {
 	}
 
 	@PostConstruct
-	public void init() throws Exception {
-		bootstrap();
+	public void init() {
+		try {
+			OrtolangConfig.getInstance();
+			bootstrap();
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "error during bootstrap");
+		}
 	}
 
 	@Override

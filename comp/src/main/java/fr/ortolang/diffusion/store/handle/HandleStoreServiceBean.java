@@ -76,7 +76,7 @@ public class HandleStoreServiceBean implements HandleStoreService {
 
 	private byte[] getAdminValue() {
 		if ( admin == null ) {
-			String adminHandle = OrtolangConfig.getInstance().getProperty("handle.admin");
+			String adminHandle = "0.NA/" + OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX);
 			admin = Encoder.encodeAdminRecord(new AdminRecord(adminHandle.getBytes(), 300, true, true, true, true, true, true, true, true, true, true, true, true));
 		}
 		return admin;

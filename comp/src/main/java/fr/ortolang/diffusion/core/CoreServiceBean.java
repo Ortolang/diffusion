@@ -754,6 +754,46 @@ public class CoreServiceBean implements CoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public Map<String, String> listWorkspaceContent(String wskey, String snapshot) throws CoreServiceException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "listing content of workspace [" + wskey + "]");
+		try {
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+			checkObjectType(identifier, Workspace.OBJECT_TYPE);
+			authorisation.checkPermission(wskey, subjects, "read");
+
+			Workspace workspace = em.find(Workspace.class, identifier.getId());
+			if (workspace == null) {
+				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+			}
+			if ( !workspace.containsSnapshotName(snapshot) ) {
+				throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + snapshot);
+			}
+			String root = workspace.findSnapshotByName(snapshot).getKey();
+
+			Map<String, String> map = new HashMap<String, String>();
+			listContent(root, PathBuilder.newInstance(), map);
+			return map;
+		} catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException | InvalidPathException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occurred during listing workspace content", e);
+			throw new CoreServiceException("unexpected error while trying to list workspace content", e);
+		}
+	}
+
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private void listContent(String key, PathBuilder path, Map<String, String> map) throws KeyNotFoundException, AccessDeniedException, CoreServiceException, OrtolangException, InvalidPathException {
+		Object object = findObject(key);
+		map.put(path.build(), key);
+		if (object instanceof Collection) {
+			for (CollectionElement element : ((Collection)object).getElements()) {
+				listContent(element.getKey(), path.clone().path(element.getName()), map);
+			}
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "find workspace [" + wskey + "] latest published snapshot");
 		try {

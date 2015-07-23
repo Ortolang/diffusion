@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.oaipmh.handlers.helpers;
+package fr.ortolang.diffusion.api.oaipmh.handlers.helpers;
 
 /*
  * #%L
@@ -52,7 +52,7 @@ import com.lyncode.xoai.dataprovider.model.Context;
 import com.lyncode.xoai.dataprovider.model.Item;
 import com.lyncode.xoai.dataprovider.model.MetadataFormat;
 
-import fr.ortolang.diffusion.oaipmh.repository.MultiMetadataItemRepository;
+import fr.ortolang.diffusion.api.oaipmh.repository.MultiMetadataItemRepository;
 
 public class MultiMetadataItemRepositoryHelper {
 	private MultiMetadataItemRepository itemRepository;

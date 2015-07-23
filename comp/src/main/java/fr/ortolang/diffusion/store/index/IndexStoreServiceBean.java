@@ -37,7 +37,6 @@ package fr.ortolang.diffusion.store.index;
  */
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -79,7 +78,6 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangSearchResult;
-import fr.ortolang.diffusion.store.DeleteFileVisitor;
 
 @Local(IndexStoreService.class)
 @Startup
@@ -101,17 +99,13 @@ public class IndexStoreServiceBean implements IndexStoreService {
 
     public IndexStoreServiceBean() {
         LOGGER.log(Level.INFO, "Instanciating service");
-        this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_INDEX_HOME);
+        this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_INDEX_HOME);
     }
 
     @PostConstruct
     public void init() {
         LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
         try {
-            if ( Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.index.purge")) ) {
-                LOGGER.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
-                Files.walkFileTree(base, new DeleteFileVisitor());
-            }
             analyzer = new FrenchAnalyzer(Version.LUCENE_46);
             directory = FSDirectory.open(base.toFile());
             LOGGER.log(Level.FINEST, "directory implementation: " + directory.getClass());

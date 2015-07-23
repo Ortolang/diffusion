@@ -46,15 +46,7 @@ public class ApiUriBuilder {
 	
 	public static UriBuilder getApiUriBuilder() {
 		try {
-			URI uri;
-			String protocol = OrtolangConfig.getInstance().getProperty("api.protocol.default");
-			String host = OrtolangConfig.getInstance().getProperty("api.host");
-			String context = OrtolangConfig.getInstance().getProperty("api.context"); 
-			if ( OrtolangConfig.getInstance().getProperty("api.port." + protocol) != null && OrtolangConfig.getInstance().getProperty("api.port." + protocol).length() > 0 ) {
-				uri = new URI(protocol, null, host, Integer.parseInt(OrtolangConfig.getInstance().getProperty("api.port." + protocol)), context, null, null);
-			} else {
-				uri = new URI(protocol, host, context, null);
-			}
+			URI uri = new URI(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL));
 			return UriBuilder.fromUri(uri);
 		} catch (Exception e) {
 			return null;

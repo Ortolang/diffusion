@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.oaipmh.repository;
+package fr.ortolang.diffusion.api.oaipmh.repository;
 
 /*
  * #%L
@@ -36,41 +36,37 @@ package fr.ortolang.diffusion.oaipmh.repository;
  * #L%
  */
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.lyncode.xoai.dataprovider.model.Item;
+import com.lyncode.xoai.dataprovider.model.ItemIdentifier;
 import com.lyncode.xoai.dataprovider.model.Set;
-import com.lyncode.xoai.model.oaipmh.About;
-import com.lyncode.xoai.model.oaipmh.Metadata;
 
-import fr.ortolang.diffusion.oaipmh.model.DiffusionMetadata;
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
-public class DiffusionItem implements Item {
+public class DiffusionItemIdentifier implements ItemIdentifier {
 
-	public static DiffusionItem item () {
-		return new DiffusionItem();
+	public static DiffusionItemIdentifier item () {
+		return new DiffusionItemIdentifier();
 	}
+
+    public static DiffusionItemIdentifier randomItem() {
+        return new DiffusionItemIdentifier()
+                .withIdentifier(randomAlphabetic(10))
+                .withDatestamp(new Date());
+    }
 
 	private Date datestamp;
 	private String identifier;
-	private Metadata metadata;
-
-	public DiffusionItem withIdentifier(String id) {
+	
+	public DiffusionItemIdentifier withIdentifier(String id) {
 		this.identifier = id;
 		return this;
 	}
 	
-	public DiffusionItem withDatestamp(Date date) {
+	public DiffusionItemIdentifier withDatestamp(Date date) {
 		this.datestamp = date;
-		return this;
-	}
-
-	public DiffusionItem withMetadata(InputStream input) throws IOException {
-		this.metadata = new DiffusionMetadata(input);
 		return this;
 	}
 	
@@ -92,18 +88,8 @@ public class DiffusionItem implements Item {
 
 	@Override
 	public boolean isDeleted() {
+		// No deleted status
 		return false;
 	}
-
-	@Override
-	public List<About> getAbout() {
-		return new ArrayList<About>();
-	}
-
-	@Override
-	public Metadata getMetadata() {
-		return this.metadata;
-	}
-
 
 }

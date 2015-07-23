@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.oaipmh.repository;
+package fr.ortolang.diffusion.api.oaipmh.repository;
 
 /*
  * #%L

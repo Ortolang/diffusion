@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.oaipmh;
+package fr.ortolang.diffusion.api.oaipmh;
 
 /*
  * #%L
@@ -74,9 +74,10 @@ import com.lyncode.xoai.xml.XmlWriter;
 import com.lyncode.xoai.xml.XmlWriter.WriterContext;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.api.ApiUriBuilder;
+import fr.ortolang.diffusion.api.oaipmh.dataprovider.DiffusionDataProvider;
+import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionItemRepository;
 import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.oaipmh.dataprovider.DiffusionDataProvider;
-import fr.ortolang.diffusion.oaipmh.repository.DiffusionItemRepository;
 import fr.ortolang.diffusion.search.SearchService;
 
 @SuppressWarnings("serial")
@@ -88,30 +89,22 @@ public class OAIPMHServlet extends HttpServlet {
 	private static SearchService search;
 	@EJB
 	private static CoreService core;
-	
-    private static Context context;
-    private static Repository repository;
-    private static DiffusionDataProvider dataProvider;
-    
+
+	private static Context context;
+	private static Repository repository;
+	private static DiffusionDataProvider dataProvider;
+
 	@Override
 	public void init(ServletConfig config) throws ServletException {
 		LOGGER.log(Level.FINE, "OAI PMH Initialized");
 		
-		String metadataFormatsStr = OrtolangConfig.getInstance().getProperty("oai.metadata.format");
-		String[] metadataFormats = metadataFormatsStr.split(",");
-		for(String metadataFormat : metadataFormats) {
-			context = new Context()
-			.withMetadataFormat(MetadataFormat.metadataFormat(OrtolangConfig.getInstance().getProperty("oai.metadata.format."+metadataFormat+".prefix"))
-					.withNamespace(OrtolangConfig.getInstance().getProperty("oai.metadata.format."+metadataFormat+".namespace"))
-					.withSchemaLocation(OrtolangConfig.getInstance().getProperty("oai.metadata.format."+metadataFormat+".schemaLocation"))
-					);
-		}
+		context = new Context().withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
 		
 		InMemorySetRepository setRepository = new InMemorySetRepository();
 		DiffusionItemRepository itemRepository = new DiffusionItemRepository(search, core);
 		
 		UTCDateProvider dateProvider = new UTCDateProvider();
-		String earliestDateStr = OrtolangConfig.getInstance().getProperty("oai.earliestdate");
+		String earliestDateStr = "2014-08-12";
 		Date earliestDate = null;
 		try {
 			earliestDate = dateProvider.parse(earliestDateStr, Granularity.Day);
@@ -128,16 +121,15 @@ public class OAIPMHServlet extends HttpServlet {
 		}
 		
 		RepositoryConfiguration repositoryConfiguration = new RepositoryConfiguration()
-			.withAdminEmail(OrtolangConfig.getInstance().getProperty("oai.adminemail")) //TODO ajouter une valeur par defaut dans la methode getProperty
-			.withBaseUrl(OAIPMHUriBuilder.getOAIPMHUriBuilder().build().toString())
-			.withRepositoryName(OrtolangConfig.getInstance().getProperty("oai.repositoryname"))
+			.withAdminEmail("contact@ortolang.fr")
+			.withBaseUrl(ApiUriBuilder.getApiUriBuilder().path(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_OAI)).build().toString())
+			.withRepositoryName("ORTOLANG Repository")
 			.withDeleteMethod(DeletedRecord.NO)
 			.withEarliestDate(earliestDate)
-//			.withDescription("ORTOLANG repository") //TODO add a description (oai-identifier?olac-description?)
 			.withGranularity(Granularity.Day)
-			.withMaxListIdentifiers(Integer.parseInt(OrtolangConfig.getInstance().getProperty("oai.maxlistidentifiers")))
-			.withMaxListRecords(Integer.parseInt(OrtolangConfig.getInstance().getProperty("oai.maxlistrecords")))
-			.withMaxListSets(Integer.parseInt(OrtolangConfig.getInstance().getProperty("oai.maxlistsets")));
+			.withMaxListIdentifiers(100)
+			.withMaxListRecords(100)
+			.withMaxListSets(100);
 		
 		repository = new Repository()
 		    .withSetRepository(setRepository)
@@ -148,16 +140,14 @@ public class OAIPMHServlet extends HttpServlet {
 		dataProvider = new DiffusionDataProvider(context, repository);
 	}
 
-
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
-		
-		// 
-		Map<String,List<String>> reqParam = toParameters(req.getParameterMap());
-		
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+		//
+		Map<String, List<String>> reqParam = toParameters(req.getParameterMap());
+
 		OAIRequest request = new OAIRequest(reqParam);
-		
+
 		// DataProvider
 		OAIPMH response = null;
 		try {
@@ -167,10 +157,10 @@ public class OAIPMHServlet extends HttpServlet {
 			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1.getMessage());
 			return;
 		}
-		
-		if(response!=null) {
+
+		if (response != null) {
 			String result = "";
-			
+
 			try {
 				result = write(response);
 			} catch (XMLStreamException e) {
@@ -182,7 +172,7 @@ public class OAIPMHServlet extends HttpServlet {
 				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
 				return;
 			}
-			
+
 			resp.setContentType("application/xml; charset=utf-8");
 			resp.setCharacterEncoding("UTF-8");
 
@@ -192,43 +182,42 @@ public class OAIPMHServlet extends HttpServlet {
 
 			writer.flush();
 			writer.close();
-			
+
 			return;
 		}
-		
+
 		LOGGER.log(Level.WARNING, "OAIPMH XMl object is null");
 		resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "No valid response to send");
 		return;
 	}
 
-    protected String write(final XmlWritable handle) throws XMLStreamException, XmlWriteException {
-        return OAIPMHServlet.toString(new XmlWritable() {
-            @Override
-            public void write(XmlWriter writer) throws XmlWriteException {
-                    writer.write(handle);
-            }
-        });
-    }
-    
-    public static String toString (XmlWritable writable) throws XMLStreamException, XmlWriteException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        XmlWriter writer = new XmlWriter(outputStream, new WriterContext(Granularity.Day, new SimpleResumptionTokenFormat()));
-        writable.write(writer);
-        writer.close();
-        return outputStream.toString();
-    }
-    
-    protected Map<String,List<String>> toParameters(Map<String, String[]> mParam) {
-		Map<String,List<String>> reqParam = new HashMap<String,List<String>>();
-    	for(Map.Entry<String, String[]> entry : mParam.entrySet()) {
+	protected String write(final XmlWritable handle) throws XMLStreamException, XmlWriteException {
+		return OAIPMHServlet.toString(new XmlWritable() {
+			@Override
+			public void write(XmlWriter writer) throws XmlWriteException {
+				writer.write(handle);
+			}
+		});
+	}
+
+	public static String toString(XmlWritable writable) throws XMLStreamException, XmlWriteException {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		XmlWriter writer = new XmlWriter(outputStream, new WriterContext(Granularity.Day, new SimpleResumptionTokenFormat()));
+		writable.write(writer);
+		writer.close();
+		return outputStream.toString();
+	}
+
+	protected Map<String, List<String>> toParameters(Map<String, String[]> mParam) {
+		Map<String, List<String>> reqParam = new HashMap<String, List<String>>();
+		for (Map.Entry<String, String[]> entry : mParam.entrySet()) {
 			List<String> lValues = new ArrayList<String>();
-			for(String value : entry.getValue()) {
+			for (String value : entry.getValue()) {
 				lValues.add(value);
 			}
 			reqParam.put(entry.getKey(), lValues);
 		}
-    	return reqParam;
-    }
-    
+		return reqParam;
+	}
 
 }

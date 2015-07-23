@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.oaipmh.xml;
+package fr.ortolang.diffusion.api.oaipmh.xml;
 
 /*
  * #%L
