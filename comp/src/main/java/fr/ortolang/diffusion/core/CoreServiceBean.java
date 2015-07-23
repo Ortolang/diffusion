@@ -120,10 +120,6 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
-import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
-import fr.ortolang.diffusion.store.triple.Triple;
-import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
-import fr.ortolang.diffusion.store.triple.URIHelper;
 
 @Local(CoreService.class)
 @Stateless(name = CoreService.SERVICE_NAME)
@@ -2851,66 +2847,6 @@ public class CoreServiceBean implements CoreService {
 
 			return content;
 		} catch (KeyNotFoundException | RegistryServiceException e) {
-			throw new OrtolangException("unable to find an object for key " + key);
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public IndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException {
-		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			if (!identifier.getService().equals(getServiceName())) {
-				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-			}
-			IndexableSemanticContent content = new IndexableSemanticContent();
-
-			if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
-				DataObject object = em.find(DataObject.class, identifier.getId());
-				if (object == null) {
-					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
-				}
-				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", object.getName()));
-				for (MetadataElement me : object.getMetadatas()) {
-					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#hasMetadata", URIHelper.fromKey(me.getKey())));
-				}
-			}
-
-			if (identifier.getType().equals(Collection.OBJECT_TYPE)) {
-				Collection collection = em.find(Collection.class, identifier.getId());
-				if (collection == null) {
-					throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
-				}
-				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", collection.getName()));
-				for (MetadataElement me : collection.getMetadatas()) {
-					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#hasMetadata", URIHelper.fromKey(me.getKey())));
-				}
-			}
-
-			if (identifier.getType().equals(Link.OBJECT_TYPE)) {
-				Link reference = em.find(Link.class, identifier.getId());
-				if (reference == null) {
-					throw new OrtolangException("unable to load reference with id [" + identifier.getId() + "] from storage");
-				}
-				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", reference.getName()));
-				for (MetadataElement me : reference.getMetadatas()) {
-					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#hasMetadata", URIHelper.fromKey(me.getKey())));
-				}
-			}
-
-			if (identifier.getType().equals(MetadataObject.OBJECT_TYPE)) {
-				MetadataObject metadata = em.find(MetadataObject.class, identifier.getId());
-				if (metadata == null) {
-					throw new OrtolangException("unable to load metadata with id [" + identifier.getId() + "] from storage");
-				}
-
-				String subj = URIHelper.fromKey(key);
-				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#name", metadata.getName()));
-				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#metadataFormat", metadata.getFormat()));
-			}
-
-			return content;
-		} catch (KeyNotFoundException | RegistryServiceException | TripleStoreServiceException e) {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}

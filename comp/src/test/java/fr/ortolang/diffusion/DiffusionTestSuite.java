@@ -47,8 +47,8 @@ import fr.ortolang.diffusion.core.PathBuilderTest;
 import fr.ortolang.diffusion.membership.MembershipServiceTest;
 import fr.ortolang.diffusion.registry.RegistryServiceTest;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceTest;
+import fr.ortolang.diffusion.store.handle.HandleStoreServiceTest;
 import fr.ortolang.diffusion.store.index.IndexStoreServiceTest;
-import fr.ortolang.diffusion.store.triple.TripleStoreServiceTest;
 
 
 @RunWith(Suite.class)
@@ -60,9 +60,8 @@ import fr.ortolang.diffusion.store.triple.TripleStoreServiceTest;
 	PathBuilderTest.class,
 	RegistryServiceTest.class,
 	BinaryStoreServiceTest.class,
-//	HandleStoreServiceTest.class,
+	HandleStoreServiceTest.class,
 	IndexStoreServiceTest.class,
-	TripleStoreServiceTest.class
 })
 public class DiffusionTestSuite {
 

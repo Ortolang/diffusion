@@ -2,7 +2,6 @@ package fr.ortolang.diffusion;
 
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
-import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
 
 /*
  * #%L
@@ -43,8 +42,6 @@ import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
 public interface OrtolangIndexableService {
 	
 	public abstract IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException;
-	
-	public abstract IndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException;
 	
 	public abstract IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException;
 	

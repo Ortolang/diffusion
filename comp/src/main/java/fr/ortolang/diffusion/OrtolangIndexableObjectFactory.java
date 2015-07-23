@@ -3,7 +3,6 @@ package fr.ortolang.diffusion;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
-import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
 
 public class OrtolangIndexableObjectFactory<T> {
 	
@@ -34,21 +33,6 @@ public class OrtolangIndexableObjectFactory<T> {
 			return object;
 		} catch (Exception e) {
 			throw new OrtolangException("unable to get json indexable content for object ", e);
-		}
-	}
-	
-	public static OrtolangIndexableObject<IndexableSemanticContent> buildSemanticIndexableObject(String key) throws OrtolangException {
-		try {
-			RegistryService registry = (RegistryService)OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME);
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
-			IndexableSemanticContent content = service.getIndexableSemanticContent(key);
-			OrtolangIndexableObject<IndexableSemanticContent> object = new OrtolangIndexableObject<IndexableSemanticContent>();
-			loadCommonIndexableObject(key, identifier, object);
-			object.setContent(content);
-			return object;
-		} catch (Exception e) {
-			throw new OrtolangException("unable to get semantic indexable content for object ", e);
 		}
 	}
 	
