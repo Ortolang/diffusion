@@ -7,9 +7,11 @@ import java.util.jar.Manifest;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -23,6 +25,9 @@ public class ConfigResource {
 	private static final Logger LOGGER = Logger.getLogger(ConfigResource.class.getName());
 	private static String version = null;
 	
+	@Context
+	private ServletContext ctx;
+	
 	@GET
 	@Path("/ping")
     public Response ping() {
@@ -35,10 +40,10 @@ public class ConfigResource {
     public Response version() throws Exception {
 		if ( version == null ) {
 			try {
-				InputStream manifestStream = ConfigResource.class.getResourceAsStream("META-INF/MANIFEST.MF");
+				InputStream manifestStream = ctx.getResourceAsStream("META-INF/MANIFEST.MF");
 		        Manifest manifest = new Manifest(manifestStream);
 		        Attributes attributes = manifest.getMainAttributes();
-		        version = attributes.getValue("Implementation-Version");
+		        version = attributes.getValue("API-Version");
 		    } catch(IOException ex) {
 		        LOGGER.log(Level.WARNING, "Error while reading version: " + ex.getMessage());
 		        throw new Exception("Unable to read version");
@@ -58,6 +63,7 @@ public class ConfigResource {
 		builder.append("OrtolangConfig.apiServerUrlNoSSL='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("';\r\n");
 		builder.append("OrtolangConfig.apiContentPath='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_CONTENT)).append("';\r\n");
 		builder.append("OrtolangConfig.apiSubPath='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_SUB)).append("';\r\n");
+		builder.append("OrtolangConfig.keycloakConfigLocation ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("/config/client/auth").append("';\r\n");
 		return Response.ok(builder.toString()).build();
 	}
 	

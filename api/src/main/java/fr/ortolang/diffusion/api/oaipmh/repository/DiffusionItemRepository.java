@@ -36,9 +36,10 @@ package fr.ortolang.diffusion.api.oaipmh.repository;
  * #L%
  */
 
+import static java.lang.Math.min;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -47,11 +48,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
 
 import com.lyncode.xoai.dataprovider.exceptions.IdDoesNotExistException;
 import com.lyncode.xoai.dataprovider.exceptions.NoMetadataFormatsException;
@@ -67,10 +63,8 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.search.SearchService;
-import fr.ortolang.diffusion.search.SearchServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
-import static java.lang.Math.min;
 
 public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
@@ -85,6 +79,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		return semanticUri.substring(semanticUri.lastIndexOf("/")+1);
 	}
 
+	@SuppressWarnings("unused")
 	private SearchService search;
 	private CoreService core;
 	

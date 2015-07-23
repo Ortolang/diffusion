@@ -111,7 +111,7 @@
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 						</manifest>
 						<manifestEntries>
-							<Implementation-Build>${project.version}</Implementation-Build>
+							<API-Version>${project.version}</API-Version>
 						</manifestEntries>
 					</archive>
 				</configuration>

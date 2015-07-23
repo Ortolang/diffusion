@@ -57,12 +57,12 @@ public class ExportBDBHandles {
 			public void scanHandle(byte[] handle) throws HandleException {
 				cpt++;
 				System.out.println(cpt + " " + Util.decodeString(handle));
-//				byte[][] rawvalues = getRawHandleValues(handle, null, null);
-//				for (int i=0; i<rawvalues.length; i++) {
-//					HandleValue value = new HandleValue();
-//					Encoder.decodeHandleValue(rawvalues[i], 0, value);
-//					System.out.println(value.toDetailedString());
-//				}
+				byte[][] rawvalues = getRawHandleValues(handle, null, null);
+				for (int i=0; i<rawvalues.length; i++) {
+					HandleValue value = new HandleValue();
+					Encoder.decodeHandleValue(rawvalues[i], 0, value);
+					System.out.println(value.toDetailedString());
+				}
 			}
 		});
 		
@@ -70,22 +70,6 @@ public class ExportBDBHandles {
 
 	private final void scanHandles(ScanCallback callback) throws HandleException {
 		DBWrapper.DBIterator e = handlesDB.getEnumerator();
-		try {
-			while (e.hasMoreElements()) {
-				byte[][] record = (byte[][]) e.nextElement();
-				callback.scanHandle(record[0]);
-			}
-		} finally {
-			e.cleanup();
-		}
-	}
-
-	/*********************************************************************
-	 * Scan the NA database, calling a method in the specified callback for every naming authority handle in the database.
-	 *********************************************************************/
-	private void scanNAs(ScanCallback callback) throws HandleException {
-		DBWrapper.DBIterator e = nasDB.getEnumerator();
-
 		try {
 			while (e.hasMoreElements()) {
 				byte[][] record = (byte[][]) e.nextElement();
@@ -193,6 +177,7 @@ public class ExportBDBHandles {
 			return null;
 		}
 
+		@SuppressWarnings("unused")
 		public void put(byte key[], byte data[]) throws IOException, Exception {
 			OperationStatus status = db.put(null, new DatabaseEntry(key), new DatabaseEntry(data));
 			if (status != OperationStatus.SUCCESS) {
@@ -204,6 +189,7 @@ public class ExportBDBHandles {
 			db.close();
 		}
 
+		@SuppressWarnings("unused")
 		public boolean del(byte key[]) throws IOException, DatabaseException {
 			return db.delete(null, new DatabaseEntry(key)) == OperationStatus.SUCCESS;
 		}
@@ -212,10 +198,12 @@ public class ExportBDBHandles {
 			return new DBIterator();
 		}
 
+		@SuppressWarnings("unused")
 		public DBIterator getEnumerator(byte filter[]) {
 			return new DBIterator(filter);
 		}
 
+		@SuppressWarnings("unused")
 		public void deleteAllRecords() throws Exception {
 			Database tmpDB = db;
 			com.sleepycat.je.Transaction killTxn = environment.beginTransaction(null, null);
@@ -237,6 +225,7 @@ public class ExportBDBHandles {
 			}
 		}
 
+		@SuppressWarnings("rawtypes")
 		class DBIterator implements Enumeration {
 			private Cursor cursor = null;
 			private DatabaseEntry keyEntry = new DatabaseEntry();

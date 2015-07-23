@@ -39,7 +39,7 @@
 	<servlet>
 		<display-name>OAI-PMH Servlet</display-name>
 		<servlet-name>OAIPMHServlet</servlet-name>
-		<servlet-class>fr.ortolang.diffusion.oaipmh.OAIPMHServlet</servlet-class>
+		<servlet-class>fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet</servlet-class>
 	</servlet>
 	<servlet>
 		<servlet-name>default</servlet-name>

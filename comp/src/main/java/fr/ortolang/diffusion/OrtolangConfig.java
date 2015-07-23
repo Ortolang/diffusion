@@ -56,7 +56,7 @@ public class OrtolangConfig {
 		if ( System.getenv("ORTOLANG_HOME") != null ) {
     		home = Paths.get(System.getenv("ORTOLANG_HOME"));
     	} else {
-    		home = Paths.get(System.getProperty("user.dir"), ".ortolang");
+    		home = Paths.get(System.getProperty("user.home"), ".ortolang");
     	}
     	if ( !Files.exists(home) ) {
 			Files.createDirectories(home);
