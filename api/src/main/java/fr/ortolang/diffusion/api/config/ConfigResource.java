@@ -59,8 +59,8 @@ public class ConfigResource {
 		StringBuilder builder = new StringBuilder();
 		builder.append("var OrtolangConfig = {};\r\n");
 		builder.append("OrtolangConfig.logoutRedirectUrl='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_LOGOUT_REDIRECT)).append("';\r\n");
-		builder.append("OrtolangConfig.apiServerUrlDefault='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_NOSSL)).append("';\r\n");
-		builder.append("OrtolangConfig.apiServerUrlNoSSL='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("';\r\n");
+		builder.append("OrtolangConfig.apiServerUrlDefault='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("';\r\n");
+		builder.append("OrtolangConfig.apiServerUrlNoSSL='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_NOSSL)).append("';\r\n");
 		builder.append("OrtolangConfig.apiContentPath='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_CONTENT)).append("';\r\n");
 		builder.append("OrtolangConfig.apiSubPath='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_SUB)).append("';\r\n");
 		builder.append("OrtolangConfig.keycloakConfigLocation ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("/config/client/auth").append("';\r\n");
