@@ -70,7 +70,7 @@
 							<contextRoot>/admin</contextRoot>
 						</webModule>
 					</modules>
-					<fileNameMapping>no-version</fileNameMapping>
+					<!-- <fileNameMapping>no-version</fileNameMapping> -->
 					<finalName>ortolang-diffusion</finalName>
 					<applicationName>diffusion</applicationName>
 					<archive>

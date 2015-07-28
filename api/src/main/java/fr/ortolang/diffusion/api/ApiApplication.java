@@ -42,6 +42,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import fr.ortolang.diffusion.api.config.ConfigResource;
 import fr.ortolang.diffusion.api.content.ContentResource;
 import fr.ortolang.diffusion.api.filter.ContentTypeSetterPreProcessorInterceptor;
 import fr.ortolang.diffusion.api.form.FormResource;
@@ -58,7 +59,6 @@ import fr.ortolang.diffusion.api.mapper.PropertyNotFoundExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SearchServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SecurityServiceExceptionMapper;
 import fr.ortolang.diffusion.api.object.ObjectResource;
-import fr.ortolang.diffusion.api.ping.PingResource;
 import fr.ortolang.diffusion.api.profile.ProfileResource;
 import fr.ortolang.diffusion.api.referentiel.ReferentielEntityResource;
 import fr.ortolang.diffusion.api.runtime.RuntimeResource;
@@ -79,7 +79,7 @@ public class ApiApplication extends Application {
 		classes.add(MetadataFormatResource.class);
 		classes.add(ReferentielEntityResource.class);
 		classes.add(ContentResource.class);
-		classes.add(PingResource.class);
+		classes.add(ConfigResource.class);
 	}
 
 	@Override

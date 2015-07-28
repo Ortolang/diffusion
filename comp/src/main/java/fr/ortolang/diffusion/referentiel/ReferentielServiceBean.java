@@ -47,10 +47,6 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
-import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
-import fr.ortolang.diffusion.store.triple.Triple;
-import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
-import fr.ortolang.diffusion.store.triple.URIHelper;
 
 @Local(ReferentielService.class)
 @Stateless(name = ReferentielService.SERVICE_NAME)
@@ -364,32 +360,6 @@ public class ReferentielServiceBean implements ReferentielService {
 		}
 	}
 
-
-	@Override
-	public IndexableSemanticContent getIndexableSemanticContent(String key)
-			throws OrtolangException {
-		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-
-			if (!identifier.getService().equals(getServiceName())) {
-				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-			}
-
-			IndexableSemanticContent content = new IndexableSemanticContent();
-			
-			if (identifier.getType().equals(ReferentielEntity.OBJECT_TYPE)) {
-				ReferentielEntity refEntity = em.find(ReferentielEntity.class, identifier.getId());
-				if (refEntity != null) {
-					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "http://xmlns.com/foaf/0.1/ReferentielEntity"));
-					content.addTriple(new Triple(URIHelper.fromKey(key), "http://xmlns.com/foaf/0.1/name", refEntity.getName()));
-				}
-			}
-
-			return content;
-		} catch (KeyNotFoundException | RegistryServiceException | TripleStoreServiceException e) {
-			throw new OrtolangException("unable to get indexable semantic content for key " + key, e);
-		}
-	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)

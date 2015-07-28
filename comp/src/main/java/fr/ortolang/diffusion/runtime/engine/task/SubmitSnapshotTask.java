@@ -55,8 +55,6 @@ public class SubmitSnapshotTask extends RuntimeEngineTask {
 			}
 		}
 		
-		//TODO notify moderators...
-
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "lock for review done: \r\n" + report.toString()));
 	}
 

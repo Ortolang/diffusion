@@ -107,6 +107,14 @@
 				<version>${version.war.plugin}</version>
 				<configuration>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+						</manifest>
+						<manifestEntries>
+							<API-Version>${project.version}</API-Version>
+						</manifestEntries>
+					</archive>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -125,32 +133,13 @@
 						</tag>
 					</tags>
 				</configuration>
-				<!-- <executions>
-					<execution>
-						<id>generate-service-docs</id>
-						<phase>generate-resources</phase>
-						<configuration>
-							<doclet>com.carma.swagger.doclet.ServiceDoclet</doclet>
-							<docletArtifact>
-								<groupId>com.carma</groupId>
-								<artifactId>swagger-doclet</artifactId>
-								<version>1.0.3</version>
-							</docletArtifact>
-							<destDir>swagger</destDir>
-							<reportOutputDirectory>${project.reporting.outputDirectory}</reportOutputDirectory>
-							<useStandardDocletOptions>false</useStandardDocletOptions>
-							<additionalparam>-apiVersion ${project.version} -docBasePath http://localhost/~fpierre/api/ -apiBasePath /</additionalparam>
-						</configuration>
-						<goals>
-							<goal>javadoc</goal>
-						</goals>
-					</execution>
-				</executions> -->
+				
 			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>

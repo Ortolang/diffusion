@@ -120,10 +120,6 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
-import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
-import fr.ortolang.diffusion.store.triple.Triple;
-import fr.ortolang.diffusion.store.triple.TripleStoreServiceException;
-import fr.ortolang.diffusion.store.triple.URIHelper;
 
 @Local(CoreService.class)
 @Stateless(name = CoreService.SERVICE_NAME)
@@ -256,7 +252,6 @@ public class CoreServiceBean implements CoreService {
 			em.persist(collection);
 
 			registry.register(head, collection.getObjectIdentifier(), caller);
-			registry.itemify(head);
 			indexing.index(head);
 
 			Map<String, List<String>> rules = new HashMap<String, List<String>>();
@@ -310,7 +305,7 @@ public class CoreServiceBean implements CoreService {
 		} catch (KeyAlreadyExistsException e) {
 			ctx.setRollbackOnly();
 			throw e;
-		} catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
+		} catch (KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
 				| MembershipServiceException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while creating workspace", e);
@@ -750,6 +745,46 @@ public class CoreServiceBean implements CoreService {
 		if (object instanceof Collection) {
 			for (CollectionElement element : ((Collection)object).getElements()) {
 				builtPublicationMap(element.getKey(), map, current, params);
+			}
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public Map<String, String> listWorkspaceContent(String wskey, String snapshot) throws CoreServiceException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "listing content of workspace [" + wskey + "]");
+		try {
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+			checkObjectType(identifier, Workspace.OBJECT_TYPE);
+			authorisation.checkPermission(wskey, subjects, "read");
+
+			Workspace workspace = em.find(Workspace.class, identifier.getId());
+			if (workspace == null) {
+				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+			}
+			if ( !workspace.containsSnapshotName(snapshot) ) {
+				throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + snapshot);
+			}
+			String root = workspace.findSnapshotByName(snapshot).getKey();
+
+			Map<String, String> map = new HashMap<String, String>();
+			listContent(root, PathBuilder.newInstance(), map);
+			return map;
+		} catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException | InvalidPathException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occurred during listing workspace content", e);
+			throw new CoreServiceException("unexpected error while trying to list workspace content", e);
+		}
+	}
+
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private void listContent(String key, PathBuilder path, Map<String, String> map) throws KeyNotFoundException, AccessDeniedException, CoreServiceException, OrtolangException, InvalidPathException {
+		Object object = findObject(key);
+		map.put(path.build(), key);
+		if (object instanceof Collection) {
+			for (CollectionElement element : ((Collection)object).getElements()) {
+				listContent(element.getKey(), path.clone().path(element.getName()), map);
 			}
 		}
 	}
@@ -2813,66 +2848,6 @@ public class CoreServiceBean implements CoreService {
 
 			return content;
 		} catch (KeyNotFoundException | RegistryServiceException e) {
-			throw new OrtolangException("unable to find an object for key " + key);
-		}
-	}
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public IndexableSemanticContent getIndexableSemanticContent(String key) throws OrtolangException {
-		try {
-			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			if (!identifier.getService().equals(getServiceName())) {
-				throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-			}
-			IndexableSemanticContent content = new IndexableSemanticContent();
-
-			if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
-				DataObject object = em.find(DataObject.class, identifier.getId());
-				if (object == null) {
-					throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
-				}
-				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", object.getName()));
-				for (MetadataElement me : object.getMetadatas()) {
-					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#hasMetadata", URIHelper.fromKey(me.getKey())));
-				}
-			}
-
-			if (identifier.getType().equals(Collection.OBJECT_TYPE)) {
-				Collection collection = em.find(Collection.class, identifier.getId());
-				if (collection == null) {
-					throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
-				}
-				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", collection.getName()));
-				for (MetadataElement me : collection.getMetadatas()) {
-					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#hasMetadata", URIHelper.fromKey(me.getKey())));
-				}
-			}
-
-			if (identifier.getType().equals(Link.OBJECT_TYPE)) {
-				Link reference = em.find(Link.class, identifier.getId());
-				if (reference == null) {
-					throw new OrtolangException("unable to load reference with id [" + identifier.getId() + "] from storage");
-				}
-				content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#name", reference.getName()));
-				for (MetadataElement me : reference.getMetadatas()) {
-					content.addTriple(new Triple(URIHelper.fromKey(key), "http://www.ortolang.fr/2014/05/diffusion#hasMetadata", URIHelper.fromKey(me.getKey())));
-				}
-			}
-
-			if (identifier.getType().equals(MetadataObject.OBJECT_TYPE)) {
-				MetadataObject metadata = em.find(MetadataObject.class, identifier.getId());
-				if (metadata == null) {
-					throw new OrtolangException("unable to load metadata with id [" + identifier.getId() + "] from storage");
-				}
-
-				String subj = URIHelper.fromKey(key);
-				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#name", metadata.getName()));
-				content.addTriple(new Triple(subj, "http://www.ortolang.fr/2014/05/diffusion#metadataFormat", metadata.getFormat()));
-			}
-
-			return content;
-		} catch (KeyNotFoundException | RegistryServiceException | TripleStoreServiceException e) {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}

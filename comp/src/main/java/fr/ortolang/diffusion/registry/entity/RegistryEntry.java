@@ -62,8 +62,6 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 		@NamedQuery(name = "findEntryByIdentifier", query = "SELECT e FROM RegistryEntry e WHERE e.identifier = :identifier AND e.deleted = false"),
 		@NamedQuery(name = "listVisibleKeys", query = "SELECT e.key FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter ORDER BY e.lastModificationDate DESC"),
 		@NamedQuery(name = "countVisibleKeys", query = "SELECT count(e) FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter"),
-		@NamedQuery(name = "listVisibleItems", query = "SELECT e.key FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.item = true AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter ORDER BY e.lastModificationDate DESC"),
-		@NamedQuery(name = "countVisibleItems", query = "SELECT count(e) FROM RegistryEntry e WHERE e.hidden = false AND e.deleted = false AND e.item = true AND e.publicationStatus LIKE :statusFilter AND e.identifier LIKE :identifierFilter"),
 		@NamedQuery(name = "findEntryByKey", query = "SELECT e FROM RegistryEntry e WHERE e.key LIKE :keyFilter")})
 @SuppressWarnings("serial")
 public class RegistryEntry implements Serializable {
@@ -74,7 +72,6 @@ public class RegistryEntry implements Serializable {
 	private long version;
 	private boolean hidden;
 	private boolean deleted;
-	private boolean item;
 	private String lock;
 	private String publicationStatus;
 	private String identifier;
@@ -88,11 +85,10 @@ public class RegistryEntry implements Serializable {
 	private String propertiesContent = "";
 	@Transient
 	private Properties properties;
-
+	
 	public RegistryEntry() {
 		hidden = false;
 		deleted = false;
-		item = false;
 		lock = "";
 		publicationStatus = OrtolangObjectState.Status.DRAFT.value();
 		author = null;
@@ -185,14 +181,6 @@ public class RegistryEntry implements Serializable {
 		this.author = author;
 	}
 
-	public boolean isItem() {
-		return item;
-	}
-
-	public void setItem(boolean item) {
-		this.item = item;
-	}
-
 	public long getCreationDate() {
 		return creationDate;
 	}
@@ -246,7 +234,6 @@ public class RegistryEntry implements Serializable {
 		builder.append("{key:").append(getKey());
 		builder.append(", locked:").append(isLocked());
 		builder.append(", hidden:").append(isHidden());
-		builder.append(", item:").append(isItem());
 		builder.append(", deleted:").append(isDeleted());
 		builder.append(", parent:").append(getParent());
 		builder.append(", identifier:").append(getIdentifier());

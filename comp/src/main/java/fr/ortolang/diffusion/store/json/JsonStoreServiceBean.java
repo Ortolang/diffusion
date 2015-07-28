@@ -1,6 +1,5 @@
 package fr.ortolang.diffusion.store.json;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,7 +34,6 @@ import com.orientechnologies.orient.server.OServerMain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
-import fr.ortolang.diffusion.store.DeleteFileVisitor;
 
 @Local(JsonStoreService.class)
 @Startup
@@ -54,7 +52,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	
 	public JsonStoreServiceBean() {
 		LOGGER.log(Level.FINE, "Instanciating json store service");
-		this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_JSON_HOME);
+		this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_JSON_HOME);
 	}
 
 	public Path getBase() {
@@ -65,10 +63,6 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	public void init() {
 		LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
 		try {
-			if (Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.json.purge"))) {
-				LOGGER.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
-				Files.walkFileTree(base, new DeleteFileVisitor());
-			}
 			Files.createDirectories(base);
 			server = OServerMain.create();
 			server.startup(this.getClass().getResourceAsStream("/orientdb-config.xml"));

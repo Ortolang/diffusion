@@ -36,8 +36,6 @@ package fr.ortolang.diffusion.api.object;
  * #L%
  */
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -329,25 +327,6 @@ public class ObjectResource {
 		LOGGER.log(Level.INFO, "POST /objects/" + key + "/index");
 		browser.index(key);
 		return Response.ok().build();
-	}
-
-	@GET
-	@Path("/semantic")
-	public Response semanticSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
-		LOGGER.log(Level.INFO, "GET /objects/semantic?query=" + query);
-		if (query != null && query.length() > 0) {
-			String queryEncoded = "";
-			try {
-				queryEncoded = URLDecoder.decode(query, "UTF-8");
-			} catch (UnsupportedEncodingException e) {
-				LOGGER.log(Level.WARNING, "cannot decode URL " + query);
-			}
-			LOGGER.log(Level.FINE, "searching objects with semantic query: " + queryEncoded);
-			String results = search.semanticSearch(queryEncoded, "json");
-			return Response.ok(results).build();
-		} else {
-			return Response.ok("").build();
-		}
 	}
 
 	@GET

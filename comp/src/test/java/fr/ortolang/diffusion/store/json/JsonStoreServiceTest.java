@@ -24,9 +24,6 @@ import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
-import fr.ortolang.diffusion.store.json.JsonStoreServiceBean;
-import fr.ortolang.diffusion.store.triple.IndexableSemanticContent;
-import fr.ortolang.diffusion.store.triple.Triple;
 
 public class JsonStoreServiceTest {
 
@@ -145,13 +142,6 @@ public class JsonStoreServiceTest {
 		content.addContentPart("tagada");
 		content.addContentPart("ceci est une petite phrase");
 		content.addContentPart("qui dure longtemps...");
-		IndexableSemanticContent scontent = new IndexableSemanticContent();
-		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/description", "W3Schools - Free tutorials"));
-		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/publisher", "Refsnes Data as"));
-		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/date", "2008-09-01"));
-		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/type", "Web Development"));
-		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/format", "text/html"));
-		scontent.addTriple(new Triple("http://www.w3schools.com", "http://purl.org/dc/elements/1.1/language", "en"));
 		IndexableJsonContent jsonContent = new IndexableJsonContent();
 		try {
 			jsonContent.put("format1", new FileInputStream("src/test/resources/json/sample.json"));

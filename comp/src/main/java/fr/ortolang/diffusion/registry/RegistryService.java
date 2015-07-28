@@ -91,10 +91,6 @@ public interface RegistryService {
 	
 	public String getLock(String key) throws RegistryServiceException, KeyNotFoundException;
 	
-	public void itemify(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
-	
-	public boolean isItem(String key) throws RegistryServiceException, KeyNotFoundException;
-	
 	public void setPublicationStatus(String key, String status) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	
 	public String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException;

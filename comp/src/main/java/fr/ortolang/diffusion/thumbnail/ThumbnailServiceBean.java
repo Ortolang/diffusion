@@ -33,7 +33,6 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
-import fr.ortolang.diffusion.store.DeleteFileVisitor;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -52,8 +51,6 @@ public class ThumbnailServiceBean implements ThumbnailService {
 	public static final String DEFAULT_THUMBNAILS_HOME = "thumbs";
 	public static final int DISTINGUISH_SIZE = 2;
 
-	private static final String GENERATORS_CONFIG_PARAMS = "thumbnail.generators";
-
 	@EJB
 	private MembershipService membership;
 	@EJB
@@ -70,19 +67,15 @@ public class ThumbnailServiceBean implements ThumbnailService {
 
 	@PostConstruct
 	public void init() {
-		this.base = Paths.get(OrtolangConfig.getInstance().getHome(), DEFAULT_THUMBNAILS_HOME);
+		this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_THUMBNAILS_HOME);
 		LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
 		try {
-			if (Files.exists(base) && Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty("store.thumbs.purge"))) {
-				LOGGER.log(Level.FINEST, "base directory exists and config is set to purge, recursive delete of base folder");
-				Files.walkFileTree(base, new DeleteFileVisitor());
-			}
 			Files.createDirectories(base);
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to initialize thumbs store", e);
 		}
 		LOGGER.log(Level.INFO, "Registering generators");
-		String[] generatorsClass = OrtolangConfig.getInstance().getProperty(GENERATORS_CONFIG_PARAMS).split(",");
+		String[] generatorsClass = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.THUMBNAIL_GENERATORS).split(",");
 		for (String clazz : generatorsClass) {
 			try {
 				LOGGER.log(Level.INFO, "Instanciating generator for class: " + clazz);
