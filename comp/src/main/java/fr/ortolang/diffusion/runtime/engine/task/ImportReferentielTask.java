@@ -56,7 +56,7 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 				}
 				if(!exist) {
 					try {
-						getReferentielService().createReferentielEntity(name, name, type, content);
+						getReferentielService().createReferentielEntity(name, type, content);
 						LOGGER.log(Level.FINE, "  referentiel entity created with name "+name);
 					} catch (ReferentielServiceException | KeyAlreadyExistsException | AccessDeniedException e) {
 						LOGGER.log(Level.SEVERE, "  unable to create referentiel entity named "+name, e);
@@ -64,7 +64,7 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 				} else {
 					LOGGER.log(Level.INFO, "  update referentiel entity "+name);
 					try {
-						getReferentielService().updateReferentielEntity(name, name, content);
+						getReferentielService().updateReferentielEntity(name, content);
 						LOGGER.log(Level.FINE, "  referentiel entity updated with name "+name);
 					} catch (ReferentielServiceException | AccessDeniedException | KeyNotFoundException e) {
 						LOGGER.log(Level.SEVERE, "  unable to create referentiel entity named "+name, e);
