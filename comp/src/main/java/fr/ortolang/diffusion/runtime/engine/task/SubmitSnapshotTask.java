@@ -35,22 +35,22 @@ public class SubmitSnapshotTask extends RuntimeEngineTask {
 		
 		Set<String> keys;
 		try {
-			LOGGER.log(Level.INFO, "building review list...");
+			LOGGER.log(Level.FINE, "building review list...");
 			keys = getCoreService().buildWorkspaceReviewList(wskey, snapshot);
 		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("unexpected error while trying to built the review list", e);
 		}
-		LOGGER.log(Level.INFO, "review list containing " + keys.size() + " keys");
+		LOGGER.log(Level.FINE, "review list containing " + keys.size() + " keys");
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "ReviewList built, containing " + keys.size() + " elements"));
 
 		StringBuilder report = new StringBuilder();
-		LOGGER.log(Level.INFO, "starting review");
+		LOGGER.log(Level.FINE, "starting review");
 		for (String key : keys) {
 			try {
 				getPublicationService().review(key);
 				report.append("key [").append(key).append("] locked for review\r\n");
 			} catch (Exception e) {
-				LOGGER.log(Level.INFO, "key [" + key + "] failed to lock for review: " + e.getMessage());
+				LOGGER.log(Level.WARNING, "key [" + key + "] failed to lock for review: " + e.getMessage());
 				report.append("key [").append(key).append("] failed to lock for review: ").append(e.getMessage()).append("\r\n");
 			}
 		}

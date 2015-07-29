@@ -1,16 +1,76 @@
 {
+	"schema": "http://www.ortolang.fr/schema/012#",
 	"type": "Corpus",
-	"title": "Test : un corpus de test",
-	"description": "<p>Le corpus de test... test les corpus</p>",
-	"extent": "pas grand chose de vraiment intéressant",
-	"temporal": "2015",
+	"title": [{"lang": "fr", "value":"TEST: un corpus de test avec du contenu fictif"}],
+	"description": [{"lang": "fr", "value":"<p>Le corpus sert uniquement de tes pour l'import de bag, il est NORMALEMENT mis à jour conjointement avec les version des métadonnées et des format d'import afin de servir de référence éventuellement</p>"}],
+	"publications": [
+		{
+			"priority": "primary",
+			"value": "Blanchard J., Ortolang T. (2015), Développement de ORTOLANG Plate-Forme."
+		}
+	],
+	"datasize": "1500",
 	"statusOfUse": "Libre",
 	"conditionsOfUse": "Le corpus est librement téléchargeable.",
-	"datasize": "15 Ko",
-	"language": ["Français"],
-	"developer": ["Sheldon Cooper"],
-	"manager": ["Sheldon Cooper"],
-	"researcher": ["Sheldon Cooper", "Rajesh Kootrapoly"],
-	"producer": ["Laboratoire lorrain de recherche en informatique et ses applications - UMR 7503 (LORIA, Nancy FR)", "Université Cergy-Pontoise (Cergy-Pontoise FR)"],
-	"spacial": ["France"]
+
+	"contributors": [
+		{
+			"role": ["producer"],
+			"entity": {
+				"type": "organization",
+				"id": "atilf",
+				"name": "Analyse et traitement informatique de la langue française - UMR 7118",
+				"fullname": "Analyse et Traitement Informatique de la Langue Française - UMR 7118 (ATILF, Nancy FR)",
+				"acronym": "ATILF",
+				"city": "Nancy",
+				"country": "FR",
+				"homepage": "http://www.atilf.fr",
+				"img": "http://atilf.atilf.fr/atilf.gif"
+			}
+		},
+		{
+			"role": ["developer"],
+			"entity": {
+				"type": "person",
+				"id": "jayblanc",
+				"fullname": "Jérôme Blanchard",
+				"title": "Mr",
+				"firstname": "Jérôme",
+				"lastname": "Blanchard"
+			}
+		},
+		{
+			"role": ["manager"],
+			"entity": {
+				"type": "person",
+				"id": "etienne_petitjean",
+				"fullname": "Etienne Petitjean",
+				"title": "Mr",
+				"firstname": "Etienne",
+				"lastname": "Petitjean",
+				"organization": {
+					"type": "organization",
+					"id": "atilf",
+					"name": "Analyse et traitement informatique de la langue française - UMR 7118",
+					"fullname": "Analyse et Traitement Informatique de la Langue Française - UMR 7118 (ATILF, Nancy FR)",
+					"acronym": "ATILF",
+					"city": "Nancy",
+					"country": "FR",
+					"homepage": "http://www.atilf.fr",
+					"img": "http://atilf.atilf.fr/atilf.gif"
+				}
+			}
+		}
+	],
+	"creationLocations": ["France"],
+	"creationDate": "2016",
+	"publicationDate": "2016-07-10",
+	"corporaType": "Écrit",
+	"corporaLanguages": ["Français"],
+	"corporaStyles": ["Littéraire"],
+	"annotationLevels": ["Morphosyntaxique", "Sémantique"],
+	"corporaFileEncodings": ["UTF-8"],
+	"corporaLanguageType": "Monolingue",
+	"wordCount": "48 360",
+	"linguisticDataType": "primary_text"
 }

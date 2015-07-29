@@ -59,4 +59,6 @@ public interface SecurityService extends OrtolangService {
 	
 	public List<String> listAvailablePermissions(String key) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException;
 	
+	public void checkPermission(String key, String permission) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException;
+	
 }

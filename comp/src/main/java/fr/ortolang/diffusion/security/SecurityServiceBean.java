@@ -258,6 +258,18 @@ public class SecurityServiceBean implements SecurityService {
 //			throw new SecurityServiceException(e);
 //		}
 	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void checkPermission(String key, String permission) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "checking permission [" + permission + "] on key [" + key + "] for connected user");
+		try {
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkPermission(key, subjects, permission);
+		} catch (MembershipServiceException | AuthorisationServiceException e) {
+			throw new SecurityServiceException(e);
+		}
+	}
 
 	@Override
 	public String getServiceName() {

@@ -1,19 +1,5 @@
 package fr.ortolang.diffusion.runtime.engine.task;
 
-import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.core.InvalidPathException;
-import fr.ortolang.diffusion.core.PathBuilder;
-import fr.ortolang.diffusion.core.entity.DataObject;
-import fr.ortolang.diffusion.core.entity.Workspace;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.store.binary.DataCollisionException;
-import org.activiti.engine.delegate.DelegateExecution;
-
-import javax.transaction.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
@@ -23,6 +9,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
+import javax.transaction.Status;
+
+import org.activiti.engine.delegate.DelegateExecution;
+
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.InvalidPathException;
+import fr.ortolang.diffusion.core.PathBuilder;
+import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.binary.DataCollisionException;
 
 public class ImportZipTask extends RuntimeEngineTask {
 	private static final Logger LOGGER = Logger.getLogger(ImportZipTask.class.getName());
@@ -34,7 +35,6 @@ public class ImportZipTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		LOGGER.log(Level.INFO, "Starting Import Content Task");
 		checkParameters(execution);
 		String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
 		String zippath = execution.getVariable(ZIP_PATH_PARAM_NAME, String.class);
@@ -73,14 +73,13 @@ public class ImportZipTask extends RuntimeEngineTask {
 					if (!entry.isDirectory()) {
 						PathBuilder opath = rootPath.clone().path(entry.getName());
 						try {
-							String okey = getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, opath.build());
+							getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, opath.build());
 							if ( overwrite ) {
 								LOGGER.log(Level.FINE, " updating object at path: " + opath);
 								try {
 									InputStream is = zip.getInputStream(entry);
 									String hash = getCoreService().put(is);
 									is.close();
-									DataObject object = getCoreService().readDataObject(okey);
 									getCoreService().updateDataObject(wskey, opath.build(), hash);
 								} catch ( InvalidPathException | DataCollisionException | KeyNotFoundException e4 ) {
 									partial = true;

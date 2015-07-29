@@ -392,7 +392,7 @@ public class CoreServiceBean implements CoreService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void snapshotWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+	public String snapshotWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "snapshoting workspace [" + wskey + "]");
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -406,7 +406,7 @@ public class CoreServiceBean implements CoreService {
 			if (workspace == null) {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
-			String name = "s" + String.valueOf(workspace.getClock());
+			String name = String.valueOf(workspace.getClock());
 			
 			if (!workspace.hasChanged()) {
 				throw new CoreServiceException("unable to snapshot because workspace has no pending modifications since last snapshot");
@@ -415,7 +415,7 @@ public class CoreServiceBean implements CoreService {
 			try {
 				JsonObjectBuilder builder = Json.createObjectBuilder();
 				builder.add("wskey", wskey);
-				builder.add("versionName", name);
+				builder.add("snapshotName", name);
 
 				JsonObject jsonObject = builder.build();
 				String hash = binarystore.put(new ByteArrayInputStream(jsonObject.toString().getBytes()));
@@ -470,6 +470,7 @@ public class CoreServiceBean implements CoreService {
 
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(1).addArgument("group", workspace.getMembers());
 			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "snapshot"), argumentsBuilder.build());
+			return name;
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CloneException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while snapshoting workspace", e);
@@ -495,28 +496,6 @@ public class CoreServiceBean implements CoreService {
 			}
 			workspace.setKey(wskey);
 			
-			//TODO managed workspace Metadata to include tag's name
-//			try {
-//				JsonObjectBuilder builder = Json.createObjectBuilder();
-//				builder.add("wskey", wskey);
-//				builder.add("versionName", name);
-//
-//				JsonObject jsonObject = builder.build();
-//				String hash = binarystore.put(new ByteArrayInputStream(jsonObject.toString().getBytes()));
-//
-//				List<String> mds = findMetadataObjectsForTargetAndName(workspace.getHead(), MetadataFormat.WORKSPACE);
-//
-//                if (mds.isEmpty()) {
-//                    LOGGER.log(Level.INFO, "creating workspace metadata for root collection");
-//                    createMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
-//                } else {
-//                    LOGGER.log(Level.INFO, "updating workspace metadata for root collection");
-//                    updateMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
-//                }
-//            } catch (BinaryStoreServiceException | DataCollisionException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | MetadataFormatException e) {
-//				throw new CoreServiceException("cannot create workspace metadata for collection root : "+e.getMessage());
-//			}
-
 			try {
 				PathBuilder pname = PathBuilder.newInstance().path(tag);
 				if (pname.depth() > 1) {
@@ -525,19 +504,46 @@ public class CoreServiceBean implements CoreService {
 				if ( Arrays.asList(RESERVED_TAG_NAMES).contains(pname.part()) ) {
 					throw new CoreServiceException(pname.part() + " is reserved and cannot be used as tag name");
 				}
+				if (workspace.findTagByName(tag) != null) {
+					throw new CoreServiceException("the tag name '" + tag + "' is already used in this workspace");
+				}
+				if (!workspace.containsSnapshotName(snapshot)) {
+					throw new CoreServiceException("the snapshot with name '" + snapshot + "' does not exists in this workspace");
+				}
+				
+				//TODO manage workspace metadata update
+//				try {
+//					List<String> mds = findMetadataObjectsForTargetAndName(workspace.getHead(), MetadataFormat.WORKSPACE);
+//	                if (mds.isEmpty()) {
+//	                    LOGGER.log(Level.INFO, "creating workspace metadata for root collection");
+//	                    JsonObjectBuilder builder = Json.createObjectBuilder();
+//	    				builder.add("wskey", wskey);
+//	    				builder.add("snapshotName", snapshot);
+//	    				JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+//	    				arrayBuilder.add(tag);
+//	    				builder.add("tags", arrayBuilder.build());
+//	    				JsonObject jsonObject = builder.build();
+//	    				String hash = binarystore.put(new ByteArrayInputStream(jsonObject.toString().getBytes()));
+//	                    createMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
+//	                } else {
+//	                    LOGGER.log(Level.INFO, "updating workspace metadata for root collection");
+//	                    updateMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
+//	                }
+//	            } catch (BinaryStoreServiceException | DataCollisionException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | MetadataFormatException e) {
+//					throw new CoreServiceException("cannot create workspace metadata for collection root : "+e.getMessage());
+//				}
+
+				workspace.addTag(new TagElement(tag, snapshot));
+				em.merge(workspace);
+				registry.update(wskey);
+
+				ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(1).addArgument("group", workspace.getMembers());
+				notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "tag"), argumentsBuilder.build());
+				
 			} catch (InvalidPathException e) {
 				throw new CoreServiceException("tag name is invalid: " + tag);
 			}
-			if (workspace.findTagByName(tag) != null) {
-				throw new CoreServiceException("the tag name '" + tag + "' is already used in this workspace");
-			}
-
-			workspace.addTag(new TagElement(tag, snapshot));
-			em.merge(workspace);
-			registry.update(wskey);
-
-			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(1).addArgument("group", workspace.getMembers());
-			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "tag"), argumentsBuilder.build());
+			
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while tagging workspace snapshot", e);
@@ -844,7 +850,8 @@ public class CoreServiceBean implements CoreService {
 			String root = workspace.findSnapshotByName(snapshot).getKey();
 
 			Set<OrtolangObjectPid> pids = new HashSet<OrtolangObjectPid> ();
-			buildPidList(workspace.getAlias(), tag, root, pids, PathBuilder.newInstance());
+			String targetBase = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL) + OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_CONTENT); 
+			buildPidList(workspace.getAlias(), tag, root, pids, PathBuilder.newInstance(), targetBase);
 			return pids;
 		} catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException | InvalidPathException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occurred during building workspace pid list", e);
@@ -853,10 +860,10 @@ public class CoreServiceBean implements CoreService {
 	}
 	
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	private void buildPidList(String wsalias, String tag, String key, Set<OrtolangObjectPid> pids, PathBuilder path) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, InvalidPathException {
+	private void buildPidList(String wsalias, String tag, String key, Set<OrtolangObjectPid> pids, PathBuilder path, String targetBase) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, InvalidPathException {
 		Object object = findObject(key);
 		LOGGER.log(Level.FINE, "Generating default pid for key: " + key);
-		String target = "/" + wsalias + "/" + tag + "/" + path.build();
+		String target = targetBase + "/" + wsalias + "/" + tag + path.build();
 		String dynHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + path.build();
 		String staticHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + "/" + tag + path.build();
 		pids.add(new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, dynHandle, key, target));
@@ -874,7 +881,7 @@ public class CoreServiceBean implements CoreService {
 						for ( int i=0; i<jpids.size(); i++ ) {
 							JsonObject jpid = jpids.getJsonObject(i);
 							LOGGER.log(Level.FINE, "Generating metadata based pid for key: " + key);
-							String ctarget = "/" + wsalias + "/" + tag + "/" + path.build();
+							String ctarget = targetBase + "/" + wsalias + "/" + tag + path.build();
 							pids.add(new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, jpid.getString("value"), key, ctarget));
 						}
 					}
@@ -886,7 +893,7 @@ public class CoreServiceBean implements CoreService {
 		}
 		if (object instanceof Collection) {
 			for (CollectionElement element : ((Collection)object).getElements()) {
-				buildPidList(wsalias, tag, element.getKey(), pids, path.clone().path(element.getName()));
+				buildPidList(wsalias, tag, element.getKey(), pids, path.clone().path(element.getName()), targetBase);
 			}
 		}
 	}
@@ -1331,7 +1338,7 @@ public class CoreServiceBean implements CoreService {
 					registry.delete(mde.getKey());
 				}
 				registry.delete(leaf.getKey());
-				indexing.remove(parent.getKey());
+				indexing.remove(leaf.getKey());
 			}
 
 			deleteCollectionContent(leaf, ws.getClock());
@@ -2528,6 +2535,7 @@ public class CoreServiceBean implements CoreService {
 					ctx.setRollbackOnly();
 					throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for collection at path [" + npath.build() + "]");
 				}
+				collection.setKey(element.getKey());
 				if (collection.getClock() < ws.getClock()) {
 					Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
 					parent.removeElement(element);
@@ -2548,6 +2556,7 @@ public class CoreServiceBean implements CoreService {
 					ctx.setRollbackOnly();
 					throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for object at path [" + npath.build() + "]");
 				}
+				object.setKey(element.getKey());
 				if (object.getClock() < ws.getClock()) {
 					DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
 					parent.removeElement(element);
@@ -2569,6 +2578,7 @@ public class CoreServiceBean implements CoreService {
 					ctx.setRollbackOnly();
 					throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for link at path [" + npath.build() + "]");
 				}
+				link.setKey(element.getKey());
 				if (link.getClock() < ws.getClock()) {
 					Link clone = cloneLink(ws.getHead(), link, ws.getClock());
 					parent.removeElement(element);
@@ -2597,7 +2607,6 @@ public class CoreServiceBean implements CoreService {
 			indexing.remove(mdelement.getKey());
 			registry.update(element.getKey());
 			indexing.index(element.getKey());
-
 
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("key", mdelement.getKey());
 			notification.throwEvent(mdelement.getKey(), caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "delete"));
@@ -2752,6 +2761,7 @@ public class CoreServiceBean implements CoreService {
 				LOGGER.log(Level.FINE, report.toString());
 
 				if (!report.isSuccess()) {
+					LOGGER.log(Level.WARNING, "error during validating metadata format " + format.getName() + ": " +  report.toString());
 					throw new MetadataFormatException("invalid metadata format");
 				}
 			} else {

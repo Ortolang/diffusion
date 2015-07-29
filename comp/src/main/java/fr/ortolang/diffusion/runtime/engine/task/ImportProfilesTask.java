@@ -33,7 +33,6 @@ public class ImportProfilesTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		LOGGER.log(Level.INFO, "Starting Import Profiles Task");
 		checkParameters(execution);
 		String profilespath = execution.getVariable(PROFILES_PATH_PARAM_NAME, String.class);
 		boolean overwrite = false;
@@ -52,7 +51,7 @@ public class ImportProfilesTask extends RuntimeEngineTask {
 				exists = false;
 				try {
 					getMembershipService().readProfile(profile.pro_login);
-					LOGGER.log(Level.INFO, "  profile already exists for username: " + profile.pro_login);
+					LOGGER.log(Level.FINE, "  profile already exists for username: " + profile.pro_login);
 					exists = true;
 				} catch ( KeyNotFoundException | AccessDeniedException | MembershipServiceException e) {
 					//

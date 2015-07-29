@@ -1,7 +1,6 @@
 package fr.ortolang.diffusion.runtime.engine.task;
 
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import javax.transaction.Status;
@@ -9,8 +8,10 @@ import javax.transaction.Status;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.jboss.logmanager.Level;
 
+import fr.ortolang.diffusion.OrtolangObjectPid;
 import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.core.entity.MetadataFormat;
+import fr.ortolang.diffusion.core.entity.TagElement;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
@@ -46,32 +47,31 @@ public class HandleSnapshotTask extends RuntimeEngineTask {
 			LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
 		}
 		
-		Map<String, String> map;
+		Set<OrtolangObjectPid> pids;
 		try {
-			LOGGER.log(Level.INFO, "listing snapshot content...");
-			//TODO change that with a method able to directly provide handles list, including handles recovered from metadata
-			//TODO inject prefix alias and version in handle name and generate consultation url for this handle (if root, special case)
-			//TODO find a handle metadata in order to record custom handles
-			map = getCoreService().listWorkspaceContent(wskey, snapshot);
+			LOGGER.log(Level.FINE, "generating workspace handles...");
+			Workspace workspace = getCoreService().readWorkspace(wskey);
+			TagElement te = workspace.findTagBySnapshot(snapshot);
+			pids = getCoreService().buildWorkspacePidList(wskey, te.getName());
 		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
-			throw new RuntimeEngineTaskException("unexpected error while trying to list snapshot content", e);
+			throw new RuntimeEngineTaskException("unexpected error while trying to generate handle list", e);
 		}
-		LOGGER.log(Level.INFO, "snapshot content map built containing " + map.size() + " entries");
-		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "SnapshotContent map built, containing " + map.size() + " entries"));
+		LOGGER.log(Level.FINE, "pids list containing " + pids.size() + " entries");
+		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "pids list built, containing " + pids.size() + " entries"));
 		
 		boolean needcommit;
 		long tscommit = System.currentTimeMillis();
 		StringBuilder report = new StringBuilder();
-		LOGGER.log(Level.INFO, "starting handles generation");
-		for (Entry<String, String> entry : map.entrySet()) {
+		LOGGER.log(Level.FINE, "starting pids creation");
+		for (OrtolangObjectPid pid : pids) {
 			needcommit = false;
 			try {
-				LOGGER.log(Level.INFO, "workspace content entry : " + entry.getKey());
-				report.append("handle [").append(entry.getKey()).append("] generated\r\n");
-				//getHandleStore().recordHandle(entry.getKey(), entry.getValue(), url);
+				getHandleStore().recordHandle(pid.getName(), pid.getKey(), pid.getTarget());
+				LOGGER.log(Level.FINE, pid + " created");
+				report.append(pid).append(" created\r\n");
 			} catch (Exception e) {
-				LOGGER.log(Level.INFO, "handle [" + entry.getKey() + "] failed to generate: " + e.getMessage());
-				report.append("handle [").append(entry.getKey()).append("] failed to generate: ").append(e.getMessage()).append("\r\n");
+				LOGGER.log(Level.WARNING, "handle [" + pid.getName() + "] failed to generate: " + e.getMessage());
+				report.append(pid).append(" creation FAILED: ").append(e.getMessage()).append("\r\n");
 			}
 			if ( System.currentTimeMillis() - tscommit > 30000 ) {
 				LOGGER.log(Level.FINE, "current transaction exceed 30sec, need commit.");

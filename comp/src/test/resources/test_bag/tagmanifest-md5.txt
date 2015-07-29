@@ -1,3 +1,3 @@
 9e5ad981e0d29adc278f6a294b8c2aca  bagit.txt
-81ee8bd1d06303c81e3b1570557eb7c2  manifest-sha1.txt
-97112c0fdb7223ef0019f8563f2dd782  bag-info.txt
+816dbd2a07a87c229e29ca370bc73189  manifest-sha1.txt
+b7083fd552cb43d95628b5be01514cb9  bag-info.txt

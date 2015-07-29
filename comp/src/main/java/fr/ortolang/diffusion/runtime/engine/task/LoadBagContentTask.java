@@ -45,7 +45,6 @@ public class LoadBagContentTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		LOGGER.log(Level.INFO, "Starting Load Bag Content Task");
 		try {
 			if (getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
 				LOGGER.log(Level.FINE, "committing active user transaction.");

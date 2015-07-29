@@ -30,7 +30,6 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		LOGGER.log(Level.INFO, "Starting Delete Workspace Task");
 		String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
 		if ( !execution.hasVariable(WORKSPACE_NAME_PARAM_NAME) ) {
 			execution.setVariable(WORKSPACE_NAME_PARAM_NAME, wskey);

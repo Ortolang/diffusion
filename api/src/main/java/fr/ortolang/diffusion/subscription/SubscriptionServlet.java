@@ -20,7 +20,7 @@ public final class SubscriptionServlet {
 
     @PathParam("username")
     private String username;
-
+    
     private SubscriptionService subscription;
 
     /**

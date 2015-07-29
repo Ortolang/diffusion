@@ -43,6 +43,7 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineListener;
 import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.runtime.entity.ProcessType;
+
 import org.activiti.engine.*;
 import org.activiti.engine.delegate.event.ActivitiEntityEvent;
 import org.activiti.engine.delegate.event.ActivitiEvent;
@@ -66,6 +67,7 @@ import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.enterprise.concurrent.ManagedScheduledExecutorService;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnit;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -277,6 +279,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	}
 
 	@Override
+	@SuppressWarnings("incomplete-switch")
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void onEvent(ActivitiEvent event) {
 		try {

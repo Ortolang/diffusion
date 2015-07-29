@@ -74,6 +74,8 @@ import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.SecurityService;
+import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
@@ -98,7 +100,9 @@ public class ContentResource {
 	@EJB
 	private BinaryStoreService store;
 	@EJB
-	private ThumbnailService service;
+	private ThumbnailService thumbnails;
+	@EJB
+	private SecurityService security;
 	@Context
 	private UriInfo uriInfo;
 
@@ -156,7 +160,7 @@ public class ContentResource {
 			}
 			if (builder == null) {
 				try {
-					File thumb = service.getThumbnail(key, size);
+					File thumb = thumbnails.getThumbnail(key, size);
 					builder = Response.ok(thumb).header("Content-Type", ThumbnailService.THUMBS_MIMETYPE);
 					builder.lastModified(lmd);
 				} catch (Exception e) {
@@ -349,8 +353,8 @@ public class ContentResource {
 	@GET
 	@Path("/key/{key}")
 	public Response key(@PathParam("key") String key, @QueryParam("fd") boolean download, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order,
-			@Context SecurityContext security, @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, InvalidPathException,
-			OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException {
+			@Context SecurityContext ctx, @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, InvalidPathException,
+			OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException, SecurityServiceException {
 		LOGGER.log(Level.INFO, "GET /key/" + key);
 		try {
 			OrtolangObjectState state = browser.getState(key);
@@ -372,6 +376,8 @@ public class ContentResource {
 				OrtolangObject object = browser.findObject(key);
 				if (object instanceof DataObject) {
 					File content = store.getFile(((DataObject) object).getStream());
+					security.checkPermission(key, "download");
+					//TODO log download
 					builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize())
 							.header("Accept-Ranges", "bytes");
 					if (download) {
@@ -435,7 +441,7 @@ public class ContentResource {
 			builder.cacheControl(cc);
 			return builder.build();
 		} catch (AccessDeniedException e) {
-			if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+			if (ctx.getUserPrincipal() == null || ctx.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
 				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
 				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/key/" + key, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo.getBaseUri().getHost(), 1,
 						"Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
@@ -662,9 +668,9 @@ public class ContentResource {
 	@Path("/{alias}/{snapshot}/{path: .*}")
 	@Produces({ MediaType.MEDIA_TYPE_WILDCARD })
 	public Response path(@PathParam("alias") String alias, @PathParam("snapshot") String snapshot, @PathParam("path") String path, @QueryParam("fd") boolean download,
-			@QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order, @Context SecurityContext security, @Context Request request)
+			@QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order, @Context SecurityContext ctx, @Context Request request)
 			throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, AliasNotFoundException, InvalidPathException, OrtolangException,
-			BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException {
+			BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException, SecurityServiceException {
 		LOGGER.log(Level.INFO, "GET /content/" + alias + "/" + snapshot + "/" + path);
 		ContentRepresentation representation = new ContentRepresentation();
 		representation.setContext(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT));
@@ -684,8 +690,8 @@ public class ContentResource {
 			}
 			PathBuilder npath = PathBuilder.fromPath(path);
 			String okey = core.resolveWorkspacePath(wskey, snapshot, npath.build());
-
 			OrtolangObjectState state = browser.getState(okey);
+			
 			CacheControl cc = new CacheControl();
 			cc.setPrivate(true);
 			if (!snapshot.equals(Workspace.LATEST) && state.isLocked()) {
@@ -703,6 +709,8 @@ public class ContentResource {
 			if (builder == null) {
 				OrtolangObject object = browser.findObject(okey);
 				if (object instanceof DataObject) {
+					security.checkPermission(okey, "download");
+					//TODO log download
 					File content = store.getFile(((DataObject) object).getStream());
 					if (download) {
 						return Response.ok(content).header("Content-Disposition", "attachment;").header("Content-Type", ((DataObject) object).getMimeType())
@@ -757,7 +765,7 @@ public class ContentResource {
 			builder.cacheControl(cc);
 			return builder.build();
 		} catch (AccessDeniedException e) {
-			if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+			if (ctx.getUserPrincipal() == null || ctx.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
 				LOGGER.log(Level.FINE, "user is not authentified, redirecting to authentication");
 				NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo.getBaseUri().getHost(), 1,
 						"Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);

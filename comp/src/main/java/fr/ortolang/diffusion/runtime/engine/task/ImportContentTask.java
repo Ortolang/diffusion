@@ -48,7 +48,6 @@ public class ImportContentTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		LOGGER.log(Level.INFO, "Starting Import Content Task");
 		checkParameters(execution);
 		Path bagpath = Paths.get(execution.getVariable(BAG_PATH_PARAM_NAME, String.class));
 		Bag bag = loadBag(bagpath);
@@ -96,7 +95,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 							updateMetadata(bag, operation[1], operation[2], operation[3]);
 							break;
 						case "delete-metadata":
-							deleteMetadata(operation[1], operation[2]);
+							deleteMetadata(operation[2], operation[3]);
 							break;
 						case "snapshot-workspace":
 							snapshotWorkspace(operation[1]);

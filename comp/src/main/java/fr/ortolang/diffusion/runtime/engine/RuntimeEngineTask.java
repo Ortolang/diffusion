@@ -86,6 +86,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public static final String WORKSPACE_TYPE_PARAM_NAME = "wstype";
 	public static final String WORKSPACE_ALIAS_PARAM_NAME = "wsalias";
 	public static final String WORKSPACE_MEMBERS_PARAM_NAME = "wsmembers";
+	public static final String WORKSPACE_TAG_PARAM_NAME = "wstag";
 
 	public static final String REFERENTIEL_PATH_PARAM_NAME = "referentielpath";
 	public static final String REFERENTIEL_TYPE_PARAM_NAME = "referentieltype";
@@ -264,7 +265,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	@Override
 	public void execute(DelegateExecution execution) {
 		try {
-			LOGGER.log(Level.INFO, "Starting RuntimeTask execution");
+			LOGGER.log(Level.INFO, "Starting " + this.getTaskName() + " execution");
 			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityStartEvent(execution.getProcessBusinessKey(), getTaskName(), "* SERVICE TASK " + execution.getCurrentActivityName() + " STARTED"));
 
 			try {

@@ -27,7 +27,6 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		LOGGER.log(Level.INFO, "Starting Import Profiles Task");
 		checkParameters(execution);
 		String referentielpath = execution.getVariable(REFERENTIEL_PATH_PARAM_NAME, String.class);
 		String referentieltype = execution.getVariable(REFERENTIEL_TYPE_PARAM_NAME, String.class);
@@ -40,7 +39,7 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 				String name = referentielEntityFile.getName().substring(0, referentielEntityFile.getName().length()-5);
 				try {
 					getReferentielService().readReferentielEntity(name);
-					LOGGER.log(Level.INFO, "  referntiel entity already exists for key: " + name);
+					LOGGER.log(Level.FINE, "  referentiel entity already exists for key: " + name);
 					exist = true;
 				} catch (ReferentielServiceException | KeyNotFoundException e) {
 					//

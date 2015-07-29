@@ -36,7 +36,6 @@ package fr.ortolang.diffusion.runtime.engine.task;
  * #L%
  */
 
-import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 import org.activiti.engine.delegate.DelegateExecution;
@@ -56,7 +55,6 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 public class LoadSnapshotTask extends RuntimeEngineTask {
 
 	public static final String NAME = "Snapshot Workspace";
-
 	private static final Logger LOGGER = Logger.getLogger(LoadSnapshotTask.class.getName());
 
 	public LoadSnapshotTask() {
@@ -76,9 +74,7 @@ public class LoadSnapshotTask extends RuntimeEngineTask {
 			if (!execution.hasVariable(SNAPSHOT_NAME_PARAM_NAME)) {
 				if (workspace.hasChanged()) {
 					LOGGER.log(Level.FINE, "Snapshot name NOT provided and workspace has changed since last snapshot, generating a new snapshot");
-					snapshotName = "Version " + workspace.getClock();
-					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Creating a new snapshot with name: " + snapshotName));
-					getCoreService().snapshotWorkspace(wskey);
+					snapshotName = getCoreService().snapshotWorkspace(wskey);
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "New snapshot [" + snapshotName + "] created"));
 					execution.setVariable(SNAPSHOT_NAME_PARAM_NAME, snapshotName);
 				} else {
@@ -117,10 +113,6 @@ public class LoadSnapshotTask extends RuntimeEngineTask {
 			}
 			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Snapshot loaded and publication status is good for publication, starting publication"));
 			
-			for ( Entry<String, Object> entry : execution.getVariables().entrySet() ) {
-				LOGGER.log(Level.INFO, "VAR: " + entry.getKey() + " - " + entry.getValue() );
-			}
-
 		} catch (CoreServiceException | KeyNotFoundException | AccessDeniedException | RegistryServiceException e) {
 			throw new RuntimeEngineTaskException("unexpected error during snapshot task execution", e);
 		}

@@ -1,7 +1,7 @@
 {
 	"pids" : [ 
-		{"type":"HANDLE", "value":"11041/test_f1_v3"},
-		{"type":"HANDLE", "value":"11041/test/3/a/oa1.txt"},
-		{"type":"HANDLE", "value":"11041/test/a/oa1.txt"}
+		{"type":"handle", "value":"11041/test_f1_v3"},
+		{"type":"handle", "value":"11041/test/3/a/oa1.txt"},
+		{"type":"handle", "value":"11041/test/a/oa1.txt"}
 	]
 }

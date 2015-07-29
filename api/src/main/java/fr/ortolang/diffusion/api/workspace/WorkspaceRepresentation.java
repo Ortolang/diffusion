@@ -43,6 +43,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 
 @XmlRootElement(name = "workspace")
@@ -62,9 +63,11 @@ public class WorkspaceRepresentation {
 	private String head;
 	private boolean changed;
 	private Set<SnapshotElement> snapshots;
+	private Set<TagElement> tags;
 
 	public WorkspaceRepresentation() {
 		snapshots = new HashSet<SnapshotElement>();
+		tags = new HashSet<TagElement>();
 	}
 
 	public String getKey() {
@@ -163,6 +166,14 @@ public class WorkspaceRepresentation {
 		this.snapshots = snapshots;
 	}
 	
+	public Set<TagElement> getTags() {
+		return tags;
+	}
+
+	public void setTags(Set<TagElement> tags) {
+		this.tags = tags;
+	}
+
 	public boolean isChanged() {
 		return changed;
 	}
@@ -182,6 +193,7 @@ public class WorkspaceRepresentation {
 		representation.setMembers(workspace.getMembers());
 		representation.setChanged(workspace.hasChanged());
 		representation.setSnapshots(workspace.getSnapshots());
+		representation.setTags(workspace.getTags());
 		return representation;
 	}
 }

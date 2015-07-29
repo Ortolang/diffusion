@@ -270,7 +270,9 @@ public class MembershipServiceBean implements MembershipService {
 			em.persist(profile);
 
 			registry.register(key, profile.getObjectIdentifier(), caller);
-			indexing.index(key);
+			if ( !key.equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
+				indexing.index(key);
+			}
 
 			authorisation.createPolicy(key, key);
 			Map<String, List<String>> readRules = new HashMap<String, List<String>>();
