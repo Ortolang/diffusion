@@ -194,6 +194,7 @@
         members varchar(255),
         name varchar(255),
         snapshotsContent text,
+        tagsContent text,
         type varchar(255),
         version int8 not null,
         primary key (id)

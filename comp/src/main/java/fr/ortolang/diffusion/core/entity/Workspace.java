@@ -79,6 +79,9 @@ public class Workspace extends OrtolangObject {
 	@Lob
 	@Type(type = "org.hibernate.type.TextType")
 	private String snapshotsContent = "";
+	@Lob
+	@Type(type = "org.hibernate.type.TextType")
+	private String tagsContent = "";
 	
 	public Workspace() {
 		clock = 1;
@@ -230,6 +233,95 @@ public class Workspace extends OrtolangObject {
 			String line = tok.nextToken();
 			if ( line.endsWith("/" + key) ) {
 				return SnapshotElement.deserialize(line);
+			}
+		}
+		return null;
+	}
+	
+	public void setTagsContent(String tagsContent) {
+		this.tagsContent = tagsContent;
+	}
+	
+	public String getTagsContent() {
+		return tagsContent;
+	}
+	
+	public Set<TagElement> getTags() {
+		Set<TagElement> tags = new HashSet<TagElement>();
+		if ( tagsContent != null && tagsContent.length() > 0 ) {
+			for ( String tag : Arrays.asList(tagsContent.split("\n")) ) {
+				tags.add(TagElement.deserialize(tag));
+			}
+		}
+		return tags;
+	}
+	
+	public void setTags(Set<TagElement> tags) {
+		StringBuilder newtags = new StringBuilder();
+		for ( TagElement tag : tags ) {
+			if ( newtags.length() > 0 ) {
+				newtags.append("\n");
+			}
+			newtags.append(tag.serialize());
+		}
+		tagsContent = newtags.toString();
+	}
+	
+	public boolean addTag(TagElement tag) {
+		if ( !containsTag(tag) ) {
+			if ( tagsContent.length() > 0 ) {
+				tagsContent += "\n" + tag.serialize();
+			} else {
+				tagsContent = tag.serialize();
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	public boolean removeTag(TagElement tag) {
+		if ( containsTag(tag) ) {
+			tagsContent = tagsContent.replaceAll("(?m)^(" + tag.serialize() + ")\n?", "");
+			if ( tagsContent.endsWith("\n") ) {
+				tagsContent = tagsContent.substring(0, tagsContent.length()-1);
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public boolean containsTag(TagElement tag) {
+		return tagsContent.length() > 0 && tagsContent.contains(tag.serialize());
+	}
+	
+	public boolean containsTagName(String name) {
+		return tagsContent.contains(name + "/");
+	}
+	
+	public boolean containsTagSnapshot(String snapshot) {
+		return tagsContent.contains("/" + snapshot);
+	}
+	
+	public TagElement findTagByName(String name) {
+		StringTokenizer tok = new StringTokenizer(tagsContent, "\r\n");
+		String start = name + "/";
+		while ( tok.hasMoreTokens() ) {
+			String line = tok.nextToken();
+			if ( line.startsWith(start) ) {
+				return TagElement.deserialize(line);
+			}
+		}
+		return null;
+	}
+	
+	public TagElement findTagBySnapshot(String snapshot) {
+		StringTokenizer tok = new StringTokenizer(tagsContent, "\r\n");
+		String end = "/" + snapshot;
+		while ( tok.hasMoreTokens() ) {
+			String line = tok.nextToken();
+			if ( line.endsWith(end) ) {
+				return TagElement.deserialize(line);
 			}
 		}
 		return null;

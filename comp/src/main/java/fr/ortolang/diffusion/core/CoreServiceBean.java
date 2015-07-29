@@ -62,6 +62,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
@@ -79,11 +80,13 @@ import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 
+import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectPid;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.core.entity.Collection;
@@ -95,6 +98,7 @@ import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
 import fr.ortolang.diffusion.indexing.IndexingService;
@@ -135,6 +139,7 @@ public class CoreServiceBean implements CoreService {
 
 	private static final String[] RESERVED_ALIASES = new String[] { "key", "auth", "export" };
 	private static final String[] RESERVED_SNAPSHOT_NAMES = new String[] { Workspace.HEAD, Workspace.LATEST };
+	private static final String[] RESERVED_TAG_NAMES = new String[] { Workspace.HEAD, Workspace.LATEST };
 
 	@EJB
 	private RegistryService registry;
@@ -401,7 +406,7 @@ public class CoreServiceBean implements CoreService {
 			if (workspace == null) {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
-			String name = String.valueOf(workspace.getClock());
+			String name = "s" + String.valueOf(workspace.getClock());
 			
 			if (!workspace.hasChanged()) {
 				throw new CoreServiceException("unable to snapshot because workspace has no pending modifications since last snapshot");
@@ -431,13 +436,13 @@ public class CoreServiceBean implements CoreService {
 			workspace.setKey(wskey);
 			workspace.incrementClock();
 
-			if ( Arrays.asList(RESERVED_SNAPSHOT_NAMES).contains(name) ) {
-				throw new CoreServiceException(name + " is reserved and cannot be used as snapshot name");
-			}
 			try {
 				PathBuilder pname = PathBuilder.newInstance().path(name);
 				if (pname.depth() > 1) {
 					throw new CoreServiceException("snapshot name is invalid: " + name);
+				}
+				if ( Arrays.asList(RESERVED_SNAPSHOT_NAMES).contains(pname.part()) ) {
+					throw new CoreServiceException(pname.part() + " is reserved and cannot be used as snapshot name");
 				}
 			} catch (InvalidPathException e) {
 				throw new CoreServiceException("snapshot name is invalid: " + name);
@@ -469,6 +474,74 @@ public class CoreServiceBean implements CoreService {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while snapshoting workspace", e);
 			throw new CoreServiceException("unable to snapshot workspace with key [" + wskey + "]", e);
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void tagWorkspace(String wskey, String tag, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "tagging workspace [" + wskey + "] and snapshot [" + snapshot + "]");
+		try {
+			String caller = membership.getProfileKeyForConnectedIdentifier();
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+			checkObjectType(identifier, Workspace.OBJECT_TYPE);
+			authorisation.checkPermission(wskey, subjects, "update");
+
+			Workspace workspace = em.find(Workspace.class, identifier.getId());
+			if (workspace == null) {
+				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+			}
+			workspace.setKey(wskey);
+			
+			//TODO managed workspace Metadata to include tag's name
+//			try {
+//				JsonObjectBuilder builder = Json.createObjectBuilder();
+//				builder.add("wskey", wskey);
+//				builder.add("versionName", name);
+//
+//				JsonObject jsonObject = builder.build();
+//				String hash = binarystore.put(new ByteArrayInputStream(jsonObject.toString().getBytes()));
+//
+//				List<String> mds = findMetadataObjectsForTargetAndName(workspace.getHead(), MetadataFormat.WORKSPACE);
+//
+//                if (mds.isEmpty()) {
+//                    LOGGER.log(Level.INFO, "creating workspace metadata for root collection");
+//                    createMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
+//                } else {
+//                    LOGGER.log(Level.INFO, "updating workspace metadata for root collection");
+//                    updateMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
+//                }
+//            } catch (BinaryStoreServiceException | DataCollisionException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | MetadataFormatException e) {
+//				throw new CoreServiceException("cannot create workspace metadata for collection root : "+e.getMessage());
+//			}
+
+			try {
+				PathBuilder pname = PathBuilder.newInstance().path(tag);
+				if (pname.depth() > 1) {
+					throw new CoreServiceException("tag name is invalid: " + tag);
+				}
+				if ( Arrays.asList(RESERVED_TAG_NAMES).contains(pname.part()) ) {
+					throw new CoreServiceException(pname.part() + " is reserved and cannot be used as tag name");
+				}
+			} catch (InvalidPathException e) {
+				throw new CoreServiceException("tag name is invalid: " + tag);
+			}
+			if (workspace.findTagByName(tag) != null) {
+				throw new CoreServiceException("the tag name '" + tag + "' is already used in this workspace");
+			}
+
+			workspace.addTag(new TagElement(tag, snapshot));
+			em.merge(workspace);
+			registry.update(wskey);
+
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(1).addArgument("group", workspace.getMembers());
+			notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "tag"), argumentsBuilder.build());
+		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
+			ctx.setRollbackOnly();
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while tagging workspace snapshot", e);
+			throw new CoreServiceException("unable to tag workspace with key [" + wskey + "]", e);
 		}
 	}
 
@@ -745,6 +818,75 @@ public class CoreServiceBean implements CoreService {
 		if (object instanceof Collection) {
 			for (CollectionElement element : ((Collection)object).getElements()) {
 				builtPublicationMap(element.getKey(), map, current, params);
+			}
+		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public Set<OrtolangObjectPid> buildWorkspacePidList(String wskey, String tag) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+		LOGGER.log(Level.FINE, "building pid list for workspace [" + wskey + "]");
+		try {
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+
+			OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+			checkObjectType(identifier, Workspace.OBJECT_TYPE);
+			authorisation.checkPermission(wskey, subjects, "read");
+
+			Workspace workspace = em.find(Workspace.class, identifier.getId());
+			if (workspace == null) {
+				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+			}
+			if ( !workspace.containsTagName(tag) ) {
+				throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a tag with name: " + tag);
+			}
+			String snapshot = workspace.findTagByName(tag).getSnapshot();
+			String root = workspace.findSnapshotByName(snapshot).getKey();
+
+			Set<OrtolangObjectPid> pids = new HashSet<OrtolangObjectPid> ();
+			buildPidList(workspace.getAlias(), tag, root, pids, PathBuilder.newInstance());
+			return pids;
+		} catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException | InvalidPathException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occurred during building workspace pid list", e);
+			throw new CoreServiceException("unexpected error while trying to build workspace pid list", e);
+		}
+	}
+	
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	private void buildPidList(String wsalias, String tag, String key, Set<OrtolangObjectPid> pids, PathBuilder path) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, InvalidPathException {
+		Object object = findObject(key);
+		LOGGER.log(Level.FINE, "Generating default pid for key: " + key);
+		String target = "/" + wsalias + "/" + tag + "/" + path.build();
+		String dynHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + path.build();
+		String staticHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + "/" + tag + path.build();
+		pids.add(new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, dynHandle, key, target));
+		pids.add(new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, staticHandle, key, target));
+		if (object instanceof MetadataSource) {
+			MetadataElement mde = ((MetadataSource)object).findMetadataByName(MetadataFormat.PID);
+			if ( mde != null ) {
+				LOGGER.log(Level.FINE, "PID metadata found, load json and generate corresponding pids");
+				MetadataObject md = readMetadataObject(mde.getKey());
+				try {
+					JsonReader reader = Json.createReader(binarystore.get(md.getStream()));
+					JsonObject json = reader.readObject();
+					if (json.containsKey("pids")) {
+						JsonArray jpids = json.getJsonArray("pids");
+						for ( int i=0; i<jpids.size(); i++ ) {
+							JsonObject jpid = jpids.getJsonObject(i);
+							LOGGER.log(Level.FINE, "Generating metadata based pid for key: " + key);
+							String ctarget = "/" + wsalias + "/" + tag + "/" + path.build();
+							pids.add(new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, jpid.getString("value"), key, ctarget));
+						}
+					}
+					reader.close();
+				} catch ( BinaryStoreServiceException | DataNotFoundException e ) {
+					LOGGER.log(Level.SEVERE, "unable to read pid metadata", e);
+				}
+			}
+		}
+		if (object instanceof Collection) {
+			for (CollectionElement element : ((Collection)object).getElements()) {
+				buildPidList(wsalias, tag, element.getKey(), pids, path.clone().path(element.getName()));
 			}
 		}
 	}
@@ -2123,8 +2265,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
 			}
 			meta.setKey(key);
-			// em.detach(meta);
-
+			
 			notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "read"));
 			return meta;
 		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {

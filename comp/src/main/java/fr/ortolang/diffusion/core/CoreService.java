@@ -36,20 +36,26 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import fr.ortolang.diffusion.OrtolangBinaryService;
 import fr.ortolang.diffusion.OrtolangIndexableService;
+import fr.ortolang.diffusion.OrtolangObjectPid;
 import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.core.entity.*;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.Link;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
-
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public interface CoreService extends OrtolangService, OrtolangBinaryService, OrtolangIndexableService {
 	
@@ -67,6 +73,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
 	public void snapshotWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
+	public void tagWorkspace(String wskey, String tag, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
 	public void deleteWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, KeyNotFoundException, AccessDeniedException;
 
 	public List<String> findWorkspacesForProfile(String profile) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
@@ -74,6 +82,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	public Map<String, Map<String, List<String>>> buildWorkspacePublicationMap(String wskey, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public Set<String> buildWorkspaceReviewList(String wskey, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public Set<OrtolangObjectPid> buildWorkspacePidList(String wskey, String tag) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public Map<String, String> listWorkspaceContent(String wskey, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	

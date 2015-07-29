@@ -37,7 +37,9 @@ package fr.ortolang.diffusion.core;
  */
 
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
+
 import org.jgroups.util.UUID;
 import org.junit.Test;
 
@@ -101,6 +103,60 @@ public class WorkspaceUnitTest {
 		assertTrue(w.containsSnapshot(se2));
 		assertNotNull(w.findSnapshotByName(sn2));
 		assertEquals(se2, w.findSnapshotByName(sn2));
+		
+	}
+	
+	@Test
+	public void testWorkspaceTag() {
+		Workspace w = new Workspace();
+		w.setId("wid");
+		w.setHead("head");
+		w.setKey("wkey");
+		w.setMembers("members");
+		w.setChanged(true);
+		w.setType("test");
+		
+		String s1 = "s324";
+		String t1 = "v2.1";
+		TagElement te1 = new TagElement(t1, s1);
+		w.addTag(te1);
+		LOGGER.log(Level.INFO, "Workspace Tag Content : \r\n" + w.getTagsContent());
+		assertEquals(1, w.getTags().size());
+		assertTrue(w.containsTagSnapshot(s1));
+		assertTrue(w.containsTagName(t1));
+		assertTrue(w.containsTag(te1));
+		assertNotNull(w.findTagByName(t1));
+		assertEquals(te1, w.findTagBySnapshot(s1));
+		
+		String s2 = "s645";
+		String t2 = "v2.3";
+		TagElement te2 = new TagElement(t2, s2);
+		w.addTag(te2);
+		LOGGER.log(Level.INFO, "Workspace Tag Content : \r\n" + w.getTagsContent());
+		assertEquals(2, w.getTags().size());
+		assertTrue(w.containsTagSnapshot(s1));
+		assertTrue(w.containsTagName(t1));
+		assertTrue(w.containsTag(te1));
+		assertNotNull(w.findTagByName(t1));
+		assertEquals(te1, w.findTagBySnapshot(s1));
+		assertTrue(w.containsTagSnapshot(s2));
+		assertTrue(w.containsTagName(t2));
+		assertTrue(w.containsTag(te2));
+		assertNotNull(w.findTagByName(t2));
+		assertEquals(te2, w.findTagBySnapshot(s2));
+		
+		w.removeTag(te1);
+		LOGGER.log(Level.INFO, "Workspace Tag Content : \r\n" + w.getSnapshotsContent());
+		assertEquals(1, w.getTags().size());
+		assertFalse(w.containsTagSnapshot(s1));
+		assertFalse(w.containsTagName(t1));
+		assertFalse(w.containsTag(te1));
+		assertNull(w.findTagByName(t1));
+		assertTrue(w.containsTagSnapshot(s2));
+		assertTrue(w.containsTagName(t2));
+		assertTrue(w.containsTag(te2));
+		assertNotNull(w.findTagByName(t2));
+		assertEquals(te2, w.findTagByName(t2));
 		
 	}
 	

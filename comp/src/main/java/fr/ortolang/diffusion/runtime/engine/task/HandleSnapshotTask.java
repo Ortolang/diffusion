@@ -10,6 +10,7 @@ import org.activiti.engine.delegate.DelegateExecution;
 import org.jboss.logmanager.Level;
 
 import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
@@ -45,18 +46,19 @@ public class HandleSnapshotTask extends RuntimeEngineTask {
 			LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
 		}
 		
-		//TODO load workspace alias
-		
 		Map<String, String> map;
 		try {
 			LOGGER.log(Level.INFO, "listing snapshot content...");
+			//TODO change that with a method able to directly provide handles list, including handles recovered from metadata
+			//TODO inject prefix alias and version in handle name and generate consultation url for this handle (if root, special case)
+			//TODO find a handle metadata in order to record custom handles
 			map = getCoreService().listWorkspaceContent(wskey, snapshot);
 		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
 			throw new RuntimeEngineTaskException("unexpected error while trying to list snapshot content", e);
 		}
 		LOGGER.log(Level.INFO, "snapshot content map built containing " + map.size() + " entries");
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "SnapshotContent map built, containing " + map.size() + " entries"));
-
+		
 		boolean needcommit;
 		long tscommit = System.currentTimeMillis();
 		StringBuilder report = new StringBuilder();
@@ -65,8 +67,8 @@ public class HandleSnapshotTask extends RuntimeEngineTask {
 			needcommit = false;
 			try {
 				LOGGER.log(Level.INFO, "workspace content entry : " + entry.getKey());
-				//getHandleStoreService().publish(entry.getKey(), entry.getValue());
 				report.append("handle [").append(entry.getKey()).append("] generated\r\n");
+				//getHandleStore().recordHandle(entry.getKey(), entry.getValue(), url);
 			} catch (Exception e) {
 				LOGGER.log(Level.INFO, "handle [" + entry.getKey() + "] failed to generate: " + e.getMessage());
 				report.append("handle [").append(entry.getKey()).append("] failed to generate: ").append(e.getMessage()).append("\r\n");

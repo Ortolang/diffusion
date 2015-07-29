@@ -11,13 +11,21 @@
       "id": "http://jsonschema.net/wsalias",
       "type": "string"
     },
-    "versionName": {
-      "id": "http://jsonschema.net/versionName",
+    "snapshotName": {
+      "id": "http://jsonschema.net/snapshotName",
       "type": "string"
     },
-    "versionDate": {
-      "id": "http://jsonschema.net/versionName",
+    "snapshotDate": {
+      "id": "http://jsonschema.net/snapshotName",
       "type": "string"
+    },
+    "tags": {
+      "id": "http://jsonschema.net/tags",
+      "type": "array",
+      "items": {
+         "id": "http://www.ortolang.fr/tags/tag",
+         "type": "string"
+      }
     }
   },
   "required": [

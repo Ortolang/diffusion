@@ -55,6 +55,7 @@ import fr.ortolang.diffusion.membership.MembershipService;
 @SuppressWarnings("serial")
 public class Group extends OrtolangObject {
 	
+	private static final String[] EMPTY_STRING_ARRAY = new String[0];
 	public static final String OBJECT_TYPE = "group";
 	
 	@Id
@@ -137,7 +138,7 @@ public class Group extends OrtolangObject {
 
 	public String[] getMembers() {
 		if (membersList.equals("")) {
-			return new String[0];
+			return EMPTY_STRING_ARRAY;
 		}
 
 		return membersList.split(",");
