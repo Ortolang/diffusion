@@ -55,7 +55,7 @@ public class LoadBagContentTaskUnitTest {
 			allowing(execution).getVariable("bagpath", String.class); will(returnValue(this.getClass().getClassLoader().getResource("test_bag").getPath()));
 			allowing(execution).getProcessBusinessKey(); will(returnValue("PID"));
 			allowing(engine).notify(with(any(RuntimeEngineEvent.class)));
-			allowing(execution).setVariable(with(any(String.class)), with(anything()));
+			allowing(execution).setVariable(with(any(String.class)), with(any(String.class)));
 	    }});
 		
 		task.executeTask(execution);

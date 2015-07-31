@@ -120,19 +120,11 @@ public class CoreServiceTest {
 		jar.addPackage("fr.ortolang.diffusion.store.binary.hash");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
 		jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
-		jar.addClass("fr.ortolang.diffusion.store.triple.IndexableSemanticContent");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreDocumentBuilder");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreService");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
-		jar.addPackage("fr.ortolang.diffusion.store.triple");
 		jar.addAsResource("config.properties");
-		jar.addAsResource("ontology/foaf.xml");
-		jar.addAsResource("ontology/ortolang.xml");
-		jar.addAsResource("ontology/ortolang-market.xml");
-		jar.addAsResource("ontology/lexvo_2013-02-09.rdf");
-		jar.addAsResource("ontology/lexvo-ontology.xml");
-		jar.addAsResource("ontology/rdfs.xml");
 		jar.addAsResource("schema/ortolang-item-schema.json");
 		jar.addAsResource("schema/ortolang-workspace-schema.json");
 		jar.addAsResource("json/meta.json");
@@ -144,26 +136,14 @@ public class CoreServiceTest {
 		EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class, "diffusion-server-ear.ear");
 		ear.addAsModule(jar);
 		ear.addAsLibraries(pom.resolve("commons-io:commons-io:2.4").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("com.healthmarketscience.rmiio:rmiio:2.0.4").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.wildfly:wildfly-ejb-client-bom:pom:8.0.0.Final").withTransitivity().asFile());
+		ear.addAsLibraries(pom.resolve("org.wildfly:wildfly-ejb-client-bom:pom:9.0.1.Final").withTransitivity().asFile());
 		ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core:1.7").withTransitivity().asFile());
 		ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-core:4.6.0").withTransitivity().asFile());
 		ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-highlighter:4.6.0").withTransitivity().asFile());
 		ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-analyzers-common:4.6.0").withTransitivity().asFile());
 		ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-queryparser:4.6.0").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-repository-api:2.7.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-repository-sail:2.7.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-sail-api:2.7.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-sail-nativerdf:2.7.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-model:2.7.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-rio-api:2.7.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-rio-rdfxml:2.7.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-queryparser-sparql:2.7.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-queryresultio-api:2.7.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-queryresultio-sparqlxml:2.7.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.openrdf.sesame:sesame-queryresultio-sparqljson:2.7.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.apache.velocity:velocity:1.7").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.apache.velocity:velocity-tools:2.0").withTransitivity().asFile());
+		ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core:1.8").withTransitivity().asFile());
+		ear.addAsLibraries(pom.resolve("org.apache.tika:tika-parsers:1.8").withTransitivity().asFile());
 		ear.addAsLibraries(pom.resolve("com.github.fge:json-schema-validator:2.2.6").withTransitivity().asFile());
 		LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 
@@ -262,7 +242,7 @@ public class CoreServiceTest {
 		}
 	}
 
-	@Test(expected = AccessDeniedException.class)
+	@Test
 	public void testReadUnreadableWorkspace() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException,
 			KeyNotFoundException {
 		final String WORKSPACE_KEY = "WSP";
@@ -293,7 +273,8 @@ public class CoreServiceTest {
 				LOGGER.log(Level.INFO, "Profile user2 already exists !!");
 			}
 			core.readWorkspace(WORKSPACE_KEY);
-			fail("Should have raised a  AccessDeniedException");
+		} catch ( AccessDeniedException e ) {
+			fail("workspaces should be readable by everybody");
 		} finally {
 			loginContext.logout();
 		}

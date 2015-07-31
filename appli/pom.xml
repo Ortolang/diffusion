@@ -25,14 +25,9 @@
 			<type>war</type>
 		</dependency>
 		<dependency>
-			<groupId>fr.ortolang.diffusion</groupId>
-			<artifactId>diffusion-admin</artifactId>
-			<type>war</type>
-		</dependency>
-		<dependency>
 			<groupId>net.bull.javamelody</groupId>
 			<artifactId>javamelody-core</artifactId>
-			<version>1.56.0</version>
+			<version>${version.javamelody}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -63,14 +58,8 @@
 							<bundleFileName>api.war</bundleFileName>
 							<contextRoot>/api</contextRoot>
 						</webModule>
-						<webModule>
-							<groupId>fr.ortolang.diffusion</groupId>
-							<artifactId>diffusion-admin</artifactId>
-							<bundleFileName>admin.war</bundleFileName>
-							<contextRoot>/admin</contextRoot>
-						</webModule>
 					</modules>
-					<!-- <fileNameMapping>no-version</fileNameMapping> -->
+					<fileNameMapping>full</fileNameMapping>
 					<finalName>ortolang-diffusion</finalName>
 					<applicationName>diffusion</applicationName>
 					<archive>

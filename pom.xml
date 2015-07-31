@@ -26,36 +26,55 @@
 	<modules>
 		<module>comp</module>
 		<module>api</module>
-		<module>admin</module>
 		<module>client</module>
 		<module>appli</module>
 	</modules>
 
 	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<version.wildfly.maven.plugin>1.0.2.Final</version.wildfly.maven.plugin>
-		<version.wildfly>8.2.0.Final</version.wildfly>
-		<version.compiler.plugin>3.1</version.compiler.plugin>
-		<version.ear.plugin>2.9</version.ear.plugin>
-		<version.ejb.plugin>2.3</version.ejb.plugin>
-		<version.war.plugin>2.4</version.war.plugin>
-		<version.surfire.plugin>2.12</version.surfire.plugin>
-		<maven.compiler.target>1.7</maven.compiler.target>
-		<maven.compiler.source>1.7</maven.compiler.source>
+		<version.ear.plugin>2.10.1</version.ear.plugin>
+		<version.ejb.plugin>2.5.1</version.ejb.plugin>
+		<version.war.plugin>2.6</version.war.plugin>
+		<version.assembly.plugin>2.5.2</version.assembly.plugin>
+		<version.wildfly.maven.plugin>1.1.0.Alpha1</version.wildfly.maven.plugin>
+		<version.wildfly>9.0.1.Final</version.wildfly>
 		<slf4j.version>1.6.4</slf4j.version>
-		<project.inceptionYear>2013</project.inceptionYear>
 		<version.apache.tika>1.8</version.apache.tika>
 		<version.apache.velocity>1.7</version.apache.velocity>
 		<version.apache.velocity-tools>2.0</version.apache.velocity-tools>
 		<version.javax.javaee>7.0</version.javax.javaee>
-		<version.jboss.resteasy>3.0.10.Final</version.jboss.resteasy>
-		<version.keycloak>1.1.0.Final</version.keycloak>
+		<version.jboss.resteasy>3.0.11.Final</version.jboss.resteasy>
+		<version.keycloak>1.4.0.Final</version.keycloak>
+		<version.shrinkwrap>1.2.2</version.shrinkwrap>
+		<version.shrinkwrap-resolver>2.1.1</version.shrinkwrap-resolver>
+		<version.arquillian>1.1.8.Final</version.arquillian>
 		<version.fasterxml.jackson>2.5.3</version.fasterxml.jackson>
 		<version.commons-io>2.4</version.commons-io>
 		<version.springframework.spring-context>4.0.9.RELEASE</version.springframework.spring-context>
 		<version.lyncode.xoai>4.1.0</version.lyncode.xoai>
 		<version.json>20141113</version.json>
 		<version.thetransactioncompany.cors-filter>2.4</version.thetransactioncompany.cors-filter>
+		<version.json-glassfish>1.0.4</version.json-glassfish>
+		<version.base64>2.3.8</version.base64>
+		<version.commons-cli>1.2</version.commons-cli>
+		<version.javamelody>1.56.0</version.javamelody>
+		<version.atmopshere>2.3.0</version.atmopshere>
+		<version.apache.lucene>4.6.0</version.apache.lucene>
+		<version.openrdf.sesame>2.8.3</version.openrdf.sesame>
+		<version.orientechnologies.orientdb>2.0.10</version.orientechnologies.orientdb>
+		<version.common-compress>1.8.1</version.common-compress>
+		<version.hdlnet>7.3.1</version.hdlnet>
+		<version.bagit>4.9.0</version.bagit>
+		<version.hibernate-core>4.3.5.Final</version.hibernate-core>
+		<version.activiti-engine>5.17.0</version.activiti-engine>
+		<version.json-schema-validator>2.2.6</version.json-schema-validator>
+		<version.javacv>0.11</version.javacv>
+		<version.guava>18.0</version.guava>
+		<version.ftpserver-core>1.0.6</version.ftpserver-core>
+		<version.je>5.0.73</version.je>
+		<version.hibernate4.plugin>1.0.5</version.hibernate4.plugin>
+		<version.flyway.plugin>3.1</version.flyway.plugin>
+		<version.activation>1.1.1</version.activation>
+		<version.freemarker>2.3.22</version.freemarker>
 	</properties>
 
 	<dependencyManagement>
@@ -88,18 +107,32 @@
 				<scope>import</scope>
 			</dependency>
 			<dependency>
+				<groupId>org.jboss.shrinkwrap</groupId>
+				<artifactId>shrinkwrap-bom</artifactId>
+				<version>${version.shrinkwrap}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
 				<groupId>org.jboss.shrinkwrap.resolver</groupId>
 				<artifactId>shrinkwrap-resolver-bom</artifactId>
-				<version>2.1.1</version>
+				<version>${version.shrinkwrap-resolver}</version>
 				<scope>import</scope>
 				<type>pom</type>
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.arquillian</groupId>
 				<artifactId>arquillian-bom</artifactId>
-				<version>1.1.5.Final</version>
+				<version>${version.arquillian}</version>
 				<type>pom</type>
 				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.wildfly</groupId>
+				<artifactId>
+					wildfly-arquillian-container-managed
+				</artifactId>
+				<version>8.2.1.Final</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

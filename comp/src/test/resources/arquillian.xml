@@ -6,7 +6,7 @@
     <container qualifier="wildfly-managed" default="true">
         <configuration>
 <!--             <property name="jbossHome">${wildfly-home}</property> -->
-            <property name="jbossHome">/opt/wildfly-8.1.0.Final</property>            
+            <property name="jbossHome">/opt/wildfly-9.0.1.Final</property>            
             <property name="serverConfig">ortolang-test.xml</property>
         </configuration>
     </container>
