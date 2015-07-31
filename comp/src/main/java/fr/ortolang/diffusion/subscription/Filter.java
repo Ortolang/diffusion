@@ -38,29 +38,51 @@ package fr.ortolang.diffusion.subscription;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 public class Filter {
 
-    private Pattern fromPattern;
-
     private Pattern typePattern;
+
+    private Pattern fromPattern;
 
     private Pattern throwedByPattern;
 
     private Map<String, Pattern> argumentsPatterns;
 
     public Filter() {
-        fromPattern = null;
         typePattern = null;
+        fromPattern = null;
         throwedByPattern = null;
         argumentsPatterns = null;
     }
 
+    public Filter(String typePatternRegEx, String fromPatternRegEx, String throwedByPatternRegEx, String... argumentsPatternsRegEx) {
+        super();
+        if (typePatternRegEx != null && typePatternRegEx.length() > 0) {
+            this.typePattern = Pattern.compile(typePatternRegEx);
+        }
+        if (fromPatternRegEx != null && fromPatternRegEx.length() > 0) {
+            this.fromPattern = Pattern.compile(fromPatternRegEx);
+        }
+        if (throwedByPatternRegEx != null && throwedByPatternRegEx.length() > 0) {
+            this.throwedByPattern = Pattern.compile(throwedByPatternRegEx);
+        }
+        if (argumentsPatternsRegEx != null && argumentsPatternsRegEx.length > 0) {
+            Map<String, Pattern> argumentsPatterns = new HashMap<>(argumentsPatternsRegEx.length);
+            for (String argumentPatternRegEx : argumentsPatternsRegEx) {
+                String[] keyValue = argumentPatternRegEx.split(",");
+                argumentsPatterns.put(keyValue[0], Pattern.compile(keyValue[1]));
+            }
+            this.argumentsPatterns = argumentsPatterns;
+        }
+    }
+
     public boolean matches(OrtolangEvent event) {
-        if (fromPattern != null && !fromPattern.matcher(event.getFromObject()).matches() ||
-                typePattern != null && !typePattern.matcher(event.getType()).matches() ||
+        if (typePattern != null && !typePattern.matcher(event.getType()).matches() ||
+                fromPattern != null && !fromPattern.matcher(event.getFromObject()).matches() ||
                 throwedByPattern != null && !throwedByPattern.matcher(event.getThrowedBy()).matches()) {
             return false;
         }
@@ -78,20 +100,20 @@ public class Filter {
         return true;
     }
 
-    public Pattern getFromPattern() {
-        return fromPattern;
-    }
-
-    public void setFromPattern(Pattern fromPattern) {
-        this.fromPattern = fromPattern;
-    }
-
     public Pattern getTypePattern() {
         return typePattern;
     }
 
     public void setTypePattern(Pattern typePattern) {
         this.typePattern = typePattern;
+    }
+
+    public Pattern getFromPattern() {
+        return fromPattern;
+    }
+
+    public void setFromPattern(Pattern fromPattern) {
+        this.fromPattern = fromPattern;
     }
 
     public Pattern getThrowedByPattern() {
@@ -125,8 +147,8 @@ public class Filter {
 
         Filter filter = (Filter) o;
 
-        if (fromPattern != null ? !fromPattern.pattern().equals(filter.fromPattern.pattern()) : filter.fromPattern != null) return false;
         if (typePattern != null ? !typePattern.pattern().equals(filter.typePattern.pattern()) : filter.typePattern != null) return false;
+        if (fromPattern != null ? !fromPattern.pattern().equals(filter.fromPattern.pattern()) : filter.fromPattern != null) return false;
         if (throwedByPattern != null ? !throwedByPattern.pattern().equals(filter.throwedByPattern.pattern()) : filter.throwedByPattern != null)
             return false;
         if (argumentsPatterns != null ? argumentsPatterns.size() != filter.argumentsPatterns.size() : filter.argumentsPatterns != null) {
@@ -144,8 +166,8 @@ public class Filter {
 
     @Override
     public int hashCode() {
-        int result = fromPattern != null ? fromPattern.pattern().hashCode() : 0;
-        result = 31 * result + (typePattern != null ? typePattern.pattern().hashCode() : 0);
+        int result = typePattern != null ? typePattern.pattern().hashCode() : 0;
+        result = 31 * result + (fromPattern != null ? fromPattern.pattern().hashCode() : 0);
         result = 31 * result + (throwedByPattern != null ? throwedByPattern.pattern().hashCode() : 0);
         if (argumentsPatterns != null) {
             for (Pattern pattern : argumentsPatterns.values()) {

@@ -4,7 +4,6 @@ import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.security.authentication.TicketHelper;
-import fr.ortolang.diffusion.subscription.SubscriptionService;
 import org.atmosphere.config.service.*;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.AtmosphereResourceEvent;
@@ -75,7 +74,11 @@ public final class SubscriptionServlet {
         switch (filterRepresentation.getAction()) {
             case ADD:
                 if (filterRepresentation.getFilter().isConform()) {
-                    subscription.addFilter(username, filterRepresentation.getFilter());
+                    try {
+                        subscription.addFilter(username, filterRepresentation.getFilter());
+                    } catch (SubscriptionServiceException e) {
+                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                    }
                 } else {
                     LOGGER.log(Level.SEVERE, "User " + username + " tried to register a non-conform filter: " + filterRepresentation.getFilter());
                 }

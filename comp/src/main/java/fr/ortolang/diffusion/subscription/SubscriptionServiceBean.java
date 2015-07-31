@@ -36,14 +36,22 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
+import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.security.PermitAll;
+import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Singleton;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,6 +61,12 @@ import java.util.logging.Logger;
 @SecurityDomain("ortolang")
 @PermitAll
 public class SubscriptionServiceBean implements SubscriptionService {
+
+    @EJB
+    private MembershipService membership;
+
+    @EJB
+    private CoreService core;
 
     private static final Logger LOGGER = Logger.getLogger(SubscriptionServiceBean.class.getName());
 
@@ -76,8 +90,11 @@ public class SubscriptionServiceBean implements SubscriptionService {
     }
 
     @Override
-    public void addFilter(String username, Filter filter) {
-        LOGGER.log(Level.INFO, "Adding filter to user " + username + " subscription " + filter);
+    public void addFilter(String username, Filter filter) throws SubscriptionServiceException {
+        LOGGER.log(Level.FINE, "Adding filter to user " + username + " subscription " + filter);
+        if (!subscriptionRegistry.containsKey(username)) {
+            throw new SubscriptionServiceException("Could not find subscription for user [" + username + "]");
+        }
         if (!subscriptionRegistry.get(username).addFilter(filter)) {
             LOGGER.log(Level.FINE, "Filter already present");
         }
@@ -88,6 +105,45 @@ public class SubscriptionServiceBean implements SubscriptionService {
         LOGGER.log(Level.INFO, "Removing filter from the subscription of user " + username);
         if (subscriptionRegistry.get(username).removeFilter(filter)) {
             LOGGER.log(Level.FINE, "Filter removed from user " + username + " subscription " + filter);
+        }
+    }
+
+    @Override
+    public void addDefaultFilters() throws SubscriptionServiceException {
+        String username = membership.getProfileKeyForConnectedIdentifier();
+        List<String> profileGroups = null;
+        List<String> workspaces = null;
+        try {
+            profileGroups = membership.getProfileGroups(username);
+            workspaces = core.findWorkspacesForProfile(username);
+        } catch (MembershipServiceException | KeyNotFoundException | AccessDeniedException | CoreServiceException e) {
+            LOGGER.log(Level.SEVERE, "Cannot read " + username + " profile and thus cannot add filters for user groups", e);
+        }
+        if (username != null) {
+            LOGGER.log(Level.FINE, "Adding default filters to user " + username + " subscription");
+            // Core events
+            addFilter(username, new Filter("core\\.workspace\\.create", null, username));
+            // Membership events
+            addFilter(username, new Filter("membership\\.group\\.add-member", null, null, "member," + username));
+            // Runtime events
+            addFilter(username, new Filter("runtime\\.process\\.create", null, username));
+            addFilter(username, new Filter("runtime\\.task\\..*", null, null, "user," + username));
+            // User's workspaces related filters
+            if (workspaces != null) {
+                for (String workspace : workspaces) {
+                    addFilter(username, new Filter("core\\.workspace\\.update", workspace, null));
+                }
+            }
+            // User's groups related filters
+            if (profileGroups != null) {
+                for (String profileGroup : profileGroups) {
+                    addFilter(username, new Filter("core\\.workspace\\.snapshot", null, null, "group," + profileGroup));
+                    addFilter(username, new Filter("runtime\\.task\\..*", null, null, "group," + profileGroup));
+                }
+            }
+            addFilter(username, new Filter("runtime\\.remote\\.create", null, username));
+        } else {
+            throw new SubscriptionServiceException("Cannot get profile key for connected identifier");
         }
     }
 

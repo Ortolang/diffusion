@@ -267,7 +267,7 @@ public class CoreServiceBean implements CoreService {
 			if ( Arrays.asList(RESERVED_ALIASES).contains(alias) ) {
 				throw new CoreServiceException(alias + " is reserved and cannot be used as an alias");
 			}
-			
+
 			List<Workspace> results = em.createNamedQuery("findWorkspaceByAlias", Workspace.class).setParameter("alias", alias).getResultList();
 			if (!results.isEmpty()) {
 				ctx.setRollbackOnly();
@@ -407,7 +407,7 @@ public class CoreServiceBean implements CoreService {
 				throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
 			}
 			String name = String.valueOf(workspace.getClock());
-			
+
 			if (!workspace.hasChanged()) {
 				throw new CoreServiceException("unable to snapshot because workspace has no pending modifications since last snapshot");
 			}
@@ -416,6 +416,7 @@ public class CoreServiceBean implements CoreService {
 				JsonObjectBuilder builder = Json.createObjectBuilder();
 				builder.add("wskey", wskey);
 				builder.add("snapshotName", name);
+				builder.add("wsalias", workspace.getAlias());
 
 				JsonObject jsonObject = builder.build();
 				String hash = binarystore.put(new ByteArrayInputStream(jsonObject.toString().getBytes()));
@@ -827,7 +828,7 @@ public class CoreServiceBean implements CoreService {
 			}
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Set<OrtolangObjectPid> buildWorkspacePidList(String wskey, String tag) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
@@ -937,7 +938,7 @@ public class CoreServiceBean implements CoreService {
 			}
 		}
 	}
-	
+
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {

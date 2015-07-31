@@ -67,6 +67,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import fr.ortolang.diffusion.core.entity.*;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import fr.ortolang.diffusion.OrtolangException;
@@ -86,13 +87,6 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.core.PathBuilder;
-import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.DataObject;
-import fr.ortolang.diffusion.core.entity.Link;
-import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.core.entity.MetadataObject;
-import fr.ortolang.diffusion.core.entity.MetadataSource;
-import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -470,16 +464,6 @@ public class WorkspaceResource {
 		core.snapshotWorkspace(wskey);
 		return Response.ok().build();
 	}
-
-    @GET
-    @Path("/{alias}/key")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getKey(@PathParam(value = "alias") String alias) throws AccessDeniedException, KeyNotFoundException, CoreServiceException, AliasNotFoundException {
-        LOGGER.log(Level.INFO, "GET /workspaces/" + alias + "/key");
-        String key = core.resolveWorkspaceAlias(alias);
-        JsonObject jsonObject = Json.createObjectBuilder().add("key", key).build();
-        return Response.ok(jsonObject).build();
-    }
 
 	@GET
 	@Path("/{alias}/available")
