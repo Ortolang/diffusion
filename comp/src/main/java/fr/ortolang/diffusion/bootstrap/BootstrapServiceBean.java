@@ -138,10 +138,10 @@ public class BootstrapServiceBean implements BootstrapService {
 			LOGGER.log(Level.INFO, "bootstrap key found, nothing to do.");
 		} catch (KeyNotFoundException e) {
 			try {
-				LOGGER.log(Level.INFO, "bootstrap key not found, bootstraping plateform...");
+				LOGGER.log(Level.INFO, "bootstrap key not found, bootstrapping platform...");
 
 				Map<String, List<String>> anonReadRules = new HashMap<String, List<String>>();
-				anonReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] { "read" }));
+				anonReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
 
 				LOGGER.log(Level.FINE, "creating root profile");
 				membership.createProfile(MembershipService.SUPERUSER_IDENTIFIER, "Super", "User", "root@ortolang.org", ProfileStatus.ACTIVE);
@@ -174,7 +174,7 @@ public class BootstrapServiceBean implements BootstrapService {
 				String forallPolicyKey = UUID.randomUUID().toString();
 				authorisation.createPolicy(forallPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
 				Map<String, List<String>> forallPolicyRules = new HashMap<String, List<String>>();
-				forallPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] { "read", "download" }));
+				forallPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read", "download"));
 				authorisation.setPolicyRules(forallPolicyKey, forallPolicyRules);
 				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.FORALL, "All users can read and download this content", forallPolicyKey);
 				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.DEFAULT, "Default template allows all users to read and download content", forallPolicyKey);
@@ -183,8 +183,8 @@ public class BootstrapServiceBean implements BootstrapService {
 				String authentifiedPolicyKey = UUID.randomUUID().toString();
 				authorisation.createPolicy(authentifiedPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
 				Map<String, List<String>> authentifiedPolicyRules = new HashMap<String, List<String>>();
-				authentifiedPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] { "read" }));
-				authentifiedPolicyRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[] { "read", "download" }));
+				authentifiedPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
+				authentifiedPolicyRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList("read", "download"));
 				authorisation.setPolicyRules(authentifiedPolicyKey, authentifiedPolicyRules);
 				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.AUTHENTIFIED, "All users can read this content but download is restricted to authentified users only", authentifiedPolicyKey);
 				
@@ -192,8 +192,8 @@ public class BootstrapServiceBean implements BootstrapService {
 				String esrPolicyKey = UUID.randomUUID().toString();
 				authorisation.createPolicy(esrPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
 				Map<String, List<String>> esrPolicyRules = new HashMap<String, List<String>>();
-				esrPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList(new String[] { "read" }));
-				esrPolicyRules.put(MembershipService.ESR_GROUP_KEY, Arrays.asList(new String[] { "read", "download" }));
+				esrPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
+				esrPolicyRules.put(MembershipService.ESR_GROUP_KEY, Arrays.asList("read", "download"));
 				authorisation.setPolicyRules(esrPolicyKey, esrPolicyRules);
 				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.ESR, "All users can read this content but download is restricted to ESR users only", esrPolicyKey);
 				
@@ -201,7 +201,7 @@ public class BootstrapServiceBean implements BootstrapService {
 				String restrictedPolicyKey = UUID.randomUUID().toString();
 				authorisation.createPolicy(restrictedPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
 				Map<String, List<String>> restrictedPolicyRules = new HashMap<String, List<String>>();
-				restrictedPolicyRules.put("${workspace.members}", Arrays.asList(new String[] { "read", "download" }));
+				restrictedPolicyRules.put("${workspace.members}", Arrays.asList("read", "download"));
 				authorisation.setPolicyRules(restrictedPolicyKey, restrictedPolicyRules);
 				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.RESTRICTED, "Only workspace members can read and download this content, all other users cannot see this content", restrictedPolicyKey);
 				
@@ -251,11 +251,11 @@ public class BootstrapServiceBean implements BootstrapService {
 				LOGGER.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException
 					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | RuntimeServiceException | FormServiceException e1) {
-				LOGGER.log(Level.SEVERE, "unexpected error occured while bootstraping plateform", e1);
-				throw new BootstrapServiceException("unable to bootstrap plateform", e1);
+				LOGGER.log(Level.SEVERE, "unexpected error occurred while bootstrapping platform", e1);
+				throw new BootstrapServiceException("unable to bootstrap platform", e1);
 			}
 		} catch (RegistryServiceException e) {
-			throw new BootstrapServiceException("unable to check plateform bootstrap status", e);
+			throw new BootstrapServiceException("unable to check platform bootstrap status", e);
 		}
 	}
 

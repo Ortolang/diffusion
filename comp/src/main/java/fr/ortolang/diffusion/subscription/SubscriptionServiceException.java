@@ -36,25 +36,25 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.Broadcaster;
+public class SubscriptionServiceException extends Exception {
 
-import java.util.Map;
+    public SubscriptionServiceException() {
+        super();
+    }
 
-public interface SubscriptionService {
+    public SubscriptionServiceException(String message) {
+        super(message);
+    }
 
-    String SERVICE_NAME = "subscription";
+    public SubscriptionServiceException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-    Broadcaster getBroadcaster(String username);
+    public SubscriptionServiceException(Throwable cause) {
+        super(cause);
+    }
 
-    void registerBroadcaster(String username, AtmosphereResource atmosphereResource);
-
-    void addFilter(String username, Filter filter) throws SubscriptionServiceException;
-
-    void removeFilter(String username, Filter filter);
-
-    void addDefaultFilters() throws SubscriptionServiceException;
-
-    Map<String, Subscription> getSubscriptions();
-
+    protected SubscriptionServiceException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

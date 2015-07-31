@@ -48,21 +48,13 @@ import fr.ortolang.diffusion.api.filter.ContentTypeSetterPreProcessorInterceptor
 import fr.ortolang.diffusion.api.form.FormResource;
 import fr.ortolang.diffusion.api.format.MetadataFormatResource;
 import fr.ortolang.diffusion.api.group.GroupResource;
-import fr.ortolang.diffusion.api.mapper.AccessDeniedExceptionMapper;
-import fr.ortolang.diffusion.api.mapper.AliasNotFoundExceptionMapper;
-import fr.ortolang.diffusion.api.mapper.BrowserServiceExceptionMapper;
-import fr.ortolang.diffusion.api.mapper.CollectionNotEmptyExceptionMapper;
-import fr.ortolang.diffusion.api.mapper.InvalidPathExceptionMapper;
-import fr.ortolang.diffusion.api.mapper.KeyAlreadyExistsExceptionMapper;
-import fr.ortolang.diffusion.api.mapper.KeyNotFoundExceptionMapper;
-import fr.ortolang.diffusion.api.mapper.PropertyNotFoundExceptionMapper;
-import fr.ortolang.diffusion.api.mapper.SearchServiceExceptionMapper;
-import fr.ortolang.diffusion.api.mapper.SecurityServiceExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.*;
 import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.profile.ProfileResource;
 import fr.ortolang.diffusion.api.referentiel.ReferentielEntityResource;
 import fr.ortolang.diffusion.api.runtime.RuntimeResource;
 import fr.ortolang.diffusion.api.workspace.WorkspaceResource;
+import fr.ortolang.diffusion.subscription.SubscriptionResource;
 
 @ApplicationPath("/*")
 public class ApiApplication extends Application {
@@ -80,6 +72,7 @@ public class ApiApplication extends Application {
 		classes.add(ReferentielEntityResource.class);
 		classes.add(ContentResource.class);
 		classes.add(ConfigResource.class);
+		classes.add(SubscriptionResource.class);
 	}
 
 	@Override
@@ -101,6 +94,7 @@ public class ApiApplication extends Application {
 		set.add(new SearchServiceExceptionMapper());
 		set.add(new SecurityServiceExceptionMapper());
 		set.add(new CollectionNotEmptyExceptionMapper());
+		set.add(new SubscriptionServiceExceptionMapper());
 		return set;
 	}
 }
