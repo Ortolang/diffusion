@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,7 +62,6 @@ import javax.ejb.TransactionAttributeType;
 import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.RunAsPrincipal;
 import org.jboss.ejb3.annotation.SecurityDomain;
-import org.jgroups.util.UUID;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.core.CoreService;
