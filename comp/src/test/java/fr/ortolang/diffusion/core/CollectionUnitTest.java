@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jgroups.util.UUID;
+import java.util.UUID;
 import org.junit.Test;
 
 import fr.ortolang.diffusion.core.entity.Collection;

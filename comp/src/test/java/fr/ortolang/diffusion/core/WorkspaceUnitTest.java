@@ -40,7 +40,7 @@ import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 
-import org.jgroups.util.UUID;
+import java.util.UUID;
 import org.junit.Test;
 
 import java.util.logging.Level;

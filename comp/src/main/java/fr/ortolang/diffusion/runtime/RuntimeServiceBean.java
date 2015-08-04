@@ -57,7 +57,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 
 import org.activiti.engine.task.IdentityLink;
 import org.jboss.ejb3.annotation.SecurityDomain;
-import org.jgroups.util.UUID;
+import java.util.UUID;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
