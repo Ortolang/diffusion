@@ -82,7 +82,7 @@ public class KeycloakAdminClient {
 		HttpClient client = new HttpClientBuilder().disableTrustManager().build();
 
 		try {
-			HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(BASE_URL + "/auth").path(ServiceUrlConstants.TOKEN_SERVICE_DIRECT_GRANT_PATH).build(REALM));
+			HttpPost post = new HttpPost(KeycloakUriBuilder.fromUri(BASE_URL + "/auth").path(ServiceUrlConstants.TOKEN_PATH).build(REALM));
 			List<NameValuePair> formparams = new ArrayList<NameValuePair>();
 			formparams.add(new BasicNameValuePair("username", USERNAME));
 			formparams.add(new BasicNameValuePair("password", PASSWORD));
