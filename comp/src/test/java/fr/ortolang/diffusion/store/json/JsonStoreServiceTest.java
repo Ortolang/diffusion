@@ -1,6 +1,7 @@
 package fr.ortolang.diffusion.store.json;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.FileInputStream;
@@ -16,8 +17,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import fr.ortolang.diffusion.OrtolangIndexableObject;
@@ -28,10 +29,10 @@ import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 public class JsonStoreServiceTest {
 
 	private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceTest.class.getName());
-	private JsonStoreServiceBean service;
+	private static JsonStoreServiceBean service;
 
-	@Before
-	public void setup() {
+	@BeforeClass
+	public static void setup() {
 		try {
 			service = new JsonStoreServiceBean();
 			service.init();
@@ -40,8 +41,8 @@ public class JsonStoreServiceTest {
 		}
 	}
 
-	@After
-	public void tearDown() {
+	@AfterClass
+	public static void tearDown() {
 		service.shutdown();
 		try {
 			Files.walkFileTree(service.getBase(), new FileVisitor<Path>() {
@@ -93,7 +94,7 @@ public class JsonStoreServiceTest {
 				System.out.println(r);
 			}
 			assertEquals(1, results.size());
-
+			
 			System.out.println(" =========");
 			System.out.println(" = ReIndex =");
 			System.out.println(" =========");
@@ -131,10 +132,25 @@ public class JsonStoreServiceTest {
 			assertEquals(0, resultsAfterRemove.size());
 			
 			
+			
 		} catch (JsonStoreServiceException e) {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
+	}
+	
+	@Test
+    public void testAdminRead() {
+	    String key = "K1";
+	    try {
+	        OrtolangIndexableObject<IndexableJsonContent> object = getOrtolangIndexableObject();
+	        service.index(object);
+	        String document = service.getDocument(key);
+	        System.out.println("DOC: " + document);
+	        assertTrue(document.contains("K1"));
+	    } catch (JsonStoreServiceException e) {
+	        fail("unable to admin document: " + e.getMessage());
+	    }
 	}
 	
 	private OrtolangIndexableObject<IndexableJsonContent> getOrtolangIndexableObject() {

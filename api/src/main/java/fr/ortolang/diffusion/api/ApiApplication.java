@@ -42,13 +42,25 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
+import fr.ortolang.diffusion.api.admin.AdminResource;
 import fr.ortolang.diffusion.api.config.ConfigResource;
 import fr.ortolang.diffusion.api.content.ContentResource;
 import fr.ortolang.diffusion.api.filter.ContentTypeSetterPreProcessorInterceptor;
 import fr.ortolang.diffusion.api.form.FormResource;
 import fr.ortolang.diffusion.api.format.MetadataFormatResource;
 import fr.ortolang.diffusion.api.group.GroupResource;
-import fr.ortolang.diffusion.api.mapper.*;
+import fr.ortolang.diffusion.api.mapper.AccessDeniedExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.AliasNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.BrowserServiceExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.CollectionNotEmptyExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.EJBAccessExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.InvalidPathExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.KeyAlreadyExistsExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.KeyNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.PropertyNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.SearchServiceExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.SecurityServiceExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.SubscriptionServiceExceptionMapper;
 import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.profile.ProfileResource;
 import fr.ortolang.diffusion.api.referentiel.ReferentielEntityResource;
@@ -70,6 +82,7 @@ public class ApiApplication extends Application {
 		classes.add(FormResource.class);
 		classes.add(MetadataFormatResource.class);
 		classes.add(ReferentielEntityResource.class);
+		classes.add(AdminResource.class);
 		classes.add(ContentResource.class);
 		classes.add(ConfigResource.class);
 		classes.add(SubscriptionResource.class);
@@ -95,6 +108,7 @@ public class ApiApplication extends Application {
 		set.add(new SecurityServiceExceptionMapper());
 		set.add(new CollectionNotEmptyExceptionMapper());
 		set.add(new SubscriptionServiceExceptionMapper());
+		set.add(new EJBAccessExceptionMapper());
 		return set;
 	}
 }

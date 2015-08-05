@@ -13,46 +13,46 @@ import fr.ortolang.diffusion.core.entity.MetadataObject;
 
 public class JsonStoreDocumentBuilder {
 
-	private static final Logger LOGGER = Logger.getLogger(JsonStoreDocumentBuilder.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(JsonStoreDocumentBuilder.class.getName());
 
-	public static final String KEY_PROPERTY = "key";
-	public static final String STATUS_PROPERTY = "status";
-	public static final String META_PROPERTY = "meta";
-	public static final String LAST_MODIFICATION_DATE_PROPERTY = "lastModificationDate";
+    public static final String KEY_PROPERTY = "key";
+    public static final String STATUS_PROPERTY = "status";
+    public static final String META_PROPERTY = "meta";
+    public static final String LAST_MODIFICATION_DATE_PROPERTY = "lastModificationDate";
 
-	public static ODocument buildDocument(OrtolangIndexableObject<IndexableJsonContent> object) {
-		return buildDocument(object, null);
-	}
+    public static ODocument buildDocument(OrtolangIndexableObject<IndexableJsonContent> object) {
+        return buildDocument(object, null);
+    }
 
-	public static ODocument buildDocument(OrtolangIndexableObject<IndexableJsonContent> object, ODocument oldDoc) {
+    public static ODocument buildDocument(OrtolangIndexableObject<IndexableJsonContent> object, ODocument oldDoc) {
 
-		ODocument doc = null;
-		if (oldDoc != null) {
-			doc = oldDoc;
-		} else {
-			doc = new ODocument(object.getType());
-		}
+        ODocument doc = null;
+        if (oldDoc != null) {
+            doc = oldDoc;
+        } else {
+            doc = new ODocument(object.getType());
+        }
 
-		doc.field(KEY_PROPERTY, object.getKey());
-		doc.field(STATUS_PROPERTY, object.getStatus());
-		doc.field(LAST_MODIFICATION_DATE_PROPERTY, object.getLastModificationDate());
+        doc.field(KEY_PROPERTY, object.getKey());
+        doc.field(STATUS_PROPERTY, object.getStatus());
+        doc.field(LAST_MODIFICATION_DATE_PROPERTY, object.getLastModificationDate());
 
-		if (object.getContent() != null && object.getContent().getStream() != null) {
-			for(Map.Entry<String, InputStream> entry : object.getContent().getStream().entrySet()) {
-				try {
-					doc.field(META_PROPERTY+"_"+entry.getKey(), new ODocument(MetadataObject.OBJECT_TYPE).fromJSON(entry.getValue()));
-				} catch (IOException e) {
-					LOGGER.log(Level.SEVERE, "unable to get object json content", e);
-				} finally {
-					try {
-						entry.getValue().close();
-					} catch (IOException e) {
-						LOGGER.log(Level.SEVERE, "unable to close the stream", e);
-					}
-				}
-			}
-		}
+        if (object.getContent() != null && object.getContent().getStream() != null) {
+            for (Map.Entry<String, InputStream> entry : object.getContent().getStream().entrySet()) {
+                try {
+                    doc.field(META_PROPERTY + "_" + entry.getKey(), new ODocument(MetadataObject.OBJECT_TYPE).fromJSON(entry.getValue()));
+                } catch (IOException e) {
+                    LOGGER.log(Level.SEVERE, "unable to get object json content", e);
+                } finally {
+                    try {
+                        entry.getValue().close();
+                    } catch (IOException e) {
+                        LOGGER.log(Level.SEVERE, "unable to close the stream", e);
+                    }
+                }
+            }
+        }
 
-		return doc;
-	}
+        return doc;
+    }
 }

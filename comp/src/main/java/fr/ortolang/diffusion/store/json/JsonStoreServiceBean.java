@@ -5,14 +5,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.security.PermitAll;
-import javax.ejb.Local;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
@@ -35,13 +37,12 @@ import com.orientechnologies.orient.server.OServerMain;
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 
-@Local(JsonStoreService.class)
 @Startup
 @Singleton(name = JsonStoreService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @Lock(LockType.READ)
 @PermitAll
-public class JsonStoreServiceBean implements JsonStoreService {
+public class JsonStoreServiceBean implements JsonStoreService, JsonStoreServiceAdmin {
 
 	private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceBean.class.getName());
 	public static final String DEFAULT_JSON_HOME = "/json-store";
@@ -77,7 +78,6 @@ public class JsonStoreServiceBean implements JsonStoreService {
 				db.close();
 			}
 			pool = new OPartitionedDatabasePool("plocal:" + this.base.toFile().getAbsolutePath(), "admin", "admin");
-
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to initialize json store", e);
 		}
@@ -94,24 +94,6 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		}
 	}
 
-	@Override
-	@Lock(LockType.WRITE)
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void importDocument(String type, InputStream stream) throws JsonStoreServiceException {
-		LOGGER.log(Level.FINE, "Importing document type "+type);
-		ODatabaseDocumentTx db = pool.acquire();
-		
-		try {
-			ODocument doc = new ODocument(type).fromJSON(stream);
-			
-			db.save(doc);
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "unable to import document", e);
-		} finally {
-			db.close();
-		}
-	}
-	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> search(String query) throws JsonStoreServiceException {
@@ -154,6 +136,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		}
 	}
 
+	@Override
 	@Lock(LockType.WRITE)
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void remove(String key) throws JsonStoreServiceException {
@@ -170,7 +153,73 @@ public class JsonStoreServiceBean implements JsonStoreService {
 			db.close();
 		}
 	}
-
+	
+	@Override
+    @Lock(LockType.WRITE)
+	@RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void insertDocument(String type, InputStream document) throws JsonStoreServiceException {
+        LOGGER.log(Level.FINE, "Importing document type " + type);
+        ODatabaseDocumentTx db = pool.acquire();
+        try {
+            ODocument doc = new ODocument(type).fromJSON(document);
+            db.save(doc);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "unable to import document", e);
+        } finally {
+            db.close();
+        }
+    }
+	
+	@Override
+    @Lock(LockType.WRITE)
+	@RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void insertDocument(String type, String document) throws JsonStoreServiceException {
+        LOGGER.log(Level.FINE, "Importing document type " + type);
+        ODatabaseDocumentTx db = pool.acquire();
+        try {
+            ODocument doc = new ODocument(type).fromJSON(document);
+            db.save(doc);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "unable to import document", e);
+        } finally {
+            db.close();
+        }
+    }
+    
+    @Override
+	@RolesAllowed("admin")
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String getDocument(String key) throws JsonStoreServiceException {
+        ODocument document = getDocumentByKey(key);
+        if ( document != null ) {
+            return document.toJSON();
+        } else {
+            return null;
+        }
+    }
+    
+    @Override
+    @RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public Map<String, String> getStoreInfos() throws JsonStoreServiceException {
+        Map<String, String>infos = new HashMap<String, String> ();
+        infos.put("pool.size.max", Integer.toString(pool.getMaxSize()));
+        infos.put("pool.connections.availables", Integer.toString(pool.getAvailableConnections()));
+        infos.put("pool.created.instances", Integer.toString(pool.getCreatedInstances()));
+        infos.put("server.directory", server.getDatabaseDirectory());
+        ODatabaseDocumentTx db = pool.acquire();
+        try {
+            infos.put("database.name", db.getName());
+            infos.put("database.size", Long.toString(db.getSize()));
+            infos.put("database.status", db.getStatus().toString());
+        } finally {
+            db.close();
+        }
+        return infos;
+    }
+	
 	protected ODocument getDocumentByKey(String key) {
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
@@ -184,5 +233,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		}
 		return null;
 	}
+
+    
 
 }
