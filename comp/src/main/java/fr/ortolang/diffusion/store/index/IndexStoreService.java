@@ -38,9 +38,12 @@ package fr.ortolang.diffusion.store.index;
 
 import java.util.List;
 
+import javax.ejb.Local;
+
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangSearchResult;
 
+@Local
 public interface IndexStoreService {
 	
 	public static final String SERVICE_NAME = "index-store";

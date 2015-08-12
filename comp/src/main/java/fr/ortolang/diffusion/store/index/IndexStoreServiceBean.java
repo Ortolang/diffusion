@@ -40,14 +40,16 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.security.PermitAll;
-import javax.ejb.Local;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
@@ -78,14 +80,14 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangSearchResult;
+import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 
-@Local(IndexStoreService.class)
 @Startup
 @Singleton(name = IndexStoreService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @Lock(LockType.READ)
 @PermitAll
-public class IndexStoreServiceBean implements IndexStoreService {
+public class IndexStoreServiceBean implements IndexStoreService, IndexStoreServiceAdmin {
 
     public static final String DEFAULT_INDEX_HOME = "/index-store";
 
@@ -205,6 +207,34 @@ public class IndexStoreServiceBean implements IndexStoreService {
             LOGGER.log(Level.WARNING, "unable search in index using " + queryString, e);
             throw new IndexStoreServiceException("Can't search in index using '" + queryString + "'\n", e);
         }
+    }
+    
+    @Override
+    @RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public Map<String, String> getServiceInfos() throws JsonStoreServiceException {
+        Map<String, String>infos = new HashMap<String, String> ();
+        infos.put("index.directory", base.toString());
+        try {
+            long totalsize = 0;
+            int nbfiles = 0;
+            for ( String file : directory.listAll() ) {
+                nbfiles++;
+                totalsize += directory.fileLength(file);
+            }
+            infos.put("index.directory.nbfiles", Integer.toString(nbfiles));
+            infos.put("index.directory.filessize", Long.toString(totalsize));
+        } catch ( IOException e ) {
+            LOGGER.log(Level.WARNING, "unable to gatter infos from index directory", e);
+        }
+        try {
+            IndexReader reader = DirectoryReader.open(directory);
+            infos.put("index.numdocs", Integer.toString(reader.numDocs()));
+            infos.put("index.numdeleteddocs", Integer.toString(reader.numDeletedDocs()));
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "unable to gatter infos from index reader", e);
+        }
+        return infos;
     }
 
 }

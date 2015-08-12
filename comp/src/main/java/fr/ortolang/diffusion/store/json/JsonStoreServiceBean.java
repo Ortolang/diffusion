@@ -203,7 +203,7 @@ public class JsonStoreServiceBean implements JsonStoreService, JsonStoreServiceA
     @Override
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public Map<String, String> getStoreInfos() throws JsonStoreServiceException {
+    public Map<String, String> getServiceInfos() throws JsonStoreServiceException {
         Map<String, String>infos = new HashMap<String, String> ();
         infos.put("pool.size.max", Integer.toString(pool.getMaxSize()));
         infos.put("pool.connections.availables", Integer.toString(pool.getAvailableConnections()));

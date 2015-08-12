@@ -12,6 +12,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import fr.ortolang.diffusion.store.index.IndexStoreServiceAdmin;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceAdmin;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 
@@ -23,12 +24,16 @@ public class AdminResource {
     
     @EJB
     private JsonStoreServiceAdmin json;
+    
+    @EJB
+    private IndexStoreServiceAdmin index;
+
 
     @GET
     @Path("/json")
     public Response getJsonStoreInfos() throws JsonStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/json");
-        Map<String, String> infos = json.getStoreInfos();
+        Map<String, String> infos = json.getServiceInfos();
         return Response.ok(infos).build();
     }
     
@@ -38,6 +43,14 @@ public class AdminResource {
         LOGGER.log(Level.INFO, "GET /admin/json/documents/" + key);
         String document = json.getDocument(key);
         return Response.ok(document).build();
+    }
+    
+    @GET
+    @Path("/index")
+    public Response getIndexStoreInfos() throws JsonStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/index");
+        Map<String, String> infos = index.getServiceInfos();
+        return Response.ok(infos).build();
     }
     
 }

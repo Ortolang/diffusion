@@ -14,6 +14,6 @@ public interface JsonStoreServiceAdmin {
     
     public String getDocument(String key) throws JsonStoreServiceException;
     
-    public Map<String, String> getStoreInfos() throws JsonStoreServiceException;
+    public Map<String, String> getServiceInfos() throws JsonStoreServiceException;
 
 }
