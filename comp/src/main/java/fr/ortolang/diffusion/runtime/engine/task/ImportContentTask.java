@@ -131,7 +131,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			LOGGER.log(Level.SEVERE, "- unexpected error during reading operations script", e);
 		}
 		try {
-			LOGGER.log(Level.FINE, "commiting active user transaction.");
+			LOGGER.log(Level.FINE, "commiting active user transaction and starting new one.");
 			getUserTransaction().commit();
 			getUserTransaction().begin();
 		} catch (Exception e) {

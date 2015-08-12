@@ -1,12 +1,12 @@
 package fr.ortolang.diffusion.runtime.engine.task;
 
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.transaction.Status;
 
 import org.activiti.engine.delegate.DelegateExecution;
-import org.jboss.logmanager.Level;
 
 import fr.ortolang.diffusion.OrtolangObjectPid;
 import fr.ortolang.diffusion.core.CoreServiceException;

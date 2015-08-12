@@ -368,6 +368,43 @@ public class CoreServiceBean implements CoreService {
             throw new CoreServiceException("unable to find workspaces for profile", e);
         }
     }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<String> findWorkspacesAliasForProfile(String profile) throws CoreServiceException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "finding workspace alias for profile");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkAuthentified(subjects);
+
+            List<String> groups = membership.getProfileGroups(profile);
+            if (groups.isEmpty()) {
+                return Collections.emptyList();
+            }
+
+            List<String> aliases = new ArrayList<String>();
+            TypedQuery<Workspace> query = em.createNamedQuery("findWorkspaceByMember", Workspace.class).setParameter("groups", groups);
+            List<Workspace> workspaces = query.getResultList();
+            for (Workspace workspace : workspaces) {
+                OrtolangObjectIdentifier identifier = workspace.getObjectIdentifier();
+                try {
+                    if ( workspace.getAlias()!= null && workspace.getAlias().length() > 0 ) {
+                        registry.lookup(identifier);
+                        aliases.add(workspace.getAlias());
+                    }
+                } catch (IdentifierNotRegisteredException e) {
+                    LOGGER.log(Level.SEVERE, "a workspace with an unregistered identifier has be found : " + identifier);
+                }
+            }
+
+            notification.throwEvent("", caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "find"));
+            return aliases;
+        } catch (NotificationServiceException | MembershipServiceException | AuthorisationServiceException | RegistryServiceException | KeyNotFoundException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred during finding workspaces for profile", e);
+            throw new CoreServiceException("unable to find workspaces for profile", e);
+        }
+    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)

@@ -7,5 +7,6 @@ public interface FtpService {
 	public void suspend();
 	
 	public void resume();
+	
 
 }

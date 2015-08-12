@@ -72,6 +72,11 @@ public class PathBuilder {
 		return this;
 	}
 	
+	public PathBuilder path(PathBuilder path) throws InvalidPathException {
+        builder = builder.append(path.builder);
+        return this;
+    }
+	
 	public String build() {
 		if ( builder.length() <= 1 ) {
 			return PATH_SEPARATOR;

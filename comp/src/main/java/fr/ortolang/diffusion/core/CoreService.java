@@ -79,6 +79,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
 	public List<String> findWorkspacesForProfile(String profile) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
+	public List<String> findWorkspacesAliasForProfile(String profile) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
 	public Map<String, Map<String, List<String>>> buildWorkspacePublicationMap(String wskey, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	public Set<String> buildWorkspaceReviewList(String wskey, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
@@ -140,6 +142,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	public void deleteLink(String wskey, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException;
 	
 	public Link readLink(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	//TODO public String resolveLinkTarget(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	/*MetadataObject*/
 

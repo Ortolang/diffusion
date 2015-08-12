@@ -67,7 +67,7 @@ public class DiffusionEchoElement implements XmlWritable {
 	
 	private static final Logger LOGGER = Logger.getLogger(DiffusionEchoElement.class.getName());
 	
-	private static XMLInputFactory factory = XMLInputFactory2.newFactory();
+	private static XMLInputFactory factory = XMLInputFactory2.newInstance();
 	private String xmlString = null;
 	private List<String> declaredPrefixes = new ArrayList<String>();
 

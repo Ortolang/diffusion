@@ -280,6 +280,13 @@ public class PathBuilderTest {
 		assertTrue(three.equals(two));
 		assertTrue(two.equals(three));
 		
+		PathBuilder bis = PathBuilder.newInstance();
+		bis.path(three);
+        
+        assertTrue(one.equals(bis));
+        assertTrue(two.equals(bis));
+        assertTrue(three.equals(bis));
+        
 		three.path("toto");
 		two.path("toto");
 		
@@ -350,5 +357,5 @@ public class PathBuilderTest {
 		}
 	
 	}
-
+	
 }

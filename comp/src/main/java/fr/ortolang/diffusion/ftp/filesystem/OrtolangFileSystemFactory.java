@@ -1,7 +1,7 @@
 package fr.ortolang.diffusion.ftp.filesystem;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.ftpserver.ftplet.FileSystemFactory;
 import org.apache.ftpserver.ftplet.FileSystemView;
@@ -10,18 +10,18 @@ import org.apache.ftpserver.ftplet.User;
 
 public class OrtolangFileSystemFactory implements FileSystemFactory {
 	
-	private Map<String, FileSystemView> cache;
-	
+    private static final Logger LOGGER = Logger.getLogger(OrtolangFileSystemFactory.class.getName());
+    
 	public OrtolangFileSystemFactory() {
-		cache = new HashMap<String, FileSystemView> ();
 	}
 
 	@Override
 	public FileSystemView createFileSystemView(User user) throws FtpException {
-		if ( !cache.containsKey(user.getName()) ) {
-			cache.put(user.getName(), new OrtolangFileSystemView(user));
-		}
-		return cache.get(user.getName());
+	    synchronized (user) {
+	        LOGGER.log(Level.FINE, "creating new filesystem view for user: " + user.getName());
+	        OrtolangFileSystemView fsview = new OrtolangFileSystemView(user);
+	        return fsview;
+	    }
 	}
 
 }
