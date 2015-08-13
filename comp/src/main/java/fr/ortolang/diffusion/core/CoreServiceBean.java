@@ -660,12 +660,19 @@ public class CoreServiceBean implements CoreService {
 
             String rroot = ws.getHead();
             if (root != null && root.length() > 0 && !root.equals(Workspace.HEAD)) {
-                SnapshotElement element = ws.findSnapshotByName(root);
+                String snapshot = root;
+                TagElement tag = ws.findTagByName(root);
+                if ( tag != null ) {
+                    LOGGER.log(Level.FINEST, "root is a tag, resolving tag snapshot");
+                    snapshot = tag.getSnapshot();
+                }
+                SnapshotElement element = ws.findSnapshotByName(snapshot);
                 if (element == null) {
                     throw new InvalidPathException("root [" + root + "] does not exists");
                 } else {
                     rroot = element.getKey();
                 }
+                
             }
 
             if (npath.isRoot()) {

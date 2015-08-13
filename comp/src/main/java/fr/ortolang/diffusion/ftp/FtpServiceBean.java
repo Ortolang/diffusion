@@ -1,12 +1,13 @@
 package fr.ortolang.diffusion.ftp;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.security.PermitAll;
-import javax.ejb.Local;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 
@@ -21,12 +22,11 @@ import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.ftp.filesystem.OrtolangFileSystemFactory;
 import fr.ortolang.diffusion.ftp.user.OrtolangUserManager;
 
-@Local(FtpServiceBean.class)
 @Startup
 @Singleton(name = FtpServiceBean.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @PermitAll
-public class FtpServiceBean implements FtpService {
+public class FtpServiceBean implements FtpService, FtpServiceAdmin {
 	
 	private static final Logger LOGGER = Logger.getLogger(FtpServiceBean.class.getName());
 	
@@ -36,7 +36,8 @@ public class FtpServiceBean implements FtpService {
 	private FtpServer server;
 
 	public FtpServiceBean() {
-		FtpServerFactory serverFactory = new FtpServerFactory();
+	    LOGGER.log(Level.FINE, "Instanciating ftp service");
+    	FtpServerFactory serverFactory = new FtpServerFactory();
 		ListenerFactory factory = new ListenerFactory();
 		factory.setPort(Integer.parseInt(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_PORT)));
 		serverFactory.addListener("default", factory.createListener());
@@ -73,6 +74,12 @@ public class FtpServiceBean implements FtpService {
 	@Override
 	public void resume() {
 		server.resume();
+	}
+	
+	@Override
+	public Map<String, String> getServiceInfos() throws FtpServiceException     {
+	    Map<String, String>infos = new HashMap<String, String> ();
+        return infos;
 	}
 
 }

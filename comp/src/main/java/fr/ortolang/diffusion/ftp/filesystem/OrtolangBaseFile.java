@@ -40,12 +40,17 @@ public class OrtolangBaseFile implements FtpFile {
     public OrtolangBaseFile(PathBuilder path, String name, boolean directory, boolean exists, boolean writeable, boolean removable, long lastModified, long size) {
         this.path = path;
         this.name = name;
+        this.hidden = false;
         this.directory = directory;
         this.exists = exists;
+        this.readable = true;
         this.writeable = writeable;
         this.removable = removable;
         this.lastModified = lastModified;
         this.size = size;
+        this.owner = "user";
+        this.group = "group";
+        this.lastModified = System.currentTimeMillis();
     }
 
     public PathBuilder getPath() {

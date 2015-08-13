@@ -24,7 +24,7 @@ public class ContentTemplateTest {
 		representation.setContext("/api");
 		representation.setBase("/content");
 		representation.setAlias("system");
-		representation.setSnapshot("head");
+		representation.setRoot("head");
 		representation.setPath("/system/head");
 		representation.setParentPath("/system");
 		String result = TemplateEngine.getInstance().process("collection", representation);

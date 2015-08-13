@@ -10,7 +10,7 @@ public class ContentRepresentation {
 	private String context;
 	private String base;
 	private String alias;
-	private String snapshot;
+	private String root;
 	private String path;
 	private String order;
 	private boolean asc;
@@ -22,7 +22,7 @@ public class ContentRepresentation {
 		context = "";
 		base = "";
 		alias = "";
-		snapshot = "";
+		root = "";
 		path = "";
 		order = "N";
 		linkbykey = false;
@@ -59,12 +59,12 @@ public class ContentRepresentation {
 		this.alias = alias;
 	}
 
-	public String getSnapshot() {
-		return snapshot;
+	public String getRoot() {
+		return root;
 	}
 
-	public void setSnapshot(String snapshot) {
-		this.snapshot = snapshot;
+	public void setRoot(String root) {
+		this.root = root;
 	}
 
 	public void setPath(String path) {

@@ -71,6 +71,7 @@ import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -291,7 +292,7 @@ public class ContentResource {
 		PathBuilder pbuilder = PathBuilder.fromPath(path);
 		String[] pparts = pbuilder.buildParts();
 		if (pparts.length < 2) {
-			throw new InvalidPathException("invalid path, format is : /{alias}/{snapshot}/{path}");
+			throw new InvalidPathException("invalid path, format is : /{alias}/{root}/{path}");
 		}
 		String wskey = core.resolveWorkspaceAlias(pparts[0]);
 		if (pparts[1].equals(Workspace.LATEST)) {
@@ -391,7 +392,7 @@ public class ContentResource {
 					representation.setContext(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT));
 					representation.setBase("/content/key");
 					representation.setAlias("");
-					representation.setSnapshot("");
+					representation.setRoot("");
 					representation.setPath("/" + key);
 					representation.setParentPath("");
 					representation.setOrder(order);
@@ -520,7 +521,7 @@ public class ContentResource {
 			}
 			if (builder == null) {
 				Workspace workspace = core.readWorkspace(wskey);
-				List<CollectionElement> elements = new ArrayList<CollectionElement>(workspace.getSnapshots().size());
+				List<CollectionElement> elements = new ArrayList<CollectionElement>();
 				String latest = core.findWorkspaceLatestPublishedSnapshot(wskey);
 				if (latest != null && latest.length() > 0) {
 					elements.add(new CollectionElement(Collection.OBJECT_TYPE, Workspace.LATEST, -1, -1, "ortolang/snapshot", latest));
@@ -529,6 +530,9 @@ public class ContentResource {
 				for (SnapshotElement snapshot : workspace.getSnapshots()) {
 					elements.add(new CollectionElement(Collection.OBJECT_TYPE, snapshot.getName(), -1, -1, "ortolang/snapshot", snapshot.getKey()));
 				}
+				for (TagElement tag : workspace.getTags()) {
+                    elements.add(new CollectionElement(Collection.OBJECT_TYPE, tag.getName(), -1, -1, "ortolang/tag", workspace.findSnapshotByName(tag.getSnapshot()).getKey()));
+                }
 				if (asc.equals("D")) {
 					Collections.sort(elements, CollectionElement.ElementNameDescComparator);
 					representation.setAsc(false);
@@ -557,24 +561,24 @@ public class ContentResource {
 	}
 
 	@GET
-	@Path("/{alias}/{snapshot}")
-	public Response snapshot(@PathParam("alias") String alias, @PathParam("snapshot") String snapshot, @QueryParam("O") @DefaultValue("A") String asc,
+	@Path("/{alias}/{root}")
+	public Response snapshot(@PathParam("alias") String alias, @PathParam("root") String root, @QueryParam("O") @DefaultValue("A") String asc,
 			@QueryParam("C") @DefaultValue("N") String order, @Context SecurityContext security, @Context Request request) throws TemplateEngineException, CoreServiceException, AccessDeniedException,
 			AliasNotFoundException, KeyNotFoundException, BrowserServiceException {
-		LOGGER.log(Level.INFO, "GET /content/" + alias + "/" + snapshot);
+		LOGGER.log(Level.INFO, "GET /content/" + alias + "/" + root);
 		ContentRepresentation representation = new ContentRepresentation();
 		representation.setContext(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT));
 		representation.setBase("/content");
 		representation.setAlias(alias);
-		representation.setSnapshot(snapshot);
-		representation.setPath("/" + alias + "/" + snapshot);
+		representation.setRoot(root);
+		representation.setPath("/" + alias + "/" + root);
 		representation.setParentPath("/" + alias);
 		representation.setOrder(order);
 		try {
 			String wskey = core.resolveWorkspaceAlias(alias);
 			Workspace workspace = core.readWorkspace(wskey);
 			String rkey;
-			switch (snapshot) {
+			switch (root) {
 			case Workspace.LATEST:
 				String sname = core.findWorkspaceLatestPublishedSnapshot(wskey);
 				rkey = workspace.findSnapshotByName(sname).getKey();
@@ -586,9 +590,14 @@ public class ContentResource {
 				rkey = workspace.getHead();
 				break;
 			default:
+			    String snapshot = root;
+			    TagElement telement = workspace.findTagByName(snapshot);
+			    if ( telement != null ) {
+			        snapshot = telement.getSnapshot();
+			    }
 				SnapshotElement selement = workspace.findSnapshotByName(snapshot);
 				if (selement == null) {
-					return Response.status(Status.NOT_FOUND).entity("Unable to find a snapshot with name [" + snapshot + "] in this workspace").type("text/plain").build();
+					return Response.status(Status.NOT_FOUND).entity("Unable to find a root tag or snapshot with name [" + root + "] in this workspace").type("text/plain").build();
 				}
 				rkey = selement.getKey();
 				break;
@@ -597,7 +606,7 @@ public class ContentResource {
 			OrtolangObjectState state = browser.getState(rkey);
 			CacheControl cc = new CacheControl();
 			cc.setPrivate(true);
-			if (!snapshot.equals(Workspace.LATEST) && state.isLocked()) {
+			if (!root.equals(Workspace.LATEST) && state.isLocked()) {
 				cc.setMaxAge(691200);
 				cc.setMustRevalidate(false);
 			} else {
@@ -665,36 +674,36 @@ public class ContentResource {
 	}
 
 	@GET
-	@Path("/{alias}/{snapshot}/{path: .*}")
+	@Path("/{alias}/{root}/{path: .*}")
 	@Produces({ MediaType.MEDIA_TYPE_WILDCARD })
-	public Response path(@PathParam("alias") String alias, @PathParam("snapshot") String snapshot, @PathParam("path") String path, @QueryParam("fd") boolean download,
+	public Response path(@PathParam("alias") String alias, @PathParam("root") String root, @PathParam("path") String path, @QueryParam("fd") boolean download,
 			@QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order, @Context SecurityContext ctx, @Context Request request)
 			throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, AliasNotFoundException, InvalidPathException, OrtolangException,
 			BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException, SecurityServiceException {
-		LOGGER.log(Level.INFO, "GET /content/" + alias + "/" + snapshot + "/" + path);
+		LOGGER.log(Level.INFO, "GET /content/" + alias + "/" + root + "/" + path);
 		ContentRepresentation representation = new ContentRepresentation();
 		representation.setContext(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT));
 		representation.setBase("/content");
 		representation.setAlias(alias);
-		representation.setSnapshot(snapshot);
-		representation.setPath("/" + alias + "/" + snapshot + "/" + path);
-		representation.setParentPath("/" + alias + "/" + snapshot);
+		representation.setRoot(root);
+		representation.setPath("/" + alias + "/" + root + "/" + path);
+		representation.setParentPath("/" + alias + "/" + root);
 		representation.setOrder(order);
 		try {
 			String wskey = core.resolveWorkspaceAlias(alias);
-			if (snapshot.equals(Workspace.LATEST)) {
-				snapshot = core.findWorkspaceLatestPublishedSnapshot(wskey);
-				if (snapshot == null) {
+			if (root.equals(Workspace.LATEST)) {
+				root = core.findWorkspaceLatestPublishedSnapshot(wskey);
+				if (root == null) {
 					return Response.status(Status.NOT_FOUND).entity("No version of this workspace has been published").type("text/plain").build();
 				}
 			}
 			PathBuilder npath = PathBuilder.fromPath(path);
-			String okey = core.resolveWorkspacePath(wskey, snapshot, npath.build());
+			String okey = core.resolveWorkspacePath(wskey, root, npath.build());
 			OrtolangObjectState state = browser.getState(okey);
 			
 			CacheControl cc = new CacheControl();
 			cc.setPrivate(true);
-			if (!snapshot.equals(Workspace.LATEST) && state.isLocked()) {
+			if (!root.equals(Workspace.LATEST) && state.isLocked()) {
 				cc.setMaxAge(691200);
 				cc.setMustRevalidate(false);
 			} else {

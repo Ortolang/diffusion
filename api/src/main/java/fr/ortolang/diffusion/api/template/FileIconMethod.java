@@ -45,6 +45,7 @@ public class FileIconMethod implements TemplateMethodModelEx {
 		typeMapping.put("application/.*", "bin.png");
 		typeMapping.put("ortolang/workspace", "folder-home.png");
 		typeMapping.put("ortolang/snapshot", "folder.png");
+		typeMapping.put("ortolang/tag", "folder.png");
 		typeMapping.put("ortolang/collection", "folder.png");
 		typeMapping.put("ortolang/link", "html.png");
 		extMapping = new HashMap<String, String> ();

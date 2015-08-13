@@ -1,8 +1,12 @@
 package fr.ortolang.diffusion.ftp.filesystem;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,11 +37,14 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
+import fr.ortolang.diffusion.store.binary.DataCollisionException;
+import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 public class OrtolangCoreFile implements FtpFile {
 
     private static final Logger LOGGER = Logger.getLogger(OrtolangCoreFile.class.getName());
-    
+
     private OrtolangFileSystemView fsview;
     private User user;
     private String alias;
@@ -51,13 +58,13 @@ public class OrtolangCoreFile implements FtpFile {
     private String group;
     private long lastModified;
     private long size;
-    
+
     public OrtolangCoreFile(OrtolangFileSystemView fsview, User user, String alias, String snapshot, String name) throws FtpException {
         this(fsview, user, alias, snapshot, name, PathBuilder.newInstance());
     }
 
     public OrtolangCoreFile(OrtolangFileSystemView fsview, User user, String alias, String root, String name, PathBuilder path) throws FtpException {
-        LOGGER.log(Level.FINE, "creating object: alias=" + alias + ", root=" + root + ", name=" + name + ", path=" + path.build() );
+        LOGGER.log(Level.FINE, "creating object: alias=" + alias + ", root=" + root + ", name=" + name + ", path=" + path.build());
         this.fsview = fsview;
         this.user = user;
         this.alias = alias;
@@ -70,7 +77,7 @@ public class OrtolangCoreFile implements FtpFile {
         this.size = 0;
         try {
             LoginContext lc = null;
-            if ( !user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
+            if (!user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 lc = UsernamePasswordLoginContextFactory.createLoginContext(user.getName(), user.getPassword());
                 lc.login();
             }
@@ -80,27 +87,27 @@ public class OrtolangCoreFile implements FtpFile {
                 object = fsview.getCoreService().findObject(key);
                 owner = fsview.getSecurityService().getOwner(key);
                 lastModified = fsview.getRegistryService().getLastModificationDate(key);
-                LOGGER.log(Level.FINE, "object loaded: key= " + key + ", identifier=" + object.getObjectIdentifier() );
-                if ( object instanceof DataObject ) {
-                    size = ((DataObject)object).getSize();
+                LOGGER.log(Level.FINE, "object loaded: key= " + key + ", identifier=" + object.getObjectIdentifier());
+                if (object instanceof DataObject) {
+                    size = ((DataObject) object).getSize();
                 }
             } catch (OrtolangException | CoreServiceException | KeyNotFoundException | SecurityServiceException | RegistryServiceException e) {
                 LOGGER.log(Level.SEVERE, "unexpected error while trying to load core object", e);
                 throw new FtpException("unexpected error while trying to load core object", e);
-            } catch ( AccessDeniedException e ) {
-                throw new FtpException("access is denied to this core object", e); 
-            } catch ( AliasNotFoundException e ) {
-                throw new FtpException("alias not found in workspaces", e); 
-            } catch ( InvalidPathException e ) {
+            } catch (AccessDeniedException e) {
+                throw new FtpException("access is denied to this core object", e);
+            } catch (AliasNotFoundException e) {
+                throw new FtpException("alias not found in workspaces", e);
+            } catch (InvalidPathException e) {
                 LOGGER.log(Level.FINE, "path does not exists, building empty object");
             }
-            if ( lc != null ) {
+            if (lc != null) {
                 lc.logout();
             }
         } catch (LoginException e) {
             LOGGER.log(Level.SEVERE, "unable to login with user: " + user.getName(), e);
             throw new FtpException("unable to login with user: " + user.getName(), e);
-        } 
+        }
     }
 
     @Override
@@ -116,38 +123,6 @@ public class OrtolangCoreFile implements FtpFile {
     @Override
     public boolean doesExist() {
         return object != null;
-    }
-
-    @Override
-    public boolean delete() {
-        if ( doesExist() ) {
-            try {
-                LoginContext lc = null;
-                if ( !user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
-                    lc = UsernamePasswordLoginContextFactory.createLoginContext(user.getName(), user.getPassword());
-                    lc.login();
-                }
-                try {
-                    if ( object.getObjectIdentifier().getType().equals(Collection.OBJECT_TYPE) ) {
-                        fsview.getCoreService().deleteCollection(wskey, path.build());
-                    } 
-                    if ( object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE) ) {
-                        fsview.getCoreService().deleteDataObject(wskey, path.build());
-                    }
-                    key = null;
-                    object = null;
-                    return true;
-                } catch (InvalidPathException | AccessDeniedException | OrtolangException | CoreServiceException | KeyNotFoundException | CollectionNotEmptyException e) {
-                    LOGGER.log(Level.SEVERE, "unable to delete object", e);
-                } 
-                if ( lc != null ) {
-                    lc.logout();
-                }
-            } catch (LoginException e) {
-                LOGGER.log(Level.SEVERE, "unable to login with user: " + user.getName(), e);
-            }
-        }
-        return false;
     }
 
     @Override
@@ -182,12 +157,12 @@ public class OrtolangCoreFile implements FtpFile {
 
     @Override
     public boolean isDirectory() {
-        return ( doesExist() && object.getObjectIdentifier().getType().equals(Collection.OBJECT_TYPE) );
+        return (doesExist() && object.getObjectIdentifier().getType().equals(Collection.OBJECT_TYPE));
     }
 
     @Override
     public boolean isFile() {
-        return ( doesExist() && object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE) );
+        return (doesExist() && object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE));
     }
 
     @Override
@@ -197,19 +172,21 @@ public class OrtolangCoreFile implements FtpFile {
 
     @Override
     public boolean isReadable() {
-        if ( doesExist() ) {
+        if (doesExist()) {
             try {
                 LoginContext lc = null;
-                if ( !user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
+                if (!user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                     lc = UsernamePasswordLoginContextFactory.createLoginContext(user.getName(), user.getPassword());
                     lc.login();
                 }
                 try {
                     fsview.getSecurityService().checkPermission(key, "download");
-                } catch ( AccessDeniedException | SecurityServiceException | KeyNotFoundException | OrtolangException e ) {
+                } catch (AccessDeniedException | SecurityServiceException | KeyNotFoundException | OrtolangException e) {
                     return false;
                 }
-                lc.logout();
+                if (lc != null) {
+                    lc.logout();
+                }
             } catch (LoginException e) {
                 LOGGER.log(Level.SEVERE, "unable to login with user: " + user.getName(), e);
             }
@@ -219,19 +196,21 @@ public class OrtolangCoreFile implements FtpFile {
 
     @Override
     public boolean isRemovable() {
-        if ( root.equals(Workspace.HEAD) && doesExist() ) {
+        if (root.equals(Workspace.HEAD) && doesExist()) {
             try {
                 LoginContext lc = null;
-                if ( !user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
+                if (!user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                     lc = UsernamePasswordLoginContextFactory.createLoginContext(user.getName(), user.getPassword());
                     lc.login();
                 }
                 try {
                     fsview.getSecurityService().checkPermission(key, "delete");
-                } catch ( AccessDeniedException | SecurityServiceException | KeyNotFoundException | OrtolangException e ) {
+                } catch (AccessDeniedException | SecurityServiceException | KeyNotFoundException | OrtolangException e) {
                     return false;
                 }
-                lc.logout();
+                if (lc != null) {
+                    lc.logout();
+                }
             } catch (LoginException e) {
                 LOGGER.log(Level.SEVERE, "unable to login with user: " + user.getName(), e);
             }
@@ -241,7 +220,7 @@ public class OrtolangCoreFile implements FtpFile {
 
     @Override
     public boolean isWritable() {
-        if ( root.equals(Workspace.HEAD) ) {
+        if (root.equals(Workspace.HEAD)) {
             return true;
         }
         return false;
@@ -249,12 +228,14 @@ public class OrtolangCoreFile implements FtpFile {
 
     @Override
     public List<FtpFile> listFiles() {
-        if ( doesExist() && object.getObjectIdentifier().getType().equals(Collection.OBJECT_TYPE) ) {
+        LOGGER.log(Level.FINE, "listing files");
+        if (doesExist() && object.getObjectIdentifier().getType().equals(Collection.OBJECT_TYPE)) {
             List<FtpFile> content = new ArrayList<FtpFile>();
-            for ( CollectionElement element : ((Collection)object).getElements() ) {
+            for (CollectionElement element : ((Collection) object).getElements()) {
                 try {
-                    content.add(new OrtolangBaseFile(PathBuilder.newInstance().path(alias).path(root).path(path).path(element.getName()), element.getName(), element.getType().equals(Collection.OBJECT_TYPE), true, true, true, element.getModification(), element.getSize()));
-                } catch ( InvalidPathException e ) {
+                    content.add(new OrtolangBaseFile(PathBuilder.newInstance().path(alias).path(root).path(path).path(element.getName()), element.getName(), element.getType().equals(
+                            Collection.OBJECT_TYPE), true, true, true, element.getModification(), element.getSize()));
+                } catch (InvalidPathException e) {
                     LOGGER.log(Level.SEVERE, "unable to create base file for element: " + element.getName());
                 }
             }
@@ -265,19 +246,22 @@ public class OrtolangCoreFile implements FtpFile {
 
     @Override
     public boolean mkdir() {
-        if ( root.equals(Workspace.HEAD) && !doesExist() ) {
+        LOGGER.log(Level.FINE, "making directory");
+        if (root.equals(Workspace.HEAD) && !doesExist()) {
             try {
                 LoginContext lc = null;
-                if ( !user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
+                if (!user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                     lc = UsernamePasswordLoginContextFactory.createLoginContext(user.getName(), user.getPassword());
                     lc.login();
                 }
                 try {
                     fsview.getCoreService().createCollection(wskey, path.build());
-                } catch ( AccessDeniedException | KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException e ) {
+                } catch (AccessDeniedException | KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException e) {
                     return false;
                 }
-                lc.logout();
+                if (lc != null) {
+                    lc.logout();
+                }
                 return true;
             } catch (LoginException e) {
                 LOGGER.log(Level.SEVERE, "unable to login with user: " + user.getName(), e);
@@ -288,26 +272,136 @@ public class OrtolangCoreFile implements FtpFile {
 
     @Override
     public boolean move(FtpFile destination) {
-        //TODO check 
+        LOGGER.log(Level.FINE, "moving file");
+        if (root.equals(Workspace.HEAD) && !doesExist()) {
+            try {
+                LoginContext lc = null;
+                if (!user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+                    lc = UsernamePasswordLoginContextFactory.createLoginContext(user.getName(), user.getPassword());
+                    lc.login();
+                }
+                try {
+                    PathBuilder dest = PathBuilder.fromPath(destination.getAbsolutePath());
+                    if (dest.depth() < 2 || !dest.buildParts()[0].equals(alias) || !dest.buildParts()[1].equals(Workspace.HEAD)) {
+                        throw new InvalidPathException("destination must be in the same workspace head.");
+                    }
+                    if (isDirectory()) {
+                        fsview.getCoreService().moveCollection(wskey, path.build(), dest.relativize(2).build());
+                    } else {
+                        fsview.getCoreService().moveDataObject(wskey, path.build(), dest.relativize(2).build());
+                    }
+                } catch (AccessDeniedException | KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException e) {
+                    return false;
+                }
+                if (lc != null) {
+                    lc.logout();
+                }
+                return true;
+            } catch (LoginException e) {
+                LOGGER.log(Level.SEVERE, "unable to login with user: " + user.getName(), e);
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean delete() {
+        LOGGER.log(Level.FINE, "deleting file");
+        if (doesExist()) {
+            try {
+                LoginContext lc = null;
+                if (!user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+                    lc = UsernamePasswordLoginContextFactory.createLoginContext(user.getName(), user.getPassword());
+                    lc.login();
+                }
+                try {
+                    if (object.getObjectIdentifier().getType().equals(Collection.OBJECT_TYPE)) {
+                        fsview.getCoreService().deleteCollection(wskey, path.build());
+                    }
+                    if (object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE)) {
+                        fsview.getCoreService().deleteDataObject(wskey, path.build());
+                    }
+                    key = null;
+                    object = null;
+                    return true;
+                } catch (InvalidPathException | AccessDeniedException | OrtolangException | CoreServiceException | KeyNotFoundException | CollectionNotEmptyException e) {
+                    LOGGER.log(Level.SEVERE, "unable to delete object", e);
+                }
+                if (lc != null) {
+                    lc.logout();
+                }
+            } catch (LoginException e) {
+                LOGGER.log(Level.SEVERE, "unable to login with user: " + user.getName(), e);
+            }
+        }
         return false;
     }
 
     @Override
     public boolean setLastModified(long lastmodified) {
+        LOGGER.log(Level.FINE, "setting last modified");
         return false;
     }
-    
+
     @Override
     public InputStream createInputStream(long offset) throws IOException {
-        //TODO if data object create new input stream for reading
-        throw new IOException("unable to create input stream for root folder");
+        LOGGER.log(Level.FINE, "getting input stream");
+        if (offset != 0) {
+            throw new IOException("random access is not supported");
+        }
+        if (doesExist() && isFile()) {
+            try {
+                return fsview.getBinaryStore().get(((DataObject) object).getStream());
+            } catch (DataNotFoundException | BinaryStoreServiceException | OrtolangException e) {
+                throw new IOException("unable to access binary data", e);
+            }
+        } else {
+            throw new IOException("object does not exists or is not a file");
+        }
     }
 
     @Override
     public OutputStream createOutputStream(long offset) throws IOException {
-        //TODO if data object create new input stream for writing
-        throw new IOException("unable to create output stream for root folder");
+        LOGGER.log(Level.FINE, "getting output stream");
+        if (!root.equals(Workspace.HEAD) && isFile()) {
+            Path upload = Files.createTempFile("ftp", ".up");
+            OutputStream os = Files.newOutputStream(upload, StandardOpenOption.WRITE);
+            BufferedOutputStream bof = new BufferedOutputStream(os) {
+                @Override
+                public void close() throws IOException {
+                    LOGGER.log(Level.FINE, "closing outputstream, time to update dataobject !!");
+                    flush();
+                    super.close();
+                    try {
+                        LoginContext lc = null;
+                        if (!user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+                            lc = UsernamePasswordLoginContextFactory.createLoginContext(user.getName(), user.getPassword());
+                            lc.login();
+                        }
+                        try {
+                            String hash = fsview.getBinaryStore().put(Files.newInputStream(upload));
+                            LOGGER.log(Level.FINE, "uploaded file content inserted in binary store");
+                            if ( doesExist() ) {
+                                fsview.getCoreService().updateDataObject(wskey, path.build(), hash);
+                            } else {
+                                fsview.getCoreService().createDataObject(wskey, path.build(), hash);
+                            }
+                        } catch (AccessDeniedException | KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException | BinaryStoreServiceException | DataCollisionException e) {
+                            throw new IOException("error during propagating files data to underlying object", e);
+                        }
+                        if (lc != null) {
+                            lc.logout();
+                        }
+                    } catch (LoginException e) {
+                        LOGGER.log(Level.SEVERE, "unable to login with user: " + user.getName(), e);
+                    }
+                    Files.delete(upload);
+                }
+            };
+            return bof;
+        } else {
+            throw new IOException("writing is only allowed in head");
+        }
     }
 
 }
-
