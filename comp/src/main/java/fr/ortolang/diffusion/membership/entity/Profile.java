@@ -71,7 +71,7 @@ public class Profile extends OrtolangObject {
     private String groupsList;
     private String friends;
     private ProfileStatus status;
-    private String secret;
+    //private String secret;
     @ElementCollection(fetch = FetchType.LAZY)
     private Set<ProfileKey> keys;
     @ElementCollection(fetch = FetchType.LAZY)
@@ -186,13 +186,13 @@ public class Profile extends OrtolangObject {
         return givenName != null && !givenName.isEmpty() && familyName != null && !familyName.isEmpty() && email != null && !email.isEmpty();
     }
 
-    public String getSecret() {
-        return secret;
-    }
-
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
+//    public String getSecret() {
+//        return secret;
+//    }
+//
+//    public void setSecret(String secret) {
+//        this.secret = secret;
+//    }
 
     public void addPublicKey(String pubkey) {
         keys.add(new ProfileKey(pubkey, pubkey.split(" ")[1]));
