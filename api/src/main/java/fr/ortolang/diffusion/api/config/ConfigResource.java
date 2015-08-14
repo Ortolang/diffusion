@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.api.config;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.jar.Attributes;
@@ -11,6 +12,7 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -82,5 +84,19 @@ public class ConfigResource {
 		builder.append("}");
 		return Response.ok(builder.toString()).build();
 	}
+	
+	@GET
+    @Path("/server/exists")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public Response fileExists(@QueryParam("path") String path) throws TemplateEngineException {
+	    SecurityManager manager = System.getSecurityManager();
+        StringBuilder builder = new StringBuilder();
+        builder.append("{\r\n");
+        builder.append("\t\"security-manager-exists\": \"").append(manager != null).append("\",\r\n");
+        builder.append("\t\"query-path\": \"").append(path).append("\",\r\n");
+        builder.append("\t\"query-path-exists\": \"").append(new File(path).exists()).append("\"\r\n");
+        builder.append("}");
+        return Response.ok(builder.toString()).build();
+    }
 
 }
