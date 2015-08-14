@@ -37,8 +37,10 @@ package fr.ortolang.diffusion.bootstrap;
  */
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -136,6 +138,28 @@ public class BootstrapServiceBean implements BootstrapService {
 		try {
 			registry.lookup(BootstrapService.WORKSPACE_KEY);
 			LOGGER.log(Level.INFO, "bootstrap key found, nothing to do.");
+			
+			String fb = "/applis/ortolang-bags/sldr000850";
+	        String fn1 = "/tmp/§test/file1.txt";
+	        String fn2 = "/applis/ortolang-bags/sldr000850/data/head/objects/§preview/picto.png";
+	        String fn3 = "data/snapshots/1/objects/§meta/rdf.html";
+	        
+	        File f1 = new File(fn1);
+	        File f2 = new File(fn2);
+	        File parent = new File(fb);
+	        File f3 = new File(parent, fn3);
+	        
+	        LOGGER.log(Level.INFO, f1.getAbsolutePath() + " exists ? " + f1.exists());
+	        LOGGER.log(Level.INFO, f2.getAbsolutePath() + " exists ? " + f2.exists());
+	        LOGGER.log(Level.INFO, parent.getAbsolutePath() + " exists ? " + parent.exists());
+	        LOGGER.log(Level.INFO, f3.getAbsolutePath() + " exists ? " + f3.exists());
+	        
+	        Normalizer.Form[] formArray = new Normalizer.Form[] { Normalizer.Form.NFC, Normalizer.Form.NFD };
+	        for (Normalizer.Form form : formArray) {
+	            String normalizedPath = Normalizer.normalize(fn3, form);
+	            File newfile = new File(parent, normalizedPath);
+	            LOGGER.log(Level.INFO, newfile.getAbsolutePath() + " exists ? " + newfile.exists());
+	        }
 		} catch (KeyNotFoundException e) {
 			try {
 				LOGGER.log(Level.INFO, "bootstrap key not found, bootstrapping platform...");

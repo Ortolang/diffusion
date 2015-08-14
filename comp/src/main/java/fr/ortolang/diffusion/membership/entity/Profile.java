@@ -51,226 +51,231 @@ import java.util.Set;
 @Entity
 @SuppressWarnings("serial")
 public class Profile extends OrtolangObject {
-	
-	public static final String OBJECT_TYPE = "profile";
-	
-	@Id
-	private String id;
-	@Version
-	private long version;
-	@Transient
-	private String key;
-	private String givenName;
-	private String familyName;
-	private String email;
-	private String emailHash;
-	private ProfileDataVisibility emailVisibility;
-	private boolean emailVerified;
-	@Lob
-	@Type(type = "org.hibernate.type.TextType")
-	private String groupsList;
-	private String friends;
-	private ProfileStatus status;
-	@ElementCollection(fetch = FetchType.LAZY)
-	private Set<ProfileKey> keys;
-	@ElementCollection(fetch = FetchType.LAZY)
-	private Map<String, ProfileData> infos;
-	
-	public Profile() {
-		groupsList = "";
-		keys = new HashSet<ProfileKey> ();
-		infos = new HashMap<String, ProfileData> ();
-		emailVisibility = ProfileDataVisibility.EVERYBODY;
-	}
 
-	public String getId() {
-		return id;
-	}
+    public static final String OBJECT_TYPE = "profile";
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    @Id
+    private String id;
+    @Version
+    private long version;
+    @Transient
+    private String key;
+    private String givenName;
+    private String familyName;
+    private String email;
+    private String emailHash;
+    private ProfileDataVisibility emailVisibility;
+    private boolean emailVerified;
+    @Lob
+    @Type(type = "org.hibernate.type.TextType")
+    private String groupsList;
+    private String friends;
+    private ProfileStatus status;
+    private String secret;
+    @ElementCollection(fetch = FetchType.LAZY)
+    private Set<ProfileKey> keys;
+    @ElementCollection(fetch = FetchType.LAZY)
+    private Map<String, ProfileData> infos;
 
-	@Transient
-	public String getKey() {
-		return key;
-	}
+    public Profile() {
+        groupsList = "";
+        keys = new HashSet<ProfileKey>();
+        infos = new HashMap<String, ProfileData>();
+        emailVisibility = ProfileDataVisibility.EVERYBODY;
+    }
 
-	public void setKey(String key) {
-		this.key = key;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public String getGivenName() {
-		return givenName;
-	}
+    public void setId(String id) {
+        this.id = id;
+    }
 
-	public void setGivenName(String givenName) {
-		this.givenName = givenName;
-	}
+    @Transient
+    public String getKey() {
+        return key;
+    }
 
-	public String getFamilyName() {
-		return familyName;
-	}
+    public void setKey(String key) {
+        this.key = key;
+    }
 
-	public void setFamilyName(String familyName) {
-		this.familyName = familyName;
-	}
+    public String getGivenName() {
+        return givenName;
+    }
 
-	public String getEmail() {
-		return email;
-	}
+    public void setGivenName(String givenName) {
+        this.givenName = givenName;
+    }
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    public String getFamilyName() {
+        return familyName;
+    }
 
-	public String getEmailHash() {
-		return emailHash;
-	}
+    public void setFamilyName(String familyName) {
+        this.familyName = familyName;
+    }
 
-	public void setEmailHash(String emailHash) {
-		this.emailHash = emailHash;
-	}
+    public String getEmail() {
+        return email;
+    }
 
-	public ProfileDataVisibility getEmailVisibility() {
-		return emailVisibility;
-	}
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-	public void setEmailVisibility(ProfileDataVisibility emailVisibility) {
-		this.emailVisibility = emailVisibility;
-	}
+    public String getEmailHash() {
+        return emailHash;
+    }
 
-	public boolean isEmailVerified() {
-		return emailVerified;
-	}
+    public void setEmailHash(String emailHash) {
+        this.emailHash = emailHash;
+    }
 
-	public void setEmailVerified(boolean emailVerified) {
-		this.emailVerified = emailVerified;
-	}
+    public ProfileDataVisibility getEmailVisibility() {
+        return emailVisibility;
+    }
 
-	public String getFullName() {
-		return givenName + " " + familyName;
-	}
+    public void setEmailVisibility(ProfileDataVisibility emailVisibility) {
+        this.emailVisibility = emailVisibility;
+    }
 
-	public ProfileStatus getStatus() {
-		return status;
-	}
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
 
-	public void setStatus(ProfileStatus status) {
-		this.status = status;
-	}
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
 
-	@JsonIgnore
-	public String getGroupsList() {
-		return groupsList;
-	}
+    public String getFullName() {
+        return givenName + " " + familyName;
+    }
 
-	public void setGroupsList(String groupsList) {
-		this.groupsList = groupsList;
-	}
-	
-	public String getFriends() {
-		return friends;
-	}
+    public ProfileStatus getStatus() {
+        return status;
+    }
 
-	public void setFriends(String friendsGroupKey) {
-		this.friends = friendsGroupKey;
-	}
+    public void setStatus(ProfileStatus status) {
+        this.status = status;
+    }
 
-	public boolean isMemberOf(String group) {
+    @JsonIgnore
+    public String getGroupsList() {
+        return groupsList;
+    }
+
+    public void setGroupsList(String groupsList) {
+        this.groupsList = groupsList;
+    }
+
+    public String getFriends() {
+        return friends;
+    }
+
+    public void setFriends(String friendsGroupKey) {
+        this.friends = friendsGroupKey;
+    }
+
+    public boolean isMemberOf(String group) {
         return groupsList.contains(group);
     }
-	
-	public boolean isComplete() {
-		return givenName != null && !givenName.isEmpty()
-				&& familyName != null && !familyName.isEmpty()
-				&& email != null && !email.isEmpty();
-	}
 
-	public void addPublicKey(String pubkey) {
-		keys.add(new ProfileKey(pubkey, pubkey.split(" ")[1]));
-	}
+    public boolean isComplete() {
+        return givenName != null && !givenName.isEmpty() && familyName != null && !familyName.isEmpty() && email != null && !email.isEmpty();
+    }
 
-	public void removePublicKey(String pubkey) {
-		keys.remove(new ProfileKey(pubkey, pubkey.split(" ")[1]));
-	}
+    public String getSecret() {
+        return secret;
+    }
 
-	@JsonIgnore
-	public Set<String> getPublicKeys() {
-		Set<String> pkeys = new HashSet<String> ();
-		for ( ProfileKey pkey : keys ) {
-			pkeys.add(pkey.getKey());
-		}
-		return pkeys;
-	}
-	
-	public void setPublicKeys(Set<String> keys) {
-		for ( String key : keys ) {
-			addPublicKey(key);
-		}
-	}
-	
-	@JsonIgnore
-	public Set<ProfileKey> getKeys() {
-		return keys;
-	}
+    public void setSecret(String secret) {
+        this.secret = secret;
+    }
 
-	public void setKeys(Set<ProfileKey> keys) {
-		this.keys = keys;
-	}
+    public void addPublicKey(String pubkey) {
+        keys.add(new ProfileKey(pubkey, pubkey.split(" ")[1]));
+    }
 
-	public void addGroup(String group) {
-		if (!isMemberOf(group)) {
-			if (groupsList.length() > 0) {
-				groupsList += ("," + group);
-			} else {
-				groupsList += group;
-			}
-		}
-	}
+    public void removePublicKey(String pubkey) {
+        keys.remove(new ProfileKey(pubkey, pubkey.split(" ")[1]));
+    }
 
-	public void removeGroup(String group) {
-		if (isMemberOf(group)) {
-			groupsList = groupsList.replaceAll("(" + group + "){1},?", "");
-		}
-	}
+    @JsonIgnore
+    public Set<String> getPublicKeys() {
+        Set<String> pkeys = new HashSet<String>();
+        for (ProfileKey pkey : keys) {
+            pkeys.add(pkey.getKey());
+        }
+        return pkeys;
+    }
 
-	@JsonIgnore
-	public String[] getGroups() {
-		if (groupsList.equals("")) {
-			return new String[0];
-		}
-		return groupsList.split(",");
-	}
-		
-	@JsonIgnore
-	public Map<String, ProfileData> getInfos() {
-		return infos;
-	}
-	
-	public void setInfos(Map<String, ProfileData> infos) {
-		this.infos = infos;
-	}
-	
-	public void setInfo(String name, ProfileData info) {
-		this.infos.put(name, info);
-	}
-	
-	@Override
-	public String getObjectKey() {
-		return getKey();
-	}
-	
-	@Override
-	public String getObjectName() {
-		return getFullName();
-	}
+    public void setPublicKeys(Set<String> keys) {
+        for (String key : keys) {
+            addPublicKey(key);
+        }
+    }
 
-	@Override
-	public OrtolangObjectIdentifier getObjectIdentifier() {
-		return new OrtolangObjectIdentifier(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, id);
-	}
+    @JsonIgnore
+    public Set<ProfileKey> getKeys() {
+        return keys;
+    }
 
+    public void setKeys(Set<ProfileKey> keys) {
+        this.keys = keys;
+    }
 
-	
+    public void addGroup(String group) {
+        if (!isMemberOf(group)) {
+            if (groupsList.length() > 0) {
+                groupsList += ("," + group);
+            } else {
+                groupsList += group;
+            }
+        }
+    }
+
+    public void removeGroup(String group) {
+        if (isMemberOf(group)) {
+            groupsList = groupsList.replaceAll("(" + group + "){1},?", "");
+        }
+    }
+
+    @JsonIgnore
+    public String[] getGroups() {
+        if (groupsList.equals("")) {
+            return new String[0];
+        }
+        return groupsList.split(",");
+    }
+
+    @JsonIgnore
+    public Map<String, ProfileData> getInfos() {
+        return infos;
+    }
+
+    public void setInfos(Map<String, ProfileData> infos) {
+        this.infos = infos;
+    }
+
+    public void setInfo(String name, ProfileData info) {
+        this.infos.put(name, info);
+    }
+
+    @Override
+    public String getObjectKey() {
+        return getKey();
+    }
+
+    @Override
+    public String getObjectName() {
+        return getFullName();
+    }
+
+    @Override
+    public OrtolangObjectIdentifier getObjectIdentifier() {
+        return new OrtolangObjectIdentifier(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, id);
+    }
+
 }

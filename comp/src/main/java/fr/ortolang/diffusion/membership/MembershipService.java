@@ -58,6 +58,12 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	public static final String ESR_GROUP_KEY = "esr";
 
 	public String getProfileKeyForConnectedIdentifier();
+	
+//	public String generateTOTPForConnectedIdentifier();
+//	
+//	public boolean validateTOTPForIdentifier(String identifier);
+//	
+//	public String getTOTPSecretForIdentifier(String identifier);
 
 	public String getProfileKeyForIdentifier(String identifier);
 
