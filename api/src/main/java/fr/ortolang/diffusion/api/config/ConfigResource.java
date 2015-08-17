@@ -3,6 +3,7 @@ package fr.ortolang.diffusion.api.config;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.jar.Attributes;
@@ -97,6 +98,8 @@ public class ConfigResource {
         builder.append("\t\"security-manager-exists\": \"").append(manager != null).append("\",\r\n");
         File file = new File(path);
         java.nio.file.Path p = Paths.get(path);
+        String encUsed = Charset.defaultCharset().displayName();
+        builder.append("\t\"charset used\": \"").append(encUsed).append("\",\r\n");
         builder.append("\t\"file class name\": \"").append(file.getClass().getName()).append("\",\r\n");
         builder.append("\t\"query-path\": \"").append(path).append("\",\r\n");
         builder.append("\t\"file.getAbsolutePath()\": \"").append(file.getAbsolutePath()).append("\",\r\n");
