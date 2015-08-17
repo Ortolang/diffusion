@@ -100,22 +100,34 @@ public class ConfigResource {
         builder.append("\t\"file class name\": \"").append(file.getClass().getName()).append("\",\r\n");
         builder.append("\t\"query-path\": \"").append(path).append("\",\r\n");
         builder.append("\t\"file.getAbsolutePath()\": \"").append(file.getAbsolutePath()).append("\",\r\n");
+        builder.append("\t\"file.getAbsolutePath() (in bytes)\": \"");
+        for ( byte b : file.getAbsolutePath().getBytes() ) {
+            builder.append(b + " ");
+        }
+        builder.append("\",\r\n");
         builder.append("\t\"file.exists()\": \"").append(file.exists()).append("\",\r\n");
         builder.append("\t\"file.getFreeSpace()\": \"").append(file.getFreeSpace()).append("\",\r\n");
+        builder.append("\t\"path.isAbsolute()\": \"").append(p.isAbsolute()).append("\",\r\n");
         try {
-            builder.append("\t\"path.isAbsolute()\": \"").append(p.isAbsolute()).append("\",\r\n");
             builder.append("\t\"path.getFileSystem()\": \"").append(p.getFileSystem()).append("\",\r\n");
-        } catch ( Exception e ) {
+            builder.append("\t\"path.toFile().exists\": \"").append(p.toFile().exists()).append("\",\r\n");
+        } catch (Exception e) {
             //
         }
-        builder.append("\t\"path.toFile().exists\": \"").append(p.toFile().exists()).append("\",\r\n");
+        builder.append("\t\"path.toString() (in bytes)\": \"");
+        for ( byte b : p.toString().getBytes() ) {
+            builder.append(b + " ");
+        }
+        builder.append("\",\r\n");
         builder.append("\t\"Files.exists(path)\": \"").append(Files.exists(p)).append("\",\r\n");
         builder.append("\t\"Files.notExists(path)\": \"").append(Files.notExists(p)).append("\",\r\n");
+        builder.append("\t\"Files.getFileStore(path).name()\": \"");
         try {
-            builder.append("\t\"Files.getFileStore(path).name()\": \"").append(Files.getFileStore(p).name()).append("\",\r\n");
-        } catch ( IOException e ) {
+            builder.append(Files.getFileStore(p).name());
+        } catch (IOException e) {
             //
         }
+        builder.append("\",\r\n");
         builder.append("\t\"Files.isDirectory(path)\": \"").append(Files.isDirectory(p)).append("\",\r\n");
         builder.append("\t\"Files.isRegularFile(path)\": \"").append(Files.isRegularFile(p)).append("\"\r\n");
         builder.append("}");
