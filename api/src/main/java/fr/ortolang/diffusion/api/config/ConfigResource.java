@@ -3,6 +3,8 @@ package fr.ortolang.diffusion.api.config;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -93,8 +95,25 @@ public class ConfigResource {
         StringBuilder builder = new StringBuilder();
         builder.append("{\r\n");
         builder.append("\t\"security-manager-exists\": \"").append(manager != null).append("\",\r\n");
+        File file = new File(path);
+        java.nio.file.Path p = Paths.get(path);
+        builder.append("\t\"file class name\": \"").append(file.getClass().getName()).append("\",\r\n");
         builder.append("\t\"query-path\": \"").append(path).append("\",\r\n");
-        builder.append("\t\"query-path-exists\": \"").append(new File(path).exists()).append("\"\r\n");
+        builder.append("\t\"file.getAbsolutePath()\": \"").append(file.getAbsolutePath()).append("\",\r\n");
+        builder.append("\t\"file.exists()\": \"").append(file.exists()).append("\",\r\n");
+        builder.append("\t\"file.getFreeSpace()\": \"").append(file.getFreeSpace()).append("\",\r\n");
+        builder.append("\t\"path.isAbsolute()\": \"").append(p.isAbsolute()).append("\",\r\n");
+        builder.append("\t\"path.getFileSystem()\": \"").append(p.getFileSystem()).append("\",\r\n");
+        builder.append("\t\"path.toFile().exists\": \"").append(p.toFile().exists()).append("\",\r\n");
+        builder.append("\t\"Files.exists(path)\": \"").append(Files.exists(p)).append("\",\r\n");
+        builder.append("\t\"Files.notExists(path)\": \"").append(Files.notExists(p)).append("\",\r\n");
+        try {
+            builder.append("\t\"Files.getFileStore(path).name()\": \"").append(Files.getFileStore(p).name()).append("\",\r\n");
+        } catch ( IOException e ) {
+            //
+        }
+        builder.append("\t\"Files.isDirectory(path)\": \"").append(Files.isDirectory(p)).append("\",\r\n");
+        builder.append("\t\"Files.isRegularFile(path)\": \"").append(Files.isRegularFile(p)).append("\"\r\n");
         builder.append("}");
         return Response.ok(builder.toString()).build();
     }
