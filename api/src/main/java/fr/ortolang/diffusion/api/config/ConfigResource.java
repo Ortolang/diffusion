@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map.Entry;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -95,6 +96,9 @@ public class ConfigResource {
 	    SecurityManager manager = System.getSecurityManager();
         StringBuilder builder = new StringBuilder();
         builder.append("{\r\n");
+        for ( Entry<Object, Object> p : System.getProperties().entrySet() ) {
+            builder.append("\t\"" + p.getKey() + "\": \"").append(p.getValue()).append("\",\r\n");
+        }
         builder.append("\t\"security-manager-exists\": \"").append(manager != null).append("\",\r\n");
         File file = new File(path);
         java.nio.file.Path p = Paths.get(path);
