@@ -102,8 +102,12 @@ public class ConfigResource {
         builder.append("\t\"file.getAbsolutePath()\": \"").append(file.getAbsolutePath()).append("\",\r\n");
         builder.append("\t\"file.exists()\": \"").append(file.exists()).append("\",\r\n");
         builder.append("\t\"file.getFreeSpace()\": \"").append(file.getFreeSpace()).append("\",\r\n");
-        builder.append("\t\"path.isAbsolute()\": \"").append(p.isAbsolute()).append("\",\r\n");
-        builder.append("\t\"path.getFileSystem()\": \"").append(p.getFileSystem()).append("\",\r\n");
+        try {
+            builder.append("\t\"path.isAbsolute()\": \"").append(p.isAbsolute()).append("\",\r\n");
+            builder.append("\t\"path.getFileSystem()\": \"").append(p.getFileSystem()).append("\",\r\n");
+        } catch ( Exception e ) {
+            //
+        }
         builder.append("\t\"path.toFile().exists\": \"").append(p.toFile().exists()).append("\",\r\n");
         builder.append("\t\"Files.exists(path)\": \"").append(Files.exists(p)).append("\",\r\n");
         builder.append("\t\"Files.notExists(path)\": \"").append(Files.notExists(p)).append("\",\r\n");
