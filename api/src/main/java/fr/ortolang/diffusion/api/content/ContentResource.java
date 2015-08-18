@@ -70,6 +70,7 @@ import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
@@ -380,6 +381,18 @@ public class ContentResource {
 					security.checkPermission(key, "download");
 					//TODO log download
 					builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize())
+							.header("Accept-Ranges", "bytes");
+					if (download) {
+						builder = builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(object.getObjectName(), "utf-8"));
+					} else {
+						builder = builder.header("Content-Disposition", "filename*=UTF-8''" + URLEncoder.encode(object.getObjectName(), "utf-8"));
+					}
+					builder.lastModified(lmd);
+				} else if (object instanceof MetadataObject) {
+					File content = store.getFile(((MetadataObject) object).getStream());
+					security.checkPermission(key, "download");
+					//TODO log download
+					builder = Response.ok(content).header("Content-Type", ((MetadataObject) object).getContentType()).header("Content-Length", ((MetadataObject) object).getSize())
 							.header("Accept-Ranges", "bytes");
 					if (download) {
 						builder = builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(object.getObjectName(), "utf-8"));
