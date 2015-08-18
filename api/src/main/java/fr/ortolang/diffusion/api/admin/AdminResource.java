@@ -37,8 +37,16 @@ public class AdminResource {
 	private RegistryServiceAdmin registry;
 	
 	
-	@GET
-	@Path("/entries")
+    @GET
+    @Path("/registry")
+    public Response getRegistryInfos() throws RegistryServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/registry");
+        Map<String, String> infos = registry.getServiceInfos();
+        return Response.ok(infos).build();
+    }
+    
+    @GET
+	@Path("/registry/entries")
 	public Response listEntries(@QueryParam("filter") String filter) throws RegistryServiceException {
 		LOGGER.log(Level.INFO, "GET /admin/registry/entries?filter=" + filter);
 		List<RegistryEntry> entries = registry.systemListEntries(filter);
