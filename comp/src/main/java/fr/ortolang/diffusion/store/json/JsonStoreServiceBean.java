@@ -192,12 +192,11 @@ public class JsonStoreServiceBean implements JsonStoreService, JsonStoreServiceA
 	@RolesAllowed("admin")
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public String getDocument(String key) throws JsonStoreServiceException {
-        ODocument document = getDocumentByKey(key);
-        if ( document != null ) {
-            return document.toJSON();
-        } else {
-            return null;
+        String json = getJSONByKey(key);
+        if ( json != null ) {
+            return json;
         }
+        return null;
     }
     
     @Override
@@ -224,9 +223,10 @@ public class JsonStoreServiceBean implements JsonStoreService, JsonStoreServiceA
 		ODatabaseDocumentTx db = pool.acquire();
 		try {
 			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
-			OIdentifiable doc = (OIdentifiable) ortolangKeyIdx.get(key);
-			if (doc != null) {
-				return (ODocument) doc.getRecord();
+			OIdentifiable ident = (OIdentifiable) ortolangKeyIdx.get(key);
+			if (ident != null) {
+			    ODocument document = (ODocument) ident.getRecord();
+			    return document;
 			}
 		} finally {
 			db.close();
@@ -234,6 +234,20 @@ public class JsonStoreServiceBean implements JsonStoreService, JsonStoreServiceA
 		return null;
 	}
 
+	protected String getJSONByKey(String key) {
+        ODatabaseDocumentTx db = pool.acquire();
+        try {
+            OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
+            OIdentifiable ident = (OIdentifiable) ortolangKeyIdx.get(key);
+            if (ident != null) {
+                ODocument document = (ODocument) ident.getRecord();
+                return document.toJSON("fetchPlan:*:-1");
+            }
+        } finally {
+            db.close();
+        }
+        return null;
+    }
     
 
 }
