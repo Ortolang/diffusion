@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.api.admin;
 
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -9,9 +10,13 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.store.index.IndexStoreServiceAdmin;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceAdmin;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
@@ -28,7 +33,18 @@ public class AdminResource {
     @EJB
     private IndexStoreServiceAdmin index;
 
-
+    @EJB
+	private RegistryService registry;
+	
+	
+	@GET
+	@Path("/entries")
+	public Response listEntries(@QueryParam("filter") String filter) throws RegistryServiceException {
+		LOGGER.log(Level.INFO, "GET /admin/registry/entries?filter=" + filter);
+		List<RegistryEntry> entries = registry.systemListEntries(filter);
+		return Response.ok(entries).build();
+	}
+	
     @GET
     @Path("/json")
     public Response getJsonStoreInfos() throws JsonStoreServiceException {

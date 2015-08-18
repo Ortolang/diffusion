@@ -45,6 +45,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
@@ -485,6 +486,18 @@ public class RegistryServiceBean implements RegistryService {
 			throw new RegistryServiceException(e);
 		}
 	}
+	
+	@Override
+    @RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<RegistryEntry> systemListEntries(String keyFilter) throws RegistryServiceException {
+            LOGGER.log(Level.FINE, "#SYSTEM# list entries for key filter [" + keyFilter + "]");
+            if ( keyFilter == null ) {
+                    keyFilter = "";
+            }
+            TypedQuery<RegistryEntry> query = em.createNamedQuery("findEntryByKey", RegistryEntry.class).setParameter("keyFilter", keyFilter + "%");
+            return query.getResultList();
+    }
 	
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private RegistryEntry findEntryByKey(String key) throws KeyNotFoundException {

@@ -41,6 +41,7 @@ import java.util.List;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 
 
 /**
@@ -115,4 +116,5 @@ public interface RegistryService {
 	
 	public long count(String identifierFilter, OrtolangObjectState.Status statusFilter, boolean itemFilter) throws RegistryServiceException;
 	
+	public List<RegistryEntry> systemListEntries(String keyFilter) throws RegistryServiceException;
 }
