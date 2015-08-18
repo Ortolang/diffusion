@@ -104,13 +104,12 @@ public class ObjectResource {
 
 	@GET
 	public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit,
-			@QueryParam(value = "service") String service, @QueryParam(value = "type") String type, @DefaultValue(value = "false") @QueryParam(value = "items") boolean itemsOnly,
-			@QueryParam(value = "status") String status) throws BrowserServiceException {
-		LOGGER.log(Level.INFO, "GET /objects?offset=" + offset + "&limit=" + limit + "&items-only=" + itemsOnly + "&status=" + status);
+			@QueryParam(value = "service") String service, @QueryParam(value = "type") String type, @QueryParam(value = "status") String status) throws BrowserServiceException {
+		LOGGER.log(Level.INFO, "GET /objects?offset=" + offset + "&limit=" + limit + "&status=" + status);
 		List<String> keys = browser.list(offset, limit, (service != null && service.length() > 0) ? service : "", (type != null && type.length() > 0) ? type : "",
-				(status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
+				(status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null);
 		long nbentries = browser.count((service != null && service.length() > 0) ? service : "", (type != null && type.length() > 0) ? type : "",
-				(status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null, itemsOnly);
+				(status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null);
 		UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(ObjectResource.class);
 
 		GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String>();

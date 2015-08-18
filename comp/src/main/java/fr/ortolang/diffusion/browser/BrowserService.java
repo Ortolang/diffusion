@@ -53,9 +53,9 @@ public interface BrowserService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "browser";
 	
-	public List<String> list(int limit, int offset, String service, String type, OrtolangObjectState.Status status, boolean itemsOnly) throws BrowserServiceException;
+	public List<String> list(int limit, int offset, String service, String type, OrtolangObjectState.Status status) throws BrowserServiceException;
 	
-	public long count(String service, String type, OrtolangObjectState.Status status, boolean itemOnly) throws BrowserServiceException;
+	public long count(String service, String type, OrtolangObjectState.Status status) throws BrowserServiceException;
 	
 	public OrtolangObjectIdentifier lookup(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
 	

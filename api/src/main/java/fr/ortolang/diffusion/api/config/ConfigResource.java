@@ -1,12 +1,7 @@
 package fr.ortolang.diffusion.api.config;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Map.Entry;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.logging.Level;
@@ -16,7 +11,6 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -89,56 +83,4 @@ public class ConfigResource {
 		return Response.ok(builder.toString()).build();
 	}
 	
-	@GET
-    @Path("/server/exists")
-    @Produces({ MediaType.APPLICATION_JSON })
-    public Response fileExists(@QueryParam("path") String path) throws TemplateEngineException {
-	    SecurityManager manager = System.getSecurityManager();
-        StringBuilder builder = new StringBuilder();
-        builder.append("{\r\n");
-        for ( Entry<Object, Object> p : System.getProperties().entrySet() ) {
-            builder.append("\t\"" + p.getKey() + "\": \"").append(p.getValue()).append("\",\r\n");
-        }
-        builder.append("\t\"security-manager-exists\": \"").append(manager != null).append("\",\r\n");
-        File file = new File(path);
-        java.nio.file.Path p = Paths.get(path);
-        String encUsed = Charset.defaultCharset().displayName();
-        builder.append("\t\"charset used\": \"").append(encUsed).append("\",\r\n");
-        builder.append("\t\"file class name\": \"").append(file.getClass().getName()).append("\",\r\n");
-        builder.append("\t\"query-path\": \"").append(path).append("\",\r\n");
-        builder.append("\t\"file.getAbsolutePath()\": \"").append(file.getAbsolutePath()).append("\",\r\n");
-        builder.append("\t\"file.getAbsolutePath() (in bytes)\": \"");
-        for ( byte b : file.getAbsolutePath().getBytes() ) {
-            builder.append(b + " ");
-        }
-        builder.append("\",\r\n");
-        builder.append("\t\"file.exists()\": \"").append(file.exists()).append("\",\r\n");
-        builder.append("\t\"file.getFreeSpace()\": \"").append(file.getFreeSpace()).append("\",\r\n");
-        builder.append("\t\"path.isAbsolute()\": \"").append(p.isAbsolute()).append("\",\r\n");
-        try {
-            builder.append("\t\"path.getFileSystem()\": \"").append(p.getFileSystem()).append("\",\r\n");
-            builder.append("\t\"path.toFile().exists\": \"").append(p.toFile().exists()).append("\",\r\n");
-        } catch (Exception e) {
-            //
-        }
-        builder.append("\t\"path.toString() (in bytes)\": \"");
-        for ( byte b : p.toString().getBytes() ) {
-            builder.append(b + " ");
-        }
-        builder.append("\",\r\n");
-        builder.append("\t\"Files.exists(path)\": \"").append(Files.exists(p)).append("\",\r\n");
-        builder.append("\t\"Files.notExists(path)\": \"").append(Files.notExists(p)).append("\",\r\n");
-        builder.append("\t\"Files.getFileStore(path).name()\": \"");
-        try {
-            builder.append(Files.getFileStore(p).name());
-        } catch (IOException e) {
-            //
-        }
-        builder.append("\",\r\n");
-        builder.append("\t\"Files.isDirectory(path)\": \"").append(Files.isDirectory(p)).append("\",\r\n");
-        builder.append("\t\"Files.isRegularFile(path)\": \"").append(Files.isRegularFile(p)).append("\"\r\n");
-        builder.append("}");
-        return Response.ok(builder.toString()).build();
-    }
-
 }

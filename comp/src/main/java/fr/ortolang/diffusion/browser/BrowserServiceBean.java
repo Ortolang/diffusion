@@ -151,11 +151,11 @@ public class BrowserServiceBean implements BrowserService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> list(int offset, int limit, String service, String type, OrtolangObjectState.Status status, boolean itemsOnly) throws BrowserServiceException {
+	public List<String> list(int offset, int limit, String service, String type, OrtolangObjectState.Status status) throws BrowserServiceException {
 		LOGGER.log(Level.FINE, "listing keys");
 		try {
 			LOGGER.log(Level.FINE, "auth user: " + membership.getProfileKeyForConnectedIdentifier());
-			return registry.list(offset, limit, OrtolangObjectIdentifier.buildJPQLFilterPattern(service, type), status, itemsOnly);
+			return registry.list(offset, limit, OrtolangObjectIdentifier.buildJPQLFilterPattern(service, type), status);
 		} catch (RegistryServiceException e) {
 			throw new BrowserServiceException("error during listing keys", e);
 		}
@@ -163,10 +163,10 @@ public class BrowserServiceBean implements BrowserService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public long count(String service, String type, OrtolangObjectState.Status status, boolean itemsOnly) throws BrowserServiceException {
+	public long count(String service, String type, OrtolangObjectState.Status status) throws BrowserServiceException {
 		LOGGER.log(Level.FINE, "counting keys");
 		try {
-			return registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(service, type), status, itemsOnly);
+			return registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(service, type), status);
 		} catch (RegistryServiceException e) {
 			throw new BrowserServiceException("error during couting keys", e);
 		}

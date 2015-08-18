@@ -38,10 +38,11 @@ package fr.ortolang.diffusion.registry;
 
 import java.util.List;
 
+import javax.ejb.Local;
+
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangObjectState;
-import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 
 
 /**
@@ -60,6 +61,7 @@ import fr.ortolang.diffusion.registry.entity.RegistryEntry;
  * @author Jerome Blanchard <jayblanc@gmail.com>
  * @version 1.0
  */
+@Local
 public interface RegistryService {
 	
 	public static final String SERVICE_NAME = "registry";
@@ -112,9 +114,8 @@ public interface RegistryService {
 	
 	public String lookup(OrtolangObjectIdentifier identifier) throws RegistryServiceException, IdentifierNotRegisteredException;
 	
-	public List<String> list(int offset, int limit, String identifierFilter, OrtolangObjectState.Status statusFilter, boolean itemFilter) throws RegistryServiceException;
+	public List<String> list(int offset, int limit, String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException;
 	
-	public long count(String identifierFilter, OrtolangObjectState.Status statusFilter, boolean itemFilter) throws RegistryServiceException;
+	public long count(String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException;
 	
-	public List<RegistryEntry> systemListEntries(String keyFilter) throws RegistryServiceException;
 }

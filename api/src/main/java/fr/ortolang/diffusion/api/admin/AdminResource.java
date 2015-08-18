@@ -14,7 +14,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceAdmin;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.store.index.IndexStoreServiceAdmin;
@@ -34,7 +34,7 @@ public class AdminResource {
     private IndexStoreServiceAdmin index;
 
     @EJB
-	private RegistryService registry;
+	private RegistryServiceAdmin registry;
 	
 	
 	@GET

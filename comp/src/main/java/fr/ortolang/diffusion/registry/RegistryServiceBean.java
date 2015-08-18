@@ -38,7 +38,9 @@ package fr.ortolang.diffusion.registry;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,7 +48,6 @@ import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
-import javax.ejb.Local;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -63,11 +64,10 @@ import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 
-@Local(RegistryService.class)
 @Stateless(name = RegistryService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @PermitAll
-public class RegistryServiceBean implements RegistryService {
+public class RegistryServiceBean implements RegistryService, RegistryServiceAdmin {
 
 	private static final  Logger LOGGER = Logger.getLogger(RegistryServiceBean.class.getName());
 	
@@ -381,8 +381,8 @@ public class RegistryServiceBean implements RegistryService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> list(int offset, int limit, String identifierFilter, OrtolangObjectState.Status statusFilter, boolean itemFilter) throws RegistryServiceException {
-		LOGGER.log(Level.FINE, "listing keys with offset:" + offset + " and limit:" + limit + " and identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter + " and itemFilter:" + itemFilter);
+	public List<String> list(int offset, int limit, String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException {
+		LOGGER.log(Level.FINE, "listing keys with offset:" + offset + " and limit:" + limit + " and identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter);
 		if (offset < 0) {
 			throw new RegistryServiceException("offset MUST be >= 0");
 		}
@@ -401,20 +401,15 @@ public class RegistryServiceBean implements RegistryService {
 			sfilter.append("%");
 		}
 		TypedQuery<String> query;
-		if ( itemFilter ) {
-			LOGGER.log(Level.FINE, "listing items only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
-			query = em.createNamedQuery("listVisibleItems", String.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString()).setFirstResult(offset).setMaxResults(limit);
-		} else {
-			LOGGER.log(Level.FINE, "listing all keys only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
-			query = em.createNamedQuery("listVisibleKeys", String.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString()).setFirstResult(offset).setMaxResults(limit);
-		}
+		LOGGER.log(Level.FINE, "listing all keys only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
+		query = em.createNamedQuery("listVisibleKeys", String.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString()).setFirstResult(offset).setMaxResults(limit);
 		return query.getResultList();
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public long count(String identifierFilter, OrtolangObjectState.Status statusFilter, boolean itemFilter) throws RegistryServiceException {
-		LOGGER.log(Level.FINE, "counting keys with identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter + " and itemFilter:" + itemFilter);
+	public long count(String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException {
+		LOGGER.log(Level.FINE, "counting keys with identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter);
 		StringBuilder ifilter = new StringBuilder();
 		if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
 			 ifilter.append(identifierFilter);
@@ -427,11 +422,7 @@ public class RegistryServiceBean implements RegistryService {
 			sfilter.append("%");
 		}
 		TypedQuery<Long> query;
-		if ( itemFilter ) {
-			query = em.createNamedQuery("countVisibleItems", Long.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString());
-		} else {
-			query = em.createNamedQuery("countVisibleKeys", Long.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString());
-		}
+		query = em.createNamedQuery("countVisibleEntries", Long.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString());
 		return query.getSingleResult().longValue();
 	}
 	
@@ -486,6 +477,30 @@ public class RegistryServiceBean implements RegistryService {
 			throw new RegistryServiceException(e);
 		}
 	}
+	
+	//Admin interface
+	
+	@Override
+    @RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public Map<String, String> getServiceInfos() throws RegistryServiceException {
+        Map<String, String>infos = new HashMap<String, String> ();
+        infos.put("registry.size", Long.toString(systemCountEntries(null)));
+        return infos;
+    }
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public long systemCountEntries(String identifierFilter) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# counting keys with identifierFilter:" + identifierFilter);
+        StringBuilder ifilter = new StringBuilder();
+        if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
+             ifilter.append(identifierFilter);
+        } 
+        ifilter.append("%");
+        TypedQuery<Long> query = em.createNamedQuery("countEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
+        return query.getSingleResult().longValue();
+    }
 	
 	@Override
     @RolesAllowed("admin")
