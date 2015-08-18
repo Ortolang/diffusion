@@ -304,7 +304,7 @@ public class MembershipServiceBean implements MembershipService {
 		try {
 			List<String> subjects = getConnectedIdentifierSubjects();
 			List<Profile> ProfilesList = new ArrayList<Profile>();
-			List<String> listKeys = registry.list(1, 100, OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null, false);
+			List<String> listKeys = registry.list(1, 100, OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null);
 			for (String key : listKeys) {
 				authorisation.checkPermission(key, subjects, "read");
 
@@ -330,7 +330,7 @@ public class MembershipServiceBean implements MembershipService {
 		LOGGER.log(Level.FINE, "searching profiles with " + data);
 		try {
 			List<Profile> ProfilesList = new ArrayList<Profile>();
-			List<String> listKeys = registry.list(1, 100, OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null, false);
+			List<String> listKeys = registry.list(1, 100, OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null);
 			for (String key : listKeys) {
 				List<String> subjects = getConnectedIdentifierSubjects();
 				authorisation.checkPermission(key, subjects, "read");
