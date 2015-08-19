@@ -123,7 +123,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public BinaryStoreService getBinaryStore() throws RuntimeEngineTaskException {
 		try {
 			if (store == null) {
-				store = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME);
+				store = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
 			}
 			return store;
 		} catch (Exception e) {
@@ -134,7 +134,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public HandleStoreService getHandleStore() throws RuntimeEngineTaskException {
 		try {
 			if (hdlstore == null) {
-				hdlstore = (HandleStoreService) OrtolangServiceLocator.lookup(HandleStoreService.SERVICE_NAME);
+				hdlstore = (HandleStoreService) OrtolangServiceLocator.lookup(HandleStoreService.SERVICE_NAME, HandleStoreService.class);
 			}
 			return hdlstore;
 		} catch (Exception e) {
@@ -178,7 +178,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public RegistryService getRegistryService() throws RuntimeEngineTaskException {
 		try {
 			if (registry == null) {
-				registry = (RegistryService) OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME);
+				registry = (RegistryService) OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
 			}
 			return registry;
 		} catch (Exception e) {
@@ -211,7 +211,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public NotificationService getNotificationService() throws RuntimeEngineTaskException {
 		try {
 			if (notification == null) {
-				notification = (NotificationService) OrtolangServiceLocator.lookup(NotificationService.SERVICE_NAME);
+				notification = (NotificationService) OrtolangServiceLocator.lookup(NotificationService.SERVICE_NAME, NotificationService.class);
 			}
 			return notification;
 		} catch (Exception e) {
@@ -222,7 +222,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	public IndexingService getIndexingService() throws RuntimeEngineTaskException {
 		try {
 			if (indexing == null) {
-				indexing = (IndexingService) OrtolangServiceLocator.lookup(IndexingService.SERVICE_NAME);
+				indexing = (IndexingService) OrtolangServiceLocator.lookup(IndexingService.SERVICE_NAME, IndexingService.class);
 			}
 			return indexing;
 		} catch (Exception e) {
@@ -255,7 +255,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 	private RuntimeEngine getRuntimeEngine() throws RuntimeEngineTaskException {
 		try {
 			if (engine == null) {
-				engine = (RuntimeEngine) OrtolangServiceLocator.lookup(RuntimeEngine.SERVICE_NAME);
+				engine = (RuntimeEngine) OrtolangServiceLocator.lookup(RuntimeEngine.SERVICE_NAME, RuntimeEngine.class);
 			}
 			return engine;
 		} catch (Exception e) {

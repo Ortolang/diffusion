@@ -56,7 +56,7 @@ public class OrtolangFileSystemView implements FileSystemView {
 
 	protected RegistryService getRegistryService() throws OrtolangException {
         if (registry == null) {
-            registry = (RegistryService) OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME);
+            registry = (RegistryService) OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
         }
         return registry;
     }
@@ -70,7 +70,7 @@ public class OrtolangFileSystemView implements FileSystemView {
 
 	protected BinaryStoreService getBinaryStore() throws OrtolangException {
         if (store == null) {
-            store = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME);
+            store = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
         }
         return store;
     }

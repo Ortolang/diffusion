@@ -93,7 +93,7 @@ public final class SubscriptionServlet {
     private SubscriptionService getSubscription() {
         if (subscription == null) {
             try {
-                subscription = (SubscriptionService) OrtolangServiceLocator.lookup(SubscriptionService.SERVICE_NAME);
+                subscription = (SubscriptionService) OrtolangServiceLocator.lookup(SubscriptionService.SERVICE_NAME, SubscriptionService.class);
             } catch (OrtolangException e) {
                 LOGGER.log(Level.SEVERE, "unable to inject SubscriptionService");
             }

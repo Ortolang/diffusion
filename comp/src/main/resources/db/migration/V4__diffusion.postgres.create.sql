@@ -128,6 +128,7 @@
         emailVisibility int4,
         familyName varchar(255),
         friends varchar(255),
+        secret varchar(255),
         givenName varchar(255),
         groupsList text,
         status int4,

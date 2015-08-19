@@ -38,13 +38,21 @@ package fr.ortolang.diffusion.membership;
 
 import java.util.List;
 
+import javax.ejb.Local;
+
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.membership.entity.*;
+import fr.ortolang.diffusion.membership.entity.Group;
+import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.membership.entity.ProfileData;
+import fr.ortolang.diffusion.membership.entity.ProfileDataType;
+import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
+import fr.ortolang.diffusion.membership.entity.ProfileStatus;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
+@Local
 public interface MembershipService extends OrtolangService, OrtolangIndexableService {
 	
 	public static final String SERVICE_NAME = "membership";
@@ -59,14 +67,10 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	public String getProfileKeyForConnectedIdentifier();
 	
-//	public String generateTOTPForConnectedIdentifier();
-//	
-//	public boolean validateTOTPForIdentifier(String identifier);
-//	
-//	public String getTOTPSecretForIdentifier(String identifier);
-
 	public String getProfileKeyForIdentifier(String identifier);
 
+	public String generateConnectedIdentifierTOTP() throws MembershipServiceException, KeyNotFoundException;
+    
 	public List<String> getConnectedIdentifierSubjects() throws MembershipServiceException, KeyNotFoundException;
 
 	public void createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
@@ -90,7 +94,8 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public List<Profile> searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
-
+	
+	
 	
 	public void createGroup(String key, String name, String description) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException;
 

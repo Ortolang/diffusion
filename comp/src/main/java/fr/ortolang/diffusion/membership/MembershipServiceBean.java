@@ -52,8 +52,8 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
-import javax.ejb.Local;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -85,17 +85,17 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authentication.AuthenticationService;
+import fr.ortolang.diffusion.security.authentication.TOTPHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 
-@Local(MembershipService.class)
 @Stateless(name = MembershipService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @PermitAll
-public class MembershipServiceBean implements MembershipService {
+public class MembershipServiceBean implements MembershipService, MembershipServiceAdmin {
 
 	private static final Logger LOGGER = Logger.getLogger(MembershipServiceBean.class.getName());
 
@@ -596,6 +596,72 @@ public class MembershipServiceBean implements MembershipService {
 			throw new MembershipServiceException("error while trying to remove public key to profile with key [" + key + "]");
 		}
 	}
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public String generateConnectedIdentifierTOTP() throws MembershipServiceException, KeyNotFoundException {
+	    LOGGER.log(Level.FINE, "generating TOTP for connected identifier");
+	    try {
+            String key = getProfileKeyForConnectedIdentifier();
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, Profile.OBJECT_TYPE);
+            Profile profile = em.find(Profile.class, identifier.getId());
+            if (profile == null) {
+                throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
+            }
+            if ( profile.getSecret() == null || profile.getSecret().length() <= 0 ) {
+                String secret = TOTPHelper.generateSecret();
+                profile.setSecret(secret);
+                em.merge(profile);
+            }
+            
+            return Integer.toString(TOTPHelper.getCode(profile.getSecret()));
+        } catch (RegistryServiceException e) {
+            throw new MembershipServiceException("unable to generate TOTOP for connected identifier", e);
+        }
+	}
+    
+	@Override
+	@RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public boolean systemValidateTOTP(String identifier, String totp) throws MembershipServiceException, KeyNotFoundException {
+	    LOGGER.log(Level.FINE, "#SYSTEM# validating TOTP for identifier");
+	    try {
+            String key = getProfileKeyForIdentifier(identifier);
+            OrtolangObjectIdentifier oid = registry.lookup(key);
+            checkObjectType(oid, Profile.OBJECT_TYPE);
+            Profile profile = em.find(Profile.class, oid.getId());
+            if (profile == null) {
+                throw new MembershipServiceException("unable to find a profile for id " + oid.getId());
+            }
+            if ( profile.getSecret() == null || profile.getSecret().length() <= 0 ) {
+                return false;
+            } else {
+                return TOTPHelper.checkCode(profile.getSecret(), Long.parseLong(totp));
+            }
+        } catch (RegistryServiceException e) {
+            throw new MembershipServiceException("unable to generate TOTOP for connected identifier", e);
+        }
+    }
+	
+	@Override
+	@RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public String systemReadProfileSecret(String identifier) throws MembershipServiceException, KeyNotFoundException {
+	    LOGGER.log(Level.FINE, "#SYSTEM# validating TOTP for identifier");
+	    try {
+            String key = getProfileKeyForIdentifier(identifier);
+            OrtolangObjectIdentifier oid = registry.lookup(key);
+            checkObjectType(oid, Profile.OBJECT_TYPE);
+            Profile profile = em.find(Profile.class, oid.getId());
+            if (profile == null) {
+                throw new MembershipServiceException("unable to find a profile for id " + oid.getId());
+            }
+            return profile.getSecret();
+        } catch (RegistryServiceException e) {
+            throw new MembershipServiceException("unable to generate TOTOP for connected identifier", e);
+        }
+	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -1082,6 +1148,16 @@ public class MembershipServiceBean implements MembershipService {
 			throws OrtolangException {
 		return null;
 	}
+	
+	@Override
+    @RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public Map<String, String> getServiceInfos() throws MembershipServiceException {
+        Map<String, String>infos = new HashMap<String, String> ();
+        //TODO implements infos
+        infos.put("profiles.all", "TODO");
+        return infos;
+    }
 
 	private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws MembershipServiceException {
 		if (!identifier.getService().equals(getServiceName())) {

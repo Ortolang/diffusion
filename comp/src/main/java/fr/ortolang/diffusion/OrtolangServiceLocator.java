@@ -105,10 +105,10 @@ public class OrtolangServiceLocator {
 		}
 	}
 	
-	public static Object lookup(String name) throws OrtolangException {
+	public static Object lookup(String name, Class<?> clazz) throws OrtolangException {
 		try {
 			if ( !objects.containsKey(name) ) {
-				objects.put(name, getJndiContext().lookup(NAMESPACE + "/" + name));
+				objects.put(name, getJndiContext().lookup(NAMESPACE + "/" + name + "!" + clazz.getCanonicalName()));
 			}
 			return objects.get(name);
 		} catch (Exception e) {
