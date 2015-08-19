@@ -168,11 +168,6 @@ public class ImportContentTask extends RuntimeEngineTask {
 		}
 		BagFactory factory = new BagFactory();
 		Bag bag = factory.createBag(bagpath.toFile());
-		SimpleResult result = bag.verifyPayloadManifests();
-		if (!result.isSuccess()) {
-			LOGGER.log(Level.WARNING, "bag verification failed: " + result.messagesToString());
-			throw new RuntimeEngineTaskException("bag verification failed: " + result.messagesToString());
-		}
 		return bag;
 	}
 
