@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.security.auth.login.LoginContext;
-import javax.security.auth.login.LoginException;
-
 import org.apache.ftpserver.ftplet.Authentication;
 import org.apache.ftpserver.ftplet.AuthenticationFailedException;
 import org.apache.ftpserver.ftplet.Authority;
@@ -24,18 +21,20 @@ import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.membership.MembershipServiceAdmin;
+import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 
 public class OrtolangUserManager implements UserManager {
     
     private static final Logger LOGGER = Logger.getLogger(OrtolangUserManager.class.getName());
 
     private static RegistryService registry;
-    private static MembershipService membership;
+    private static MembershipServiceAdmin membership;
 
     private static RegistryService getRegistryService() throws OrtolangException {
         if (registry == null) {
@@ -44,9 +43,9 @@ public class OrtolangUserManager implements UserManager {
         return registry;
     }
 
-    private static MembershipService getMembershipService() throws OrtolangException {
+    private static MembershipServiceAdmin getMembershipServiceAdmin() throws OrtolangException {
         if (membership == null) {
-            membership = (MembershipService) OrtolangServiceLocator.findService(MembershipService.SERVICE_NAME);
+            membership = (MembershipServiceAdmin) OrtolangServiceLocator.lookup(MembershipService.SERVICE_NAME, MembershipServiceAdmin.class);
         }
         return membership;
     }
@@ -54,33 +53,42 @@ public class OrtolangUserManager implements UserManager {
     @Override
     public User authenticate(Authentication auth) throws AuthenticationFailedException {
         if (auth instanceof UsernamePasswordAuthentication) {
-            LOGGER.log(Level.FINE, "checking authentication for username/password");
+            LOGGER.log(Level.FINE, "checking totp validity for username: " + ((UsernamePasswordAuthentication) auth).getUsername());
             UsernamePasswordAuthentication upauth = (UsernamePasswordAuthentication) auth;
             String username = upauth.getUsername();
-            String password = upauth.getPassword();
-            if (username == null) {
-                throw new AuthenticationFailedException("authentication failed");
+            String totp = upauth.getPassword();
+            if (username == null || username.length() == 0) {
+                throw new AuthenticationFailedException("authentication failed, username is null or empty");
             }
-            if (password == null) {
-                throw new AuthenticationFailedException("authentication failed");
+            if (totp == null || totp.length() == 0) {
+                throw new AuthenticationFailedException("authentication failed, password is null or empty");
             }
             try {
-                LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(username, password);
-                lc.login();
-                LOGGER.log(Level.FINE, "try a call to membreship service to validate credentials");
-                String expected = getMembershipService().getProfileKeyForIdentifier(username);
-                String connected = getMembershipService().getProfileKeyForConnectedIdentifier(); 
-                lc.logout();
-                LOGGER.log(Level.FINE, "expected: " + expected);
-                LOGGER.log(Level.FINE, "connected: " + connected);
-                if (connected.equals(username)) {
-                    LOGGER.log(Level.INFO, "authentication success");
-                    return getUserByName(username, password);
+                boolean validTotp = getMembershipServiceAdmin().systemValidateTOTP(username, totp);
+                if ( validTotp ) {
+                    LOGGER.log(Level.INFO, "authentication success totp is valid, retreiving profile secret to enforce EJB authentication");
+                    String secret = getMembershipServiceAdmin().systemReadProfileSecret(username);
+                    return getUserByName(username, secret);
                 } else {
-                    LOGGER.log(Level.INFO, "authentication failed: connected profile [" + connected + "] is NOT the expected one [" + expected + "]");
+                    LOGGER.log(Level.INFO, "authentication failed totp is not valid");
                     throw new AuthenticationFailedException("authentication failed");
                 }
-            } catch (OrtolangException | LoginException e) {
+//                LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(username, password);
+//                lc.login();
+//                LOGGER.log(Level.FINE, "try a call to membreship service to validate credentials");
+//                String expected = getMembershipService().getProfileKeyForIdentifier(username);
+//                String connected = getMembershipService().getProfileKeyForConnectedIdentifier(); 
+//                lc.logout();
+//                LOGGER.log(Level.FINE, "expected: " + expected);
+//                LOGGER.log(Level.FINE, "connected: " + connected);
+//                if (connected.equals(username)) {
+//                    LOGGER.log(Level.INFO, "authentication success");
+//                    return getUserByName(username, password);
+//                } else {
+//                    LOGGER.log(Level.INFO, "authentication failed: connected profile [" + connected + "] is NOT the expected one [" + expected + "]");
+//                    throw new AuthenticationFailedException("authentication failed");
+//                }
+            } catch (OrtolangException | MembershipServiceException | KeyNotFoundException e) {
                 LOGGER.log(Level.SEVERE, "unable to perform authentication");
                 throw new AuthenticationFailedException("unable to perform authentication", e);
             }
