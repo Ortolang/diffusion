@@ -120,6 +120,7 @@ public class CoreServiceTest {
 		jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreDocumentBuilder");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreService");
+		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceAdmin");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
 		jar.addAsResource("config.properties");
