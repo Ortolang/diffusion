@@ -612,9 +612,10 @@ public class CoreServiceBean implements CoreService {
 
             membership.deleteGroup(workspace.getMembers());
             registry.delete(wskey);
+            indexing.remove(wskey);
 
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "delete"));
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred while deleting workspace", e);
             throw new CoreServiceException("unable to delete workspace with key [" + wskey + "]", e);
