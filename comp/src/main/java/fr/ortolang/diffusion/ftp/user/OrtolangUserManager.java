@@ -73,21 +73,6 @@ public class OrtolangUserManager implements UserManager {
                     LOGGER.log(Level.INFO, "authentication failed totp is not valid");
                     throw new AuthenticationFailedException("authentication failed");
                 }
-//                LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(username, password);
-//                lc.login();
-//                LOGGER.log(Level.FINE, "try a call to membreship service to validate credentials");
-//                String expected = getMembershipService().getProfileKeyForIdentifier(username);
-//                String connected = getMembershipService().getProfileKeyForConnectedIdentifier(); 
-//                lc.logout();
-//                LOGGER.log(Level.FINE, "expected: " + expected);
-//                LOGGER.log(Level.FINE, "connected: " + connected);
-//                if (connected.equals(username)) {
-//                    LOGGER.log(Level.INFO, "authentication success");
-//                    return getUserByName(username, password);
-//                } else {
-//                    LOGGER.log(Level.INFO, "authentication failed: connected profile [" + connected + "] is NOT the expected one [" + expected + "]");
-//                    throw new AuthenticationFailedException("authentication failed");
-//                }
             } catch (OrtolangException | MembershipServiceException | KeyNotFoundException e) {
                 LOGGER.log(Level.SEVERE, "unable to perform authentication");
                 throw new AuthenticationFailedException("unable to perform authentication", e);

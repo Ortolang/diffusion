@@ -1,0 +1,28 @@
+CREATE 11041/sldr000850/picto.png
+100 HS_ADMIN 86400 1110 ADMIN 300:110011111110:0.NA/11041
+7 EMAIL 86400 1110 UTF8 webmaster@sldr.org
+8 URL 86400 1110 UTF8 http://sldr.org/sldr000850/preview/picto.png
+9 DESC 86400 1110 UTF8 ORTOLANG www.ortolang.fr (via SLDR)
+10 DESC 86400 1110 UTF8 MarsaLex
+11 DESC 86400 1110 UTF8 Secondary data (resource): MarsaLex
+12 DESC 86400 1110 UTF8 Datos secundarios (recurso): MarsaLex
+13 DESC 86400 1110 UTF8 file §preview/picto.png
+14 DESC 86400 1110 UTF8 Content-Type: image/png
+15 DESC 86400 1110 UTF8 Content-Length: 18928
+
+
+
+
+
+CREATE 11041/sldr000850/picto.png
+100 HS_ADMIN 86400 1110 ADMIN 300:110011111110:0.NA/11041
+7 EMAIL 86400 1110 UTF8 webmaster@sldr.org
+8 URL 86400 1110 UTF8 http://sldr.org/sldr000850/preview/picto.png
+9 DESC 86400 1110 UTF8 ORTOLANG www.ortolang.fr (via SLDR)
+10 DESC 86400 1110 UTF8 MarsaLex
+11 DESC 86400 1110 UTF8 Secondary data (resource): MarsaLex
+12 DESC 86400 1110 UTF8 Datos secundarios (recurso): MarsaLex
+13 DESC 86400 1110 UTF8 file §preview/picto.png
+14 DESC 86400 1110 UTF8 Content-Type: image/png
+15 DESC 86400 1110 UTF8 Content-Length: 18928
+

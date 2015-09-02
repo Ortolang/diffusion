@@ -38,7 +38,6 @@ package fr.ortolang.diffusion.api.profile;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -80,9 +79,6 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 
-/**
- * @resourceDescription Operations on Profiles
- */
 @Path("/profiles")
 @Produces({ MediaType.APPLICATION_JSON })
 public class ProfileResource {
@@ -99,15 +95,6 @@ public class ProfileResource {
     public ProfileResource() {
     }
 
-    /**
-     * @description Connect to current profile
-     * @responseType fr.ortolang.diffusion.api.profile.ProfileRepresentation
-     * @return {@link ProfileRepresentation}
-     * @throws MembershipServiceException
-     * @throws KeyNotFoundException
-     * @throws ProfileAlreadyExistsException
-     * @throws AccessDeniedException
-     */
     @GET
     @Path("/connected")
     public Response getConnected() throws MembershipServiceException, KeyNotFoundException, ProfileAlreadyExistsException, AccessDeniedException {
@@ -122,16 +109,17 @@ public class ProfileResource {
         ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
         return Response.ok(representation).build();
     }
+    
+    @GET
+    @Path("/totp")
+    public Response getProfileTotp() throws AccessDeniedException, OrtolangException, KeyNotFoundException, MembershipServiceException {
+        LOGGER.log(Level.INFO, "GET /profiles/totp");
+        String totp = membership.generateConnectedIdentifierTOTP();
+        JsonObject jsonObject = Json.createObjectBuilder().add("totp", totp).build();
+        return Response.ok(jsonObject).build();
+    }
 
-    /**
-     * @description List profiles
-     * @responseType fr.ortolang.diffusion.api.object.GenericCollectionRepresentation
-     * @return {@link GenericCollectionRepresentation}&lt;{@link ProfileRepresentation}&gt;
-     * @throws MembershipServiceException
-     * @throws KeyNotFoundException
-     * @throws AccessDeniedException
-     * @throws AuthorisationServiceException
-     */
+
     @GET
     @Path("/list")
     public Response getProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, AuthorisationServiceException {
@@ -148,18 +136,6 @@ public class ProfileResource {
         return Response.ok(representation).build();
     }
 
-    /**
-     * @description Return profile for a given key
-     * @responseType fr.ortolang.diffusion.api.profile.ProfileRepresentation
-     * @param key {@link String}
-     * 		Key of wanted profile
-     * @param request {@link Request}
-     * @return {@link ProfileRepresentation}
-     * @throws MembershipServiceException
-     * @throws BrowserServiceException
-     * @throws KeyNotFoundException
-     * @throws AccessDeniedException
-     */
     @GET
     @Path("/{key}")
     public Response getProfile(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
@@ -187,18 +163,6 @@ public class ProfileResource {
         return builder.build();
     }
 
-    /**
-     * @description Return the profile card for a given key
-     * @responseType fr.ortolang.diffusion.api.profile.ProfileCardRepresentation
-     * @param key {@link String}
-     * 		Key of wanted profile
-     * @param request {@link Request}
-     * @return {@link ProfileCardRepresentation}
-     * @throws MembershipServiceException
-     * @throws BrowserServiceException
-     * @throws KeyNotFoundException
-     * @throws AccessDeniedException
-     */
     @GET
     @Path("/{key}/card")
     public Response getProfileCard(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
@@ -226,18 +190,6 @@ public class ProfileResource {
         return builder.build();
     }
 
-    /**
-     * @description Update a profile
-     * @param key {@link String}
-     * 		Key of the profile to update {@link String}
-     * @param representation {@link ProfileRepresentation}
-     * 		New value
-     * @return {@link Response}
-     * 		Empty response
-     * @throws MembershipServiceException
-     * @throws KeyNotFoundException
-     * @throws AccessDeniedException
-     */
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -249,15 +201,6 @@ public class ProfileResource {
         return Response.ok(profileRepresentation).build();
     }
 
-    /**
-     * @description Return public keys of a profile
-     * @param key {@link String}
-     * 		Key of the profile {@link String}
-     * @return {@link Set}&lt;{@link String}&gt;
-     * @throws MembershipServiceException
-     * @throws KeyNotFoundException
-     * @throws AccessDeniedException
-     */
     @GET
     @Path("/{key}/keys")
     public Response getProfilePublicKeys(@PathParam(value = "key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
@@ -266,18 +209,6 @@ public class ProfileResource {
         return Response.ok(profile.getPublicKeys()).build();
     }
 
-    /**
-     * @description Add a Public key to a profile
-     * @param key {@link String}
-     * 		Key of the profile {@link String}
-     * @param pubkey {@link ProfileKeyRepresentation}
-     * 		New public key value
-     * @return {@link Response}
-     * 		Response with OK status
-     * @throws MembershipServiceException
-     * @throws KeyNotFoundException
-     * @throws AccessDeniedException
-     */
     @POST
     @Path("/{key}/keys")
     @Consumes({ MediaType.APPLICATION_JSON })
@@ -287,18 +218,6 @@ public class ProfileResource {
         return Response.ok().build();
     }
 
-    /**
-     * @description Delete a public key of a profile
-     * @param key {@link String}
-     * 		Key of the profile {@link String}
-     * @param pubkey {@link ProfileKeyRepresentation}
-     * 		New public key value
-     * @return {@link Response}
-     * 		Response with OK status
-     * @throws MembershipServiceException
-     * @throws KeyNotFoundException
-     * @throws AccessDeniedException
-     */
     @DELETE
     @Path("/{key}/keys")
     @Consumes({ MediaType.APPLICATION_JSON })
@@ -308,20 +227,6 @@ public class ProfileResource {
         return Response.ok().build();
     }
 
-    /**
-     * @description Return collection of infos of a given profile
-     * @responseType fr.ortolang.diffusion.api.rest.object.GenericCollectionRepresentation
-     * @param key {@link String}
-     * 		Key of the profile {@link String}
-     * @param filter {@link String}
-     * 		Category of infos to return
-     * @param request {@link Request}
-     * @return {@link GenericCollectionRepresentation}&lt;{@link ProfileDataRepresentation}&gt;
-     * @throws MembershipServiceException
-     * @throws BrowserServiceException
-     * @throws AccessDeniedException
-     * @throws KeyNotFoundException
-     */
     @GET
     @Path("/{key}/infos")
     public Response getInfos(@PathParam(value = "key") String key, @QueryParam(value = "filter") String filter, @Context Request request) throws MembershipServiceException, BrowserServiceException, AccessDeniedException, KeyNotFoundException {
@@ -355,19 +260,6 @@ public class ProfileResource {
         return builder.build();
     }
 
-    /**
-     * @description Update infos for a given profile
-     * @param key {@link String}
-     * 		Key of the profile
-     * @param info {@link ProfileDataRepresentation}
-     * 		New infos values
-     * @return {@link Response}
-     * 		Response with OK status
-     * @throws MembershipServiceException
-     * @throws KeyNotFoundException
-     * @throws AccessDeniedException
-     * @throws KeyLockedException
-     */
     @POST
     @Path("/{key}/infos")
     @Consumes({ MediaType.APPLICATION_JSON })
@@ -377,16 +269,6 @@ public class ProfileResource {
         return Response.ok().build();
     }
 
-    /**
-     * @description Return the size of a profile
-     * @param key {@link String}
-     * 		Key of the profile
-     * @return {@link OrtolangObjectSize}
-     * 		Size of the profile
-     * @throws AccessDeniedException
-     * @throws OrtolangException
-     * @throws KeyNotFoundException
-     */
     @GET
     @Path("/{key}/size")
     public Response getProfileSize(@PathParam(value = "key") String key) throws AccessDeniedException, OrtolangException, KeyNotFoundException {
@@ -398,11 +280,11 @@ public class ProfileResource {
     @GET
     @Path("/{key}/ticket")
     public Response getProfileTicket(@PathParam(value = "key") String key) throws AccessDeniedException, OrtolangException, KeyNotFoundException, MembershipServiceException {
-        LOGGER.log(Level.INFO, "GET /profiles/" + key + "/size");
+        LOGGER.log(Level.INFO, "GET /profiles/" + key + "/ticket");
         Profile profile = membership.readProfile(key);
         String ticket = TicketHelper.makeTicket(profile.getId(), profile.getKey());
         JsonObject jsonObject = Json.createObjectBuilder().add("t", ticket).build();
         return Response.ok(jsonObject).build();
     }
-
+    
 }

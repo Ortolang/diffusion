@@ -92,19 +92,6 @@
         primary key (id)
     );
 
-    create table Organization (
-        id varchar(255) not null,
-        acronym varchar(255),
-        city varchar(255),
-        country varchar(255),
-        fullname varchar(255),
-        homepage varchar(255),
-        img varchar(255),
-        name varchar(255),
-        version int8 not null,
-        primary key (id)
-    );
-
     create table Process (
         id varchar(255) not null,
         activity varchar(255),

@@ -363,9 +363,11 @@ public class OrtolangCoreFile implements FtpFile {
     @Override
     public OutputStream createOutputStream(long offset) throws IOException {
         LOGGER.log(Level.FINE, "getting output stream");
-        if (!root.equals(Workspace.HEAD) && isFile()) {
+        if (root.equals(Workspace.HEAD)) {
+            LOGGER.log(Level.FINE, "snapshot is " + Workspace.HEAD + ", ready to create temporary file for upload");
             Path upload = Files.createTempFile("ftp", ".up");
             OutputStream os = Files.newOutputStream(upload, StandardOpenOption.WRITE);
+            LOGGER.log(Level.FINE, "output stream created on temporary file: " + upload);
             BufferedOutputStream bof = new BufferedOutputStream(os) {
                 @Override
                 public void close() throws IOException {
@@ -400,6 +402,7 @@ public class OrtolangCoreFile implements FtpFile {
             };
             return bof;
         } else {
+            LOGGER.log(Level.FINE, "snapshot is NOT " + Workspace.HEAD + ", aborting upload");
             throw new IOException("writing is only allowed in head");
         }
     }

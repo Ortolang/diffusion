@@ -1,0 +1,34 @@
+handle: \x31313430332f434f4d4552452f434d522d415243484932312f564944454f532f434d522d415243484932312d534c5245464c2d45532d4a332d322e4d5034
+(11403/COMERE/CMR-ARCHI21/VIDEOS/CMR-ARCHI21-SLREFL-ES-J3-2.MP4)
+index: 100
+type: \x48535f41444d494e
+(HS_ADMIN)
+data: \x0fff0000000a302e4e412f31313430330000012c                                                                                                                                                                                           
+()
+ttl_type: 0
+ttl: 86400
+timestamp: 1437138746
+refs: null
+admin_read: t
+admin_write: t
+pub_read: t
+pub_write: f
+
+
+\x31313430332f434f4d4552452f434d522d415243484932312f564944454f532f434d522d415243484932312d534c5245464c2d41562d4a322d332e4d5034
+(11403/COMERE/CMR-ARCHI21/VIDEOS/CMR-ARCHI21-SLREFL-AV-J2-3.MP4)
+1
+\x55524c
+(URL)
+\x687474703a2f2f7265706f7369746f72792e6f72746f6c616e672e66722f636f6e74656e742f6c61746573742f636f6d6572652f636d722d617263686932312f766964656f732f636d722d617263686932312d736c7265666c2d61762d6a322d332e6d7034                         
+(http://repository.ortolang.fr/content/latest/comere/cmr-archi21/videos/cmr-archi21-slrefl-av-j2-3.mp4)
+0
+86400
+1437138746
+null
+t
+t
+t
+f
+
+
