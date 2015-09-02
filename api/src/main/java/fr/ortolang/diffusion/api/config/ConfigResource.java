@@ -63,8 +63,8 @@ public class ConfigResource {
 		builder.append("OrtolangConfig.apiServerUrlNoSSL='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_NOSSL)).append("';\r\n");
 		builder.append("OrtolangConfig.apiContentPath='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_CONTENT)).append("';\r\n");
 		builder.append("OrtolangConfig.apiSubPath='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_SUB)).append("';\r\n");
-		builder.append("OrtolangConfig.piwikHost='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_SUB)).append("';\r\n");
-		builder.append("OrtolangConfig.piwikSiteId='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_SUB)).append("';\r\n");
+		builder.append("OrtolangConfig.piwikHost='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_HOST)).append("';\r\n");
+		builder.append("OrtolangConfig.piwikSiteId='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID)).append("';\r\n");
 		builder.append("OrtolangConfig.keycloakConfigLocation ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("/config/client/auth").append("';\r\n");
 		return Response.ok(builder.toString()).build();
 	}
