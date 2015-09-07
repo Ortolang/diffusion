@@ -50,16 +50,12 @@ import javax.ejb.Stateless;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
-import fr.ortolang.diffusion.notification.NotificationService;
-import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
@@ -88,22 +84,12 @@ public class SearchServiceBean implements SearchService {
 	private IndexStoreService indexStore;
 	@EJB
 	private JsonStoreService jsonStore;
-	@EJB
-	private NotificationService notification;
 	@Resource
 	private SessionContext ctx;
 	
 	public SearchServiceBean() {
 	}
 	
-	public NotificationService getNotificationService() {
-		return notification;
-	}
-
-	public void setNotificationService(NotificationService notificationService) {
-		this.notification = notificationService;
-	}
-
 	public IndexStoreService getIndexStoreService() {
 		return indexStore;
 	}
@@ -173,7 +159,6 @@ public class SearchServiceBean implements SearchService {
 	public List<OrtolangSearchResult> indexSearch(String query) throws SearchServiceException {
 		LOGGER.log(Level.FINE, "Performing index search with query: " + query);
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			List<OrtolangSearchResult> checkedResults = new ArrayList<OrtolangSearchResult>();
 			for ( OrtolangSearchResult result : indexStore.search(query) ) {
@@ -183,10 +168,8 @@ public class SearchServiceBean implements SearchService {
 				} catch ( AccessDeniedException e ) {
 				}
 			}
-			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("query", query);
-			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "index-search"), argumentsBuilder.build());
 			return checkedResults;
-		} catch ( IndexStoreServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | NotificationServiceException e ) {
+		} catch ( IndexStoreServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException e ) {
 			throw new SearchServiceException("unable to perform index search", e);
 		}
 	}
@@ -195,12 +178,9 @@ public class SearchServiceBean implements SearchService {
 	public List<String> jsonSearch(String query) throws SearchServiceException {
 		LOGGER.log(Level.FINE, "Performing semantic search with query: " + query);
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> result = jsonStore.search(query);
-			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("query", query);
-			notification.throwEvent("", caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(SearchService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "json-search"), argumentsBuilder.build());
 			return result;
-		} catch ( JsonStoreServiceException | NotificationServiceException e ) {
+		} catch ( JsonStoreServiceException e ) {
 			throw new SearchServiceException("unable to perform json search", e);
 		}
 	}

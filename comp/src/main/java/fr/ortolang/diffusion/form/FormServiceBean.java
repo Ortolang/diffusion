@@ -175,8 +175,6 @@ public class FormServiceBean implements FormService {
 	public Form readForm(String key) throws FormServiceException, KeyNotFoundException {
 		LOGGER.log(Level.FINE, "reading form for key [" + key + "]");
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			checkObjectType(identifier, Form.OBJECT_TYPE);
 			Form form = em.find(Form.class, identifier.getId());
@@ -185,9 +183,8 @@ public class FormServiceBean implements FormService {
 			}
 			form.setKey(key);
 
-			notification.throwEvent(key, caller, Form.OBJECT_TYPE, OrtolangEvent.buildEventType(FormService.SERVICE_NAME, Form.OBJECT_TYPE, "read"));
 			return form;
-		} catch (RegistryServiceException | NotificationServiceException e) {
+		} catch (RegistryServiceException e) {
 			throw new FormServiceException("unable to read the form with key [" + key + "]", e);
 		}
 	}

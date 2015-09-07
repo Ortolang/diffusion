@@ -36,8 +36,31 @@ package fr.ortolang.diffusion.security;
  * #L%
  */
 
-import fr.ortolang.diffusion.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -48,15 +71,6 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.*;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Local(SecurityService.class)
 @Stateless(name = SecurityService.SERVICE_NAME)
@@ -151,13 +165,10 @@ public class SecurityServiceBean implements SecurityService {
 	public String getOwner(String key) throws SecurityServiceException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "getting owner for key [" + key + "]");
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
-			OrtolangObjectIdentifier keyid = registry.lookup(key);
-			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "get-owner"));
 			return authorisation.getPolicyOwner(key);
-		} catch (MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | NotificationServiceException | RegistryServiceException e) {
+		} catch (MembershipServiceException | KeyNotFoundException | AuthorisationServiceException e) {
 			throw new SecurityServiceException(e);
 		}
 	}
@@ -167,13 +178,10 @@ public class SecurityServiceBean implements SecurityService {
 	public Map<String, List<String>> listRules(String key) throws SecurityServiceException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "listing rules for key [" + key + "]");
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
-			OrtolangObjectIdentifier keyid = registry.lookup(key);
-			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "list-rules"));
 			return authorisation.getPolicyRules(key);
-		} catch (MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | RegistryServiceException | NotificationServiceException e) {
+		} catch (MembershipServiceException | KeyNotFoundException | AuthorisationServiceException e) {
 			throw new SecurityServiceException(e);
 		}
 	}
@@ -198,7 +206,7 @@ public class SecurityServiceBean implements SecurityService {
 				}
 			}
 			authorisation.setPolicyRules(key, rules);
-			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-rules"));
+			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-all-rules"));
 		} catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new SecurityServiceException(e);
@@ -243,20 +251,17 @@ public class SecurityServiceBean implements SecurityService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<String> listAvailablePermissions(String key) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "listing availables permissions for key [" + key + "]");
-//		try {
-//			String caller = membership.getProfileKeyForConnectedIdentifier();
-//			List<String> subjects = membership.getConnectedIdentifierSubjects();
-//			authorisation.checkPermission(key, subjects, "read");
-//			
-//			OrtolangObjectIdentifier keyid = registry.lookup(key);
-			//TODO find a way to touch concrete service from service name 
-			throw new SecurityServiceException("not implemented");
+		try {
+			List<String> subjects = membership.getConnectedIdentifierSubjects();
+			authorisation.checkPermission(key, subjects, "read");
 			
-			//notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "list-permissions"), "");
-//		} catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException e) {
-//			ctx.setRollbackOnly();
-//			throw new SecurityServiceException(e);
-//		}
+			OrtolangObjectIdentifier keyid = registry.lookup(key);
+			OrtolangService service = OrtolangServiceLocator.findService(keyid.getService());
+			String[] permissions = service.getObjectPermissionsList(keyid.getType());
+			return Arrays.asList(permissions);
+		} catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | OrtolangException e) {
+			throw new SecurityServiceException(e);
+		}
 	}
 	
 	@Override

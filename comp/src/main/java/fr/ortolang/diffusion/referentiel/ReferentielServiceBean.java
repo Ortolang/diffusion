@@ -263,7 +263,6 @@ public class ReferentielServiceBean implements ReferentielService {
 	public ReferentielEntity readReferentielEntity(String name) throws ReferentielServiceException, KeyNotFoundException {
 		LOGGER.log(Level.FINE, "reading form for name [" + name + "]");
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
 			String key = PREFIX_KEY+":"+name;
 			
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -274,9 +273,8 @@ public class ReferentielServiceBean implements ReferentielService {
 			}
 			refEntity.setKey(key);
 
-			notification.throwEvent(key, caller, ReferentielEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, ReferentielEntity.OBJECT_TYPE, "read"));
 			return refEntity;
-		} catch (RegistryServiceException | NotificationServiceException e) {
+		} catch (RegistryServiceException e) {
 			throw new ReferentielServiceException("unable to read the ReferentielEntity with name [" + name + "]", e);
 		}
 	}

@@ -138,13 +138,11 @@ public class BrowserServiceBean implements BrowserService {
 	public OrtolangObjectIdentifier lookup(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "looking up identifier for key [" + key + "]");
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
-			notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(BrowserService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "lookup"));
 			return identifier;
-		} catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | NotificationServiceException e) {
+		} catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
 			throw new BrowserServiceException("unable to lookup identifier for key [" + key + "]", e);
 		}
 	}

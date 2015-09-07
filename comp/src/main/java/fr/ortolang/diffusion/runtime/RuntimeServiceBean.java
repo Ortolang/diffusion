@@ -241,7 +241,6 @@ public class RuntimeServiceBean implements RuntimeService {
 	public Process readProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "Reading process with key: " + key);
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 
@@ -253,9 +252,8 @@ public class RuntimeServiceBean implements RuntimeService {
 			}
 			instance.setKey(key);
 
-			notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "read"));
 			return instance;
-		} catch (MembershipServiceException | NotificationServiceException | AuthorisationServiceException | RegistryServiceException e) {
+		} catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while reading process", e);
 			throw new RuntimeServiceException("unable to read process", e);
 		}
@@ -280,7 +278,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			String key = registry.lookup(process.getObjectIdentifier());
 			registry.update(key);
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("state", state);
-			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-state"), argumentsBuilder.build());
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "change-state"), argumentsBuilder.build());
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while updating process state", e);
@@ -303,7 +301,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			String key = registry.lookup(process.getObjectIdentifier());
 			registry.update(key);
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("message", log);
-			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "log"), argumentsBuilder.build());
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "log-info"), argumentsBuilder.build());
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while appending log to process", e);
@@ -326,7 +324,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			String key = registry.lookup(process.getObjectIdentifier());
 			registry.update(key);
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("activity", name);
-			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-activity"), argumentsBuilder.build());
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "change-activity"), argumentsBuilder.build());
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while updating process activity", e);
@@ -481,7 +479,6 @@ public class RuntimeServiceBean implements RuntimeService {
 	public RemoteProcess readRemoteProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "Reading remote process with key: " + key);
 		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 
@@ -493,9 +490,8 @@ public class RuntimeServiceBean implements RuntimeService {
 			}
 			instance.setKey(key);
 
-			notification.throwEvent(key, caller, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "read"));
 			return instance;
-		} catch (MembershipServiceException | NotificationServiceException | AuthorisationServiceException | RegistryServiceException e) {
+		} catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while reading remote process", e);
 			throw new RuntimeServiceException("unable to read remote process", e);
 		}
@@ -553,7 +549,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			registry.update(key);
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("state", state);
-			notification.throwEvent(key, RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "update-state"), argumentsBuilder.build());
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "change-state"), argumentsBuilder.build());
 		
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
@@ -580,7 +576,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			registry.update(key);
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("message", log);
-			notification.throwEvent(key, RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "log"), argumentsBuilder.build());
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "log-info"), argumentsBuilder.build());
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while appending log to process", e);
@@ -606,7 +602,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			registry.update(key);
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("activity", name);
-			notification.throwEvent(key, RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "update-activity"), argumentsBuilder.build());
+			notification.throwEvent(key, RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "change-activity"), argumentsBuilder.build());
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while updating remote process activity", e);

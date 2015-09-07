@@ -340,7 +340,6 @@ public class CoreServiceBean implements CoreService {
     public List<String> findWorkspacesForProfile(String profile) throws CoreServiceException, AccessDeniedException {
         LOGGER.log(Level.FINE, "finding workspace for profile");
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkAuthentified(subjects);
 
@@ -361,9 +360,8 @@ public class CoreServiceBean implements CoreService {
                 }
             }
 
-            notification.throwEvent("", caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "find"));
             return keys;
-        } catch (NotificationServiceException | MembershipServiceException | AuthorisationServiceException | RegistryServiceException | KeyNotFoundException e) {
+        } catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException | KeyNotFoundException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during finding workspaces for profile", e);
             throw new CoreServiceException("unable to find workspaces for profile", e);
         }
@@ -374,7 +372,6 @@ public class CoreServiceBean implements CoreService {
     public List<String> findWorkspacesAliasForProfile(String profile) throws CoreServiceException, AccessDeniedException {
         LOGGER.log(Level.FINE, "finding workspace alias for profile");
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkAuthentified(subjects);
 
@@ -398,9 +395,8 @@ public class CoreServiceBean implements CoreService {
                 }
             }
 
-            notification.throwEvent("", caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "find"));
             return aliases;
-        } catch (NotificationServiceException | MembershipServiceException | AuthorisationServiceException | RegistryServiceException | KeyNotFoundException e) {
+        } catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException | KeyNotFoundException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during finding workspaces for profile", e);
             throw new CoreServiceException("unable to find workspaces for profile", e);
         }
@@ -1088,7 +1084,6 @@ public class CoreServiceBean implements CoreService {
     public Collection readCollection(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.FINE, "reading collection with key [" + key + "]");
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
 
             OrtolangObjectIdentifier cidentifier = registry.lookup(key);
@@ -1101,9 +1096,8 @@ public class CoreServiceBean implements CoreService {
             }
             collection.setKey(key);
 
-            notification.throwEvent(key, caller, Collection.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "read"));
             return collection;
-        } catch (NotificationServiceException | MembershipServiceException | AuthorisationServiceException | RegistryServiceException e) {
+        } catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error while reading collection", e);
             throw new CoreServiceException("unable to read collection with key [" + key + "]", e);
         }
@@ -1475,7 +1469,6 @@ public class CoreServiceBean implements CoreService {
     public DataObject readDataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.FINE, "reading object with key [" + key + "]");
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
 
             OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -1488,9 +1481,8 @@ public class CoreServiceBean implements CoreService {
             }
             object.setKey(key);
 
-            notification.throwEvent(key, caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "read"));
             return object;
-        } catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
+        } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while reading object", e);
             throw new CoreServiceException("unable to read object with key [" + key + "]", e);
         }
@@ -1867,7 +1859,6 @@ public class CoreServiceBean implements CoreService {
     public Link readLink(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.FINE, "reading link with key [" + key + "]");
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
 
             OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -1880,9 +1871,8 @@ public class CoreServiceBean implements CoreService {
             }
             link.setKey(key);
 
-            notification.throwEvent(key, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "read"));
             return link;
-        } catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
+        } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while reading link", e);
             throw new CoreServiceException("unable to read link with key [" + key + "]", e);
         }
@@ -2066,7 +2056,6 @@ public class CoreServiceBean implements CoreService {
     public List<String> findLinksForTarget(String target) throws CoreServiceException, AccessDeniedException {
         LOGGER.log(Level.FINE, "finding links for target [" + target + "]");
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkPermission(target, subjects, "read");
 
@@ -2077,10 +2066,8 @@ public class CoreServiceBean implements CoreService {
                 String key = registry.lookup(link.getObjectIdentifier());
                 results.add(key);
             }
-            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("target", target);
-            notification.throwEvent("", caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "find"), argumentsBuilder.build());
             return results;
-        } catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
+        } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during finding links for target", e);
             throw new CoreServiceException("unable to find link for target [" + target + "]", e);
         }
@@ -2279,7 +2266,6 @@ public class CoreServiceBean implements CoreService {
     public MetadataObject readMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.FINE, "reading metadata for key [" + key + "]");
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkPermission(key, subjects, "read");
 
@@ -2292,9 +2278,8 @@ public class CoreServiceBean implements CoreService {
             }
             meta.setKey(key);
 
-            notification.throwEvent(key, caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "read"));
             return meta;
-        } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+        } catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during reading metadata", e);
             throw new CoreServiceException("unable to read metadata with key [" + key + "]", e);
         }
@@ -2643,7 +2628,6 @@ public class CoreServiceBean implements CoreService {
     public List<String> findMetadataObjectsForTarget(String target) throws CoreServiceException, AccessDeniedException {
         LOGGER.log(Level.FINE, "finding metadata for target [" + target + "]");
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkPermission(target, subjects, "read");
 
@@ -2654,10 +2638,8 @@ public class CoreServiceBean implements CoreService {
                 String key = registry.lookup(mdo.getObjectIdentifier());
                 results.add(key);
             }
-            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("target", target);
-            notification.throwEvent("", caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "find"), argumentsBuilder.build());
             return results;
-        } catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
+        } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during finding metadata", e);
             throw new CoreServiceException("unable to find metadata for target [" + target + "]", e);
         }
@@ -2668,7 +2650,6 @@ public class CoreServiceBean implements CoreService {
     public List<String> findMetadataObjectsForTargetAndName(String target, String name) throws CoreServiceException, AccessDeniedException {
         LOGGER.log(Level.FINE, "finding metadata for target [" + target + "]");
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkPermission(target, subjects, "read");
 
@@ -2679,10 +2660,8 @@ public class CoreServiceBean implements CoreService {
                 String key = registry.lookup(mdo.getObjectIdentifier());
                 results.add(key);
             }
-            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("target", target).addArgument("name", name);
-            notification.throwEvent("", caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "find"), argumentsBuilder.build());
             return results;
-        } catch (NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
+        } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during finding metadata", e);
             throw new CoreServiceException("unable to find metadata for target [" + target + "]", e);
         }
@@ -2800,11 +2779,9 @@ public class CoreServiceBean implements CoreService {
     public String put(InputStream data) throws CoreServiceException, DataCollisionException {
         LOGGER.log(Level.FINE, "putting binary content in store");
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
             String hash = binarystore.put(data);
-            notification.throwEvent(hash, caller, "binary-content", OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, "binary-content", "put"));
             return hash;
-        } catch (NotificationServiceException | BinaryStoreServiceException e) {
+        } catch (BinaryStoreServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during putting binary content", e);
             throw new CoreServiceException("unable to put binary content", e);
         }
@@ -3128,8 +3105,6 @@ public class CoreServiceBean implements CoreService {
         LOGGER.log(Level.FINE, "listing workspace keys [" + wskey + "]");
         Set<String> keys = new HashSet<String>();
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
-
             OrtolangObjectIdentifier identifier = registry.lookup(wskey);
             checkObjectType(identifier, Workspace.OBJECT_TYPE);
             Workspace workspace = em.find(Workspace.class, identifier.getId());
@@ -3141,9 +3116,8 @@ public class CoreServiceBean implements CoreService {
                 keys = systemListCollectionKeys(snapshot.getKey(), keys);
             }
 
-            notification.throwEvent(wskey, caller, identifier.getType(), OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, identifier.getType(), "system-list-keys"));
             return keys;
-        } catch (NotificationServiceException | RegistryServiceException e) {
+        } catch (RegistryServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while listing workspace keys", e);
             throw new CoreServiceException("unable to list keys for workspace with key [" + wskey + "]", e);
         }

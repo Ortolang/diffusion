@@ -377,9 +377,8 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 				}
 			}
 
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "read"));
 			return profile;
-		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException e) {
+		} catch (RegistryServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to read the profile with key [" + key + "]", e);
 		}
 	}
@@ -420,9 +419,8 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 				}
 			}
 
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "list-infos"));
 			return visibleInfos;
-		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException e) {
+		} catch (RegistryServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to listy profile infos for profile with key [" + key + "]", e);
 		}
 	}
@@ -474,7 +472,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 			registry.update(key);
 
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("name", name);
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "set-info"), argumentsBuilder.build());
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "add-info"), argumentsBuilder.build());
 		} catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException | KeyLockedException e) {
 			throw new MembershipServiceException("unable to set profile info for profile with key [" + key + "]", e);
 		}
@@ -563,7 +561,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 
 			registry.update(key);
 
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "add-key"));
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "add-ssh-key"));
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("error while trying to add public key to profile with key [" + key + "]");
@@ -590,7 +588,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 
 			registry.update(key);
 
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "remove-key"));
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "remove-ssh-key"));
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("error while trying to remove public key to profile with key [" + key + "]");
@@ -818,7 +816,6 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", member);
 			notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "add-member"), argumentsBuilder.build());
-
 			return group;
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
@@ -861,7 +858,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 			registry.update(member);
 
 			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", member);
-			notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "remove-member"), argumentsBuilder.build());
+            notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "remove-member"), argumentsBuilder.build());
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to remove member from group with key [" + key + "]", e);
@@ -898,8 +895,8 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 			registry.update(key);
 			registry.update(caller);
 
-			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("group", key);
-			notification.throwEvent(caller, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "join"), argumentsBuilder.build());
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", caller);
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "add-member"), argumentsBuilder.build());
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to join group with key [" + key + "]", e);
@@ -939,9 +936,8 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 			registry.update(key);
 			registry.update(caller);
 
-			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("group", key);
-			notification
-					.throwEvent(caller, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "leave"), argumentsBuilder.build());
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", caller);
+			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "remove-member"), argumentsBuilder.build());
 		} catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
 			ctx.setRollbackOnly();
 			throw new MembershipServiceException("unable to leave group with key [" + key + "]", e);
@@ -953,7 +949,6 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	public List<String> listMembers(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "listing members of group with key [" + key + "]");
 		try {
-			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 
@@ -966,9 +961,8 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 			}
 			String[] members = group.getMembers();
 
-			notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "list-members"));
 			return Arrays.asList(members);
-		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
+		} catch (RegistryServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to list members in group with key [" + key + "]", e);
 		}
 	}
@@ -978,7 +972,6 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	public List<String> getProfileGroups(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "listing groups of profile with key [" + key + "]");
 		try {
-			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 
@@ -991,9 +984,8 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 			}
 			String[] groups = profile.getGroups();
 
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "list-groups"));
 			return Arrays.asList(groups);
-		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
+		} catch (RegistryServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to list groups of profile with key [" + key + "]", e);
 		}
 	}
@@ -1003,7 +995,6 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	public boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
 		LOGGER.log(Level.FINE, "checking membership of member [" + member + "] in group with key [" + key + "]");
 		try {
-			String caller = getProfileKeyForConnectedIdentifier();
 			List<String> subjects = getConnectedIdentifierSubjects();
 			authorisation.checkPermission(key, subjects, "read");
 			authorisation.checkPermission(member, subjects, "read");
@@ -1022,10 +1013,8 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 				isMember = true;
 			}
 
-			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", member);
-			notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "is-member"), argumentsBuilder.build());
 			return isMember;
-		} catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
+		} catch (RegistryServiceException | AuthorisationServiceException e) {
 			throw new MembershipServiceException("unable to check membership in group with key [" + key + "]", e);
 		}
 	}
