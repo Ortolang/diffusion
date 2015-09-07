@@ -36,6 +36,8 @@ package fr.ortolang.diffusion;
  * #L%
  */
 
+import java.util.Map;
+
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
@@ -51,6 +53,8 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 public interface OrtolangService {
 
 	public abstract String getServiceName();
+	
+	public abstract Map<String, String> getServiceInfos();
 
 	public abstract String[] getObjectTypeList();
 	

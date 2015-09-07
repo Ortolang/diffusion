@@ -52,11 +52,14 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
+
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.ejb.*;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -228,6 +231,11 @@ public class PublicationServiceBean implements PublicationService {
 	}
 
 	@Override
+    public Map<String, String> getServiceInfos() {
+        return Collections.emptyMap();
+    }
+
+    @Override
 	public OrtolangObject findObject(String key) throws OrtolangException {
 		throw new OrtolangException("This service does not manage any object");
 	}

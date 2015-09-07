@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -14,27 +15,26 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import fr.ortolang.diffusion.registry.RegistryServiceAdmin;
+import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
-import fr.ortolang.diffusion.store.index.IndexStoreServiceAdmin;
-import fr.ortolang.diffusion.store.json.JsonStoreServiceAdmin;
+import fr.ortolang.diffusion.store.index.IndexStoreService;
+import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
+@RunAs("system")
 public class AdminResource {
     
     private static final Logger LOGGER = Logger.getLogger(AdminResource.class.getName());
     
     @EJB
-    private JsonStoreServiceAdmin json;
-    
+    private JsonStoreService json;
     @EJB
-    private IndexStoreServiceAdmin index;
-
+    private IndexStoreService index;
     @EJB
-	private RegistryServiceAdmin registry;
+	private RegistryService registry;
 	
 	
     @GET
@@ -65,7 +65,7 @@ public class AdminResource {
     @Path("/json/documents/{key}")
     public Response getJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/json/documents/" + key);
-        String document = json.getDocument(key);
+        String document = json.systemGetDocument(key);
         return Response.ok(document).build();
     }
     

@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.ejb.Local;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -59,19 +60,27 @@ import javax.persistence.TypedQuery;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
+import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
+@Local(RegistryService.class)
 @Stateless(name = RegistryService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @PermitAll
-public class RegistryServiceBean implements RegistryService, RegistryServiceAdmin {
+public class RegistryServiceBean implements RegistryService {
 
 	private static final  Logger LOGGER = Logger.getLogger(RegistryServiceBean.class.getName());
 	
-	@PersistenceContext(unitName = "ortolangPU")
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
+    @PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;
 	@Resource
 	private SessionContext ctx;
@@ -481,15 +490,7 @@ public class RegistryServiceBean implements RegistryService, RegistryServiceAdmi
 	//Admin interface
 	
 	@Override
-    @RolesAllowed("admin")
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public Map<String, String> getServiceInfos() throws RegistryServiceException {
-        Map<String, String>infos = new HashMap<String, String> ();
-        infos.put("registry.size", Long.toString(systemCountEntries(null)));
-        return infos;
-    }
-	
-	@Override
+	@RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public long systemCountEntries(String identifierFilter) throws RegistryServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting keys with identifierFilter:" + identifierFilter);
@@ -503,7 +504,7 @@ public class RegistryServiceBean implements RegistryService, RegistryServiceAdmi
     }
 	
 	@Override
-    @RolesAllowed("admin")
+    @RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<RegistryEntry> systemListEntries(String keyFilter) throws RegistryServiceException {
             LOGGER.log(Level.FINE, "#SYSTEM# list entries for key filter [" + keyFilter + "]");
@@ -557,5 +558,43 @@ public class RegistryServiceBean implements RegistryService, RegistryServiceAdmi
 		}
 		return entries.get(0);
 	}
+	
+	//Service methods
+    
+    @Override
+    public String getServiceName() {
+        return RegistryService.SERVICE_NAME;
+    }
+    
+    @Override
+    public Map<String, String> getServiceInfos() {
+        Map<String, String>infos = new HashMap<String, String> ();
+        try {
+            infos.put("registry.size", Long.toString(systemCountEntries(null)));
+        } catch ( Exception e ) {
+            //
+        }
+        return infos;
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException, AccessDeniedException, KeyNotFoundException {
+        throw new OrtolangException("this service does not managed any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+        throw new OrtolangException("this service does not managed any object");
+    }
 
 }

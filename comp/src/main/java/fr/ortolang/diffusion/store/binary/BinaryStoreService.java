@@ -39,6 +39,8 @@ package fr.ortolang.diffusion.store.binary;
 import java.io.File;
 import java.io.InputStream;
 
+import fr.ortolang.diffusion.OrtolangService;
+
 /**
  * <p>
  * <b>Binary Store</b> for ORTOLANG Diffusion Server.<br/>
@@ -61,7 +63,7 @@ import java.io.InputStream;
  * @author Jerome Blanchard <jayblanc@gmail.com>
  * @version 1.0
  */
-public interface BinaryStoreService {
+public interface BinaryStoreService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "binary-store";
 

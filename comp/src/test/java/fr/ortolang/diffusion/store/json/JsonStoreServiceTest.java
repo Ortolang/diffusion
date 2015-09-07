@@ -140,12 +140,12 @@ public class JsonStoreServiceTest {
 	}
 	
 	@Test
-    public void testAdminRead() {
+    public void testSystemRead() {
 	    String key = "K1";
 	    try {
 	        OrtolangIndexableObject<IndexableJsonContent> object = getOrtolangIndexableObject();
 	        service.index(object);
-	        String document = service.getDocument(key);
+	        String document = service.systemGetDocument(key);
 	        System.out.println("DOC: " + document);
 	        assertTrue(document.contains("K1"));
 	    } catch (JsonStoreServiceException e) {

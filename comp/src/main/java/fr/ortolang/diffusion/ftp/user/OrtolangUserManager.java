@@ -18,36 +18,22 @@ import org.apache.ftpserver.usermanager.impl.ConcurrentLoginPermission;
 import org.apache.ftpserver.usermanager.impl.TransferRatePermission;
 
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.ftp.FtpService;
+import fr.ortolang.diffusion.ftp.FtpServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.membership.MembershipServiceAdmin;
-import fr.ortolang.diffusion.membership.MembershipServiceException;
-import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryService;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
 
 public class OrtolangUserManager implements UserManager {
     
     private static final Logger LOGGER = Logger.getLogger(OrtolangUserManager.class.getName());
 
-    private static RegistryService registry;
-    private static MembershipServiceAdmin membership;
+    private static FtpService ftp;
 
-    private static RegistryService getRegistryService() throws OrtolangException {
-        if (registry == null) {
-            registry = (RegistryService) OrtolangServiceLocator.findService(RegistryService.SERVICE_NAME);
+    private static FtpService getFtpService() throws OrtolangException {
+        if (ftp == null) {
+            ftp = (FtpService) OrtolangServiceLocator.findService(FtpService.SERVICE_NAME);
         }
-        return registry;
-    }
-
-    private static MembershipServiceAdmin getMembershipServiceAdmin() throws OrtolangException {
-        if (membership == null) {
-            membership = (MembershipServiceAdmin) OrtolangServiceLocator.lookup(MembershipService.SERVICE_NAME, MembershipServiceAdmin.class);
-        }
-        return membership;
+        return ftp;
     }
 
     @Override
@@ -64,16 +50,16 @@ public class OrtolangUserManager implements UserManager {
                 throw new AuthenticationFailedException("authentication failed, password is null or empty");
             }
             try {
-                boolean validTotp = getMembershipServiceAdmin().systemValidateTOTP(username, totp);
+                boolean validTotp = getFtpService().checkUserAuthentication(username, totp);
                 if ( validTotp ) {
                     LOGGER.log(Level.INFO, "authentication success totp is valid, retreiving profile secret to enforce EJB authentication");
-                    String secret = getMembershipServiceAdmin().systemReadProfileSecret(username);
+                    String secret = getFtpService().getInternalAuthenticationPassword(username);
                     return getUserByName(username, secret);
                 } else {
                     LOGGER.log(Level.INFO, "authentication failed totp is not valid");
                     throw new AuthenticationFailedException("authentication failed");
                 }
-            } catch (OrtolangException | MembershipServiceException | KeyNotFoundException e) {
+            } catch (OrtolangException | FtpServiceException e) {
                 LOGGER.log(Level.SEVERE, "unable to perform authentication");
                 throw new AuthenticationFailedException("unable to perform authentication", e);
             }
@@ -108,14 +94,10 @@ public class OrtolangUserManager implements UserManager {
     @Override
     public boolean doesExist(String username) throws FtpException {
         LOGGER.log(Level.FINE, "checking existence of username: " + username);
-        OrtolangObjectIdentifier identifier = new OrtolangObjectIdentifier(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, username);
         try {
-            getRegistryService().lookup(identifier);
-            return true;
-        } catch (IdentifierNotRegisteredException e) {
-            return false;
-        } catch (OrtolangException | RegistryServiceException e) {
-            throw new FtpException("unable to check if user exists in registry", e);
+            return getFtpService().checkUserExistence(username);
+        } catch (FtpServiceException | OrtolangException e) {
+            throw new FtpException("unable to check if user exists", e);
         }
 
     }

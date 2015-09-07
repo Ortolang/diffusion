@@ -15,6 +15,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.ejb.Local;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
@@ -35,19 +36,28 @@ import com.orientechnologies.orient.server.OServer;
 import com.orientechnologies.orient.server.OServerMain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 @Startup
+@Local(JsonStoreService.class)
 @Singleton(name = JsonStoreService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @Lock(LockType.READ)
 @PermitAll
-public class JsonStoreServiceBean implements JsonStoreService, JsonStoreServiceAdmin {
+public class JsonStoreServiceBean implements JsonStoreService {
 
 	private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceBean.class.getName());
 	public static final String DEFAULT_JSON_HOME = "/json-store";
 	
-	private Path base;
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
+    private Path base;
 	private OServer server;
 	private OPartitionedDatabasePool pool;
 	
@@ -156,9 +166,9 @@ public class JsonStoreServiceBean implements JsonStoreService, JsonStoreServiceA
 	
 	@Override
     @Lock(LockType.WRITE)
-	@RolesAllowed("admin")
+	@RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public void insertDocument(String type, InputStream document) throws JsonStoreServiceException {
+    public void systemInsertDocument(String type, InputStream document) throws JsonStoreServiceException {
         LOGGER.log(Level.FINE, "Importing document type " + type);
         ODatabaseDocumentTx db = pool.acquire();
         try {
@@ -173,9 +183,9 @@ public class JsonStoreServiceBean implements JsonStoreService, JsonStoreServiceA
 	
 	@Override
     @Lock(LockType.WRITE)
-	@RolesAllowed("admin")
+	@RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public void insertDocument(String type, String document) throws JsonStoreServiceException {
+    public void systemInsertDocument(String type, String document) throws JsonStoreServiceException {
         LOGGER.log(Level.FINE, "Importing document type " + type);
         ODatabaseDocumentTx db = pool.acquire();
         try {
@@ -189,9 +199,9 @@ public class JsonStoreServiceBean implements JsonStoreService, JsonStoreServiceA
     }
     
     @Override
-	@RolesAllowed("admin")
+	@RolesAllowed("system")
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public String getDocument(String key) throws JsonStoreServiceException {
+    public String systemGetDocument(String key) throws JsonStoreServiceException {
         String json = getJSONByKey(key);
         if ( json != null ) {
             return json;
@@ -199,10 +209,16 @@ public class JsonStoreServiceBean implements JsonStoreService, JsonStoreServiceA
         return null;
     }
     
+    //Service methods
+    
     @Override
-    @RolesAllowed("admin")
+    public String getServiceName() {
+        return JsonStoreService.SERVICE_NAME;
+    }
+    
+    @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public Map<String, String> getServiceInfos() throws JsonStoreServiceException {
+    public Map<String, String> getServiceInfos() {
         Map<String, String>infos = new HashMap<String, String> ();
         infos.put("pool.size.max", Integer.toString(pool.getMaxSize()));
         infos.put("pool.connections.availables", Integer.toString(pool.getAvailableConnections()));
@@ -217,6 +233,26 @@ public class JsonStoreServiceBean implements JsonStoreService, JsonStoreServiceA
             db.close();
         }
         return infos;
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException, AccessDeniedException, KeyNotFoundException {
+        throw new OrtolangException("this service does not managed any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+        throw new OrtolangException("this service does not managed any object");
     }
 	
 	protected ODocument getDocumentByKey(String key) {

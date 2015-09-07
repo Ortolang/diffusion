@@ -13,8 +13,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
-import fr.ortolang.diffusion.form.FormServiceException;
-import fr.ortolang.diffusion.form.entity.Form;
 import fr.ortolang.diffusion.referentiel.ReferentielService;
 import fr.ortolang.diffusion.referentiel.ReferentielServiceException;
 import fr.ortolang.diffusion.referentiel.entity.ReferentielEntity;

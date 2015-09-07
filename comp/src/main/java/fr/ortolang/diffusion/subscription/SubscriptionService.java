@@ -36,25 +36,27 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
+import java.util.Map;
+
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 
-import java.util.Map;
+import fr.ortolang.diffusion.OrtolangService;
 
-public interface SubscriptionService {
+public interface SubscriptionService extends OrtolangService {
 
-    String SERVICE_NAME = "subscription";
+    public static final String SERVICE_NAME = "subscription";
 
-    Broadcaster getBroadcaster(String username);
+    public Broadcaster getBroadcaster(String username);
 
-    void registerBroadcaster(String username, AtmosphereResource atmosphereResource);
+    public void registerBroadcaster(String username, AtmosphereResource atmosphereResource);
 
-    void addFilter(String username, Filter filter) throws SubscriptionServiceException;
+    public void addFilter(String username, Filter filter) throws SubscriptionServiceException;
 
-    void removeFilter(String username, Filter filter);
+    public void removeFilter(String username, Filter filter);
 
-    void addDefaultFilters() throws SubscriptionServiceException;
+    public void addDefaultFilters() throws SubscriptionServiceException;
 
-    Map<String, Subscription> getSubscriptions();
+    public Map<String, Subscription> getSubscriptions();
 
 }

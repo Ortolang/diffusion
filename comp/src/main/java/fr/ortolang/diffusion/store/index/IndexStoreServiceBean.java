@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
+import javax.ejb.Local;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
 import javax.ejb.Singleton;
@@ -78,21 +78,29 @@ import org.apache.lucene.util.Version;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangSearchResult;
-import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 @Startup
+@Local(IndexStoreService.class)
 @Singleton(name = IndexStoreService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @Lock(LockType.READ)
 @PermitAll
-public class IndexStoreServiceBean implements IndexStoreService, IndexStoreServiceAdmin {
+public class IndexStoreServiceBean implements IndexStoreService {
 
     public static final String DEFAULT_INDEX_HOME = "/index-store";
 
     private static final Logger LOGGER = Logger.getLogger(IndexStoreServiceBean.class.getName());
 
+    private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
     private Path base;
     private Analyzer analyzer;
     private Directory directory;
@@ -209,10 +217,16 @@ public class IndexStoreServiceBean implements IndexStoreService, IndexStoreServi
         }
     }
     
+    //Service methods
+    
     @Override
-    @RolesAllowed("admin")
+    public String getServiceName() {
+        return IndexStoreService.SERVICE_NAME;
+    }
+    
+    @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public Map<String, String> getServiceInfos() throws JsonStoreServiceException {
+    public Map<String, String> getServiceInfos() {
         Map<String, String>infos = new HashMap<String, String> ();
         infos.put("index.directory", base.toString());
         try {
@@ -235,6 +249,26 @@ public class IndexStoreServiceBean implements IndexStoreService, IndexStoreServi
             LOGGER.log(Level.WARNING, "unable to gatter infos from index reader", e);
         }
         return infos;
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException, AccessDeniedException, KeyNotFoundException {
+        throw new OrtolangException("this service does not managed any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+        throw new OrtolangException("this service does not managed any object");
     }
 
 }

@@ -172,6 +172,13 @@
         version int8 not null,
         primary key (id)
     );
+    
+    create table Value (
+        name varchar(255) not null,
+        timestamp int8 not null,
+        value varchar(255),
+        primary key (name, timestamp)
+    );
 
     create table Workspace (
         id varchar(255) not null,

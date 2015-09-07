@@ -36,6 +36,8 @@ package fr.ortolang.diffusion.indexing;
  * #L%
  */
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -53,6 +55,12 @@ import javax.jms.Topic;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+
 @Local(IndexingService.class)
 @Stateless(name = IndexingService.SERVICE_NAME)
 @SecurityDomain("ortolang")
@@ -61,7 +69,10 @@ public class IndexingServiceBean implements IndexingService {
 	
 	private static final Logger LOGGER = Logger.getLogger(IndexingServiceBean.class.getName());
 	
-	@Resource(mappedName = "java:jboss/exported/jms/topic/indexing")
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
+    @Resource(mappedName = "java:jboss/exported/jms/topic/indexing")
 	private Topic indexingTopic;
 	@Resource
 	private SessionContext sessionCtx;
@@ -93,4 +104,37 @@ public class IndexingServiceBean implements IndexingService {
 			throw new IndexingServiceException("unable to send indexing message", e);
 		}
 	}
+	
+	//Service methods
+    
+    @Override
+    public String getServiceName() {
+        return IndexingService.SERVICE_NAME;
+    }
+    
+    @Override
+    public Map<String, String> getServiceInfos() {
+        //TODO provide infos about number of indexed document or maybe index queue status...
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException, AccessDeniedException, KeyNotFoundException {
+        throw new OrtolangException("this service does not managed any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+        throw new OrtolangException("this service does not managed any object");
+    }
 }

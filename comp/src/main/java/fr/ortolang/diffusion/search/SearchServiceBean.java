@@ -37,7 +37,9 @@ package fr.ortolang.diffusion.search;
  */
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -136,6 +138,12 @@ public class SearchServiceBean implements SearchService {
 	}
 
 	@Override
+    public Map<String, String> getServiceInfos() {
+        //TODO provide infos about active connections, config, ports, etc...
+        return Collections.emptyMap();
+    }
+
+    @Override
 	public String[] getObjectTypeList() {
 		return OBJECT_TYPE_LIST;
 	}

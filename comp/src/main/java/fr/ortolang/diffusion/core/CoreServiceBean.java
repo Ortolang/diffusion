@@ -65,6 +65,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
+
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -2833,6 +2834,12 @@ public class CoreServiceBean implements CoreService {
     @Override
     public String getServiceName() {
         return SERVICE_NAME;
+    }
+    
+    @Override
+    public Map<String, String> getServiceInfos() {
+        //TODO provide infos about workspaces (created, published, etc...)
+        return Collections.emptyMap();
     }
 
     @Override

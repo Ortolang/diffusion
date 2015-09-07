@@ -36,25 +36,32 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.security.PermitAll;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+
+import org.atmosphere.cpr.AtmosphereResource;
+import org.atmosphere.cpr.Broadcaster;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.Broadcaster;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import javax.annotation.security.PermitAll;
-import javax.ejb.EJB;
-import javax.ejb.Local;
-import javax.ejb.Singleton;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Local(SubscriptionService.class)
 @Singleton(name = SubscriptionService.SERVICE_NAME)
@@ -62,14 +69,15 @@ import java.util.logging.Logger;
 @PermitAll
 public class SubscriptionServiceBean implements SubscriptionService {
 
-    @EJB
-    private MembershipService membership;
-
-    @EJB
-    private CoreService core;
-
     private static final Logger LOGGER = Logger.getLogger(SubscriptionServiceBean.class.getName());
 
+    private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
+    @EJB
+    private MembershipService membership;
+    @EJB
+    private CoreService core;
     private Map<String, Subscription> subscriptionRegistry = new HashMap<>();
 
     public SubscriptionServiceBean() {
@@ -152,6 +160,40 @@ public class SubscriptionServiceBean implements SubscriptionService {
     @Override
     public Map<String, Subscription> getSubscriptions() {
         return subscriptionRegistry;
+    }
+    
+    //Service methods
+    
+    @Override
+    public String getServiceName() {
+        return SubscriptionService.SERVICE_NAME;
+    }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public Map<String, String> getServiceInfos() {
+        Map<String, String>infos = new HashMap<String, String> ();
+        return infos;
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException, AccessDeniedException, KeyNotFoundException {
+        throw new OrtolangException("this service does not managed any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+        throw new OrtolangException("this service does not managed any object");
     }
 
 }

@@ -43,6 +43,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,6 +64,11 @@ import org.apache.tika.io.TikaInputStream;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStream;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStreamFactory;
 import fr.ortolang.diffusion.store.binary.hash.SHA1FilterInputStreamFactory;
@@ -87,7 +94,10 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	
 	private static final Logger LOGGER = Logger.getLogger(BinaryStoreServiceBean.class.getName());
 
-	private HashedFilterInputStreamFactory factory;
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
+    private HashedFilterInputStreamFactory factory;
 	private Path base;
 	private Path working;
 	private Path collide;
@@ -340,4 +350,37 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 			throw new DataNotFoundException(e);
 		}
 	}
+	
+	//Service methods
+    
+    @Override
+    public String getServiceName() {
+        return BinaryStoreService.SERVICE_NAME;
+    }
+    
+    @Override
+    public Map<String, String> getServiceInfos() {
+        //TODO provide infos about active connections, config, ports, etc...
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException, AccessDeniedException, KeyNotFoundException {
+        throw new OrtolangException("this service does not managed any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+        throw new OrtolangException("this service does not managed any object");
+    }
 }

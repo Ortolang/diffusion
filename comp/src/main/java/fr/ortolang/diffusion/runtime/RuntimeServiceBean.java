@@ -57,6 +57,9 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 
 import org.activiti.engine.task.IdentityLink;
 import org.jboss.ejb3.annotation.SecurityDomain;
+
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Resource;
@@ -614,8 +617,14 @@ public class RuntimeServiceBean implements RuntimeService {
 	public String getServiceName() {
 		return RuntimeService.SERVICE_NAME;
 	}
-
+	
 	@Override
+    public Map<String, String> getServiceInfos() {
+        //TODO provide infos about active connections, config, ports, etc...
+        return Collections.emptyMap();
+    }
+
+    @Override
 	public String[] getObjectTypeList() {
 		return OBJECT_TYPE_LIST;
 	}

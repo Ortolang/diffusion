@@ -40,9 +40,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 
-public interface AuthorisationService {
+public interface AuthorisationService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "authorisation";
 	

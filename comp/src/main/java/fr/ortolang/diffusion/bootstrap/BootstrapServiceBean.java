@@ -40,6 +40,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +65,9 @@ import org.jboss.ejb3.annotation.RunAsPrincipal;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
@@ -97,7 +101,10 @@ import fr.ortolang.diffusion.store.json.JsonStoreService;
 public class BootstrapServiceBean implements BootstrapService {
 
 	private static final Logger LOGGER = Logger.getLogger(BootstrapServiceBean.class.getName());
-
+	
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
 	@EJB
 	private RegistryService registry;
 	@EJB
@@ -258,5 +265,37 @@ public class BootstrapServiceBean implements BootstrapService {
 			throw new BootstrapServiceException("unable to check platform bootstrap status", e);
 		}
 	}
+	
+	
+	@Override
+    public String getServiceName() {
+        return BootstrapService.SERVICE_NAME;
+    }
+    
+    @Override
+    public Map<String, String> getServiceInfos() {
+        //TODO parse the bootstrap file to read status and infos.
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException, AccessDeniedException, KeyNotFoundException {
+        throw new OrtolangException("this service does not managed any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+        throw new OrtolangException("this service does not managed any object");
+    }
 
 }

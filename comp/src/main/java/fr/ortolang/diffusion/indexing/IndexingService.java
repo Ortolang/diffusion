@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.indexing;
 
+import fr.ortolang.diffusion.OrtolangService;
+
 /*
  * #%L
  * ORTOLANG
@@ -37,7 +39,7 @@ package fr.ortolang.diffusion.indexing;
  */
 
 
-public interface IndexingService {
+public interface IndexingService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "indexing";
 	public static final String INDEX_ACTION = "index";
