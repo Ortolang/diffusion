@@ -48,8 +48,8 @@ public class InvalidPathExceptionMapper implements ExceptionMapper<InvalidPathEx
 
 	@Override
 	public Response toResponse(InvalidPathException ex) {
-		return Response.status(Status.NOT_FOUND)
-				.entity("Element not found at path : " + ex.getMessage()).type("text/plain")
+		return Response.status(Status.BAD_REQUEST)
+				.entity("Invalid path: " + ex.getMessage()).type("text/plain")
 				.build();
 	}
 }

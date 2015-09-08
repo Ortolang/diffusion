@@ -68,6 +68,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import fr.ortolang.diffusion.core.entity.*;
+
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import fr.ortolang.diffusion.OrtolangException;
@@ -86,7 +87,9 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.MetadataFormatException;
+import fr.ortolang.diffusion.core.PathAlreadyExistsException;
 import fr.ortolang.diffusion.core.PathBuilder;
+import fr.ortolang.diffusion.core.PathNotFoundException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -227,7 +230,7 @@ public class WorkspaceResource {
 	@Path("/{wskey}/elements")
 	public Response getWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@QueryParam(value = "metadata") String metadata, @Context Request request) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, OrtolangException,
-			BrowserServiceException, PropertyNotFoundException {
+			BrowserServiceException, PropertyNotFoundException, PathNotFoundException {
 		LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/elements?root=" + root + "&path=" + path + "&metadata=" + metadata);
 		if (path == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
@@ -299,7 +302,7 @@ public class WorkspaceResource {
 	@Path("/{wskey}/elements")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	public Response createWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form, @Context HttpHeaders headers)
-			throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException {
+			throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException {
 		LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/elements");
 		try {
 			String contentTransferEncoding = "UTF-8";
@@ -388,7 +391,7 @@ public class WorkspaceResource {
 	@Path("/{wskey}/elements")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public Response updateWorkspaceElement(@PathParam(value = "wskey") String wskey, WorkspaceElementRepresentation representation, @QueryParam(value = "destination") String destination) throws CoreServiceException,
-			KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException {
+			KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException {
 		LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements");
 		PathBuilder npath = PathBuilder.fromPath(representation.getPath());
 		try {
@@ -429,7 +432,7 @@ public class WorkspaceResource {
 	@Path("/{wskey}/elements")
 	public Response deleteWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
 			@QueryParam(value = "metadataname") String metadataname) throws CoreServiceException, InvalidPathException, AccessDeniedException, KeyNotFoundException,
-			BrowserServiceException, CollectionNotEmptyException {
+			BrowserServiceException, CollectionNotEmptyException, PathNotFoundException {
 		LOGGER.log(Level.INFO, "DELETE /workspaces/" + wskey + "/elements");
 		if (path == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();

@@ -25,7 +25,6 @@ import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.ftp.filesystem.OrtolangFileSystemFactory;
 import fr.ortolang.diffusion.ftp.user.OrtolangUserManager;
 import fr.ortolang.diffusion.membership.MembershipService;

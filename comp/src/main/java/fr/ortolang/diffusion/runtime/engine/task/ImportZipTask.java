@@ -16,7 +16,9 @@ import org.activiti.engine.delegate.DelegateExecution;
 
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
+import fr.ortolang.diffusion.core.PathAlreadyExistsException;
 import fr.ortolang.diffusion.core.PathBuilder;
+import fr.ortolang.diffusion.core.PathNotFoundException;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
@@ -81,11 +83,11 @@ public class ImportZipTask extends RuntimeEngineTask {
 									String hash = getCoreService().put(is);
 									is.close();
 									getCoreService().updateDataObject(wskey, opath.build(), hash);
-								} catch ( InvalidPathException | DataCollisionException | KeyNotFoundException e4 ) {
+								} catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException e4 ) {
 									partial = true;
 								}
 							}
-						} catch ( InvalidPathException e3 ) {
+						} catch ( PathNotFoundException e3 ) {
 							LOGGER.log(Level.FINE, " creating object at path: " + opath);
 							try {
 								InputStream is = zip.getInputStream(entry);
@@ -100,7 +102,7 @@ public class ImportZipTask extends RuntimeEngineTask {
 										if (!cache.contains(current)) {
 											try {
 												getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, current);
-											} catch (InvalidPathException e2) {
+											} catch (InvalidPathException | PathNotFoundException e2) {
 												getCoreService().createCollection(wskey, current);
 											}
 											cache.add(current);
@@ -109,7 +111,7 @@ public class ImportZipTask extends RuntimeEngineTask {
 								}
 								String current = opath.build();
 								getCoreService().createDataObject(wskey, current, hash);
-							} catch ( InvalidPathException | DataCollisionException | KeyNotFoundException e4 ) {
+							} catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | PathAlreadyExistsException e4 ) {
 								partial = true;
 							}
 						} 

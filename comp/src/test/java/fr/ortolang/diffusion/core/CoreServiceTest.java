@@ -332,7 +332,7 @@ public class CoreServiceTest {
 	}
 
 	@Test
-	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException, InvalidPathException, MetadataFormatException {
+	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException, InvalidPathException, MetadataFormatException, PathNotFoundException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -375,7 +375,7 @@ public class CoreServiceTest {
 
 	@Test
 	public void testCRUDCollection() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException,
-			KeyNotFoundException, InvalidPathException, CollectionNotEmptyException, DataCollisionException {
+			KeyNotFoundException, InvalidPathException, CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -499,7 +499,7 @@ public class CoreServiceTest {
 
 	@Test
 	public void testDeleteCollectionElementConcurrently() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException,
-			MembershipServiceException, KeyNotFoundException, InvalidPathException {
+			MembershipServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -603,7 +603,7 @@ public class CoreServiceTest {
 					LOGGER.log(Level.INFO, "Deleting collection at path: " + path);
 					core.deleteCollection(wskey, path);
 					deleted = true;
-				} catch (CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | CollectionNotEmptyException e) {
+				} catch (CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | CollectionNotEmptyException | PathNotFoundException e) {
 					LOGGER.log(Level.SEVERE, "error during deleting collection: " + e.getMessage());
 				} finally {
 					loginContext.logout();

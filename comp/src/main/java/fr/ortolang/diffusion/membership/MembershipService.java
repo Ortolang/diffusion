@@ -38,8 +38,6 @@ package fr.ortolang.diffusion.membership;
 
 import java.util.List;
 
-import javax.ejb.Local;
-
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.membership.entity.Group;
