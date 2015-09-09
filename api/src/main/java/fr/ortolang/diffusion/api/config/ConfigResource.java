@@ -30,6 +30,7 @@ public class ConfigResource {
 	
 	@GET
 	@Path("/ping")
+	@Produces({ MediaType.TEXT_PLAIN })
     public Response ping() {
         return Response.ok("pong").build();
     }

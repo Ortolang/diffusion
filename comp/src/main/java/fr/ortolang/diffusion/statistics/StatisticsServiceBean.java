@@ -33,7 +33,7 @@ import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.statistics.entity.Value;
+import fr.ortolang.diffusion.statistics.entity.StatisticValue;
 
 @Startup
 @Local(StatisticsService.class)
@@ -93,6 +93,7 @@ public class StatisticsServiceBean implements StatisticsService {
     }
 
     @Override
+    //@Schedule(hour="23")
     @Schedule(minute="*/5", hour="*")
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void probe() throws StatisticsServiceException {
@@ -105,7 +106,7 @@ public class StatisticsServiceBean implements StatisticsService {
                 for ( String info : stat.getValue() ) {
                     if ( infos.containsKey(info) ) {
                         try {
-                            Value value = new Value(stat.getKey() + SEPARATOR + info, System.currentTimeMillis(), infos.get(info));
+                            StatisticValue value = new StatisticValue(stat.getKey() + SEPARATOR + info, System.currentTimeMillis(), Long.parseLong(infos.get(info)));
                             em.persist(value);
                             LOGGER.log(Level.FINEST, "value persisted for stat name: " + value.getName());
                         } catch (Exception e) {
@@ -123,15 +124,15 @@ public class StatisticsServiceBean implements StatisticsService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public String[] read(String name) throws StatisticsServiceException, StatisticNameNotFoundException {
+    public long[] read(String name) throws StatisticsServiceException, StatisticNameNotFoundException {
         LOGGER.log(Level.FINEST, "reading stat value for name : " + name);
-        TypedQuery<Value> query = em.createNamedQuery("findValuesForName", Value.class).setParameter("name", name).setMaxResults(1);
-        Value v = query.getSingleResult();
+        TypedQuery<StatisticValue> query = em.createNamedQuery("findValuesForName", StatisticValue.class).setParameter("name", name).setMaxResults(1);
+        StatisticValue v = query.getSingleResult();
         if ( v == null ) {
             throw new StatisticNameNotFoundException("unable to find a value for stat with name: " + name);
         } else {
-            String[] value = new String[2];
-            value[0] = Long.toString(v.getTimestamp());
+            long[] value = new long[2];
+            value[0] = v.getTimestamp();
             value[1] = v.getValue();
             return value;
         }
@@ -139,16 +140,18 @@ public class StatisticsServiceBean implements StatisticsService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public Map<String, String> history(String name, long from, long to) throws StatisticsServiceException, StatisticNameNotFoundException {
+    public long[][] history(String name, long from, long to) throws StatisticsServiceException, StatisticNameNotFoundException {
         LOGGER.log(Level.FINEST, "reading stat history for name : " + name);
-        TypedQuery<Value> query = em.createNamedQuery("findValuesForNameFromTo", Value.class).setParameter("name", name).setParameter("from", from).setParameter("to", to);
-        List<Value> values = query.getResultList();
+        TypedQuery<StatisticValue> query = em.createNamedQuery("findValuesForNameFromTo", StatisticValue.class).setParameter("name", name).setParameter("from", from).setParameter("to", to);
+        List<StatisticValue> values = query.getResultList();
         if ( values == null ) {
             throw new StatisticNameNotFoundException("unable to find values for stat with name: " + name);
         } else {
-            Map<String, String> result = new HashMap<String, String> ();
-            for ( Value value : values ) {
-                result.put(Long.toBinaryString(value.getTimestamp()), value.getValue());
+            long[][] result = new long[values.size()][2];
+            int cpt = 0;
+            for ( StatisticValue value : values ) {
+                result[cpt][0] = value.getTimestamp();
+                result[cpt][1] = value.getValue();
             }
             return result;
         }

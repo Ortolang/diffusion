@@ -9,24 +9,24 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 
 @Entity
-@IdClass(ValuePK.class)
+@IdClass(StatisticValuePK.class)
 @NamedQueries({ 
-    @NamedQuery(name = "findValuesForName", query = "SELECT v FROM Value v WHERE v.name = :name ORDER BY v.timestamp DESC"),
-    @NamedQuery(name = "findValuesForNameFromTo", query = "SELECT v FROM Value v WHERE v.name = :name AND v.timestamp > :from AND v.timestamp < :to ORDER BY v.timestamp ASC")
+    @NamedQuery(name = "findValuesForName", query = "SELECT v FROM StatisticValue v WHERE v.name = :name ORDER BY v.timestamp DESC"),
+    @NamedQuery(name = "findValuesForNameFromTo", query = "SELECT v FROM StatisticValue v WHERE v.name = :name AND v.timestamp > :from AND v.timestamp < :to ORDER BY v.timestamp ASC")
 })
 @SuppressWarnings("serial")
-public class Value implements Serializable {
+public class StatisticValue implements Serializable {
     
     @Id
     private String name;
     @Id
     private long timestamp;
-    private String value;
+    private long value;
     
-    public Value() {
+    public StatisticValue() {
     }
     
-    public Value(String name, long timestamp, String value) {
+    public StatisticValue(String name, long timestamp, long value) {
         this.name = name;
         this.timestamp = timestamp;
         this.value = value;
@@ -48,11 +48,11 @@ public class Value implements Serializable {
         this.timestamp = timestamp;
     }
 
-    public String getValue() {
+    public long getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public void setValue(long value) {
         this.value = value;
     }
     

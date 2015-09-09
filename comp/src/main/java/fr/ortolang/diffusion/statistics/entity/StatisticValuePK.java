@@ -3,15 +3,15 @@ package fr.ortolang.diffusion.statistics.entity;
 import java.io.Serializable;
 
 @SuppressWarnings("serial")
-public class ValuePK implements Serializable {
+public class StatisticValuePK implements Serializable {
 
     private String name;
     private long timestamp;
 
-    public ValuePK() {
+    public StatisticValuePK() {
     }
 
-    public ValuePK(String name, long timestamp) {
+    public StatisticValuePK(String name, long timestamp) {
         super();
         this.name = name;
         this.timestamp = timestamp;
@@ -50,7 +50,7 @@ public class ValuePK implements Serializable {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ValuePK other = (ValuePK) obj;
+        StatisticValuePK other = (StatisticValuePK) obj;
         if (name == null) {
             if (other.name != null)
                 return false;

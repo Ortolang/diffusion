@@ -173,10 +173,10 @@
         primary key (id)
     );
     
-    create table Value (
+    create table StatisticValue (
         name varchar(255) not null,
         timestamp int8 not null,
-        value varchar(255),
+        value int8 not null,
         primary key (name, timestamp)
     );
 
