@@ -65,6 +65,8 @@ public interface RegistryService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "registry";
 	
+	public static final String INFO_SIZE = "size";
+    
 	public void register(String key, OrtolangObjectIdentifier identifier, String author) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException;
 	
 	public void register(String key, OrtolangObjectIdentifier identifier, String parent, boolean inherit) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, KeyNotFoundException;

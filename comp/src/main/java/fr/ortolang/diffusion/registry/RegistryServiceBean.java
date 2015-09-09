@@ -79,7 +79,7 @@ public class RegistryServiceBean implements RegistryService {
 	
 	private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
+
     @PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;
 	@Resource
@@ -570,7 +570,7 @@ public class RegistryServiceBean implements RegistryService {
     public Map<String, String> getServiceInfos() {
         Map<String, String>infos = new HashMap<String, String> ();
         try {
-            infos.put("registry.size", Long.toString(systemCountEntries(null)));
+            infos.put(INFO_SIZE, Long.toString(systemCountEntries(null)));
         } catch ( Exception e ) {
             //
         }

@@ -11,8 +11,9 @@ import javax.persistence.NamedQuery;
 @Entity
 @IdClass(ValuePK.class)
 @NamedQueries({ 
-    @NamedQuery(name = "findValueByName", query = "select v from Value v where v.name = ?1") }
-)
+    @NamedQuery(name = "findValuesForName", query = "SELECT v FROM Value v WHERE v.name = :name ORDER BY v.timestamp DESC"),
+    @NamedQuery(name = "findValuesForNameFromTo", query = "SELECT v FROM Value v WHERE v.name = :name AND v.timestamp > :from AND v.timestamp < :to ORDER BY v.timestamp ASC")
+})
 @SuppressWarnings("serial")
 public class Value implements Serializable {
     
