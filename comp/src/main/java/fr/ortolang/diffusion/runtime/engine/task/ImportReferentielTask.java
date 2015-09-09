@@ -98,6 +98,8 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 				return ReferentielType.ORGANIZATION;
 			case "Person":
 				return ReferentielType.PERSON;
+			case "Term":
+				return ReferentielType.TERM;
 			default:
 				LOGGER.log(Level.SEVERE, "  referentiel type unknown : "+type);
 				return null;
