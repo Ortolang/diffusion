@@ -689,7 +689,7 @@ public class CoreServiceBean implements CoreService {
 
             CollectionElement element = parent.findElementByName(npath.part());
             if (element == null) {
-                throw new InvalidPathException("path [" + npath.build() + "] does not exists");
+                throw new PathNotFoundException(npath.build());
             }
 
             return element.getKey();
@@ -1571,7 +1571,6 @@ public class CoreServiceBean implements CoreService {
                     parent.removeElement(element);
                     CollectionElement celement = new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey());
                     parent.addElement(celement);
-                    registry.update(parent.getKey());
                     object = clone;
                 } else {
                     parent.removeElement(element);
@@ -1580,6 +1579,7 @@ public class CoreServiceBean implements CoreService {
                 }
                 em.merge(parent);
                 em.merge(object);
+                registry.update(parent.getKey());
                 registry.update(object.getKey());
                 indexing.index(object.getKey());
                 LOGGER.log(Level.FINEST, "object updated");

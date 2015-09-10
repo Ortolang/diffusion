@@ -49,6 +49,7 @@ public class ImportZipTask extends RuntimeEngineTask {
 		}
 		boolean overwrite = false;
 		if (execution.hasVariable(ZIP_OVERWRITE_PARAM_NAME)) {
+		    LOGGER.log(Level.INFO, "zip import will OVERWRITE existing files");
 			overwrite = Boolean.parseBoolean(execution.getVariable(ZIP_OVERWRITE_PARAM_NAME, String.class));
 		}
 		
@@ -70,6 +71,7 @@ public class ImportZipTask extends RuntimeEngineTask {
 			long tscommit = System.currentTimeMillis();
 			for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements();) {
 				ZipEntry entry = e.nextElement();
+				LOGGER.log(Level.FINE, " zip entry found: " + entry.getName());
 				needcommit = false;
 				try {
 					if (!entry.isDirectory()) {
@@ -77,7 +79,7 @@ public class ImportZipTask extends RuntimeEngineTask {
 						try {
 							getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, opath.build());
 							if ( overwrite ) {
-								LOGGER.log(Level.FINE, " updating object at path: " + opath);
+								LOGGER.log(Level.FINE, " updating object at path: " + opath.build());
 								try {
 									InputStream is = zip.getInputStream(entry);
 									String hash = getCoreService().put(is);
@@ -88,7 +90,7 @@ public class ImportZipTask extends RuntimeEngineTask {
 								}
 							}
 						} catch ( PathNotFoundException e3 ) {
-							LOGGER.log(Level.FINE, " creating object at path: " + opath);
+							LOGGER.log(Level.FINE, " creating object at path: " + opath.build());
 							try {
 								InputStream is = zip.getInputStream(entry);
 								String hash = getCoreService().put(is);

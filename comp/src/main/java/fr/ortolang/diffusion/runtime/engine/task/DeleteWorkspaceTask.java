@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ejb.EJBTransactionRolledbackException;
 import javax.transaction.SystemException;
 
 import org.activiti.engine.delegate.DelegateExecution;
@@ -57,8 +58,9 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 				getUserTransaction().rollback();
 				throw new RuntimeEngineTaskException("unexpected error during delete workspace task", e);
 			} 
-		} catch (SystemException | SecurityException | IllegalStateException e) {
-			throw new RuntimeEngineTaskException("unable to create transaction", e);
+		} catch (SystemException | SecurityException | IllegalStateException  | EJBTransactionRolledbackException e) {
+		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
+			throw new RuntimeEngineTaskException("unexpected error occured", e);
 		}
 	}
 
