@@ -73,7 +73,7 @@ public class OrtolangConfig {
         	String fileVersion = this.getProperty(Property.CONFIG_VERSION);
         	if ( !fileVersion.equals(CURRENT_CONFIG_VERSION) ) {
         		LOGGER.log(Level.SEVERE, "Configuration File Version mismatch with Current Config Version: " + fileVersion + " != " + CURRENT_CONFIG_VERSION + "  --> UPDATE CONFIGURATION FILE");
-        		throw new Exception("Version mismatch between config file version: " + fileVersion + " and current config verison: " + CURRENT_CONFIG_VERSION + " !! Please update your config file");
+        		throw new Exception("Version mismatch between config file version: " + fileVersion + " and current config version: " + CURRENT_CONFIG_VERSION + " !! Please update your config file");
         	}
         }
     }

@@ -140,7 +140,7 @@ public class OrtolangClientAccountManager {
 	public synchronized void setCredentials(String user, String password) throws OrtolangClientAccountException {
 		LOGGER.log(Level.INFO, "Asking AccessToken using credential grant for user: " + user);
 			
-		WebTarget target = client.target(authurl).path("realms").path(authrealm).path("protocol/openid-connect/grants/access");
+		WebTarget target = client.target(authurl).path("realms").path(authrealm).path("protocol/openid-connect/token");
 		Form form = new Form().param("username", user).param("password", password);
 		Invocation.Builder invocationBuilder = target.request(MediaType.APPLICATION_JSON_TYPE);
 		if ( appsecret != null && appsecret.length() > 0 ) {
