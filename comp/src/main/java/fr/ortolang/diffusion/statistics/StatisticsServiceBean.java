@@ -99,8 +99,8 @@ public class StatisticsServiceBean implements StatisticsService {
     }
 
     @Override
-    //@Schedule(hour="23")
-    @Schedule(minute="*/5", hour="*")
+    @Schedule(hour="23")
+    //@Schedule(minute="*/5", hour="*")
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void probe() throws StatisticsServiceException {
         LOGGER.log(Level.FINEST, "probing stat for fresh values");
