@@ -65,7 +65,10 @@ public interface RegistryService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "registry";
 	
-	public static final String INFO_SIZE = "size";
+	public static final String INFO_SIZE = "entries.all";
+	public static final String INFO_DELETED = "entries.deleted";
+	public static final String INFO_HIDDEN = "entries.hidden";
+	public static final String INFO_PUBLISHED = "entries.published";
     
 	public void register(String key, OrtolangObjectIdentifier identifier, String author) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException;
 	
@@ -122,6 +125,10 @@ public interface RegistryService extends OrtolangService {
 
 	public List<RegistryEntry> systemListEntries(String keyFilter) throws RegistryServiceException;
     
-    public long systemCountEntries(String identifierFilter) throws RegistryServiceException;
+    public long systemCountAllEntries(String identifierFilter) throws RegistryServiceException;
+    
+    public long systemCountDeletedEntries(String identifierFilter) throws RegistryServiceException;
+    
+    public long systemCountHiddenEntries(String identifierFilter) throws RegistryServiceException;
     	
 }

@@ -492,14 +492,42 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
 	@RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public long systemCountEntries(String identifierFilter) throws RegistryServiceException {
-        LOGGER.log(Level.FINE, "#SYSTEM# counting keys with identifierFilter:" + identifierFilter);
+    public long systemCountAllEntries(String identifierFilter) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# counting all entries with identifierFilter:" + identifierFilter);
         StringBuilder ifilter = new StringBuilder();
         if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
              ifilter.append(identifierFilter);
         } 
         ifilter.append("%");
-        TypedQuery<Long> query = em.createNamedQuery("countEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
+        TypedQuery<Long> query = em.createNamedQuery("countAllEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
+        return query.getSingleResult().longValue();
+    }
+	
+	@Override
+    @RolesAllowed("system")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public long systemCountDeletedEntries(String identifierFilter) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# counting deleted entries with identifierFilter:" + identifierFilter);
+        StringBuilder ifilter = new StringBuilder();
+        if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
+             ifilter.append(identifierFilter);
+        } 
+        ifilter.append("%");
+        TypedQuery<Long> query = em.createNamedQuery("countDeletedEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
+        return query.getSingleResult().longValue();
+    }
+	
+	@Override
+    @RolesAllowed("system")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public long systemCountHiddenEntries(String identifierFilter) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# counting hidden entries with identifierFilter:" + identifierFilter);
+        StringBuilder ifilter = new StringBuilder();
+        if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
+             ifilter.append(identifierFilter);
+        } 
+        ifilter.append("%");
+        TypedQuery<Long> query = em.createNamedQuery("countHiddenEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
         return query.getSingleResult().longValue();
     }
 	
@@ -570,9 +598,24 @@ public class RegistryServiceBean implements RegistryService {
     public Map<String, String> getServiceInfos() {
         Map<String, String>infos = new HashMap<String, String> ();
         try {
-            infos.put(INFO_SIZE, Long.toString(systemCountEntries(null)));
-        } catch ( Exception e ) {
-            //
+            infos.put(INFO_SIZE, Long.toString(systemCountAllEntries(null)));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_SIZE, e);
+        }
+        try {
+            infos.put(INFO_DELETED, Long.toString(systemCountDeletedEntries(null)));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_DELETED, e);
+        }
+        try {
+            infos.put(INFO_HIDDEN, Long.toString(systemCountHiddenEntries(null)));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_HIDDEN, e);
+        }
+        try { 
+            infos.put(INFO_PUBLISHED, Long.toString(count(null, OrtolangObjectState.Status.PUBLISHED)));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_PUBLISHED, e);
         }
         return infos;
     }

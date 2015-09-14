@@ -61,6 +61,12 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	public static final String SERVICE_NAME = "core";
 	
+	public static final String INFO_WORKSPACES_ALL = "workspaces.all";
+	//TODO public static final String INFO_WORKSPACES_PUBLISHED = "workspaces.published";
+	//TODO public static final String INFO_WORKSPACES_DELETED = "workspaces.deleted";
+	public static final String INFO_COLLECTIONS_ALL = "collections.all";
+	public static final String INFO_OBJECTS_ALL = "objects.all";
+	
 	/* Workspace */
 	
 	public Workspace createWorkspace(String wskey, String alias, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;

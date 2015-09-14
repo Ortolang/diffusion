@@ -159,6 +159,11 @@
 			<version>${version.ftpserver-core}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.fusesource</groupId>
+			<artifactId>sigar</artifactId>
+			<version>${version.sigar}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.sleepycat</groupId>
 			<artifactId>je</artifactId>
 			<version>${version.je}</version>

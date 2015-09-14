@@ -30,10 +30,12 @@ import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.statistics.entity.StatisticValue;
+import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 
 @Startup
 @Local(StatisticsService.class)
@@ -75,8 +77,12 @@ public class StatisticsServiceBean implements StatisticsService {
     
     @PostConstruct
     private void init() {
-        String[] registryInfos = new String[] { RegistryService.INFO_SIZE };
+        String[] registryInfos = new String[] { RegistryService.INFO_SIZE, RegistryService.INFO_PUBLISHED, RegistryService.INFO_DELETED, RegistryService.INFO_HIDDEN };
         STATS_NAMES.put(RegistryService.SERVICE_NAME, Arrays.asList(registryInfos));
+        String[] coreInfos = new String[] { CoreService.INFO_WORKSPACES_ALL, CoreService.INFO_COLLECTIONS_ALL, CoreService.INFO_OBJECTS_ALL };
+        STATS_NAMES.put(CoreService.SERVICE_NAME, Arrays.asList(coreInfos));
+        String[] binaryInfos = new String[] { BinaryStoreService.INFO_SIZE, BinaryStoreService.INFO_FILES };
+        STATS_NAMES.put(BinaryStoreService.SERVICE_NAME, Arrays.asList(binaryInfos));
     }
     
     @Override

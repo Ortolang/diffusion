@@ -2839,8 +2839,23 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     public Map<String, String> getServiceInfos() {
-        // TODO provide infos about workspaces (created, published, etc...)
-        return Collections.emptyMap();
+        Map<String, String>infos = new HashMap<String, String> ();
+        try {
+            infos.put(INFO_WORKSPACES_ALL, Long.toString(registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE), null)));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_WORKSPACES_ALL, e); 
+        }
+        try {
+            infos.put(INFO_COLLECTIONS_ALL, Long.toString(registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE), null)));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_COLLECTIONS_ALL, e);
+        }
+        try {
+            infos.put(INFO_OBJECTS_ALL, Long.toString(registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE), null)));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_OBJECTS_ALL, e);
+        }
+        return infos;
     }
 
     @Override

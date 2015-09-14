@@ -66,6 +66,10 @@ import fr.ortolang.diffusion.OrtolangService;
 public interface BinaryStoreService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "binary-store";
+	
+	public static final String INFO_PATH = "path";
+	public static final String INFO_SIZE = "size";
+	public static final String INFO_FILES = "files";
 
 	/**
 	 * Check that this hash exists in the store.<br/>

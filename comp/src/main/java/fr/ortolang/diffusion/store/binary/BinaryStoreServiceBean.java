@@ -43,7 +43,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -351,6 +351,24 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 		}
 	}
 	
+	private long getStoreNbFiles() throws IOException {
+	    long nbfiles = Files.walk(base).count();
+	    return nbfiles;
+	}
+	
+	private long getStoreSize() throws IOException {
+        long size = Files.walk(base).mapToLong(this::size).sum();
+        return size;
+    }
+	
+	private long size(Path p) {
+	    try {
+	        return Files.size(p);
+	    } catch ( Exception e ) {
+	        return 0;
+	    }
+	}
+	
 	//Service methods
     
     @Override
@@ -360,8 +378,19 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
     
     @Override
     public Map<String, String> getServiceInfos() {
-        //TODO provide infos about active connections, config, ports, etc...
-        return Collections.emptyMap();
+        Map<String, String>infos = new HashMap<String, String> ();
+        infos.put(INFO_PATH, this.base.toString());
+        try {
+            infos.put(INFO_FILES, Long.toString(getStoreNbFiles()));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_FILES, e);
+        }
+        try {
+            infos.put(INFO_SIZE, Long.toString(getStoreSize()));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_SIZE, e);
+        }
+       return infos;
     }
 
     @Override
