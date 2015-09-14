@@ -212,7 +212,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 					if (!collectionCreationCache.contains(current)) {
 						try {
 							getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, current);
-						} catch (InvalidPathException e) {
+						} catch (PathNotFoundException e) {
 							getCoreService().createCollection(wskey, current);
 						}
 						collectionCreationCache.add(current);
