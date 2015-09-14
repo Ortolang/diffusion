@@ -31,9 +31,7 @@ import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.statistics.entity.StatisticValue;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 
@@ -187,12 +185,12 @@ public class StatisticsServiceBean implements StatisticsService {
     }
 
     @Override
-    public OrtolangObject findObject(String key) throws OrtolangException, AccessDeniedException, KeyNotFoundException {
+    public OrtolangObject findObject(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");
     }
 
     @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");
     }
 

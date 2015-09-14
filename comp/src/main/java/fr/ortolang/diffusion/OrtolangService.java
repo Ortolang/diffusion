@@ -38,9 +38,6 @@ package fr.ortolang.diffusion;
 
 import java.util.Map;
 
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-
 /**
  * <p>
  * Base interface for all services of the platform. A DiffusionService is responsible for exposing its name, the object types name it 
@@ -60,8 +57,8 @@ public interface OrtolangService {
 	
 	public abstract String[] getObjectPermissionsList(String type) throws OrtolangException;
 
-	public abstract OrtolangObject findObject(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException;
+	public abstract OrtolangObject findObject(String key) throws OrtolangException;
 
-    public abstract OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException;
+    public abstract OrtolangObjectSize getSize(String key) throws OrtolangException;
 	
 }

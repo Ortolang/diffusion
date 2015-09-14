@@ -67,7 +67,6 @@ import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 @Local(RegistryService.class)
 @Stateless(name = RegistryService.SERVICE_NAME)
@@ -631,12 +630,12 @@ public class RegistryServiceBean implements RegistryService {
     }
 
     @Override
-    public OrtolangObject findObject(String key) throws OrtolangException, AccessDeniedException, KeyNotFoundException {
+    public OrtolangObject findObject(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");
     }
 
     @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");
     }
 

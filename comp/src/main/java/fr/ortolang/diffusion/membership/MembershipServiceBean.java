@@ -1045,8 +1045,8 @@ public class MembershipServiceBean implements MembershipService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public OrtolangObject findObject(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
-		try {
+	public OrtolangObject findObject(String key) throws OrtolangException {
+	    try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
 			if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
@@ -1062,14 +1062,14 @@ public class MembershipServiceBean implements MembershipService {
 			}
 
 			throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-		} catch (MembershipServiceException | RegistryServiceException e) {
+		} catch (MembershipServiceException | RegistryServiceException | KeyNotFoundException | AccessDeniedException e) {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+	public OrtolangObjectSize getSize(String key) throws OrtolangException {
 		LOGGER.log(Level.FINE, "calculating size for object with key [" + key + "]");
 		try {
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -1093,7 +1093,7 @@ public class MembershipServiceBean implements MembershipService {
 				}
 			}
 			return ortolangObjectSize;
-		} catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException e) {
+		} catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException | AccessDeniedException | KeyNotFoundException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error while calculating object size", e);
 			throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
 		}

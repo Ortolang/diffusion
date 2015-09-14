@@ -322,25 +322,25 @@ public class BrowserServiceBean implements BrowserService {
 	}
 
 	@Override
-	public OrtolangObject findObject(String key) throws OrtolangException, AccessDeniedException, KeyNotFoundException {
+	public OrtolangObject findObject(String key) throws OrtolangException {
 		LOGGER.log(Level.FINE, "trying to find object for key [" + key + "]");
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			OrtolangService service = OrtolangServiceLocator.findService(identifier.getService());
 			return service.findObject(key);
-		} catch (RegistryServiceException e) {
+		} catch (RegistryServiceException | KeyNotFoundException e) {
 			throw new OrtolangException("unable to find object for key [" + key + "]", e);
 		}
 	}
 
     @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
         LOGGER.log(Level.FINE, "trying to find object size for key [" + key + "]");
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             OrtolangService service = OrtolangServiceLocator.findService(identifier.getService());
             return service.getSize(key);
-        } catch (RegistryServiceException e) {
+        } catch (RegistryServiceException | KeyNotFoundException e) {
             throw new OrtolangException("unable to find object size for key [" + key + "]", e);
         }
     }

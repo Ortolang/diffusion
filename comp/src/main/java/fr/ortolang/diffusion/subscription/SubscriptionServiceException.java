@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
+@SuppressWarnings("serial")
 public class SubscriptionServiceException extends Exception {
 
     public SubscriptionServiceException() {

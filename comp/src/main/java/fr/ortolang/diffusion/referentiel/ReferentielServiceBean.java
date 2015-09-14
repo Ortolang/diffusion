@@ -163,7 +163,7 @@ public class ReferentielServiceBean implements ReferentielService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public OrtolangObject findObject(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+    public OrtolangObject findObject(String key) throws OrtolangException {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
 
@@ -176,13 +176,13 @@ public class ReferentielServiceBean implements ReferentielService {
             }
 
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-        } catch (ReferentielServiceException | RegistryServiceException e) {
+        } catch (ReferentielServiceException | RegistryServiceException | KeyNotFoundException e) {
             throw new OrtolangException("unable to find an object for key " + key);
         }
     }
 
     @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
         return null;
     }
 

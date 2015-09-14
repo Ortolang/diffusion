@@ -267,7 +267,7 @@ public class FormServiceBean implements FormService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public OrtolangObject findObject(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+	public OrtolangObject findObject(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
@@ -280,7 +280,7 @@ public class FormServiceBean implements FormService {
 			}
 
 			throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-		} catch (FormServiceException | RegistryServiceException e) {
+		} catch (FormServiceException | RegistryServiceException | KeyNotFoundException e) {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}

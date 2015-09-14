@@ -640,7 +640,7 @@ public class RuntimeServiceBean implements RuntimeService {
 	}
 
 	@Override
-	public OrtolangObject findObject(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+	public OrtolangObject findObject(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
@@ -653,7 +653,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			}
 
 			throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-		} catch (RuntimeServiceException | RegistryServiceException e) {
+		} catch (RuntimeServiceException | RegistryServiceException | KeyNotFoundException | AccessDeniedException e) {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}

@@ -117,15 +117,10 @@ public class CoreServiceTest {
 		jar.addPackage("fr.ortolang.diffusion.store.binary");
 		jar.addPackage("fr.ortolang.diffusion.store.binary.hash");
 		jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
-//		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreDocumentBuilder");
-//		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreService");
-//		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreServiceAdmin");
-//		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreServiceBean");
 		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreServiceException");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
         jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreDocumentBuilder");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreService");
-		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceAdmin");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
 		jar.addAsResource("config.properties");

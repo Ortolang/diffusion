@@ -72,7 +72,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
-import org.activiti.engine.impl.juel.TreeBuilderException;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -466,7 +465,8 @@ public class CoreServiceBean implements CoreService {
                     LOGGER.log(Level.INFO, "updating workspace metadata for root collection");
                     updateMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
                 }
-            } catch (BinaryStoreServiceException | DataCollisionException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | MetadataFormatException | PathNotFoundException e) {
+            } catch (BinaryStoreServiceException | DataCollisionException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | MetadataFormatException
+                    | PathNotFoundException e) {
                 throw new CoreServiceException("cannot create workspace metadata for collection root : " + e.getMessage());
             }
 
@@ -1112,47 +1112,6 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.FINE, "calculating size for object with key [" + key + "]");
-        try {
-            List<String> subjects = membership.getConnectedIdentifierSubjects();
-            OrtolangObjectIdentifier cidentifier = registry.lookup(key);
-            if (!cidentifier.getService().equals(CoreService.SERVICE_NAME)) {
-                throw new OrtolangException("object identifier " + cidentifier + " does not refer to service " + getServiceName());
-            }
-            OrtolangObjectSize ortolangObjectSize = new OrtolangObjectSize();
-            switch (cidentifier.getType()) {
-            case DataObject.OBJECT_TYPE: {
-                authorisation.checkPermission(key, subjects, "read");
-                DataObject dataObject = em.find(DataObject.class, cidentifier.getId());
-                ortolangObjectSize.addElement(DataObject.OBJECT_TYPE, dataObject.getSize());
-                break;
-            }
-            case Collection.OBJECT_TYPE: {
-                ortolangObjectSize = getCollectionSize(key, cidentifier, ortolangObjectSize, subjects);
-                break;
-            }
-            case Workspace.OBJECT_TYPE: {
-                authorisation.checkPermission(key, subjects, "read");
-                Workspace workspace = em.find(Workspace.class, cidentifier.getId());
-                ortolangObjectSize = getCollectionSize(workspace.getHead(), registry.lookup(workspace.getHead()), ortolangObjectSize, subjects);
-                for (SnapshotElement snapshotElement : workspace.getSnapshots()) {
-                    ortolangObjectSize = getCollectionSize(snapshotElement.getKey(), registry.lookup(snapshotElement.getKey()), ortolangObjectSize, subjects);
-                }
-                ortolangObjectSize.addElement("members", workspace.getMembers().split(",").length);
-                ortolangObjectSize.addElement("snapshots", workspace.getSnapshots().size());
-                break;
-            }
-            }
-            return ortolangObjectSize;
-        } catch (CoreServiceException | MembershipServiceException | RegistryServiceException | AuthorisationServiceException e) {
-            LOGGER.log(Level.SEVERE, "unexpected error while calculating object size", e);
-            throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
-        }
-    }
-
-    @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public String resolvePathFromCollection(String key, String path) throws KeyNotFoundException, CoreServiceException, AccessDeniedException, InvalidPathException, PathNotFoundException {
         LOGGER.log(Level.FINE, "reading collection with key [" + key + "]");
@@ -1599,7 +1558,7 @@ public class CoreServiceBean implements CoreService {
                 LOGGER.log(Level.FINEST, "no changes detected with current object, nothing to do");
             }
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
-                | TreeBuilderException | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException e) {
+                | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while reading object", e);
             throw new CoreServiceException("unable to read object into workspace [" + workspace + "] at path [" + path + "]", e);
         }
@@ -2617,8 +2576,8 @@ public class CoreServiceBean implements CoreService {
             notification.throwEvent(mdelement.getKey(), caller, MetadataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "delete"));
             notification.throwEvent(element.getKey(), caller, tidentifier.getType(), OrtolangEvent.buildEventType(tidentifier.getService(), tidentifier.getType(), "remove-metadata"),
                     argumentsBuilder.build());
-        } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
-                | TreeBuilderException | CloneException | IndexingServiceException e) {
+        } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException | CloneException
+                | IndexingServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred during metadata creation", e);
             throw new CoreServiceException("unable to create metadata into workspace [" + workspace + "] for path [" + path + "]", e);
@@ -2839,20 +2798,20 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     public Map<String, String> getServiceInfos() {
-        Map<String, String>infos = new HashMap<String, String> ();
+        Map<String, String> infos = new HashMap<String, String>();
         try {
             infos.put(INFO_WORKSPACES_ALL, Long.toString(registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE), null)));
-        } catch ( Exception e ) { 
-            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_WORKSPACES_ALL, e); 
+        } catch (Exception e) {
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_WORKSPACES_ALL, e);
         }
         try {
             infos.put(INFO_COLLECTIONS_ALL, Long.toString(registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE), null)));
-        } catch ( Exception e ) { 
+        } catch (Exception e) {
             LOGGER.log(Level.INFO, "unable to collect info: " + INFO_COLLECTIONS_ALL, e);
         }
         try {
             infos.put(INFO_OBJECTS_ALL, Long.toString(registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE), null)));
-        } catch ( Exception e ) { 
+        } catch (Exception e) {
             LOGGER.log(Level.INFO, "unable to collect info: " + INFO_OBJECTS_ALL, e);
         }
         return infos;
@@ -2875,7 +2834,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public OrtolangObject findObject(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+    public OrtolangObject findObject(String key) throws OrtolangException {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
 
@@ -2904,8 +2863,49 @@ public class CoreServiceBean implements CoreService {
             }
 
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-        } catch (CoreServiceException | RegistryServiceException e) {
+        } catch (CoreServiceException | RegistryServiceException | KeyNotFoundException | AccessDeniedException e) {
             throw new OrtolangException("unable to find an object for key " + key);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
+        LOGGER.log(Level.FINE, "calculating size for object with key [" + key + "]");
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            OrtolangObjectIdentifier cidentifier = registry.lookup(key);
+            if (!cidentifier.getService().equals(CoreService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + cidentifier + " does not refer to service " + getServiceName());
+            }
+            OrtolangObjectSize ortolangObjectSize = new OrtolangObjectSize();
+            switch (cidentifier.getType()) {
+            case DataObject.OBJECT_TYPE: {
+                authorisation.checkPermission(key, subjects, "read");
+                DataObject dataObject = em.find(DataObject.class, cidentifier.getId());
+                ortolangObjectSize.addElement(DataObject.OBJECT_TYPE, dataObject.getSize());
+                break;
+            }
+            case Collection.OBJECT_TYPE: {
+                ortolangObjectSize = getCollectionSize(key, cidentifier, ortolangObjectSize, subjects);
+                break;
+            }
+            case Workspace.OBJECT_TYPE: {
+                authorisation.checkPermission(key, subjects, "read");
+                Workspace workspace = em.find(Workspace.class, cidentifier.getId());
+                ortolangObjectSize = getCollectionSize(workspace.getHead(), registry.lookup(workspace.getHead()), ortolangObjectSize, subjects);
+                for (SnapshotElement snapshotElement : workspace.getSnapshots()) {
+                    ortolangObjectSize = getCollectionSize(snapshotElement.getKey(), registry.lookup(snapshotElement.getKey()), ortolangObjectSize, subjects);
+                }
+                ortolangObjectSize.addElement("members", workspace.getMembers().split(",").length);
+                ortolangObjectSize.addElement("snapshots", workspace.getSnapshots().size());
+                break;
+            }
+            }
+            return ortolangObjectSize;
+        } catch (CoreServiceException | MembershipServiceException | RegistryServiceException | AuthorisationServiceException | AccessDeniedException | KeyNotFoundException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error while calculating object size", e);
+            throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
         }
     }
 
