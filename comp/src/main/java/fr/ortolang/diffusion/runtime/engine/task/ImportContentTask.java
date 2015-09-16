@@ -64,7 +64,8 @@ public class ImportContentTask extends RuntimeEngineTask {
 		}
 		
 		boolean partial = false;
-		try {
+		StringBuilder report = new StringBuilder();
+        try {
 			String line = null;
 			boolean needcommit;
 			long tscommit = System.currentTimeMillis();
@@ -79,38 +80,46 @@ public class ImportContentTask extends RuntimeEngineTask {
 							createWorkspace(operation[1], operation[2], operation[3], operation[4], operation[5]);
 							execution.setVariable(WORKSPACE_KEY_PARAM_NAME, wskey);
 							needcommit = true;
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "create-object":
 							createObject(bag, operation[1], operation[2], operation[3]);
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "update-object":
 							updateObject(bag, operation[1], operation[2]);
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "delete-object":
 							deleteObject(operation[2]);
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "create-metadata":
 							createMetadata(bag, operation[1], operation[2], operation[3]);
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "update-metadata":
 							updateMetadata(bag, operation[1], operation[2], operation[3]);
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "delete-metadata":
 							deleteMetadata(operation[2], operation[3]);
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "snapshot-workspace":
 							snapshotWorkspace(operation[1]);
 							purgeCache();
 							needcommit = true;
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						default:
 							partial = true;
-							throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unknown operation: " + line));
+							report.append("[ERROR] " + line + " \r\n\t -> Unknown operation\r\n");
 					}
 				} catch ( Exception e ) {
-					LOGGER.log(Level.SEVERE, "ImportContentTask exception raised", e);
+					LOGGER.log(Level.FINE, "ImportContentTask exception raised", e);
 					partial = true;
-					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Error while executing operation: " + line));
+					report.append("[ERROR] " + line + " \r\n\t -> Message: " + e.getMessage() + "\r\n");
 				}
 				if ( System.currentTimeMillis() - tscommit > 30000 ) {
 					LOGGER.log(Level.FINE, "current transaction exceed 30sec, need commit.");
@@ -129,6 +138,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			}
 		} catch (IOException e) {
 			partial = true;
+			report.append("[ERROR] unable to read script \r\n\t -> Message: " + e.getMessage() + "\r\n");
 			LOGGER.log(Level.SEVERE, "- unexpected error during reading operations script", e);
 		}
 		try {
@@ -146,7 +156,12 @@ public class ImportContentTask extends RuntimeEngineTask {
 		}
 		LOGGER.log(Level.FINE, "- import content done");
 		execution.setVariable("partial", partial);
-		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import content done"));
+		if ( partial ) {
+		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some content has not been imported (see trace for detail)"));
+		} else {
+		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All content imported successfully"));
+		}
+		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), report.toString(), null));
 	}
 
 	@Override

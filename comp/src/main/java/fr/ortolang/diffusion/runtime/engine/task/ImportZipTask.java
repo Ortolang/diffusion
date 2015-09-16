@@ -47,10 +47,14 @@ public class ImportZipTask extends RuntimeEngineTask {
 		} catch (InvalidPathException e) {
 			throw new RuntimeEngineTaskException("parameter " + ZIP_ROOT_PARAM_NAME + " value " + root + " is not a valid path");
 		}
+		StringBuilder report = new StringBuilder();
 		boolean overwrite = false;
 		if (execution.hasVariable(ZIP_OVERWRITE_PARAM_NAME)) {
-		    LOGGER.log(Level.INFO, "zip import will OVERWRITE existing files");
-			overwrite = Boolean.parseBoolean(execution.getVariable(ZIP_OVERWRITE_PARAM_NAME, String.class));
+		    overwrite = Boolean.parseBoolean(execution.getVariable(ZIP_OVERWRITE_PARAM_NAME, String.class));
+		    if ( overwrite ) {
+		        LOGGER.log(Level.FINE, "zip import will OVERWRITE existing files");
+	            report.append("zip import with OVERWRITING existing files\r\n");
+		    }
 		}
 		
 		try {
@@ -85,8 +89,10 @@ public class ImportZipTask extends RuntimeEngineTask {
 									String hash = getCoreService().put(is);
 									is.close();
 									getCoreService().updateDataObject(wskey, opath.build(), hash);
+									report.append("[DONE] object updated at path: " + opath.build() + "\r\n");
 								} catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException e4 ) {
 									partial = true;
+									report.append("[ERROR] object updated failed for path: " + opath.build() + "\r\n\t-> message: " + e4.getMessage() + "\r\n");
 								}
 							}
 						} catch ( PathNotFoundException e3 ) {
@@ -106,6 +112,7 @@ public class ImportZipTask extends RuntimeEngineTask {
 												getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, current);
 											} catch (InvalidPathException | PathNotFoundException e2) {
 												getCoreService().createCollection(wskey, current);
+												report.append("[DONE] collection created at path: " + current + "\r\n");
 											}
 											cache.add(current);
 										}
@@ -113,13 +120,16 @@ public class ImportZipTask extends RuntimeEngineTask {
 								}
 								String current = opath.build();
 								getCoreService().createDataObject(wskey, current, hash);
+								report.append("[DONE] data object created at path: " + current + "\r\n");
 							} catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | PathAlreadyExistsException e4 ) {
 								partial = true;
+								report.append("[ERROR] create object failed for path: " + opath.build() + "\r\n\t-> message: " + e4.getMessage() + "\r\n");
 							}
 						} 
 					}
 				} catch (InvalidPathException | CoreServiceException | AccessDeniedException e2) {
 					partial = true;
+					report.append("[ERROR] unexpected error: " + e2.getMessage() + "\r\n");
 				}
 				if ( System.currentTimeMillis() - tscommit > 300000 ) {
 					LOGGER.log(Level.FINE, "current transaction exceed 5min, need commit.");
@@ -138,9 +148,10 @@ public class ImportZipTask extends RuntimeEngineTask {
 			}
 			zip.close();
 			if ( partial ) {
-				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some objects has not been imported"));
+				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some objects has not been imported (see trace for detail)"));
 			}
 			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import Zip content done"));
+			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), report.toString(), null));
 		} catch (IOException e1) {
 			throw new RuntimeEngineTaskException("error reading zip file: " + e1.getMessage());
 		}

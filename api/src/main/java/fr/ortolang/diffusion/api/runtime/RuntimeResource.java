@@ -36,6 +36,39 @@ package fr.ortolang.diffusion.api.runtime;
  * #L%
  */
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.Resource;
+import javax.ejb.EJB;
+import javax.transaction.UserTransaction;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
+
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.core.CoreService;
@@ -51,31 +84,6 @@ import fr.ortolang.diffusion.runtime.entity.ProcessType;
 import fr.ortolang.diffusion.runtime.entity.RemoteProcess;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
-
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
-import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
-
-import javax.annotation.Resource;
-import javax.ejb.EJB;
-import javax.transaction.UserTransaction;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Path("/runtime")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -219,12 +227,20 @@ public class RuntimeResource {
 	
 	@GET
 	@Path("/processes/{key}")
-	public Response listInstances(@PathParam("key") String key) throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
+	public Response readProcess(@PathParam("key") String key) throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
 		LOGGER.log(Level.INFO, "GET /runtime/processes/" + key);
 		Process process = runtime.readProcess(key);
 		ProcessRepresentation representation = ProcessRepresentation.fromProcess(process);
 		return Response.ok(representation).build();
 	}
+	
+	@GET
+    @Path("/processes/{key}/trace")
+    public Response readProcessTrace(@PathParam("key") String key) throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "GET /runtime/processes/" + key + "/trace");
+        File trace = runtime.readProcessTrace(key);
+        return Response.ok(trace).header("Content-Type", "text/plain").header("Content-Length", trace.length()).header("Accept-Ranges", "bytes").build();
+    }
 	
 	@GET
 	@Path("/tasks")

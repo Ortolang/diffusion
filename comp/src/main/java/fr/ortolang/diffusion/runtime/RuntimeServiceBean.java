@@ -36,44 +36,69 @@ package fr.ortolang.diffusion.runtime;
  * #L%
  */
 
-import fr.ortolang.diffusion.*;
-import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
-import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.membership.MembershipServiceException;
-import fr.ortolang.diffusion.notification.NotificationService;
-import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.registry.*;
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngine;
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngineException;
-import fr.ortolang.diffusion.runtime.entity.HumanTask;
-import fr.ortolang.diffusion.runtime.entity.Process;
-import fr.ortolang.diffusion.runtime.entity.RemoteProcess;
-import fr.ortolang.diffusion.runtime.entity.Process.State;
-import fr.ortolang.diffusion.runtime.entity.ProcessType;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
-import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-
-import org.activiti.engine.task.IdentityLink;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
-import javax.ejb.*;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.enterprise.concurrent.ContextService;
 import javax.enterprise.concurrent.ManagedScheduledExecutorService;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.activiti.engine.task.IdentityLink;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.notification.NotificationService;
+import fr.ortolang.diffusion.notification.NotificationServiceException;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyLockedException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngine;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineException;
+import fr.ortolang.diffusion.runtime.entity.HumanTask;
+import fr.ortolang.diffusion.runtime.entity.Process;
+import fr.ortolang.diffusion.runtime.entity.Process.State;
+import fr.ortolang.diffusion.runtime.entity.ProcessType;
+import fr.ortolang.diffusion.runtime.entity.RemoteProcess;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 
 
 @Local(RuntimeService.class)
@@ -83,11 +108,12 @@ import java.util.logging.Logger;
 public class RuntimeServiceBean implements RuntimeService {
 	
 	private static final Logger LOGGER = Logger.getLogger(RuntimeServiceBean.class.getName());
+	public static final String DEFAULT_RUNTIME_HOME = "/runtime";
 	
+	private static final String TRACE_FILE_EXTENSION = ".log";
 	private static final String[] OBJECT_TYPE_LIST = new String[] { Process.OBJECT_TYPE };
 	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
 			{ Process.OBJECT_TYPE, "read,update,delete,start" } };
-	
 	
 	@EJB
 	private RegistryService registry;
@@ -107,7 +133,27 @@ public class RuntimeServiceBean implements RuntimeService {
 	private ManagedScheduledExecutorService executor;
 	@Resource
 	private ContextService contextService;
-	
+	private Path base;
+    
+	public RuntimeServiceBean() {
+        LOGGER.log(Level.FINE, "Instanciating runtime service");
+        this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_RUNTIME_HOME);
+    }
+
+    public Path getBase() {
+        return base;
+    }
+    
+    @PostConstruct
+    public void init() {
+        LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
+        try {
+            Files.createDirectories(base);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to initialize runtime service", e);
+        }
+    }
+    
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void importProcessTypes() throws RuntimeServiceException {
@@ -153,7 +199,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			process.setName(name);
 			process.setType(type);
 			process.setState(State.PENDING);
-			process.appendLog("## PROCESS CREATED BY " + caller + " ON " + new Date());
+			process.appendLog(new Date() + "  PROCESS CREATED BY " + caller);
 			em.persist(process);
 			
 			registry.register(key, new OrtolangObjectIdentifier(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, id), caller);
@@ -187,7 +233,7 @@ public class RuntimeServiceBean implements RuntimeService {
 				throw new RuntimeServiceException("unable to start process, state is not " + State.PENDING);
 			}
 			process.setKey(key);
-			process.appendLog("## PROCESS STATE CHANGED TO " + State.SUBMITTED + " BY " + caller + " ON " + new Date());
+			process.appendLog(new Date() + "  PROCESS STATE CHANGED TO " + State.SUBMITTED + " BY " + caller);
 			process.setState(State.SUBMITTED);
 			process.setStart(System.currentTimeMillis());
 			em.persist(process);
@@ -263,6 +309,32 @@ public class RuntimeServiceBean implements RuntimeService {
 	}
 	
 	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public File readProcessTrace(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "Reading trace of process with key: " + key);
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(key, subjects, "read");
+
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, Process.OBJECT_TYPE);
+            Process instance = em.find(Process.class, identifier.getId());
+            if ( instance == null )  {
+                throw new RuntimeServiceException("unable to find a process with id: " + identifier.getId());
+            }
+            Path trace = Paths.get(base.toString(), instance.getId() + TRACE_FILE_EXTENSION);
+            if ( Files.exists(trace) ) {
+                return trace.toFile();
+            } else {
+                throw new RuntimeServiceException("unable to find trace file for process with key: " + key);
+            }
+        } catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while reading process", e);
+            throw new RuntimeServiceException("unable to read process", e);
+        }
+    }
+	
+	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateProcessState(String pid, State state) throws RuntimeServiceException {
 		LOGGER.log(Level.INFO, "Updating state of process with pid: " + pid);
@@ -275,7 +347,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			if(state.equals(State.ABORTED) || state.equals(State.COMPLETED) || state.equals(State.SUSPENDED)) {
 				process.setStop(System.currentTimeMillis());
 			}
-			process.appendLog("## PROCESS STATE CHANGED TO " + state + " ON " + new Date());
+			process.appendLog(new Date() + "  PROCESS STATE CHANGED TO " + state);
 			em.merge(process);
 			
 			String key = registry.lookup(process.getObjectIdentifier());
@@ -288,27 +360,44 @@ public class RuntimeServiceBean implements RuntimeService {
 			throw new RuntimeServiceException("unable to update process state", e);
 		}
 	}
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void appendProcessLog(String pid, String log) throws RuntimeServiceException {
+        LOGGER.log(Level.INFO, "Appending log to process with pid: " + pid);
+        try {
+            Process process = em.find(Process.class, pid);
+            if ( process == null )  {
+                throw new RuntimeServiceException("unable to find a process with id: " + pid);
+            }
+            process.appendLog(log);
+            em.merge(process);
+            
+            String key = registry.lookup(process.getObjectIdentifier());
+            registry.update(key);
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("message", log);
+            notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "log-info"), argumentsBuilder.build());
+        } catch (Exception e) {
+            ctx.setRollbackOnly();
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while appending log to process", e);
+            throw new RuntimeServiceException("unable to append process log", e);
+        }
+    }
 		
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void appendProcessLog(String pid, String log) throws RuntimeServiceException {
-		LOGGER.log(Level.INFO, "Appending log to process with pid: " + pid);
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public void appendProcessTrace(String pid, String trace) throws RuntimeServiceException {
+		LOGGER.log(Level.INFO, "Appending trace to process with pid: " + pid);
 		try {
-			Process process = em.find(Process.class, pid);
-			if ( process == null )  {
-				throw new RuntimeServiceException("unable to find a process with id: " + pid);
-			}
-			process.appendLog(log);
-			em.merge(process);
-			
-			String key = registry.lookup(process.getObjectIdentifier());
-			registry.update(key);
-			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("message", log);
-			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "log-info"), argumentsBuilder.build());
-		} catch (Exception e) {
-			ctx.setRollbackOnly();
-			LOGGER.log(Level.SEVERE, "unexpected error occurred while appending log to process", e);
-			throw new RuntimeServiceException("unable to append process log", e);
+		    Path logfile = Paths.get(base.toString(), pid + TRACE_FILE_EXTENSION);
+		    if ( !Files.exists(logfile) ) {
+		        String head = "## TRACE FILE FOR PROCESS WITH PID: " + pid + "\r\n##\r\n\r\n";
+		        Files.write(logfile, head.getBytes(), StandardOpenOption.CREATE);
+		    }
+		    Files.write(logfile, trace.getBytes(), StandardOpenOption.APPEND);
+		} catch (IOException e) {
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while appending trace to process", e);
+			throw new RuntimeServiceException("unable to append process trace", e);
 		}
 	}
 
@@ -428,7 +517,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			remoteProcess.setToolKey(toolKey);
 			remoteProcess.setToolJobId(toolId);
 			remoteProcess.setState(State.PENDING);
-			remoteProcess.appendLog("## REMOTE PROCESS FOR TOOL " + toolName + " CREATED BY " + caller + " ON " + new Date());
+			remoteProcess.appendLog(new Date() + "  REMOTE PROCESS FOR TOOL " + toolName + " CREATED BY " + caller);
 			em.persist(remoteProcess);
 			
 			registry.register(key, new OrtolangObjectIdentifier(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, id), caller);
@@ -540,12 +629,11 @@ public class RuntimeServiceBean implements RuntimeService {
 			}
 			
 			remoteProcess.setState(state);
-			remoteProcess.appendLog("## REMOTE PROCESS STATE CHANGED TO " + state + " ON " + new Date());
+			remoteProcess.appendLog(new Date() + "  REMOTE PROCESS STATE CHANGED TO " + state);
 			if(start !=null && start != 0){
 				remoteProcess.setStart(start);
 			}
 			if(stop !=null && stop != 0){
-				LOGGER.log(Level.INFO, "Stop : " + stop);
 				remoteProcess.setStop(stop);
 			}
 			em.merge(remoteProcess);
@@ -573,7 +661,6 @@ public class RuntimeServiceBean implements RuntimeService {
 			if ( remoteProcess == null )  {
 				throw new RuntimeServiceException("unable to find a remote process with id: " + identifier.getId());
 			}
-			
 			remoteProcess.appendLog(log);
 			em.merge(remoteProcess);
 			
@@ -599,7 +686,6 @@ public class RuntimeServiceBean implements RuntimeService {
 			if ( remoteProcess == null )  {
 				throw new RuntimeServiceException("unable to find a remote process with id: " + identifier.getId());
 			}
-			
 			remoteProcess.setActivity(name);
 			em.merge(remoteProcess);
 			

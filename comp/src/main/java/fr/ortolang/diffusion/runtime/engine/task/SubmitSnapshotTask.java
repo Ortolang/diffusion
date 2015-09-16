@@ -45,17 +45,24 @@ public class SubmitSnapshotTask extends RuntimeEngineTask {
 
 		StringBuilder report = new StringBuilder();
 		LOGGER.log(Level.FINE, "starting review");
+		boolean partial = false;
 		for (String key : keys) {
 			try {
 				getPublicationService().review(key);
-				report.append("key [").append(key).append("] locked for review\r\n");
+				report.append("[DONE] key [").append(key).append("] locked for review\r\n");
 			} catch (Exception e) {
-				LOGGER.log(Level.WARNING, "key [" + key + "] failed to lock for review: " + e.getMessage());
-				report.append("key [").append(key).append("] failed to lock for review: ").append(e.getMessage()).append("\r\n");
+				LOGGER.log(Level.FINE, "key [" + key + "] failed to lock for review", e);
+				partial = true;
+				report.append("[ERROR] key [").append(key).append("] failed to lock for review: ").append(e.getMessage()).append("\r\n");
 			}
 		}
 		
-		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "lock for review done: \r\n" + report.toString()));
+		if ( partial ) {
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some elements has not been locked for review (see trace for detail)"));
+        } else {
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All elements locked for review succesfully"));
+        }
+        throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "Lock for review report: \r\n" + report.toString(), null));
 	}
 
 	@Override

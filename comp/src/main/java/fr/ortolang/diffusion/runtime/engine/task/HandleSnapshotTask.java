@@ -97,7 +97,8 @@ public class HandleSnapshotTask extends RuntimeEngineTask {
     		} catch (Exception e) {
     			LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
     		}
-    		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "handle generation done report : \r\n" + report.toString()));
+    		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "handle generation done"));
+    		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), report.toString(), null));
     		
 		} catch (SecurityException | IllegalStateException  | EJBTransactionRolledbackException e) {
             throw new RuntimeEngineTaskException("unexpected error occured", e);
