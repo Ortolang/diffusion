@@ -366,7 +366,7 @@ public class WorkspaceResource {
 				default:
 					return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + form.getType()).build();
 				}
-			} catch (InvalidPathException e) {
+			} catch (PathNotFoundException e) {
 				if (form.getType().equals(MetadataObject.OBJECT_TYPE)) {
 					LOGGER.log(Level.FINEST, "unable to create metadata, path: " + npath.build() + " does not exists");
 					return Response.status(Response.Status.BAD_REQUEST).entity("unable to create metadata, path: " + npath.build() + " does not exists").build();
@@ -424,7 +424,7 @@ public class WorkspaceResource {
 					return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + representation.getType()).build();
 			}
 			return Response.ok().build();
-		} catch (InvalidPathException e) {
+		} catch (PathNotFoundException e) {
 			if (representation.getType().equals(Collection.OBJECT_TYPE)) {
 				core.createCollection(wskey, npath.build());
 			} else {
