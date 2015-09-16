@@ -64,7 +64,7 @@ public interface RuntimeService extends OrtolangService {
 	
 	/* Process */
 	
-	public Process createProcess(String key, String type, String name) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	public Process createProcess(String key, String type, String name, String wskey) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
 
 	public void startProcess(String key, Map<String, Object> variables) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
@@ -76,7 +76,9 @@ public interface RuntimeService extends OrtolangService {
 	
 	public void updateProcessActivity(String pid, String name) throws RuntimeServiceException;
 	
-	public List<Process> listProcesses(State sate) throws RuntimeServiceException, AccessDeniedException;
+	public List<Process> listCallerProcesses(State state) throws RuntimeServiceException, AccessDeniedException;
+	
+	public List<Process> listWorkspaceProcesses(String wskey, State state) throws RuntimeServiceException, AccessDeniedException;
 	
 	public Process readProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
 	
@@ -106,4 +108,11 @@ public interface RuntimeService extends OrtolangService {
 
 	public void updateRemoteProcessActivity(String key, String name) throws RuntimeServiceException;
 
-	public void appendRemoteProcessLog(String key, String log) throws RuntimeServiceException;}
+	public void appendRemoteProcessLog(String key, String log) throws RuntimeServiceException;
+
+    /* System */
+
+    //public void systemKillProcess(String key) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
+
+
+}

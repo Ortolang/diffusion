@@ -67,10 +67,9 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import fr.ortolang.diffusion.core.entity.*;
-
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
+import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -90,7 +89,15 @@ import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.core.PathAlreadyExistsException;
 import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.PathNotFoundException;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.Link;
+import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
+import fr.ortolang.diffusion.core.entity.MetadataSource;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
@@ -467,6 +474,27 @@ public class WorkspaceResource {
 		core.snapshotWorkspace(wskey);
 		return Response.ok().build();
 	}
+	
+	@GET
+    @Path("/{alias}/ftp")
+    public Response getFtpUrl(@PathParam(value = "alias") String alias) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, MembershipServiceException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + alias + "/ftp");
+        StringBuilder url = new StringBuilder();
+        url.append("ftp://");
+        String connectedIdentifier = membership.getProfileKeyForConnectedIdentifier();
+        if ( connectedIdentifier.equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER )) {
+            url.append("anonymous").append(":").append("password").append("@");
+        } else {
+            url.append(membership.getProfileKeyForConnectedIdentifier()).append(":").append(membership.generateConnectedIdentifierTOTP()).append("@");
+        }
+        url.append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_HOST)).append(":");
+        url.append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_PORT)).append("/");
+        url.append(alias);
+        String[] ftpinfos = new String[2];
+        ftpinfos[0] = "url";
+        ftpinfos[1] = url.toString();
+        return Response.ok(ftpinfos).build();
+    }
 
 	@GET
 	@Path("/{alias}/available")

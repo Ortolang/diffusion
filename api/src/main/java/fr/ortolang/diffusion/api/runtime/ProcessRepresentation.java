@@ -44,104 +44,114 @@ import fr.ortolang.diffusion.runtime.entity.Process;
 @XmlRootElement(name = "process")
 public class ProcessRepresentation {
 
-	@XmlAttribute
-	private String key;
-	private String name;
-	private String initier;
-	private String type;
-	private String log;
-	private String state;
-	private String activity;
-	private long start;
-	private long stop;
-	
-	public ProcessRepresentation() {
-	}
+    @XmlAttribute
+    private String key;
+    private String name;
+    private String initier;
+    private String type;
+    private String workspace;
+    private String log;
+    private String state;
+    private String activity;
+    private long start;
+    private long stop;
 
-	public String getKey() {
-		return key;
-	}
+    public ProcessRepresentation() {
+    }
 
-	public void setKey(String key) {
-		this.key = key;
-	}
+    public String getKey() {
+        return key;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setKey(String key) {
+        this.key = key;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getInitier() {
-		return initier;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setInitier(String initier) {
-		this.initier = initier;
-	}
+    public String getInitier() {
+        return initier;
+    }
 
-	public String getType() {
-		return type;
-	}
+    public void setInitier(String initier) {
+        this.initier = initier;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public String getType() {
+        return type;
+    }
 
-	public String getLog() {
-		return log;
-	}
+    public void setType(String type) {
+        this.type = type;
+    }
 
-	public void setLog(String log) {
-		this.log = log;
-	}
+    public String getLog() {
+        return log;
+    }
 
-	public String getState() {
-		return state;
-	}
+    public void setLog(String log) {
+        this.log = log;
+    }
 
-	public void setState(String state) {
-		this.state = state;
-	}
-	
-	public String getActivity() {
-		return activity;
-	}
+    public String getState() {
+        return state;
+    }
 
-	public void setActivity(String activity) {
-		this.activity = activity;
-	}
+    public void setState(String state) {
+        this.state = state;
+    }
 
-	public long getStart() {
-		return this.start;
-	}	
+    public String getWorkspace() {
+        return workspace;
+    }
 
-	public void setStart(long start) {
-		this.start = start;
-	}
+    public void setWorkspace(String workspace) {
+        this.workspace = workspace;
+    }
 
-	public long getStop() {
-		return this.stop;
-	}
+    public String getActivity() {
+        return activity;
+    }
 
-	public void setStop(long stop) {
-		this.stop = stop;
-	}
-	public static ProcessRepresentation fromProcess(Process instance) {
-		ProcessRepresentation representation = new ProcessRepresentation();
-		representation.setKey(instance.getKey());
-		representation.setName(instance.getName());
-		representation.setInitier(instance.getInitier());
-		representation.setLog(instance.getLog());
-		representation.setState(instance.getState().name());
-		representation.setActivity(instance.getActivity());
-		representation.setType(instance.getType());
-		representation.setStart(instance.getStart());
-		representation.setStop(instance.getStop());
-		return representation;
-	}
+    public void setActivity(String activity) {
+        this.activity = activity;
+    }
 
+    public long getStart() {
+        return this.start;
+    }
+
+    public void setStart(long start) {
+        this.start = start;
+    }
+
+    public long getStop() {
+        return this.stop;
+    }
+
+    public void setStop(long stop) {
+        this.stop = stop;
+    }
+
+    public static ProcessRepresentation fromProcess(Process instance) {
+        ProcessRepresentation representation = new ProcessRepresentation();
+        representation.setKey(instance.getKey());
+        representation.setName(instance.getName());
+        representation.setInitier(instance.getInitier());
+        representation.setLog(instance.getLog());
+        representation.setState(instance.getState().name());
+        representation.setWorkspace(instance.getWorkspace());
+        representation.setActivity(instance.getActivity());
+        representation.setType(instance.getType());
+        representation.setStart(instance.getStart());
+        representation.setStop(instance.getStop());
+        return representation;
+    }
 
 }

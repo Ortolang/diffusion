@@ -116,13 +116,21 @@ public class RuntimeResource {
 	
 	@GET
 	@Path("/processes")
-	public Response listProcesses(@QueryParam("state") String state) throws RuntimeServiceException, AccessDeniedException {
+	public Response listProcesses(@QueryParam("wskey") String wskey, @QueryParam("state") String state) throws RuntimeServiceException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "GET /runtime/processes");
 		List<Process> instances;
-		if ( state != null ) {
-			instances = runtime.listProcesses(State.valueOf(state));
+		if ( wskey != null ) {
+    		if ( state != null ) {
+    			instances = runtime.listCallerProcesses(State.valueOf(state));
+    		} else {
+    			instances = runtime.listCallerProcesses(null);
+    		}
 		} else {
-			instances = runtime.listProcesses(null);
+		    if ( state != null ) {
+                instances = runtime.listWorkspaceProcesses(wskey, State.valueOf(state));
+            } else {
+                instances = runtime.listWorkspaceProcesses(wskey, null);
+            }
 		}
 		
 		GenericCollectionRepresentation<ProcessRepresentation> representation = new GenericCollectionRepresentation<ProcessRepresentation>();
@@ -140,7 +148,7 @@ public class RuntimeResource {
 	@POST
 	@Path("/processes")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response createProcess(MultivaluedMap<String, String> params) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException {
+	public Response startInstance(MultivaluedMap<String, String> params) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException {
 		LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /runtime/processes");
 		String key = UUID.randomUUID().toString();
 		
@@ -156,6 +164,10 @@ public class RuntimeResource {
 		} else {
 			name = params.remove("process-name").get(0);
 		}
+		String wskey = null;
+        if ( params.containsKey("wskey") ) {
+            wskey = params.remove("wskey").get(0);
+        }
 		
 		Map<String, Object> mparams = new HashMap<String, Object> ();
 		for ( Entry<String, List<String>> entry : params.entrySet() ) {
@@ -169,7 +181,7 @@ public class RuntimeResource {
 		}
 		
 		try {
-			Process process = runtime.createProcess(key, definition, name);
+			Process process = runtime.createProcess(key, definition, name, wskey);
 			runtime.startProcess(key, mparams);
 			URI newly = ApiUriBuilder.getApiUriBuilder().path(RuntimeResource.class).path("processes").path(key).build();
 			return Response.created(newly).entity(ProcessRepresentation.fromProcess(process)).build();
@@ -200,6 +212,10 @@ public class RuntimeResource {
 		} else {
 			name = form.remove("process-name").get(0).getBodyAsString();
 		}
+		String wskey = null;
+        if ( form.containsKey("wskey") ) {
+            wskey = form.remove("wskey").get(0).getBodyAsString();
+        }
 		
 		for ( Entry<String, List<InputPart>> entry : form.entrySet() ) {
 			if ( entry.getValue().size() > 0 ) {
@@ -219,7 +235,7 @@ public class RuntimeResource {
 				mparams.put(entry.getKey(), values.substring(0, values.length()-1));
 			}
 		}
-		Process process = runtime.createProcess(key, definition, name);
+		Process process = runtime.createProcess(key, definition, name, wskey);
 		runtime.startProcess(key, mparams);
 		URI newly = ApiUriBuilder.getApiUriBuilder().path(RuntimeResource.class).path("processes").path(key).build();
 		return Response.created(newly).entity(ProcessRepresentation.fromProcess(process)).build();

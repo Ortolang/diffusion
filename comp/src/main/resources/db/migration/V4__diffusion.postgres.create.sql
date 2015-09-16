@@ -98,6 +98,7 @@
         initier varchar(255),
         log text,
         name varchar(255),
+        workspace varchar(255),
         progress int4 not null,
         start int8 not null,
         state int4,

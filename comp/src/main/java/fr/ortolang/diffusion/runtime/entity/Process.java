@@ -57,13 +57,16 @@ import fr.ortolang.diffusion.runtime.RuntimeService;
 @NamedQueries({ @NamedQuery(name = "findAllProcesses", query = "select p from Process p"),
 		@NamedQuery(name = "findProcessByState", query = "select p from Process p where p.state = :state"),
 		@NamedQuery(name = "findProcessByInitier", query = "select p from Process p where p.initier = :initier"),
-		@NamedQuery(name = "findProcessByIniterAndState", query = "select p from Process p where p.state = :state and p.initier = :initier") })
+		@NamedQuery(name = "findProcessByIniterAndState", query = "select p from Process p where p.state = :state and p.initier = :initier"),
+		@NamedQuery(name = "findProcessByWorkspace", query = "select p from Process p where p.workspace = :workspace"),
+		@NamedQuery(name = "findProcessByWorkspaceAndState", query = "select p from Process p where p.workspace = :workspace and p.state = :state")})
 @SuppressWarnings("serial")
 public class Process extends OrtolangObject {
 
 	public static final String OBJECT_TYPE = "process";
 	
 	public static final String INITIER_VAR_NAME = "initier";
+	public static final String WSKEY_VAR_NAME = "wskey";
 
 	public static enum State {
 		PENDING, SUBMITTED, RUNNING, SUSPENDED, ABORTED, COMPLETED
@@ -78,6 +81,7 @@ public class Process extends OrtolangObject {
 	private String name;
 	private String type;
 	private String initier;
+	private String workspace;
 	private State state;
 	private int progress;
 	private String activity;
@@ -123,8 +127,16 @@ public class Process extends OrtolangObject {
 	public void setInitier(String initier) {
 		this.initier = initier;
 	}
+	
+	public String getWorkspace() {
+        return workspace;
+    }
 
-	public String getType() {
+    public void setWorkspace(String workspace) {
+        this.workspace = workspace;
+    }
+
+    public String getType() {
 		return type;
 	}
 

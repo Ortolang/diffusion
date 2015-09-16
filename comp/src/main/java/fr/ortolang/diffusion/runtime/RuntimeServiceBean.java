@@ -181,7 +181,7 @@ public class RuntimeServiceBean implements RuntimeService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public Process createProcess(String key, String type, String name) throws RuntimeServiceException, AccessDeniedException {
+	public Process createProcess(String key, String type, String name, String workspace) throws RuntimeServiceException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "Creating new process of type: " + type);
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -197,6 +197,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			process.setInitier(caller);
 			process.setKey(key);
 			process.setName(name);
+			process.setWorkspace(workspace);
 			process.setType(type);
 			process.setState(State.PENDING);
 			process.appendLog(new Date() + "  PROCESS CREATED BY " + caller);
@@ -238,8 +239,9 @@ public class RuntimeServiceBean implements RuntimeService {
 			process.setStart(System.currentTimeMillis());
 			em.persist(process);
 			
-			if ( !variables.containsKey(Process.INITIER_VAR_NAME) ) {
-				variables.put(Process.INITIER_VAR_NAME, process.getInitier());
+			variables.put(Process.INITIER_VAR_NAME, process.getInitier());
+			if ( process.getWorkspace() != null && process.getWorkspace().length() > 0 ) {
+			    variables.put(Process.WSKEY_VAR_NAME, process.getInitier());
 			}
 			
 			engine.startProcess(process.getType(), process.getId(), variables);
@@ -255,8 +257,8 @@ public class RuntimeServiceBean implements RuntimeService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<Process> listProcesses(State state) throws RuntimeServiceException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "Listing " + ((state != null)?state:"all") + " processes");
+	public List<Process> listCallerProcesses(State state) throws RuntimeServiceException, AccessDeniedException {
+		LOGGER.log(Level.INFO, "Listing caller processes in " + ((state != null)?"state="+state:"all states"));
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			
@@ -267,9 +269,8 @@ public class RuntimeServiceBean implements RuntimeService {
 				query = em.createNamedQuery("findProcessByInitier", Process.class).setParameter("initier", caller);
 			}
 			
-			List<Process> processes = query.getResultList();
 			List<Process> rprocesses = new ArrayList<Process>();
-			for (Process process : processes) {
+			for (Process process : query.getResultList()) {
 				try {
 					String ikey = registry.lookup(process.getObjectIdentifier());
 					process.setKey(ikey);
@@ -284,6 +285,35 @@ public class RuntimeServiceBean implements RuntimeService {
 			throw new RuntimeServiceException("unable to list processes", e);
 		}
 	}
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Process> listWorkspaceProcesses(String wskey, State state) throws RuntimeServiceException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "Listing workspace processes in " + ((state != null)?"state="+state:"all states"));
+        try {
+            TypedQuery<Process> query;
+            if ( state != null ) {
+                query = em.createNamedQuery("findProcessByWorkspaceAndState", Process.class).setParameter("state", state).setParameter("wskey", wskey);
+            } else {
+                query = em.createNamedQuery("findProcessByWorkspace", Process.class).setParameter("wskey", wskey);
+            }
+            
+            List<Process> rprocesses = new ArrayList<Process>();
+            for (Process process : query.getResultList()) {
+                try {
+                    String ikey = registry.lookup(process.getObjectIdentifier());
+                    process.setKey(ikey);
+                    rprocesses.add(process);
+                } catch ( IdentifierNotRegisteredException e ) {
+                    LOGGER.log(Level.WARNING, "unregistered process found in storage for id: " + process.getId());
+                }
+            }
+            return rprocesses;
+        } catch ( RegistryServiceException e ) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while listing processes", e);
+            throw new RuntimeServiceException("unable to list processes", e);
+        }
+    }
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
