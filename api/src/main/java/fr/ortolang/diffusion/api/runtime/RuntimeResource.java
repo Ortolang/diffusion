@@ -166,7 +166,7 @@ public class RuntimeResource {
 		}
 		String wskey = null;
         if ( params.containsKey("wskey") ) {
-            wskey = params.remove("wskey").get(0);
+            wskey = params.get("wskey").get(0);
         }
 		
 		Map<String, Object> mparams = new HashMap<String, Object> ();
@@ -214,7 +214,7 @@ public class RuntimeResource {
 		}
 		String wskey = null;
         if ( form.containsKey("wskey") ) {
-            wskey = form.remove("wskey").get(0).getBodyAsString();
+            wskey = form.get("wskey").get(0).getBodyAsString();
         }
 		
 		for ( Entry<String, List<InputPart>> entry : form.entrySet() ) {
