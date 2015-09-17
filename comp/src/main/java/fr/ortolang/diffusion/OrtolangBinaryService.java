@@ -46,7 +46,7 @@ import java.util.List;
  * data in all the OrtolangObjects registered.
  * </p>
  * 
- * @author Jerome Blanchard <jayblanc@gmail.com>
+ * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
 public interface OrtolangBinaryService {

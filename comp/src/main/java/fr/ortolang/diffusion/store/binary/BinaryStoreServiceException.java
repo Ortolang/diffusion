@@ -40,7 +40,7 @@ package fr.ortolang.diffusion.store.binary;
  * BinaryStoreServiceException is raised when a storage sub system problem occurs. This type of exception is not supposed to
  * happen and can wrap any kind of storage sub system error.
  * 
- * @author Jerome Blanchard <jayblanc@gmail.com>
+ * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
 @SuppressWarnings("serial")

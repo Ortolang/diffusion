@@ -44,7 +44,7 @@ import java.util.Map;
  * can handle and a generic find operation based on the global DiffusionObjectIdentifier
  * </p>
  * 
- * @author Jerome Blanchard <jayblanc@gmail.com>
+ * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
 public interface OrtolangService {

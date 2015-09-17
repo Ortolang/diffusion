@@ -47,7 +47,7 @@ import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 
 /**
  * <p>
- * <b>RegistryService</b> for ORTOLANG Diffusion Server.<br/>
+ * <b>RegistryService</b> for ORTOLANG Diffusion Server.<br>
  * This service is central to the platform and holds all references to objects managed by diffusion platform.
  * Services are responsible for registering their objects in this registry using the provided API.
  * Services must comply with the DiffusionObjectIdentifier format in order to provide object references that allows
@@ -58,7 +58,7 @@ import fr.ortolang.diffusion.registry.entity.RegistryEntry;
  * avoid duplication of registered keys.
  * </p>
  * 
- * @author Jerome Blanchard <jayblanc@gmail.com>
+ * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
 public interface RegistryService extends OrtolangService {
