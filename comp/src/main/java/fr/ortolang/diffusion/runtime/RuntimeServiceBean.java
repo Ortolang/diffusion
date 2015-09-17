@@ -241,7 +241,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			variables.put(Process.INITIER_VAR_NAME, process.getInitier());
 			if ( process.getWorkspace() != null && process.getWorkspace().length() > 0 ) {
-			    variables.put(Process.WSKEY_VAR_NAME, process.getInitier());
+			    variables.put(Process.WSKEY_VAR_NAME, process.getWorkspace());
 			}
 			
 			engine.startProcess(process.getType(), process.getId(), variables);
