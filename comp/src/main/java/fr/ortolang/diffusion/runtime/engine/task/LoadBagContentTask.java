@@ -209,7 +209,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
             return tagnames;
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "unable to find tags names for snapshots", e);
-            throw new RuntimeEngineTaskException("unable to find tags names for snapshots", e);
+            return Collections.emptyMap();
         }
 	}
 
