@@ -43,7 +43,7 @@ import fr.ortolang.diffusion.OrtolangService;
 
 /**
  * <p>
- * <b>Binary Store</b> for ORTOLANG Diffusion Server.<br/>
+ * <b>Binary Store</b> for ORTOLANG Diffusion Server.<br>
  * This binary store is an internal service dedicated to object's binary content storage and retrieve. 
  * It stores binaries object's content in an optimal way in order to avoid duplication. The service generate identifiers 
  * based on binaries object's content (hash) using a BinaryHashGenerator. In this way, the same binary content cannot 
@@ -51,6 +51,7 @@ import fr.ortolang.diffusion.OrtolangService;
  * </p>
  * <p>
  * This binary storage service should meet those requirements :
+ * </p>
  * <ul>
  * <li>store and retrieve binary object's content</li>
  * <li>avoid duplication of objects</li>
@@ -58,9 +59,8 @@ import fr.ortolang.diffusion.OrtolangService;
  * <li>provide the fastest store and retrieve operations</li>
  * <li>handle billions of objects</li>
  * </ul>
- * </p>
  * 
- * @author Jerome Blanchard <jayblanc@gmail.com>
+ * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
 public interface BinaryStoreService extends OrtolangService {
@@ -72,62 +72,66 @@ public interface BinaryStoreService extends OrtolangService {
 	public static final String INFO_FILES = "files";
 
 	/**
-	 * Check that this hash exists in the store.<br/>
+	 * Check that this hash exists in the store.
 	 * 
 	 * @param hash
 	 *            The hash of the data
 	 * @return true or false
-	 * @throws DataNotFoundException
+	 * @throws BinaryStoreServiceException
 	 *             if the hash does not exists in the storage
 	 */
 	public boolean contains(String hash) throws BinaryStoreServiceException;
 	
 	/**
-	 * Retrieve the data associated with this identifier.<br/>
+	 * Retrieve the data associated with this identifier.
 	 * 
 	 * @param hash
 	 *            The hash of the data
 	 * @return an InputStream of the data
 	 * @throws DataNotFoundException
 	 *             if the hash does not exists in the storage
+	 * @throws BinaryStoreServiceException
 	 */
 	public InputStream get(String hash) throws BinaryStoreServiceException, DataNotFoundException;
 	
 	/**
-	 * Retrieve the file object of the data associated with this identifier.<br/>
+	 * Retrieve the file object of the data associated with this identifier.
 	 * 
 	 * @param hash
 	 *            The hash of the data
 	 * @return the File object
 	 * @throws DataNotFoundException
-	 *             if the hash does not exists in the storage
+	 *             if the hash does not exists in the storage*
+	 * @throws BinaryStoreServiceException
 	 */
 	public File getFile(String hash) throws BinaryStoreServiceException, DataNotFoundException;
 	
 	/**
-	 * Retrieve the data size associated with this identifier.<br/>
+	 * Retrieve the data size associated with this identifier.
 	 * 
 	 * @param hash
 	 *            The hash of the data
 	 * @return a long representing the size
 	 * @throws DataNotFoundException
 	 *             if the hash does not exists in the storage
+	 * @throws BinaryStoreServiceException
 	 */
 	public long size(String hash) throws BinaryStoreServiceException, DataNotFoundException;
 	
 	/**
-	 * Retrieve the data mime type associated with this identifier.<br/>
+	 * Retrieve the data mime type associated with this identifier.
 	 * 
 	 * @param hash
 	 *            The hash of the data
 	 * @return a String representing the mime type
 	 * @throws DataNotFoundException
 	 *             if the hash does not exists in the storage
+     * @throws BinaryStoreServiceException
 	 */
 	public String type(String hash) throws BinaryStoreServiceException, DataNotFoundException;
 	
 	/**
-	 * Retrieve the data mime type associated with this identifier and a filename for better resolution.<br/>
+	 * Retrieve the data mime type associated with this identifier and a filename for better resolution.
 	 * 
 	 * @param hash
 	 *            The hash of the data
@@ -136,23 +140,25 @@ public interface BinaryStoreService extends OrtolangService {
 	 * @return a String representing the mime type
 	 * @throws DataNotFoundException
 	 *             if the hash does not exists in the storage
+     * @throws BinaryStoreServiceException
 	 */
 	public String type(String hash, String filename) throws BinaryStoreServiceException, DataNotFoundException;
 	
 	/**
-	 * Extract the plain text part of the data associated with this identifier.<br/>
+	 * Extract the plain text part of the data associated with this identifier.
 	 * 
 	 * @param hash
 	 *            The hash of the data
 	 * @return a String representing the plain text extraction
 	 * @throws DataNotFoundException
 	 *             if the hash does not exists in the storage
+     * @throws BinaryStoreServiceException
 	 */
 	public String extract(String hash) throws BinaryStoreServiceException, DataNotFoundException;
 
 	/**
-	 * Insert some data in the storage.<br/>
-	 * The storage will generate a hash for this data and insert it using this hash as identifier in the storage.<br/>
+	 * Insert some data in the storage.<br>
+	 * The storage will generate a hash for this data and insert it using this hash as identifier in the storage.<br>
 	 * If the data already exists this method does nothing
 	 * 
 	 * @param data
@@ -160,6 +166,7 @@ public interface BinaryStoreService extends OrtolangService {
 	 * @return a String representation of the generated hash
 	 * @throws DataCollisionException
 	 *             if the hash already exists in the storage but for a different data
+     * @throws BinaryStoreServiceException
 	 */
 	public String put(InputStream data) throws BinaryStoreServiceException, DataCollisionException;
 	
@@ -172,6 +179,7 @@ public interface BinaryStoreService extends OrtolangService {
 	 *             if the hash does not exists in the storage
 	 * @throws DataCorruptedException
 	 *             if the data has been corrupted
+     * @throws BinaryStoreServiceException
 	 */
 	public void check(String hash) throws BinaryStoreServiceException, DataNotFoundException, DataCorruptedException;
 
@@ -182,6 +190,7 @@ public interface BinaryStoreService extends OrtolangService {
 	 * @param data
 	 *            The data on which to generate a hash
 	 * @return a String representation of the generated hash
+     * @throws BinaryStoreServiceException
 	 */
 	public String generate(InputStream data) throws BinaryStoreServiceException;
 
@@ -190,6 +199,7 @@ public interface BinaryStoreService extends OrtolangService {
 	 * 
 	 * @param hash
 	 *            The hash of the data to remove
+     * @throws BinaryStoreServiceException
 	 */
 	public void delete(String hash) throws BinaryStoreServiceException, DataNotFoundException;
 

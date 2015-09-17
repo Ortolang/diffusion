@@ -41,7 +41,7 @@ package fr.ortolang.diffusion.store.binary;
  * Two different binary streams has generated the same hash. 
  * This should NEVER happen. 
  * 
- * @author Jerome Blanchard <jayblanc@gmail.com>
+ * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
 @SuppressWarnings("serial")

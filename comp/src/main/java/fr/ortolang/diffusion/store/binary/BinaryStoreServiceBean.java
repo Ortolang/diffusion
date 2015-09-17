@@ -72,11 +72,11 @@ import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStreamFactory;
 import fr.ortolang.diffusion.store.binary.hash.SHA1FilterInputStreamFactory;
 
 /**
- * Local FileSystem based implementation of the BinaryStoreService.<br/>
- * <br/>
+ * Local FileSystem based implementation of the BinaryStoreService.<br>
+ * <br>
  * This implementation store all contents in the provided base folder in the local file system using a SHA1 hash generator.
  * 
- * @author Jerome Blanchard <jayblanc@gmail.com>
+ * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
 @Local(BinaryStoreService.class)
