@@ -76,6 +76,7 @@
 		<version.freemarker>2.3.22</version.freemarker>
 		<version.sigar>1.6.4</version.sigar>
                 <additionalparam>-Xdoclint:none</additionalparam>
+                <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
 	</properties>
 
 	<dependencyManagement>
