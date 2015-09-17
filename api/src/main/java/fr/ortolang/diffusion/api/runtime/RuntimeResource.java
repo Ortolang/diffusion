@@ -120,16 +120,16 @@ public class RuntimeResource {
 		LOGGER.log(Level.INFO, "GET /runtime/processes");
 		List<Process> instances;
 		if ( wskey != null ) {
-    		if ( state != null ) {
-    			instances = runtime.listCallerProcesses(State.valueOf(state));
-    		} else {
-    			instances = runtime.listCallerProcesses(null);
-    		}
-		} else {
 		    if ( state != null ) {
                 instances = runtime.listWorkspaceProcesses(wskey, State.valueOf(state));
             } else {
                 instances = runtime.listWorkspaceProcesses(wskey, null);
+            }
+		} else {
+		    if ( state != null ) {
+                instances = runtime.listCallerProcesses(State.valueOf(state));
+            } else {
+                instances = runtime.listCallerProcesses(null);
             }
 		}
 		
