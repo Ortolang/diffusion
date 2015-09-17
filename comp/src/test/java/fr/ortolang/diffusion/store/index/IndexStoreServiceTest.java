@@ -87,7 +87,32 @@ public class IndexStoreServiceTest {
 	@Before
 	public void setup() {
 		try {
-			service = new IndexStoreServiceBean();
+		    service = new IndexStoreServiceBean();
+		    Files.walkFileTree(service.getBase(), new FileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                    LOGGER.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
+                    return FileVisitResult.TERMINATE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+                
+            });
 			service.init();
 		} catch (Exception e) {
 			fail(e.getMessage());
