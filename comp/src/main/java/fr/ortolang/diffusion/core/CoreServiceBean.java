@@ -790,7 +790,7 @@ public class CoreServiceBean implements CoreService {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
             }
             if (!workspace.containsSnapshotName(snapshot)) {
-                throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + snapshot);
+                throw new CoreServiceException("the workspace with key: " + wskey + " does not contain a snapshot with name: " + snapshot);
             }
             String root = workspace.findSnapshotByName(snapshot).getKey();
 

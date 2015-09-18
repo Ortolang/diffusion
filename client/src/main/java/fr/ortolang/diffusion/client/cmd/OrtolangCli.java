@@ -45,7 +45,7 @@ public class OrtolangCli {
 	}
 	
 	private void help() {
-		System.out.println("Ortolang CLI availables commands :");
+		System.out.println("Ortolang CLI available commands :");
 		for (String command : commands.keySet()) {
 			System.out.println("\t " + command);
 		}

@@ -113,7 +113,7 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 			}
 			try {
 				if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
-					LOGGER.log(Level.FINE, "commiting active user transaction.");
+					LOGGER.log(Level.FINE, "committing active user transaction.");
 					getUserTransaction().commit();
 					tscommit = System.currentTimeMillis();
 					getUserTransaction().begin();
@@ -123,7 +123,7 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 			}
 		}
 		try {
-			LOGGER.log(Level.FINE, "commiting active user transaction.");
+			LOGGER.log(Level.FINE, "committing active user transaction.");
 			getUserTransaction().commit();
 			getUserTransaction().begin();
 		} catch (Exception e) {

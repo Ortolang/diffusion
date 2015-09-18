@@ -127,7 +127,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 				}
 				try {
 					if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
-						LOGGER.log(Level.FINE, "commiting active user transaction.");
+						LOGGER.log(Level.FINE, "committing active user transaction.");
 						getUserTransaction().commit();
 						tscommit = System.currentTimeMillis();
 						getUserTransaction().begin();
@@ -142,7 +142,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			LOGGER.log(Level.SEVERE, "- unexpected error during reading operations script", e);
 		}
 		try {
-			LOGGER.log(Level.FINE, "commiting active user transaction and starting new one.");
+			LOGGER.log(Level.FINE, "committing active user transaction and starting new one.");
 			getUserTransaction().commit();
 			getUserTransaction().begin();
 		} catch (Exception e) {

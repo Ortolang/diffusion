@@ -131,6 +131,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
             LOGGER.log(Level.FINE, "Adding default filters to user " + username + " subscription");
             // Core events
             addFilter(username, new Filter("core\\.workspace\\.create", null, username));
+            addFilter(username, new Filter("core\\.workspace\\.delete", null, username));
             // Membership events
             addFilter(username, new Filter("membership\\.group\\.add-member", null, null, "member," + username));
             // Runtime events
