@@ -283,9 +283,10 @@ public class ReferentielServiceBean implements ReferentielService {
             em.merge(refEntity);
 
             registry.update(key);
+            indexing.index(key);
 
             notification.throwEvent(key, caller, ReferentielEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, ReferentielEntity.OBJECT_TYPE, "update"));
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new ReferentielServiceException("error while trying to update the ReferentielEntity with name [" + name + "]");
         }
@@ -303,8 +304,10 @@ public class ReferentielServiceBean implements ReferentielService {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             checkObjectType(identifier, ReferentielEntity.OBJECT_TYPE);
             registry.delete(key);
+            indexing.remove(key);
+            
             notification.throwEvent(key, caller, ReferentielEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, ReferentielEntity.OBJECT_TYPE, "delete"));
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new ReferentielServiceException("unable to delete ReferentielEntity with name [" + name + "]", e);
         }
