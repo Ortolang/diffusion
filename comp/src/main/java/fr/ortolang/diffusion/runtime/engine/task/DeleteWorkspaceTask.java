@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJBTransactionRolledbackException;
 import javax.transaction.SystemException;
 
+import fr.ortolang.diffusion.core.AliasNotFoundException;
 import org.activiti.engine.delegate.DelegateExecution;
 
 import fr.ortolang.diffusion.core.CoreServiceException;
@@ -31,7 +32,18 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-	    String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
+		String wskey;
+		if (execution.hasVariable(WORKSPACE_ALIAS_PARAM_NAME)) {
+			String wsalias = execution.getVariable(WORKSPACE_ALIAS_PARAM_NAME, String.class);
+			try {
+				wskey = getCoreService().resolveWorkspaceAlias(wsalias);
+			} catch (CoreServiceException | AccessDeniedException | AliasNotFoundException e) {
+				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occurred while resolving workspace alias: " + wsalias + " " + e.getMessage()));
+				throw new RuntimeEngineTaskException("unexpected error occurred while resolving workspace alias: " + wsalias, e);
+			}
+		} else {
+	        wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
+		}
 		if ( !execution.hasVariable(WORKSPACE_NAME_PARAM_NAME) ) {
 			execution.setVariable(WORKSPACE_NAME_PARAM_NAME, wskey);
 		}
@@ -47,16 +59,16 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 				}
 				LOGGER.log(Level.FINE, "Listing workspace keys");
 				Set<String> keys = getCoreService().systemListWorkspaceKeys(wskey);
-				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace content retreived"));
+				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace content retrieved"));
 				StringBuilder trace = new StringBuilder();
 		        for ( String key : keys ) {
 					LOGGER.log(Level.FINE, "Deleting content key: " + key);
 					getRegistryService().delete(key, true);
 					getIndexingService().remove(key);
-					trace.append("key [" + key + "] deleted and removed from index");
+					trace.append("key [").append(key).append("] deleted and removed from index");
 				}
 				getCoreService().deleteWorkspace(wskey);
-				trace.append("workspace with key [" + wskey + "] deleted");
+				trace.append("workspace with key [").append(wskey).append("] deleted");
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace deleted"));
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), trace.toString(), null));
 			} catch (KeyNotFoundException | IndexingServiceException | AccessDeniedException | CoreServiceException | RegistryServiceException | KeyLockedException e) {
@@ -65,7 +77,7 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 			} 
 		} catch (SystemException | SecurityException | IllegalStateException  | EJBTransactionRolledbackException e) {
 		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
-			throw new RuntimeEngineTaskException("unexpected error occured", e);
+			throw new RuntimeEngineTaskException("unexpected error occurred", e);
 		}
 	}
 
