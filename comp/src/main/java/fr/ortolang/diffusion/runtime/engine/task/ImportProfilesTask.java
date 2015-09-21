@@ -47,6 +47,7 @@ public class ImportProfilesTask extends RuntimeEngineTask {
 			LOGGER.log(Level.FINE, "- starting import profiles");
 			boolean partial = false;
 			boolean exists;
+			StringBuilder report = new StringBuilder();
 			for (JsonProfile profile : profiles) {
 				exists = false;
 				try {
@@ -61,6 +62,7 @@ public class ImportProfilesTask extends RuntimeEngineTask {
 						getMembershipService().createProfile(profile.pro_login, profile.pro_firstname, profile.pro_lastname, profile.pro_emailt, ProfileStatus.ACTIVE);
 					} catch (ProfileAlreadyExistsException | AccessDeniedException | MembershipServiceException e) {
 						partial = true;
+						report.append("creation failed for: " + profile.pro_login + "\r\n");
 						LOGGER.log(Level.SEVERE, "  unable to create profile: " + profile.pro_login, e);
 					}
 				}
@@ -69,6 +71,7 @@ public class ImportProfilesTask extends RuntimeEngineTask {
 						getMembershipService().updateProfile(profile.pro_login, profile.pro_firstname, profile.pro_lastname, profile.pro_emailt, null);
 					} catch (KeyNotFoundException | AccessDeniedException | MembershipServiceException e) {
 						partial = true;
+						report.append("update failed for existing profile: " + profile.pro_login + "\r\n");
 						LOGGER.log(Level.SEVERE, "  unable to update profile: " + profile.pro_login, e);
 					}
 				}
@@ -134,13 +137,15 @@ public class ImportProfilesTask extends RuntimeEngineTask {
 						}
 					} catch (KeyNotFoundException | AccessDeniedException | MembershipServiceException e) {
 						partial = true;
+						report.append("unable to set info for profile: " + profile.pro_login + "\r\n");
 						LOGGER.log(Level.SEVERE, "  unable to set profile info for identifier: " + profile.pro_login, e);
 					}
 				}
 			}
 
 			if (partial) {
-				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some profiles has not been imported"));
+				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some profiles has not been imported (see trace for detail)"));
+				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), report.toString(), null));
 			}
 			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import Profiles done"));
 		} catch (IOException e) {

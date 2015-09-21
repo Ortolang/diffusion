@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.bootstrap;
 
+import fr.ortolang.diffusion.OrtolangService;
+
 /*
  * #%L
  * ORTOLANG
@@ -36,9 +38,9 @@ package fr.ortolang.diffusion.bootstrap;
  * #L%
  */
 
-public interface BootstrapService {
+public interface BootstrapService extends OrtolangService {
 	
-	public static final String VERSION = "1.0";
+	public static final String VERSION = "3.0";
     public static final String WORKSPACE_KEY = "system";
     public static final String SERVICE_NAME = "bootstrap";
     

@@ -1,6 +1,6 @@
 package fr.ortolang.diffusion.ftp;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -8,6 +8,8 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RunAs;
+import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 
@@ -19,18 +21,38 @@ import org.apache.ftpserver.listener.ListenerFactory;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.ftp.filesystem.OrtolangFileSystemFactory;
 import fr.ortolang.diffusion.ftp.user.OrtolangUserManager;
+import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 
 @Startup
 @Singleton(name = FtpServiceBean.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @PermitAll
-public class FtpServiceBean implements FtpService, FtpServiceAdmin {
+@RunAs("system")
+public class FtpServiceBean implements FtpService {
 	
 	private static final Logger LOGGER = Logger.getLogger(FtpServiceBean.class.getName());
 	
-	private OrtolangFileSystemFactory fsFactory;
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
+    @EJB
+    private MembershipService membership;
+    @EJB
+    private RegistryService registry;
+    
+    private OrtolangFileSystemFactory fsFactory;
 	private OrtolangUserManager userManager;
 	private ConnectionConfigFactory cFactory;
 	private FtpServer server;
@@ -77,9 +99,67 @@ public class FtpServiceBean implements FtpService, FtpServiceAdmin {
 	}
 	
 	@Override
-	public Map<String, String> getServiceInfos() throws FtpServiceException     {
-	    Map<String, String>infos = new HashMap<String, String> ();
-        return infos;
-	}
+    public boolean checkUserExistence(String username) throws FtpServiceException {
+	    OrtolangObjectIdentifier uid = new OrtolangObjectIdentifier(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, username);
+	    try {
+	        registry.lookup(uid);
+	        return true;
+	    } catch ( IdentifierNotRegisteredException e ) {
+	        return false;
+	    } catch (RegistryServiceException e ) {
+	        throw new FtpServiceException ("unable to check if user exists", e);
+	    }
+    }
+
+    @Override
+    public boolean checkUserAuthentication(String username, String password) throws FtpServiceException {
+        try {
+            return membership.systemValidateTOTP(username, password);
+        } catch (MembershipServiceException | KeyNotFoundException e) {
+            throw new FtpServiceException("unable to check user authentication", e);
+        }
+    }
+
+    @Override
+    public String getInternalAuthenticationPassword(String username) throws FtpServiceException {
+        try {
+            return membership.systemReadProfileSecret(username);
+        } catch (MembershipServiceException | KeyNotFoundException e) {
+            throw new FtpServiceException("unable to get internal user password", e);
+        }
+    }
+	
+	//Service methods
+	
+	@Override
+    public String getServiceName() {
+        return FtpService.SERVICE_NAME;
+    }
+    
+    @Override
+    public Map<String, String> getServiceInfos() {
+        //TODO provide infos about active connections, config, ports, etc...
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException {
+        throw new OrtolangException("this service does not managed any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
+        throw new OrtolangException("this service does not managed any object");
+    }
 
 }

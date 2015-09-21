@@ -36,15 +36,36 @@ package fr.ortolang.diffusion.runtime.engine.activiti;
  * #L%
  */
 
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngine;
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngineException;
-import fr.ortolang.diffusion.runtime.engine.RuntimeEngineListener;
-import fr.ortolang.diffusion.runtime.entity.HumanTask;
-import fr.ortolang.diffusion.runtime.entity.Process;
-import fr.ortolang.diffusion.runtime.entity.ProcessType;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.activiti.engine.*;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.Local;
+import javax.ejb.Lock;
+import javax.ejb.LockType;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.concurrent.ContextService;
+import javax.enterprise.concurrent.ManagedExecutorService;
+import javax.enterprise.concurrent.ManagedScheduledExecutorService;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
+
+import org.activiti.engine.ActivitiException;
+import org.activiti.engine.ProcessEngine;
+import org.activiti.engine.ProcessEngineConfiguration;
+import org.activiti.engine.RuntimeService;
+import org.activiti.engine.TaskService;
 import org.activiti.engine.delegate.event.ActivitiEntityEvent;
 import org.activiti.engine.delegate.event.ActivitiEvent;
 import org.activiti.engine.delegate.event.ActivitiEventListener;
@@ -54,26 +75,17 @@ import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.DeploymentBuilder;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.runtime.ProcessInstanceQuery;
 import org.activiti.engine.task.Task;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.*;
-import javax.enterprise.concurrent.ContextService;
-import javax.enterprise.concurrent.ManagedExecutorService;
-import javax.enterprise.concurrent.ManagedScheduledExecutorService;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceUnit;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngine;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineException;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineListener;
+import fr.ortolang.diffusion.runtime.entity.HumanTask;
+import fr.ortolang.diffusion.runtime.entity.Process;
+import fr.ortolang.diffusion.runtime.entity.ProcessType;
 
 @Startup
 @Local(RuntimeEngine.class)
@@ -112,7 +124,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 			ActivitiEngineJobExecutor jobExecutor = new ActivitiEngineJobExecutor(scheduledExecutor, executor);
 			config.setJobExecutor(jobExecutor);
 			config.setJobExecutorActivate(true);
-			config.setProcessEngineName("ortolang");
+			config.setProcessEngineName("ortolang"); 
 			engine = config.buildProcessEngine();
 			engine.getRuntimeService().addEventListener(this);
 			listener = new RuntimeEngineListener();
@@ -199,6 +211,25 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 			throw new RuntimeEngineException("unexpected error while getting process instance", e);
 		}
 	}
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Process> findProcess(Map<String, Object> variables) throws RuntimeEngineException {
+        try {
+            ProcessInstanceQuery query = engine.getRuntimeService().createProcessInstanceQuery();
+            for ( Entry<String, Object> variableEntry : variables.entrySet() ) {
+                query.variableValueEquals(variableEntry.getKey(), variableEntry.getValue());
+            }
+            List<Process> result = new ArrayList<Process> ();
+            List<ProcessInstance> instances = query.list();
+            for ( ProcessInstance instance : instances ) {
+                result.add(toProcess(instance));
+            }
+            return result;
+        } catch (ActivitiException e) {
+            throw new RuntimeEngineException("unexpected error while trying to find process instances", e);
+        }
+    }
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)

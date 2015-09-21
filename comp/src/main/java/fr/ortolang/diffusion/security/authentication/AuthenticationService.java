@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.security.authentication;
 
+import fr.ortolang.diffusion.OrtolangService;
+
 /*
  * #%L
  * ORTOLANG
@@ -37,7 +39,7 @@ package fr.ortolang.diffusion.security.authentication;
  */
 
 
-public interface AuthenticationService {
+public interface AuthenticationService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "authentication";
     

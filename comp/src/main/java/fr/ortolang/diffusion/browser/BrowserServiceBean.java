@@ -37,7 +37,9 @@ package fr.ortolang.diffusion.browser;
  */
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -303,6 +305,11 @@ public class BrowserServiceBean implements BrowserService {
 	public String getServiceName() {
 		return BrowserService.SERVICE_NAME;
 	}
+	
+	@Override
+	public Map<String, String> getServiceInfos() {
+	    return Collections.emptyMap();
+	}
 
 	@Override
 	public String[] getObjectTypeList() {
@@ -315,21 +322,27 @@ public class BrowserServiceBean implements BrowserService {
 	}
 
 	@Override
-	public OrtolangObject findObject(String key) throws OrtolangException, AccessDeniedException, KeyNotFoundException {
+	public OrtolangObject findObject(String key) throws OrtolangException {
 		LOGGER.log(Level.FINE, "trying to find object for key [" + key + "]");
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 			OrtolangService service = OrtolangServiceLocator.findService(identifier.getService());
 			return service.findObject(key);
-		} catch (RegistryServiceException e) {
+		} catch (RegistryServiceException | KeyNotFoundException e) {
 			throw new OrtolangException("unable to find object for key [" + key + "]", e);
 		}
 	}
 
-    // @TODO implement getSize
     @Override
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        return null;
+        LOGGER.log(Level.FINE, "trying to find object size for key [" + key + "]");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            OrtolangService service = OrtolangServiceLocator.findService(identifier.getService());
+            return service.getSize(key);
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to find object size for key [" + key + "]", e);
+        }
     }
 
 }

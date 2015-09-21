@@ -43,6 +43,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,16 +64,19 @@ import org.apache.tika.io.TikaInputStream;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStream;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStreamFactory;
 import fr.ortolang.diffusion.store.binary.hash.SHA1FilterInputStreamFactory;
 
 /**
- * Local FileSystem based implementation of the BinaryStoreService.<br/>
- * <br/>
+ * Local FileSystem based implementation of the BinaryStoreService.<br>
+ * <br>
  * This implementation store all contents in the provided base folder in the local file system using a SHA1 hash generator.
  * 
- * @author Jerome Blanchard <jayblanc@gmail.com>
+ * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
 @Local(BinaryStoreService.class)
@@ -87,7 +92,10 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	
 	private static final Logger LOGGER = Logger.getLogger(BinaryStoreServiceBean.class.getName());
 
-	private HashedFilterInputStreamFactory factory;
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
+    private HashedFilterInputStreamFactory factory;
 	private Path base;
 	private Path working;
 	private Path collide;
@@ -340,4 +348,66 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 			throw new DataNotFoundException(e);
 		}
 	}
+	
+	private long getStoreNbFiles() throws IOException {
+	    long nbfiles = Files.walk(base).count();
+	    return nbfiles;
+	}
+	
+	private long getStoreSize() throws IOException {
+        long size = Files.walk(base).mapToLong(this::size).sum();
+        return size;
+    }
+	
+	private long size(Path p) {
+	    try {
+	        return Files.size(p);
+	    } catch ( Exception e ) {
+	        return 0;
+	    }
+	}
+	
+	//Service methods
+    
+    @Override
+    public String getServiceName() {
+        return BinaryStoreService.SERVICE_NAME;
+    }
+    
+    @Override
+    public Map<String, String> getServiceInfos() {
+        Map<String, String>infos = new HashMap<String, String> ();
+        infos.put(INFO_PATH, this.base.toString());
+        try {
+            infos.put(INFO_FILES, Long.toString(getStoreNbFiles()));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_FILES, e);
+        }
+        try {
+            infos.put(INFO_SIZE, Long.toString(getStoreSize()));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_SIZE, e);
+        }
+       return infos;
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException {
+        throw new OrtolangException("this service does not managed any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
+        throw new OrtolangException("this service does not managed any object");
+    }
 }

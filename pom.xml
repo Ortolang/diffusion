@@ -6,14 +6,14 @@
 	<groupId>fr.ortolang.diffusion</groupId>
 	<artifactId>ortolang-diffusion</artifactId>
 	<name>Ortolang Diffusion Server Parent</name>
-	<version>3.1.0-SNAPSHOT</version>
+	<version>3.2.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<url>http://www.ortolang.fr</url>
 
 	<parent>
 		<groupId>fr.ortolang</groupId>
 		<artifactId>ortolang</artifactId>
-		<version>3.1.0-SNAPSHOT</version>
+		<version>3.0.0</version>
 	</parent>
 	
 	<scm>
@@ -75,6 +75,7 @@
 		<version.flyway.plugin>3.1</version.flyway.plugin>
 		<version.activation>1.1.1</version.activation>
 		<version.freemarker>2.3.22</version.freemarker>
+		<version.sigar>1.6.4</version.sigar>
 	</properties>
 
 	<dependencyManagement>

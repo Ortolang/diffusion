@@ -98,6 +98,7 @@
         initier varchar(255),
         log text,
         name varchar(255),
+        workspace varchar(255),
         progress int4 not null,
         start int8 not null,
         state int4,
@@ -171,6 +172,13 @@
         toolName varchar(255),
         version int8 not null,
         primary key (id)
+    );
+    
+    create table StatisticValue (
+        name varchar(255) not null,
+        timestamp int8 not null,
+        value int8 not null,
+        primary key (name, timestamp)
     );
 
     create table Workspace (

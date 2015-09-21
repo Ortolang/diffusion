@@ -39,7 +39,7 @@ package fr.ortolang.diffusion.store.binary;
 /**
  * An object with this hash does not exists in the storage. 
  * 
- * @author Jerome Blanchard <jayblanc@gmail.com>
+ * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
 @SuppressWarnings("serial")

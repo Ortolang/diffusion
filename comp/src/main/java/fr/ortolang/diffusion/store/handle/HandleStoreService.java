@@ -2,6 +2,7 @@ package fr.ortolang.diffusion.store.handle;
 
 import java.util.List;
 
+import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.store.handle.entity.Handle;
 
 /*
@@ -41,7 +42,7 @@ import fr.ortolang.diffusion.store.handle.entity.Handle;
  */
 
 
-public interface HandleStoreService {
+public interface HandleStoreService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "handle-store";
 	

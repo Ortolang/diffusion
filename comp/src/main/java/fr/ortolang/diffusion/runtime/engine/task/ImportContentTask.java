@@ -21,7 +21,9 @@ import fr.ortolang.diffusion.core.CollectionNotEmptyException;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.MetadataFormatException;
+import fr.ortolang.diffusion.core.PathAlreadyExistsException;
 import fr.ortolang.diffusion.core.PathBuilder;
+import fr.ortolang.diffusion.core.PathNotFoundException;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -33,7 +35,6 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import gov.loc.repository.bagit.Bag;
 import gov.loc.repository.bagit.BagFactory;
-import gov.loc.repository.bagit.utilities.SimpleResult;
 
 public class ImportContentTask extends RuntimeEngineTask {
 
@@ -63,7 +64,8 @@ public class ImportContentTask extends RuntimeEngineTask {
 		}
 		
 		boolean partial = false;
-		try {
+		StringBuilder report = new StringBuilder();
+        try {
 			String line = null;
 			boolean needcommit;
 			long tscommit = System.currentTimeMillis();
@@ -78,38 +80,46 @@ public class ImportContentTask extends RuntimeEngineTask {
 							createWorkspace(operation[1], operation[2], operation[3], operation[4], operation[5]);
 							execution.setVariable(WORKSPACE_KEY_PARAM_NAME, wskey);
 							needcommit = true;
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "create-object":
 							createObject(bag, operation[1], operation[2], operation[3]);
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "update-object":
 							updateObject(bag, operation[1], operation[2]);
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "delete-object":
 							deleteObject(operation[2]);
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "create-metadata":
 							createMetadata(bag, operation[1], operation[2], operation[3]);
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "update-metadata":
 							updateMetadata(bag, operation[1], operation[2], operation[3]);
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "delete-metadata":
 							deleteMetadata(operation[2], operation[3]);
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						case "snapshot-workspace":
 							snapshotWorkspace(operation[1]);
 							purgeCache();
 							needcommit = true;
+							report.append("[DONE] " + line + "\r\n");
 							break;
 						default:
 							partial = true;
-							throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unknown operation: " + line));
+							report.append("[ERROR] " + line + " \r\n\t -> Unknown operation\r\n");
 					}
 				} catch ( Exception e ) {
-					LOGGER.log(Level.SEVERE, "ImportContentTask exception raised", e);
+					LOGGER.log(Level.FINE, "ImportContentTask exception raised", e);
 					partial = true;
-					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Error while executing operation: " + line));
+					report.append("[ERROR] " + line + " \r\n\t -> Message: " + e.getMessage() + "\r\n");
 				}
 				if ( System.currentTimeMillis() - tscommit > 30000 ) {
 					LOGGER.log(Level.FINE, "current transaction exceed 30sec, need commit.");
@@ -117,7 +127,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 				}
 				try {
 					if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
-						LOGGER.log(Level.FINE, "commiting active user transaction.");
+						LOGGER.log(Level.FINE, "committing active user transaction.");
 						getUserTransaction().commit();
 						tscommit = System.currentTimeMillis();
 						getUserTransaction().begin();
@@ -128,10 +138,11 @@ public class ImportContentTask extends RuntimeEngineTask {
 			}
 		} catch (IOException e) {
 			partial = true;
+			report.append("[ERROR] unable to read script \r\n\t -> Message: " + e.getMessage() + "\r\n");
 			LOGGER.log(Level.SEVERE, "- unexpected error during reading operations script", e);
 		}
 		try {
-			LOGGER.log(Level.FINE, "commiting active user transaction and starting new one.");
+			LOGGER.log(Level.FINE, "committing active user transaction and starting new one.");
 			getUserTransaction().commit();
 			getUserTransaction().begin();
 		} catch (Exception e) {
@@ -145,7 +156,12 @@ public class ImportContentTask extends RuntimeEngineTask {
 		}
 		LOGGER.log(Level.FINE, "- import content done");
 		execution.setVariable("partial", partial);
-		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import content done"));
+		if ( partial ) {
+		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some content has not been imported (see trace for detail)"));
+		} else {
+		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All content imported successfully"));
+		}
+		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), report.toString(), null));
 	}
 
 	@Override
@@ -194,7 +210,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		}
 	}
 
-	private void createObject(Bag bag, String bagpath, String sha1, String path) throws RuntimeEngineTaskException, InvalidPathException {
+	private void createObject(Bag bag, String bagpath, String sha1, String path) throws RuntimeEngineTaskException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException {
 		try {
 			if ( sha1 == null || (sha1 != null && !getBinaryStore().contains(sha1)) ) {
 				InputStream is = bag.getBagFile(bagpath).newInputStream();
@@ -211,7 +227,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 					if (!collectionCreationCache.contains(current)) {
 						try {
 							getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, current);
-						} catch (InvalidPathException e) {
+						} catch (PathNotFoundException e) {
 							getCoreService().createCollection(wskey, current);
 						}
 						collectionCreationCache.add(current);
@@ -227,7 +243,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		} 
 	}
 
-	private void updateObject(Bag bag, String bagpath, String path) throws InvalidPathException, RuntimeEngineTaskException {
+	private void updateObject(Bag bag, String bagpath, String path) throws InvalidPathException, RuntimeEngineTaskException, PathNotFoundException {
 		try {
 			InputStream is = bag.getBagFile(bagpath).newInputStream();
 			String hash = getCoreService().put(is);
@@ -241,7 +257,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		}
 	}
 
-	private void deleteObject(String path) throws InvalidPathException, RuntimeEngineTaskException {
+	private void deleteObject(String path) throws InvalidPathException, RuntimeEngineTaskException, PathNotFoundException {
 		try {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().deleteDataObject(wskey, path);
@@ -261,7 +277,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		}
 	}
 
-	private void createMetadata(Bag bag, String bagpath, String path, String name) throws InvalidPathException, RuntimeEngineTaskException, MetadataFormatException {
+	private void createMetadata(Bag bag, String bagpath, String path, String name) throws InvalidPathException, RuntimeEngineTaskException, MetadataFormatException, PathNotFoundException {
 		try {
 			InputStream is = bag.getBagFile(bagpath).newInputStream();
 			String hash = getCoreService().put(is);
@@ -275,7 +291,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		} 
 	}
 
-	private void updateMetadata(Bag bag, String bagpath, String path, String name) throws InvalidPathException, RuntimeEngineTaskException, MetadataFormatException {
+	private void updateMetadata(Bag bag, String bagpath, String path, String name) throws InvalidPathException, RuntimeEngineTaskException, MetadataFormatException, PathNotFoundException {
 		try {
 			InputStream is = bag.getBagFile(bagpath).newInputStream();
 			String hash = getCoreService().put(is);
@@ -289,7 +305,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		} 
 	}
 
-	private void deleteMetadata(String path, String name) throws InvalidPathException, RuntimeEngineTaskException {
+	private void deleteMetadata(String path, String name) throws InvalidPathException, RuntimeEngineTaskException, PathNotFoundException {
 		try {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().deleteMetadataObject(wskey, path, name);

@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 
 public class OrtolangConfig {
 	
-	private static final String CURRENT_CONFIG_VERSION = "4";
+	private static final String CURRENT_CONFIG_VERSION = "5";
 	private static final Logger LOGGER = Logger.getLogger(OrtolangConfig.class.getName());
 	private static OrtolangConfig config;
 	private Properties props;
@@ -73,7 +73,7 @@ public class OrtolangConfig {
         	String fileVersion = this.getProperty(Property.CONFIG_VERSION);
         	if ( !fileVersion.equals(CURRENT_CONFIG_VERSION) ) {
         		LOGGER.log(Level.SEVERE, "Configuration File Version mismatch with Current Config Version: " + fileVersion + " != " + CURRENT_CONFIG_VERSION + "  --> UPDATE CONFIGURATION FILE");
-        		throw new Exception("Version mismatch between config file version: " + fileVersion + " and current config verison: " + CURRENT_CONFIG_VERSION + " !! Please update your config file");
+        		throw new Exception("Version mismatch between config file version: " + fileVersion + " and current config version: " + CURRENT_CONFIG_VERSION + " !! Please update your config file");
         	}
         }
     }
@@ -122,6 +122,7 @@ public class OrtolangConfig {
     	
     	THUMBNAIL_GENERATORS ("thumbnail.generators"),
     	
+    	FTP_SERVER_HOST ("ftp.server.host"),
     	FTP_SERVER_PORT ("ftp.server.port"),
     	
     	PIWIK_HOST ("piwik.host"),

@@ -59,6 +59,8 @@ public interface RuntimeEngine {
 	
 	public Process getProcess(String id) throws RuntimeEngineException;
 	
+	public List<Process> findProcess(Map<String, Object> variables) throws RuntimeEngineException;
+	
 	public HumanTask getTask(String id) throws RuntimeEngineException;
 	
 	public List<HumanTask> listCandidateTasks(String user, List<String> groups) throws RuntimeEngineException;

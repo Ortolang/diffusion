@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ejb.EJBTransactionRolledbackException;
 import javax.transaction.SystemException;
 
 import org.activiti.engine.delegate.DelegateExecution;
@@ -30,7 +31,7 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
+	    String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
 		if ( !execution.hasVariable(WORKSPACE_NAME_PARAM_NAME) ) {
 			execution.setVariable(WORKSPACE_NAME_PARAM_NAME, wskey);
 		}
@@ -39,7 +40,7 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 			try {
 				getUserTransaction().setTransactionTimeout(2000);
 				LOGGER.log(Level.FINE, "Reading workspace");
-				Workspace workspace = getCoreService().readWorkspace(wskey);
+		        Workspace workspace = getCoreService().readWorkspace(wskey);
 				if ( workspace.getType().equals(WorkspaceType.SYSTEM.toString())) {
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace is a SYSTEM workspace and it is forbidden to delete it"));
 					throw new RuntimeEngineTaskException("deleting a system workspace is forbidden");
@@ -47,18 +48,24 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 				LOGGER.log(Level.FINE, "Listing workspace keys");
 				Set<String> keys = getCoreService().systemListWorkspaceKeys(wskey);
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace content retreived"));
-				for ( String key : keys ) {
+				StringBuilder trace = new StringBuilder();
+		        for ( String key : keys ) {
 					LOGGER.log(Level.FINE, "Deleting content key: " + key);
 					getRegistryService().delete(key, true);
 					getIndexingService().remove(key);
+					trace.append("key [" + key + "] deleted and removed from index");
 				}
 				getCoreService().deleteWorkspace(wskey);
+				trace.append("workspace with key [" + wskey + "] deleted");
+				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace deleted"));
+				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), trace.toString(), null));
 			} catch (KeyNotFoundException | IndexingServiceException | AccessDeniedException | CoreServiceException | RegistryServiceException | KeyLockedException e) {
 				getUserTransaction().rollback();
 				throw new RuntimeEngineTaskException("unexpected error during delete workspace task", e);
 			} 
-		} catch (SystemException | SecurityException | IllegalStateException e) {
-			throw new RuntimeEngineTaskException("unable to create transaction", e);
+		} catch (SystemException | SecurityException | IllegalStateException  | EJBTransactionRolledbackException e) {
+		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
+			throw new RuntimeEngineTaskException("unexpected error occured", e);
 		}
 	}
 

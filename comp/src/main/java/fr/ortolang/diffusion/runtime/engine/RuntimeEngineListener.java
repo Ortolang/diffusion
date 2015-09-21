@@ -36,13 +36,14 @@ package fr.ortolang.diffusion.runtime.engine;
  * #L%
  */
 
+import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class RuntimeEngineListener {
 
@@ -75,23 +76,26 @@ public class RuntimeEngineListener {
                     getRuntimeService().updateProcessState(event.getPid(), State.COMPLETED);
                     break;
                 case PROCESS_LOG:
-                    getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+                    getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
+                    break;
+                case PROCESS_TRACE:
+                    getRuntimeService().appendProcessTrace(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage() + "\r\n" + event.getTrace());
                     break;
                 case PROCESS_ACTIVITY_STARTED:
                     getRuntimeService().updateProcessActivity(event.getPid(), event.getActivityName());
-                    getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+                    getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case PROCESS_ACTIVITY_ERROR:
                     getRuntimeService().updateProcessActivity(event.getPid(), "");
-                    getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+                    getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case PROCESS_ACTIVITY_PROGRESS:
                     // TODO Increase RuntimeService Process model to include activity progression field
-                    getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+                    getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case PROCESS_ACTIVITY_COMPLETED:
                     getRuntimeService().updateProcessActivity(event.getPid(), "");
-                    getRuntimeService().appendProcessLog(event.getPid(), event.getMessage());
+                    getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case TASK_CREATED:
                 case TASK_ASSIGNED:

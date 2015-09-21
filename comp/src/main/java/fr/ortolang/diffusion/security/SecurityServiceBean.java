@@ -37,6 +37,7 @@ package fr.ortolang.diffusion.security;
  */
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -80,7 +81,10 @@ public class SecurityServiceBean implements SecurityService {
 
 	private static final Logger LOGGER = Logger.getLogger(SecurityServiceBean.class.getName());
 
-	@Resource
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
+    @Resource
 	private SessionContext ctx;
 	@EJB
 	private MembershipService membership;
@@ -282,16 +286,22 @@ public class SecurityServiceBean implements SecurityService {
 	}
 
 	@Override
-	public String[] getObjectTypeList() {
-		return new String[] {};
-	}
-	
-	@Override
-	public String[] getObjectPermissionsList(String type) throws OrtolangException {
-		throw new OrtolangException("This service does not manage any object");
-	}
+    public Map<String, String> getServiceInfos() {
+        //TODO provide infos about active connections, config, ports, etc...
+        return Collections.emptyMap();
+    }
 
 	@Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
 	public OrtolangObject findObject(String key) throws OrtolangException {
 		throw new OrtolangException("this service does not manage any object");
 	}

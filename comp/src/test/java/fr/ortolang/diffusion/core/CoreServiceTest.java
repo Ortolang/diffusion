@@ -117,15 +117,10 @@ public class CoreServiceTest {
 		jar.addPackage("fr.ortolang.diffusion.store.binary");
 		jar.addPackage("fr.ortolang.diffusion.store.binary.hash");
 		jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
-//		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreDocumentBuilder");
-//		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreService");
-//		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreServiceAdmin");
-//		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreServiceBean");
 		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreServiceException");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
         jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreDocumentBuilder");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreService");
-		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceAdmin");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
 		jar.addAsResource("config.properties");
@@ -332,7 +327,7 @@ public class CoreServiceTest {
 	}
 
 	@Test
-	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException, InvalidPathException, MetadataFormatException {
+	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException, InvalidPathException, MetadataFormatException, PathNotFoundException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -375,7 +370,7 @@ public class CoreServiceTest {
 
 	@Test
 	public void testCRUDCollection() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException,
-			KeyNotFoundException, InvalidPathException, CollectionNotEmptyException, DataCollisionException {
+			KeyNotFoundException, InvalidPathException, CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -499,7 +494,7 @@ public class CoreServiceTest {
 
 	@Test
 	public void testDeleteCollectionElementConcurrently() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException,
-			MembershipServiceException, KeyNotFoundException, InvalidPathException {
+			MembershipServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -603,7 +598,7 @@ public class CoreServiceTest {
 					LOGGER.log(Level.INFO, "Deleting collection at path: " + path);
 					core.deleteCollection(wskey, path);
 					deleted = true;
-				} catch (CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | CollectionNotEmptyException e) {
+				} catch (CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | CollectionNotEmptyException | PathNotFoundException e) {
 					LOGGER.log(Level.SEVERE, "error during deleting collection: " + e.getMessage());
 				} finally {
 					loginContext.logout();

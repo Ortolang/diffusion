@@ -36,8 +36,7 @@ package fr.ortolang.diffusion;
  * #L%
  */
 
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import java.util.Map;
 
 /**
  * <p>
@@ -45,19 +44,21 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
  * can handle and a generic find operation based on the global DiffusionObjectIdentifier
  * </p>
  * 
- * @author Jerome Blanchard <jayblanc@gmail.com>
+ * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
 public interface OrtolangService {
 
 	public abstract String getServiceName();
+	
+	public abstract Map<String, String> getServiceInfos();
 
 	public abstract String[] getObjectTypeList();
 	
 	public abstract String[] getObjectPermissionsList(String type) throws OrtolangException;
 
-	public abstract OrtolangObject findObject(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException;
+	public abstract OrtolangObject findObject(String key) throws OrtolangException;
 
-    public abstract OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException;
+    public abstract OrtolangObjectSize getSize(String key) throws OrtolangException;
 	
 }

@@ -38,8 +38,10 @@ package fr.ortolang.diffusion.store.handle;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,6 +62,9 @@ import net.handle.hdllib.HandleValue;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.store.handle.entity.Handle;
 
 @Local(HandleStoreService.class)
@@ -71,7 +76,10 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	private static final Logger LOGGER = Logger.getLogger(HandleStoreServiceBean.class.getName());
 	private static byte[] admin = null;
 	
-	@PersistenceContext(unitName = "ortolangPU")
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
+    @PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;
 
 	private byte[] getAdminValue() {
@@ -135,5 +143,38 @@ public class HandleStoreServiceBean implements HandleStoreService {
 		}
 		return names;
 	}
+	
+	//Service methods
+    
+    @Override
+    public String getServiceName() {
+        return HandleStoreService.SERVICE_NAME;
+    }
+    
+    @Override
+    public Map<String, String> getServiceInfos() {
+        //TODO provide infos about active connections, config, ports, etc...
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException {
+        throw new OrtolangException("this service does not managed any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
+        throw new OrtolangException("this service does not managed any object");
+    }
 	
 }

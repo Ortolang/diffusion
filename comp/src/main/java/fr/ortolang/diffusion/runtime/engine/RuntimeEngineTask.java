@@ -36,7 +36,6 @@ package fr.ortolang.diffusion.runtime.engine;
  * #L%
  */
 
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,241 +62,247 @@ import fr.ortolang.diffusion.store.handle.HandleStoreService;
 
 public abstract class RuntimeEngineTask implements JavaDelegate {
 
-	public static final String PRETEND = "pretend";
-	
-	public static final String ZIP_PATH_PARAM_NAME = "zippath";
-	public static final String ZIP_ROOT_PARAM_NAME = "ziproot";
-	public static final String ZIP_OVERWRITE_PARAM_NAME = "zipoverwrites";
-	
-	public static final String PROFILES_PATH_PARAM_NAME = "profilespath";
-	public static final String PROFILES_OVERWRITE_PARAM_NAME = "profilesoverwrites";
-	
-	public static final String BAG_PATH_PARAM_NAME = "bagpath";
-	public static final String BAG_VERSIONS_PARAM_NAME = "bagversions";
-	public static final String BAG_VERSION_PARAM_NAME = "bagversion";
-	
-	public static final String IMPORT_OPERATIONS_PARAM_NAME = "operations";
+    public static final String PRETEND = "pretend";
 
-	public static final String ROOT_COLLECTION_PARAM_NAME = "root";
-	public static final String SNAPSHOTS_TO_PUBLISH_PARAM_NAME = "snapshotsToPublish";
-	public static final String SNAPSHOT_NAME_PARAM_NAME = "snapshot";
+    public static final String ZIP_PATH_PARAM_NAME = "zippath";
+    public static final String ZIP_ROOT_PARAM_NAME = "ziproot";
+    public static final String ZIP_OVERWRITE_PARAM_NAME = "zipoverwrites";
 
-	public static final String WORKSPACE_KEY_PARAM_NAME = "wskey";
-	public static final String WORKSPACE_NAME_PARAM_NAME = "wsname";
-	public static final String WORKSPACE_TYPE_PARAM_NAME = "wstype";
-	public static final String WORKSPACE_ALIAS_PARAM_NAME = "wsalias";
-	public static final String WORKSPACE_MEMBERS_PARAM_NAME = "wsmembers";
-	public static final String WORKSPACE_TAG_PARAM_NAME = "wstag";
+    public static final String PROFILES_PATH_PARAM_NAME = "profilespath";
+    public static final String PROFILES_OVERWRITE_PARAM_NAME = "profilesoverwrites";
 
-	public static final String REFERENTIEL_PATH_PARAM_NAME = "referentielpath";
-	public static final String REFERENTIEL_TYPE_PARAM_NAME = "referentieltype";
-	
-	private static final Logger LOGGER = Logger.getLogger(RuntimeEngineTask.class.getName());
+    public static final String BAG_PATH_PARAM_NAME = "bagpath";
+    public static final String BAG_VERSIONS_PARAM_NAME = "bagversions";
+    public static final String BAG_VERSION_PARAM_NAME = "bagversion";
 
-	protected UserTransaction userTx;
-	protected RuntimeEngine engine;
-	protected RuntimeService runtime;
-	protected MembershipService membership;
-	protected BinaryStoreService store;
-	protected HandleStoreService hdlstore;
-	protected CoreService core;
-	protected BrowserService browser;
-	protected RegistryService registry;
-	protected SecurityService security;
-	protected PublicationService publication;
-	protected NotificationService notification;
-	protected IndexingService indexing;
-	protected ReferentielService referentiel;
+    public static final String IMPORT_OPERATIONS_PARAM_NAME = "operations";
 
-	public MembershipService getMembershipService() throws RuntimeEngineTaskException {
-		try {
-			if (membership == null) {
-				membership = (MembershipService) OrtolangServiceLocator.findService(MembershipService.SERVICE_NAME);
-			}
-			return membership;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
+    public static final String ROOT_COLLECTION_PARAM_NAME = "root";
+    public static final String SNAPSHOTS_TO_PUBLISH_PARAM_NAME = "snapshotsToPublish";
+    public static final String SNAPSHOT_NAME_PARAM_NAME = "snapshot";
+    public static final String SNAPSHOTS_TAGS_PARAM_NAME = "snapshotTags";
 
-	public BinaryStoreService getBinaryStore() throws RuntimeEngineTaskException {
-		try {
-			if (store == null) {
-				store = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
-			}
-			return store;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
-	
-	public HandleStoreService getHandleStore() throws RuntimeEngineTaskException {
-		try {
-			if (hdlstore == null) {
-				hdlstore = (HandleStoreService) OrtolangServiceLocator.lookup(HandleStoreService.SERVICE_NAME, HandleStoreService.class);
-			}
-			return hdlstore;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
+    public static final String WORKSPACE_KEY_PARAM_NAME = "wskey";
+    public static final String WORKSPACE_NAME_PARAM_NAME = "wsname";
+    public static final String WORKSPACE_TYPE_PARAM_NAME = "wstype";
+    public static final String WORKSPACE_ALIAS_PARAM_NAME = "wsalias";
+    public static final String WORKSPACE_MEMBERS_PARAM_NAME = "wsmembers";
+    public static final String WORKSPACE_TAG_PARAM_NAME = "wstag";
 
-	public CoreService getCoreService() throws RuntimeEngineTaskException {
-		try {
-			if (core == null) {
-				core = (CoreService) OrtolangServiceLocator.findService(CoreService.SERVICE_NAME);
-			}
-			return core;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
+    public static final String REFERENTIEL_PATH_PARAM_NAME = "referentielpath";
+    public static final String REFERENTIEL_TYPE_PARAM_NAME = "referentieltype";
 
-	public RuntimeService getRuntimeService() throws RuntimeEngineTaskException {
-		try {
-			if (runtime == null) {
-				runtime = (RuntimeService) OrtolangServiceLocator.findService(RuntimeService.SERVICE_NAME);
-			}
-			return runtime;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
+    private static final Logger LOGGER = Logger.getLogger(RuntimeEngineTask.class.getName());
 
-	public BrowserService getBrowserService() throws RuntimeEngineTaskException {
-		try {
-			if (browser == null) {
-				browser = (BrowserService) OrtolangServiceLocator.findService(BrowserService.SERVICE_NAME);
-			}
-			return browser;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
+    protected UserTransaction userTx;
+    protected RuntimeEngine engine;
+    protected RuntimeService runtime;
+    protected MembershipService membership;
+    protected BinaryStoreService store;
+    protected HandleStoreService hdlstore;
+    protected CoreService core;
+    protected BrowserService browser;
+    protected RegistryService registry;
+    protected SecurityService security;
+    protected PublicationService publication;
+    protected NotificationService notification;
+    protected IndexingService indexing;
+    protected ReferentielService referentiel;
 
-	public RegistryService getRegistryService() throws RuntimeEngineTaskException {
-		try {
-			if (registry == null) {
-				registry = (RegistryService) OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
-			}
-			return registry;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
-	
-	public SecurityService getSecurityService() throws RuntimeEngineTaskException {
-		try {
-			if (security == null) {
-				security = (SecurityService) OrtolangServiceLocator.findService(SecurityService.SERVICE_NAME);
-			}
-			return security;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
+    public MembershipService getMembershipService() throws RuntimeEngineTaskException {
+        try {
+            if (membership == null) {
+                membership = (MembershipService) OrtolangServiceLocator.findService(MembershipService.SERVICE_NAME);
+            }
+            return membership;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
 
-	public PublicationService getPublicationService() throws RuntimeEngineTaskException {
-		try {
-			if (publication == null) {
-				publication = (PublicationService) OrtolangServiceLocator.findService(PublicationService.SERVICE_NAME);
-			}
-			return publication;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
-	
-	public NotificationService getNotificationService() throws RuntimeEngineTaskException {
-		try {
-			if (notification == null) {
-				notification = (NotificationService) OrtolangServiceLocator.lookup(NotificationService.SERVICE_NAME, NotificationService.class);
-			}
-			return notification;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
-	
-	public IndexingService getIndexingService() throws RuntimeEngineTaskException {
-		try {
-			if (indexing == null) {
-				indexing = (IndexingService) OrtolangServiceLocator.lookup(IndexingService.SERVICE_NAME, IndexingService.class);
-			}
-			return indexing;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
+    public BinaryStoreService getBinaryStore() throws RuntimeEngineTaskException {
+        try {
+            if (store == null) {
+                store = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
+            }
+            return store;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
 
-	public ReferentielService getReferentielService() throws RuntimeEngineTaskException {
-		try {
-			if (referentiel == null) {
-				referentiel = (ReferentielService) OrtolangServiceLocator.findService(ReferentielService.SERVICE_NAME);
-			}
-			return referentiel;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
+    public HandleStoreService getHandleStore() throws RuntimeEngineTaskException {
+        try {
+            if (hdlstore == null) {
+                hdlstore = (HandleStoreService) OrtolangServiceLocator.lookup(HandleStoreService.SERVICE_NAME, HandleStoreService.class);
+            }
+            return hdlstore;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
 
-	public UserTransaction getUserTransaction() throws RuntimeEngineTaskException {
-		try {
-			if (userTx == null) {
-				userTx = (UserTransaction) new InitialContext().lookup("java:jboss/UserTransaction");
-			}
-			return userTx;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
+    public CoreService getCoreService() throws RuntimeEngineTaskException {
+        try {
+            if (core == null) {
+                core = (CoreService) OrtolangServiceLocator.findService(CoreService.SERVICE_NAME);
+            }
+            return core;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
 
-	private RuntimeEngine getRuntimeEngine() throws RuntimeEngineTaskException {
-		try {
-			if (engine == null) {
-				engine = (RuntimeEngine) OrtolangServiceLocator.lookup(RuntimeEngine.SERVICE_NAME, RuntimeEngine.class);
-			}
-			return engine;
-		} catch (Exception e) {
-			throw new RuntimeEngineTaskException(e);
-		}
-	}
+    public RuntimeService getRuntimeService() throws RuntimeEngineTaskException {
+        try {
+            if (runtime == null) {
+                runtime = (RuntimeService) OrtolangServiceLocator.findService(RuntimeService.SERVICE_NAME);
+            }
+            return runtime;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
 
-	@Override
-	public void execute(DelegateExecution execution) {
-		try {
-			LOGGER.log(Level.INFO, "Starting " + this.getTaskName() + " execution");
-			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityStartEvent(execution.getProcessBusinessKey(), getTaskName(), new Date(System.currentTimeMillis())+" : SERVICE TASK " + execution.getCurrentActivityName() + " STARTED"));
+    public BrowserService getBrowserService() throws RuntimeEngineTaskException {
+        try {
+            if (browser == null) {
+                browser = (BrowserService) OrtolangServiceLocator.findService(BrowserService.SERVICE_NAME);
+            }
+            return browser;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
 
-			try {
-				LOGGER.log(Level.FINE, "Executing task");
-				executeTask(execution);
-				LOGGER.log(Level.FINE, "Task executed");
-			} catch (RuntimeEngineTaskException e) {
-				LOGGER.log(Level.SEVERE, "RuntimeTask exception intercepted, putting task in error and aborting process", e);
-				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), new Date(System.currentTimeMillis())+" : SERVICE TASK " + execution.getCurrentActivityName() + " IN ERROR: " + e.getMessage()));
-				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessAbortEvent(execution.getProcessBusinessKey(), e.getMessage()));
-				throw new BpmnError("RuntimeTaskExecutionError", e.getMessage());
-			}
+    public RegistryService getRegistryService() throws RuntimeEngineTaskException {
+        try {
+            if (registry == null) {
+                registry = (RegistryService) OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
+            }
+            return registry;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
 
-			LOGGER.log(Level.FINE, "Sending events of process evolution");
-			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityCompleteEvent(execution.getProcessBusinessKey(), getTaskName(), new Date(System.currentTimeMillis())+" : SERVICE TASK " + execution.getCurrentActivityName() + " COMPLETED"));
-		} catch (RuntimeEngineTaskException e) {
-			LOGGER.log(Level.SEVERE, "Unexpected runtime task exception", e);
-			throw new BpmnError("Unexpected RuntimeTaskExecutionError", e.getMessage());
-		}
-	}
+    public SecurityService getSecurityService() throws RuntimeEngineTaskException {
+        try {
+            if (security == null) {
+                security = (SecurityService) OrtolangServiceLocator.findService(SecurityService.SERVICE_NAME);
+            }
+            return security;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
 
-	public void throwRuntimeEngineEvent(RuntimeEngineEvent event) throws RuntimeEngineTaskException {
-		try {
-			getRuntimeEngine().notify(event);
-		} catch (RuntimeEngineException e) {
-			throw new RuntimeEngineTaskException("unexpected error while trying to throw event", e);
-		}
-	}
+    public PublicationService getPublicationService() throws RuntimeEngineTaskException {
+        try {
+            if (publication == null) {
+                publication = (PublicationService) OrtolangServiceLocator.findService(PublicationService.SERVICE_NAME);
+            }
+            return publication;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
 
-	public abstract String getTaskName();
+    public NotificationService getNotificationService() throws RuntimeEngineTaskException {
+        try {
+            if (notification == null) {
+                notification = (NotificationService) OrtolangServiceLocator.lookup(NotificationService.SERVICE_NAME, NotificationService.class);
+            }
+            return notification;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
 
-	public abstract void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException;
+    public IndexingService getIndexingService() throws RuntimeEngineTaskException {
+        try {
+            if (indexing == null) {
+                indexing = (IndexingService) OrtolangServiceLocator.lookup(IndexingService.SERVICE_NAME, IndexingService.class);
+            }
+            return indexing;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
+
+    public ReferentielService getReferentielService() throws RuntimeEngineTaskException {
+        try {
+            if (referentiel == null) {
+                referentiel = (ReferentielService) OrtolangServiceLocator.findService(ReferentielService.SERVICE_NAME);
+            }
+            return referentiel;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
+
+    public UserTransaction getUserTransaction() throws RuntimeEngineTaskException {
+        try {
+            if (userTx == null) {
+                userTx = (UserTransaction) new InitialContext().lookup("java:jboss/UserTransaction");
+            }
+            return userTx;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
+
+    private RuntimeEngine getRuntimeEngine() throws RuntimeEngineTaskException {
+        try {
+            if (engine == null) {
+                engine = (RuntimeEngine) OrtolangServiceLocator.lookup(RuntimeEngine.SERVICE_NAME, RuntimeEngine.class);
+            }
+            return engine;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
+
+    @Override
+    public void execute(DelegateExecution execution) {
+        try {
+            LOGGER.log(Level.INFO, "Starting " + this.getTaskName() + " execution");
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityStartEvent(execution.getProcessBusinessKey(), getTaskName(), "SERVICE TASK " + execution.getCurrentActivityName()
+                    + " STARTED"));
+
+            try {
+                LOGGER.log(Level.FINE, "Executing task");
+                executeTask(execution);
+                LOGGER.log(Level.FINE, "Task executed");
+            } catch (RuntimeEngineTaskException e) {
+                LOGGER.log(Level.SEVERE, "RuntimeTask exception intercepted, putting task in error and aborting process with pid: " + execution.getProcessBusinessKey());
+                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "SERVICE TASK " + execution.getCurrentActivityName()
+                        + " IN ERROR: " + e.getMessage(), e));
+                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "SERVICE TASK " + execution.getCurrentActivityName()
+                        + " IN ERROR: " + e.getMessage()));
+                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessAbortEvent(execution.getProcessBusinessKey(), e.getMessage()));
+                throw new BpmnError("RuntimeTaskExecutionError", e.getMessage());
+            }
+
+            LOGGER.log(Level.FINE, "Sending events of process evolution");
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityCompleteEvent(execution.getProcessBusinessKey(), getTaskName(), "SERVICE TASK " + execution.getCurrentActivityName()
+                    + " COMPLETED"));
+        } catch (RuntimeEngineTaskException e) {
+            LOGGER.log(Level.SEVERE, "Unexpected runtime task exception", e);
+            throw new BpmnError("Unexpected RuntimeTaskExecutionError", e.getMessage());
+        }
+    }
+
+    public void throwRuntimeEngineEvent(RuntimeEngineEvent event) throws RuntimeEngineTaskException {
+        try {
+            getRuntimeEngine().notify(event);
+        } catch (RuntimeEngineException e) {
+            throw new RuntimeEngineTaskException("unexpected error while trying to throw event", e);
+        }
+    }
+
+    public abstract String getTaskName();
+
+    public abstract void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException;
 
 }

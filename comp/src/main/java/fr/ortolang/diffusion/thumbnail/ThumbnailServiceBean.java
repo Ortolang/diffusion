@@ -6,7 +6,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +26,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
@@ -48,7 +51,10 @@ public class ThumbnailServiceBean implements ThumbnailService {
 
 	private static final Logger LOGGER = Logger.getLogger(ThumbnailServiceBean.class.getName());
 
-	public static final String DEFAULT_THUMBNAILS_HOME = "thumbs";
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
+    public static final String DEFAULT_THUMBNAILS_HOME = "thumbs";
 	public static final int DISTINGUISH_SIZE = 2;
 
 	@EJB
@@ -155,5 +161,39 @@ public class ThumbnailServiceBean implements ThumbnailService {
 		}
 		return true;
 	}
+	
+	//Service methods
+    
+    @Override
+    public String getServiceName() {
+        return ThumbnailService.SERVICE_NAME;
+    }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public Map<String, String> getServiceInfos() {
+        Map<String, String>infos = new HashMap<String, String> ();
+        return infos;
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException {
+        throw new OrtolangException("this service does not managed any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
+        throw new OrtolangException("this service does not managed any object");
+    }
 
 }

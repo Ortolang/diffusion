@@ -39,7 +39,9 @@ package fr.ortolang.diffusion.notification;
 
 import java.util.Map;
 
-public interface NotificationService {
+import fr.ortolang.diffusion.OrtolangService;
+
+public interface NotificationService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "notification";
     

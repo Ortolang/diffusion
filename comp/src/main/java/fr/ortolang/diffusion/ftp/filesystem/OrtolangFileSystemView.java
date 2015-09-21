@@ -19,6 +19,7 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
+import fr.ortolang.diffusion.core.PathNotFoundException;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -164,7 +165,10 @@ public class OrtolangFileSystemView implements FileSystemView {
                             LOGGER.log(Level.FINE, "working directory set to: " + current.build());
                             changed = true;
                         }
-                    } catch (OrtolangException | CoreServiceException | InvalidPathException | AccessDeniedException | AliasNotFoundException | RegistryServiceException | KeyNotFoundException e) {
+                    } catch ( PathNotFoundException | InvalidPathException | AccessDeniedException | AliasNotFoundException e ) {
+                        LOGGER.log(Level.FINE, "unable to change directory", e);
+                        return false;
+                    } catch (OrtolangException | CoreServiceException | RegistryServiceException | KeyNotFoundException e) {
                         LOGGER.log(Level.SEVERE, "unexpected error while trying to change directory", e);
                         return false;
                     } 

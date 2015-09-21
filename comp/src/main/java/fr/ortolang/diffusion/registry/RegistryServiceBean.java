@@ -48,6 +48,7 @@ import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.ejb.Local;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -59,19 +60,26 @@ import javax.persistence.TypedQuery;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
+import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 
+@Local(RegistryService.class)
 @Stateless(name = RegistryService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @PermitAll
-public class RegistryServiceBean implements RegistryService, RegistryServiceAdmin {
+public class RegistryServiceBean implements RegistryService {
 
 	private static final  Logger LOGGER = Logger.getLogger(RegistryServiceBean.class.getName());
 	
-	@PersistenceContext(unitName = "ortolangPU")
+	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+
+    @PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;
 	@Resource
 	private SessionContext ctx;
@@ -481,29 +489,49 @@ public class RegistryServiceBean implements RegistryService, RegistryServiceAdmi
 	//Admin interface
 	
 	@Override
-    @RolesAllowed("admin")
+	@RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public Map<String, String> getServiceInfos() throws RegistryServiceException {
-        Map<String, String>infos = new HashMap<String, String> ();
-        infos.put("registry.size", Long.toString(systemCountEntries(null)));
-        return infos;
-    }
-	
-	@Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public long systemCountEntries(String identifierFilter) throws RegistryServiceException {
-        LOGGER.log(Level.FINE, "#SYSTEM# counting keys with identifierFilter:" + identifierFilter);
+    public long systemCountAllEntries(String identifierFilter) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# counting all entries with identifierFilter:" + identifierFilter);
         StringBuilder ifilter = new StringBuilder();
         if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
              ifilter.append(identifierFilter);
         } 
         ifilter.append("%");
-        TypedQuery<Long> query = em.createNamedQuery("countEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
+        TypedQuery<Long> query = em.createNamedQuery("countAllEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
         return query.getSingleResult().longValue();
     }
 	
 	@Override
-    @RolesAllowed("admin")
+    @RolesAllowed("system")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public long systemCountDeletedEntries(String identifierFilter) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# counting deleted entries with identifierFilter:" + identifierFilter);
+        StringBuilder ifilter = new StringBuilder();
+        if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
+             ifilter.append(identifierFilter);
+        } 
+        ifilter.append("%");
+        TypedQuery<Long> query = em.createNamedQuery("countDeletedEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
+        return query.getSingleResult().longValue();
+    }
+	
+	@Override
+    @RolesAllowed("system")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public long systemCountHiddenEntries(String identifierFilter) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# counting hidden entries with identifierFilter:" + identifierFilter);
+        StringBuilder ifilter = new StringBuilder();
+        if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
+             ifilter.append(identifierFilter);
+        } 
+        ifilter.append("%");
+        TypedQuery<Long> query = em.createNamedQuery("countHiddenEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
+        return query.getSingleResult().longValue();
+    }
+	
+	@Override
+    @RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<RegistryEntry> systemListEntries(String keyFilter) throws RegistryServiceException {
             LOGGER.log(Level.FINE, "#SYSTEM# list entries for key filter [" + keyFilter + "]");
@@ -557,5 +585,58 @@ public class RegistryServiceBean implements RegistryService, RegistryServiceAdmi
 		}
 		return entries.get(0);
 	}
+	
+	//Service methods
+    
+    @Override
+    public String getServiceName() {
+        return RegistryService.SERVICE_NAME;
+    }
+    
+    @Override
+    public Map<String, String> getServiceInfos() {
+        Map<String, String>infos = new HashMap<String, String> ();
+        try {
+            infos.put(INFO_SIZE, Long.toString(systemCountAllEntries(null)));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_SIZE, e);
+        }
+        try {
+            infos.put(INFO_DELETED, Long.toString(systemCountDeletedEntries(null)));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_DELETED, e);
+        }
+        try {
+            infos.put(INFO_HIDDEN, Long.toString(systemCountHiddenEntries(null)));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_HIDDEN, e);
+        }
+        try { 
+            infos.put(INFO_PUBLISHED, Long.toString(count(null, OrtolangObjectState.Status.PUBLISHED)));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_PUBLISHED, e);
+        }
+        return infos;
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException {
+        throw new OrtolangException("this service does not managed any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
+        throw new OrtolangException("this service does not managed any object");
+    }
 
 }

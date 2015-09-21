@@ -54,6 +54,7 @@ import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
+import javax.ejb.Local;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
@@ -92,10 +93,11 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 
+@Local(MembershipService.class)
 @Stateless(name = MembershipService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @PermitAll
-public class MembershipServiceBean implements MembershipService, MembershipServiceAdmin {
+public class MembershipServiceBean implements MembershipService {
 
 	private static final Logger LOGGER = Logger.getLogger(MembershipServiceBean.class.getName());
 
@@ -620,6 +622,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	}
     
 	@Override
+	@RolesAllowed("system")
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public boolean systemValidateTOTP(String identifier, String totp) throws MembershipServiceException, KeyNotFoundException {
 	    LOGGER.log(Level.FINE, "#SYSTEM# validating TOTP for identifier");
@@ -642,6 +645,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
     }
 	
 	@Override
+	@RolesAllowed("system")
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String systemReadProfileSecret(String identifier) throws MembershipServiceException, KeyNotFoundException {
 	    LOGGER.log(Level.FINE, "#SYSTEM# validating TOTP for identifier");
@@ -1041,8 +1045,8 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public OrtolangObject findObject(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
-		try {
+	public OrtolangObject findObject(String key) throws OrtolangException {
+	    try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
 			if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
@@ -1058,13 +1062,14 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 			}
 
 			throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-		} catch (MembershipServiceException | RegistryServiceException e) {
+		} catch (MembershipServiceException | RegistryServiceException | KeyNotFoundException | AccessDeniedException e) {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}
 
 	@Override
-	public OrtolangObjectSize getSize(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public OrtolangObjectSize getSize(String key) throws OrtolangException {
 		LOGGER.log(Level.FINE, "calculating size for object with key [" + key + "]");
 		try {
 			List<String> subjects = getConnectedIdentifierSubjects();
@@ -1088,7 +1093,7 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 				}
 			}
 			return ortolangObjectSize;
-		} catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException e) {
+		} catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException | AccessDeniedException | KeyNotFoundException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error while calculating object size", e);
 			throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
 		}
@@ -1131,15 +1136,14 @@ public class MembershipServiceBean implements MembershipService, MembershipServi
 	}
 
 	@Override
-	public IndexableJsonContent getIndexableJsonContent(String key)
-			throws OrtolangException {
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException {
 		return null;
 	}
 	
 	@Override
-    @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public Map<String, String> getServiceInfos() throws MembershipServiceException {
+    public Map<String, String> getServiceInfos() {
         Map<String, String>infos = new HashMap<String, String> ();
         //TODO implements infos
         infos.put("profiles.all", "TODO");

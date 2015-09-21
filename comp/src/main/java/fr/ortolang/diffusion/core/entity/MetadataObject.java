@@ -52,7 +52,7 @@ import fr.ortolang.diffusion.core.CoreService;
 /**
  * A DigitalMetadata object contains a metadata file which is attached to a DigitalReference.
  * 
- * @author cyril pestel <cyril.pestel@atilf.fr>
+ * @author cyril pestel (cyril.pestel@atilf.fr)
  * 
  */
 @Entity

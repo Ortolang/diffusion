@@ -38,8 +38,6 @@ package fr.ortolang.diffusion.membership;
 
 import java.util.List;
 
-import javax.ejb.Local;
-
 import fr.ortolang.diffusion.OrtolangIndexableService;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.membership.entity.Group;
@@ -52,7 +50,6 @@ import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
-@Local
 public interface MembershipService extends OrtolangService, OrtolangIndexableService {
 	
 	public static final String SERVICE_NAME = "membership";
@@ -118,5 +115,10 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	public List<String> getProfileGroups(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	
+    public boolean systemValidateTOTP(String identifier, String totp) throws MembershipServiceException, KeyNotFoundException;
+    
+    public String systemReadProfileSecret(String identifier) throws MembershipServiceException, KeyNotFoundException;
 
 }

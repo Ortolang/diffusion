@@ -6,10 +6,12 @@
 	<filter>
 		<filter-name>CORS</filter-name>
 		<filter-class>fr.ortolang.diffusion.api.filter.CORSFilter</filter-class>
+		<async-supported>true</async-supported>
 	</filter>
 	<filter>
 		<filter-name>monitoring</filter-name>
 		<filter-class>net.bull.javamelody.MonitoringFilter</filter-class>
+		<async-supported>true</async-supported>
 		<init-param>
 			<param-name>http-transform-pattern</param-name>
 			<param-value>(?&lt;=/objects).*</param-value>

@@ -38,16 +38,16 @@ package fr.ortolang.diffusion.registry;
 
 import java.util.List;
 
-import javax.ejb.Local;
-
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 
 
 /**
  * <p>
- * <b>RegistryService</b> for ORTOLANG Diffusion Server.<br/>
+ * <b>RegistryService</b> for ORTOLANG Diffusion Server.<br>
  * This service is central to the platform and holds all references to objects managed by diffusion platform.
  * Services are responsible for registering their objects in this registry using the provided API.
  * Services must comply with the DiffusionObjectIdentifier format in order to provide object references that allows
@@ -58,14 +58,18 @@ import fr.ortolang.diffusion.OrtolangObjectState;
  * avoid duplication of registered keys.
  * </p>
  * 
- * @author Jerome Blanchard <jayblanc@gmail.com>
+ * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
-@Local
-public interface RegistryService {
+public interface RegistryService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "registry";
 	
+	public static final String INFO_SIZE = "entries.all";
+	public static final String INFO_DELETED = "entries.deleted";
+	public static final String INFO_HIDDEN = "entries.hidden";
+	public static final String INFO_PUBLISHED = "entries.published";
+    
 	public void register(String key, OrtolangObjectIdentifier identifier, String author) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException;
 	
 	public void register(String key, OrtolangObjectIdentifier identifier, String parent, boolean inherit) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, KeyNotFoundException;
@@ -118,4 +122,13 @@ public interface RegistryService {
 	
 	public long count(String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException;
 	
+
+	public List<RegistryEntry> systemListEntries(String keyFilter) throws RegistryServiceException;
+    
+    public long systemCountAllEntries(String identifierFilter) throws RegistryServiceException;
+    
+    public long systemCountDeletedEntries(String identifierFilter) throws RegistryServiceException;
+    
+    public long systemCountHiddenEntries(String identifierFilter) throws RegistryServiceException;
+    	
 }

@@ -95,15 +95,17 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 		boolean needcommit;
 		long tscommit = System.currentTimeMillis();
 		StringBuilder report = new StringBuilder();
+		boolean partial = false;
 		LOGGER.log(Level.FINE, "starting publication");
 		for (Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
 			needcommit = false;
 			try {
 				getPublicationService().publish(entry.getKey(), entry.getValue());
-				report.append("key [").append(entry.getKey()).append("] published successfully\r\n");
+				report.append("[DONE] key [").append(entry.getKey()).append("] published successfully\r\n");
 			} catch (Exception e) {
-				LOGGER.log(Level.FINE, "key [" + entry.getKey() + "] failed to publish: " + e.getMessage());
-				report.append("key [").append(entry.getKey()).append("] failed to publish: ").append(e.getMessage()).append("\r\n");
+				LOGGER.log(Level.FINE, "key [" + entry.getKey() + "] failed to publish", e);
+				partial = true;
+				report.append("[ERROR] key [").append(entry.getKey()).append("] failed to publish: ").append(e.getMessage()).append("\r\n");
 			}
 			if ( System.currentTimeMillis() - tscommit > 30000 ) {
 				LOGGER.log(Level.FINE, "current transaction exceed 30sec, need commit.");
@@ -111,7 +113,7 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 			}
 			try {
 				if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
-					LOGGER.log(Level.FINE, "commiting active user transaction.");
+					LOGGER.log(Level.FINE, "committing active user transaction.");
 					getUserTransaction().commit();
 					tscommit = System.currentTimeMillis();
 					getUserTransaction().begin();
@@ -121,14 +123,19 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 			}
 		}
 		try {
-			LOGGER.log(Level.FINE, "commiting active user transaction.");
+			LOGGER.log(Level.FINE, "committing active user transaction.");
 			getUserTransaction().commit();
 			getUserTransaction().begin();
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
 		}
 
-		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "publication done report : \r\n" + report.toString()));
+		if ( partial ) {
+		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some elements has not been published (see trace for detail)"));
+		} else {
+		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All elements published succesfully"));
+		}
+		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "Publication Report: \r\n" + report.toString(), null));
 	}
 
 	@Override

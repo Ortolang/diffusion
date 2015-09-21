@@ -36,78 +36,89 @@ package fr.ortolang.diffusion.runtime.engine;
  * #L%
  */
 
-import org.activiti.engine.task.IdentityLink;
-
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.Set;
+
+import org.activiti.engine.task.IdentityLink;
 
 @SuppressWarnings("serial")
 public class RuntimeEngineEvent implements Serializable {
-	
-	public static final String MESSAGE_PROPERTY_NAME = "event_object";
 
-	public enum Type {
-		PROCESS_START, PROCESS_ABORT, PROCESS_COMPLETE, PROCESS_ACTIVITY_STARTED, PROCESS_ACTIVITY_PROGRESS, PROCESS_ACTIVITY_COMPLETED, PROCESS_ACTIVITY_ERROR, PROCESS_LOG, TASK_CREATED, TASK_ASSIGNED, TASK_COMPLETED
-	}
+    public static final String MESSAGE_PROPERTY_NAME = "event_object";
 
-	private long timestamp;
-	private Type type;
-	private String pid;
-	private String activityName;
-	private int activityProgress;
-	private String message;
+    public enum Type {
+        PROCESS_START, PROCESS_ABORT, PROCESS_COMPLETE, PROCESS_ACTIVITY_STARTED, PROCESS_ACTIVITY_PROGRESS, PROCESS_ACTIVITY_COMPLETED, PROCESS_ACTIVITY_ERROR, PROCESS_LOG, PROCESS_TRACE, TASK_CREATED, TASK_ASSIGNED, TASK_COMPLETED
+    }
+
+    private long timestamp;
+    private Type type;
+    private String pid;
+    private String activityName;
+    private int activityProgress;
+    private String message;
+    private String trace;
     private Set<IdentityLink> candidates;
 
-	private RuntimeEngineEvent() {
-	}
+    private RuntimeEngineEvent() {
+    }
 
-	public long getTimestamp() {
-		return timestamp;
-	}
+    public long getTimestamp() {
+        return timestamp;
+    }
 
-	public void setTimestamp(long timestamp) {
-		this.timestamp = timestamp;
-	}
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
 
-	public Type getType() {
-		return type;
-	}
+    public Type getType() {
+        return type;
+    }
 
-	public void setType(Type type) {
-		this.type = type;
-	}
+    public void setType(Type type) {
+        this.type = type;
+    }
 
-	public String getPid() {
-		return pid;
-	}
+    public String getPid() {
+        return pid;
+    }
 
-	public void setPid(String pid) {
-		this.pid = pid;
-	}
+    public void setPid(String pid) {
+        this.pid = pid;
+    }
 
-	public String getActivityName() {
-		return activityName;
-	}
+    public String getActivityName() {
+        return activityName;
+    }
 
-	public void setActivityName(String activityName) {
-		this.activityName = activityName;
-	}
+    public void setActivityName(String activityName) {
+        this.activityName = activityName;
+    }
 
-	public int getActivityProgress() {
-		return activityProgress;
-	}
+    public int getActivityProgress() {
+        return activityProgress;
+    }
 
-	public void setActivityProgress(int activityProgress) {
-		this.activityProgress = activityProgress;
-	}
+    public void setActivityProgress(int activityProgress) {
+        this.activityProgress = activityProgress;
+    }
 
-	public String getMessage() {
-		return message;
-	}
+    public String getMessage() {
+        return message;
+    }
 
-	public void setMessage(String message) {
-		this.message = message;
-	}
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getTrace() {
+        return trace;
+    }
+
+    public void setTrace(String trace) {
+        this.trace = trace;
+    }
 
     public Set<IdentityLink> getCandidates() {
         return candidates;
@@ -118,83 +129,99 @@ public class RuntimeEngineEvent implements Serializable {
     }
 
     public static RuntimeEngineEvent createProcessStartEvent(String pid) {
-		RuntimeEngineEvent event = new RuntimeEngineEvent();
-		event.setTimestamp(System.currentTimeMillis());
-		event.setType(Type.PROCESS_START);
-		event.setPid(pid);
-		return event;
-	}
-	
-	public static RuntimeEngineEvent createProcessAbortEvent(String pid, String message) {
-		RuntimeEngineEvent event = new RuntimeEngineEvent();
-		event.setTimestamp(System.currentTimeMillis());
-		event.setType(Type.PROCESS_ABORT);
-		event.setPid(pid);
-		event.setMessage(message);
-		return event;
-	}
-	
-	public static RuntimeEngineEvent createProcessCompleteEvent(String pid) {
-		RuntimeEngineEvent event = new RuntimeEngineEvent();
-		event.setTimestamp(System.currentTimeMillis());
-		event.setType(Type.PROCESS_COMPLETE);
-		event.setPid(pid);
-		return event;
-	}
-	
-	public static RuntimeEngineEvent createProcessLogEvent(String pid, String message) {
-		RuntimeEngineEvent event = new RuntimeEngineEvent();
-		event.setTimestamp(System.currentTimeMillis());
-		event.setType(Type.PROCESS_LOG);
-		event.setPid(pid);
-		event.setMessage(message);
-		return event;
-	}
-	
-	public static RuntimeEngineEvent createProcessActivityStartEvent(String pid, String name, String message) {
-		RuntimeEngineEvent event = new RuntimeEngineEvent();
-		event.setTimestamp(System.currentTimeMillis());
-		event.setType(Type.PROCESS_ACTIVITY_STARTED);
-		event.setPid(pid);
-		event.setActivityName(name);
-		event.setActivityProgress(0);
-		event.setMessage(message);
-		return event;
-	}
-	
-	public static RuntimeEngineEvent createProcessActivityCompleteEvent(String pid, String name, String message) {
-		RuntimeEngineEvent event = new RuntimeEngineEvent();
-		event.setTimestamp(System.currentTimeMillis());
-		event.setType(Type.PROCESS_ACTIVITY_COMPLETED);
-		event.setPid(pid);
-		event.setActivityName(name);
-		event.setActivityProgress(100);
-		event.setMessage(message);
-		return event;
-	}
-	
-	public static RuntimeEngineEvent createProcessActivityErrorEvent(String pid, String name, String message) {
-		RuntimeEngineEvent event = new RuntimeEngineEvent();
-		event.setTimestamp(System.currentTimeMillis());
-		event.setType(Type.PROCESS_ACTIVITY_ERROR);
-		event.setPid(pid);
-		event.setActivityName(name);
-		event.setMessage(message);
-		return event;
-	}
-	
-	public static RuntimeEngineEvent createProcessActivityProgressEvent(String pid, String name, String message, int progression) {
-		RuntimeEngineEvent event = new RuntimeEngineEvent();
-		event.setTimestamp(System.currentTimeMillis());
-		event.setType(Type.PROCESS_ACTIVITY_PROGRESS);
-		event.setPid(pid);
-		event.setActivityName(name);
-		event.setActivityProgress(progression);
-		event.setMessage(message);
-		return event;
-	}
+        RuntimeEngineEvent event = new RuntimeEngineEvent();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setType(Type.PROCESS_START);
+        event.setPid(pid);
+        return event;
+    }
 
-	public static RuntimeEngineEvent createTaskCreatedEvent(String pid, String name, Set<IdentityLink> candidates) {
+    public static RuntimeEngineEvent createProcessAbortEvent(String pid, String message) {
+        RuntimeEngineEvent event = new RuntimeEngineEvent();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setType(Type.PROCESS_ABORT);
+        event.setPid(pid);
+        event.setMessage(message);
+        return event;
+    }
+
+    public static RuntimeEngineEvent createProcessCompleteEvent(String pid) {
+        RuntimeEngineEvent event = new RuntimeEngineEvent();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setType(Type.PROCESS_COMPLETE);
+        event.setPid(pid);
+        return event;
+    }
+
+    public static RuntimeEngineEvent createProcessLogEvent(String pid, String message) {
+        RuntimeEngineEvent event = new RuntimeEngineEvent();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setType(Type.PROCESS_LOG);
+        event.setPid(pid);
+        event.setMessage(message);
+        return event;
+    }
+
+    public static RuntimeEngineEvent createProcessTraceEvent(String pid, String message, Throwable throwable) {
+        RuntimeEngineEvent event = new RuntimeEngineEvent();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setType(Type.PROCESS_TRACE);
+        event.setPid(pid);
+        event.setMessage(message);
+        if ( throwable != null ) {
+            StringWriter writer = new StringWriter();
+            throwable.printStackTrace(new PrintWriter(writer));
+            event.setTrace(writer.toString());
+        } else {
+            event.setTrace("");
+        }
+        return event;
+    }
+
+    public static RuntimeEngineEvent createProcessActivityStartEvent(String pid, String name, String message) {
+        RuntimeEngineEvent event = new RuntimeEngineEvent();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setType(Type.PROCESS_ACTIVITY_STARTED);
+        event.setPid(pid);
+        event.setActivityName(name);
+        event.setActivityProgress(0);
+        event.setMessage(message);
+        return event;
+    }
+
+    public static RuntimeEngineEvent createProcessActivityCompleteEvent(String pid, String name, String message) {
+        RuntimeEngineEvent event = new RuntimeEngineEvent();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setType(Type.PROCESS_ACTIVITY_COMPLETED);
+        event.setPid(pid);
+        event.setActivityName(name);
+        event.setActivityProgress(100);
+        event.setMessage(message);
+        return event;
+    }
+
+    public static RuntimeEngineEvent createProcessActivityErrorEvent(String pid, String name, String message) {
+        RuntimeEngineEvent event = new RuntimeEngineEvent();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setType(Type.PROCESS_ACTIVITY_ERROR);
+        event.setPid(pid);
+        event.setActivityName(name);
+        event.setMessage(message);
+        return event;
+    }
+
+    public static RuntimeEngineEvent createProcessActivityProgressEvent(String pid, String name, String message, int progression) {
+        RuntimeEngineEvent event = new RuntimeEngineEvent();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setType(Type.PROCESS_ACTIVITY_PROGRESS);
+        event.setPid(pid);
+        event.setActivityName(name);
+        event.setActivityProgress(progression);
+        event.setMessage(message);
+        return event;
+    }
+
+    public static RuntimeEngineEvent createTaskCreatedEvent(String pid, String name, Set<IdentityLink> candidates) {
         RuntimeEngineEvent event = new RuntimeEngineEvent();
         event.setTimestamp(System.currentTimeMillis());
         event.setType(Type.TASK_CREATED);
@@ -202,7 +229,7 @@ public class RuntimeEngineEvent implements Serializable {
         event.setActivityName(name);
         event.setCandidates(candidates);
         return event;
-	}
+    }
 
     public static RuntimeEngineEvent createTaskAssignedEvent(String pid, String name, Set<IdentityLink> candidates) {
         RuntimeEngineEvent event = new RuntimeEngineEvent();

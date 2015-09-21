@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.indexing;
  * #L%
  */
 
+@SuppressWarnings("serial")
 public class NotIndexableContentException extends Exception {
 
     public NotIndexableContentException() {

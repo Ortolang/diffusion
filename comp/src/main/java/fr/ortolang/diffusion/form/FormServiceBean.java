@@ -46,6 +46,7 @@ import fr.ortolang.diffusion.registry.*;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.Resource;
@@ -54,8 +55,11 @@ import javax.ejb.*;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -240,8 +244,13 @@ public class FormServiceBean implements FormService {
 	public String getServiceName() {
 		return SERVICE_NAME;
 	}
-
+	
 	@Override
+    public Map<String, String> getServiceInfos() {
+        return Collections.emptyMap();
+    }
+
+    @Override
 	public String[] getObjectTypeList() {
 		return OBJECT_TYPE_LIST;
 	}
@@ -258,7 +267,7 @@ public class FormServiceBean implements FormService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public OrtolangObject findObject(String key) throws OrtolangException, KeyNotFoundException, AccessDeniedException {
+	public OrtolangObject findObject(String key) throws OrtolangException {
 		try {
 			OrtolangObjectIdentifier identifier = registry.lookup(key);
 
@@ -271,7 +280,7 @@ public class FormServiceBean implements FormService {
 			}
 
 			throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-		} catch (FormServiceException | RegistryServiceException e) {
+		} catch (FormServiceException | RegistryServiceException | KeyNotFoundException e) {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}

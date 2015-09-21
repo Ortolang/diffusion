@@ -296,6 +296,7 @@ public class CollectionUnitTest {
         c.setName("collection");
         long tsk1 = System.currentTimeMillis();
         long tsk2 = System.currentTimeMillis();
+        long tsk3 = System.currentTimeMillis();
 
 
         String key1 = UUID.randomUUID().toString();
@@ -304,9 +305,13 @@ public class CollectionUnitTest {
         String key2 = UUID.randomUUID().toString();
         CollectionElement collectionElement2 = new CollectionElement(DataObject.OBJECT_TYPE, "myname1 [foo]", tsk2, 12, Collection.MIME_TYPE, key2);
         c.addElement(collectionElement2);
+        String key3 = UUID.randomUUID().toString();
+        CollectionElement collectionElement3 = new CollectionElement(Collection.OBJECT_TYPE, "§test", tsk3, 12, Collection.MIME_TYPE, key3);
+        c.addElement(collectionElement3);
 
         assertTrue(c.containsElementName(collectionElement1.getName()));
         assertTrue(c.containsElementName(collectionElement2.getName()));
+        assertTrue(c.containsElementName(collectionElement3.getName()));
         
         CollectionElement ce1 = c.findElementByName("myname1 (foo)");
         assertNotNull(ce1);
@@ -324,6 +329,14 @@ public class CollectionUnitTest {
         assertEquals(12,ce2.getSize());
         assertEquals(Collection.MIME_TYPE,ce2.getMimeType());
         assertEquals(key2,ce2.getKey());
+        CollectionElement ce3 = c.findElementByName("§test");
+        assertNotNull(ce3);
+        assertEquals(Collection.OBJECT_TYPE,ce3.getType());
+        assertEquals("§test",ce3.getName());
+        assertEquals(tsk3,ce3.getModification());
+        assertEquals(12,ce3.getSize());
+        assertEquals(Collection.MIME_TYPE,ce3.getMimeType());
+        assertEquals(key3,ce3.getKey());
         
         c.removeElement(collectionElement1);
         assertFalse(c.containsElementKey(key1));

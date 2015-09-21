@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.runtime.engine.task;
 
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,7 +25,8 @@ public class TagSnapshotTask extends RuntimeEngineTask {
 	}
 
 	@Override
-	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
+	@SuppressWarnings("rawtypes")
+    public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
 		if (!execution.hasVariable(WORKSPACE_KEY_PARAM_NAME)) {
 			throw new RuntimeEngineTaskException("execution variable " + WORKSPACE_KEY_PARAM_NAME + " is not set");
 		}
@@ -36,7 +38,12 @@ public class TagSnapshotTask extends RuntimeEngineTask {
 		String tag = "v" + snapshot;
 		if (execution.hasVariable(WORKSPACE_TAG_PARAM_NAME)) {
 			tag = execution.getVariable(WORKSPACE_TAG_PARAM_NAME, String.class);
-		} 
+		} else if (execution.hasVariable(SNAPSHOTS_TAGS_PARAM_NAME)) {
+            Map tags = execution.getVariable(SNAPSHOTS_TAGS_PARAM_NAME, Map.class);
+            if ( tags.containsKey(snapshot) ) {
+                tag = (String) tags.get(snapshot);
+            }
+        }  
 		
 		try {
 			if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {

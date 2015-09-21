@@ -36,6 +36,13 @@ package fr.ortolang.diffusion.runtime;
  * #L%
  */
 
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.activiti.engine.task.IdentityLink;
+
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -47,12 +54,6 @@ import fr.ortolang.diffusion.runtime.entity.ProcessType;
 import fr.ortolang.diffusion.runtime.entity.RemoteProcess;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
-import org.activiti.engine.task.IdentityLink;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 public interface RuntimeService extends OrtolangService {
 
 	public static final String SERVICE_NAME = "runtime";
@@ -63,7 +64,7 @@ public interface RuntimeService extends OrtolangService {
 	
 	/* Process */
 	
-	public Process createProcess(String key, String type, String name) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	public Process createProcess(String key, String type, String name, String wskey) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
 
 	public void startProcess(String key, Map<String, Object> variables) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
@@ -71,11 +72,17 @@ public interface RuntimeService extends OrtolangService {
 	
 	public void appendProcessLog(String pid, String log) throws RuntimeServiceException;
 	
+	public void appendProcessTrace(String pid, String trace) throws RuntimeServiceException;
+	
 	public void updateProcessActivity(String pid, String name) throws RuntimeServiceException;
 	
-	public List<Process> listProcesses(State sate) throws RuntimeServiceException, AccessDeniedException;
-
+	public List<Process> listCallerProcesses(State state) throws RuntimeServiceException, AccessDeniedException;
+	
+	public List<Process> listWorkspaceProcesses(String wskey, State state) throws RuntimeServiceException, AccessDeniedException;
+	
 	public Process readProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public File readProcessTrace(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	/* Task */
 
@@ -101,4 +108,11 @@ public interface RuntimeService extends OrtolangService {
 
 	public void updateRemoteProcessActivity(String key, String name) throws RuntimeServiceException;
 
-	public void appendRemoteProcessLog(String key, String log) throws RuntimeServiceException;}
+	public void appendRemoteProcessLog(String key, String log) throws RuntimeServiceException;
+
+    /* System */
+
+    //public void systemKillProcess(String key) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
+
+
+}

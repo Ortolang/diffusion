@@ -74,6 +74,7 @@ import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
+import fr.ortolang.diffusion.core.PathNotFoundException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.search.SearchService;
@@ -191,7 +192,7 @@ public class ObjectResource {
 	@GET
 	@Path("/{key}/element")
 	public Response resolve(@PathParam(value = "key") String key, @QueryParam(value = "path") String relativePath, @Context Request request) throws OrtolangException, KeyNotFoundException,
-			AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException {
+			AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
 		LOGGER.log(Level.INFO, "GET /objects/" + key + "?path=" + relativePath);
 
 		return get(core.resolvePathFromCollection(key, relativePath), request);
