@@ -35,16 +35,6 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 		if(referentielPathFile.exists()) {
 			for(File referentielEntityFile : referentielPathFile.listFiles()) {
 
-				boolean exist = false;
-				String name = referentielEntityFile.getName().substring(0, referentielEntityFile.getName().length()-5);
-				try {
-					getReferentielService().readReferentielEntity(name);
-					LOGGER.log(Level.FINE, "  referentiel entity already exists for key: " + name);
-					exist = true;
-				} catch (ReferentielServiceException | KeyNotFoundException e) {
-					//
-				}
-				
 				String content = getContent(referentielEntityFile);
 				if(content==null) {
 					continue;
@@ -53,6 +43,18 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 				if(type==null) {
 					continue;
 				}
+
+				boolean exist = false;
+				String name = referentielEntityFile.getName().substring(0, referentielEntityFile.getName().length()-5);
+				String key = type.toString() + ":" + name;
+				try {
+					getReferentielService().readReferentielEntity(key);
+					LOGGER.log(Level.FINE, "  referentiel entity already exists for key: " + name);
+					exist = true;
+				} catch (ReferentielServiceException | KeyNotFoundException e) {
+					//
+				}
+				
 				if(!exist) {
 					try {
 						getReferentielService().createReferentielEntity(name, type, content);
@@ -63,7 +65,7 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 				} else {
 					LOGGER.log(Level.INFO, "  update referentiel entity "+name);
 					try {
-						getReferentielService().updateReferentielEntity(name, content);
+						getReferentielService().updateReferentielEntity(key, content);
 						LOGGER.log(Level.FINE, "  referentiel entity updated with name "+name);
 					} catch (ReferentielServiceException | AccessDeniedException | KeyNotFoundException e) {
 						LOGGER.log(Level.SEVERE, "  unable to create referentiel entity named "+name, e);
@@ -102,6 +104,42 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 				return ReferentielType.TERM;
 			case "Language":
 				return ReferentielType.LANGUAGE;
+			case "AnnotationLevel":
+				return ReferentielType.ANNOTATION_LEVEL;
+			case "CorporaDataType":
+				return ReferentielType.CORPORA_DATA_TYPE;
+			case "CorporaFileEncoding":
+				return ReferentielType.CORPORA_FILE_ENCODING;
+			case "CorporaFormat":
+				return ReferentielType.CORPORA_FORMAT;
+			case "CorporaLanguageType":
+				return ReferentielType.CORPORA_LANGUAGE_TYPE;
+			case "CorporaStyle":
+				return ReferentielType.CORPORA_STYLE;
+			case "CorporaType":
+				return ReferentielType.CORPORA_TYPE;
+			case "LexiconDescriptionType":
+				return ReferentielType.LEXICON_DESCRIPTION_TYPE;
+			case "LexiconFormat":
+				return ReferentielType.LEXICON_FORMAT;
+			case "LexiconInputType":
+				return ReferentielType.LEXICON_INPUT_TYPE;
+			case "LexiconLanguageType":
+				return ReferentielType.LEXICON_LANGUAGE_TYPE;
+			case "Role":
+				return ReferentielType.ROLE;
+			case "StatusOfUse":
+				return ReferentielType.STATUS_OF_USE;
+			case "ToolFileEncoding":
+				return ReferentielType.TOOL_FILE_ENCODING;
+			case "ToolFunctionality":
+				return ReferentielType.TOOL_FUNCTIONALITY;
+			case "ToolInputData":
+				return ReferentielType.TOOL_INPUT_DATA;
+			case "ToolOutputData":
+				return ReferentielType.TOOL_OUTPUT_DATA;
+			case "ResourceType":
+				return ReferentielType.RESOURCE_TYPE;
 			default:
 				LOGGER.log(Level.SEVERE, "  referentiel type unknown : "+type);
 				return null;

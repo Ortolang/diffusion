@@ -219,7 +219,7 @@ public class ReferentielServiceBean implements ReferentielService {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkAuthentified(subjects);
 
-            String key = PREFIX_KEY + ":" + name;
+            String key = type.toString() + ":" + name;
             ReferentielEntity refEntity = new ReferentielEntity();
             refEntity.setId(UUID.randomUUID().toString());
             refEntity.setKey(key);
@@ -243,10 +243,10 @@ public class ReferentielServiceBean implements ReferentielService {
     }
 
     @Override
-    public ReferentielEntity readReferentielEntity(String name) throws ReferentielServiceException, KeyNotFoundException {
-        LOGGER.log(Level.FINE, "reading form for name [" + name + "]");
+    public ReferentielEntity readReferentielEntity(String key) throws ReferentielServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "reading form for key [" + key + "]");
         try {
-            String key = PREFIX_KEY + ":" + name;
+//            String key = PREFIX_KEY + ":" + name;
 
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             checkObjectType(identifier, ReferentielEntity.OBJECT_TYPE);
@@ -258,15 +258,15 @@ public class ReferentielServiceBean implements ReferentielService {
 
             return refEntity;
         } catch (RegistryServiceException e) {
-            throw new ReferentielServiceException("unable to read the ReferentielEntity with name [" + name + "]", e);
+            throw new ReferentielServiceException("unable to read the ReferentielEntity with key [" + key + "]", e);
         }
     }
 
     @Override
-    public void updateReferentielEntity(String name, String content) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.FINE, "updating form for name [" + name + "]");
+    public void updateReferentielEntity(String key, String content) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "updating form for key [" + key + "]");
         try {
-            String key = PREFIX_KEY + ":" + name;
+//            String key = PREFIX_KEY + ":" + name;
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkPermission(key, subjects, "update");
@@ -278,7 +278,7 @@ public class ReferentielServiceBean implements ReferentielService {
                 throw new ReferentielServiceException("unable to find a form for id " + identifier.getId());
             }
             refEntity.setKey(key);
-            refEntity.setName(name);
+//            refEntity.setName(name);
             refEntity.setContent(content);
             em.merge(refEntity);
 
@@ -288,17 +288,17 @@ public class ReferentielServiceBean implements ReferentielService {
             notification.throwEvent(key, caller, ReferentielEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, ReferentielEntity.OBJECT_TYPE, "update"));
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
-            throw new ReferentielServiceException("error while trying to update the ReferentielEntity with name [" + name + "]");
+            throw new ReferentielServiceException("error while trying to update the ReferentielEntity with key [" + key + "]");
         }
     }
 
     @Override
-    public void deleteReferentielEntity(String name) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.FINE, "deleting form for name [" + name + "]");
+    public void deleteReferentielEntity(String key) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "deleting form for key [" + key + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
-            String key = PREFIX_KEY + ":" + name;
+//            String key = PREFIX_KEY + ":" + name;
             authorisation.checkPermission(key, subjects, "delete");
 
             OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -309,7 +309,7 @@ public class ReferentielServiceBean implements ReferentielService {
             notification.throwEvent(key, caller, ReferentielEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, ReferentielEntity.OBJECT_TYPE, "delete"));
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
-            throw new ReferentielServiceException("unable to delete ReferentielEntity with name [" + name + "]", e);
+            throw new ReferentielServiceException("unable to delete ReferentielEntity with key [" + key + "]", e);
         }
     }
 

@@ -18,9 +18,9 @@ public interface ReferentielService extends OrtolangService, OrtolangIndexableSe
 	
 	public void createReferentielEntity(String name, ReferentielType type, String content) throws ReferentielServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
-	public ReferentielEntity readReferentielEntity(String name) throws ReferentielServiceException, KeyNotFoundException;
+	public ReferentielEntity readReferentielEntity(String key) throws ReferentielServiceException, KeyNotFoundException;
 	
-	public void updateReferentielEntity(String name, String content) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException;
+	public void updateReferentielEntity(String key, String content) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void deleteReferentielEntity(String name) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException;
+	public void deleteReferentielEntity(String key) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException;
 }
