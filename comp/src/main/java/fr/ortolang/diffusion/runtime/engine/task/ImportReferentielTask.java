@@ -138,6 +138,12 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 				return ReferentielType.TOOL_INPUT_DATA;
 			case "ToolOutputData":
 				return ReferentielType.TOOL_OUTPUT_DATA;
+            case "OperatingSystem":
+                return ReferentielType.OPERATING_SYSTEM;
+            case "ProgrammingLanguage":
+                return ReferentielType.PROGRAMMING_LANGUAGE;
+            case "ToolSupport":
+                return ReferentielType.TOOL_SUPPORT;
 			case "ResourceType":
 				return ReferentielType.RESOURCE_TYPE;
 			default:
