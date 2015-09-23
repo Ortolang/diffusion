@@ -52,7 +52,6 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.ejb.EJB;
@@ -115,6 +114,8 @@ public class RuntimeServiceBean implements RuntimeService {
 	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
 			{ Process.OBJECT_TYPE, "read,update,delete,start" } };
 	
+	private static Path base;
+    
 	@EJB
 	private RegistryService registry;
 	@EJB
@@ -133,25 +134,21 @@ public class RuntimeServiceBean implements RuntimeService {
 	private ManagedScheduledExecutorService executor;
 	@Resource
 	private ContextService contextService;
-	private Path base;
-    
+	
 	public RuntimeServiceBean() {
-        LOGGER.log(Level.FINE, "Instanciating runtime service");
-        this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_RUNTIME_HOME);
     }
 
-    public Path getBase() {
-        return base;
-    }
-    
-    @PostConstruct
-    public void init() {
-        LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
-        try {
-            Files.createDirectories(base);
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "unable to initialize runtime service", e);
+    public Path getBase() throws RuntimeServiceException {
+        if ( base == null ) {
+            try {
+                base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_RUNTIME_HOME);
+                Files.createDirectories(base);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "unable to build base working directory for runtime service", e);
+                throw new RuntimeServiceException("unable to build base working directory for runtime service", e);
+            }
         }
+        return base;
     }
     
 	@Override
@@ -352,7 +349,7 @@ public class RuntimeServiceBean implements RuntimeService {
             if ( instance == null )  {
                 throw new RuntimeServiceException("unable to find a process with id: " + identifier.getId());
             }
-            Path trace = Paths.get(base.toString(), instance.getId() + TRACE_FILE_EXTENSION);
+            Path trace = Paths.get(getBase().toString(), instance.getId() + TRACE_FILE_EXTENSION);
             if ( Files.exists(trace) ) {
                 return trace.toFile();
             } else {
@@ -419,7 +416,7 @@ public class RuntimeServiceBean implements RuntimeService {
 	public void appendProcessTrace(String pid, String trace) throws RuntimeServiceException {
 		LOGGER.log(Level.INFO, "Appending trace to process with pid: " + pid);
 		try {
-		    Path logfile = Paths.get(base.toString(), pid + TRACE_FILE_EXTENSION);
+		    Path logfile = Paths.get(getBase().toString(), pid + TRACE_FILE_EXTENSION);
 		    if ( !Files.exists(logfile) ) {
 		        String head = "## TRACE FILE FOR PROCESS WITH PID: " + pid + "\r\n##\r\n\r\n";
 		        Files.write(logfile, head.getBytes(), StandardOpenOption.CREATE);
