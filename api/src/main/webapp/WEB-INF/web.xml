@@ -16,6 +16,18 @@
 			<param-name>http-transform-pattern</param-name>
 			<param-value>(?&lt;=/objects).*</param-value>
 		</init-param>
+		<init-param>
+		    <param-name>log</param-name>
+		    <param-value>true</param-value>
+		</init-param>
+		<init-param>
+		    <param-name>datasources</param-name>
+		    <param-value>java:jboss/datasources/OrtolangDS</param-value>
+		</init-param>
+		<init-param>
+		    <param-name>disabled</param-name>
+		    <param-value>false</param-value>
+		</init-param>
 	</filter>
 
 	<filter-mapping>
