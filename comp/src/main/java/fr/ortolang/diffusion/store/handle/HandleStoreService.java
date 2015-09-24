@@ -46,6 +46,8 @@ public interface HandleStoreService extends OrtolangService {
 	
 	public static final String SERVICE_NAME = "handle-store";
 	
+	public static final String INFO_TOTAL_SIZE = "size.total";
+	
 	public void recordHandle(String handle, String key, String url) throws HandleStoreServiceException;
 	
 	public List<Handle> listHandleValues(String handle) throws HandleStoreServiceException, HandleNotFoundException;

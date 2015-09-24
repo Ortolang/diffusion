@@ -1145,8 +1145,18 @@ public class MembershipServiceBean implements MembershipService {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {
         Map<String, String>infos = new HashMap<String, String> ();
-        //TODO implements infos
-        infos.put("profiles.all", "TODO");
+        try {
+            long nbprofiles = registry.count(OrtolangObjectIdentifier.buildFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null);
+            infos.put(MembershipService.INFO_PROFILES_ALL, Long.toString(nbprofiles));
+        } catch ( RegistryServiceException e ) {
+            //
+        }
+        try {
+            long nbprofiles = registry.count(OrtolangObjectIdentifier.buildFilterPattern(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE), null);
+            infos.put(MembershipService.INFO_GROUPS_ALL, Long.toString(nbprofiles));
+        } catch ( RegistryServiceException e ) {
+            //
+        }
         return infos;
     }
 

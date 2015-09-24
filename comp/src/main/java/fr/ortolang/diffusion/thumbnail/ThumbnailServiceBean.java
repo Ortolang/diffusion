@@ -162,6 +162,24 @@ public class ThumbnailServiceBean implements ThumbnailService {
 		return true;
 	}
 	
+	private long getStoreNbFiles() throws IOException {
+        long nbfiles = Files.walk(base).count();
+        return nbfiles;
+    }
+    
+    private long getStoreSize() throws IOException {
+        long size = Files.walk(base).mapToLong(this::size).sum();
+        return size;
+    }
+    
+    private long size(Path p) {
+        try {
+            return Files.size(p);
+        } catch ( Exception e ) {
+            return 0;
+        }
+    }
+	
 	//Service methods
     
     @Override
@@ -170,10 +188,20 @@ public class ThumbnailServiceBean implements ThumbnailService {
     }
     
     @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {
         Map<String, String>infos = new HashMap<String, String> ();
-        return infos;
+        infos.put(INFO_PATH, this.base.toString());
+        try {
+            infos.put(INFO_FILES, Long.toString(getStoreNbFiles()));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_FILES, e);
+        }
+        try {
+            infos.put(INFO_SIZE, Long.toString(getStoreSize()));
+        } catch ( Exception e ) { 
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_SIZE, e);
+        }
+       return infos;
     }
 
     @Override

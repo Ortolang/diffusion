@@ -38,7 +38,7 @@ package fr.ortolang.diffusion.store.handle;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -144,6 +144,13 @@ public class HandleStoreServiceBean implements HandleStoreService {
 		return names;
 	}
 	
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public long countHandles() throws HandleStoreServiceException {
+	    TypedQuery<Long> query = em.createNamedQuery("countHandles", Long.class);
+        Long nbhandles = query.getSingleResult(); 
+        return nbhandles;
+	}
+	
 	//Service methods
     
     @Override
@@ -153,8 +160,13 @@ public class HandleStoreServiceBean implements HandleStoreService {
     
     @Override
     public Map<String, String> getServiceInfos() {
-        //TODO provide infos about active connections, config, ports, etc...
-        return Collections.emptyMap();
+        Map<String, String> infos = new HashMap<String, String> ();
+        try {
+            infos.put(HandleStoreService.INFO_TOTAL_SIZE, Long.toString(countHandles()));
+        } catch ( Exception e ) {
+            //
+        }
+        return infos;
     }
 
     @Override
