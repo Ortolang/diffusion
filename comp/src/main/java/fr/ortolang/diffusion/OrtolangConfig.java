@@ -45,99 +45,101 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class OrtolangConfig {
-	
-	private static final String CURRENT_CONFIG_VERSION = "5";
-	private static final Logger LOGGER = Logger.getLogger(OrtolangConfig.class.getName());
-	private static OrtolangConfig config;
-	private Properties props;
-	private Path home;
-	
-	private OrtolangConfig() throws Exception {
-		if ( System.getenv("ORTOLANG_HOME") != null ) {
-    		home = Paths.get(System.getenv("ORTOLANG_HOME"));
-    	} else {
-    		home = Paths.get(System.getProperty("user.home"), ".ortolang");
-    	}
-    	if ( !Files.exists(home) ) {
-			Files.createDirectories(home);
-		}
-    	LOGGER.log(Level.INFO, "ORTOLANG_HOME set to : " + home);
-    	
-    	props = new Properties();
+
+    private static final String CURRENT_CONFIG_VERSION = "6";
+    private static final Logger LOGGER = Logger.getLogger(OrtolangConfig.class.getName());
+    private static OrtolangConfig config;
+    private Properties props;
+    private Path home;
+
+    private OrtolangConfig() throws Exception {
+        if ( System.getenv("ORTOLANG_HOME") != null ) {
+            home = Paths.get(System.getenv("ORTOLANG_HOME"));
+        } else {
+            home = Paths.get(System.getProperty("user.home"), ".ortolang");
+        }
+        if ( !Files.exists(home) ) {
+            Files.createDirectories(home);
+        }
+        LOGGER.log(Level.INFO, "ORTOLANG_HOME set to : " + home);
+
+        props = new Properties();
         Path configFilePath = Paths.get(home.toString(), "config.properties");
-    	if ( !Files.exists(configFilePath) ) {
-    		Files.copy(OrtolangConfig.class.getClassLoader().getResourceAsStream("config.properties"), configFilePath);
-    	}
-    	try (InputStream in = Files.newInputStream(configFilePath) ) {
-        	props.load(in);
-        	String fileVersion = this.getProperty(Property.CONFIG_VERSION);
-        	if ( !fileVersion.equals(CURRENT_CONFIG_VERSION) ) {
-        		LOGGER.log(Level.SEVERE, "Configuration File Version mismatch with Current Config Version: " + fileVersion + " != " + CURRENT_CONFIG_VERSION + "  --> UPDATE CONFIGURATION FILE");
-        		throw new Exception("Version mismatch between config file version: " + fileVersion + " and current config version: " + CURRENT_CONFIG_VERSION + " !! Please update your config file");
-        	}
+        if ( !Files.exists(configFilePath) ) {
+            Files.copy(OrtolangConfig.class.getClassLoader().getResourceAsStream("config.properties"), configFilePath);
+        }
+        try (InputStream in = Files.newInputStream(configFilePath) ) {
+            props.load(in);
+            String fileVersion = this.getProperty(Property.CONFIG_VERSION);
+            if ( !fileVersion.equals(CURRENT_CONFIG_VERSION) ) {
+                LOGGER.log(Level.SEVERE, "Configuration File Version mismatch with Current Config Version: " + fileVersion + " != " + CURRENT_CONFIG_VERSION + "  --> UPDATE CONFIGURATION FILE");
+                throw new Exception("Version mismatch between config file version: " + fileVersion + " and current config version: " + CURRENT_CONFIG_VERSION + " !! Please update your config file");
+            }
         }
     }
 
     public static synchronized OrtolangConfig getInstance() {
         if (config == null) {
-         	try {
-				config = new OrtolangConfig();
-			} catch (Exception e) {
-				LOGGER.log(Level.SEVERE, "unable to load configuration", e);
-				throw new RuntimeException("unable to load configuration", e);
-			}
+            try {
+                config = new OrtolangConfig();
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "unable to load configuration", e);
+                throw new RuntimeException("unable to load configuration", e);
+            }
         }
         return config;
     }
-    
+
     public Path getHomePath() {
-    	return home;
+        return home;
     }
-    
+
     public String getProperty(OrtolangConfig.Property property) {
-    	return props.getProperty(property.key());
+        return props.getProperty(property.key());
     }
-    
+
     public enum Property {
-    	
-    	CONFIG_VERSION ("config.version"),
-    	HANDLE_PREFIX ("handle.prefix"),
-    	DATE_FORMAT_PATTERN ("date.format.pattern"),
-    	
-    	API_URL_SSL ("api.url.ssl"),
-    	API_URL_NOSSL ("api.url.nossl"),
-    	API_CONTEXT ("api.context"),
-    	API_PATH_OBJECTS ("api.path.objects"),
-    	API_PATH_CONTENT ("api.path.content"),
-    	API_PATH_SUB ("api.path.sub"),
-    	API_PATH_OAI ("api.path.oai"),
-    	
-    	AUTH_SERVER_URL ("auth.server.url"),
-    	AUTH_CLIENT_PUBKEY ("auth.pubkey"),
-    	AUTH_REALM ("auth.realm"),
-    	AUTH_CLIENT ("auth.client"),
-    	AUTH_LOGOUT_REDIRECT ("auth.logout.redirect"),
-    	
-    	RUNTIME_DEFINITIONS ("runtime.definitions"),
-    	
-    	THUMBNAIL_GENERATORS ("thumbnail.generators"),
-    	
-    	FTP_SERVER_HOST ("ftp.server.host"),
-    	FTP_SERVER_PORT ("ftp.server.port"),
-    	
-    	PIWIK_HOST ("piwik.host"),
-    	PIWIK_SITE_ID ("piwik.site.id");
-    	
-    	private final String key;
-    	
-    	private Property(String name) {
-    		this.key = name;
-    	}
-    	
-    	public String key() {
-    		return key;
-    	}
-    	
+
+        CONFIG_VERSION ("config.version"),
+        HANDLE_PREFIX ("handle.prefix"),
+        DATE_FORMAT_PATTERN ("date.format.pattern"),
+
+        API_URL_SSL ("api.url.ssl"),
+        API_URL_NOSSL ("api.url.nossl"),
+        API_CONTEXT ("api.context"),
+        API_PATH_OBJECTS ("api.path.objects"),
+        API_PATH_CONTENT ("api.path.content"),
+        API_PATH_SUB ("api.path.sub"),
+        API_PATH_OAI ("api.path.oai"),
+
+        AUTH_SERVER_URL ("auth.server.url"),
+        AUTH_CLIENT_PUBKEY ("auth.pubkey"),
+        AUTH_REALM ("auth.realm"),
+        AUTH_CLIENT ("auth.client"),
+        AUTH_LOGOUT_REDIRECT ("auth.logout.redirect"),
+
+        RUNTIME_DEFINITIONS ("runtime.definitions"),
+
+        THUMBNAIL_GENERATORS ("thumbnail.generators"),
+
+        FTP_SERVER_HOST ("ftp.server.host"),
+        FTP_SERVER_PORT ("ftp.server.port"),
+
+        PIWIK_HOST ("piwik.host"),
+        PIWIK_SITE_ID ("piwik.site.id"),
+
+        ZIP_IGNORED_FILES ("zip.ignored.files");
+
+        private final String key;
+
+        private Property(String name) {
+            this.key = name;
+        }
+
+        public String key() {
+            return key;
+        }
+
     }
 
 }

@@ -173,7 +173,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {
-        Map<String, String>infos = new HashMap<String, String> ();
+        Map<String, String> infos = new HashMap<String, String> ();
         return infos;
     }
 
