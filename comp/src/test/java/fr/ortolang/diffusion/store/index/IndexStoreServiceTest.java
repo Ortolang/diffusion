@@ -72,15 +72,8 @@ public class IndexStoreServiceTest {
 	public static void globalSetup() {
 		try {
 			LogManager.getLogManager().readConfiguration(ClassLoader.getSystemResourceAsStream("logging.properties"));
-		} catch (SecurityException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (SecurityException | IOException e) {
+			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
 	
@@ -238,7 +231,7 @@ public class IndexStoreServiceTest {
 	
 	private void dumpResults(List<OrtolangSearchResult> results) {
 		StringBuffer dump = new StringBuffer();
-		dump.append(results.size() + " results found :");
+		dump.append(results.size()).append(" results found :");
 		for ( OrtolangSearchResult result : results ) {
 			dump.append("\r\n").append(result.toString());
 		}

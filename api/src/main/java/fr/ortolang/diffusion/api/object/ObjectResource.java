@@ -215,34 +215,4 @@ public class ObjectResource {
 		return Response.ok().build();
 	}
 
-	@GET
-	@Path("/index")
-	public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
-		LOGGER.log(Level.INFO, "GET /objects/index?query=" + query);
-		List<OrtolangSearchResult> results;
-		if (query != null && query.length() > 0) {
-			results = search.indexSearch(query);
-		} else {
-			results = Collections.emptyList();
-		}
-		return Response.ok(results).build();
-	}
-
-	@GET
-	@Path("/json")
-	public Response jsonSearch(@QueryParam(value = "query") String query) {
-		LOGGER.log(Level.INFO, "GET /objects/json?query=" + query);
-		List<String> results;
-		if (query != null && query.length() > 0) {
-			try {
-				results = search.jsonSearch(query);
-			} catch (SearchServiceException e) {
-				results = Collections.emptyList();
-			}
-		} else {
-			results = Collections.emptyList();
-		}
-		return Response.ok(results).build();
-	}
-
 }

@@ -86,6 +86,7 @@ public class ImportZipTask extends RuntimeEngineTask {
                 try {
                     for (Pattern pattern : IGNORED_FILES) {
                         if (pattern.matcher(entry.getName()).matches()) {
+                            LOGGER.log(Level.FINEST, "Zip entry ignored");
                             ignore = true;
                             break;
                         }
