@@ -141,6 +141,7 @@ public class ContentResource {
 
     @GET
     @Path("/thumb/{key}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response get(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size, @QueryParam("l") @DefaultValue("true") boolean login,
             @Context SecurityContext security, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, ThumbnailServiceException {
         LOGGER.log(Level.INFO, "GET /content/thumb/" + key);
@@ -197,6 +198,7 @@ public class ContentResource {
     @POST
     @Path("/export")
     @Consumes({ MediaType.APPLICATION_FORM_URLENCODED })
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response exportPost(final @FormParam("followsymlink") @DefaultValue("false") String followSymlink, @FormParam("filename") @DefaultValue("download") String filename,
             @FormParam("format") @DefaultValue("zip") String format, final @FormParam("path") List<String> paths, @Context Request request) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "POST /export");
@@ -206,6 +208,7 @@ public class ContentResource {
 
     @GET
     @Path("/export")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response exportGet(final @QueryParam("followsymlink") @DefaultValue("false") String followSymlink, @QueryParam("filename") @DefaultValue("download") String filename,
             @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, @Context Request request) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "POST /export");
@@ -369,6 +372,7 @@ public class ContentResource {
 
     @GET
     @Path("/key/{key}")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response key(@PathParam("key") String key, @QueryParam("fd") boolean download, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order,
             @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext ctx, @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException,
             AccessDeniedException, InvalidPathException, OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException,
@@ -532,6 +536,7 @@ public class ContentResource {
 
     @GET
     @Path("/{alias}")
+    @Produces(MediaType.TEXT_HTML)
     public Response workspace(@PathParam("alias") String alias, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("l") @DefaultValue("true") boolean login,
             @Context SecurityContext security, @Context Request request) throws TemplateEngineException, CoreServiceException, AliasNotFoundException, KeyNotFoundException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /content/" + alias);
@@ -607,6 +612,7 @@ public class ContentResource {
 
     @GET
     @Path("/{alias}/{root}")
+    @Produces(MediaType.TEXT_HTML)
     public Response snapshot(@PathParam("alias") String alias, @PathParam("root") String root, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order,
             @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security, @Context Request request) throws TemplateEngineException, CoreServiceException,
             AccessDeniedException, AliasNotFoundException, KeyNotFoundException, BrowserServiceException {
@@ -725,7 +731,7 @@ public class ContentResource {
 
     @GET
     @Path("/{alias}/{root}/{path: .*}")
-    @Produces({ MediaType.MEDIA_TYPE_WILDCARD })
+    @Produces({ MediaType.TEXT_HTML, MediaType.APPLICATION_OCTET_STREAM })
     public Response path(@PathParam("alias") String alias, @PathParam("root") String root, @PathParam("path") String path, @QueryParam("fd") boolean download,
             @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext ctx,
             @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, AliasNotFoundException, InvalidPathException,
