@@ -17,6 +17,7 @@ import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangIndexableObjectFactory;
 import fr.ortolang.diffusion.OrtolangJob;
 import fr.ortolang.diffusion.indexing.IndexingService;
+import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 
 @Singleton
 @Startup
@@ -98,9 +99,14 @@ public class IndexStoreServiceWorker {
 					try {
 						switch ( job.getAction() ) {
 							case IndexingService.INDEX_ACTION :
-								OrtolangIndexableObject<IndexablePlainTextContent> object = OrtolangIndexableObjectFactory.buildPlainTextIndexableObject(job.getTarget());
-								store.index(object);
-								LOGGER.log(Level.FINE, "key " + job.getTarget() + " added to index store");
+								OrtolangIndexableObject<IndexablePlainTextContent> object;
+								try {
+									object = OrtolangIndexableObjectFactory.buildPlainTextIndexableObject(job.getTarget());
+									store.index(object);
+									LOGGER.log(Level.FINE, "key " + job.getTarget() + " added to index store");
+								} catch (NotIndexableContentException e) {
+									LOGGER.log(Level.FINE, "key " + job.getTarget() + " not indexable");
+								}
 								break;
 							case IndexingService.REMOVE_ACTION :
 								store.remove(job.getTarget());
