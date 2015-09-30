@@ -56,235 +56,235 @@ import fr.ortolang.diffusion.core.entity.Link;
 
 
 public class CollectionUnitTest {
-	
-	private static final Logger LOGGER = Logger.getLogger(CollectionUnitTest.class.getName());
-	
-	@Test 
-	public void testRegexp() {
-		String work = "1,2,3,4,5,6";
-		
-		work = removeElement(work, "2");
-		LOGGER.log(Level.INFO,work);
-		assertEquals("1,3,4,5,6", work);
-		
-		work = removeElement(work, "1");
-		LOGGER.log(Level.INFO,work);
-		assertEquals("3,4,5,6", work);
-		
-		work = removeElement(work, "6");
-		LOGGER.log(Level.INFO,work);
-		assertEquals("3,4,5", work);
-		
-		work = removeElement(work, "5");
-		work = removeElement(work, "3");
-		work = removeElement(work, "4");
-		LOGGER.log(Level.INFO,work);
-		assertEquals("", work);
-	}
-	
-	private String removeElement(String collection, String element) {
-		collection = collection.replaceAll("(" + element + "){1},?", "");
-		if ( collection.endsWith(",") ) {
-			collection = collection.substring(0, collection.length()-1);
-		}
-		return collection;
-	}
-	
-	@Test 
-	public void testRegexp2() {
-		String work = "1\n2\n3\n4\n5\n6";
-		
-		work = removeElement2(work, "2");
-		LOGGER.log(Level.INFO,"\n" + work);
-		assertEquals("1\n3\n4\n5\n6", work);
-		
-		work = removeElement2(work, "1");
-		LOGGER.log(Level.INFO,"\n" + work);
-		assertEquals("3\n4\n5\n6", work);
-		
-		work = removeElement2(work, "6");
-		LOGGER.log(Level.INFO,"\n" + work);
-		assertEquals("3\n4\n5", work);
-		
-		work = removeElement2(work, "5");
-		work = removeElement2(work, "3");
-		work = removeElement2(work, "4");
-		LOGGER.log(Level.INFO,"\n" + work);
-		assertEquals("", work);
-	}
-	
-	private String removeElement2(String collection, String element) {
-		collection = collection.replaceAll("(?m)^(" + element + ")\n?", "");
-		if ( collection.endsWith("\n") ) {
-			collection = collection.substring(0, collection.length()-1);
-		}
-		return collection;
-	}
-	
-	@Test
-	public void testKeySizeImpact() {
-		StringBuffer serial1 = new StringBuffer();
-		StringBuffer serial2 = new StringBuffer();
-		int cpt = 0;
-		for ( int j=0; j<100; j++ ) {
-			for ( int i=0; i<10; i++) {
-				cpt++;
-				serial1.append(Integer.toHexString(cpt)).append(",");
-				serial2.append(UUID.randomUUID().toString()).append(",");
-			}
-			LOGGER.log(Level.INFO, cpt + "," + serial1.length() + "," + serial2.length());
-		}
-	}
-	
-//	@Test
-//	public void benchCollectionElement() {
-//		Collection c = new Collection();
-//		c.setId("1");
-//		c.setClock(1);
-//		c.setKey("K1");
-//		c.setRoot(false);
-//		c.setName("collection");
-//
-//		
-//		for ( int j=1; j<=10; j++) {
-//			for ( int i=1; i<=2000; i++) {
-//				c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "name." + j + i, System.currentTimeMillis(), UUID.randomUUID().toString()));
-//			}
-//		
-//			long start = System.currentTimeMillis();
-//			int size = c.getElements().size();
-//			long stop = System.currentTimeMillis();
-//			logger.log(Level.INFO, (stop-start) + " ms to get the " + size + " collection elements !!");
-//			//logger.log(Level.INFO, "for " + size + " elements, collection contains " + c.getSegments().size() + " segments");
-//			
-//			start = System.currentTimeMillis();
-//			size = c.getElements().size();
-//			stop = System.currentTimeMillis();
-//			logger.log(Level.INFO, (stop-start) + " ms to get the " + size + " collection elements the second time !!");
-//			
-//			start = System.currentTimeMillis();
-//			boolean exists = c.containsElementName("name."+j+"10");
-//			stop = System.currentTimeMillis();
-//			logger.log(Level.INFO, (stop-start) + " ms to check that name."+j+"10 exists : " + exists + ",  in the collection collection elements !!");
-//			
-//			start = System.currentTimeMillis();
-//			CollectionElement element = c.findElementByName("name."+j+"10");
-//			stop = System.currentTimeMillis();
-//			logger.log(Level.INFO, (stop-start) + " ms to find element with name."+j+"10 element : " + element);
-//		}
-//		
-////		for ( String segment : c.getSegments() ) {
-////			logger.log(Level.INFO, segment);
-////		}
-//		
-//	}
-	
-	
-	@Test
-	public void testCollectionElement() {
-		Collection c = new Collection();
-		c.setId("1");
-		c.setClock(1);
-		c.setKey("K1");
-		c.setRoot(false);
-		c.setName("collection");
-		long tsk1 = System.currentTimeMillis();
-		long tsk2 = System.currentTimeMillis();
-		long tsk3 = System.currentTimeMillis();
-		long tsk4 = System.currentTimeMillis();
-		
-		
-		String key1 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", tsk1, 12, Collection.MIME_TYPE, key1));
-		
-		assertTrue(c.containsElementName("myname1"));
-		assertTrue(c.containsElementKey(key1));
-		
-//		for ( String segment : c.getSegments() ) {
-//			logger.log(Level.INFO, segment);
-//		}
-		
-		String key2 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname2", tsk2, 124521, Collection.MIME_TYPE, key2));
-		String key3 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname3", tsk3, 548754, Collection.MIME_TYPE, key3));
-		String key4 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", tsk4, 1024, Collection.MIME_TYPE, key4));
-		
-		assertTrue(c.containsElementName("myname1"));
-		assertTrue(c.containsElementKey(key1));
-		assertTrue(c.containsElementName("myname2"));
-		assertTrue(c.containsElementKey(key2));
-		assertTrue(c.containsElementName("myname3"));
-		assertTrue(c.containsElementKey(key3));
-		assertTrue(c.containsElementName("myname4"));
-		assertTrue(c.containsElementKey(key4));
-		
-//		logger.log(Level.INFO, "Segment Size : " + c.getSegments().size());
-//		for ( String segment : c.getSegments() ) {
-//			logger.log(Level.INFO, segment);
-//		}
-		
-		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname2", tsk2, 124521, Collection.MIME_TYPE, key2));
-		assertTrue(c.containsElementName("myname1"));
-		assertTrue(c.containsElementKey(key1));
-		assertFalse(c.containsElementName("myname2"));
-		assertFalse(c.containsElementKey(key2));
-		assertTrue(c.containsElementName("myname3"));
-		assertTrue(c.containsElementKey(key3));
-		assertTrue(c.containsElementName("myname4"));
-		assertTrue(c.containsElementKey(key4));
-		
-//		logger.log(Level.INFO, "Segment Size : " + c.getSegments().size());
-//		for ( String segment : c.getSegments() ) {
-//			logger.log(Level.INFO, segment);
-//		}
-		
-		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", tsk4, 1024, Collection.MIME_TYPE, key4));
-		assertTrue(c.containsElementName("myname1"));
-		assertTrue(c.containsElementKey(key1));
-		assertFalse(c.containsElementName("myname2"));
-		assertFalse(c.containsElementKey(key2));
-		assertTrue(c.containsElementName("myname3"));
-		assertTrue(c.containsElementKey(key3));
-		assertFalse(c.containsElementName("myname4"));
-		assertFalse(c.containsElementKey(key4));
-		
-//		logger.log(Level.INFO, "Segment Size : " + c.getSegments().size());
-//		for ( String segment : c.getSegments() ) {
-//			logger.log(Level.INFO, segment);
-//		}
-		
-		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", tsk1, 12, Collection.MIME_TYPE, key1));
-		assertFalse(c.containsElementName("myname1"));
-		assertFalse(c.containsElementKey(key1));
-		assertFalse(c.containsElementName("myname2"));
-		assertFalse(c.containsElementKey(key2));
-		assertTrue(c.containsElementName("myname3"));
-		assertTrue(c.containsElementKey(key3));
-		assertFalse(c.containsElementName("myname4"));
-		assertFalse(c.containsElementKey(key4));
-		
-//		logger.log(Level.INFO, "Segment Size : " + c.getSegments().size());
-//		for ( String segment : c.getSegments() ) {
-//			logger.log(Level.INFO, segment);
-//		}
-		
-		c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname3", tsk3, 548754, Collection.MIME_TYPE, key3));
-		assertFalse(c.containsElementName("myname1"));
-		assertFalse(c.containsElementKey(key1));
-		assertFalse(c.containsElementName("myname2"));
-		assertFalse(c.containsElementKey(key2));
-		assertFalse(c.containsElementName("myname3"));
-		assertFalse(c.containsElementKey(key3));
-		assertFalse(c.containsElementName("myname4"));
-		assertFalse(c.containsElementKey(key4));
-		
-//		logger.log(Level.INFO, "Segment Size : " + c.getSegments().size());
-//		for ( String segment : c.getSegments() ) {
-//			logger.log(Level.INFO, segment);
-//		}
-	}
+
+    private static final Logger LOGGER = Logger.getLogger(CollectionUnitTest.class.getName());
+
+    @Test
+    public void testRegexp() {
+        String work = "1,2,3,4,5,6";
+
+        work = removeElement(work, "2");
+        LOGGER.log(Level.INFO,work);
+        assertEquals("1,3,4,5,6", work);
+
+        work = removeElement(work, "1");
+        LOGGER.log(Level.INFO,work);
+        assertEquals("3,4,5,6", work);
+
+        work = removeElement(work, "6");
+        LOGGER.log(Level.INFO,work);
+        assertEquals("3,4,5", work);
+
+        work = removeElement(work, "5");
+        work = removeElement(work, "3");
+        work = removeElement(work, "4");
+        LOGGER.log(Level.INFO,work);
+        assertEquals("", work);
+    }
+
+    private String removeElement(String collection, String element) {
+        collection = collection.replaceAll("(" + element + "){1},?", "");
+        if ( collection.endsWith(",") ) {
+            collection = collection.substring(0, collection.length()-1);
+        }
+        return collection;
+    }
+
+    @Test
+    public void testRegexp2() {
+        String work = "1\n2\n3\n4\n5\n6";
+
+        work = removeElement2(work, "2");
+        LOGGER.log(Level.INFO,"\n" + work);
+        assertEquals("1\n3\n4\n5\n6", work);
+
+        work = removeElement2(work, "1");
+        LOGGER.log(Level.INFO,"\n" + work);
+        assertEquals("3\n4\n5\n6", work);
+
+        work = removeElement2(work, "6");
+        LOGGER.log(Level.INFO,"\n" + work);
+        assertEquals("3\n4\n5", work);
+
+        work = removeElement2(work, "5");
+        work = removeElement2(work, "3");
+        work = removeElement2(work, "4");
+        LOGGER.log(Level.INFO,"\n" + work);
+        assertEquals("", work);
+    }
+
+    private String removeElement2(String collection, String element) {
+        collection = collection.replaceAll("(?m)^(" + element + ")\n?", "");
+        if ( collection.endsWith("\n") ) {
+            collection = collection.substring(0, collection.length()-1);
+        }
+        return collection;
+    }
+
+    @Test
+    public void testKeySizeImpact() {
+        StringBuffer serial1 = new StringBuffer();
+        StringBuffer serial2 = new StringBuffer();
+        int cpt = 0;
+        for ( int j=0; j<100; j++ ) {
+            for ( int i=0; i<10; i++) {
+                cpt++;
+                serial1.append(Integer.toHexString(cpt)).append(",");
+                serial2.append(UUID.randomUUID().toString()).append(",");
+            }
+            LOGGER.log(Level.INFO, cpt + "," + serial1.length() + "," + serial2.length());
+        }
+    }
+
+    //	@Test
+    //	public void benchCollectionElement() {
+    //		Collection c = new Collection();
+    //		c.setId("1");
+    //		c.setClock(1);
+    //		c.setKey("K1");
+    //		c.setRoot(false);
+    //		c.setName("collection");
+    //
+    //
+    //		for ( int j=1; j<=10; j++) {
+    //			for ( int i=1; i<=2000; i++) {
+    //				c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "name." + j + i, System.currentTimeMillis(), UUID.randomUUID().toString()));
+    //			}
+    //
+    //			long start = System.currentTimeMillis();
+    //			int size = c.getElements().size();
+    //			long stop = System.currentTimeMillis();
+    //			logger.log(Level.INFO, (stop-start) + " ms to get the " + size + " collection elements !!");
+    //			//logger.log(Level.INFO, "for " + size + " elements, collection contains " + c.getSegments().size() + " segments");
+    //
+    //			start = System.currentTimeMillis();
+    //			size = c.getElements().size();
+    //			stop = System.currentTimeMillis();
+    //			logger.log(Level.INFO, (stop-start) + " ms to get the " + size + " collection elements the second time !!");
+    //
+    //			start = System.currentTimeMillis();
+    //			boolean exists = c.containsElementName("name."+j+"10");
+    //			stop = System.currentTimeMillis();
+    //			logger.log(Level.INFO, (stop-start) + " ms to check that name."+j+"10 exists : " + exists + ",  in the collection collection elements !!");
+    //
+    //			start = System.currentTimeMillis();
+    //			CollectionElement element = c.findElementByName("name."+j+"10");
+    //			stop = System.currentTimeMillis();
+    //			logger.log(Level.INFO, (stop-start) + " ms to find element with name."+j+"10 element : " + element);
+    //		}
+    //
+    ////		for ( String segment : c.getSegments() ) {
+    ////			logger.log(Level.INFO, segment);
+    ////		}
+    //
+    //	}
+
+
+    @Test
+    public void testCollectionElement() {
+        Collection c = new Collection();
+        c.setId("1");
+        c.setClock(1);
+        c.setKey("K1");
+        c.setRoot(false);
+        c.setName("collection");
+        long tsk1 = System.currentTimeMillis();
+        long tsk2 = System.currentTimeMillis();
+        long tsk3 = System.currentTimeMillis();
+        long tsk4 = System.currentTimeMillis();
+
+
+        String key1 = UUID.randomUUID().toString();
+        c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", tsk1, 12, Collection.MIME_TYPE, key1));
+
+        assertTrue(c.containsElementName("myname1"));
+        assertTrue(c.containsElementKey(key1));
+
+        //		for ( String segment : c.getSegments() ) {
+        //			logger.log(Level.INFO, segment);
+        //		}
+
+        String key2 = UUID.randomUUID().toString();
+        c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname2", tsk2, 124521, Collection.MIME_TYPE, key2));
+        String key3 = UUID.randomUUID().toString();
+        c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname3", tsk3, 548754, Collection.MIME_TYPE, key3));
+        String key4 = UUID.randomUUID().toString();
+        c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", tsk4, 1024, Collection.MIME_TYPE, key4));
+
+        assertTrue(c.containsElementName("myname1"));
+        assertTrue(c.containsElementKey(key1));
+        assertTrue(c.containsElementName("myname2"));
+        assertTrue(c.containsElementKey(key2));
+        assertTrue(c.containsElementName("myname3"));
+        assertTrue(c.containsElementKey(key3));
+        assertTrue(c.containsElementName("myname4"));
+        assertTrue(c.containsElementKey(key4));
+
+        //		logger.log(Level.INFO, "Segment Size : " + c.getSegments().size());
+        //		for ( String segment : c.getSegments() ) {
+        //			logger.log(Level.INFO, segment);
+        //		}
+
+        c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname2", tsk2, 124521, Collection.MIME_TYPE, key2));
+        assertTrue(c.containsElementName("myname1"));
+        assertTrue(c.containsElementKey(key1));
+        assertFalse(c.containsElementName("myname2"));
+        assertFalse(c.containsElementKey(key2));
+        assertTrue(c.containsElementName("myname3"));
+        assertTrue(c.containsElementKey(key3));
+        assertTrue(c.containsElementName("myname4"));
+        assertTrue(c.containsElementKey(key4));
+
+        //		logger.log(Level.INFO, "Segment Size : " + c.getSegments().size());
+        //		for ( String segment : c.getSegments() ) {
+        //			logger.log(Level.INFO, segment);
+        //		}
+
+        c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", tsk4, 1024, Collection.MIME_TYPE, key4));
+        assertTrue(c.containsElementName("myname1"));
+        assertTrue(c.containsElementKey(key1));
+        assertFalse(c.containsElementName("myname2"));
+        assertFalse(c.containsElementKey(key2));
+        assertTrue(c.containsElementName("myname3"));
+        assertTrue(c.containsElementKey(key3));
+        assertFalse(c.containsElementName("myname4"));
+        assertFalse(c.containsElementKey(key4));
+
+        //		logger.log(Level.INFO, "Segment Size : " + c.getSegments().size());
+        //		for ( String segment : c.getSegments() ) {
+        //			logger.log(Level.INFO, segment);
+        //		}
+
+        c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", tsk1, 12, Collection.MIME_TYPE, key1));
+        assertFalse(c.containsElementName("myname1"));
+        assertFalse(c.containsElementKey(key1));
+        assertFalse(c.containsElementName("myname2"));
+        assertFalse(c.containsElementKey(key2));
+        assertTrue(c.containsElementName("myname3"));
+        assertTrue(c.containsElementKey(key3));
+        assertFalse(c.containsElementName("myname4"));
+        assertFalse(c.containsElementKey(key4));
+
+        //		logger.log(Level.INFO, "Segment Size : " + c.getSegments().size());
+        //		for ( String segment : c.getSegments() ) {
+        //			logger.log(Level.INFO, segment);
+        //		}
+
+        c.removeElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname3", tsk3, 548754, Collection.MIME_TYPE, key3));
+        assertFalse(c.containsElementName("myname1"));
+        assertFalse(c.containsElementKey(key1));
+        assertFalse(c.containsElementName("myname2"));
+        assertFalse(c.containsElementKey(key2));
+        assertFalse(c.containsElementName("myname3"));
+        assertFalse(c.containsElementKey(key3));
+        assertFalse(c.containsElementName("myname4"));
+        assertFalse(c.containsElementKey(key4));
+
+        //		logger.log(Level.INFO, "Segment Size : " + c.getSegments().size());
+        //		for ( String segment : c.getSegments() ) {
+        //			logger.log(Level.INFO, segment);
+        //		}
+    }
 
     @Test
     public void testCollectionElementWithSpecialChars() {
@@ -312,7 +312,7 @@ public class CollectionUnitTest {
         assertTrue(c.containsElementName(collectionElement1.getName()));
         assertTrue(c.containsElementName(collectionElement2.getName()));
         assertTrue(c.containsElementName(collectionElement3.getName()));
-        
+
         CollectionElement ce1 = c.findElementByName("myname1 (foo)");
         assertNotNull(ce1);
         assertEquals(DataObject.OBJECT_TYPE,ce1.getType());
@@ -337,78 +337,83 @@ public class CollectionUnitTest {
         assertEquals(12,ce3.getSize());
         assertEquals(Collection.MIME_TYPE,ce3.getMimeType());
         assertEquals(key3,ce3.getKey());
-        
+
         c.removeElement(collectionElement1);
         assertFalse(c.containsElementKey(key1));
         c.removeElement(collectionElement2);
         assertFalse(c.containsElementKey(key2));
     }
-	
-	@Test
-	public void testFindCollectionElement() {
-		Collection c = new Collection();
-		c.setId("1");
-		c.setClock(1);
-		c.setKey("K1");
-		c.setRoot(false);
-		c.setName("collection");
 
-		String key1 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", System.currentTimeMillis(), 1024, Collection.MIME_TYPE, key1));
-		String key2 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(Collection.OBJECT_TYPE, "myname2", System.currentTimeMillis(), 0, "image/svg+xml", key2));
-		String key3 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(Link.OBJECT_TYPE, "myname3", System.currentTimeMillis(), 0, "application/vnd.ms-excel", key3));
-		String key4 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", System.currentTimeMillis(), 1024, "application/EDI-X12", key4));
-		String key5 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname 5", System.currentTimeMillis(), 1024, "application/EDI-X12", key5));
-		String key6 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "w&értþÿû 523 ze", System.currentTimeMillis(), 1024, "application/EDI-X12", key6));
-		String key7 = UUID.randomUUID().toString();
-		c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "Bootstrap (1).txt", System.currentTimeMillis(), 1024, "application/EDI-X12", key7));
-		
-		String regexp = "(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\tmyname1\t([0-9]{13})\t([0-9]+)\t([^%]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$";
-		
-		for ( String segment : c.getSegments() ) {
-			LOGGER.log(Level.INFO, segment);
-			LOGGER.log(Level.INFO, "segment matches myname1: " + segment.matches(regexp));
-			Pattern pattern = Pattern.compile(regexp);
-			Matcher matcher = pattern.matcher(segment);
-			matcher.matches();
-			LOGGER.log(Level.INFO, "group 1 : " + matcher.group(1));
-			LOGGER.log(Level.INFO, "group 2 : " + matcher.group(2));
-			LOGGER.log(Level.INFO, "group 3 : " + matcher.group(3));
-			LOGGER.log(Level.INFO, "group 4 : " + matcher.group(4));
-		}
-		
-		for ( CollectionElement element : c.getElements() ) {
-			LOGGER.log(Level.INFO, "element: " + element.serialize());
-		}
-		
-		CollectionElement ce1 = c.findElementByName("myname1");
-		LOGGER.log(Level.INFO, "ce1 : " + ce1);
-		assertNotNull(ce1);
-		CollectionElement ce2 = c.findElementByName("myname2");
-		LOGGER.log(Level.INFO, "ce2 : " + ce2);
-		assertNotNull(ce2);
-		CollectionElement ce3 = c.findElementByName("myname3");
-		LOGGER.log(Level.INFO, "ce3 : " + ce3);
-		assertNotNull(ce3);
-		CollectionElement ce4 = c.findElementByName("myname4");
-		LOGGER.log(Level.INFO, "ce4 : " + ce4);
-		assertNotNull(ce4);
-		CollectionElement ce5 = c.findElementByName("myname 5");
-		LOGGER.log(Level.INFO, "ce5 : " + ce5);
-		assertNotNull(ce5);
-		CollectionElement ce6 = c.findElementByName("w&értþÿû 523 ze");
-		LOGGER.log(Level.INFO, "ce6 : " + ce6);
-		assertNotNull(ce6);
-		CollectionElement ce7 = c.findElementByName("Bootstrap (1).txt");
-		LOGGER.log(Level.INFO, "ce7 : " + ce7);
-		assertNotNull(ce7);
-	}
-	
+    @Test
+    public void testFindCollectionElement() {
+        Collection c = new Collection();
+        c.setId("1");
+        c.setClock(1);
+        c.setKey("K1");
+        c.setRoot(false);
+        c.setName("collection");
+
+        String key1 = UUID.randomUUID().toString();
+        c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname1", System.currentTimeMillis(), 1024, Collection.MIME_TYPE, key1));
+        String key2 = UUID.randomUUID().toString();
+        c.addElement(new CollectionElement(Collection.OBJECT_TYPE, "myname2", System.currentTimeMillis(), 0, "image/svg+xml", key2));
+        String key3 = UUID.randomUUID().toString();
+        c.addElement(new CollectionElement(Link.OBJECT_TYPE, "myname3", System.currentTimeMillis(), 0, "application/vnd.ms-excel", key3));
+        String key4 = UUID.randomUUID().toString();
+        c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname4", System.currentTimeMillis(), 1024, "application/EDI-X12", key4));
+        String key5 = UUID.randomUUID().toString();
+        c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "myname 5", System.currentTimeMillis(), 1024, "application/EDI-X12", key5));
+        String key6 = UUID.randomUUID().toString();
+        c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "w&értþÿû 523 ze", System.currentTimeMillis(), 1024, "application/EDI-X12", key6));
+        String key7 = UUID.randomUUID().toString();
+        c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "Bootstrap (1).txt", System.currentTimeMillis(), 1024, "application/EDI-X12", key7));
+        String key8 = UUID.randomUUID().toString();
+        c.addElement(new CollectionElement(DataObject.OBJECT_TYPE, "©πî‡∂Ù@€ôæÂê‡ƒ÷~◊Ï.txt", System.currentTimeMillis(), 1024, "application/EDI-X12", key8));
+
+        String regexp = "(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\tmyname1\t([0-9]{13})\t([0-9]+)\t([^%]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$";
+
+        for ( String segment : c.getSegments() ) {
+            LOGGER.log(Level.INFO, segment);
+            LOGGER.log(Level.INFO, "segment matches myname1: " + segment.matches(regexp));
+            Pattern pattern = Pattern.compile(regexp);
+            Matcher matcher = pattern.matcher(segment);
+            matcher.matches();
+            LOGGER.log(Level.INFO, "group 1 : " + matcher.group(1));
+            LOGGER.log(Level.INFO, "group 2 : " + matcher.group(2));
+            LOGGER.log(Level.INFO, "group 3 : " + matcher.group(3));
+            LOGGER.log(Level.INFO, "group 4 : " + matcher.group(4));
+        }
+
+        for ( CollectionElement element : c.getElements() ) {
+            LOGGER.log(Level.INFO, "element: " + element.serialize());
+        }
+
+        CollectionElement ce1 = c.findElementByName("myname1");
+        LOGGER.log(Level.INFO, "ce1 : " + ce1);
+        assertNotNull(ce1);
+        CollectionElement ce2 = c.findElementByName("myname2");
+        LOGGER.log(Level.INFO, "ce2 : " + ce2);
+        assertNotNull(ce2);
+        CollectionElement ce3 = c.findElementByName("myname3");
+        LOGGER.log(Level.INFO, "ce3 : " + ce3);
+        assertNotNull(ce3);
+        CollectionElement ce4 = c.findElementByName("myname4");
+        LOGGER.log(Level.INFO, "ce4 : " + ce4);
+        assertNotNull(ce4);
+        CollectionElement ce5 = c.findElementByName("myname 5");
+        LOGGER.log(Level.INFO, "ce5 : " + ce5);
+        assertNotNull(ce5);
+        CollectionElement ce6 = c.findElementByName("w&értþÿû 523 ze");
+        LOGGER.log(Level.INFO, "ce6 : " + ce6);
+        assertNotNull(ce6);
+        CollectionElement ce7 = c.findElementByName("Bootstrap (1).txt");
+        LOGGER.log(Level.INFO, "ce7 : " + ce7);
+        assertNotNull(ce7);
+        CollectionElement ce8 = c.findElementByName("©πî‡∂Ù@€ôæÂê‡ƒ÷~◊Ï.txt");
+        LOGGER.log(Level.INFO, "ce8 : " + ce8);
+        assertNotNull(ce8);
+    }
+
 }
 
 

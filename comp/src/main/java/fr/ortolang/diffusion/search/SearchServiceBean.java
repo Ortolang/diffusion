@@ -186,8 +186,7 @@ public class SearchServiceBean implements SearchService {
 	public List<String> jsonSearch(String query) throws SearchServiceException {
 		LOGGER.log(Level.FINE, "Performing semantic search with query: " + query);
 		try {
-			List<String> result = jsonStore.search(query);
-			return result;
+			return jsonStore.search(query);
 		} catch ( JsonStoreServiceException e ) {
 			throw new SearchServiceException("unable to perform json search", e);
 		}

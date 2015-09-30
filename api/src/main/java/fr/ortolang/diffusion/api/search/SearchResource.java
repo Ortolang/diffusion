@@ -41,10 +41,7 @@ import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.search.SearchServiceException;
 
 import javax.ejb.EJB;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
@@ -56,42 +53,43 @@ import java.util.logging.Logger;
 @Produces({ MediaType.APPLICATION_JSON })
 public class SearchResource {
 
-	private static final Logger LOGGER = Logger.getLogger(SearchResource.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(SearchResource.class.getName());
 
-	@EJB
-	private SearchService search;
+    @EJB
+    private SearchService search;
 
-	public SearchResource() {
-	}
+    public SearchResource() {
+    }
 
-	@GET
-	@Path("/index")
-	public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
-		LOGGER.log(Level.INFO, "GET /search/index?query=" + query);
-		List<OrtolangSearchResult> results;
-		if (query != null && query.length() > 0) {
-			results = search.indexSearch(query);
-		} else {
-			results = Collections.emptyList();
-		}
-		return Response.ok(results).build();
-	}
+    @GET
+    @Path("/index")
+    public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
+        LOGGER.log(Level.INFO, "GET /search/index?query=" + query);
+        List<OrtolangSearchResult> results;
+        if (query != null && query.length() > 0) {
+            results = search.indexSearch(query);
+        } else {
+            results = Collections.emptyList();
+        }
+        return Response.ok(results).build();
+    }
 
-	@GET
-	@Path("/json")
-	public Response jsonSearch(@QueryParam(value = "query") String query) {
-		LOGGER.log(Level.INFO, "GET /search/json?query=" + query);
-		List<String> results;
-		if (query != null && query.length() > 0) {
-			try {
-				results = search.jsonSearch(query);
-			} catch (SearchServiceException e) {
-				results = Collections.emptyList();
-			}
-		} else {
-			results = Collections.emptyList();
-		}
-		return Response.ok(results).build();
-	}
+    @POST
+    @Path("/json")
+    @Consumes({ MediaType.APPLICATION_FORM_URLENCODED })
+    public Response jsonSearch(@FormParam(value = "query") String query) {
+        LOGGER.log(Level.INFO, "POST /search/json");
+        List<String> results;
+        if (query != null && query.length() > 0) {
+            try {
+                results = search.jsonSearch(query);
+            } catch (SearchServiceException e) {
+                results = Collections.emptyList();
+            }
+        } else {
+            results = Collections.emptyList();
+        }
+        return Response.ok(results).build();
+    }
 
 }
