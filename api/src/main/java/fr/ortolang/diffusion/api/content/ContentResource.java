@@ -777,12 +777,13 @@ public class ContentResource {
                     security.checkPermission(okey, "download");
                     File content = store.getFile(((DataObject) object).getStream());
                     if (download) {
-                        return Response.ok(content).header("Content-Disposition", "attachment;").header("Content-Type", ((DataObject) object).getMimeType())
-                                .header("Content-Length", ((DataObject) object).getSize()).build();
+                        builder = Response.ok(content).header("Content-Disposition", "attachment;").header("Content-Type", ((DataObject) object).getMimeType())
+                                .header("Content-Length", ((DataObject) object).getSize());
                     } else {
-                        return Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize())
-                                .header("Accept-Ranges", "bytes").build();
+                        builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize())
+                                .header("Accept-Ranges", "bytes");
                     }
+                    builder.lastModified(lmd);
                 } else if (object instanceof Collection) {
                     representation.setElements(new ArrayList<CollectionElement>(((Collection) object).getElements()));
                     if (asc.equals("D")) {
