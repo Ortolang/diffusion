@@ -104,6 +104,8 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 				return ReferentielType.TERM;
 			case "Language":
 				return ReferentielType.LANGUAGE;
+			case "Country":
+				return ReferentielType.COUNTRY;
 			case "AnnotationLevel":
 				return ReferentielType.ANNOTATION_LEVEL;
 			case "CorporaDataType":
