@@ -31,9 +31,13 @@ import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.statistics.entity.StatisticValue;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
+import fr.ortolang.diffusion.store.handle.HandleStoreService;
+import fr.ortolang.diffusion.store.json.JsonStoreService;
+import fr.ortolang.diffusion.thumbnail.ThumbnailService;
 
 @Startup
 @Local(StatisticsService.class)
@@ -81,6 +85,14 @@ public class StatisticsServiceBean implements StatisticsService {
         STATS_NAMES.put(CoreService.SERVICE_NAME, Arrays.asList(coreInfos));
         String[] binaryInfos = new String[] { BinaryStoreService.INFO_SIZE, BinaryStoreService.INFO_FILES };
         STATS_NAMES.put(BinaryStoreService.SERVICE_NAME, Arrays.asList(binaryInfos));
+        String[] membershipInfos = new String[] { MembershipService.INFO_PROFILES_ALL, MembershipService.INFO_GROUPS_ALL };
+        STATS_NAMES.put(MembershipService.SERVICE_NAME, Arrays.asList(membershipInfos));
+        String[] handleInfos = new String[] { HandleStoreService.INFO_TOTAL_SIZE };
+        STATS_NAMES.put(HandleStoreService.SERVICE_NAME, Arrays.asList(handleInfos));
+        String[] jsonInfos = new String[] { JsonStoreService.INFO_SIZE, JsonStoreService.INFO_DB_SIZE };
+        STATS_NAMES.put(JsonStoreService.SERVICE_NAME, Arrays.asList(jsonInfos));
+        String[] thumbnailInfos = new String[] { ThumbnailService.INFO_SIZE, ThumbnailService.INFO_FILES };
+        STATS_NAMES.put(ThumbnailService.SERVICE_NAME, Arrays.asList(thumbnailInfos));
     }
     
     @Override

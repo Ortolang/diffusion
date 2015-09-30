@@ -9,7 +9,7 @@ import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 
 public class OrtolangIndexableObjectFactory<T> {
 
-    public static OrtolangIndexableObject<IndexablePlainTextContent> buildPlainTextIndexableObject(String key) throws OrtolangException {
+    public static OrtolangIndexableObject<IndexablePlainTextContent> buildPlainTextIndexableObject(String key) throws OrtolangException, NotIndexableContentException {
         try {
             RegistryService registry = (RegistryService)OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
             OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -19,7 +19,7 @@ public class OrtolangIndexableObjectFactory<T> {
             loadCommonIndexableObject(key, identifier, object);
             object.setContent(content);
             return object;
-        } catch (Exception e) {
+        } catch (RegistryServiceException | KeyNotFoundException e) {
             throw new OrtolangException("unable to get plain text indexable content for object ", e);
         }
     }

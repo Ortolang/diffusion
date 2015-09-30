@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.store.json;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -218,15 +219,22 @@ public class JsonStoreServiceBean implements JsonStoreService {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {
         Map<String, String>infos = new HashMap<String, String> ();
-        infos.put("pool.size.max", Integer.toString(pool.getMaxSize()));
-        infos.put("pool.connections.availables", Integer.toString(pool.getAvailableConnections()));
-        infos.put("pool.created.instances", Integer.toString(pool.getCreatedInstances()));
-        infos.put("server.directory", server.getDatabaseDirectory());
+        infos.put(INFO_POOL_SIZE_MAX, Integer.toString(pool.getMaxSize()));
+        infos.put(INFO_AVAIL_CONNECTIONS, Integer.toString(pool.getAvailableConnections()));
+        infos.put(INFO_INSTANCES_CREATED, Integer.toString(pool.getCreatedInstances()));
+        try {
+            infos.put(INFO_PATH, base.toString());
+            infos.put(INFO_SIZE, Long.toString(getStoreSize()));
+        } catch ( Exception e ) {
+            //
+        }
         ODatabaseDocumentTx db = pool.acquire();
         try {
-            infos.put("database.name", db.getName());
-            infos.put("database.size", Long.toString(db.getSize()));
-            infos.put("database.status", db.getStatus().toString());
+            infos.put(INFO_DB_NAME, db.getName());
+            infos.put(INFO_DB_SIZE, Long.toString(db.getSize()));
+            infos.put(INFO_DB_STATUS, db.getStatus().toString());
+        } catch ( Exception e ) {
+            //
         } finally {
             db.close();
         }
@@ -282,6 +290,17 @@ public class JsonStoreServiceBean implements JsonStoreService {
         }
         return null;
     }
+	
+	private long getStoreSize() throws IOException {
+        long size = Files.walk(base).mapToLong(this::size).sum();
+        return size;
+    }
     
-
+	private long size(Path p) {
+        try {
+            return Files.size(p);
+        } catch ( Exception e ) {
+            return 0;
+        }
+    }
 }

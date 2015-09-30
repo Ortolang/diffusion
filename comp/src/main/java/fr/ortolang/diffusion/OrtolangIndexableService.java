@@ -42,7 +42,7 @@ import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 
 public interface OrtolangIndexableService {
 	
-	public abstract IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException;
+	public abstract IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException;
 	
 	public abstract IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException, NotIndexableContentException;
 	

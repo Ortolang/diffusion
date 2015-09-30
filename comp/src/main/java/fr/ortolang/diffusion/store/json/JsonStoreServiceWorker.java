@@ -101,7 +101,7 @@ public class JsonStoreServiceWorker {
                     try {
                         switch (job.getAction()) {
                             case IndexingService.INDEX_ACTION:
-                                OrtolangIndexableObject<IndexableJsonContent> object = null;
+                                OrtolangIndexableObject<IndexableJsonContent> object;
                                 try {
                                     object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(job.getTarget());
                                     store.index(object);

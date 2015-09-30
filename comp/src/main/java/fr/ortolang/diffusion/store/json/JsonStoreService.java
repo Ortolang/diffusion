@@ -10,6 +10,17 @@ public interface JsonStoreService extends OrtolangService {
 
 	public static final String SERVICE_NAME = "json-store";
 	
+	public static final String INFO_PATH = "path";
+    public static final String INFO_SIZE = "size";
+    public static final String INFO_FILES = "files";
+    public static final String INFO_POOL_SIZE_MAX = "pool.maxsize";
+    public static final String INFO_AVAIL_CONNECTIONS = "connections.avail";
+    public static final String INFO_INSTANCES_CREATED = "instances.created";
+    public static final String INFO_DB_NAME = "db.name";
+    public static final String INFO_DB_SIZE = "db.size";
+    public static final String INFO_DB_STATUS = "db.status";
+       
+	
 	public void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException;
 	
 	public void remove(String key) throws JsonStoreServiceException;

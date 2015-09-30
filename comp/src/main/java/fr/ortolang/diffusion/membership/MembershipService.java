@@ -61,6 +61,9 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	public static final String ADMIN_GROUP_KEY = "admins";
 	public static final String MODERATOR_GROUP_KEY = "moderators";
 	public static final String ESR_GROUP_KEY = "esr";
+	
+	public static final String INFO_PROFILES_ALL = "profiles.all";
+	public static final String INFO_GROUPS_ALL = "groups.all";
 
 	public String getProfileKeyForConnectedIdentifier();
 	

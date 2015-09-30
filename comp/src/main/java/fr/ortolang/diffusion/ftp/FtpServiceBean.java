@@ -1,6 +1,6 @@
 package fr.ortolang.diffusion.ftp;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,15 +54,16 @@ public class FtpServiceBean implements FtpService {
     
     private OrtolangFileSystemFactory fsFactory;
 	private OrtolangUserManager userManager;
+	private ListenerFactory lFactory;
 	private ConnectionConfigFactory cFactory;
 	private FtpServer server;
 
 	public FtpServiceBean() {
 	    LOGGER.log(Level.FINE, "Instanciating ftp service");
     	FtpServerFactory serverFactory = new FtpServerFactory();
-		ListenerFactory factory = new ListenerFactory();
-		factory.setPort(Integer.parseInt(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_PORT)));
-		serverFactory.addListener("default", factory.createListener());
+    	lFactory = new ListenerFactory();
+    	lFactory.setPort(Integer.parseInt(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_PORT)));
+		serverFactory.addListener("default", lFactory.createListener());
 		fsFactory = new OrtolangFileSystemFactory();
 		serverFactory.setFileSystem(fsFactory);
 		cFactory = new ConnectionConfigFactory();
@@ -138,8 +139,23 @@ public class FtpServiceBean implements FtpService {
     
     @Override
     public Map<String, String> getServiceInfos() {
-        //TODO provide infos about active connections, config, ports, etc...
-        return Collections.emptyMap();
+        Map<String, String>infos = new HashMap<String, String> ();
+        infos.put(INFO_SERVER_HOST, lFactory.getServerAddress());
+        infos.put(INFO_SERVER_PORT, Integer.toString(lFactory.getPort()));
+        if (server.isStopped()) {
+            infos.put(INFO_SERVER_STATE, "stopped");
+        } else if (server.isSuspended()) {
+            infos.put(INFO_SERVER_STATE, "suspended");
+        } else {
+            infos.put(INFO_SERVER_STATE, "started");
+        }
+        infos.put(INFO_LOGIN_FAILURE_DELAY, Integer.toString(cFactory.getLoginFailureDelay()));
+        infos.put(INFO_ANON_LOGIN_ENABLES, Boolean.toString(cFactory.isAnonymousLoginEnabled()));
+        infos.put(INFO_MAX_ANON_LOGIN, Integer.toString(cFactory.getMaxAnonymousLogins()));
+        infos.put(INFO_MAX_LOGIN, Integer.toString(cFactory.getMaxLogins()));
+        infos.put(INFO_MAX_LOGIN_FAILURES, Integer.toString(cFactory.getMaxLoginFailures()));
+        infos.put(INFO_MAX_THREADS, Integer.toString(cFactory.getMaxThreads()));
+        return infos;
     }
 
     @Override
