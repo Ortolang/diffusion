@@ -2,10 +2,25 @@ package fr.ortolang.diffusion.runtime.engine.task;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.apache.commons.io.IOUtils;
@@ -28,52 +43,65 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
 		checkParameters(execution);
-		String referentielpath = execution.getVariable(REFERENTIEL_PATH_PARAM_NAME, String.class);
-		String referentieltype = execution.getVariable(REFERENTIEL_TYPE_PARAM_NAME, String.class);
+		String referentielPathParam = execution.getVariable(REFERENTIEL_PATH_PARAM_NAME, String.class);
 		
-		File referentielPathFile = new File(referentielpath);
+		File referentielPathFile = new File(referentielPathParam);
 		if(referentielPathFile.exists()) {
-			for(File referentielEntityFile : referentielPathFile.listFiles()) {
+			
+			final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:*.{json}");
+			final Path referentialPath = Paths.get(referentielPathParam);
+			try {
+				Files.walkFileTree(referentialPath, new FileVisitor<Path>() {
+						@Override
+						public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+							return FileVisitResult.CONTINUE;
+						}
 
-				String content = getContent(referentielEntityFile);
-				if(content==null) {
-					continue;
-				}
-				ReferentielType type = getReferentielType(referentieltype);
-				if(type==null) {
-					continue;
-				}
+						@Override
+						public FileVisitResult visitFile(Path filepath, BasicFileAttributes attrs) throws IOException {
+							Path filename = filepath.getFileName();
+							if (filename!= null && matcher.matches(filename)) {
+								
+								File jsonFile = filepath.toFile();
+								String content = getContent(jsonFile);
+								if(content==null) {
+									LOGGER.log(Level.INFO, "Referential entity content is empty for file " + jsonFile);
+									return FileVisitResult.CONTINUE;
+								}
+								
+								ReferentielType type = extractReferentielType(content);
+								if(type==null) {
+									LOGGER.log(Level.INFO, "Referential entity type unknown for file " + jsonFile);
+									return FileVisitResult.CONTINUE;
+								}
 
-				boolean exist = false;
-				String name = referentielEntityFile.getName().substring(0, referentielEntityFile.getName().length()-5);
-				String key = type.toString() + ":" + name;
-				try {
-					getReferentielService().readReferentielEntity(key);
-					LOGGER.log(Level.FINE, "  referentiel entity already exists for key: " + name);
-					exist = true;
-				} catch (ReferentielServiceException | KeyNotFoundException e) {
-					//
-				}
-				
-				if(!exist) {
-					try {
-						getReferentielService().createReferentielEntity(name, type, content);
-						LOGGER.log(Level.FINE, "  referentiel entity created with name "+name);
-					} catch (ReferentielServiceException | KeyAlreadyExistsException | AccessDeniedException e) {
-						LOGGER.log(Level.SEVERE, "  unable to create referentiel entity named "+name, e);
-					}
-				} else {
-					LOGGER.log(Level.INFO, "  update referentiel entity "+name);
-					try {
-						getReferentielService().updateReferentielEntity(key, content);
-						LOGGER.log(Level.FINE, "  referentiel entity updated with name "+name);
-					} catch (ReferentielServiceException | AccessDeniedException | KeyNotFoundException e) {
-						LOGGER.log(Level.SEVERE, "  unable to create referentiel entity named "+name, e);
-					}
-				}
+								String name = jsonFile.getName().substring(0, jsonFile.getName().length()-5);
+								try {
+									addReferentialEntity(name, type, content);
+								} catch (RuntimeEngineTaskException e) {
+									LOGGER.log(Level.WARNING, "  unable to import referentiel : " + referentielPathFile);
+								}
+							}
+							return FileVisitResult.CONTINUE;
+						}
+
+						@Override
+						public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+							return FileVisitResult.CONTINUE;
+						}
+
+						@Override
+						public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+							return FileVisitResult.CONTINUE;
+						}
+
+					});
+			} catch (Exception e) {
+				LOGGER.log(Level.SEVERE, "  unable to import referentiel : " + referentielPathFile);
 			}
+			
 		} else {
-			LOGGER.log(Level.SEVERE, "  unable to import referentiel : " + referentielPathFile);
+			LOGGER.log(Level.SEVERE, "Referential folder doesn't exists : " + referentielPathFile);
 		}
 		
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import Referentiel entities done"));
@@ -89,8 +117,35 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 		if (!execution.hasVariable(REFERENTIEL_PATH_PARAM_NAME)) {
 			throw new RuntimeEngineTaskException("execution variable " + REFERENTIEL_PATH_PARAM_NAME + " is not set");
 		}
-		if (!execution.hasVariable(REFERENTIEL_TYPE_PARAM_NAME) ) {
-			throw new RuntimeEngineTaskException("execution variable " + REFERENTIEL_TYPE_PARAM_NAME + " is not set");
+	}
+	
+	private void addReferentialEntity(String name, ReferentielType type, String content) throws RuntimeEngineTaskException {
+		boolean exist = false;
+		String key = type.toString() + ":" + name;
+		try {
+			getReferentielService().readReferentielEntity(key);
+			LOGGER.log(Level.FINE, "  referentiel entity already exists for key: " + name);
+			exist = true;
+		} catch (ReferentielServiceException | KeyNotFoundException e) {
+			//
+		}
+		
+		if(!exist) {
+			try {
+				LOGGER.log(Level.FINE, "  add referentiel entity "+name); 
+				getReferentielService().createReferentielEntity(name, type, content);
+				LOGGER.log(Level.FINE, "  referentiel entity created with name "+name);
+			} catch (ReferentielServiceException | KeyAlreadyExistsException | AccessDeniedException e) {
+				LOGGER.log(Level.SEVERE, "  unable to create referentiel entity named "+name, e);
+			}
+		} else {
+			LOGGER.log(Level.FINE, "  update referentiel entity "+name); 
+			try {
+				getReferentielService().updateReferentielEntity(key, content);
+				LOGGER.log(Level.FINE, "  referentiel entity updated with name "+name);
+			} catch (ReferentielServiceException | AccessDeniedException | KeyNotFoundException e) {
+				LOGGER.log(Level.SEVERE, "  unable to create referentiel entity named "+name, e);
+			}
 		}
 	}
 	
@@ -154,14 +209,37 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 		}
 	}
 	
-	private String getContent(File file) {
+	private String getContent(File file) throws IOException {
 		String content = null;
+		InputStream is = new FileInputStream(file);
 		try {
-			content = IOUtils.toString(new FileInputStream(file));
+			content = IOUtils.toString(is);
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, "  unable to get content of file : "+file, e);
+		} finally {
+			is.close();
 		}
 		return content;
+	}
+	
+	private ReferentielType extractReferentielType(String jsonContent) {
+		String type = null;
+		StringReader reader = new StringReader(jsonContent);
+		JsonReader jsonReader = Json.createReader(reader);
+		try {
+			JsonObject jsonObj = jsonReader.readObject();
+			type = jsonObj.getString("type");
+		} catch(NullPointerException | ClassCastException e) {
+			LOGGER.log(Level.WARNING, "No property 'type' in json object");
+		} finally {
+			jsonReader.close();
+			reader.close();
+		}
+
+		if(type!=null) {
+			return getReferentielType(type);
+		}
+		return null;
 	}
 
 }

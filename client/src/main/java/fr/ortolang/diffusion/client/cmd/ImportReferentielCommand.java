@@ -25,7 +25,6 @@ public class ImportReferentielCommand extends Command {
 		options.addOption("U", "username", true, "username for login");
 		options.addOption("P", "password", true, "password for login");
 		options.addOption("f", "file", true, "directory which contains all referentiel entities to import");
-		options.addOption("t", "type", true, "specify the type of referentiel entities is");
 	}
 
 	@Override
@@ -54,9 +53,8 @@ public class ImportReferentielCommand extends Command {
 				}
 			}
 			
-			if ( cmd.hasOption("f") && cmd.hasOption("t") ) {
+			if ( cmd.hasOption("f") ) {
 				params.put("referentielpath", cmd.getOptionValue("f"));
-				params.put("referentieltype", cmd.getOptionValue("t"));
 			} else {
 				help();
 			}
