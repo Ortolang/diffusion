@@ -47,7 +47,7 @@
 		<version.shrinkwrap>1.2.2</version.shrinkwrap>
 		<version.shrinkwrap-resolver>2.1.1</version.shrinkwrap-resolver>
 		<version.arquillian>1.1.8.Final</version.arquillian>
-		<version.fasterxml.jackson>2.5.3</version.fasterxml.jackson>
+		<version.fasterxml.jackson>2.6.2</version.fasterxml.jackson>
 		<version.commons-io>2.4</version.commons-io>
 		<version.springframework.spring-context>4.0.9.RELEASE</version.springframework.spring-context>
 		<version.lyncode.xoai>4.1.0</version.lyncode.xoai>
@@ -60,7 +60,7 @@
 		<version.atmopshere>2.3.0</version.atmopshere>
 		<version.apache.lucene>4.6.0</version.apache.lucene>
 		<version.openrdf.sesame>2.8.3</version.openrdf.sesame>
-		<version.orientechnologies.orientdb>2.0.10</version.orientechnologies.orientdb>
+		<version.orientechnologies.orientdb>2.0.15</version.orientechnologies.orientdb>
 		<version.common-compress>1.8.1</version.common-compress>
 		<version.hdlnet>7.3.1</version.hdlnet>
 		<version.bagit>4.9.0</version.bagit>

@@ -613,7 +613,7 @@ public class ContentResource {
     @GET
     @Path("/{alias}/{root}")
     @Produces(MediaType.TEXT_HTML)
-    public Response snapshot(@PathParam("alias") String alias, @PathParam("root") String root, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order,
+    public Response snapshot(@PathParam("alias") String alias, @PathParam("root") final String root, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order,
             @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security, @Context Request request) throws TemplateEngineException, CoreServiceException,
             AccessDeniedException, AliasNotFoundException, KeyNotFoundException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /content/" + alias + "/" + root);
@@ -732,7 +732,7 @@ public class ContentResource {
     @GET
     @Path("/{alias}/{root}/{path: .*}")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-    public Response path(@PathParam("alias") String alias, @PathParam("root") String root, @PathParam("path") String path, @QueryParam("fd") boolean download,
+    public Response path(@PathParam("alias") String alias, @PathParam("root") final String root, @PathParam("path") String path, @QueryParam("fd") boolean download,
             @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext ctx,
             @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, AliasNotFoundException, InvalidPathException,
             OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException, SecurityServiceException, PathNotFoundException {
@@ -747,19 +747,29 @@ public class ContentResource {
         representation.setOrder(order);
         try {
             String wskey = core.resolveWorkspaceAlias(alias);
+            boolean cacheableRoot = false;
+            String rroot = null;
             if (root.equals(Workspace.LATEST)) {
-                root = core.findWorkspaceLatestPublishedSnapshot(wskey);
-                if (root == null) {
+                rroot = core.findWorkspaceLatestPublishedSnapshot(wskey);
+                if (rroot == null) {
                     return Response.status(Status.NOT_FOUND).entity("No version of this workspace has been published").type("text/plain").build();
                 }
+            } else if (!root.equals(Workspace.HEAD)) {
+                Workspace workspace = core.readWorkspace(wskey);
+                if (!workspace.containsTagName(root)) {
+                    cacheableRoot = true;
+                }
+            }
+            if (rroot == null) {
+                rroot = root;
             }
             PathBuilder npath = PathBuilder.fromPath(path);
-            String okey = core.resolveWorkspacePath(wskey, root, npath.build());
+            String okey = core.resolveWorkspacePath(wskey, rroot, npath.build());
             OrtolangObjectState state = browser.getState(okey);
 
             CacheControl cc = new CacheControl();
             cc.setPrivate(true);
-            if (!root.equals(Workspace.LATEST) && state.isLocked()) {
+            if (cacheableRoot) {
                 cc.setMaxAge(691200);
                 cc.setMustRevalidate(false);
             } else {

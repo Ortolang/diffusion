@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 
 public class OrtolangConfig {
 
-    private static final String CURRENT_CONFIG_VERSION = "6";
+    private static final String CURRENT_CONFIG_VERSION = "7";
     private static final Logger LOGGER = Logger.getLogger(OrtolangConfig.class.getName());
     private static OrtolangConfig config;
     private Properties props;
@@ -128,7 +128,9 @@ public class OrtolangConfig {
         PIWIK_HOST ("piwik.host"),
         PIWIK_SITE_ID ("piwik.site.id"),
 
-        ZIP_IGNORED_FILES ("zip.ignored.files");
+        ZIP_IGNORED_FILES ("zip.ignored.files"),
+
+        STATIC_SITE_VERSION ("static.site.version");
 
         private final String key;
 

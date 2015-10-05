@@ -296,7 +296,7 @@ public class Workspace extends OrtolangObject {
 	}
 	
 	public boolean containsTagName(String name) {
-		return tagsContent.contains(name + "/");
+		return findTagByName(name) != null;
 	}
 	
 	public boolean containsTagSnapshot(String snapshot) {
