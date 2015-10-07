@@ -833,7 +833,7 @@ public class ContentResource {
                     builder = Response.ok(TemplateEngine.getInstance().process("collection", representation));
                     builder.lastModified(lmd);
                 } else if (object instanceof Link) {
-                    return Response.seeOther(new URI(((Link) object).getTarget())).build();
+                    return Response.seeOther(uriInfo.getBaseUri().resolve(((Link) object).getTarget())).build();
                 } else {
                     return Response.serverError().entity("object type not supported").build();
                 }

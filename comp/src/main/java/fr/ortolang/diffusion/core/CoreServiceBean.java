@@ -226,7 +226,7 @@ public class CoreServiceBean implements CoreService {
     public SessionContext getSessionContext() {
         return this.ctx;
     }
-
+    
     /* Workspace */
 
     @Override
@@ -1652,8 +1652,11 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            notification.throwEvent(sobject.getKey(), caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "move"));
-            // TODO update event to propagate workspace modification
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("wskey", ws.getKey()).addArgument("source", spath).addArgument("destination", dpath)
+                    .addArgument("members", ws.getMembers());
+            notification.throwEvent(sobject.getKey(), caller, DataObject.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "move"), argumentsBuilder.build());
+            ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(2).addArgument("oKey", sobject.getKey()).addArgument("source", spath).addArgument("destination", dpath);
+            notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder2.build());
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CloneException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error while moving object", e);
@@ -1769,9 +1772,6 @@ public class CoreServiceBean implements CoreService {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkAuthentified(subjects);
             LOGGER.log(Level.FINEST, "user [" + caller + "] is authentified");
-            //TODO check that target is of type DataObjetc or Collection (maybe link)
-            authorisation.checkPermission(target, subjects, "read");
-            LOGGER.log(Level.FINEST, "user [" + caller + "] has 'read' permissions on the target");
 
             OrtolangObjectIdentifier wsidentifier = registry.lookup(workspace);
             checkObjectType(wsidentifier, Workspace.OBJECT_TYPE);
@@ -1817,7 +1817,11 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            notification.throwEvent(key, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "create"));
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("wskey", ws.getKey()).addArgument("path", path).addArgument("members", ws.getMembers())
+                    .addArgument("target", target);
+            notification.throwEvent(key, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "create"), argumentsBuilder.build());
+            ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(2).addArgument("oKey", key).addArgument("path", path);
+            notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder2.build());
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
                 | MembershipServiceException | IndexingServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during link creation", e);
@@ -1847,6 +1851,100 @@ public class CoreServiceBean implements CoreService {
         } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while reading link", e);
             throw new CoreServiceException("unable to read link with key [" + key + "]", e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void updateLink(String workspace, String path, String target) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException {
+        LOGGER.log(Level.FINE, "updating link into workspace [" + workspace + "] at path [" + path + "]");
+        try {
+            PathBuilder npath = PathBuilder.fromPath(path);
+            if (npath.isRoot()) {
+                throw new InvalidPathException("path is empty");
+            }
+            PathBuilder ppath = npath.clone().parent();
+
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkAuthentified(subjects);
+            LOGGER.log(Level.FINEST, "user [" + caller + "] is authentified");
+
+            OrtolangObjectIdentifier wsidentifier = registry.lookup(workspace);
+            checkObjectType(wsidentifier, Workspace.OBJECT_TYPE);
+            LOGGER.log(Level.FINEST, "workspace with key [" + workspace + "] exists");
+
+            Workspace ws = em.find(Workspace.class, wsidentifier.getId());
+            if (ws == null) {
+                throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
+            }
+            ws.setKey(workspace);
+            LOGGER.log(Level.FINEST, "workspace loaded");
+
+            authorisation.checkPermission(ws.getHead(), subjects, "update");
+            LOGGER.log(Level.FINEST, "user [" + caller + "] has 'update' permission on the head collection of this workspace");
+
+            String current = resolveWorkspacePath(workspace, Workspace.HEAD, npath.build());
+            OrtolangObjectIdentifier cidentifier = registry.lookup(current);
+            checkObjectType(cidentifier, Link.OBJECT_TYPE);
+            Link clink = em.find(Link.class, cidentifier.getId());
+            if (clink == null) {
+                throw new CoreServiceException("unable to load link with id [" + cidentifier.getId() + "] from storage");
+            }
+            LOGGER.log(Level.FINEST, "current link loaded");
+
+            if (!target.equals(clink.getTarget())) {
+                Collection parent = loadCollectionAtPath(ws.getHead(), ppath, ws.getClock());
+                LOGGER.log(Level.FINEST, "parent collection loaded for path " + npath.build());
+
+                CollectionElement element = parent.findElementByName(npath.part());
+                if (element == null) {
+                    throw new PathNotFoundException(npath.build());
+                }
+                LOGGER.log(Level.FINEST, "link element found for name " + npath.part());
+                if (!element.getType().equals(Link.OBJECT_TYPE)) {
+                    throw new InvalidPathException("path [" + npath.build() + "] is not a link");
+                }
+
+                OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
+                checkObjectType(identifier, Link.OBJECT_TYPE);
+                Link link = em.find(Link.class, identifier.getId());
+                if (link == null) {
+                    throw new CoreServiceException("unable to load link with id [" + identifier.getId() + "] from storage");
+                }
+                link.setKey(element.getKey());
+                link.setTarget(target);
+                if (link.getClock() < ws.getClock()) {
+                    Link clone = cloneLink(ws.getHead(), link, ws.getClock());
+                    parent.removeElement(element);
+                    CollectionElement celement = new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, clone.getKey());
+                    parent.addElement(celement);
+                    link = clone;
+                }
+                em.merge(parent);
+                em.merge(link);
+                registry.update(parent.getKey());
+                registry.update(link.getKey());
+                indexing.index(link.getKey());
+                LOGGER.log(Level.FINEST, "link updated");
+
+                ws.setChanged(true);
+                em.merge(ws);
+                registry.update(ws.getKey());
+                LOGGER.log(Level.FINEST, "workspace set changed");
+
+                ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(5).addArgument("wskey", ws.getKey()).addArgument("path", npath.build()).addArgument("members", ws.getMembers())
+                        .addArgument("target", target);
+                notification.throwEvent(link.getKey(), caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "update"), argumentsBuilder.build());
+                ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(2).addArgument("oKey", link.getKey()).addArgument("path", path);
+                notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder2.build());
+            } else {
+                LOGGER.log(Level.FINEST, "no changes detected with current link, nothing to do");
+            }
+        } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException | CloneException
+                | IndexingServiceException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while reading object", e);
+            throw new CoreServiceException("unable to read object into workspace [" + workspace + "] at path [" + path + "]", e);
         }
     }
 
@@ -1940,7 +2038,11 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            notification.throwEvent(slink.getKey(), caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "move"));
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("wskey", ws.getKey()).addArgument("source", spath).addArgument("destination", dpath)
+                    .addArgument("members", ws.getMembers());
+            notification.throwEvent(slink.getKey(), caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "move"), argumentsBuilder.build());
+            ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(2).addArgument("oKey", slink.getKey()).addArgument("source", spath).addArgument("destination", dpath);
+            notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder2.build());
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CloneException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error while moving link", e);
@@ -2014,7 +2116,10 @@ public class CoreServiceBean implements CoreService {
                 indexing.remove(leaf.getKey());
             }
 
-            notification.throwEvent(leaf.getKey(), caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "delete"));
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("wskey", ws.getKey()).addArgument("path", path).addArgument("members", ws.getMembers());
+            notification.throwEvent(leaf.getKey(), caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "delete"), argumentsBuilder.build());
+            ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(2).addArgument("oKey", leaf.getKey()).addArgument("path", path);
+            notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder2.build());
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error while deleting link", e);
@@ -2027,9 +2132,6 @@ public class CoreServiceBean implements CoreService {
     public List<String> findLinksForTarget(String target) throws CoreServiceException, AccessDeniedException {
         LOGGER.log(Level.FINE, "finding links for target [" + target + "]");
         try {
-            List<String> subjects = membership.getConnectedIdentifierSubjects();
-            authorisation.checkPermission(target, subjects, "read");
-
             TypedQuery<Link> query = em.createNamedQuery("findLinksForTarget", Link.class).setParameter("target", target);
             List<Link> links = query.getResultList();
             List<String> results = new ArrayList<String>();
@@ -2038,11 +2140,32 @@ public class CoreServiceBean implements CoreService {
                 results.add(key);
             }
             return results;
-        } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | IdentifierNotRegisteredException e) {
+        } catch (RegistryServiceException | IdentifierNotRegisteredException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during finding links for target", e);
             throw new CoreServiceException("unable to find link for target [" + target + "]", e);
         }
     }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String resolveLinkTarget(String target) throws CoreServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, AliasNotFoundException {
+        LOGGER.log(Level.FINE, "resolving link target [" + target + "]");
+        PathBuilder tpath = PathBuilder.fromPath(target);
+        String[] tparts = tpath.buildParts();
+        if ( tparts.length < 2 ) {
+            throw new CoreServiceException("unable to resolve target, path must containes at least an alias and a version");
+        }
+        String wskey = resolveWorkspaceAlias(tparts[0]);
+        String root = tparts[1];
+        String path = tpath.relativize(2).build();
+        if ( root.equals(Workspace.HEAD) || root.equals(Workspace.LATEST) ) {
+            throw new CoreServiceException("unable to resolve target due to " + Workspace.HEAD + " or " + Workspace.LATEST + " version reference");
+        }
+        String object = resolveWorkspacePath(wskey, root, path);
+        return object;
+    }
+
+    
 
     /* Metadatas */
 

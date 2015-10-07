@@ -141,7 +141,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	public void createLink(String wskey, String key, String path, String target) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
 	
-	public List<String> findLinksForTarget(String target) throws CoreServiceException, AccessDeniedException;
+	public void updateLink(String wskey, String path, String target)  throws CoreServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException;
 	
 	public void moveLink(String wskey, String from, String to) throws CoreServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
 	
@@ -149,9 +149,11 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	public Link readLink(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	//TODO public String resolveLinkTarget(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+	public List<String> findLinksForTarget(String target) throws CoreServiceException, AccessDeniedException;
 	
-	/*MetadataObject*/
+	public String resolveLinkTarget(String target) throws CoreServiceException, AliasNotFoundException, InvalidPathException, KeyNotFoundException, PathNotFoundException, AccessDeniedException;
+    
+    /*MetadataObject*/
 
 	public void createMetadataObject(String wskey, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
 

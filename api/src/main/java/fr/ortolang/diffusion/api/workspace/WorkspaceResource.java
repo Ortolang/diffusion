@@ -363,6 +363,9 @@ public class WorkspaceResource {
                 case DataObject.OBJECT_TYPE:
                     core.updateDataObject(wskey, npath.build(), form.getStreamHash());
                     return Response.ok().build();
+                case Link.OBJECT_TYPE:
+                    core.updateLink(wskey, npath.build(), form.getTarget());
+                    return Response.ok().build();
                 case MetadataObject.OBJECT_TYPE:
                     boolean mdexists = false;
                     String name = URLDecoder.decode(form.getName(), contentTransferEncoding);
@@ -427,6 +430,13 @@ public class WorkspaceResource {
             case Collection.OBJECT_TYPE:
                 if (destination != null && destination.length() > 0) {
                     core.moveCollection(wskey, representation.getPath(), destination);
+                }
+                break;
+            case Link.OBJECT_TYPE:
+                if (destination != null && destination.length() > 0) {
+                    core.moveLink(wskey, representation.getPath(), destination);
+                } else {
+                    core.updateDataObject(wskey, npath.build(), representation.getTarget());
                 }
                 break;
             case DataObject.OBJECT_TYPE:
