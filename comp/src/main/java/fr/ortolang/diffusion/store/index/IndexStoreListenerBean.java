@@ -51,7 +51,7 @@ import javax.jms.MessageListener;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-@MessageDriven(name = "PlainTextIndexingTopicMDB", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
+@MessageDriven(name = "IndexStoreListener", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
 		@ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
 		@ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @SecurityDomain("ortolang")
