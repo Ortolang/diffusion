@@ -1769,6 +1769,7 @@ public class CoreServiceBean implements CoreService {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkAuthentified(subjects);
             LOGGER.log(Level.FINEST, "user [" + caller + "] is authentified");
+            //TODO check that target is of type DataObjetc or Collection (maybe link)
             authorisation.checkPermission(target, subjects, "read");
             LOGGER.log(Level.FINEST, "user [" + caller + "] has 'read' permissions on the target");
 
