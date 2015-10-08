@@ -2038,10 +2038,10 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("wskey", ws.getKey()).addArgument("source", spath).addArgument("destination", dpath)
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(3).addArgument("wskey", ws.getKey()).addArgument("source", spath.build()).addArgument("destination", dpath.build())
                     .addArgument("members", ws.getMembers());
             notification.throwEvent(slink.getKey(), caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "move"), argumentsBuilder.build());
-            ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(2).addArgument("oKey", slink.getKey()).addArgument("source", spath).addArgument("destination", dpath);
+            ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(3).addArgument("oKey", slink.getKey()).addArgument("source", spath.build()).addArgument("destination", dpath.build());
             notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder2.build());
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CloneException | IndexingServiceException e) {
             ctx.setRollbackOnly();
