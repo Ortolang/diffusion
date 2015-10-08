@@ -2153,7 +2153,7 @@ public class CoreServiceBean implements CoreService {
         PathBuilder tpath = PathBuilder.fromPath(target);
         String[] tparts = tpath.buildParts();
         if ( tparts.length < 2 ) {
-            throw new CoreServiceException("unable to resolve target, path must containes at least an alias and a version");
+            throw new CoreServiceException("unable to resolve target, path must contains at least an alias and a version");
         }
         String wskey = resolveWorkspaceAlias(tparts[0]);
         String root = tparts[1];
@@ -2161,8 +2161,7 @@ public class CoreServiceBean implements CoreService {
         if ( root.equals(Workspace.HEAD) || root.equals(Workspace.LATEST) ) {
             throw new CoreServiceException("unable to resolve target due to " + Workspace.HEAD + " or " + Workspace.LATEST + " version reference");
         }
-        String object = resolveWorkspacePath(wskey, root, path);
-        return object;
+        return resolveWorkspacePath(wskey, root, path);
     }
 
     

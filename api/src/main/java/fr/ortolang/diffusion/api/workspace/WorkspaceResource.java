@@ -454,9 +454,14 @@ public class WorkspaceResource {
             }
             return Response.ok().build();
         } catch (PathNotFoundException e) {
-            if (representation.getType().equals(Collection.OBJECT_TYPE)) {
+            switch (representation.getType()) {
+            case Collection.OBJECT_TYPE:
                 core.createCollection(wskey, npath.build());
-            } else {
+                break;
+            case Link.OBJECT_TYPE:
+                core.createLink(wskey, npath.build(), representation.getTarget());
+                break;
+            default:
                 return Response.status(Response.Status.BAD_REQUEST).entity("unable to create element of type: " + representation.getType()).build();
             }
             URI newly = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build()).build();
