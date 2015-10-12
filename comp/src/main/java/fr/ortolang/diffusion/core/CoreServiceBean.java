@@ -1793,12 +1793,14 @@ public class CoreServiceBean implements CoreService {
             if (parent.containsElementName(npath.part())) {
                 throw new PathAlreadyExistsException(npath.build());
             }
-
+            
+            String ntarget = PathBuilder.fromPath(target).build();
+            
             Link link = new Link();
             link.setId(UUID.randomUUID().toString());
             link.setName(npath.part());
             link.setClock(ws.getClock());
-            link.setTarget(target);
+            link.setTarget(ntarget);
             em.persist(link);
 
             registry.register(key, link.getObjectIdentifier(), caller);
@@ -1818,7 +1820,7 @@ public class CoreServiceBean implements CoreService {
             LOGGER.log(Level.FINEST, "workspace set changed");
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("wskey", ws.getKey()).addArgument("path", path).addArgument("members", ws.getMembers())
-                    .addArgument("target", target);
+                    .addArgument("target", ntarget);
             notification.throwEvent(key, caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "create"), argumentsBuilder.build());
             ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(2).addArgument("oKey", key).addArgument("path", path);
             notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder2.build());
@@ -1892,8 +1894,10 @@ public class CoreServiceBean implements CoreService {
                 throw new CoreServiceException("unable to load link with id [" + cidentifier.getId() + "] from storage");
             }
             LOGGER.log(Level.FINEST, "current link loaded");
+            
+            String ntarget = PathBuilder.fromPath(target).build();
 
-            if (!target.equals(clink.getTarget())) {
+            if (!ntarget.equals(clink.getTarget())) {
                 Collection parent = loadCollectionAtPath(ws.getHead(), ppath, ws.getClock());
                 LOGGER.log(Level.FINEST, "parent collection loaded for path " + npath.build());
 
@@ -1913,7 +1917,7 @@ public class CoreServiceBean implements CoreService {
                     throw new CoreServiceException("unable to load link with id [" + identifier.getId() + "] from storage");
                 }
                 link.setKey(element.getKey());
-                link.setTarget(target);
+                link.setTarget(ntarget);
                 if (link.getClock() < ws.getClock()) {
                     Link clone = cloneLink(ws.getHead(), link, ws.getClock());
                     parent.removeElement(element);
@@ -1934,7 +1938,7 @@ public class CoreServiceBean implements CoreService {
                 LOGGER.log(Level.FINEST, "workspace set changed");
 
                 ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(5).addArgument("wskey", ws.getKey()).addArgument("path", npath.build()).addArgument("members", ws.getMembers())
-                        .addArgument("target", target);
+                        .addArgument("target", ntarget);
                 notification.throwEvent(link.getKey(), caller, Link.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "update"), argumentsBuilder.build());
                 ArgumentsBuilder argumentsBuilder2 = new ArgumentsBuilder(2).addArgument("oKey", link.getKey()).addArgument("path", path);
                 notification.throwEvent(ws.getKey(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argumentsBuilder2.build());
@@ -2153,7 +2157,7 @@ public class CoreServiceBean implements CoreService {
         PathBuilder tpath = PathBuilder.fromPath(target);
         String[] tparts = tpath.buildParts();
         if ( tparts.length < 2 ) {
-            throw new CoreServiceException("unable to resolve target, path must containes at least an alias and a version");
+            throw new CoreServiceException("unable to resolve target, path must contains at least an alias and a version");
         }
         String wskey = resolveWorkspaceAlias(tparts[0]);
         String root = tparts[1];
