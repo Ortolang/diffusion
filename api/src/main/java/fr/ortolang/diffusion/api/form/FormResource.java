@@ -67,9 +67,6 @@ public class FormResource {
 	@Context
 	private UriInfo uriInfo;
 	
-	public FormResource() {
-	}
-	
 	@GET
 	public Response list() throws FormServiceException {
 		LOGGER.log(Level.INFO, "GET /forms");

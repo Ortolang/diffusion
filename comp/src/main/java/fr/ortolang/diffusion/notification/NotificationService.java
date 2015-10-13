@@ -47,5 +47,5 @@ public interface NotificationService extends OrtolangService {
     
     public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType) throws NotificationServiceException;
 
-    public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, Map<String, Object> args) throws NotificationServiceException;
+    public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, Map<String, String> args) throws NotificationServiceException;
 }

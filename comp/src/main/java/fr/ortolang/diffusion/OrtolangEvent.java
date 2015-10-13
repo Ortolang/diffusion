@@ -40,6 +40,7 @@ import org.apache.commons.codec.binary.Base64;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -104,9 +105,9 @@ public abstract class OrtolangEvent {
 	
 	public abstract void setThrowedBy(String throwedby);
 	
-	public abstract Map<String, Object> getArguments();
+	public abstract Map<String, String> getArguments();
 	
-	public abstract void setArguments(Map<String, Object> arguments);
+	public abstract void setArguments(Map<String, String> arguments);
 	
 	@SuppressWarnings("unchecked")
 	public void fromJMSMessage(Message message) throws OrtolangException {
@@ -121,7 +122,7 @@ public abstract class OrtolangEvent {
 				ByteArrayInputStream bais = new ByteArrayInputStream(Base64.decodeBase64(serializedArgs));
 				try {
 					ObjectInputStream ois = new ObjectInputStream(bais);
-					Map<String, Object> args = (Map<String, Object>) ois.readObject();
+					Map<String, String> args = (Map<String, String>) ois.readObject();
 					setArguments(args);
 				} catch (IOException | ClassNotFoundException e) {
 					LOGGER.log(Level.SEVERE, "Unable to deserialize arguments", e);
@@ -131,11 +132,6 @@ public abstract class OrtolangEvent {
 			throw new OrtolangException("unable to build event from jms message", e);
 		}
 	}
-	
-//	public String toString() {
-//		JSONObject jsonObject = JSONObject.fromObject( this );  
-//	    return jsonObject.toString();
-//	}
 	
 	public static String buildEventType(String serviceName, String resourceName, String eventName) {
 		StringBuilder event = new StringBuilder();
@@ -151,27 +147,27 @@ public abstract class OrtolangEvent {
 
 	public static class ArgumentsBuilder {
 
-		private Map<String, Object> args;
+		private Map<String, String> args;
 
 		public ArgumentsBuilder(int initialCapacity) {
 			args = new HashMap<>(initialCapacity);
 		}
 
-		public ArgumentsBuilder(String key, Object value) {
+		public ArgumentsBuilder(String key, String value) {
 			this(1);
 			addArgument(key, value);
 		}
 
-		public ArgumentsBuilder(Map<String, Object> args) {
+		public ArgumentsBuilder(Map<String, String> args) {
 			this.args = args;
 		}
 
-		public ArgumentsBuilder addArgument(String key, Object value) {
+		public ArgumentsBuilder addArgument(String key, String value) {
 			args.put(key, value);
 			return this;
 		}
 
-		public Map<String, Object> build() {
+		public Map<String, String> build() {
 			return args;
 		}
 	}

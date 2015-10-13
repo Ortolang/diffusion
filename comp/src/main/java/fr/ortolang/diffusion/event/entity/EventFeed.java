@@ -1,6 +1,7 @@
 package fr.ortolang.diffusion.event.entity;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -19,7 +20,7 @@ public class EventFeed extends OrtolangObject {
 
     public static final String OBJECT_TYPE = "eventfeed";
     public static final int MAX_SIZE = 100;
-    public static final int DEFAULT_SIZE = 20;
+    public static final int DEFAULT_SIZE = 10;
 
     @Id
     private String id;
@@ -31,9 +32,9 @@ public class EventFeed extends OrtolangObject {
     private String description;
     private int size;
     @ElementCollection
-    private ArrayList<EventFeedFilter> filters;
+    private List<EventFeedFilter> filters;
     @Transient
-    private ArrayList<OrtolangEvent> events;
+    private List<OrtolangEvent> events;
     
     public EventFeed() {
         filters = new ArrayList<EventFeedFilter>();
@@ -78,10 +79,14 @@ public class EventFeed extends OrtolangObject {
     }
 
     public void setSize(int size) {
-        this.size = size;
+        if ( size >= MAX_SIZE ) {
+            this.size = MAX_SIZE;
+        } else {
+            this.size = size;
+        }
     }
 
-    public ArrayList<EventFeedFilter> getFilters() {
+    public List<EventFeedFilter> getFilters() {
         return filters;
     }
 
@@ -97,7 +102,7 @@ public class EventFeed extends OrtolangObject {
         this.filters.remove(filter);
     }
 
-    public ArrayList<OrtolangEvent> getEvents() {
+    public List<OrtolangEvent> getEvents() {
         return events;
     }
 

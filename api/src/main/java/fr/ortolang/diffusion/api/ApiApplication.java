@@ -92,6 +92,7 @@ public class ApiApplication extends Application {
 		classes.add(SubscriptionResource.class);
 		classes.add(StatisticsResource.class);
 		classes.add(SearchResource.class);
+		classes.add(EventFeedResource.class);
 	}
 
 	@Override

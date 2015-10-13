@@ -11,6 +11,9 @@ public interface EventService extends OrtolangService {
 
     public static final String SERVICE_NAME = "event";
     
+    public static final String INFO_FEEDS_ALL = "feeds.all";
+    public static final String INFO_EVENTS_ALL = "events.all";
+    
     public void createEventFeed(String key, String name, String description) throws EventServiceException, AccessDeniedException, KeyAlreadyExistsException;
 
     public void addEventFeedFilter(String key, String eventTypeRE, String fromResourceRE, String resourceTypeRE, String throwedByRE) throws EventServiceException, AccessDeniedException, KeyNotFoundException;
