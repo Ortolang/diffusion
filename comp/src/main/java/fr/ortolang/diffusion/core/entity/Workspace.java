@@ -76,6 +76,7 @@ public class Workspace extends OrtolangObject {
 	private int clock;
 	private boolean changed;
 	private String members;
+	private String eventfeed;
 	@Lob
 	@Type(type = "org.hibernate.type.TextType")
 	private String snapshotsContent = "";
@@ -335,7 +336,15 @@ public class Workspace extends OrtolangObject {
 		this.members = members;
 	}
 	
-	@Override
+	public String getEventFeed() {
+        return eventfeed;
+    }
+
+    public void setEventFeed(String eventfeed) {
+        this.eventfeed = eventfeed;
+    }
+
+    @Override
 	public String getObjectName() {
 		return name;
 	}

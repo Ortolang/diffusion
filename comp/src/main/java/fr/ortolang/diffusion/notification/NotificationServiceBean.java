@@ -89,7 +89,7 @@ public class NotificationServiceBean implements NotificationService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, Map<String, Object> arguments) throws NotificationServiceException {
+	public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, Map<String, String> arguments) throws NotificationServiceException {
 		try {
 			Message message = context.createMessage();
 			message.setStringProperty(OrtolangEvent.DATE, OrtolangEvent.getEventDateFormatter().format(new Date()));

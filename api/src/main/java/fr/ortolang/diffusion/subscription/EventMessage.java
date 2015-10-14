@@ -53,7 +53,7 @@ public class EventMessage {
 
     private String type;
 
-    private Map<String, Object> arguments;
+    private Map<String, String> arguments;
 
     public EventMessage() {
     }
@@ -98,11 +98,11 @@ public class EventMessage {
         this.type = type;
     }
 
-    public Map<String, Object> getArguments() {
+    public Map<String, String> getArguments() {
         return arguments;
     }
 
-    public void setArguments(Map<String, Object> arguments) {
+    public void setArguments(Map<String, String> arguments) {
         this.arguments = arguments;
     }
 

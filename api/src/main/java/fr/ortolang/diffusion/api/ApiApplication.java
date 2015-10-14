@@ -45,6 +45,7 @@ import javax.ws.rs.core.Application;
 import fr.ortolang.diffusion.api.admin.AdminResource;
 import fr.ortolang.diffusion.api.config.ConfigResource;
 import fr.ortolang.diffusion.api.content.ContentResource;
+import fr.ortolang.diffusion.api.event.EventFeedResource;
 import fr.ortolang.diffusion.api.filter.ContentTypeSetterPreProcessorInterceptor;
 import fr.ortolang.diffusion.api.form.FormResource;
 import fr.ortolang.diffusion.api.format.MetadataFormatResource;
@@ -92,6 +93,7 @@ public class ApiApplication extends Application {
 		classes.add(SubscriptionResource.class);
 		classes.add(StatisticsResource.class);
 		classes.add(SearchResource.class);
+		classes.add(EventFeedResource.class);
 	}
 
 	@Override
