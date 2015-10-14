@@ -57,6 +57,8 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.PostLoad;
+import javax.persistence.PostUpdate;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -152,7 +154,7 @@ public class Event extends OrtolangEvent implements Serializable {
 
 	@Override
 	public Map<String, String> getArguments() {
-		return args;
+	    return args;
 	}
 
 	@Override
@@ -166,21 +168,31 @@ public class Event extends OrtolangEvent implements Serializable {
         }
 	}
 	
-	public String getSerializedArguments() {
-        return serializedArgs;
-    }
-
-    public void setSerializedArguments(String serializedArguments) {
-        this.serializedArgs = serializedArguments;
-        try {
-            this.args = deserializeArgs(serializedArguments);
-            LOGGER.log(Level.FINEST, "arguments deserialized for event");
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "unable to deserialize event arguments");
+	@PostLoad 
+	private void onPostLoad() {
+	    if (serializedArgs != null && serializedArgs.length() > 0 ) {
+    	    try {
+    	        this.args = deserializeArgs(serializedArgs);
+                LOGGER.log(Level.FINEST, "arguments deserialized for event");
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "unable to deserialize event arguments");
+            }
+	    }
+	}
+	
+	@PostUpdate
+    private void onPostUpdate() {
+        if (serializedArgs != null && serializedArgs.length() > 0 ) {
+            try {
+                this.args = deserializeArgs(serializedArgs);
+                LOGGER.log(Level.FINEST, "arguments deserialized for event");
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "unable to deserialize event arguments");
+            }
         }
     }
-    
-    private static String serializeArgs(Map<String, String> args) throws IOException {
+	
+	private static String serializeArgs(Map<String, String> args) throws IOException {
         if (args == null || args.size() == 0 ) {
             return "";
         }

@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 import javax.persistence.Version;
@@ -31,7 +32,7 @@ public class EventFeed extends OrtolangObject {
     private String name;
     private String description;
     private int size;
-    @ElementCollection
+    @ElementCollection(fetch=FetchType.EAGER)
     private List<EventFeedFilter> filters;
     @Transient
     private List<OrtolangEvent> events;
