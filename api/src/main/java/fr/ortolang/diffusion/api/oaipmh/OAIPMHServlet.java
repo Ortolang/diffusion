@@ -85,8 +85,6 @@ public class OAIPMHServlet {
 
 	@EJB
 	private static SearchService search;
-	@EJB
-	private static CoreService core;
 
 	private static Context context;
 	private static Repository repository;
@@ -101,7 +99,7 @@ public class OAIPMHServlet {
 		context = new Context().withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
 		
 		InMemorySetRepository setRepository = new InMemorySetRepository();
-		DiffusionItemRepository itemRepository = new DiffusionItemRepository(search, core);
+		DiffusionItemRepository itemRepository = new DiffusionItemRepository(search);
 		
 		UTCDateProvider dateProvider = new UTCDateProvider();
 		String earliestDateStr = "2014-08-12";
