@@ -47,16 +47,6 @@
         primary key (id)
     );
 
-    create table ReferentielEntity (
-        id varchar(255) not null,
-        name varchar(255),
-        content text,
-        status varchar(255),
-        type int4,
-        version int8 not null,
-        primary key (id)
-    );
-
     create table Link (
         id varchar(255) not null,
         clock int4 not null,
@@ -98,13 +88,13 @@
         initier varchar(255),
         log text,
         name varchar(255),
-        workspace varchar(255),
         progress int4 not null,
         start int8 not null,
         state int4,
         stop int8 not null,
         type varchar(255),
         version int8 not null,
+        workspace varchar(255),
         primary key (id)
     );
 
@@ -116,9 +106,9 @@
         emailVisibility int4,
         familyName varchar(255),
         friends varchar(255),
-        secret varchar(255),
         givenName varchar(255),
         groupsList text,
+        secret varchar(255),
         status int4,
         version int8 not null,
         primary key (id)
@@ -139,6 +129,16 @@
         Profile_id varchar(255) not null,
         key varchar(2500),
         password varchar(2500)
+    );
+
+    create table ReferentielEntity (
+        id varchar(255) not null,
+        content text,
+        name varchar(255),
+        status varchar(255),
+        type int4,
+        version int8 not null,
+        primary key (id)
     );
 
     create table RegistryEntry (
@@ -173,7 +173,7 @@
         version int8 not null,
         primary key (id)
     );
-    
+
     create table StatisticValue (
         name varchar(255) not null,
         timestamp int8 not null,

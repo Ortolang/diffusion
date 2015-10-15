@@ -36,26 +36,62 @@ package fr.ortolang.diffusion.event.entity;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangEvent;
-
+import java.io.IOException;
 import java.io.Serializable;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.PostLoad;
+import javax.persistence.PostUpdate;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+
+import fr.ortolang.diffusion.OrtolangEvent;
+
+@Entity
 @SuppressWarnings("serial")
+@Table(indexes={@Index(columnList="date", name="eventDateIndex")})
+@NamedQueries({ 
+    @NamedQuery(name = "listAllEventsByDate", query = "SELECT e FROM Event e ORDER BY e.date DESC") 
+})
 public class Event extends OrtolangEvent implements Serializable {
+    
+    private static final Logger LOGGER = Logger.getLogger(Event.class.getName());
 
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
 	private String fromObject;
 	private String throwedBy;
 	private String objectType;
+	@Temporal(TemporalType.TIMESTAMP)
 	private Date date;
 	private String type;
-	private Map<String, Object> arguments;
+	@Transient
+	private Map<String, String> args;
+	@Column(columnDefinition="TEXT")
+	private String serializedArgs;
 
 	public Event() {
-		arguments = Collections.emptyMap();
+		args = Collections.emptyMap();
 	}
 
 	public Long getId() {
@@ -117,16 +153,73 @@ public class Event extends OrtolangEvent implements Serializable {
 	}
 
 	@Override
-	public Map<String, Object> getArguments() {
-		return arguments;
+	public Map<String, String> getArguments() {
+	    return args;
 	}
 
 	@Override
-	public void setArguments(Map<String, Object> args) {
-		this.arguments = args;
+	public void setArguments(Map<String, String> args) {
+		this.args = args;
+		try {
+            this.serializedArgs = serializeArgs(args);
+            LOGGER.log(Level.FINEST, "arguments serialized for event");
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "unable to serialize event arguments");
+        }
 	}
+	
+	@PostLoad 
+	private void onPostLoad() {
+	    if (serializedArgs != null && serializedArgs.length() > 0 ) {
+    	    try {
+    	        this.args = deserializeArgs(serializedArgs);
+                LOGGER.log(Level.FINEST, "arguments deserialized for event");
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "unable to deserialize event arguments");
+            }
+	    }
+	}
+	
+	@PostUpdate
+    private void onPostUpdate() {
+        if (serializedArgs != null && serializedArgs.length() > 0 ) {
+            try {
+                this.args = deserializeArgs(serializedArgs);
+                LOGGER.log(Level.FINEST, "arguments deserialized for event");
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "unable to deserialize event arguments");
+            }
+        }
+    }
+	
+	private static String serializeArgs(Map<String, String> args) throws IOException {
+        if (args == null || args.size() == 0 ) {
+            return "";
+        }
+        Properties props = new Properties();
+        for ( Entry<String, String> entry : args.entrySet() ) {
+            props.setProperty(entry.getKey(), entry.getValue());
+        }
+        StringWriter out = new StringWriter();
+        props.store(out, null);
+        return out.toString();
+    }
+    
+    private static Map<String, String> deserializeArgs(String serializedArgs) throws IOException {
+        if (serializedArgs != null && serializedArgs.length() > 0 ) {
+            Properties props = new Properties();
+            props.load(new StringReader(serializedArgs));
+            Map<String, String> map = new HashMap<String, String>();
+            for (String key : props.stringPropertyNames()) {
+                map.put(key, props.getProperty(key));
+            }
+            return map;
+        }
+        return Collections.emptyMap();
+    }
+    
 
-	@Override
+    @Override
 	public String toString() {
 		return "Event{" +
 				"id=" + id +
@@ -135,7 +228,7 @@ public class Event extends OrtolangEvent implements Serializable {
 				", objectType='" + objectType + '\'' +
 				", date=" + date +
 				", type='" + type + '\'' +
-				", arguments=" + arguments +
+				", arguments=" + args +
 				'}';
 	}
 }

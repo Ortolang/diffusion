@@ -379,7 +379,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			
 			String key = registry.lookup(process.getObjectIdentifier());
 			registry.update(key);
-			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("state", state);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("state", state.name());
 			notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "change-state"), argumentsBuilder.build());
 		} catch (Exception e) {
 			ctx.setRollbackOnly();
@@ -666,7 +666,7 @@ public class RuntimeServiceBean implements RuntimeService {
 			em.merge(remoteProcess);
 			
 			registry.update(key);
-			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("state", state);
+			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("state", state.name());
 			notification.throwEvent(key, RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, RemoteProcess.OBJECT_TYPE, "change-state"), argumentsBuilder.build());
 		
 		} catch (Exception e) {
