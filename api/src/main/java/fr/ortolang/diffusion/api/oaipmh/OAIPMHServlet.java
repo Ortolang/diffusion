@@ -37,8 +37,6 @@ package fr.ortolang.diffusion.api.oaipmh;
  */
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -49,11 +47,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.xml.stream.XMLStreamException;
 
 import com.lyncode.xml.exceptions.XmlWriteException;
@@ -80,10 +79,9 @@ import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionItemRepository;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.search.SearchService;
 
-@SuppressWarnings("serial")
-public class OAIPMHServlet extends HttpServlet {
-
-	private static final Logger LOGGER = Logger.getLogger(OAIPMHServlet.class.getName());
+@Path("/oai")
+@Produces({ MediaType.APPLICATION_XML })
+public class OAIPMHServlet {
 
 	@EJB
 	private static SearchService search;
@@ -94,9 +92,11 @@ public class OAIPMHServlet extends HttpServlet {
 	private static Repository repository;
 	private static DiffusionDataProvider dataProvider;
 
-	@Override
-	public void init(ServletConfig config) throws ServletException {
-		LOGGER.log(Level.FINE, "OAI PMH Initialized");
+	private static final Logger LOGGER = Logger.getLogger(OAIPMHServlet.class.getName());
+
+	@GET
+	@Path("/")
+	public Response oai(@QueryParam("verb") String verb, @QueryParam("identifier") String identifier, @QueryParam("metadataPrefix") String metadataPrefix) {
 		
 		context = new Context().withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
 		
@@ -138,59 +138,60 @@ public class OAIPMHServlet extends HttpServlet {
 		    .withConfiguration(repositoryConfiguration);
 
 		dataProvider = new DiffusionDataProvider(context, repository);
-	}
-
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
+		
 		//
-		Map<String, List<String>> reqParam = toParameters(req.getParameterMap());
-
-		OAIRequest request = new OAIRequest(reqParam);
+//		Map<String, List<String>> reqParam = toParameters(request.getParameterMap());
+		Map<String, List<String>> reqParam = new HashMap<String, List<String>>();
+		List<String> verbValues = new ArrayList<String>();
+		verbValues.add(verb);
+		reqParam.put("verb", verbValues);
+		List<String> identifierValues = new ArrayList<String>();
+		identifierValues.add(identifier);
+		reqParam.put("identifier", identifierValues);
+		List<String> metadataPrefixValues = new ArrayList<String>();
+		metadataPrefixValues.add(metadataPrefix);
+		reqParam.put("metadataPrefix", metadataPrefixValues);
+		
+		LOGGER.log(Level.INFO, "Service : "+search);
+		OAIRequest oaiRequest = new OAIRequest(reqParam);
 
 		// DataProvider
 		OAIPMH response = null;
 		try {
-			response = dataProvider.handle(request);
+			response = dataProvider.handle(oaiRequest);
 		} catch (OAIException e1) {
 			LOGGER.log(Level.WARNING, e1.getMessage(), e1.fillInStackTrace());
-			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1.getMessage());
-			return;
+//			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1.getMessage());
+//			return;
+			return Response.serverError().build();
 		}
 
 		if (response != null) {
-			String result = "";
+//			String result = "";
 
 			try {
-				result = write(response);
+//				result = write(response);
+				return Response.ok(write(response)).header("Content-Type", "application/xml; charset=utf-8")
+						.header("Character-Encoding", "UTF-8").build();
 			} catch (XMLStreamException e) {
 				LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
-				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-				return;
+//				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+//				return;
+				return Response.serverError().build();
 			} catch (XmlWriteException e) {
 				LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
-				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-				return;
+//				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+//				return;
+				return Response.serverError().build();
 			}
-
-			resp.setContentType("application/xml; charset=utf-8");
-			resp.setCharacterEncoding("UTF-8");
-
-			PrintWriter writer = resp.getWriter();
-
-			writer.print(result);
-
-			writer.flush();
-			writer.close();
-
-			return;
 		}
 
 		LOGGER.log(Level.WARNING, "OAIPMH XMl object is null");
-		resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "No valid response to send");
-		return;
+//		resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "No valid response to send");
+//		return;
+		return Response.serverError().build();
 	}
-
+	
 	protected String write(final XmlWritable handle) throws XMLStreamException, XmlWriteException {
 		return OAIPMHServlet.toString(new XmlWritable() {
 			@Override

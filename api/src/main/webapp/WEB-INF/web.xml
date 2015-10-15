@@ -51,11 +51,6 @@
 		<async-supported>true</async-supported>
 	</servlet>
 	<servlet>
-		<display-name>OAI-PMH Servlet</display-name>
-		<servlet-name>OAIPMHServlet</servlet-name>
-		<servlet-class>fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet</servlet-class>
-	</servlet>
-	<servlet>
 		<servlet-name>default</servlet-name>
 		<servlet-class>io.undertow.servlet.handlers.DefaultServlet</servlet-class>
 		<init-param>
@@ -64,10 +59,6 @@
 		</init-param>
 	</servlet>
 
-	<servlet-mapping>
-		<servlet-name>OAIPMHServlet</servlet-name>
-		<url-pattern>/oai/*</url-pattern>
-	</servlet-mapping>
 	<servlet-mapping>
 		<servlet-name>AtmosphereServlet</servlet-name>
 		<url-pattern>/sub/*</url-pattern>

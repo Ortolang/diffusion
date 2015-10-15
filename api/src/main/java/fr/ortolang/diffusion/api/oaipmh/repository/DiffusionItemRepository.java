@@ -40,14 +40,19 @@ import static java.lang.Math.min;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.json.Json;
+import javax.json.JsonNumber;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 
 import com.lyncode.xoai.dataprovider.exceptions.IdDoesNotExistException;
 import com.lyncode.xoai.dataprovider.exceptions.NoMetadataFormatsException;
@@ -63,6 +68,7 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.search.SearchService;
+import fr.ortolang.diffusion.search.SearchServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
@@ -79,7 +85,6 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		return semanticUri.substring(semanticUri.lastIndexOf("/")+1);
 	}
 
-	@SuppressWarnings("unused")
 	private SearchService search;
 	private CoreService core;
 	
@@ -92,50 +97,30 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 	@Override
     public List<String> getListMetadataFormats(String identifier) throws IdDoesNotExistException, NoMetadataFormatsException, OAIException {
 
-//		if(!identifier.startsWith(DiffusionItemRepository.PREFIX_IDENTIFIER))
-//			throw new IdDoesNotExistException();
-//		
-//		String key = identifier.replaceFirst(DiffusionItemRepository.PREFIX_IDENTIFIER, "");
-//		String subjectURI = null;
-//		try {
-//			subjectURI = URIHelper.fromKey(key);
-//		} catch (TripleStoreServiceException e) {
-//			LOGGER.log(Level.SEVERE, "unable to get subject URI", e);
-//		}
-//		
-//		String query = "SELECT ?metadataPrefix WHERE { "
-//				+"<"+subjectURI+"> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.ortolang.fr/2014/05/diffusion#Object> "
-//				+"; <http://www.ortolang.fr/2014/05/diffusion#publicationDate> ?pubDate "
-//				+"; <http://www.ortolang.fr/2014/05/diffusion#hasMetadata> ?metadata "
-//				+". ?metadata <http://www.ortolang.fr/2014/05/diffusion#metadataFormat> ?metadataPrefix "
-//				+"}";
-//		
-//		String languageResult = "json";
-//		try {
-//			List<String> metadataFormat = new ArrayList<String>();
-//			LOGGER.log(Level.FINE, "SPARQL query : "+query);
-//			String semanticResult = search.semanticSearch(query, languageResult);
-//			LOGGER.log(Level.FINE, "SPARQL Result : "+semanticResult);
-//			JsonObject jsonObject = Json.createReader(new StringReader(semanticResult)).readObject();
-//			JsonArray results = jsonObject.getJsonObject("results").getJsonArray("bindings");
-//			JsonObject result = null;
-//			
-//			for(JsonValue value : results) {
-//				
-//				if(value.getValueType().equals(JsonValue.ValueType.OBJECT)) {
-//					result = (JsonObject) value;
-//					
-//					String metadataPrefix = result.getJsonObject("metadataPrefix").getString("value");
-//					metadataFormat.add(metadataPrefix);
-//				}
-//			}
-//			
-//			return metadataFormat;
-//		} catch (SearchServiceException e) {
-//			LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
-//		}
+		if(!identifier.startsWith(DiffusionItemRepository.PREFIX_IDENTIFIER))
+			throw new IdDoesNotExistException();
+
+		String key = identifier.replaceFirst(DiffusionItemRepository.PREFIX_IDENTIFIER, "");
+		List<String> metadataFormat = new ArrayList<String>();
 		
-		throw new NoMetadataFormatsException();
+		LOGGER.log(Level.INFO, "GetListMetadataFormats with identifiier '"+identifier+"' (key:'"+key+"')");
+		String query = "SELECT key FROM Collection WHERE status='published' AND key='"+key+"'";
+		try {
+			List<String> docs = search.jsonSearch(query);
+			LOGGER.log(Level.INFO, "Find ("+docs.size()+" elements)");
+			if(!docs.isEmpty()) {
+				LOGGER.log(Level.INFO, "Add OAI_DC metadata format");
+				metadataFormat.add("oai_dc");
+			}
+			
+		} catch (SearchServiceException e) {
+			LOGGER.log(Level.SEVERE, e.getMessage(), e.fillInStackTrace());
+		}
+		
+		if(metadataFormat.isEmpty())
+			throw new NoMetadataFormatsException();
+		else
+			return metadataFormat;
     }
 	
 
@@ -285,83 +270,76 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		return query(metadataPrefix, from, null);
 	}
 	
+//	protected String query(String metadataPrefix, Date from, Date until) {
+//		StringBuilder query = new StringBuilder("SELECT ?item ?pubDate ?metadata WHERE {")
+//			.append(" ?item <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.ortolang.fr/2014/05/diffusion#Object> ")
+//			.append("; <http://www.ortolang.fr/2014/05/diffusion#publicationDate> ?pubDate ")
+//			.append("; <http://www.ortolang.fr/2014/05/diffusion#hasMetadata> ?metadata ")
+//			.append(". ?metadata <http://www.ortolang.fr/2014/05/diffusion#metadataFormat> '").append(metadataPrefix).append("' ");
+//		
+//		HashMap<String,StringBuilder> conditions = new HashMap<String, StringBuilder>();
+//		if(from!=null)
+//			conditions.put("from", new StringBuilder("(?pubDate >= \"").append(sdf.format(from)).append("\")"));
+//
+//		if(until!=null)
+//			conditions.put("until", new StringBuilder("(?pubDate <= \"").append(sdf.format(until)).append("\")"));
+//		
+//		if(conditions.size()>0) {
+//			query.append(". FILTER( ");
+//
+//			int iCond = 1;
+//			int condLength = conditions.values().size();
+//			
+//			for(StringBuilder sb : conditions.values()) {
+//				query.append(sb);
+//				
+//				if(iCond<condLength)
+//					query.append(" && ");
+//				iCond++;
+//			}
+//			
+//			query.append(")");
+//		}
+//		
+//		return query.append("}").toString();
+//	}
+
 	protected String query(String metadataPrefix, Date from, Date until) {
-		StringBuilder query = new StringBuilder("SELECT ?item ?pubDate ?metadata WHERE {")
-			.append(" ?item <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.ortolang.fr/2014/05/diffusion#Object> ")
-			.append("; <http://www.ortolang.fr/2014/05/diffusion#publicationDate> ?pubDate ")
-			.append("; <http://www.ortolang.fr/2014/05/diffusion#hasMetadata> ?metadata ")
-			.append(". ?metadata <http://www.ortolang.fr/2014/05/diffusion#metadataFormat> '").append(metadataPrefix).append("' ");
-		
-		HashMap<String,StringBuilder> conditions = new HashMap<String, StringBuilder>();
-		if(from!=null)
-			conditions.put("from", new StringBuilder("(?pubDate >= \"").append(sdf.format(from)).append("\")"));
 
-		if(until!=null)
-			conditions.put("until", new StringBuilder("(?pubDate <= \"").append(sdf.format(until)).append("\")"));
+		StringBuilder query = new StringBuilder("SELECT key, lastModificationDate FROM Collection WHERE status='published'");
 		
-		if(conditions.size()>0) {
-			query.append(". FILTER( ");
-
-			int iCond = 1;
-			int condLength = conditions.values().size();
-			
-			for(StringBuilder sb : conditions.values()) {
-				query.append(sb);
-				
-				if(iCond<condLength)
-					query.append(" && ");
-				iCond++;
-			}
-			
-			query.append(")");
-		}
-		
-		return query.append("}").toString();
+		return query.toString();
 	}
-	
 
 	protected ListItemIdentifiersResult getItemIdentifiersFromQuery(String query, String metadataPrefix, int offset, int length) {
 
 		List<DiffusionItemIdentifier> list = new ArrayList<DiffusionItemIdentifier>();
 		
-//		String languageResult = "json";
-//		try {
-//			LOGGER.log(Level.FINE, "SPARQL query : "+query);
-//			String semanticResult = search.semanticSearch(query, languageResult);
-//			LOGGER.log(Level.FINE, "Result of SPARQL query : "+semanticResult);
-//			JsonObject jsonObject = Json.createReader(new StringReader(semanticResult)).readObject();
-//			JsonArray results = jsonObject.getJsonObject("results").getJsonArray("bindings");
-//			
-//			for(JsonValue value : results) {
-//				
-//				if(value.getValueType().equals(JsonValue.ValueType.OBJECT)) {
-//					JsonObject result = (JsonObject) value;
-//
-//					// Gets item identifier
-//					//TODO get handle (persistent identifier) and the last version of the metadata
-//					String semanticUri = result.getJsonObject("item").getString("value");
-//					String itemID = identifier(semanticUri);
-//					
-//					// Gets datestamp
-//					String lastDate = result.getJsonObject("pubDate").getString("value");
-//					Date datestamp = null;
-//					try {
-//						datestamp = sdf.parse(lastDate);
-//					} catch (ParseException e) {
-//						LOGGER.log(Level.SEVERE, "unable to parse date", e);
-//					}
-//					if(itemID!=null && datestamp!=null) {
-//						list.add(new DiffusionItemIdentifier().withIdentifier(PREFIX_IDENTIFIER+itemID).withDatestamp(datestamp));
-//					} else {
-//						LOGGER.log(Level.SEVERE, "Unable to parse datestamp string : "+datestamp);
-//					}
-//				}
-//			}
-//		} catch (SearchServiceException e) {
-////			e.printStackTrace();
-//			LOGGER.log(Level.SEVERE, "Unable to search into the triplestore with SPARQL query : "+query);
-//			LOGGER.log(Level.SEVERE, "Stack traces : ", e.fillInStackTrace());
-//		}
+		try {
+			List<String> docs = search.jsonSearch(query);
+			
+			for(String doc : docs) {
+				StringReader reader = new StringReader(doc);
+				JsonReader jsonReader = Json.createReader(reader);
+				JsonObject jsonObj = jsonReader.readObject();
+				
+				try {
+					String key = jsonObj.getString("key");
+					JsonNumber lastModificationDate = jsonObj.getJsonNumber("lastModificationDate");
+					Long longTimestamp = Long.valueOf(lastModificationDate.longValue());
+					Date datestamp = new Date(longTimestamp);
+					
+					list.add(new DiffusionItemIdentifier().withIdentifier(PREFIX_IDENTIFIER+key).withDatestamp(datestamp));
+				} catch(NullPointerException | ClassCastException | NumberFormatException e) {
+					LOGGER.log(Level.WARNING, "No property 'key' or lastModificationDate in json object", e);
+				} finally {
+					jsonReader.close();
+					reader.close();
+				}
+			}
+		} catch (SearchServiceException e) {
+			LOGGER.log(Level.SEVERE, "Unable to search into the triplestore with SPARQL query : "+query, e.fillInStackTrace());
+		}
 		
 		return new ListItemIdentifiersResult(offset + length < list.size(), new ArrayList<ItemIdentifier>(list.subList(offset, min(offset + length, list.size()))));
 	}
