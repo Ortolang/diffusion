@@ -51,8 +51,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+//import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 import javax.xml.stream.XMLStreamException;
 
 import com.lyncode.xml.exceptions.XmlWriteException;
@@ -94,7 +96,11 @@ public class OAIPMHServlet {
 
 	@GET
 	@Path("/")
-	public Response oai(@QueryParam("verb") String verb, @QueryParam("identifier") String identifier, @QueryParam("metadataPrefix") String metadataPrefix) {
+	public Response oai(@QueryParam("verb") String verb
+	        , @QueryParam("identifier") String identifier
+	        , @QueryParam("metadataPrefix") String metadataPrefix
+	        , @QueryParam("from") String from
+	        , @QueryParam("until") String until) {
 		
 		context = new Context().withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
 		
@@ -138,17 +144,12 @@ public class OAIPMHServlet {
 		dataProvider = new DiffusionDataProvider(context, repository);
 		
 		//
-//		Map<String, List<String>> reqParam = toParameters(request.getParameterMap());
 		Map<String, List<String>> reqParam = new HashMap<String, List<String>>();
-		List<String> verbValues = new ArrayList<String>();
-		verbValues.add(verb);
-		reqParam.put("verb", verbValues);
-		List<String> identifierValues = new ArrayList<String>();
-		identifierValues.add(identifier);
-		reqParam.put("identifier", identifierValues);
-		List<String> metadataPrefixValues = new ArrayList<String>();
-		metadataPrefixValues.add(metadataPrefix);
-		reqParam.put("metadataPrefix", metadataPrefixValues);
+		OAIPMHServlet.putParameter("verb", verb, reqParam);
+		OAIPMHServlet.putParameter("identifier", identifier, reqParam);
+		OAIPMHServlet.putParameter("metadataPrefix", metadataPrefix, reqParam);
+        OAIPMHServlet.putParameter("from", from, reqParam);
+        OAIPMHServlet.putParameter("until", until, reqParam);
 		
 		LOGGER.log(Level.INFO, "Service : "+search);
 		OAIRequest oaiRequest = new OAIRequest(reqParam);
@@ -207,16 +208,9 @@ public class OAIPMHServlet {
 		return outputStream.toString();
 	}
 
-	protected Map<String, List<String>> toParameters(Map<String, String[]> mParam) {
-		Map<String, List<String>> reqParam = new HashMap<String, List<String>>();
-		for (Map.Entry<String, String[]> entry : mParam.entrySet()) {
-			List<String> lValues = new ArrayList<String>();
-			for (String value : entry.getValue()) {
-				lValues.add(value);
-			}
-			reqParam.put(entry.getKey(), lValues);
-		}
-		return reqParam;
+	protected static void putParameter(String name, String value, Map<String, List<String>> reqParam) {
+      List<String> verbValues = new ArrayList<String>();
+      verbValues.add(value);
+      reqParam.put(name, verbValues);
 	}
-
 }
