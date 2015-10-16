@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.ortolang.diffusion</groupId>
@@ -13,14 +12,14 @@
 	<parent>
 		<groupId>fr.ortolang</groupId>
 		<artifactId>ortolang</artifactId>
-		<version>3.0.0</version>
+		<version>3.2.0-SNAPSHOT</version>
 	</parent>
 	
 	<scm>
 		<connection>scm:git:git@forge.ortolang.fr:ortolang-diffusion.git</connection>
 		<developerConnection>scm:git:git@forge.ortolang.fr:ortolang-diffusion.git</developerConnection>
 		<url>http://git.ortolang.fr/ortolang-diffusion.git/</url>
-		<tag>HEAD</tag>
+		<tag>ortolang-diffusion-3.1.5</tag>
 	</scm>
 
 	<modules>
@@ -76,6 +75,8 @@
 		<version.activation>1.1.1</version.activation>
 		<version.freemarker>2.3.22</version.freemarker>
 		<version.sigar>1.6.4</version.sigar>
+		<additionalparam>-Xdoclint:none</additionalparam>
+		<maven.javadoc.failOnError>false</maven.javadoc.failOnError>
 	</properties>
 
 	<dependencyManagement>

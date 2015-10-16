@@ -14,7 +14,7 @@
         <fileSet>
         	<directory>src/main/resources</directory>
             <includes>
-        		<include>client-config.properties</include>
+        		<include>client-config.properties.sample</include>
             </includes>
             <outputDirectory>conf</outputDirectory>
         </fileSet>
