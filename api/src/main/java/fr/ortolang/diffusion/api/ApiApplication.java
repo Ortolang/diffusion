@@ -64,6 +64,7 @@ import fr.ortolang.diffusion.api.mapper.PropertyNotFoundExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SearchServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SecurityServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SubscriptionServiceExceptionMapper;
+import fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet;
 import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.profile.ProfileResource;
 import fr.ortolang.diffusion.api.referentiel.ReferentielEntityResource;
@@ -93,6 +94,7 @@ public class ApiApplication extends Application {
 		classes.add(SubscriptionResource.class);
 		classes.add(StatisticsResource.class);
 		classes.add(SearchResource.class);
+		classes.add(OAIPMHServlet.class);
 		classes.add(EventFeedResource.class);
 	}
 
