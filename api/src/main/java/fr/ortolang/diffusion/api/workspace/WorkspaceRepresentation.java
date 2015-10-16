@@ -49,151 +49,161 @@ import fr.ortolang.diffusion.core.entity.Workspace;
 @XmlRootElement(name = "workspace")
 public class WorkspaceRepresentation {
 
-	@XmlAttribute
-	private String key;
-	private String author;
-	private String owner;
-	private String alias;
-	private String name = "No Name Provided";
-	private String type = "default";
-	private int clock;
-	private long creationDate;
-	private long lastModificationDate;
-	private String members;
-	private String head;
-	private boolean changed;
-	private Set<SnapshotElement> snapshots;
-	private Set<TagElement> tags;
+    @XmlAttribute
+    private String key;
+    private String author;
+    private String owner;
+    private String alias;
+    private String name = "No Name Provided";
+    private String type = "default";
+    private int clock;
+    private long creationDate;
+    private long lastModificationDate;
+    private String members;
+    private String eventFeed;
+    private String head;
+    private boolean changed;
+    private Set<SnapshotElement> snapshots;
+    private Set<TagElement> tags;
 
-	public WorkspaceRepresentation() {
-		snapshots = new HashSet<SnapshotElement>();
-		tags = new HashSet<TagElement>();
-	}
+    public WorkspaceRepresentation() {
+        snapshots = new HashSet<SnapshotElement>();
+        tags = new HashSet<TagElement>();
+    }
 
-	public String getKey() {
-		return key;
-	}
+    public String getKey() {
+        return key;
+    }
 
-	public void setKey(String key) {
-		this.key = key;
-	}
+    public void setKey(String key) {
+        this.key = key;
+    }
 
-	public String getAlias() {
-		return alias;
-	}
+    public String getAlias() {
+        return alias;
+    }
 
-	public void setAlias(String alias) {
-		this.alias = alias;
-	}
+    public void setAlias(String alias) {
+        this.alias = alias;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public String getType() {
-		return type;
-	}
+    public String getType() {
+        return type;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public void setType(String type) {
+        this.type = type;
+    }
 
-	public String getAuthor() {
-		return author;
-	}
+    public String getAuthor() {
+        return author;
+    }
 
-	public void setAuthor(String author) {
-		this.author = author;
-	}
+    public void setAuthor(String author) {
+        this.author = author;
+    }
 
-	public String getOwner() {
-		return owner;
-	}
+    public String getOwner() {
+        return owner;
+    }
 
-	public void setOwner(String owner) {
-		this.owner = owner;
-	}
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
 
-	public int getClock() {
-		return clock;
-	}
+    public int getClock() {
+        return clock;
+    }
 
-	public void setClock(int clock) {
-		this.clock = clock;
-	}
+    public void setClock(int clock) {
+        this.clock = clock;
+    }
 
-	public long getCreationDate() {
-		return creationDate;
-	}
+    public long getCreationDate() {
+        return creationDate;
+    }
 
-	public long getLastModificationDate() {
-		return lastModificationDate;
-	}
+    public long getLastModificationDate() {
+        return lastModificationDate;
+    }
 
-	public void setLastModificationDate(long lastModificationDate) {
-		this.lastModificationDate = lastModificationDate;
-	}
+    public void setLastModificationDate(long lastModificationDate) {
+        this.lastModificationDate = lastModificationDate;
+    }
 
-	public void setCreationDate(long creationDate) {
-		this.creationDate = creationDate;
-	}
+    public void setCreationDate(long creationDate) {
+        this.creationDate = creationDate;
+    }
 
-	public String getMembers() {
-		return members;
-	}
+    public String getMembers() {
+        return members;
+    }
 
-	public void setMembers(String members) {
-		this.members = members;
-	}
+    public void setMembers(String members) {
+        this.members = members;
+    }
 
-	public String getHead() {
-		return head;
-	}
+    public String getEventFeed() {
+        return eventFeed;
+    }
 
-	public void setHead(String head) {
-		this.head = head;
-	}
+    public void setEventFeed(String eventFeed) {
+        this.eventFeed = eventFeed;
+    }
 
-	public Set<SnapshotElement> getSnapshots() {
-		return snapshots;
-	}
+    public String getHead() {
+        return head;
+    }
 
-	public void setSnapshots(Set<SnapshotElement> snapshots) {
-		this.snapshots = snapshots;
-	}
-	
-	public Set<TagElement> getTags() {
-		return tags;
-	}
+    public void setHead(String head) {
+        this.head = head;
+    }
 
-	public void setTags(Set<TagElement> tags) {
-		this.tags = tags;
-	}
+    public Set<SnapshotElement> getSnapshots() {
+        return snapshots;
+    }
 
-	public boolean isChanged() {
-		return changed;
-	}
+    public void setSnapshots(Set<SnapshotElement> snapshots) {
+        this.snapshots = snapshots;
+    }
 
-	public void setChanged(boolean changed) {
-		this.changed = changed;
-	}
+    public Set<TagElement> getTags() {
+        return tags;
+    }
 
-	public static WorkspaceRepresentation fromWorkspace(Workspace workspace) {
-		WorkspaceRepresentation representation = new WorkspaceRepresentation();
-		representation.setKey(workspace.getKey());
-		representation.setAlias(workspace.getAlias());
-		representation.setName(workspace.getName());
-		representation.setType(workspace.getType());
-		representation.setClock(workspace.getClock());
-		representation.setHead(workspace.getHead());
-		representation.setMembers(workspace.getMembers());
-		representation.setChanged(workspace.hasChanged());
-		representation.setSnapshots(workspace.getSnapshots());
-		representation.setTags(workspace.getTags());
-		return representation;
-	}
+    public void setTags(Set<TagElement> tags) {
+        this.tags = tags;
+    }
+
+    public boolean isChanged() {
+        return changed;
+    }
+
+    public void setChanged(boolean changed) {
+        this.changed = changed;
+    }
+
+    public static WorkspaceRepresentation fromWorkspace(Workspace workspace) {
+        WorkspaceRepresentation representation = new WorkspaceRepresentation();
+        representation.setKey(workspace.getKey());
+        representation.setAlias(workspace.getAlias());
+        representation.setName(workspace.getName());
+        representation.setType(workspace.getType());
+        representation.setClock(workspace.getClock());
+        representation.setHead(workspace.getHead());
+        representation.setMembers(workspace.getMembers());
+        representation.setEventFeed(workspace.getEventFeed());
+        representation.setChanged(workspace.hasChanged());
+        representation.setSnapshots(workspace.getSnapshots());
+        representation.setTags(workspace.getTags());
+        return representation;
+    }
 }
