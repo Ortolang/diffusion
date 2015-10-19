@@ -17,13 +17,13 @@ public class OAI_DC {
 
     private static final Logger LOGGER = Logger.getLogger(OAI_DC.class.getName());
     
-    private Map<String,String> title;
-    private Map<String,String> description;
-    private Map<String,String> subject;
-    private Map<String,String> language;
-    private List<String> publisher;
-    private List<String> contributor;
-    private List<String> creator;
+    protected Map<String,String> title;
+    protected Map<String,String> description;
+    protected Map<String,String> subject;
+    protected Map<String,String> language;
+    protected List<String> publisher;
+    protected List<String> contributor;
+    protected List<String> creator;
     
     public OAI_DC() {
         title = new HashMap<String, String>();
@@ -87,38 +87,33 @@ public class OAI_DC {
         this.creator.add(creator);
     }
 
+    protected static void writeMultilingualValue(StringBuilder buffer, String name, Map<String,String> values) {
+    	for(Map.Entry<String, String> entry : values.entrySet()) {
+            buffer.append("<dc:").append(name).append(" xml:lang=\"").append(entry.getKey()).append("\">").append(entry.getValue()).append("</dc:").append(name).append(">");
+        }
+    }
+    
+    protected static void writeMultivalueField(StringBuilder buffer, String name, List<String> values) {
+        for(String value : values) {
+            buffer.append("<dc:").append(name).append(">").append(value).append("</dc:").append(name).append(">");
+        }
+    }
+    
     public String toString() {
-        StringBuilder buffer = new StringBuilder("<oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd http://purl.org/dc/elements/1.1/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd\">");
+        StringBuilder buffer = new StringBuilder();
         
-        for(Map.Entry<String, String> entry : title.entrySet()) {
-            buffer.append("<dc:title xml:lang=\"").append(entry.getKey()).append("\">").append(entry.getValue()).append("</dc:title>");
-        }
+        buffer.append("<oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd http://purl.org/dc/elements/1.1/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd\">");
 
-        for(Map.Entry<String, String> entry : description.entrySet()) {
-            buffer.append("<dc:description xml:lang=\"").append(entry.getKey()).append("\">").append(StringEscapeUtils.escapeHtml(entry.getValue())).append("</dc:description>");
-        }
-
-        for(Map.Entry<String, String> entry : subject.entrySet()) {
-            buffer.append("<dc:subject xml:lang=\"").append(entry.getKey()).append("\">").append(entry.getValue()).append("</dc:subject>");
-        }
-
-        for(Map.Entry<String, String> entry : language.entrySet()) {
-            buffer.append("<dc:language xml:lang=\"").append(entry.getKey()).append("\">").append(entry.getValue()).append("</dc:language>");
-        }
-        
-        for(String value : publisher) {
-            buffer.append("<dc:publisher>").append(value).append("</dc:publisher>");
-        }
-
-        for(String value : contributor) {
-            buffer.append("<dc:contributor>").append(value).append("</dc:contributor>");
-        }
-
-        for(String value : creator) {
-            buffer.append("<dc:creator>").append(value).append("</dc:creator>");
-        }
+        writeMultilingualValue(buffer, "title", title);
+        writeMultilingualValue(buffer, "description", description);
+        writeMultilingualValue(buffer, "subject", subject);
+        writeMultilingualValue(buffer, "language", language);
+        writeMultivalueField(buffer, "publisher", publisher);
+        writeMultivalueField(buffer, "contributor", contributor);
+        writeMultivalueField(buffer, "creator", creator);
         
         buffer.append("</oai_dc:dc>");
+        
         return buffer.toString();
     }
     
@@ -193,7 +188,7 @@ public class OAI_DC {
         if(entityOrganization!=null) {
             acronym = entityOrganization.getJsonString("acronym"); 
         }
-        return lastname+(midname!=null?", "+midname:"")+(firstname!=null?", "+firstname:"")+(title!=null?" "+title:"")+(acronym!=null?", "+acronym:"")+" ("+role+")";
+        return lastname.toString()+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"")+" ("+role+")";
     }
 
     protected static String creator(JsonObject contributor) {
@@ -207,6 +202,6 @@ public class OAI_DC {
         if(entityOrganization!=null) {
             acronym = entityOrganization.getJsonString("acronym"); 
         }
-        return lastname+(midname!=null?", "+midname:"")+(firstname!=null?", "+firstname:"")+(title!=null?" "+title:"")+(acronym!=null?", "+acronym:"");
+        return lastname+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
     }
 }

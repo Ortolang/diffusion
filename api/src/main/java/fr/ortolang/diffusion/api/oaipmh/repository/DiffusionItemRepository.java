@@ -43,7 +43,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -66,6 +65,7 @@ import com.lyncode.xoai.dataprovider.model.ItemIdentifier;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.api.oaipmh.format.OAI_DC;
+import fr.ortolang.diffusion.api.oaipmh.format.OLAC;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.search.SearchService;
@@ -75,9 +75,6 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
 	private static final Logger LOGGER = Logger.getLogger(DiffusionItemRepository.class.getName());
-	
-	// From fr.ortolang.diffusion.store.triple.TripleStoreStatementBuilder
-	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 	
 	public static final String PREFIX_IDENTIFIER = "oai:ortolang.fr:";
 
@@ -289,7 +286,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		}
 		
 		if(key!=null) {
-		    query.append(" AND meta_ortolang-workspace-jsonwsalias='").append(key).append("'");
+		    query.append(" AND meta_ortolang-workspace-json.wsalias='").append(key).append("'");
 		}
 		
 		return query.toString();
@@ -353,8 +350,6 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		
 		String key = identifier.replaceFirst(DiffusionItemRepository.PREFIX_IDENTIFIER, "");
 		
-//		StringBuilder query = new StringBuilder("SELECT lastModificationDate, meta_ortolang-workspace-json.*, meta_ortolang-item-json.* FROM Collection WHERE status='published' and  meta_ortolang-workspace-jsonwsalias='")
-//		    .append(key).append("'");
 		String query = buildQuery(metadataPrefix, null, null, key);
 		
 		try {
@@ -544,6 +539,8 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
             InputStream metadata = null;
             if(metadataPrefix.equals("oai_dc")) {
                 metadata = transformToOAI_DC(jsonDoc);
+            } else if(metadataPrefix.equals("olac")) {
+            	metadata = transformToOLAC(jsonDoc);
             }
             
             if(metadata!=null) {
@@ -576,5 +573,20 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
     protected InputStream transformToOAI_DC(JsonObject jsonDoc) {
         OAI_DC oai_dc = OAI_DC.valueOf(jsonDoc);
         return new ByteArrayInputStream(oai_dc.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Converts JSON document (String representation) to XML OLAC
+     * @param document
+     * @return
+     * @throws OrtolangException
+     * @throws KeyNotFoundException
+     * @throws CoreServiceException
+     * @throws DataNotFoundException
+     * @throws IOException
+     */
+    protected InputStream transformToOLAC(JsonObject jsonDoc) {
+        OLAC olac = OLAC.valueOf(jsonDoc);
+        return new ByteArrayInputStream(olac.toString().getBytes(StandardCharsets.UTF_8));
     }
 }

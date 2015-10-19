@@ -51,10 +51,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-//import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import javax.xml.stream.XMLStreamException;
 
 import com.lyncode.xml.exceptions.XmlWriteException;
@@ -78,7 +76,6 @@ import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.oaipmh.dataprovider.DiffusionDataProvider;
 import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionItemRepository;
-import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.search.SearchService;
 
 @Path("/oai")
@@ -102,7 +99,9 @@ public class OAIPMHServlet {
 	        , @QueryParam("from") String from
 	        , @QueryParam("until") String until) {
 		
-		context = new Context().withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
+		context = new Context();
+		context.withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
+		context.withMetadataFormat(MetadataFormat.metadataFormat("olac").withNamespace("http://www.language-archives.org/OLAC/1.1/").withSchemaLocation("http://www.language-archives.org/OLAC/1.1/olac.xsd"));
 		
 		InMemorySetRepository setRepository = new InMemorySetRepository();
 		DiffusionItemRepository itemRepository = new DiffusionItemRepository(search);
@@ -154,7 +153,6 @@ public class OAIPMHServlet {
 		LOGGER.log(Level.INFO, "Service : "+search);
 		OAIRequest oaiRequest = new OAIRequest(reqParam);
 
-		// DataProvider
 		OAIPMH response = null;
 		try {
 			response = dataProvider.handle(oaiRequest);
@@ -166,10 +164,8 @@ public class OAIPMHServlet {
 		}
 
 		if (response != null) {
-//			String result = "";
 
 			try {
-//				result = write(response);
 				return Response.ok(write(response)).header("Content-Type", "application/xml; charset=utf-8")
 						.header("Character-Encoding", "UTF-8").build();
 			} catch (XMLStreamException e) {
