@@ -1,19 +1,23 @@
 package fr.ortolang.diffusion.api.oaipmh.format;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.json.JsonArray;
+import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 
 public class OAI_DC {
 
     private static final Logger LOGGER = Logger.getLogger(OAI_DC.class.getName());
-
+    protected static final SimpleDateFormat w3cdtf = new SimpleDateFormat("yyyy-MM-dd");
+    
     protected String header;
     protected String footer;
     protected List<XMLElement> fields;
@@ -137,6 +141,15 @@ public class OAI_DC {
             if(discourseTypes!=null) {
                 for(JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
                     oai_dc.addDcField("type", "discourse-type: "+discourseType.getString());
+                }
+            }
+            JsonString creationDate = doc.getJsonString("meta_ortolang-item-jsoncreationDate");
+            if(creationDate!=null) {
+                oai_dc.addDcField("date", creationDate.getString());
+            } else {
+                JsonString publicationDate = doc.getJsonString("meta_ortolang-item-jsonpublicationDate");
+                if(publicationDate!=null) {
+                    oai_dc.addDcField("date", publicationDate.getString());
                 }
             }
         } catch(NullPointerException | ClassCastException | NumberFormatException e) {

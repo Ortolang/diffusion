@@ -1,9 +1,11 @@
 package fr.ortolang.diffusion.api.oaipmh.format;
 
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.json.JsonArray;
+import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 
@@ -100,7 +102,7 @@ public class OLAC extends OAI_DC {
             JsonString licenseWebsite = doc.getJsonString("meta_ortolang-item-jsonlicenseWebsite");
             if(licenseWebsite!=null) {
             	//TODO check for xsi:type DCTERMS:URI
-            	olac.addDctermsField("licence", "DCTERMS:URI", licenseWebsite.getString());
+            	olac.addDctermsField("licence", "dcterms:URI", licenseWebsite.getString());
             }
 
             JsonString linguisticDataType = doc.getJsonString("meta_ortolang-item-jsonlinguisticDataType");
@@ -126,6 +128,25 @@ public class OLAC extends OAI_DC {
 	                olac.addDctermsMultilingualField("bibliographicCitation", multilingualBibliographicCitation.getString("lang"), multilingualBibliographicCitation.getString("value"));
 	            }
             }
+            JsonString publicationDate = doc.getJsonString("meta_ortolang-item-jsonpublicationDate");
+            JsonString creationDate = doc.getJsonString("meta_ortolang-item-jsoncreationDate");
+            if(creationDate!=null) {
+                olac.addDcField("date", creationDate.getString());
+              //TODO check date validation and convert
+                olac.addDctermsField("temporal", "dcterms:W3CDTF", creationDate.getString());
+            } else {
+                if(publicationDate!=null) {
+                    olac.addDcField("date", publicationDate.getString());
+                }
+            }
+            if(publicationDate!=null) {
+                //TODO get created date if publicationDate not set
+                olac.addDctermsField("created", "dcterms:W3CDTF", publicationDate.getString());
+            }
+            JsonNumber lastModificationDate = doc.getJsonNumber("lastModificationDate");
+            Long longTimestamp = Long.valueOf(lastModificationDate.longValue());
+            Date datestamp = new Date(longTimestamp);
+            olac.addDctermsField("modified", "dcterms:W3CDTF", w3cdtf.format(datestamp));
             
         } catch(NullPointerException | ClassCastException | NumberFormatException e) {
             LOGGER.log(Level.WARNING, "Cannot parse JSON property", e);

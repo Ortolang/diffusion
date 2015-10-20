@@ -104,6 +104,7 @@ public class OAIPMHServlet {
 		context.withMetadataFormat(MetadataFormat.metadataFormat("olac").withNamespace("http://www.language-archives.org/OLAC/1.1/").withSchemaLocation("http://www.language-archives.org/OLAC/1.1/olac.xsd"));
 		
 		InMemorySetRepository setRepository = new InMemorySetRepository();
+		setRepository.doesNotSupportSets();
 		DiffusionItemRepository itemRepository = new DiffusionItemRepository(search);
 		
 		UTCDateProvider dateProvider = new UTCDateProvider();
@@ -127,6 +128,7 @@ public class OAIPMHServlet {
 			.withAdminEmail("contact@ortolang.fr")
 			.withBaseUrl(ApiUriBuilder.getApiUriBuilder().path(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_OAI)).build().toString())
 			.withRepositoryName("ORTOLANG Repository")
+			.withDescription(description())
 			.withDeleteMethod(DeletedRecord.NO)
 			.withEarliestDate(earliestDate)
 			.withGranularity(Granularity.Day)
@@ -150,7 +152,6 @@ public class OAIPMHServlet {
         OAIPMHServlet.putParameter("from", from, reqParam);
         OAIPMHServlet.putParameter("until", until, reqParam);
 		
-		LOGGER.log(Level.INFO, "Service : "+search);
 		OAIRequest oaiRequest = new OAIRequest(reqParam);
 
 		OAIPMH response = null;
@@ -166,7 +167,7 @@ public class OAIPMHServlet {
 		if (response != null) {
 
 			try {
-				return Response.ok(write(response)).header("Content-Type", "application/xml; charset=utf-8")
+				return Response.ok(write(response)).header("Content-Type", "text/xml")
 						.header("Character-Encoding", "UTF-8").build();
 			} catch (XMLStreamException e) {
 				LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
@@ -208,5 +209,17 @@ public class OAIPMHServlet {
       List<String> verbValues = new ArrayList<String>();
       verbValues.add(value);
       reqParam.put(name, verbValues);
+	}
+	
+	protected static String description() {
+	    return new StringBuilder().append("<oai-identifier xmlns=\"http://www.openarchives.org/OAI/2.0/oai-identifier\"")
+	        .append(" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"")
+	        .append(" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai-identifier http://www.openarchives.org/OAI/2.0/oai-identifier.xsd\">")
+	        .append("<scheme>oai</scheme>")
+	        .append("<repositoryIdentifier>www.ortolang.fr</repositoryIdentifier>")
+	        .append("<delimiter>:</delimiter>")
+	        .append("<sampleIdentifier>oai:ortolang.fr:dede</sampleIdentifier>")
+	        .append("</oai-identifier>").toString();
+	    
 	}
 }
