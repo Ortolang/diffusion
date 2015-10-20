@@ -275,14 +275,14 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 	 */
 	protected String buildQuery(String metadataPrefix, Date from, Date until, String key) {
 
-		StringBuilder query = new StringBuilder("SELECT lastModificationDate, meta_ortolang-workspace-json.*, meta_ortolang-item-json.* FROM Collection WHERE status='published' AND meta_ortolang-workspace-json.wsalias IS NOT null");
+		StringBuilder query = new StringBuilder("SELECT lastModificationDate, meta_ortolang-workspace-json.*, meta_ortolang-item-json.* FROM Collection WHERE status='published' AND meta_ortolang-workspace-json.wsalias IS NOT null AND meta_ortolang-item-json.title IS NOT null");
 		
 		if(from!=null) {
 		    query.append(" AND lastModificationDate>=").append(from.getTime());
 		}
 		
 		if(until!=null) {
-		    query.append(" AND lastModificationDate<=").append(until.getTime());
+		    query.append(" AND lastModificationDate<=").append(until.getTime()+86400000);
 		}
 		
 		if(key!=null) {
