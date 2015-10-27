@@ -44,64 +44,74 @@ import fr.ortolang.diffusion.membership.entity.Profile;
 @XmlRootElement(name = "profile-card")
 public class ProfileCardRepresentation {
 
-	@XmlAttribute(name = "key")
-	private String key;
-	private String givenName;
-	private String familyName;
-	private String email;
-	private String emailHash;
+    @XmlAttribute(name = "key")
+    private String key;
+    private String givenName;
+    private String familyName;
+    private String fullName;
+    private String email;
+    private String emailHash;
 
-	public ProfileCardRepresentation() {
-	}
+    public ProfileCardRepresentation() {
+    }
 
-	public String getKey() {
-		return key;
-	}
+    public String getKey() {
+        return key;
+    }
 
-	public void setKey(String key) {
-		this.key = key;
-	}
+    public void setKey(String key) {
+        this.key = key;
+    }
 
-	public String getGivenName() {
-		return givenName;
-	}
+    public String getGivenName() {
+        return givenName;
+    }
 
-	public void setGivenName(String givenName) {
-		this.givenName = givenName;
-	}
+    public void setGivenName(String givenName) {
+        this.givenName = givenName;
+    }
 
-	public String getFamilyName() {
-		return familyName;
-	}
+    public String getFamilyName() {
+        return familyName;
+    }
 
-	public void setFamilyName(String familyName) {
-		this.familyName = familyName;
-	}
+    public void setFamilyName(String familyName) {
+        this.familyName = familyName;
+    }
 
-	public String getEmail() {
-		return email;
-	}
+    public String getFullName() {
+        return fullName;
+    }
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
-	public String getEmailHash() {
-		return emailHash;
-	}
+    public String getEmail() {
+        return email;
+    }
 
-	public void setEmailHash(String emailHash) {
-		this.emailHash = emailHash;
-	}
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-	public static ProfileCardRepresentation fromProfile(Profile profile) {
-		ProfileCardRepresentation representation = new ProfileCardRepresentation();
-		representation.setKey(profile.getKey());
-		representation.setEmail(profile.getEmail());
-		representation.setEmailHash(profile.getEmailHash());
-		representation.setGivenName(profile.getGivenName());
-		representation.setFamilyName(profile.getFamilyName());
-		return representation;
-	}
+    public String getEmailHash() {
+        return emailHash;
+    }
+
+    public void setEmailHash(String emailHash) {
+        this.emailHash = emailHash;
+    }
+
+    public static ProfileCardRepresentation fromProfile(Profile profile) {
+        ProfileCardRepresentation representation = new ProfileCardRepresentation();
+        representation.setKey(profile.getKey());
+        representation.setEmail(profile.getEmail());
+        representation.setEmailHash(profile.getEmailHash());
+        representation.setGivenName(profile.getGivenName());
+        representation.setFamilyName(profile.getFamilyName());
+        representation.setFullName(profile.getGivenName() + ' ' + profile.getFamilyName());
+        return representation;
+    }
 
 }

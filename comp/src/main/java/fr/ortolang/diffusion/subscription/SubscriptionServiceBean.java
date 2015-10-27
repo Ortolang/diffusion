@@ -140,7 +140,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
             // User's workspaces related filters
             if (workspaces != null) {
                 for (String workspace : workspaces) {
-                    addFilter(username, new Filter("core\\.workspace\\.update", workspace, null));
+                    addFilter(username, new Filter(null, workspace, null));
                 }
             }
             // User's groups related filters

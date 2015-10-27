@@ -69,6 +69,8 @@ import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process;
+import fr.ortolang.diffusion.security.SecurityService;
+import fr.ortolang.diffusion.security.SecurityServiceException;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import fr.ortolang.diffusion.OrtolangConfig;
@@ -120,12 +122,15 @@ public class WorkspaceResource {
     private MembershipService membership;
     @EJB
     private RuntimeService runtime;
+    @EJB
+    private SecurityService security;
 
     public WorkspaceResource() {
     }
 
     @GET
-    public Response listProfileWorkspaces() throws CoreServiceException, KeyNotFoundException, AccessDeniedException, BrowserServiceException {
+    public Response listProfileWorkspaces(@QueryParam("md") @DefaultValue("false") boolean md)
+            throws CoreServiceException, KeyNotFoundException, AccessDeniedException, BrowserServiceException, SecurityServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces");
         String profile = membership.getProfileKeyForConnectedIdentifier();
 
@@ -138,6 +143,19 @@ public class WorkspaceResource {
             workspaceRepresentation.setAuthor(infos.getAuthor());
             workspaceRepresentation.setCreationDate(infos.getCreationDate());
             workspaceRepresentation.setLastModificationDate(infos.getLastModificationDate());
+            workspaceRepresentation.setOwner(security.getOwner(key));
+            if (md) {
+                Collection head = core.readCollection(workspace.getHead());
+                if (head.getMetadatas().isEmpty()) {
+                    workspaceRepresentation.setMetadatas(Collections.emptyMap());
+                } else {
+                    Map<String, String> metadatas = new HashMap<>();
+                    for (MetadataElement metadataElement : head.getMetadatas()) {
+                        metadatas.put(metadataElement.getName(), metadataElement.getKey());
+                    }
+                    workspaceRepresentation.setMetadatas(metadatas);
+                }
+            }
             representation.addEntry(workspaceRepresentation);
         }
         representation.setOffset(0);
@@ -149,7 +167,7 @@ public class WorkspaceResource {
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response createWorkspace(@FormParam("type") @DefaultValue("default") String type, @FormParam("name") @DefaultValue("No Name Provided") String name, @FormParam("alias") String alias)
-            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException {
+            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException {
         LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
         String key = java.util.UUID.randomUUID().toString();
         Workspace workspace;
@@ -164,6 +182,7 @@ public class WorkspaceResource {
         workspaceRepresentation.setAuthor(infos.getAuthor());
         workspaceRepresentation.setCreationDate(infos.getCreationDate());
         workspaceRepresentation.setLastModificationDate(infos.getLastModificationDate());
+        workspaceRepresentation.setOwner(security.getOwner(key));
         return Response.created(location).entity(workspaceRepresentation).build();
     }
 
@@ -184,7 +203,8 @@ public class WorkspaceResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response createWorkspace(WorkspaceRepresentation representation) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException {
+    public Response createWorkspace(WorkspaceRepresentation representation)
+            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException {
         LOGGER.log(Level.INFO, "POST(application/json) /workspaces");
         String key = UUID.randomUUID().toString();
         Workspace workspace;
@@ -199,12 +219,14 @@ public class WorkspaceResource {
         workspaceRepresentation.setAuthor(infos.getAuthor());
         workspaceRepresentation.setCreationDate(infos.getCreationDate());
         workspaceRepresentation.setLastModificationDate(infos.getLastModificationDate());
+        workspaceRepresentation.setOwner(security.getOwner(key));
         return Response.created(location).entity(workspaceRepresentation).build();
     }
 
     @GET
     @Path("/{wskey}")
-    public Response getWorkspace(@PathParam(value = "wskey") String wskey, @Context Request request) throws CoreServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+    public Response getWorkspace(@PathParam(value = "wskey") String wskey, @Context Request request)
+            throws CoreServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException, SecurityServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey);
 
         OrtolangObjectState state = browser.getState(wskey);
@@ -230,6 +252,7 @@ public class WorkspaceResource {
             representation.setAuthor(infos.getAuthor());
             representation.setCreationDate(infos.getCreationDate());
             representation.setLastModificationDate(infos.getLastModificationDate());
+            representation.setOwner(security.getOwner(wskey));
             builder = Response.ok(representation);
             builder.lastModified(lmd);
         }
