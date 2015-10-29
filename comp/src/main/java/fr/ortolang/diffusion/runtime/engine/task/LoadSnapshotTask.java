@@ -43,6 +43,7 @@ import org.activiti.engine.delegate.DelegateExecution;
 
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.WorkspaceLockedException;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -69,6 +70,11 @@ public class LoadSnapshotTask extends RuntimeEngineTask {
 		
 		try {
 			Workspace workspace = getCoreService().readWorkspace(wskey);
+			if ( workspace.getAlias() != null && workspace.getAlias().length() > 0 ) {
+			    execution.setVariable(WORKSPACE_ALIAS_PARAM_NAME, workspace.getAlias());
+			} else {
+			    execution.setVariable(WORKSPACE_ALIAS_PARAM_NAME, wskey);
+			}
 			String snapshotName;
 			String rootCollection;
 			if (!execution.hasVariable(SNAPSHOT_NAME_PARAM_NAME)) {
@@ -113,7 +119,7 @@ public class LoadSnapshotTask extends RuntimeEngineTask {
 			}
 			throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Snapshot loaded and publication status is good for publication, starting publication"));
 			
-		} catch (CoreServiceException | KeyNotFoundException | AccessDeniedException | RegistryServiceException e) {
+		} catch (CoreServiceException | KeyNotFoundException | AccessDeniedException | RegistryServiceException | WorkspaceLockedException e) {
 			throw new RuntimeEngineTaskException("unexpected error during snapshot task execution", e);
 		}
 	}

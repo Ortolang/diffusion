@@ -9,9 +9,11 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
+
 import org.activiti.engine.delegate.DelegateExecution;
 
 import javax.transaction.Status;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -106,7 +108,7 @@ public class ImportZipTask extends RuntimeEngineTask {
                                     is.close();
                                     getCoreService().updateDataObject(wskey, opath.build(), hash);
                                     report.append("[DONE] object updated at path: " + opath.build() + "\r\n");
-                                } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException e4 ) {
+                                } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | WorkspaceLockedException e4 ) {
                                     partial = true;
                                     report.append("[ERROR] object updated failed for path: " + opath.build() + "\r\n\t-> message: " + e4.getMessage() + "\r\n");
                                 }
@@ -137,7 +139,7 @@ public class ImportZipTask extends RuntimeEngineTask {
                                 String current = opath.build();
                                 getCoreService().createDataObject(wskey, current, hash);
                                 report.append("[DONE] data object created at path: " + current + "\r\n");
-                            } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | PathAlreadyExistsException e4 ) {
+                            } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | PathAlreadyExistsException | WorkspaceLockedException e4 ) {
                                 partial = true;
                                 report.append("[ERROR] create object failed for path: " + opath.build() + "\r\n\t-> message: " + e4.getMessage() + "\r\n");
                             }

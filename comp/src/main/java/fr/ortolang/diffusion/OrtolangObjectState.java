@@ -112,7 +112,6 @@ public class OrtolangObjectState implements Serializable {
 
 	public enum Status {
 		DRAFT ("draft"), 
-		REVIEW ("review"),
 		PUBLISHED ("published");
 		
 		private String value;

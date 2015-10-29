@@ -86,9 +86,7 @@ public class MembershipServiceBean implements MembershipService {
     private static final Logger LOGGER = Logger.getLogger(MembershipServiceBean.class.getName());
 
     private static final String[] OBJECT_TYPE_LIST = new String[] { Group.OBJECT_TYPE, Profile.OBJECT_TYPE };
-    private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] {
-            { Profile.OBJECT_TYPE, "read,update,delete" },
-            { Group.OBJECT_TYPE, "read,update,delete" }};
+    private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { { Profile.OBJECT_TYPE, "read,update,delete" }, { Group.OBJECT_TYPE, "read,update,delete" } };
 
     @EJB
     private RegistryService registry;
@@ -169,8 +167,8 @@ public class MembershipServiceBean implements MembershipService {
             String[] groups = profile.getGroups();
             List<String> subjects = new ArrayList<String>(groups.length + 2);
             subjects.add(caller);
-            if ( profile.getStatus().equals(ProfileStatus.ACTIVE) ) {
-                if ( !caller.equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
+            if (profile.getStatus().equals(ProfileStatus.ACTIVE)) {
+                if (!caller.equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                     subjects.add(MembershipService.UNAUTHENTIFIED_IDENTIFIER);
                     subjects.add(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY);
                 }
@@ -195,10 +193,10 @@ public class MembershipServiceBean implements MembershipService {
             try {
                 registry.lookup(key);
                 throw new ProfileAlreadyExistsException("A profile already exists for identifier: " + connectedIdentifier);
-            } catch ( KeyNotFoundException e ) {
+            } catch (KeyNotFoundException e) {
             }
 
-            String friendGroupKey = connectedIdentifier+"-friends";
+            String friendGroupKey = connectedIdentifier + "-friends";
 
             Profile profile = new Profile();
             profile.setId(connectedIdentifier);
@@ -225,7 +223,8 @@ public class MembershipServiceBean implements MembershipService {
 
             notification.throwEvent(key, key, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"));
             return profile;
-        } catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | KeyAlreadyExistsException | NoSuchAlgorithmException | UnsupportedEncodingException | IndexingServiceException e) {
+        } catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | KeyAlreadyExistsException | NoSuchAlgorithmException
+                | UnsupportedEncodingException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MembershipServiceException("unable to create profile with key [" + key + "]", e);
         }
@@ -233,7 +232,8 @@ public class MembershipServiceBean implements MembershipService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException {
+    public void createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException,
+            AccessDeniedException {
         LOGGER.log(Level.FINE, "creating profile for identifier [" + identifier + "] and email [" + email + "]");
 
         String key = getProfileKeyForIdentifier(identifier);
@@ -243,7 +243,7 @@ public class MembershipServiceBean implements MembershipService {
             String caller = getProfileKeyForConnectedIdentifier();
             authorisation.checkSuperUser(caller);
 
-            String friendGroupKey = identifier+"-friends";
+            String friendGroupKey = identifier + "-friends";
 
             Profile profile = new Profile();
             profile.setId(identifier);
@@ -256,18 +256,18 @@ public class MembershipServiceBean implements MembershipService {
             em.persist(profile);
 
             registry.register(key, profile.getObjectIdentifier(), caller);
-            if ( !key.equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
+            if (!key.equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 indexing.index(key);
             }
 
             authorisation.createPolicy(key, key);
             Map<String, List<String>> readRules = new HashMap<String, List<String>>();
-            readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[]{"read"}));
+            readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[] { "read" }));
             authorisation.setPolicyRules(key, readRules);
 
             createGroup(friendGroupKey, identifier + "'s Collaborators", "List of collaborators of user " + identifier);
             Map<String, List<String>> friendsReadRules = new HashMap<String, List<String>>();
-            friendsReadRules.put(friendGroupKey, Arrays.asList(new String[]{"read"}));
+            friendsReadRules.put(friendGroupKey, Arrays.asList(new String[] { "read" }));
             authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
             authorisation.updatePolicyOwner(friendGroupKey, key);
 
@@ -275,16 +275,16 @@ public class MembershipServiceBean implements MembershipService {
         } catch (KeyAlreadyExistsException e) {
             ctx.setRollbackOnly();
             throw new ProfileAlreadyExistsException("a profile already exists for identifier " + identifier, e);
-        } catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | NoSuchAlgorithmException | UnsupportedEncodingException | IndexingServiceException e) {
+        } catch (RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException | NoSuchAlgorithmException
+                | UnsupportedEncodingException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MembershipServiceException("unable to create profile with key [" + key + "]", e);
         }
     }
 
-
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    //TODO refactor
+    // TODO refactor
     public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.FINE, "listing profiles");
         try {
@@ -311,7 +311,7 @@ public class MembershipServiceBean implements MembershipService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    //TODO refactor
+    // TODO refactor
     public List<Profile> searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.FINE, "searching profiles with " + data);
         try {
@@ -329,7 +329,7 @@ public class MembershipServiceBean implements MembershipService {
                 }
                 String id = profile.getId();
                 String name = profile.getFullName();
-                if(id.matches("(?i).*" + data + ".*") || name.matches("(?i).*" + data + ".*")){
+                if (id.matches("(?i).*" + data + ".*") || name.matches("(?i).*" + data + ".*")) {
                     ProfilesList.add(profile);
                 }
             }
@@ -388,13 +388,13 @@ public class MembershipServiceBean implements MembershipService {
             ProfileDataVisibility visibilityLevel = getVisibilityLevel(caller, key, subjects, profile);
             LOGGER.log(Level.FINE, "Visibility level set to " + visibilityLevel);
 
-            List<ProfileData> visibleInfos = new ArrayList<ProfileData> ();
-            for ( ProfileData info : profile.getInfos().values() ) {
-                LOGGER.log(Level.FINE, "Treating info " + info.getName() );
+            List<ProfileData> visibleInfos = new ArrayList<ProfileData>();
+            for (ProfileData info : profile.getInfos().values()) {
+                LOGGER.log(Level.FINE, "Treating info " + info.getName());
                 if (visibilityLevel.compareTo(info.getVisibility()) >= 0) {
                     LOGGER.log(Level.FINE, "info is visible");
-                    if ( filter != null && filter.length() > 0 ) {
-                        if ( info.getName().matches(filter+"(.*)") ) {
+                    if (filter != null && filter.length() > 0) {
+                        if (info.getName().matches(filter + "(.*)")) {
                             LOGGER.log(Level.FINE, "info name matches filter");
                             visibleInfos.add(info);
                         }
@@ -411,21 +411,22 @@ public class MembershipServiceBean implements MembershipService {
         }
     }
 
-    private ProfileDataVisibility getVisibilityLevel(String caller, String key, List<String> subjects, Profile profile) throws AuthorisationServiceException, MembershipServiceException, KeyNotFoundException, RegistryServiceException {
+    private ProfileDataVisibility getVisibilityLevel(String caller, String key, List<String> subjects, Profile profile) throws AuthorisationServiceException, MembershipServiceException,
+            KeyNotFoundException, RegistryServiceException {
         ProfileDataVisibility visibilityLevel = ProfileDataVisibility.EVERYBODY;
         try {
             authorisation.checkOwnership(key, subjects);
             visibilityLevel = ProfileDataVisibility.NOBODY;
-        } catch(AccessDeniedException e1) {
-            if(profile.getFriends()!= null) {
+        } catch (AccessDeniedException e1) {
+            if (profile.getFriends() != null) {
                 String friendsGroupKey = profile.getFriends();
                 OrtolangObjectIdentifier friendsObject = registry.lookup(friendsGroupKey);
                 checkObjectType(friendsObject, Group.OBJECT_TYPE);
                 try {
-                    if (isMember(friendsGroupKey, caller)){
+                    if (isMember(friendsGroupKey, caller)) {
                         visibilityLevel = ProfileDataVisibility.FRIENDS;
                     }
-                } catch (AccessDeniedException e2){
+                } catch (AccessDeniedException e2) {
                     LOGGER.log(Level.FINE, caller + " is not authorized to read friend list of profile with key [" + key + "]");
                 }
             }
@@ -435,8 +436,9 @@ public class MembershipServiceBean implements MembershipService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void setProfileInfo(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.FINE, "set profile info [" +  name + "] for profile with key [" + key + "]");
+    public void setProfileInfo(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException,
+            AccessDeniedException {
+        LOGGER.log(Level.FINE, "set profile info [" + name + "] for profile with key [" + key + "]");
         try {
             String caller = getProfileKeyForConnectedIdentifier();
             List<String> subjects = getConnectedIdentifierSubjects();
@@ -450,7 +452,7 @@ public class MembershipServiceBean implements MembershipService {
             }
 
             ProfileData info = null;
-            if ( value != null && value.length() > 0 ) {
+            if (value != null && value.length() > 0) {
                 info = new ProfileData(name, value, visibility, type, source);
             }
             profile.setInfo(name, info);
@@ -466,7 +468,8 @@ public class MembershipServiceBean implements MembershipService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Profile updateProfile(String key, String givenName, String familyName, String email, ProfileDataVisibility emailVisibility) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
+    public Profile updateProfile(String key, String givenName, String familyName, String email, ProfileDataVisibility emailVisibility) throws MembershipServiceException, KeyNotFoundException,
+            AccessDeniedException {
         LOGGER.log(Level.FINE, "updating profile for key [" + key + "]");
         try {
             String caller = getProfileKeyForConnectedIdentifier();
@@ -493,7 +496,8 @@ public class MembershipServiceBean implements MembershipService {
 
             notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update"));
             return profile;
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | NoSuchAlgorithmException | UnsupportedEncodingException | IndexingServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | NoSuchAlgorithmException | UnsupportedEncodingException
+                | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MembershipServiceException("error while trying to update the profile with key [" + key + "]");
         }
@@ -593,7 +597,7 @@ public class MembershipServiceBean implements MembershipService {
             if (profile == null) {
                 throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
             }
-            if ( profile.getSecret() == null || profile.getSecret().length() <= 0 ) {
+            if (profile.getSecret() == null || profile.getSecret().length() <= 0) {
                 String secret = TOTPHelper.generateSecret();
                 profile.setSecret(secret);
                 em.merge(profile);
@@ -601,7 +605,7 @@ public class MembershipServiceBean implements MembershipService {
 
             return Integer.toString(TOTPHelper.getCode(profile.getSecret()));
         } catch (RegistryServiceException e) {
-            throw new MembershipServiceException("unable to generate TOTOP for connected identifier", e);
+            throw new MembershipServiceException("unable to generate TOTP for connected identifier", e);
         }
     }
 
@@ -618,13 +622,13 @@ public class MembershipServiceBean implements MembershipService {
             if (profile == null) {
                 throw new MembershipServiceException("unable to find a profile for id " + oid.getId());
             }
-            if ( profile.getSecret() == null || profile.getSecret().length() <= 0 ) {
+            if (profile.getSecret() == null || profile.getSecret().length() <= 0) {
                 return false;
             } else {
                 return TOTPHelper.checkCode(profile.getSecret(), Long.parseLong(totp));
             }
         } catch (RegistryServiceException e) {
-            throw new MembershipServiceException("unable to generate TOTOP for connected identifier", e);
+            throw new MembershipServiceException("unable to validate TOTP for identifier: " + identifier, e);
         }
     }
 
@@ -643,7 +647,44 @@ public class MembershipServiceBean implements MembershipService {
             }
             return profile.getSecret();
         } catch (RegistryServiceException e) {
-            throw new MembershipServiceException("unable to generate TOTOP for connected identifier", e);
+            throw new MembershipServiceException("unable to read profile secret for identifier: " + identifier, e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String systemReadProfileEmail(String identifier) throws MembershipServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "#SYSTEM# reading profile Email");
+        try {
+            String key = getProfileKeyForIdentifier(identifier);
+            OrtolangObjectIdentifier oid = registry.lookup(key);
+            checkObjectType(oid, Profile.OBJECT_TYPE);
+            Profile profile = em.find(Profile.class, oid.getId());
+            if (profile == null) {
+                throw new MembershipServiceException("unable to find a profile for id " + oid.getId());
+            }
+            return profile.getEmail();
+        } catch (RegistryServiceException e) {
+            throw new MembershipServiceException("unable to read profile email for identifier: " + identifier, e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public ProfileData systemGetProfileInfo(String identifier, String name) throws MembershipServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "#SYSTEM# get profile info [" + name + "] for identifier [" + identifier + "]");
+        try {
+            String key = getProfileKeyForIdentifier(identifier);
+            OrtolangObjectIdentifier oid = registry.lookup(key);
+            checkObjectType(oid, Profile.OBJECT_TYPE);
+            Profile profile = em.find(Profile.class, key);
+            if (profile == null) {
+                throw new MembershipServiceException("unable to find a profile for id " + oid.getId());
+            }
+            
+            return profile.getInfos().get(name);
+        } catch (RegistryServiceException e) {
+            throw new MembershipServiceException("unable to get profile info [" + name + "] for identifier [" + identifier + "]", e);
         }
     }
 
@@ -656,7 +697,7 @@ public class MembershipServiceBean implements MembershipService {
             List<String> subjects = getConnectedIdentifierSubjects();
             authorisation.checkAuthentified(subjects);
 
-            if ( key.equals(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY ) ) {
+            if (key.equals(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY)) {
                 throw new MembershipServiceException("key [" + key + "] is reserved for all authentified users and cannot be used for a group");
             }
 
@@ -747,7 +788,7 @@ public class MembershipServiceBean implements MembershipService {
             if (group == null) {
                 throw new MembershipServiceException("unable to find a group for id " + gidentifier.getId());
             }
-            for ( String pkey : group.getMembers() ) {
+            for (String pkey : group.getMembers()) {
                 OrtolangObjectIdentifier pidentifier = registry.lookup(pkey);
                 checkObjectType(pidentifier, Profile.OBJECT_TYPE);
                 Profile profile = em.find(Profile.class, pidentifier.getId());
@@ -758,7 +799,7 @@ public class MembershipServiceBean implements MembershipService {
                 em.merge(profile);
                 try {
                     registry.update(pkey);
-                } catch ( Exception e ) {
+                } catch (Exception e) {
                     LOGGER.log(Level.WARNING, "unable to update profile key [" + pkey + "]", e);
                 }
             }
@@ -1150,17 +1191,17 @@ public class MembershipServiceBean implements MembershipService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {
-        Map<String, String>infos = new HashMap<String, String> ();
+        Map<String, String> infos = new HashMap<String, String>();
         try {
             long nbprofiles = registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null);
             infos.put(MembershipService.INFO_PROFILES_ALL, Long.toString(nbprofiles));
-        } catch ( RegistryServiceException e ) {
+        } catch (RegistryServiceException e) {
             //
         }
         try {
             long nbprofiles = registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE), null);
             infos.put(MembershipService.INFO_GROUPS_ALL, Long.toString(nbprofiles));
-        } catch ( RegistryServiceException e ) {
+        } catch (RegistryServiceException e) {
             //
         }
         return infos;
@@ -1181,8 +1222,7 @@ public class MembershipServiceBean implements MembershipService {
         byte[] hashedBytes = digest.digest(email.getBytes("UTF-8"));
         StringBuilder stringBuilder = new StringBuilder();
         for (byte b : hashedBytes) {
-            stringBuilder.append(Integer.toString((b & 0xff) + 0x100, 16)
-                    .substring(1));
+            stringBuilder.append(Integer.toString((b & 0xff) + 0x100, 16).substring(1));
         }
         return stringBuilder.toString();
     }

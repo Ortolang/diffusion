@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.api.template.TemplateEngineException;
+import fr.ortolang.diffusion.template.TemplateEngineException;
 
 @Path("/config")
 @Produces({ MediaType.APPLICATION_JSON })

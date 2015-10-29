@@ -324,6 +324,24 @@ public class RegistryServiceBean implements RegistryService {
 	}
 	
 	@Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void unlock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
+        LOGGER.log(Level.FINE, "unlocking key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        if ( entry.isLocked() && !entry.getLock().equals(owner) ) {
+            throw new KeyLockedException("Key is locked by another owner");
+        }
+        try {
+            entry.setLock("");
+            em.merge(entry);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            ctx.setRollbackOnly();
+            throw new RegistryServiceException(e);
+        }
+    }
+	
+	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException {
 		LOGGER.log(Level.FINE, "getting state for key [" + key + "]");

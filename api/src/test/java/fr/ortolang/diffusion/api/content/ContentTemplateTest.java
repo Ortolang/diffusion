@@ -3,8 +3,8 @@ package fr.ortolang.diffusion.api.content;
 import org.junit.Test;
 
 import fr.ortolang.diffusion.api.content.ContentRepresentation;
-import fr.ortolang.diffusion.api.template.TemplateEngine;
-import fr.ortolang.diffusion.api.template.TemplateEngineException;
+import fr.ortolang.diffusion.template.TemplateEngine;
+import fr.ortolang.diffusion.template.TemplateEngineException;
 
 
 public class ContentTemplateTest {

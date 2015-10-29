@@ -281,7 +281,7 @@ public class CoreServiceTest {
 	}
 
 	@Test
-	public void testCRUDWorkspace() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException {
+	public void testCRUDWorkspace() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, WorkspaceLockedException {
 		final String WORKSPACE_KEY = "WS1";
 		final String WORKSPACE_NAME = "Workspace1";
 		final String WORKSPACE_NAME_UPDATE = "Workspace1.update";
@@ -327,7 +327,7 @@ public class CoreServiceTest {
 	}
 
 	@Test
-	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException, InvalidPathException, MetadataFormatException, PathNotFoundException {
+	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException, InvalidPathException, MetadataFormatException, PathNotFoundException, WorkspaceLockedException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -370,7 +370,7 @@ public class CoreServiceTest {
 
 	@Test
 	public void testCRUDCollection() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException,
-			KeyNotFoundException, InvalidPathException, CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException {
+			KeyNotFoundException, InvalidPathException, CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceLockedException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -494,7 +494,7 @@ public class CoreServiceTest {
 
 	@Test
 	public void testDeleteCollectionElementConcurrently() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException,
-			MembershipServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException {
+			MembershipServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, WorkspaceLockedException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -598,7 +598,7 @@ public class CoreServiceTest {
 					LOGGER.log(Level.INFO, "Deleting collection at path: " + path);
 					core.deleteCollection(wskey, path);
 					deleted = true;
-				} catch (CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | CollectionNotEmptyException | PathNotFoundException e) {
+				} catch (CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | CollectionNotEmptyException | PathNotFoundException | WorkspaceLockedException e) {
 					LOGGER.log(Level.SEVERE, "error during deleting collection: " + e.getMessage());
 				} finally {
 					loginContext.logout();

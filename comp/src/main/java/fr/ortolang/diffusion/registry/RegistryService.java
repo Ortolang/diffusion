@@ -94,6 +94,8 @@ public interface RegistryService extends OrtolangService {
 	
 	public void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 	
+	public void unlock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
+	
 	public boolean isLocked(String key) throws RegistryServiceException, KeyNotFoundException;
 	
 	public String getLock(String key) throws RegistryServiceException, KeyNotFoundException;

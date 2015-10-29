@@ -42,7 +42,6 @@ import java.util.logging.Logger;
 
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.runtime.RuntimeService;
-import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 
 public class RuntimeEngineListener {
@@ -63,9 +62,9 @@ public class RuntimeEngineListener {
 	}
 
 	public void onEvent(RuntimeEngineEvent event) {
-		LOGGER.log(Level.FINE, "RuntimeEngineEvent type: " + event.getType());
+		LOGGER.log(Level.FINE, "RuntimeEngineEvent type: " + event.getType() + " pid: " + event.getPid());
 		try {
-            switch (event.getType()) {
+		    switch (event.getType()) {
                 case PROCESS_START:
                     getRuntimeService().updateProcessState(event.getPid(), State.RUNNING);
                     break;
@@ -103,7 +102,7 @@ public class RuntimeEngineListener {
                     getRuntimeService().pushTaskEvent(event.getPid(), event.getCandidates(), event.getType());
                     break;
             }
-		} catch (RuntimeServiceException | RuntimeEngineException e) {
+		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unexpected error while trying to treat runtime  event", e);
 		}
 	}

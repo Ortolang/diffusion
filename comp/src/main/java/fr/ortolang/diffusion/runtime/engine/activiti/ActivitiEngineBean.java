@@ -153,16 +153,17 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void deployDefinitions(String[] resources) {
-		LOGGER.log(Level.INFO, "Deploying process definitions");
-		DeploymentBuilder deployment = engine.getRepositoryService().createDeployment();
-		deployment.enableDuplicateFiltering();
-		deployment.name("EngineServiceDeployement");
+		LOGGER.log(Level.INFO, "Deploying all process definitions");
 		for (String resource : resources) {
-			LOGGER.log(Level.INFO, "Adding process definition resource to deployment : " + resource);
-			deployment.addClasspathResource(resource);
+		    LOGGER.log(Level.INFO, "Creating deployment builder for process definition resource: " + resource);
+            DeploymentBuilder deployment = engine.getRepositoryService().createDeployment();
+    		deployment.enableDuplicateFiltering();
+    		deployment.name("Deployment of resource: " + resource);
+    		deployment.addClasspathResource(resource);
+			Deployment deploy = deployment.deploy();
+			LOGGER.log(Level.INFO, "Process definitions deployed on " + deploy.getDeploymentTime());
 		}
-		Deployment deploy = deployment.deploy();
-		LOGGER.log(Level.INFO, "Process definitions deployed on " + deploy.getDeploymentTime());
+		LOGGER.log(Level.INFO, "All process definitions deployed");
 	}
 
 	@Override
@@ -188,7 +189,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public ProcessType getProcessTypeByKey(String key) throws RuntimeEngineException {
-		ProcessDefinition apdef = engine.getRepositoryService().createProcessDefinitionQuery().processDefinitionKey(key).singleResult();
+		ProcessDefinition apdef = engine.getRepositoryService().createProcessDefinitionQuery().processDefinitionKey(key).latestVersion().singleResult();
 		String form = engine.getFormService().getStartFormKey(apdef.getId());
 		return toProcessType(apdef, form);
 	}
