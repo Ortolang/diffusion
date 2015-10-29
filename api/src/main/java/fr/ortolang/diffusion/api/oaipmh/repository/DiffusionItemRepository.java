@@ -43,7 +43,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -66,6 +65,7 @@ import com.lyncode.xoai.dataprovider.model.ItemIdentifier;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.api.oaipmh.format.OAI_DC;
+import fr.ortolang.diffusion.api.oaipmh.format.OLAC;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.search.SearchService;
@@ -75,9 +75,6 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
 	private static final Logger LOGGER = Logger.getLogger(DiffusionItemRepository.class.getName());
-	
-	// From fr.ortolang.diffusion.store.triple.TripleStoreStatementBuilder
-	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 	
 	public static final String PREFIX_IDENTIFIER = "oai:ortolang.fr:";
 
@@ -182,7 +179,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 	public ListItemIdentifiersResult getItemIdentifiers(
 			List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from, Date until)
 			throws OAIException {
-		String query = query(metadataPrefix, from, until);
+		String query = buildQuery(metadataPrefix, from, until);
 		
 		return getItemIdentifiersFromQuery(query, metadataPrefix, offset, length);
 	}
@@ -218,7 +215,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 			List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec,
 			Date from, Date until) throws OAIException {
 		//TODO filter on setSpec
-		String query = query(metadataPrefix, from, until);
+		String query = buildQuery(metadataPrefix, from, until);
 		
 		return getItemIdentifiersFromQuery(query, metadataPrefix, offset, length);
 	}
@@ -235,7 +232,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 	public ListItemIdentifiersResult getItemIdentifiersUntil(
 			List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date until)
 			throws OAIException {
-		String query = query(metadataPrefix, null, until);
+		String query = buildQuery(metadataPrefix, null, until);
 		
 		return getItemIdentifiersFromQuery(query, metadataPrefix, offset, length);
 	}
@@ -253,60 +250,56 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 			List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date until)
 			throws OAIException {
 		//TODO filter on setSpec
-		String query = query(metadataPrefix, null, until);
+		String query = buildQuery(metadataPrefix, null, until);
 		
 		return getItemIdentifiersFromQuery(query, metadataPrefix, offset, length);
 	}
 
 	protected String query(String metadataPrefix) {
-		return query(metadataPrefix, null, null);
+		return buildQuery(metadataPrefix, null, null);
 	}
 	
 	protected String query(String metadataPrefix, Date from) {
-		return query(metadataPrefix, from, null);
+		return buildQuery(metadataPrefix, from, null);
 	}
-	
-//	protected String query(String metadataPrefix, Date from, Date until) {
-//		StringBuilder query = new StringBuilder("SELECT ?item ?pubDate ?metadata WHERE {")
-//			.append(" ?item <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.ortolang.fr/2014/05/diffusion#Object> ")
-//			.append("; <http://www.ortolang.fr/2014/05/diffusion#publicationDate> ?pubDate ")
-//			.append("; <http://www.ortolang.fr/2014/05/diffusion#hasMetadata> ?metadata ")
-//			.append(". ?metadata <http://www.ortolang.fr/2014/05/diffusion#metadataFormat> '").append(metadataPrefix).append("' ");
-//		
-//		HashMap<String,StringBuilder> conditions = new HashMap<String, StringBuilder>();
-//		if(from!=null)
-//			conditions.put("from", new StringBuilder("(?pubDate >= \"").append(sdf.format(from)).append("\")"));
-//
-//		if(until!=null)
-//			conditions.put("until", new StringBuilder("(?pubDate <= \"").append(sdf.format(until)).append("\")"));
-//		
-//		if(conditions.size()>0) {
-//			query.append(". FILTER( ");
-//
-//			int iCond = 1;
-//			int condLength = conditions.values().size();
-//			
-//			for(StringBuilder sb : conditions.values()) {
-//				query.append(sb);
-//				
-//				if(iCond<condLength)
-//					query.append(" && ");
-//				iCond++;
-//			}
-//			
-//			query.append(")");
-//		}
-//		
-//		return query.append("}").toString();
-//	}
 
-	protected String query(String metadataPrefix, Date from, Date until) {
+    protected String buildQuery(String metadataPrefix, Date from, Date until) {
+        return buildQuery(metadataPrefix, from, until, null);
+    }
+	/**
+	 * Builds a query allowing to retrieve identifier of records based of some criteria. 
+	 * @param metadataPrefix
+	 * @param from
+	 * @param until
+	 * @return
+	 */
+	protected String buildQuery(String metadataPrefix, Date from, Date until, String key) {
 
-		StringBuilder query = new StringBuilder("SELECT meta_ortolang-workspace-json.wsalias as wsalias, lastModificationDate FROM Collection WHERE status='published' AND meta_ortolang-workspace-json.wsalias IS NOT null");
+		StringBuilder query = new StringBuilder("SELECT lastModificationDate, meta_ortolang-workspace-json.*, meta_ortolang-item-json.* FROM Collection WHERE status='published' AND meta_ortolang-workspace-json.wsalias IS NOT null AND meta_ortolang-item-json.title IS NOT null");
+		
+		if(from!=null) {
+		    query.append(" AND lastModificationDate>=").append(from.getTime());
+		}
+		
+		if(until!=null) {
+		    query.append(" AND lastModificationDate<=").append(until.getTime()+86400000);
+		}
+		
+		if(key!=null) {
+		    query.append(" AND meta_ortolang-workspace-json.wsalias='").append(key).append("'");
+		}
 		
 		return query.toString();
 	}
 
+	/**
+	 * Retrieves identifier of records based of a query and a metadata prefix.
+	 * @param query
+	 * @param metadataPrefix
+	 * @param offset
+	 * @param length
+	 * @return
+	 */
 	protected ListItemIdentifiersResult getItemIdentifiersFromQuery(String query, String metadataPrefix, int offset, int length) {
 
 		List<DiffusionItemIdentifier> list = new ArrayList<DiffusionItemIdentifier>();
@@ -320,7 +313,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 				JsonObject jsonObj = jsonReader.readObject();
 				
 				try {
-					String key = jsonObj.getString("wsalias");
+					String key = jsonObj.getString("meta_ortolang-workspace-jsonwsalias");
 					JsonNumber lastModificationDate = jsonObj.getJsonNumber("lastModificationDate");
 					Long longTimestamp = Long.valueOf(lastModificationDate.longValue());
 					Date datestamp = new Date(longTimestamp);
@@ -357,11 +350,10 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		
 		String key = identifier.replaceFirst(DiffusionItemRepository.PREFIX_IDENTIFIER, "");
 		
-		StringBuilder query = new StringBuilder("SELECT meta_ortolang-workspace-json.wsalias as wsalias, lastModificationDate, meta_ortolang-item-json.title as title FROM Collection WHERE status='published' and wsalias='")
-		    .append(key).append("'");
+		String query = buildQuery(metadataPrefix, null, null, key);
 		
 		try {
-		    List<String> docs = search.jsonSearch(query.toString());
+		    List<String> docs = search.jsonSearch(query);
 		    
 		    if(docs.size()==1) {
 		        DiffusionItem item = diffusionItem(docs.get(0), metadataPrefix);
@@ -438,7 +430,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 	public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset,
 			int length, Date from, Date until) throws OAIException {
 
-		String query = query(metadataPrefix, from, until);
+		String query = buildQuery(metadataPrefix, from, until);
 		
 		return getItemsFromQuery(query, metadataPrefix, offset, length);
 	}
@@ -470,7 +462,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 	public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset,
 			int length, String setSpec, Date from, Date until) throws OAIException {
 		// TODO Filter by set
-		String query = query(metadataPrefix, from, until);
+		String query = buildQuery(metadataPrefix, from, until);
 		
 		return getItemsFromQuery(query, metadataPrefix, offset, length);
 	}
@@ -485,7 +477,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 	@Override
 	public ListItemsResults getItemsUntil(List<ScopedFilter> filters, String metadataPrefix, int offset,
 			int length, Date until) throws OAIException {
-		String query = query(metadataPrefix, null, until);
+		String query = buildQuery(metadataPrefix, null, until);
 		
 		return getItemsFromQuery(query, metadataPrefix, offset, length);
 	}
@@ -501,7 +493,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 	public ListItemsResults getItemsUntil(List<ScopedFilter> filters, String metadataPrefix, int offset,
 			int length, String setSpec, Date until) throws OAIException {
 		// TODO Filter by set
-		String query = query(metadataPrefix, null, until);
+		String query = buildQuery(metadataPrefix, null, until);
 		
 		return getItemsFromQuery(query, metadataPrefix, offset, length);
 	}
@@ -539,15 +531,17 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
         JsonObject jsonDoc = jsonReader.readObject();
         
         try {
-            String key = jsonDoc.getString("wsalias");
+            String key = jsonDoc.getString("meta_ortolang-workspace-jsonwsalias");
             JsonNumber lastModificationDate = jsonDoc.getJsonNumber("lastModificationDate");
             Long longTimestamp = Long.valueOf(lastModificationDate.longValue());
             Date datestamp = new Date(longTimestamp);
             
             InputStream metadata = null;
-//            if(metadataPrefix=="oai_dc") {
+            if(metadataPrefix.equals("oai_dc")) {
                 metadata = transformToOAI_DC(jsonDoc);
-//            }
+            } else if(metadataPrefix.equals("olac")) {
+            	metadata = transformToOLAC(jsonDoc);
+            }
             
             if(metadata!=null) {
                 item = DiffusionItem.item();
@@ -579,5 +573,20 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
     protected InputStream transformToOAI_DC(JsonObject jsonDoc) {
         OAI_DC oai_dc = OAI_DC.valueOf(jsonDoc);
         return new ByteArrayInputStream(oai_dc.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Converts JSON document (String representation) to XML OLAC
+     * @param document
+     * @return
+     * @throws OrtolangException
+     * @throws KeyNotFoundException
+     * @throws CoreServiceException
+     * @throws DataNotFoundException
+     * @throws IOException
+     */
+    protected InputStream transformToOLAC(JsonObject jsonDoc) {
+        OLAC olac = OLAC.valueOf(jsonDoc);
+        return new ByteArrayInputStream(olac.toString().getBytes(StandardCharsets.UTF_8));
     }
 }

@@ -76,7 +76,6 @@ import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.oaipmh.dataprovider.DiffusionDataProvider;
 import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionItemRepository;
-import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.search.SearchService;
 
 @Path("/oai")
@@ -94,11 +93,18 @@ public class OAIPMHServlet {
 
 	@GET
 	@Path("/")
-	public Response oai(@QueryParam("verb") String verb, @QueryParam("identifier") String identifier, @QueryParam("metadataPrefix") String metadataPrefix) {
+	public Response oai(@QueryParam("verb") String verb
+	        , @QueryParam("identifier") String identifier
+	        , @QueryParam("metadataPrefix") String metadataPrefix
+	        , @QueryParam("from") String from
+	        , @QueryParam("until") String until) {
 		
-		context = new Context().withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
+		context = new Context();
+		context.withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
+		context.withMetadataFormat(MetadataFormat.metadataFormat("olac").withNamespace("http://www.language-archives.org/OLAC/1.1/").withSchemaLocation("http://www.language-archives.org/OLAC/1.1/olac.xsd"));
 		
 		InMemorySetRepository setRepository = new InMemorySetRepository();
+		setRepository.doesNotSupportSets();
 		DiffusionItemRepository itemRepository = new DiffusionItemRepository(search);
 		
 		UTCDateProvider dateProvider = new UTCDateProvider();
@@ -122,6 +128,7 @@ public class OAIPMHServlet {
 			.withAdminEmail("contact@ortolang.fr")
 			.withBaseUrl(ApiUriBuilder.getApiUriBuilder().path(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_OAI)).build().toString())
 			.withRepositoryName("ORTOLANG Repository")
+			.withDescription(description())
 			.withDeleteMethod(DeletedRecord.NO)
 			.withEarliestDate(earliestDate)
 			.withGranularity(Granularity.Day)
@@ -138,22 +145,15 @@ public class OAIPMHServlet {
 		dataProvider = new DiffusionDataProvider(context, repository);
 		
 		//
-//		Map<String, List<String>> reqParam = toParameters(request.getParameterMap());
 		Map<String, List<String>> reqParam = new HashMap<String, List<String>>();
-		List<String> verbValues = new ArrayList<String>();
-		verbValues.add(verb);
-		reqParam.put("verb", verbValues);
-		List<String> identifierValues = new ArrayList<String>();
-		identifierValues.add(identifier);
-		reqParam.put("identifier", identifierValues);
-		List<String> metadataPrefixValues = new ArrayList<String>();
-		metadataPrefixValues.add(metadataPrefix);
-		reqParam.put("metadataPrefix", metadataPrefixValues);
+		OAIPMHServlet.putParameter("verb", verb, reqParam);
+		OAIPMHServlet.putParameter("identifier", identifier, reqParam);
+		OAIPMHServlet.putParameter("metadataPrefix", metadataPrefix, reqParam);
+        OAIPMHServlet.putParameter("from", from, reqParam);
+        OAIPMHServlet.putParameter("until", until, reqParam);
 		
-		LOGGER.log(Level.INFO, "Service : "+search);
 		OAIRequest oaiRequest = new OAIRequest(reqParam);
 
-		// DataProvider
 		OAIPMH response = null;
 		try {
 			response = dataProvider.handle(oaiRequest);
@@ -165,11 +165,9 @@ public class OAIPMHServlet {
 		}
 
 		if (response != null) {
-//			String result = "";
 
 			try {
-//				result = write(response);
-				return Response.ok(write(response)).header("Content-Type", "application/xml; charset=utf-8")
+				return Response.ok(write(response)).header("Content-Type", "text/xml")
 						.header("Character-Encoding", "UTF-8").build();
 			} catch (XMLStreamException e) {
 				LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
@@ -207,16 +205,21 @@ public class OAIPMHServlet {
 		return outputStream.toString();
 	}
 
-	protected Map<String, List<String>> toParameters(Map<String, String[]> mParam) {
-		Map<String, List<String>> reqParam = new HashMap<String, List<String>>();
-		for (Map.Entry<String, String[]> entry : mParam.entrySet()) {
-			List<String> lValues = new ArrayList<String>();
-			for (String value : entry.getValue()) {
-				lValues.add(value);
-			}
-			reqParam.put(entry.getKey(), lValues);
-		}
-		return reqParam;
+	protected static void putParameter(String name, String value, Map<String, List<String>> reqParam) {
+      List<String> verbValues = new ArrayList<String>();
+      verbValues.add(value);
+      reqParam.put(name, verbValues);
 	}
-
+	
+	protected static String description() {
+	    return new StringBuilder().append("<oai-identifier xmlns=\"http://www.openarchives.org/OAI/2.0/oai-identifier\"")
+	        .append(" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"")
+	        .append(" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai-identifier http://www.openarchives.org/OAI/2.0/oai-identifier.xsd\">")
+	        .append("<scheme>oai</scheme>")
+	        .append("<repositoryIdentifier>www.ortolang.fr</repositoryIdentifier>")
+	        .append("<delimiter>:</delimiter>")
+	        .append("<sampleIdentifier>oai:ortolang.fr:dede</sampleIdentifier>")
+	        .append("</oai-identifier>").toString();
+	    
+	}
 }

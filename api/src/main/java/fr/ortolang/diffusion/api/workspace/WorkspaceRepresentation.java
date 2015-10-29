@@ -37,6 +37,7 @@ package fr.ortolang.diffusion.api.workspace;
  */
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -65,6 +66,7 @@ public class WorkspaceRepresentation {
     private boolean changed;
     private Set<SnapshotElement> snapshots;
     private Set<TagElement> tags;
+    private Map<String,String> metadatas;
 
     public WorkspaceRepresentation() {
         snapshots = new HashSet<SnapshotElement>();
@@ -189,6 +191,14 @@ public class WorkspaceRepresentation {
 
     public void setChanged(boolean changed) {
         this.changed = changed;
+    }
+
+    public Map<String, String> getMetadatas() {
+        return metadatas;
+    }
+
+    public void setMetadatas(Map<String, String> metadata) {
+        this.metadatas = metadata;
     }
 
     public static WorkspaceRepresentation fromWorkspace(Workspace workspace) {
