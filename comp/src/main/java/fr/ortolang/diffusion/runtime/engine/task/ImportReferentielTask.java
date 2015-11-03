@@ -203,6 +203,8 @@ public class ImportReferentielTask extends RuntimeEngineTask {
                 return ReferentielType.TOOL_SUPPORT;
 			case "ResourceType":
 				return ReferentielType.RESOURCE_TYPE;
+            case "License":
+                return ReferentielType.LICENSE;
 			default:
 				LOGGER.log(Level.SEVERE, "  referentiel type unknown : "+type);
 				return null;

@@ -244,7 +244,10 @@ public class BootstrapServiceBean implements BootstrapService {
 				InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.12.json");
 				String schemaHash = core.put(schemaInputStream);
 				core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schemaHash, "ortolang-item-form");
-				InputStream schemaInputStream2 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-acl-schema.json");
+				InputStream schema13InputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.13.json");
+                String schema13Hash = core.put(schema13InputStream);
+                core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schema13Hash, "ortolang-item-form");
+                InputStream schemaInputStream2 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-acl-schema.json");
 				String schemaHash2 = core.put(schemaInputStream2);
 				core.createMetadataFormat(MetadataFormat.ACL, "Les métadonnées de contrôle d'accès permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, "");
 				InputStream schemaWorkspaceInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-workspace-schema.json");
@@ -253,9 +256,6 @@ public class BootstrapServiceBean implements BootstrapService {
 				InputStream schemaPidInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-pid-schema.json");
 				String schemaPidHash = core.put(schemaPidInputStream);
 				core.createMetadataFormat(MetadataFormat.PID, "Les métadonnées associées aux pids d'un object.", schemaPidHash, "");
-//				InputStream schemaInputStream3 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-organization-schema.json");
-//				String schemaHash3 = core.put(schemaInputStream3);
-//				core.createMetadataFormat(MetadataFormat.ORGANIZATION, "Les métadonnées de présentation d'un laboratoire producteur.", schemaHash3, "");
 				
 				LOGGER.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException
