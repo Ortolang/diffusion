@@ -68,6 +68,8 @@ public interface RuntimeService extends OrtolangService {
 
 	public void startProcess(String key, Map<String, Object> variables) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
+	public void abortProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
+	
 	public void updateProcessState(String pid, State state) throws RuntimeServiceException;
 	
 	public void appendProcessLog(String pid, String log) throws RuntimeServiceException;

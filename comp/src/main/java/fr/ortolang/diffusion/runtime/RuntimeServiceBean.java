@@ -112,7 +112,7 @@ public class RuntimeServiceBean implements RuntimeService {
 	private static final String TRACE_FILE_EXTENSION = ".log";
 	private static final String[] OBJECT_TYPE_LIST = new String[] { Process.OBJECT_TYPE };
 	private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { 
-			{ Process.OBJECT_TYPE, "read,update,delete,start" } };
+			{ Process.OBJECT_TYPE, "read,update,delete,start,abort" } };
 	
 	private static Path base;
     
@@ -250,6 +250,41 @@ public class RuntimeServiceBean implements RuntimeService {
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while submitting process for start", e);
 			throw new RuntimeServiceException("unable to submit process for start", e);
 		}
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void abortProcess(String key) throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
+	    LOGGER.log(Level.INFO, "Killing process with key: " + key);
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(key, subjects, "abort");
+            
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, Process.OBJECT_TYPE);
+            Process process = em.find(Process.class, identifier.getId());
+            if (process == null) {
+                throw new RuntimeServiceException("unable to find a process for id " + identifier.getId());
+            }
+            if ( !process.getState().equals(State.RUNNING) ) {
+                throw new RuntimeServiceException("unable to kill process, state is not " + State.RUNNING);
+            }
+            process.setKey(key);
+            process.appendLog(new Date() + "  PROCESS STATE CHANGED TO " + State.ABORTED + " BY " + caller);
+            process.setState(State.ABORTED);
+            process.setStop(System.currentTimeMillis());
+            em.persist(process);
+            
+            engine.deleteProcess(process.getId());
+            
+            registry.update(key);
+            notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "abort"));
+        } catch (KeyLockedException | MembershipServiceException | AuthorisationServiceException | RegistryServiceException | RuntimeEngineException | NotificationServiceException e) {
+            ctx.setRollbackOnly();
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while killing process", e);
+            throw new RuntimeServiceException("unable to kill process", e);
+        }
 	}
 	
 	@Override

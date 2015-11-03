@@ -54,6 +54,7 @@ import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.transaction.UserTransaction;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -249,6 +250,16 @@ public class RuntimeResource {
 		ProcessRepresentation representation = ProcessRepresentation.fromProcess(process);
 		return Response.ok(representation).build();
 	}
+	
+	@DELETE
+    @Path("/processes/{key}")
+    public Response abortProcess(@PathParam("key") String key) throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "DELETE /runtime/processes/" + key);
+        runtime.abortProcess(key);
+        Process process = runtime.readProcess(key);
+        ProcessRepresentation representation = ProcessRepresentation.fromProcess(process);
+        return Response.ok(representation).build();
+    }
 	
 	@GET
     @Path("/processes/{key}/trace")
