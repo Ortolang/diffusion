@@ -123,5 +123,9 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
     public boolean systemValidateTOTP(String identifier, String totp) throws MembershipServiceException, KeyNotFoundException;
     
     public String systemReadProfileSecret(String identifier) throws MembershipServiceException, KeyNotFoundException;
+    
+    public String systemReadProfileEmail(String identifier) throws MembershipServiceException, KeyNotFoundException;
+    
+    public ProfileData systemGetProfileInfo(String identifier, String name) throws MembershipServiceException, KeyNotFoundException; 
 
 }

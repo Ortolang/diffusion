@@ -24,6 +24,7 @@ import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.core.PathAlreadyExistsException;
 import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.PathNotFoundException;
+import fr.ortolang.diffusion.core.WorkspaceLockedException;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -238,7 +239,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().createDataObject(wskey, current, sha1);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceLockedException e) {
 			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "]", e);
 		} 
 	}
@@ -252,7 +253,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().updateDataObject(wskey, path, hash);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceLockedException e) {
 			throw new RuntimeEngineTaskException("Error updating object for path [" + path + "]", e);
 		}
 	}
@@ -261,7 +262,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		try {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().deleteDataObject(wskey, path);
-		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceLockedException e) {
 			LOGGER.log(Level.FINE, "Error deleting object for path: " + path, e);
 			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "]", e);
 		}
@@ -270,7 +271,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		while (!opath.isRoot()) {
 			try {
 				getCoreService().deleteCollection(wskey, opath.build());
-			} catch (CollectionNotEmptyException | CoreServiceException | KeyNotFoundException | AccessDeniedException e) {
+			} catch (CollectionNotEmptyException | CoreServiceException | KeyNotFoundException | AccessDeniedException | WorkspaceLockedException e) {
 				break;
 			}
 			opath.parent();
@@ -286,7 +287,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().createMetadataObject(wskey, path, name, hash);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceLockedException e) {
 			throw new RuntimeEngineTaskException("Error creating metadata for path [" + path + "]", e);
 		} 
 	}
@@ -300,7 +301,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().updateMetadataObject(wskey, path, name, hash);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceLockedException e) {
 			throw new RuntimeEngineTaskException("Error updating metadata for path [" + path + "]", e);
 		} 
 	}
@@ -309,7 +310,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		try {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().deleteMetadataObject(wskey, path, name);
-		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceLockedException e) {
 			throw new RuntimeEngineTaskException("Error deleting metadata for path [" + path + "]", e);
 		} 
 	}
@@ -317,7 +318,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 	private void snapshotWorkspace(String name) throws RuntimeEngineTaskException {
 		try {
 			getCoreService().snapshotWorkspace(wskey);
-		} catch ( CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
+		} catch ( CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceLockedException e) {
 			throw new RuntimeEngineTaskException("Error snapshoting workspace", e);
 		} 
 	}

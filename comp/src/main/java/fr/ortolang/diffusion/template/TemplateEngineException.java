@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.api.template;
+package fr.ortolang.diffusion.template;
 
 @SuppressWarnings("serial")
 public class TemplateEngineException extends Exception {

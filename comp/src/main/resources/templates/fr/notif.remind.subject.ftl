@@ -1,0 +1,1 @@
+[ORTOLANG] Rappel : demande de publication de l'espace '${wsalias}' en attente depuis ${delai}

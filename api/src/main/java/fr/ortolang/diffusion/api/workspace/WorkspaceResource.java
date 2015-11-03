@@ -39,7 +39,12 @@ package fr.ortolang.diffusion.api.workspace;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,12 +70,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
-import fr.ortolang.diffusion.runtime.RuntimeService;
-import fr.ortolang.diffusion.runtime.RuntimeServiceException;
-import fr.ortolang.diffusion.runtime.entity.Process;
-import fr.ortolang.diffusion.security.SecurityService;
-import fr.ortolang.diffusion.security.SecurityServiceException;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import fr.ortolang.diffusion.OrtolangConfig;
@@ -82,6 +81,7 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.filter.CORSFilter;
 import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
+import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.AliasNotFoundException;
@@ -93,6 +93,7 @@ import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.core.PathAlreadyExistsException;
 import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.PathNotFoundException;
+import fr.ortolang.diffusion.core.WorkspaceLockedException;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
@@ -105,6 +106,11 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
+import fr.ortolang.diffusion.runtime.RuntimeService;
+import fr.ortolang.diffusion.runtime.RuntimeServiceException;
+import fr.ortolang.diffusion.runtime.entity.Process;
+import fr.ortolang.diffusion.security.SecurityService;
+import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 
@@ -265,7 +271,7 @@ public class WorkspaceResource {
     @Path("/{wskey}")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateWorkspace(@PathParam(value = "wskey") String wskey, WorkspaceRepresentation representation) throws CoreServiceException, KeyAlreadyExistsException,
-            AccessDeniedException, KeyNotFoundException {
+            AccessDeniedException, KeyNotFoundException, WorkspaceLockedException {
         LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey);
         if (representation.getKey() != null && representation.getKey().length() > 0) {
             core.updateWorkspace(representation.getKey(), representation.getName());
@@ -351,7 +357,7 @@ public class WorkspaceResource {
     @Path("/{wskey}/elements")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response createWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form, @Context HttpHeaders headers)
-            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException {
+            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException, WorkspaceLockedException {
         LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/elements");
         try {
             String contentTransferEncoding = "UTF-8";
@@ -443,7 +449,7 @@ public class WorkspaceResource {
     @Path("/{wskey}/elements")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateWorkspaceElement(@PathParam(value = "wskey") String wskey, WorkspaceElementRepresentation representation, @QueryParam(value = "destination") String destination) throws CoreServiceException,
-            KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException {
+            KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException, WorkspaceLockedException {
         LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements");
         PathBuilder npath = PathBuilder.fromPath(representation.getPath());
         try {
@@ -496,7 +502,7 @@ public class WorkspaceResource {
     @Path("/{wskey}/elements")
     public Response deleteWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
             @QueryParam(value = "metadataname") String metadataname) throws CoreServiceException, InvalidPathException, AccessDeniedException, KeyNotFoundException,
-            BrowserServiceException, CollectionNotEmptyException, PathNotFoundException {
+            BrowserServiceException, CollectionNotEmptyException, PathNotFoundException, WorkspaceLockedException {
         LOGGER.log(Level.INFO, "DELETE /workspaces/" + wskey + "/elements");
         if (path == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
@@ -526,7 +532,7 @@ public class WorkspaceResource {
 
     @POST
     @Path("/{wskey}/snapshots")
-    public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceLockedException {
         LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/snapshots");
         core.snapshotWorkspace(wskey);
         return Response.ok().build();

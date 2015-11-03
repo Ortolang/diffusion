@@ -102,6 +102,7 @@ import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
+import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
 import fr.ortolang.diffusion.indexing.IndexingService;
@@ -270,6 +271,7 @@ public class CoreServiceBean implements CoreService {
 
             Map<String, List<String>> rules = new HashMap<String, List<String>>();
             rules.put(members, Arrays.asList("read", "create", "update", "delete", "download"));
+            rules.put(MembershipService.MODERATOR_GROUP_KEY, Arrays.asList("read", "create", "update", "delete", "download"));
             authorisation.createPolicy(head, members);
             authorisation.setPolicyRules(head, rules);
 
@@ -310,6 +312,7 @@ public class CoreServiceBean implements CoreService {
             Map<String, List<String>> wsrules = new HashMap<String, List<String>>();
             wsrules.put(members, Arrays.asList("read"));
             wsrules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
+            wsrules.put(MembershipService.MODERATOR_GROUP_KEY, Arrays.asList("read", "create", "update", "delete")); 
             authorisation.createPolicy(wskey, caller);
             authorisation.setPolicyRules(wskey, wsrules);
 
@@ -436,12 +439,16 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public String snapshotWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    public String snapshotWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "snapshoting workspace [" + wskey + "]");
         try {
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to snapshot workspace with key [" + wskey + "] because it is locked");
+            }
+            
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
-
+            
             OrtolangObjectIdentifier identifier = registry.lookup(wskey);
             checkObjectType(identifier, Workspace.OBJECT_TYPE);
             authorisation.checkPermission(wskey, subjects, "update");
@@ -511,9 +518,13 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void tagWorkspace(String wskey, String tag, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    public void tagWorkspace(String wskey, String tag, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "tagging workspace [" + wskey + "] and snapshot [" + snapshot + "]");
         try {
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to tag workspace with key [" + wskey + "] because it is locked");
+            }
+
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
 
@@ -564,9 +575,13 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateWorkspace(String wskey, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    public void updateWorkspace(String wskey, String name) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "updating workspace [" + wskey + "]");
         try {
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to update workspace with key [" + wskey + "] because it is locked");
+            }
+
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
 
@@ -591,14 +606,27 @@ public class CoreServiceBean implements CoreService {
             throw new CoreServiceException("unable to update workspace with key [" + wskey + "]", e);
         }
     }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void deleteWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceLockedException {
+        deleteWorkspace(wskey, false);
+    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void deleteWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    public void deleteWorkspace(String wskey, boolean force) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "deleting workspace [" + wskey + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
+            
+            if (force && !MembershipService.SUPERUSER_IDENTIFIER.equals(caller)) {
+                throw new CoreServiceException("only " + MembershipService.SUPERUSER_IDENTIFIER + " can force workspace delete");
+            }
+            if (!force && registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to delete workspace with key [" + wskey + "] because it is locked");
+            }
 
             OrtolangObjectIdentifier identifier = registry.lookup(wskey);
             checkObjectType(identifier, Workspace.OBJECT_TYPE);
@@ -607,6 +635,18 @@ public class CoreServiceBean implements CoreService {
             Workspace workspace = em.find(Workspace.class, identifier.getId());
             if (workspace == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+            }
+            if ( !force ) {
+                if ( workspace.getType().equals(WorkspaceType.SYSTEM.name()) ) {
+                    throw new CoreServiceException("unable to delete with key [" + wskey + "] because it is of type: " + WorkspaceType.SYSTEM.name());
+                }
+                String current = workspace.getHead();
+                while (current != null) {
+                    String parent = registry.getParent(current);
+                    if (parent != null && registry.getPublicationStatus(parent).equals(OrtolangObjectState.Status.PUBLISHED.value())) {
+                        throw new CoreServiceException("unable to delete workspace with key [" + wskey + "] because it has a published version");
+                    }
+                }
             }
             workspace.setAlias(null);
             em.merge(workspace);
@@ -1001,7 +1041,7 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void createCollection(String wskey, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException,
-            PathAlreadyExistsException {
+            PathAlreadyExistsException, WorkspaceLockedException {
         String key = UUID.randomUUID().toString();
         try {
             createCollection(wskey, key, path);
@@ -1014,7 +1054,7 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void createCollection(String wskey, String key, String path) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException,
-            PathNotFoundException, PathAlreadyExistsException {
+            PathNotFoundException, PathAlreadyExistsException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "creating collection with key [" + key + "] into workspace [" + wskey + "] at path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -1022,6 +1062,10 @@ public class CoreServiceBean implements CoreService {
                 throw new InvalidPathException("forbidden to create the root collection");
             }
             PathBuilder ppath = npath.clone().parent();
+            
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to create collection in workspace with key [" + wskey + "] because it is locked");
+            }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1147,9 +1191,13 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void moveCollection(String wskey, String source, String destination) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
-            PathNotFoundException, PathAlreadyExistsException {
+            PathNotFoundException, PathAlreadyExistsException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "moving collection into workspace [" + wskey + "] from path [" + source + "] to path [" + destination + "]");
         try {
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to move collection in workspace with key [" + wskey + "] because it is locked");
+            }
+
             PathBuilder spath = PathBuilder.fromPath(source);
             if (spath.isRoot()) {
                 throw new InvalidPathException("unable to move the root collection");
@@ -1243,14 +1291,14 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void deleteCollection(String workspace, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, CollectionNotEmptyException,
-            PathNotFoundException {
+            PathNotFoundException, WorkspaceLockedException {
         deleteCollection(workspace, path, false);
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void deleteCollection(String wskey, String path, boolean force) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
-            CollectionNotEmptyException, PathNotFoundException {
+            CollectionNotEmptyException, PathNotFoundException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "deleting collection into workspace [" + wskey + "] at path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -1258,6 +1306,10 @@ public class CoreServiceBean implements CoreService {
                 throw new InvalidPathException("unable to delete the root collection");
             }
             PathBuilder ppath = npath.clone().parent();
+
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to delete collection in workspace with key [" + wskey + "] because it is locked");
+            }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1334,7 +1386,7 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void createDataObject(String workspace, String path, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException,
-            PathAlreadyExistsException {
+            PathAlreadyExistsException, WorkspaceLockedException {
         String key = UUID.randomUUID().toString();
         try {
             createDataObject(workspace, key, path, hash);
@@ -1347,7 +1399,7 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void createDataObject(String wskey, String key, String path, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
-            AccessDeniedException, PathNotFoundException, PathAlreadyExistsException {
+            AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "create data object with key [" + key + "] into workspace [" + wskey + "] at path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -1355,6 +1407,10 @@ public class CoreServiceBean implements CoreService {
                 throw new InvalidPathException("forbidden to create an object at root level");
             }
             PathBuilder ppath = npath.clone().parent();
+
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to create data object in workspace with key [" + wskey + "] because it is locked");
+            }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1452,7 +1508,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateDataObject(String wskey, String path, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException {
+    public void updateDataObject(String wskey, String path, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "updating object into workspace [" + wskey + "] at path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -1460,6 +1516,10 @@ public class CoreServiceBean implements CoreService {
                 throw new InvalidPathException("path is empty");
             }
             PathBuilder ppath = npath.clone().parent();
+
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to update data object in workspace with key [" + wskey + "] because it is locked");
+            }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1557,7 +1617,7 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void moveDataObject(String wskey, String source, String destination) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
-            PathNotFoundException, PathAlreadyExistsException {
+            PathNotFoundException, PathAlreadyExistsException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "moving object into workspace [" + wskey + "] from path [" + source + "] to path [" + destination + "]");
         try {
             PathBuilder spath = PathBuilder.fromPath(source);
@@ -1574,6 +1634,10 @@ public class CoreServiceBean implements CoreService {
 
             if (dpath.equals(spath)) {
                 throw new InvalidPathException("unable to move into the same path");
+            }
+
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to move data object in workspace with key [" + wskey + "] because it is locked");
             }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -1653,7 +1717,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void deleteDataObject(String wskey, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException {
+    public void deleteDataObject(String wskey, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "deleting object into workspace [" + wskey + "] at path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -1661,6 +1725,10 @@ public class CoreServiceBean implements CoreService {
                 throw new InvalidPathException("path is empty");
             }
             PathBuilder ppath = npath.clone().parent();
+
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to delete data object in workspace with key [" + wskey + "] because it is locked");
+            }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1731,7 +1799,7 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void createLink(String workspace, String path, String target) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException,
-            PathAlreadyExistsException {
+            PathAlreadyExistsException, WorkspaceLockedException {
         String key = UUID.randomUUID().toString();
         try {
             createLink(workspace, key, path, target);
@@ -1744,7 +1812,7 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void createLink(String wskey, String key, String path, String target) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
-            AccessDeniedException, PathNotFoundException, PathAlreadyExistsException {
+            AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "create link with key [" + key + "] into workspace [" + wskey + "] at path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -1752,6 +1820,10 @@ public class CoreServiceBean implements CoreService {
                 throw new InvalidPathException("path is empty");
             }
             PathBuilder ppath = npath.clone().parent();
+
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to create link in workspace with key [" + wskey + "] because it is locked");
+            }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1844,7 +1916,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateLink(String wskey, String path, String target) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException {
+    public void updateLink(String wskey, String path, String target) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "updating link into workspace [" + wskey + "] at path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -1852,6 +1924,10 @@ public class CoreServiceBean implements CoreService {
                 throw new InvalidPathException("path is empty");
             }
             PathBuilder ppath = npath.clone().parent();
+
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to update link in workspace with key [" + wskey + "] because it is locked");
+            }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1937,7 +2013,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void moveLink(String wskey, String source, String destination) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, PathAlreadyExistsException {
+    public void moveLink(String wskey, String source, String destination) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "moving link into workspace [" + wskey + "] from path [" + source + "] to path [" + destination + "]");
         try {
             PathBuilder spath = PathBuilder.fromPath(source);
@@ -1954,6 +2030,10 @@ public class CoreServiceBean implements CoreService {
 
             if (dpath.equals(spath)) {
                 throw new InvalidPathException("unable to move into the same path");
+            }
+
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to move link in workspace with key [" + wskey + "] because it is locked");
             }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -2035,7 +2115,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void deleteLink(String wskey, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException {
+    public void deleteLink(String wskey, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "deleting link into workspace [" + wskey + "] at path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -2043,6 +2123,10 @@ public class CoreServiceBean implements CoreService {
                 throw new InvalidPathException("path is empty");
             }
             PathBuilder ppath = npath.clone().parent();
+
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to delete link in workspace with key [" + wskey + "] because it is locked");
+            }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -2152,7 +2236,7 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void createMetadataObject(String workspace, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
-            MetadataFormatException, PathNotFoundException {
+            MetadataFormatException, PathNotFoundException, WorkspaceLockedException {
         String key = UUID.randomUUID().toString();
 
         try {
@@ -2166,11 +2250,15 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void createMetadataObject(String wskey, String key, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException,
-            InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException {
+            InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "create metadataobject with key [" + key + "] into workspace [" + wskey + "] for path [" + path + "] with name [" + name + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
             PathBuilder ppath = npath.clone().parent();
+
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to create metadata object in workspace with key [" + wskey + "] because it is locked");
+            }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -2360,11 +2448,15 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void updateMetadataObject(String wskey, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
-            MetadataFormatException, PathNotFoundException {
+            MetadataFormatException, PathNotFoundException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "updating metadata content into workspace [" + wskey + "] for path [" + path + "] and name [" + name + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
             PathBuilder ppath = npath.clone().parent();
+
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to update metadata object in workspace with key [" + wskey + "] because it is locked");
+            }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -2557,11 +2649,15 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void deleteMetadataObject(String wskey, String path, String name) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException {
+    public void deleteMetadataObject(String wskey, String path, String name) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "deleting metadataobject into workspace [" + wskey + "] for path [" + path + "] with name [" + name + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
             PathBuilder ppath = npath.clone().parent();
+
+            if ( registry.isLocked(wskey) ) {
+                throw new WorkspaceLockedException("unable to delete metadata object in workspace with key [" + wskey + "] because it is locked");
+            }
 
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -3223,7 +3319,7 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Set<String> systemListWorkspaceKeys(String wskey) throws CoreServiceException, KeyNotFoundException {
-        LOGGER.log(Level.FINE, "listing workspace keys [" + wskey + "]");
+        LOGGER.log(Level.FINE, "{SYSTEM} listing workspace keys [" + wskey + "]");
         Set<String> keys = new HashSet<String>();
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(wskey);

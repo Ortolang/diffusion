@@ -48,6 +48,4 @@ public interface PublicationService extends OrtolangService {
 	
 	public void publish(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException;
 	
-	public void review(String key) throws PublicationServiceException, AccessDeniedException;
-	
 }

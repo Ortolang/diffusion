@@ -190,32 +190,6 @@ public class PublicationServiceBean implements PublicationService {
 	}
 
 	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void review(String key) throws PublicationServiceException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "submiting key for review");
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-
-			if (registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.PUBLISHED.value())) {
-				LOGGER.log(Level.WARNING, "key [" + key + "] is already published, nothing to do !!");
-			} else if (registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.REVIEW.value())) {
-				LOGGER.log(Level.WARNING, "key [" + key + "] is already in review, nothing to do !!");
-			} else {
-				authorisation.checkOwnership(key, subjects);
-				registry.setPublicationStatus(key, OrtolangObjectState.Status.REVIEW.value());
-				registry.update(key);
-				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
-				indexing.index(key);
-				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "review"));
-			}
-		} catch (KeyLockedException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IndexingServiceException e) {
-			ctx.setRollbackOnly();
-			throw new PublicationServiceException("error during submitting key for review : " + e);
-		}
-	}
-
-	@Override
 	public String getServiceName() {
 		return PublicationService.SERVICE_NAME;
 	}

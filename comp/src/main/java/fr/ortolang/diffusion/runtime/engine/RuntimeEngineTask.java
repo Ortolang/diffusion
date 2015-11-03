@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.runtime.engine;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.mail.Session;
 import javax.naming.InitialContext;
 import javax.transaction.UserTransaction;
 
@@ -91,10 +92,15 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 
     public static final String REFERENTIEL_PATH_PARAM_NAME = "referentielpath";
     public static final String REFERENTIEL_TYPE_PARAM_NAME = "referentieltype";
+    
+    public static final String PUBLICATION_REJECT_REASON = "rejectreason";
+    
+    public static final String TASK_ACTION = "action";
 
     private static final Logger LOGGER = Logger.getLogger(RuntimeEngineTask.class.getName());
 
     protected UserTransaction userTx;
+    protected Session mailSession;
     protected RuntimeEngine engine;
     protected RuntimeService runtime;
     protected MembershipService membership;
@@ -108,6 +114,17 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     protected NotificationService notification;
     protected IndexingService indexing;
     protected ReferentielService referentiel;
+    
+    public Session getMailSession() throws RuntimeEngineTaskException {
+        try {
+            if ( mailSession == null ) {
+                mailSession = (Session) new InitialContext().lookup("java:jboss/mail/Default");
+            }
+            return mailSession;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        } 
+    }
 
     public MembershipService getMembershipService() throws RuntimeEngineTaskException {
         try {

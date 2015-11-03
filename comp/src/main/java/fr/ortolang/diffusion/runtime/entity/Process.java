@@ -68,7 +68,7 @@ public class Process extends OrtolangObject {
 	public static final String INITIER_VAR_NAME = "initier";
 	public static final String WSKEY_VAR_NAME = "wskey";
 
-	public static enum State {
+    public static enum State {
 		PENDING, SUBMITTED, RUNNING, SUSPENDED, ABORTED, COMPLETED
 	}
 

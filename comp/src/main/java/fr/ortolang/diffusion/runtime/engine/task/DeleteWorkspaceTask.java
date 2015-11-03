@@ -8,6 +8,8 @@ import javax.ejb.EJBTransactionRolledbackException;
 import javax.transaction.SystemException;
 
 import fr.ortolang.diffusion.core.AliasNotFoundException;
+import fr.ortolang.diffusion.core.WorkspaceLockedException;
+
 import org.activiti.engine.delegate.DelegateExecution;
 
 import fr.ortolang.diffusion.core.CoreServiceException;
@@ -61,17 +63,17 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 				Set<String> keys = getCoreService().systemListWorkspaceKeys(wskey);
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace content retrieved"));
 				StringBuilder trace = new StringBuilder();
-		        for ( String key : keys ) {
+				getCoreService().deleteWorkspace(wskey);
+                for ( String key : keys ) {
 					LOGGER.log(Level.FINE, "Deleting content key: " + key);
 					getRegistryService().delete(key, true);
 					getIndexingService().remove(key);
 					trace.append("key [").append(key).append("] deleted and removed from index");
 				}
-				getCoreService().deleteWorkspace(wskey);
 				trace.append("workspace with key [").append(wskey).append("] deleted");
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace deleted"));
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), trace.toString(), null));
-			} catch (KeyNotFoundException | IndexingServiceException | AccessDeniedException | CoreServiceException | RegistryServiceException | KeyLockedException e) {
+			} catch (KeyNotFoundException | IndexingServiceException | AccessDeniedException | CoreServiceException | RegistryServiceException | KeyLockedException | WorkspaceLockedException e) {
 				getUserTransaction().rollback();
 				throw new RuntimeEngineTaskException("unexpected error during delete workspace task", e);
 			} 

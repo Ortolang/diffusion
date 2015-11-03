@@ -73,6 +73,7 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathAlreadyExistsException;
 import fr.ortolang.diffusion.core.PathNotFoundException;
+import fr.ortolang.diffusion.core.WorkspaceLockedException;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.form.FormService;
@@ -144,10 +145,10 @@ public class BootstrapServiceBean implements BootstrapService {
 		LOGGER.log(Level.INFO, "checking bootstrap status...");
 		try {
 			registry.lookup(BootstrapService.WORKSPACE_KEY);
-			LOGGER.log(Level.INFO, "bootstrap key found, nothing to do.");
+			LOGGER.log(Level.INFO, "bootstrap key found, skipping initial creation.");
 		} catch (KeyNotFoundException e) {
 			try {
-				LOGGER.log(Level.INFO, "bootstrap key not found, bootstrapping platform...");
+				LOGGER.log(Level.INFO, "bootstrap key not found, creating  platform initial content...");
 
 				Map<String, List<String>> anonReadRules = new HashMap<String, List<String>>();
 				anonReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
@@ -214,10 +215,6 @@ public class BootstrapServiceBean implements BootstrapService {
 				authorisation.setPolicyRules(restrictedPolicyKey, restrictedPolicyRules);
 				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.RESTRICTED, "Only workspace members can read and download this content, all other users cannot see this content", restrictedPolicyKey);
 				
-
-				LOGGER.log(Level.FINE, "import process types");
-				runtime.importProcessTypes();
-
 				LOGGER.log(Level.FINE, "import forms");
 				LOGGER.log(Level.FINE, "import form : test-process-start-form");
 				InputStream is = getClass().getClassLoader().getResourceAsStream("forms/test-process-start-form.json");
@@ -259,13 +256,21 @@ public class BootstrapServiceBean implements BootstrapService {
 				
 				LOGGER.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException
-					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | RuntimeServiceException | FormServiceException | PathNotFoundException | PathAlreadyExistsException e1) {
+					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | FormServiceException | PathNotFoundException | PathAlreadyExistsException | WorkspaceLockedException e1) {
 				LOGGER.log(Level.SEVERE, "unexpected error occurred while bootstrapping platform", e1);
 				throw new BootstrapServiceException("unable to bootstrap platform", e1);
 			}
+			
 		} catch (RegistryServiceException e) {
 			throw new BootstrapServiceException("unable to check platform bootstrap status", e);
 		}
+		
+		try {
+            LOGGER.log(Level.INFO, "import process types");
+            runtime.importProcessTypes();
+        } catch (RuntimeServiceException e1) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while importing process types", e1);
+        }
 	}
 	
 	

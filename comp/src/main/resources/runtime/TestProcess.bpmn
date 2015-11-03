@@ -25,7 +25,7 @@
       <documentation>Do me need to say hello again ??</documentation>
     </userTask>
     <sequenceFlow id="flow5" sourceRef="usertask1" targetRef="exclusivegateway1"></sequenceFlow>
-    <exclusiveGateway id="exclusivegateway1" name="Exclusive Gateway"></exclusiveGateway>
+    <exclusiveGateway id="exclusivegateway1" name="Exclusive Gateway" activiti:async="true"></exclusiveGateway>
     <sequenceFlow id="flow6" sourceRef="exclusivegateway1" targetRef="servicetask4">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${helloAgain}]]></conditionExpression>
     </sequenceFlow>
