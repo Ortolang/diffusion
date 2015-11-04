@@ -57,6 +57,8 @@ public interface SubscriptionService extends OrtolangService {
 
     public void addDefaultFilters() throws SubscriptionServiceException;
 
+    public void addAdminFilters() throws SubscriptionServiceException;
+
     public Map<String, Subscription> getSubscriptions();
 
 }
