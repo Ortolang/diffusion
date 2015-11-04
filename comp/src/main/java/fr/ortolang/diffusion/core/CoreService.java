@@ -157,23 +157,23 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     
     /*MetadataObject*/
 
-	public void createMetadataObject(String wskey, String path, String name, String hash) throws CoreServiceException, WorkspaceLockedException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
+	public void createMetadataObject(String wskey, String path, String name, String hash, String filename) throws CoreServiceException, WorkspaceLockedException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
 
-	public void createMetadataObject(String wskey, String key, String path, String name, String hash) throws CoreServiceException, WorkspaceLockedException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
+	public void createMetadataObject(String wskey, String key, String path, String name, String hash, String filename) throws CoreServiceException, WorkspaceLockedException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
 	
 	public List<String> findMetadataObjectsForTarget(String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public List<String> findMetadataObjectsForTargetAndName(String target, String name) throws CoreServiceException, AccessDeniedException;
-	
+
 	public MetadataObject readMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateMetadataObject(String wskey, String path, String name, String hash) throws CoreServiceException, WorkspaceLockedException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
+	public void updateMetadataObject(String wskey, String path, String name, String hash, String filename) throws CoreServiceException, WorkspaceLockedException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
 	
 	public void deleteMetadataObject(String wskey, String path, String name) throws CoreServiceException, WorkspaceLockedException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException;
 
 	/*MetadataFormat*/
 	
-	public String createMetadataFormat(String name, String description, String schema, String form) throws CoreServiceException;
+	public String createMetadataFormat(String name, String description, String schema, String form, boolean validationNeeded) throws CoreServiceException;
 	
 	public MetadataFormat getMetadataFormat(String name) throws CoreServiceException;
 	

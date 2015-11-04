@@ -77,6 +77,10 @@ public class WorkspaceElementFormRepresentation {
 	private InputStream stream = null;
 	private String streamHash = "";
 
+    @FormParam("streamFilename")
+    @PartType("text/plain")
+    private String streamFilename = null;
+
 	public WorkspaceElementFormRepresentation() {
 	}
 	
@@ -160,4 +164,11 @@ public class WorkspaceElementFormRepresentation {
 		this.streamHash = streamHash;
 	}
 
+    public String getStreamFilename() {
+        return streamFilename;
+    }
+
+    public void setStreamFilename(String streamFilename) {
+        this.streamFilename = streamFilename;
+    }
 }
