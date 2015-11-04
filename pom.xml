@@ -55,7 +55,7 @@
 		<version.json-glassfish>1.0.4</version.json-glassfish>
 		<version.base64>2.3.8</version.base64>
 		<version.commons-cli>1.2</version.commons-cli>
-		<version.javamelody>1.58.0-SNAPSHOT</version.javamelody>
+		<version.javamelody>1.57.1</version.javamelody>
 		<version.atmopshere>2.3.0</version.atmopshere>
 		<version.apache.lucene>4.6.0</version.apache.lucene>
 		<version.openrdf.sesame>2.8.3</version.openrdf.sesame>
