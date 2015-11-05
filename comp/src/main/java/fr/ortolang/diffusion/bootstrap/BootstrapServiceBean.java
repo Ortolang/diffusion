@@ -270,7 +270,7 @@ public class BootstrapServiceBean implements BootstrapService {
 
             InputStream schemaThumbInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-thumb-schema.json");
             String schemaThumbHash = core.put(schemaThumbInputStream);
-            core.createMetadataFormat(MetadataFormat.PID, "Schema for ORTOLANG objects thumbnail", schemaThumbHash, "", false);
+            core.createMetadataFormat(MetadataFormat.THUMB, "Schema for ORTOLANG objects thumbnail", schemaThumbHash, "", false);
         } catch (RuntimeServiceException | CoreServiceException | DataCollisionException e1) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while importing process types and metadataformat schemas", e1);
         }
