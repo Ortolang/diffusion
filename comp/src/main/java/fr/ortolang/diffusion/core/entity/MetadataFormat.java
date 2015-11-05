@@ -121,4 +121,41 @@ public class MetadataFormat {
     public void setValidationNeeded(boolean validationSkipped) {
         this.validationNeeded = validationSkipped;
     }
+
+    @Override public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+
+        MetadataFormat that = (MetadataFormat) o;
+
+        if (size != that.size)
+            return false;
+        if (validationNeeded != that.validationNeeded)
+            return false;
+        if (name != null ? !name.equals(that.name) : that.name != null)
+            return false;
+        if (description != null ? !description.equals(that.description) : that.description != null)
+            return false;
+        if (mimeType != null ? !mimeType.equals(that.mimeType) : that.mimeType != null)
+            return false;
+        if (schema != null ? !schema.equals(that.schema) : that.schema != null)
+            return false;
+        if (form != null ? !form.equals(that.form) : that.form != null)
+            return false;
+
+        return true;
+    }
+
+    @Override public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (description != null ? description.hashCode() : 0);
+        result = 31 * result + (int) (size ^ (size >>> 32));
+        result = 31 * result + (mimeType != null ? mimeType.hashCode() : 0);
+        result = 31 * result + (schema != null ? schema.hashCode() : 0);
+        result = 31 * result + (form != null ? form.hashCode() : 0);
+        result = 31 * result + (validationNeeded ? 1 : 0);
+        return result;
+    }
 }

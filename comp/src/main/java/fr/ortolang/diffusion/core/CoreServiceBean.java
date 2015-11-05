@@ -2847,14 +2847,8 @@ public class CoreServiceBean implements CoreService {
     public String createMetadataFormat(String name, String description, String schema, String form, boolean validationNeeded) throws CoreServiceException {
         LOGGER.log(Level.FINE, "creating metadataformat with name [" + name + "]");
         try {
-            MetadataFormat mdf = getMetadataFormat(name);
             MetadataFormat newmdf = new MetadataFormat();
-            if (mdf != null) {
-                LOGGER.log(Level.FINE, "metadata format version already exists, creating new version");
-                newmdf.setSerial(mdf.getSerial() + 1);
-            }
             newmdf.setName(name);
-            newmdf.setId(name + ":" + newmdf.getSerial());
             newmdf.setDescription(description);
             newmdf.setForm(form);
             newmdf.setValidationNeeded(validationNeeded);
@@ -2867,6 +2861,16 @@ public class CoreServiceBean implements CoreService {
                 newmdf.setMimeType("application/octet-stream");
                 newmdf.setSchema("");
             }
+            MetadataFormat mdf = getMetadataFormat(name);
+            if (mdf != null) {
+                if (mdf.equals(newmdf)) {
+                    LOGGER.log(Level.INFO, "Already imported metadata format: " + mdf.getId());
+                    return mdf.getId();
+                }
+                LOGGER.log(Level.FINE, "metadata format version already exists, creating new version");
+                newmdf.setSerial(mdf.getSerial() + 1);
+            }
+            newmdf.setId(name + ":" + newmdf.getSerial());
             em.persist(newmdf);
             return newmdf.getId();
         } catch (BinaryStoreServiceException | DataNotFoundException e) {
