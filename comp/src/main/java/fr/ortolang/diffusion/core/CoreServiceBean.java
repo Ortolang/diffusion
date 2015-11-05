@@ -646,6 +646,7 @@ public class CoreServiceBean implements CoreService {
                     if (parent != null && registry.getPublicationStatus(parent).equals(OrtolangObjectState.Status.PUBLISHED.value())) {
                         throw new CoreServiceException("unable to delete workspace with key [" + wskey + "] because it has a published version");
                     }
+                    current = parent;
                 }
             }
             workspace.setAlias(null);
