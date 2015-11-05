@@ -8,7 +8,7 @@ import javax.ejb.EJBTransactionRolledbackException;
 import javax.transaction.SystemException;
 
 import fr.ortolang.diffusion.core.AliasNotFoundException;
-import fr.ortolang.diffusion.core.WorkspaceLockedException;
+import fr.ortolang.diffusion.core.WorkspaceReadOnlyException;
 
 import org.activiti.engine.delegate.DelegateExecution;
 
@@ -73,7 +73,7 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 				trace.append("workspace with key [").append(wskey).append("] deleted");
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace deleted"));
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), trace.toString(), null));
-			} catch (KeyNotFoundException | IndexingServiceException | AccessDeniedException | CoreServiceException | RegistryServiceException | KeyLockedException | WorkspaceLockedException e) {
+			} catch (KeyNotFoundException | IndexingServiceException | AccessDeniedException | CoreServiceException | RegistryServiceException | KeyLockedException | WorkspaceReadOnlyException e) {
 				getUserTransaction().rollback();
 				throw new RuntimeEngineTaskException("unexpected error during delete workspace task", e);
 			} 

@@ -108,7 +108,7 @@ public class ImportZipTask extends RuntimeEngineTask {
                                     is.close();
                                     getCoreService().updateDataObject(wskey, opath.build(), hash);
                                     report.append("[DONE] object updated at path: " + opath.build() + "\r\n");
-                                } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | WorkspaceLockedException e4 ) {
+                                } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | WorkspaceReadOnlyException e4 ) {
                                     partial = true;
                                     report.append("[ERROR] object updated failed for path: " + opath.build() + "\r\n\t-> message: " + e4.getMessage() + "\r\n");
                                 }
@@ -139,7 +139,7 @@ public class ImportZipTask extends RuntimeEngineTask {
                                 String current = opath.build();
                                 getCoreService().createDataObject(wskey, current, hash);
                                 report.append("[DONE] data object created at path: " + current + "\r\n");
-                            } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | PathAlreadyExistsException | WorkspaceLockedException e4 ) {
+                            } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException e4 ) {
                                 partial = true;
                                 report.append("[ERROR] create object failed for path: " + opath.build() + "\r\n\t-> message: " + e4.getMessage() + "\r\n");
                             }

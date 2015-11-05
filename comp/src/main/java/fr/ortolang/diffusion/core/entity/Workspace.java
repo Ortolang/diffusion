@@ -75,6 +75,7 @@ public class Workspace extends OrtolangObject {
 	private String head;
 	private int clock;
 	private boolean changed;
+	private boolean readOnly;
 	private String members;
 	private String eventfeed;
 	@Lob
@@ -87,6 +88,7 @@ public class Workspace extends OrtolangObject {
 	public Workspace() {
 		clock = 1;
 		changed = false;
+		readOnly = false;
 		alias = "";
 	}
 	
@@ -128,6 +130,14 @@ public class Workspace extends OrtolangObject {
 	
 	public void setChanged(boolean changed) {
 		this.changed = changed;
+	}
+	
+	public boolean isReadOnly() {
+	    return readOnly;
+	}
+	
+	public void setReadOnly(boolean readOnly) {
+	    this.readOnly = readOnly;
 	}
 	
 	public String getName() {

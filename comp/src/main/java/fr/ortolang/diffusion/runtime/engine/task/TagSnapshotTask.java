@@ -9,7 +9,7 @@ import javax.transaction.Status;
 import org.activiti.engine.delegate.DelegateExecution;
 
 import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.core.WorkspaceLockedException;
+import fr.ortolang.diffusion.core.WorkspaceReadOnlyException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
@@ -58,7 +58,7 @@ public class TagSnapshotTask extends RuntimeEngineTask {
 		try {
 			LOGGER.log(Level.FINE, "tagging workspace snapshot...");
 			getCoreService().tagWorkspace(wskey, tag, snapshot);
-		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceLockedException e) {
+		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
 			throw new RuntimeEngineTaskException("unexpected error while trying to tag workspace snapshot", e);
 		}
 

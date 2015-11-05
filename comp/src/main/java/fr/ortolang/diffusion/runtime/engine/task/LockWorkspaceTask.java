@@ -10,10 +10,7 @@ import org.activiti.engine.delegate.Expression;
 
 import fr.ortolang.diffusion.core.AliasNotFoundException;
 import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
@@ -59,31 +56,16 @@ public class LockWorkspaceTask extends RuntimeEngineTask {
         try {
             if (((String)action.getValue(execution)).equals(ACTION_LOCK)) {
                 LOGGER.log(Level.FINE, "locking workspace with key: " + wskey);
-                try {
-                    getRegistryService().lock(wskey, RuntimeService.SERVICE_NAME);
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace locked"));
-                } catch (KeyLockedException e) {
-                    String locker = getRegistryService().getLock(wskey);
-                    if (locker.equals(RuntimeService.SERVICE_NAME)) {
-                        throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace was already locked, nothing done"));
-                    } else {
-                        throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace is locked by another user [" + locker + "], unable to get lock"));
-                        throw new RuntimeEngineTaskException("unexpected error occurred", e);
-                    }
-                }
+                getCoreService().systemSetWorkspaceReadOnly(wskey, true);
+                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace locked"));
             } else if (((String)action.getValue(execution)).equals(ACTION_UNLOCK)) {
                 LOGGER.log(Level.FINE, "unlocking workspace with key: " + wskey);
-                try {
-                    getRegistryService().unlock(wskey, RuntimeService.SERVICE_NAME);
-                } catch (KeyLockedException e) {
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace lock is not owned by " + RuntimeService.SERVICE_NAME));
-                    throw new RuntimeEngineTaskException("Workspace lock is not owned by " + RuntimeService.SERVICE_NAME);
-                }
+                getCoreService().systemSetWorkspaceReadOnly(wskey, false);
             } else {
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unable to perform action [" + action + "], only lock or unlock are allowed"));
                 throw new RuntimeEngineTaskException("Unable to perform action [" + action + "], only lock or unlock are allowed");
             }
-        } catch (SecurityException | IllegalStateException | EJBTransactionRolledbackException | RegistryServiceException | KeyNotFoundException e) {
+        } catch (SecurityException | IllegalStateException | EJBTransactionRolledbackException | CoreServiceException | KeyNotFoundException e) {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
             throw new RuntimeEngineTaskException("unexpected error occurred", e);
         }
