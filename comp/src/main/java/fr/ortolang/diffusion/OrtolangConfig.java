@@ -116,7 +116,6 @@ public class OrtolangConfig {
         AUTH_CLIENT_PUBKEY ("auth.pubkey"),
         AUTH_REALM ("auth.realm"),
         AUTH_CLIENT ("auth.client"),
-        AUTH_LOGOUT_REDIRECT ("auth.logout.redirect"),
 
         RUNTIME_DEFINITIONS ("runtime.definitions"),
 

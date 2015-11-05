@@ -25,6 +25,8 @@ import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.store.index.IndexStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
+import fr.ortolang.diffusion.subscription.SubscriptionService;
+import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
 
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -40,6 +42,8 @@ public class AdminResource {
     private IndexStoreService index;
     @EJB
 	private RegistryService registry;
+    @EJB
+    private SubscriptionService subscription;
 	
 	
     @GET
@@ -65,6 +69,14 @@ public class AdminResource {
         LOGGER.log(Level.INFO, "GET /admin/json/documents/" + key);
         String document = json.systemGetDocument(key);
         return Response.ok(document).build();
+    }
+
+    @GET
+    @Path("/subscription")
+    public Response addSubscriptionFilters() throws SubscriptionServiceException {
+        LOGGER.log(Level.INFO, "GET /subscription");
+        subscription.addAdminFilters();
+        return Response.ok().build();
     }
     
 }

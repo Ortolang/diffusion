@@ -258,6 +258,10 @@ public class CoreServiceBean implements CoreService {
             events.createEventFeed(eventfeed, name + "'s Event Feed", "EventFeed for tracking workspace activity");
             events.addEventFeedFilter(eventfeed, ".*", wskey, Workspace.OBJECT_TYPE, ".*");
 
+            Map<String, List<String>> rules = new HashMap<String, List<String>>();
+            rules.put(members, Arrays.asList("read"));
+            authorisation.setPolicyRules(eventfeed, rules);
+
             String head = UUID.randomUUID().toString();
             Collection collection = new Collection();
             collection.setId(UUID.randomUUID().toString());
@@ -269,7 +273,7 @@ public class CoreServiceBean implements CoreService {
             registry.register(head, collection.getObjectIdentifier(), caller);
             indexing.index(head);
 
-            Map<String, List<String>> rules = new HashMap<String, List<String>>();
+            rules = new HashMap<String, List<String>>();
             rules.put(members, Arrays.asList("read", "create", "update", "delete", "download"));
             rules.put(MembershipService.MODERATOR_GROUP_KEY, Arrays.asList("read", "create", "update", "delete", "download"));
             authorisation.createPolicy(head, members);
@@ -312,7 +316,7 @@ public class CoreServiceBean implements CoreService {
             Map<String, List<String>> wsrules = new HashMap<String, List<String>>();
             wsrules.put(members, Arrays.asList("read"));
             wsrules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
-            wsrules.put(MembershipService.MODERATOR_GROUP_KEY, Arrays.asList("read", "create", "update", "delete")); 
+            wsrules.put(MembershipService.MODERATOR_GROUP_KEY, Arrays.asList("read", "create", "update", "delete"));
             authorisation.createPolicy(wskey, caller);
             authorisation.setPolicyRules(wskey, wsrules);
 
@@ -445,10 +449,10 @@ public class CoreServiceBean implements CoreService {
             if ( registry.isLocked(wskey) ) {
                 throw new WorkspaceLockedException("unable to snapshot workspace with key [" + wskey + "] because it is locked");
             }
-            
+
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
-            
+
             OrtolangObjectIdentifier identifier = registry.lookup(wskey);
             checkObjectType(identifier, Workspace.OBJECT_TYPE);
             authorisation.checkPermission(wskey, subjects, "update");
@@ -476,10 +480,10 @@ public class CoreServiceBean implements CoreService {
 
                 if (mds.isEmpty()) {
                     LOGGER.log(Level.INFO, "creating workspace metadata for root collection");
-                    createMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
+                    createMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash, null);
                 } else {
                     LOGGER.log(Level.INFO, "updating workspace metadata for root collection");
-                    updateMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash);
+                    updateMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash, null);
                 }
             } catch (BinaryStoreServiceException | DataCollisionException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | MetadataFormatException
                     | PathNotFoundException e) {
@@ -606,7 +610,7 @@ public class CoreServiceBean implements CoreService {
             throw new CoreServiceException("unable to update workspace with key [" + wskey + "]", e);
         }
     }
-    
+
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void deleteWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceLockedException {
@@ -620,7 +624,7 @@ public class CoreServiceBean implements CoreService {
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
-            
+
             if (force && !MembershipService.SUPERUSER_IDENTIFIER.equals(caller)) {
                 throw new CoreServiceException("only " + MembershipService.SUPERUSER_IDENTIFIER + " can force workspace delete");
             }
@@ -646,6 +650,7 @@ public class CoreServiceBean implements CoreService {
                     if (parent != null && registry.getPublicationStatus(parent).equals(OrtolangObjectState.Status.PUBLISHED.value())) {
                         throw new CoreServiceException("unable to delete workspace with key [" + wskey + "] because it has a published version");
                     }
+                    current = parent;
                 }
             }
             workspace.setAlias(null);
@@ -1062,7 +1067,7 @@ public class CoreServiceBean implements CoreService {
                 throw new InvalidPathException("forbidden to create the root collection");
             }
             PathBuilder ppath = npath.clone().parent();
-            
+
             if ( registry.isLocked(wskey) ) {
                 throw new WorkspaceLockedException("unable to create collection in workspace with key [" + wskey + "] because it is locked");
             }
@@ -2235,12 +2240,12 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createMetadataObject(String workspace, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
-            MetadataFormatException, PathNotFoundException, WorkspaceLockedException {
+    public void createMetadataObject(String workspace, String path, String name, String hash, String filename)
+            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceLockedException {
         String key = UUID.randomUUID().toString();
 
         try {
-            createMetadataObject(workspace, key, path, name, hash);
+            createMetadataObject(workspace, key, path, name, hash, filename);
         } catch (KeyAlreadyExistsException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.WARNING, "the generated key already exists : " + key);
@@ -2249,8 +2254,9 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createMetadataObject(String wskey, String key, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException,
-            InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceLockedException {
+    public void createMetadataObject(String wskey, String key, String path, String name, String hash, String filename)
+            throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException,
+            WorkspaceLockedException {
         LOGGER.log(Level.FINE, "create metadataobject with key [" + key + "] into workspace [" + wskey + "] for path [" + path + "] with name [" + name + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -2303,7 +2309,11 @@ public class CoreServiceBean implements CoreService {
             meta.setName(name);
             if (hash != null && hash.length() > 0) {
                 meta.setSize(binarystore.size(hash));
-                meta.setContentType(binarystore.type(hash));
+                if (filename != null) {
+                    meta.setContentType(binarystore.type(hash, filename));
+                } else {
+                    meta.setContentType(binarystore.type(hash));
+                }
                 meta.setStream(hash);
             } else {
                 meta.setSize(0);
@@ -2316,7 +2326,9 @@ public class CoreServiceBean implements CoreService {
                 LOGGER.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
                 throw new CoreServiceException("unknown metadata format for name: " + name);
             }
-            validateMetadata(meta, format);
+            if (format.isValidationNeeded()) {
+                validateMetadata(meta, format);
+            }
             meta.setFormat(format.getId());
             meta.setTarget(tkey);
             meta.setKey(key);
@@ -2447,8 +2459,8 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateMetadataObject(String wskey, String path, String name, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
-            MetadataFormatException, PathNotFoundException, WorkspaceLockedException {
+    public void updateMetadataObject(String wskey, String path, String name, String hash, String filename)
+            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceLockedException {
         LOGGER.log(Level.FINE, "updating metadata content into workspace [" + wskey + "] for path [" + path + "] and name [" + name + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -2611,14 +2623,20 @@ public class CoreServiceBean implements CoreService {
 
                 if (hash != null && hash.length() > 0) {
                     meta.setSize(binarystore.size(hash));
-                    meta.setContentType(binarystore.type(hash));
+                    if (filename != null) {
+                        meta.setContentType(binarystore.type(hash, filename));
+                    } else {
+                        meta.setContentType(binarystore.type(hash));
+                    }
                     meta.setStream(hash);
                     MetadataFormat format = findMetadataFormatById(meta.getFormat());
                     if (format == null) {
                         LOGGER.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
                         throw new CoreServiceException("unknown metadata format for name: " + name);
                     }
-                    validateMetadata(meta, format);
+                    if (format.isValidationNeeded()) {
+                        validateMetadata(meta, format);
+                    }
                     meta.setTarget(tkey);
                 } else {
                     throw new CoreServiceException("unable to update a metadata with an empty content (hash is null)");
@@ -2826,19 +2844,14 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public String createMetadataFormat(String name, String description, String schema, String form) throws CoreServiceException {
+    public String createMetadataFormat(String name, String description, String schema, String form, boolean validationNeeded) throws CoreServiceException {
         LOGGER.log(Level.FINE, "creating metadataformat with name [" + name + "]");
         try {
-            MetadataFormat mdf = getMetadataFormat(name);
             MetadataFormat newmdf = new MetadataFormat();
-            if (mdf != null) {
-                LOGGER.log(Level.FINE, "metadata format version already exists, creating new version");
-                newmdf.setSerial(mdf.getSerial() + 1);
-            }
             newmdf.setName(name);
-            newmdf.setId(name + ":" + newmdf.getSerial());
             newmdf.setDescription(description);
             newmdf.setForm(form);
+            newmdf.setValidationNeeded(validationNeeded);
             if (schema != null && schema.length() > 0) {
                 newmdf.setSize(binarystore.size(schema));
                 newmdf.setMimeType(binarystore.type(schema));
@@ -2848,6 +2861,16 @@ public class CoreServiceBean implements CoreService {
                 newmdf.setMimeType("application/octet-stream");
                 newmdf.setSchema("");
             }
+            MetadataFormat mdf = getMetadataFormat(name);
+            if (mdf != null) {
+                if (mdf.equals(newmdf)) {
+                    LOGGER.log(Level.INFO, "Already imported metadata format: " + mdf.getId());
+                    return mdf.getId();
+                }
+                LOGGER.log(Level.FINE, "metadata format version already exists, creating new version");
+                newmdf.setSerial(mdf.getSerial() + 1);
+            }
+            newmdf.setId(name + ":" + newmdf.getSerial());
             em.persist(newmdf);
             return newmdf.getId();
         } catch (BinaryStoreServiceException | DataNotFoundException e) {
@@ -2934,8 +2957,7 @@ public class CoreServiceBean implements CoreService {
     public String put(InputStream data) throws CoreServiceException, DataCollisionException {
         LOGGER.log(Level.FINE, "putting binary content in store");
         try {
-            String hash = binarystore.put(data);
-            return hash;
+            return binarystore.put(data);
         } catch (BinaryStoreServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during putting binary content", e);
             throw new CoreServiceException("unable to put binary content", e);

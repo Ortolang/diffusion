@@ -292,7 +292,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
                 executeTask(execution);
                 LOGGER.log(Level.FINE, "Task executed");
             } catch (RuntimeEngineTaskException e) {
-                LOGGER.log(Level.SEVERE, "RuntimeTask exception intercepted, putting task in error and aborting process with pid: " + execution.getProcessBusinessKey());
+                LOGGER.log(Level.SEVERE, "RuntimeTask exception intercepted, putting task in error and aborting process with pid: " + execution.getProcessBusinessKey(), e);
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "SERVICE TASK " + execution.getCurrentActivityName()
                         + " IN ERROR: " + e.getMessage(), e));
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "SERVICE TASK " + execution.getCurrentActivityName()

@@ -43,6 +43,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Singleton;
@@ -155,6 +156,23 @@ public class SubscriptionServiceBean implements SubscriptionService {
             addFilter(username, new Filter("runtime\\.remote\\.create", null, username));
         } else {
             throw new SubscriptionServiceException("Cannot get profile key for connected identifier");
+        }
+    }
+
+    @Override
+    @RolesAllowed("system")
+    public void addAdminFilters() throws SubscriptionServiceException {
+        String username = membership.getProfileKeyForConnectedIdentifier();
+        if (username != null) {
+            LOGGER.log(Level.FINE, "Adding admin filters to user " + username + " subscription");
+            // Core events
+            addFilter(username, new Filter("core\\.workspace\\..*", null, null));
+            // Membership events
+            addFilter(username, new Filter("membership\\.group\\..*", null, null));
+            // Runtime events
+            addFilter(username, new Filter("runtime\\.process\\..*", null, null));
+            addFilter(username, new Filter("runtime\\.task\\..*", null, null));
+            addFilter(username, new Filter("runtime\\.remote\\..*", null, null));
         }
     }
 

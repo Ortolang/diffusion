@@ -1,1 +1,1 @@
-[ORTOLANG] Reminder : publication request for workspace '${wsalias}' waiting since ${delai}
+[ORTOLANG] Reminder : a publication request for workspace '${wsalias}' is waiting

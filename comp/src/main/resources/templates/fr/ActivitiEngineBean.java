@@ -201,17 +201,6 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		Runnable ctxRunnable = contextService.createContextualProxy(runnable, Runnable.class);
 		scheduledExecutor.schedule(ctxRunnable, 3, TimeUnit.SECONDS);
 	}
-	
-	@Override
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void deleteProcess(String key) throws RuntimeEngineException {
-	    try {
-            ProcessInstance instance = engine.getRuntimeService().createProcessInstanceQuery().processInstanceBusinessKey(key).singleResult();
-            engine.getRuntimeService().deleteProcessInstance(instance.getId(), "Ortolang process deleted also");
-        } catch (ActivitiException e) {
-            throw new RuntimeEngineException("unexpected error while deleting process instance", e);
-        }
-    }
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -337,21 +326,21 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
                 case TASK_CREATED:
                     LOGGER.log(Level.INFO, "Activiti task created event received");
                     task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
-                    pid = task.getProcessInstance().getBusinessKey();
+                    pid = task.getExecution().getBusinessKey();
                     LOGGER.log(Level.FINEST, "pid of task: " + pid);
                     notify(RuntimeEngineEvent.createTaskCreatedEvent(pid, task.getName(), task.getCandidates()));
                     break;
                 case TASK_ASSIGNED:
                     LOGGER.log(Level.INFO, "Activiti task assigned event received");
                     task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
-                    pid = task.getProcessInstance().getBusinessKey();
+                    pid = task.getExecution().getBusinessKey();
                     LOGGER.log(Level.FINEST, "pid of task: " + pid);
                     notify(RuntimeEngineEvent.createTaskAssignedEvent(pid, task.getName(), task.getCandidates()));
                     break;
                 case TASK_COMPLETED:
                     LOGGER.log(Level.INFO, "Activiti task completed event received");
                     task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
-                    pid = task.getProcessInstance().getBusinessKey();
+                    pid = task.getExecution().getBusinessKey();
                     LOGGER.log(Level.FINEST, "pid of task: " + pid);
                     notify(RuntimeEngineEvent.createTaskCompletedEvent(pid, task.getName(), task.getCandidates()));
                     break;

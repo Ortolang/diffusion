@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.subscription;
+package fr.ortolang.diffusion.thumbnail;
 
 /*
  * #%L
@@ -36,29 +36,32 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import java.util.Map;
+import java.io.File;
 
-import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.Broadcaster;
+public class Thumbnail {
 
-import fr.ortolang.diffusion.OrtolangService;
+    private File file;
 
-public interface SubscriptionService extends OrtolangService {
+    private String contentType;
 
-    public static final String SERVICE_NAME = "subscription";
+    public Thumbnail(File file, String contentType) {
+        this.file = file;
+        this.contentType = contentType;
+    }
 
-    public Broadcaster getBroadcaster(String username);
+    public File getFile() {
+        return file;
+    }
 
-    public void registerBroadcaster(String username, AtmosphereResource atmosphereResource);
+    public void setFile(File file) {
+        this.file = file;
+    }
 
-    public void addFilter(String username, Filter filter) throws SubscriptionServiceException;
+    public String getContentType() {
+        return contentType;
+    }
 
-    public void removeFilter(String username, Filter filter);
-
-    public void addDefaultFilters() throws SubscriptionServiceException;
-
-    public void addAdminFilters() throws SubscriptionServiceException;
-
-    public Map<String, Subscription> getSubscriptions();
-
+    public void setContentType(String contentType) {
+        this.contentType = contentType;
+    }
 }

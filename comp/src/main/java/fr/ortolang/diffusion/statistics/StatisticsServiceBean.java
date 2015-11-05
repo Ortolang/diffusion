@@ -168,6 +168,7 @@ public class StatisticsServiceBean implements StatisticsService {
             for ( StatisticValue value : values ) {
                 result[cpt][0] = value.getTimestamp();
                 result[cpt][1] = value.getValue();
+                cpt++;
             }
             return result;
         }

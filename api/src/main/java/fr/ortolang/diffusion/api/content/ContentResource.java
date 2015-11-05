@@ -42,6 +42,7 @@ import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import fr.ortolang.diffusion.thumbnail.Thumbnail;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -163,8 +164,8 @@ public class ContentResource {
             }
             if (builder == null) {
                 try {
-                    File thumb = thumbnails.getThumbnail(key, size);
-                    builder = Response.ok(thumb).header("Content-Type", ThumbnailService.THUMBS_MIMETYPE);
+                    Thumbnail thumbnail = thumbnails.getThumbnail(key, size);
+                    builder = Response.ok(thumbnail.getFile()).header("Content-Type", thumbnail.getContentType());
                     builder.lastModified(lmd);
                 } catch (Exception e) {
                     LOGGER.log(Level.FINE, "unable to generate thumbnail, sending transparent image");
@@ -319,8 +320,7 @@ public class ContentResource {
                 throw new InvalidPathException("unable to find latest published snapshot for workspace alias: " + pparts[0]);
             }
         }
-        String okey = core.resolveWorkspacePath(wskey, pparts[1], pbuilder.relativize(2).build());
-        return okey;
+        return core.resolveWorkspacePath(wskey, pparts[1], pbuilder.relativize(2).build());
     }
 
     // TODO in case of following symlink, add cyclic detection

@@ -57,6 +57,8 @@ public interface RuntimeEngine {
 	
 	public void startProcess(String type, String key, Map<String, Object> variables) throws RuntimeEngineException;
 	
+	public void deleteProcess(String key) throws RuntimeEngineException;
+	
 	public Process getProcess(String id) throws RuntimeEngineException;
 	
 	public List<Process> findProcess(Map<String, Object> variables) throws RuntimeEngineException;
