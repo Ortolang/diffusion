@@ -7,7 +7,8 @@
     "required": [
         "type",
         "title",
-        "description"
+        "description",
+        "schema"
     ],
     "properties": {
         "schema": {
@@ -119,10 +120,45 @@
                 "type": "string"
             }
         },
+        "statusOfUse": {
+            "id": "http://www.ortolang.fr/schema/013#statusOfUse",
+            "type": "string"
+        },
+        "conditionsOfUse": {
+            "id": "http://www.ortolang.fr/schema/013#conditionsOfUse",
+            "type": "array",
+            "items": {
+                "id": "http://www.ortolang.fr/schema/013#conditionsOfUse/item",
+                "type": "object",
+                "properties": {
+                    "lang": {
+                        "id": "http://www.ortolang.fr/schema/013#conditionsOfUse/item/lang",
+                        "type": "string"
+                    },
+                    "value": {
+                        "id": "http://www.ortolang.fr/schema/013#conditionsOfUse/item/value",
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "license": {
             "id": "http://www.ortolang.fr/schema/013#license",
             "type": "object",
             "properties": {
+
+                "schema": {
+                    "id": "http://www.ortolang.fr/schema/013#license/schema",
+                    "type": "string"
+                },
+                "type": {
+                    "id": "http://www.ortolang.fr/schema/013#license/type",
+                    "type": "string"
+                },
+                "id": {
+                    "id": "http://www.ortolang.fr/schema/013#license/id",
+                    "type": "string"
+                },
                 "label": {
                     "id": "http://www.ortolang.fr/schema/013#license/label",
                     "type": "string"
