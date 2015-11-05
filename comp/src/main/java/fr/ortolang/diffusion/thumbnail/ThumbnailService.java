@@ -1,10 +1,10 @@
 package fr.ortolang.diffusion.thumbnail;
 
-import java.io.File;
-
 import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 
 public interface ThumbnailService extends OrtolangService {
 	
@@ -15,6 +15,6 @@ public interface ThumbnailService extends OrtolangService {
     public static final String INFO_SIZE = "size";
     public static final String INFO_FILES = "files";
     
-	public File getThumbnail(String key, int size) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException;
+	public Thumbnail getThumbnail(String key, int size) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException;
 	
 }

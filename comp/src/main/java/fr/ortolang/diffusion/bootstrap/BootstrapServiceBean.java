@@ -151,7 +151,7 @@ public class BootstrapServiceBean implements BootstrapService {
 				LOGGER.log(Level.INFO, "bootstrap key not found, creating  platform initial content...");
 
 				Map<String, List<String>> anonReadRules = new HashMap<String, List<String>>();
-				anonReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
+				anonReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
 
 				LOGGER.log(Level.FINE, "creating root profile");
 				membership.createProfile(MembershipService.SUPERUSER_IDENTIFIER, "Super", "User", "root@ortolang.org", ProfileStatus.ACTIVE);
@@ -164,12 +164,12 @@ public class BootstrapServiceBean implements BootstrapService {
 				authorisation.setPolicyRules(MembershipService.UNAUTHENTIFIED_IDENTIFIER, anonReadRules);
 
 				LOGGER.log(Level.FINE, "creating moderators group");
-				membership.createGroup(MembershipService.MODERATOR_GROUP_KEY, "Publication Moderators", "Moderators of the plateform can publish content");
+				membership.createGroup(MembershipService.MODERATOR_GROUP_KEY, "Publication Moderators", "Moderators of the platform can publish content");
 				membership.addMemberInGroup(MembershipService.MODERATOR_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
 				authorisation.setPolicyRules(MembershipService.MODERATOR_GROUP_KEY, anonReadRules);
 				
 				LOGGER.log(Level.FINE, "creating esr group");
-				membership.createGroup(MembershipService.ESR_GROUP_KEY, "ESR Members", "People from Superior Teaching and Reserch Group");
+				membership.createGroup(MembershipService.ESR_GROUP_KEY, "ESR Members", "People from Superior Teaching and Research Group");
 				authorisation.setPolicyRules(MembershipService.ESR_GROUP_KEY, anonReadRules);
 
 				LOGGER.log(Level.FINE, "create system workspace");
@@ -193,7 +193,7 @@ public class BootstrapServiceBean implements BootstrapService {
 				String authentifiedPolicyKey = UUID.randomUUID().toString();
 				authorisation.createPolicy(authentifiedPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
 				Map<String, List<String>> authentifiedPolicyRules = new HashMap<String, List<String>>();
-				authentifiedPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
+				authentifiedPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
 				authentifiedPolicyRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList("read", "download"));
 				authorisation.setPolicyRules(authentifiedPolicyKey, authentifiedPolicyRules);
 				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.AUTHENTIFIED, "All users can read this content but download is restricted to authentified users only", authentifiedPolicyKey);
@@ -202,7 +202,7 @@ public class BootstrapServiceBean implements BootstrapService {
 				String esrPolicyKey = UUID.randomUUID().toString();
 				authorisation.createPolicy(esrPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
 				Map<String, List<String>> esrPolicyRules = new HashMap<String, List<String>>();
-				esrPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
+				esrPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
 				esrPolicyRules.put(MembershipService.ESR_GROUP_KEY, Arrays.asList("read", "download"));
 				authorisation.setPolicyRules(esrPolicyKey, esrPolicyRules);
 				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.ESR, "All users can read this content but download is restricted to ESR users only", esrPolicyKey);
@@ -214,7 +214,7 @@ public class BootstrapServiceBean implements BootstrapService {
 				restrictedPolicyRules.put("${workspace.members}", Arrays.asList("read", "download"));
 				authorisation.setPolicyRules(restrictedPolicyKey, restrictedPolicyRules);
 				authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.RESTRICTED, "Only workspace members can read and download this content, all other users cannot see this content", restrictedPolicyKey);
-				
+
 				LOGGER.log(Level.FINE, "import forms");
 				LOGGER.log(Level.FINE, "import form : test-process-start-form");
 				InputStream is = getClass().getClassLoader().getResourceAsStream("forms/test-process-start-form.json");
@@ -240,31 +240,34 @@ public class BootstrapServiceBean implements BootstrapService {
 				LOGGER.log(Level.FINE, "import metadataformat schemas");
 				InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.12.json");
 				String schemaHash = core.put(schemaInputStream);
-				core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schemaHash, "ortolang-item-form");
+				core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schemaHash, "ortolang-item-form", true);
 				InputStream schema13InputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.13.json");
                 String schema13Hash = core.put(schema13InputStream);
-                core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schema13Hash, "ortolang-item-form");
+                core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schema13Hash, "ortolang-item-form", true);
                 InputStream schemaInputStream2 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-acl-schema.json");
 				String schemaHash2 = core.put(schemaInputStream2);
-				core.createMetadataFormat(MetadataFormat.ACL, "Les métadonnées de contrôle d'accès permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, "");
+				core.createMetadataFormat(MetadataFormat.ACL, "Les métadonnées de contrôle d'accès permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, "", true);
 				InputStream schemaWorkspaceInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-workspace-schema.json");
 				String schemaWorkspaceHash = core.put(schemaWorkspaceInputStream);
-				core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "");
+				core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "", true);
 				InputStream schemaPidInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-pid-schema.json");
 				String schemaPidHash = core.put(schemaPidInputStream);
-				core.createMetadataFormat(MetadataFormat.PID, "Les métadonnées associées aux pids d'un object.", schemaPidHash, "");
-				
+				core.createMetadataFormat(MetadataFormat.PID, "Les métadonnées associées aux pids d'un object.", schemaPidHash, "", true);
+				InputStream schemaThumbInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-thumb-schema.json");
+				String schemaThumbHash = core.put(schemaThumbInputStream);
+				core.createMetadataFormat(MetadataFormat.PID, "Schema for ORTOLANG objects thumbnail", schemaThumbHash, "", false);
+
 				LOGGER.log(Level.INFO, "bootstrap done.");
 			} catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException
 					| AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | FormServiceException | PathNotFoundException | PathAlreadyExistsException | WorkspaceLockedException e1) {
 				LOGGER.log(Level.SEVERE, "unexpected error occurred while bootstrapping platform", e1);
 				throw new BootstrapServiceException("unable to bootstrap platform", e1);
 			}
-			
+
 		} catch (RegistryServiceException e) {
 			throw new BootstrapServiceException("unable to check platform bootstrap status", e);
 		}
-		
+
 		try {
             LOGGER.log(Level.INFO, "import process types");
             runtime.importProcessTypes();
@@ -272,7 +275,6 @@ public class BootstrapServiceBean implements BootstrapService {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while importing process types", e1);
         }
 	}
-	
 	
 	@Override
     public String getServiceName() {

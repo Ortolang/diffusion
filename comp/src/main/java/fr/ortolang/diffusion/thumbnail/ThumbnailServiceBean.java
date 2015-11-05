@@ -21,6 +21,8 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.entity.*;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
@@ -31,7 +33,6 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -65,6 +66,8 @@ public class ThumbnailServiceBean implements ThumbnailService {
 	private BinaryStoreService store;
 	@EJB
 	private BrowserService browser;
+	@EJB
+	private CoreService core;
 	private Path base;
 	private List<ThumbnailGenerator> generators = new ArrayList<ThumbnailGenerator>();
 
@@ -84,35 +87,48 @@ public class ThumbnailServiceBean implements ThumbnailService {
 		String[] generatorsClass = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.THUMBNAIL_GENERATORS).split(",");
 		for (String clazz : generatorsClass) {
 			try {
-				LOGGER.log(Level.INFO, "Instanciating generator for class: " + clazz);
+				LOGGER.log(Level.INFO, "Instantiating generator for class: " + clazz);
 				ThumbnailGenerator generator = (ThumbnailGenerator) Class.forName(clazz).newInstance();
 				generators.add(generator);
 			} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-				LOGGER.log(Level.WARNING, "Unable to instanciate generator for class: " + clazz, e);
+				LOGGER.log(Level.WARNING, "Unable to instantiate generator for class: " + clazz, e);
 			}
 		}
 	}
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public File getThumbnail(String key, int size) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException {
+	public Thumbnail getThumbnail(String key, int size) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException {
 		LOGGER.log(Level.FINE, "get thumbnail size for key [" + key + "] and size [" + size + "]");
 		try {
 			OrtolangObjectState state = browser.getState(key);
 			if (needGeneration(key, size, state.getLastModification())) {
 				OrtolangObject object = browser.findObject(key);
 				boolean generated = false;
-				if (object.getObjectIdentifier().getService().equals(CoreService.SERVICE_NAME) && object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE)) {
+				if (object.getObjectIdentifier().getService().equals(CoreService.SERVICE_NAME)) {
+					if (object instanceof MetadataSource) {
+						MetadataElement metadataElement = ((MetadataSource) object).findMetadataByName(MetadataFormat.THUMB);
+						if (metadataElement != null) {
+							MetadataObject metadataObject = core.readMetadataObject(metadataElement.getKey());
+							File file = store.getFile(metadataObject.getStream());
+							generated = generate(key, metadataObject.getContentType(), metadataObject.getStream(), size);
+							if (!generated) {
+								return new Thumbnail(file, metadataObject.getContentType());
+							}
+						}
+					}
+				}
+				if (!generated && object.getObjectIdentifier().getService().equals(CoreService.SERVICE_NAME) && object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE)) {
 					generated = generate(key, ((DataObject) object).getMimeType(), ((DataObject) object).getStream(), size);
-				} 
+				}
 				if ( !generated ) {
 					throw new ThumbnailServiceException("unable to generate thumbnail for object that are not dataobjects");
 				}
 			}
-			return getFile(key, size);
+			return new Thumbnail(getFile(key, size), ThumbnailService.THUMBS_MIMETYPE);
 		} catch (DataNotFoundException | IOException | OrtolangException | BrowserServiceException e) {
-			LOGGER.log(Level.WARNING, "unexpected error while retreiving thumbnail", e);
-			throw new ThumbnailServiceException("error while retreiving thumbnail", e);
+			LOGGER.log(Level.WARNING, "unexpected error while retrieving thumbnail", e);
+			throw new ThumbnailServiceException("error while retrieving thumbnail", e);
 		}
 	}
 
@@ -189,7 +205,7 @@ public class ThumbnailServiceBean implements ThumbnailService {
     
     @Override
     public Map<String, String> getServiceInfos() {
-        Map<String, String>infos = new HashMap<String, String> ();
+        Map<String, String> infos = new HashMap<String, String> ();
         infos.put(INFO_PATH, this.base.toString());
         try {
             infos.put(INFO_FILES, Long.toString(getStoreNbFiles()));

@@ -406,10 +406,10 @@ public class WorkspaceResource {
                         }
                     }
                     if (mdexists) {
-                        core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash());
+                        core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename());
                         return Response.ok().build();
                     } else {
-                        core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash());
+                        core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename());
                         URI newly = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build())
                                 .queryParam("metadataname", name).build();
                         return Response.created(newly).build();
@@ -476,7 +476,7 @@ public class WorkspaceResource {
                 }
                 break;
             case MetadataObject.OBJECT_TYPE:
-                core.updateMetadataObject(wskey, npath.build(), representation.getName(), representation.getStream());
+                core.updateMetadataObject(wskey, npath.build(), representation.getName(), representation.getStream(), null);
                 break;
             default:
                 return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + representation.getType()).build();

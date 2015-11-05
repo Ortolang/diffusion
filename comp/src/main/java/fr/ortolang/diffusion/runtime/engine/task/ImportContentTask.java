@@ -284,7 +284,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			String hash = getCoreService().put(is);
 			is.close();
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
-			getCoreService().createMetadataObject(wskey, path, name, hash);
+			getCoreService().createMetadataObject(wskey, path, name, hash, null);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceLockedException e) {
@@ -298,7 +298,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			String hash = getCoreService().put(is);
 			is.close();
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
-			getCoreService().updateMetadataObject(wskey, path, name, hash);
+			getCoreService().updateMetadataObject(wskey, path, name, hash, null);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceLockedException e) {

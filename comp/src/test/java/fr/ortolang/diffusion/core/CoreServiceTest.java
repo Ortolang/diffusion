@@ -340,7 +340,7 @@ public class CoreServiceTest {
 
 			InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
 			String schemaHash = core.put(schemaInputStream);
-			String id = core.createMetadataFormat("ortolang-item-json", "ORTOLANG Item", schemaHash, null);
+			String id = core.createMetadataFormat("ortolang-item-json", "ORTOLANG Item", schemaHash, null, true);
 			
 			List<MetadataFormat> mfs = core.listMetadataFormat();
 			assertEquals(1, mfs.size());
@@ -359,7 +359,7 @@ public class CoreServiceTest {
 			String metak = UUID.randomUUID().toString();
 			InputStream metadataInputStream = getClass().getClassLoader().getResourceAsStream("json/meta.json");
 			String metadataHash = core.put(metadataInputStream);
-			core.createMetadataObject(wsk, metak, "/", mf.getName(), metadataHash);
+			core.createMetadataObject(wsk, metak, "/", mf.getName(), metadataHash, "meta.json");
 			MetadataObject metadata = core.readMetadataObject(metak);
 			assertEquals("ortolang-item-json:1", metadata.getFormat());
 			
@@ -413,7 +413,7 @@ public class CoreServiceTest {
 
 			InputStream schemaWorkspaceInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-workspace-schema.json");
 			String schemaWorkspaceHash = core.put(schemaWorkspaceInputStream);
-			core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "");
+			core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "", true);
 			
 			Workspace workspace = core.readWorkspace(wsk);
 			assertEquals(0, workspace.getSnapshots().size());

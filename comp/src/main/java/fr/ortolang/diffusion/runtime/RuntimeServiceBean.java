@@ -325,9 +325,9 @@ public class RuntimeServiceBean implements RuntimeService {
         try {
             TypedQuery<Process> query;
             if ( state != null ) {
-                query = em.createNamedQuery("findProcessByWorkspaceAndState", Process.class).setParameter("state", state).setParameter("wskey", wskey);
+                query = em.createNamedQuery("findProcessByWorkspaceAndState", Process.class).setParameter("state", state).setParameter("workspace", wskey);
             } else {
-                query = em.createNamedQuery("findProcessByWorkspace", Process.class).setParameter("wskey", wskey);
+                query = em.createNamedQuery("findProcessByWorkspace", Process.class).setParameter("workspace", wskey);
             }
             
             List<Process> rprocesses = new ArrayList<Process>();
