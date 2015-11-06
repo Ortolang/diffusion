@@ -190,14 +190,6 @@ public class WorkspaceRepresentation {
         return changed;
     }
 
-    public boolean isReadOnly() {
-        return readOnly;
-    }
-
-    public void setReadOnly(boolean readOnly) {
-        this.readOnly = readOnly;
-    }
-
     public void setChanged(boolean changed) {
         this.changed = changed;
     }
