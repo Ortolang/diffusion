@@ -16,32 +16,37 @@ import fr.ortolang.diffusion.thumbnail.util.ImageResizer;
 
 public class VideoThumbnailGenerator implements ThumbnailGenerator {
 
-	public void generate(File input, File output, int width, int height) throws ThumbnailGeneratorException {
-		FFmpegFrameGrabber g = new FFmpegFrameGrabber(input);
-		try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-			g.start();
-			Frame f = g.grabKeyFrame();
-			Java2DFrameConverter converter = new Java2DFrameConverter();
-			ImageIO.write(converter.getBufferedImage(f), "jpg", baos);
-			g.stop();
-			
-			ImageResizer resizer = new ImageResizer(width, height);
-			resizer.setInputImage(new ByteArrayInputStream(baos.toByteArray()));
-			resizer.writeOutput(output);
-		} catch (Exception e) {
-			throw new ThumbnailGeneratorException("unable to generate video preview", e);
-		}
-	}
+    private static List<String> acceptedMIMETypes = Arrays.asList(
+            "video/mp4",
+            "video/quicktime",
+            "video/x-msvideo",
+            "video/x-ms-wmv",
+            "video/mpeg",
+            "video/x-matroska",
+            "video/ogg",
+            "video/theora",
+            "video/webm",
+            "video/x-flv"
+    );
 
-	public List<String> getAcceptedMIMETypes() {
-    	return Arrays.asList(new String[] {
-			      "video/mp4",
-			      "video/quicktime",
-			      "video/x-msvideo",
-			      "video/x-ms-wmv",
-			      "video/mpeg",
-			      "video/x-matroska",
-			      "video/ogg"
-			      });
-	}
+    public void generate(File input, File output, int width, int height) throws ThumbnailGeneratorException {
+        FFmpegFrameGrabber g = new FFmpegFrameGrabber(input);
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            g.start();
+            Frame f = g.grabKeyFrame();
+            Java2DFrameConverter converter = new Java2DFrameConverter();
+            ImageIO.write(converter.getBufferedImage(f), "jpg", baos);
+            g.stop();
+
+            ImageResizer resizer = new ImageResizer(width, height);
+            resizer.setInputImage(new ByteArrayInputStream(baos.toByteArray()));
+            resizer.writeOutput(output);
+        } catch (Exception e) {
+            throw new ThumbnailGeneratorException("unable to generate video preview", e);
+        }
+    }
+
+    public List<String> getAcceptedMIMETypes() {
+        return acceptedMIMETypes;
+    }
 }

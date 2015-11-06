@@ -55,7 +55,7 @@ public class WorkspaceRepresentation {
     private String author;
     private String owner;
     private String alias;
-    private String name = "No Name Provided";
+    private String name;
     private String type = "default";
     private int clock;
     private long creationDate;
@@ -70,8 +70,8 @@ public class WorkspaceRepresentation {
     private Map<String,String> metadatas;
 
     public WorkspaceRepresentation() {
-        snapshots = new HashSet<SnapshotElement>();
-        tags = new HashSet<TagElement>();
+        snapshots = new HashSet<>();
+        tags = new HashSet<>();
     }
 
     public String getKey() {
@@ -190,6 +190,14 @@ public class WorkspaceRepresentation {
         return changed;
     }
 
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
+    }
+
     public void setChanged(boolean changed) {
         this.changed = changed;
     }
@@ -221,6 +229,7 @@ public class WorkspaceRepresentation {
         representation.setMembers(workspace.getMembers());
         representation.setEventFeed(workspace.getEventFeed());
         representation.setChanged(workspace.hasChanged());
+        representation.setReadOnly(workspace.isReadOnly());
         representation.setSnapshots(workspace.getSnapshots());
         representation.setTags(workspace.getTags());
         return representation;

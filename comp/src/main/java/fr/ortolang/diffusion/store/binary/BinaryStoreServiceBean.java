@@ -136,10 +136,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 	public boolean contains(String identifier) throws BinaryStoreServiceException {
 		try {
 			Path path = getPathForIdentifier(identifier);
-			if (Files.exists(path)) {
-				return true;
-			}
-			return false;
+			return Files.exists(path);
 		} catch (DataNotFoundException e) {
 			return false;
 		}

@@ -151,16 +151,7 @@ public class WorkspaceResource {
             workspaceRepresentation.setLastModificationDate(infos.getLastModificationDate());
             workspaceRepresentation.setOwner(security.getOwner(key));
             if (md) {
-                Collection head = core.readCollection(workspace.getHead());
-                if (head.getMetadatas().isEmpty()) {
-                    workspaceRepresentation.setMetadatas(Collections.emptyMap());
-                } else {
-                    Map<String, String> metadatas = new HashMap<>();
-                    for (MetadataElement metadataElement : head.getMetadatas()) {
-                        metadatas.put(metadataElement.getName(), metadataElement.getKey());
-                    }
-                    workspaceRepresentation.setMetadatas(metadatas);
-                }
+                addMetadatasToRepresentation(workspaceRepresentation);
             }
             representation.addEntry(workspaceRepresentation);
         }
@@ -231,20 +222,13 @@ public class WorkspaceResource {
 
     @GET
     @Path("/{wskey}")
-    public Response getWorkspace(@PathParam(value = "wskey") String wskey, @Context Request request)
+    public Response getWorkspace(@PathParam(value = "wskey") String wskey, @QueryParam("md") @DefaultValue("false") boolean md, @Context Request request)
             throws CoreServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException, SecurityServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey);
 
         OrtolangObjectState state = browser.getState(wskey);
         CacheControl cc = new CacheControl();
         cc.setPrivate(true);
-        if ( state.isLocked() ) {
-            cc.setMaxAge(691200);
-            cc.setMustRevalidate(false);
-        } else {
-            cc.setMaxAge(0);
-            cc.setMustRevalidate(true);
-        }
         Date lmd = new Date(state.getLastModification() / 1000 * 1000);
         ResponseBuilder builder = null;
         if (System.currentTimeMillis() - state.getLastModification() > 1000) {
@@ -259,6 +243,9 @@ public class WorkspaceResource {
             representation.setCreationDate(infos.getCreationDate());
             representation.setLastModificationDate(infos.getLastModificationDate());
             representation.setOwner(security.getOwner(wskey));
+            if (md) {
+                addMetadatasToRepresentation(representation);
+            }
             builder = Response.ok(representation);
             builder.lastModified(lmd);
         }
@@ -560,6 +547,15 @@ public class WorkspaceResource {
     }
 
     @GET
+    @Path("/alias/{alias}")
+    public Response getWorkspaceFromAlias(@PathParam(value = "alias") String alias, @QueryParam("md") @DefaultValue("false") boolean md, @Context Request request)
+            throws CoreServiceException, AliasNotFoundException, AccessDeniedException, KeyNotFoundException, SecurityServiceException, BrowserServiceException {
+        LOGGER.log(Level.INFO, "GET /workspaces/alias/" + alias);
+        String wskey = core.resolveWorkspaceAlias(alias);
+        return getWorkspace(wskey, md, request);
+    }
+
+    @GET
     @Path("/{alias}/available")
     @Produces(MediaType.APPLICATION_JSON)
     public Response checkAliasAvailability(@PathParam(value = "alias") String alias) throws AccessDeniedException, KeyNotFoundException, CoreServiceException {
@@ -574,4 +570,16 @@ public class WorkspaceResource {
         return Response.ok(jsonObject).build();
     }
 
+    private void addMetadatasToRepresentation(WorkspaceRepresentation representation) throws CoreServiceException, AccessDeniedException, KeyNotFoundException {
+        Collection head = core.readCollection(representation.getHead());
+        if (head.getMetadatas().isEmpty()) {
+            representation.setMetadatas(Collections.emptyMap());
+        } else {
+            Map<String, String> metadatas = new HashMap<>();
+            for (MetadataElement metadataElement : head.getMetadatas()) {
+                metadatas.put(metadataElement.getName(), metadataElement.getKey());
+            }
+            representation.setMetadatas(metadatas);
+        }
+    }
 }
