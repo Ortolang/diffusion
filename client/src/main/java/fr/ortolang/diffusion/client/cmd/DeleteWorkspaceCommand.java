@@ -27,6 +27,7 @@ public class DeleteWorkspaceCommand extends Command {
         options.addOption("P", "password", true, "password for login");
         options.addOption("k", "key", true, "the workspace key");
         options.addOption("a", "alias", true, "the workspace alias");
+        options.addOption("f", "force", false, "force the supression even if workspace contains published versions (must be root)");
     }
 
     @Override
@@ -60,6 +61,10 @@ public class DeleteWorkspaceCommand extends Command {
                 params.put("wsalias", cmd.getOptionValue("a"));
             } else {
                 help();
+            }
+            
+            if (cmd.hasOption("f")) {
+                params.put("force", "true");
             }
 
             OrtolangClient client = OrtolangClient.getInstance();

@@ -64,6 +64,7 @@ public class WorkspaceRepresentation {
     private String eventFeed;
     private String head;
     private boolean changed;
+    private boolean readOnly;
     private Set<SnapshotElement> snapshots;
     private Set<TagElement> tags;
     private Map<String,String> metadatas;
@@ -191,6 +192,14 @@ public class WorkspaceRepresentation {
 
     public void setChanged(boolean changed) {
         this.changed = changed;
+    }
+
+    public boolean isReadOnly() {
+        return readOnly;
+    }
+
+    public void setReadOnly(boolean readOnly) {
+        this.readOnly = readOnly;
     }
 
     public Map<String, String> getMetadatas() {

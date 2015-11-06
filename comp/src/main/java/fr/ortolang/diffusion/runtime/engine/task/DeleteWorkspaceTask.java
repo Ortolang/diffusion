@@ -49,6 +49,10 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 		if ( !execution.hasVariable(WORKSPACE_NAME_PARAM_NAME) ) {
 			execution.setVariable(WORKSPACE_NAME_PARAM_NAME, wskey);
 		}
+		boolean force = false;
+		if ( execution.hasVariable(FORCE_PARAM_NAME) ) {
+            force = Boolean.parseBoolean(execution.getVariable(FORCE_PARAM_NAME, String.class));
+        }
 		
 		try {
 			try {
@@ -63,7 +67,7 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 				Set<String> keys = getCoreService().systemListWorkspaceKeys(wskey);
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace content retrieved"));
 				StringBuilder trace = new StringBuilder();
-				getCoreService().deleteWorkspace(wskey);
+				getCoreService().deleteWorkspace(wskey, force);
                 for ( String key : keys ) {
 					LOGGER.log(Level.FINE, "Deleting content key: " + key);
 					getRegistryService().delete(key, true);
@@ -75,6 +79,8 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), trace.toString(), null));
 			} catch (KeyNotFoundException | IndexingServiceException | AccessDeniedException | CoreServiceException | RegistryServiceException | KeyLockedException | WorkspaceReadOnlyException e) {
 				getUserTransaction().rollback();
+				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
+				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "unexpected error during delete workspace task", e));
 				throw new RuntimeEngineTaskException("unexpected error during delete workspace task", e);
 			} 
 		} catch (SystemException | SecurityException | IllegalStateException  | EJBTransactionRolledbackException e) {

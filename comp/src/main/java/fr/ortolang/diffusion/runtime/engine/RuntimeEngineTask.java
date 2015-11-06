@@ -82,7 +82,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     public static final String SNAPSHOTS_TO_PUBLISH_PARAM_NAME = "snapshotsToPublish";
     public static final String SNAPSHOT_NAME_PARAM_NAME = "snapshot";
     public static final String SNAPSHOTS_TAGS_PARAM_NAME = "snapshotTags";
-
+    
     public static final String WORKSPACE_KEY_PARAM_NAME = "wskey";
     public static final String WORKSPACE_NAME_PARAM_NAME = "wsname";
     public static final String WORKSPACE_TYPE_PARAM_NAME = "wstype";
@@ -96,6 +96,8 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     public static final String PUBLICATION_REJECT_REASON = "rejectreason";
     
     public static final String TASK_ACTION = "action";
+    
+    public static final String FORCE_PARAM_NAME = "force";
 
     private static final Logger LOGGER = Logger.getLogger(RuntimeEngineTask.class.getName());
 
