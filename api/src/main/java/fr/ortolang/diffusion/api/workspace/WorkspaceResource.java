@@ -49,8 +49,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
-import javax.json.Json;
-import javax.json.JsonObject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -526,9 +524,9 @@ public class WorkspaceResource {
     }
 
     @GET
-    @Path("/{alias}/ftp")
+    @Path("/alias/{alias}/ftp")
     public Response getFtpUrl(@PathParam(value = "alias") String alias) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, MembershipServiceException {
-        LOGGER.log(Level.INFO, "GET /workspaces/" + alias + "/ftp");
+        LOGGER.log(Level.INFO, "GET /workspaces/alias/" + alias + "/ftp");
         StringBuilder url = new StringBuilder();
         url.append("ftp://");
         String connectedIdentifier = membership.getProfileKeyForConnectedIdentifier();
@@ -540,9 +538,8 @@ public class WorkspaceResource {
         url.append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_HOST)).append(":");
         url.append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_PORT)).append("/");
         url.append(alias);
-        String[] ftpinfos = new String[2];
-        ftpinfos[0] = "url";
-        ftpinfos[1] = url.toString();
+        Map<String, String> ftpinfos = new HashMap<>(1);
+        ftpinfos.put("url", url.toString());
         return Response.ok(ftpinfos).build();
     }
 
@@ -556,18 +553,19 @@ public class WorkspaceResource {
     }
 
     @GET
-    @Path("/{alias}/available")
+    @Path("/alias/{alias}/available")
     @Produces(MediaType.APPLICATION_JSON)
     public Response checkAliasAvailability(@PathParam(value = "alias") String alias) throws AccessDeniedException, KeyNotFoundException, CoreServiceException {
-        LOGGER.log(Level.INFO, "GET /workspaces/" + alias + "/available");
+        LOGGER.log(Level.INFO, "GET /workspaces/alias/" + alias + "/available");
         boolean available = false;
         try {
             core.resolveWorkspaceAlias(alias);
         } catch (AliasNotFoundException e) {
             available = true;
         }
-        JsonObject jsonObject = Json.createObjectBuilder().add("available", available).build();
-        return Response.ok(jsonObject).build();
+        Map<String, Boolean> availableInfo = new HashMap<>(1);
+        availableInfo.put("available", available);
+        return Response.ok(availableInfo).build();
     }
 
     private void addMetadatasToRepresentation(WorkspaceRepresentation representation) throws CoreServiceException, AccessDeniedException, KeyNotFoundException {
