@@ -55,11 +55,14 @@ public class RuntimeEngineEvent implements Serializable {
     private long timestamp;
     private Type type;
     private String pid;
+    private String tid;
     private String activityName;
     private int activityProgress;
     private String message;
     private String trace;
     private Set<IdentityLink> candidates;
+    private String assignee;
+    private String actor;
 
     private RuntimeEngineEvent() {
     }
@@ -86,6 +89,14 @@ public class RuntimeEngineEvent implements Serializable {
 
     public void setPid(String pid) {
         this.pid = pid;
+    }
+
+    public String getTid() {
+        return tid;
+    }
+
+    public void setTid(String tid) {
+        this.tid = tid;
     }
 
     public String getActivityName() {
@@ -168,7 +179,7 @@ public class RuntimeEngineEvent implements Serializable {
         event.setType(Type.PROCESS_TRACE);
         event.setPid(pid);
         event.setMessage(message);
-        if ( throwable != null ) {
+        if (throwable != null) {
             StringWriter writer = new StringWriter();
             throwable.printStackTrace(new PrintWriter(writer));
             event.setTrace(writer.toString());
@@ -221,31 +232,34 @@ public class RuntimeEngineEvent implements Serializable {
         return event;
     }
 
-    public static RuntimeEngineEvent createTaskCreatedEvent(String pid, String name, Set<IdentityLink> candidates) {
+    public static RuntimeEngineEvent createTaskCreatedEvent(String pid, String tid, String name, Set<IdentityLink> candidates) {
         RuntimeEngineEvent event = new RuntimeEngineEvent();
         event.setTimestamp(System.currentTimeMillis());
         event.setType(Type.TASK_CREATED);
         event.setPid(pid);
+        event.setTid(tid);
         event.setActivityName(name);
         event.setCandidates(candidates);
         return event;
     }
 
-    public static RuntimeEngineEvent createTaskAssignedEvent(String pid, String name, Set<IdentityLink> candidates) {
+    public static RuntimeEngineEvent createTaskAssignedEvent(String pid, String tid, String name, Set<IdentityLink> candidates) {
         RuntimeEngineEvent event = new RuntimeEngineEvent();
         event.setTimestamp(System.currentTimeMillis());
         event.setType(Type.TASK_ASSIGNED);
         event.setPid(pid);
+        event.setTid(tid);
         event.setActivityName(name);
         event.setCandidates(candidates);
         return event;
     }
 
-    public static RuntimeEngineEvent createTaskCompletedEvent(String pid, String name, Set<IdentityLink> candidates) {
+    public static RuntimeEngineEvent createTaskCompletedEvent(String pid, String tid, String name, Set<IdentityLink> candidates) {
         RuntimeEngineEvent event = new RuntimeEngineEvent();
         event.setTimestamp(System.currentTimeMillis());
         event.setType(Type.TASK_COMPLETED);
         event.setPid(pid);
+        event.setTid(tid);
         event.setActivityName(name);
         event.setCandidates(candidates);
         return event;

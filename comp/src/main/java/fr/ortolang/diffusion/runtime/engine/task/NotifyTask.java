@@ -31,6 +31,7 @@ import fr.ortolang.diffusion.template.TemplateEngineException;
 public class NotifyTask extends RuntimeEngineTask {
 
     private static final Logger LOGGER = Logger.getLogger(NotifyTask.class.getName());
+    private static final ClassLoader TEMPLATE_ENGINE_CL = NotifyTask.class.getClassLoader();
 
     public static final String NAME = "Notify";
     public static final String ACTION_SUBMIT = "submit";
@@ -68,8 +69,8 @@ public class NotifyTask extends RuntimeEngineTask {
                         if ( language != null ) {
                             lang = language.getValue();
                         }
-                        String subject = TemplateEngine.getInstance().process(lang + "/notif.submit.subject", execution.getVariables());
-                        String message = TemplateEngine.getInstance().process(lang + "/notif.submit.body.initier.txt", execution.getVariables());
+                        String subject = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.submit.subject", execution.getVariables());
+                        String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.submit.body.initier.txt", execution.getVariables());
                         notify("ORTOLANG Service", "noreply@ortolang.fr", initierEmail, subject, message);
                     }
                 } catch (MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
@@ -89,8 +90,8 @@ public class NotifyTask extends RuntimeEngineTask {
                             if ( language != null ) {
                                 lang = language.getValue();
                             }
-                            String subject = TemplateEngine.getInstance().process(lang + "/notif.submit.subject", execution.getVariables());
-                            String message = TemplateEngine.getInstance().process(lang + "/notif.submit.body.moderator.txt", execution.getVariables());
+                            String subject = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.submit.subject", execution.getVariables());
+                            String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.submit.body.moderator.txt", execution.getVariables());
                             notify("ORTOLANG Service", "noreply@ortolang.fr", moderatorEmail, subject, message);
                         }
                     }
@@ -110,8 +111,8 @@ public class NotifyTask extends RuntimeEngineTask {
                         if ( language != null ) {
                             lang = language.getValue();
                         }
-                        String subject = TemplateEngine.getInstance().process(lang + "/notif.accept.subject", execution.getVariables());
-                        String message = TemplateEngine.getInstance().process(lang + "/notif.accept.body.txt", execution.getVariables());
+                        String subject = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.accept.subject", execution.getVariables());
+                        String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.accept.body.txt", execution.getVariables());
                         notify("ORTOLANG Service", "noreply@ortolang.fr", initierEmail, subject, message);
                     }
                 } catch (MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
@@ -130,8 +131,8 @@ public class NotifyTask extends RuntimeEngineTask {
                         if ( language != null ) {
                             lang = language.getValue();
                         }
-                        String subject = TemplateEngine.getInstance().process(lang + "/notif.reject.subject", execution.getVariables());
-                        String message = TemplateEngine.getInstance().process(lang + "/notif.reject.body.txt", execution.getVariables());
+                        String subject = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.reject.subject", execution.getVariables());
+                        String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.reject.body.txt", execution.getVariables());
                         notify("ORTOLANG Service", "noreply@ortolang.fr", initierEmail, subject, message);
                     }
                 } catch (MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
@@ -153,8 +154,8 @@ public class NotifyTask extends RuntimeEngineTask {
                             if ( language != null ) {
                                 lang = language.getValue();
                             }
-                            String subject = TemplateEngine.getInstance().process(lang + "/notif.remind.subject", execution.getVariables());
-                            String message = TemplateEngine.getInstance().process(lang + "/notif.remind.body.txt", execution.getVariables());
+                            String subject = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.remind.subject", execution.getVariables());
+                            String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.remind.body.txt", execution.getVariables());
                             notify("ORTOLANG Service", "noreply@ortolang.fr", moderatorEmail, subject, message);
                         }
                     }

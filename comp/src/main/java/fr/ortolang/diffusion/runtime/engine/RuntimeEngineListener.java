@@ -97,16 +97,16 @@ public class RuntimeEngineListener {
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case TASK_CREATED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "[CREATED] " + event.getActivityName());
-                    getRuntimeService().pushTaskEvent(event.getPid(), event.getCandidates(), event.getType());
+                    getRuntimeService().updateProcessActivity(event.getPid(), "Human Task (#" + event.getTid() + ") '" + event.getActivityName() + "' CREATED");
+                    getRuntimeService().pushTaskEvent(event.getPid(), event.getTid(), event.getCandidates(), event.getType());
                     break;
                 case TASK_ASSIGNED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "[ASSIGNED] " + event.getActivityName());
-                    getRuntimeService().pushTaskEvent(event.getPid(), event.getCandidates(), event.getType());
+                    getRuntimeService().updateProcessActivity(event.getPid(), "Human Task (#" + event.getTid() + ") '" + event.getActivityName() + "' ASSIGNED");
+                    getRuntimeService().pushTaskEvent(event.getPid(), event.getTid(), event.getCandidates(), event.getType());
                     break;
                 case TASK_COMPLETED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "[COMPLETED] " + event.getActivityName());
-                    getRuntimeService().pushTaskEvent(event.getPid(), event.getCandidates(), event.getType());
+                    getRuntimeService().updateProcessActivity(event.getPid(), "Human Task (#" + event.getTid() + ") '" + event.getActivityName() + "' COMPLETED");
+                    getRuntimeService().pushTaskEvent(event.getPid(), event.getTid(), event.getCandidates(), event.getType());
                     break;
             }
 		} catch (Exception e) {

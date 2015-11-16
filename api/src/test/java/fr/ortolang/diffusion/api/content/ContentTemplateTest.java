@@ -14,7 +14,7 @@ public class ContentTemplateTest {
 		ContentRepresentation representation = new ContentRepresentation();
 		representation.setContext("/api");
 		representation.setBase("/content");
-		String result = TemplateEngine.getInstance().process("collection", representation);
+		String result = TemplateEngine.getInstance(this.getClass().getClassLoader()).process("collection", representation);
 		System.out.println(result);
 	}
 	
@@ -27,7 +27,7 @@ public class ContentTemplateTest {
 		representation.setRoot("head");
 		representation.setPath("/system/head");
 		representation.setParentPath("/system");
-		String result = TemplateEngine.getInstance().process("collection", representation);
+		String result = TemplateEngine.getInstance(this.getClass().getClassLoader()).process("collection", representation);
 		System.out.println(result);
 	}
 

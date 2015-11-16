@@ -525,18 +525,18 @@ public class RuntimeServiceBean implements RuntimeService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void pushTaskEvent(String pid, Set<IdentityLink> candidates, RuntimeEngineEvent.Type type) {
+	public void pushTaskEvent(String pid, String tid, Set<IdentityLink> candidates, RuntimeEngineEvent.Type type) {
         ArgumentsBuilder argumentsBuilder;
         String eventName = type.name().substring(type.name().lastIndexOf("_") + 1).toLowerCase();
         for (IdentityLink candidate : candidates) {
             try {
                 if (candidate.getUserId() != null) {
                     LOGGER.log(Level.INFO, "USER CANDIDATE");
-                    argumentsBuilder = new ArgumentsBuilder("user", candidate.getUserId());
+                    argumentsBuilder = new ArgumentsBuilder("user", candidate.getUserId()).addArgument("tid", tid);
                     notification.throwEvent(pid, RuntimeService.SERVICE_NAME, HumanTask.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, HumanTask.OBJECT_TYPE, eventName), argumentsBuilder.build());
                 } else if (candidate.getGroupId() != null) {
                     LOGGER.log(Level.INFO, "GROUP CANDIDATE");
-                    argumentsBuilder = new ArgumentsBuilder("group", candidate.getGroupId());
+                    argumentsBuilder = new ArgumentsBuilder("group", candidate.getGroupId()).addArgument("tid", tid);
                     notification.throwEvent(pid, RuntimeService.SERVICE_NAME, HumanTask.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, HumanTask.OBJECT_TYPE, eventName), argumentsBuilder.build());
                 }
             } catch (NotificationServiceException e) {

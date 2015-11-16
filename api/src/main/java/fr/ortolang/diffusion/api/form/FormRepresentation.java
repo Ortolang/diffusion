@@ -41,9 +41,7 @@ import fr.ortolang.diffusion.form.entity.Form;
 public class FormRepresentation {
 
     private String key;
-
     private String name;
-
     private String definition;
 
     public FormRepresentation() {
@@ -77,7 +75,6 @@ public class FormRepresentation {
         FormRepresentation representation = new FormRepresentation();
         representation.setKey(form.getKey());
         representation.setDefinition(form.getDefinition());
-
         return  representation;
     }
 }

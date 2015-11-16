@@ -362,21 +362,23 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
                     task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
                     pid = task.getProcessInstance().getBusinessKey();
                     LOGGER.log(Level.FINEST, "pid of task: " + pid);
-                    notify(RuntimeEngineEvent.createTaskCreatedEvent(pid, task.getName(), task.getCandidates()));
+                    notify(RuntimeEngineEvent.createTaskCreatedEvent(pid, task.getId(), task.getName(), task.getCandidates()));
                     break;
                 case TASK_ASSIGNED:
                     LOGGER.log(Level.INFO, "Activiti task assigned event received");
                     task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
                     pid = task.getProcessInstance().getBusinessKey();
+                    //TODO include assignee
                     LOGGER.log(Level.FINEST, "pid of task: " + pid);
-                    notify(RuntimeEngineEvent.createTaskAssignedEvent(pid, task.getName(), task.getCandidates()));
+                    notify(RuntimeEngineEvent.createTaskAssignedEvent(pid, task.getId(), task.getName(), task.getCandidates()));
                     break;
                 case TASK_COMPLETED:
                     LOGGER.log(Level.INFO, "Activiti task completed event received");
                     task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
                     pid = task.getProcessInstance().getBusinessKey();
+                    //TODO include executor
                     LOGGER.log(Level.FINEST, "pid of task: " + pid);
-                    notify(RuntimeEngineEvent.createTaskCompletedEvent(pid, task.getName(), task.getCandidates()));
+                    notify(RuntimeEngineEvent.createTaskCompletedEvent(pid, task.getId(), task.getName(), task.getCandidates()));
                     break;
             }
 		} catch ( RuntimeEngineException e ) {

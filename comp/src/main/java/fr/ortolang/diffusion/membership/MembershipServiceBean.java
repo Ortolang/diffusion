@@ -726,7 +726,6 @@ public class MembershipServiceBean implements MembershipService {
     public Group readGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.FINE, "reading group for key [" + key + "]");
         try {
-            String caller = getProfileKeyForConnectedIdentifier();
             List<String> subjects = getConnectedIdentifierSubjects();
             authorisation.checkPermission(key, subjects, "read");
 
@@ -738,9 +737,8 @@ public class MembershipServiceBean implements MembershipService {
             }
             group.setKey(key);
 
-            notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "read"));
             return group;
-        } catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException e) {
+        } catch (RegistryServiceException | AuthorisationServiceException e) {
             throw new MembershipServiceException("unable to read the group with key [" + key + "]", e);
         }
     }

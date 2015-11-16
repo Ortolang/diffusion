@@ -61,24 +61,21 @@ public class FormResource {
     private static final Logger LOGGER = Logger.getLogger(FormResource.class.getName());
 
     @EJB
-    private FormService form;
+    private FormService service;
     @Context
     private UriInfo uriInfo;
 
     @GET
     public Response list() throws FormServiceException {
         LOGGER.log(Level.INFO, "GET /forms");
-
-        List<Form> forms = form.listForms();
-
-        GenericCollectionRepresentation<Form> representation = new GenericCollectionRepresentation<Form> ();
+        List<Form> forms = service.listForms();
+        GenericCollectionRepresentation<FormRepresentation> representation = new GenericCollectionRepresentation<FormRepresentation> ();
         for(Form form : forms) {
-            representation.addEntry(form);
+            representation.addEntry(FormRepresentation.fromForm(form));
         }
         representation.setOffset(0);
         representation.setSize(forms.size());
         representation.setLimit(forms.size());
-
         return Response.ok(representation).build();
     }
 
@@ -86,18 +83,15 @@ public class FormResource {
     @Path("/{key}")
     public Response get(@PathParam(value = "key") String key) throws FormServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /forms/" + key);
-
-        Form representation = form.readForm(key);
-
+        Form form = service.readForm(key);
+        FormRepresentation representation = FormRepresentation.fromForm(form);
         return Response.ok(representation).build();
     }
 
     @PUT
-    public Response updateForm(FormRepresentation formRepresentation) throws FormServiceException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "PUT /forms/" + formRepresentation.getKey());
-
-        form.updateForm(formRepresentation.getKey(), formRepresentation.getName(), formRepresentation.getDefinition());
-
+    public Response updateForm(@PathParam(value = "key") String key, FormRepresentation formRepresentation) throws FormServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "PUT /forms/" + key);
+        service.updateForm(key, formRepresentation.getName(), formRepresentation.getDefinition());
         return Response.ok().build();
     }
 

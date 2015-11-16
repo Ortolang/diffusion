@@ -42,7 +42,6 @@ import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import fr.ortolang.diffusion.thumbnail.Thumbnail;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -83,6 +82,7 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.template.TemplateEngine;
 import fr.ortolang.diffusion.template.TemplateEngineException;
+import fr.ortolang.diffusion.thumbnail.Thumbnail;
 import fr.ortolang.diffusion.thumbnail.ThumbnailService;
 import fr.ortolang.diffusion.thumbnail.ThumbnailServiceException;
 
@@ -95,6 +95,7 @@ public class ContentResource {
     private static final String REDIRECT_PATH_PARAM_NAME = "redirect";
     private static final String DEFAULT_THUMBNAIL_IMAGE = "empty.png";
     private static final String DEFAULT_THUMBNAIL_MIMETYPE = "image/png";
+    private static final ClassLoader TEMPLATE_ENGINE_CL = ContentResource.class.getClassLoader();
 
     @EJB
     private CoreService core;
@@ -463,7 +464,7 @@ public class ContentResource {
                         }
                         representation.setAsc(true);
                     }
-                    builder = Response.ok(TemplateEngine.getInstance().process("collection", representation));
+                    builder = Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation));
                     builder.lastModified(lmd);
                 } else if (object instanceof Link) {
                     return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path(((Link) object).getTarget()).build()).build();
@@ -515,7 +516,7 @@ public class ContentResource {
                 representation.setAsc(true);
             }
             representation.setElements(elements);
-            return Response.ok(TemplateEngine.getInstance().process("collection", representation)).build();
+            return Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation)).build();
         } catch (AccessDeniedException e) {
             if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
@@ -586,7 +587,7 @@ public class ContentResource {
                     representation.setAsc(true);
                 }
                 representation.setElements(elements);
-                builder = Response.ok(TemplateEngine.getInstance().process("collection", representation));
+                builder = Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation));
                 builder.lastModified(lmd);
             }
             builder.cacheControl(cc);
@@ -705,7 +706,7 @@ public class ContentResource {
                     }
                     representation.setAsc(true);
                 }
-                builder = Response.ok(TemplateEngine.getInstance().process("collection", representation));
+                builder = Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation));
                 builder.lastModified(lmd);
             }
             builder.cacheControl(cc);
@@ -829,7 +830,7 @@ public class ContentResource {
                         }
                         representation.setAsc(true);
                     }
-                    builder = Response.ok(TemplateEngine.getInstance().process("collection", representation));
+                    builder = Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation));
                     builder.lastModified(lmd);
                 } else if (object instanceof Link) {
                     return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path(((Link) object).getTarget()).build()).build();
