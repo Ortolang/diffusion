@@ -60,7 +60,7 @@ public interface RuntimeService extends OrtolangService {
 	
 	public void importProcessTypes() throws RuntimeServiceException;
 	
-	public List<ProcessType> listProcessTypes() throws RuntimeServiceException;
+	public List<ProcessType> listProcessTypes(boolean onlyLatestVersion) throws RuntimeServiceException;
 	
 	/* Process */
 	
@@ -114,6 +114,10 @@ public interface RuntimeService extends OrtolangService {
 
     /* System */
 
+	public List<Process> systemListProcesses(State state) throws RuntimeServiceException, AccessDeniedException;
+	
+	public List<HumanTask> systemListTasks() throws RuntimeServiceException;
+    
     //public void systemKillProcess(String key) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
 
 

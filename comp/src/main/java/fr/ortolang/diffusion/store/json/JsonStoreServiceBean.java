@@ -153,7 +153,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	
 	@Override
     @Lock(LockType.WRITE)
-	@RolesAllowed("system")
+	@RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void systemInsertDocument(String type, InputStream document) throws JsonStoreServiceException {
         LOGGER.log(Level.FINE, "Importing document type " + type);
@@ -167,7 +167,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	
 	@Override
     @Lock(LockType.WRITE)
-	@RolesAllowed("system")
+	@RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void systemInsertDocument(String type, String document) throws JsonStoreServiceException {
         LOGGER.log(Level.FINE, "Importing document type " + type);
@@ -180,7 +180,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
     }
     
     @Override
-	@RolesAllowed("system")
+	@RolesAllowed("admin")
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public String systemGetDocument(String key) throws JsonStoreServiceException {
         String json = getJSONByKey(key);

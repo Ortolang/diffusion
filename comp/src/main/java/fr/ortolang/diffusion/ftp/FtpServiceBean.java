@@ -39,7 +39,7 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 @Singleton(name = FtpServiceBean.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @PermitAll
-@RunAs("system")
+@RunAs("admin")
 public class FtpServiceBean implements FtpService {
 	
 	private static final Logger LOGGER = Logger.getLogger(FtpServiceBean.class.getName());

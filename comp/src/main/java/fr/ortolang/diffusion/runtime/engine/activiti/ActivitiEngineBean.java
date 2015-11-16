@@ -168,8 +168,13 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<ProcessType> listProcessTypes() throws RuntimeEngineException {
-		List<ProcessDefinition> apdefs = engine.getRepositoryService().createProcessDefinitionQuery().latestVersion().list();
+	public List<ProcessType> listProcessTypes(boolean latest) throws RuntimeEngineException {
+	    List<ProcessDefinition> apdefs;
+	    if ( latest ) {
+	        apdefs = engine.getRepositoryService().createProcessDefinitionQuery().latestVersion().list();
+	    } else {
+	        apdefs = engine.getRepositoryService().createProcessDefinitionQuery().list();
+	    }
 		List<ProcessType> defs = new ArrayList<ProcessType>();
 		for (ProcessDefinition apdef : apdefs) {
 			String form = engine.getFormService().getStartFormKey(apdef.getId());
@@ -254,6 +259,24 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 			throw new RuntimeEngineException("unexpected error while getting task", e);
 		}
 	}
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<HumanTask> listAllTasks() throws RuntimeEngineException {
+        try {
+            List<HumanTask> tasks = new ArrayList<HumanTask>();
+
+            List<Task> utasks = engine.getTaskService().createTaskQuery().list();
+            for (Task task : utasks) {
+                String form = engine.getFormService().getTaskFormKey(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
+                tasks.add(toHumanTask(task, form));
+            }
+            
+            return tasks;
+        } catch (ActivitiException e) {
+            throw new RuntimeEngineException("unexpected error while listing all tasks", e);
+        }
+    }
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)

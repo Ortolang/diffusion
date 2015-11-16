@@ -49,7 +49,7 @@ public interface RuntimeEngine {
 	
 	public void deployDefinitions(String[] resources) throws RuntimeEngineException;
 	
-	public List<ProcessType> listProcessTypes() throws RuntimeEngineException;
+	public List<ProcessType> listProcessTypes(boolean onlyLatest) throws RuntimeEngineException;
 	
 	public ProcessType getProcessTypeById(String id) throws RuntimeEngineException;
 	
@@ -64,6 +64,8 @@ public interface RuntimeEngine {
 	public List<Process> findProcess(Map<String, Object> variables) throws RuntimeEngineException;
 	
 	public HumanTask getTask(String id) throws RuntimeEngineException;
+	
+	public List<HumanTask> listAllTasks() throws RuntimeEngineException;
 	
 	public List<HumanTask> listCandidateTasks(String user, List<String> groups) throws RuntimeEngineException;
 

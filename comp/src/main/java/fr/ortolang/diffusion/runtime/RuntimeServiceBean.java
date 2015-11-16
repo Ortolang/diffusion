@@ -54,6 +54,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -166,10 +167,10 @@ public class RuntimeServiceBean implements RuntimeService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<ProcessType> listProcessTypes() throws RuntimeServiceException {
-		LOGGER.log(Level.INFO, "Listing process types");
+	public List<ProcessType> listProcessTypes(boolean onlyLatestVersions) throws RuntimeServiceException {
+		LOGGER.log(Level.INFO, "Listing process types of " + (onlyLatestVersions?"latest":"all" + " versions"));
 		try {
-			return engine.listProcessTypes();
+			return engine.listProcessTypes(onlyLatestVersions);
 		} catch (RuntimeEngineException e) {
 			LOGGER.log(Level.SEVERE, "unexpected error occurred while listing process types", e);
 			throw new RuntimeServiceException("unable to list process types", e);
@@ -286,6 +287,42 @@ public class RuntimeServiceBean implements RuntimeService {
             throw new RuntimeServiceException("unable to kill process", e);
         }
 	}
+	
+	@Override
+	@RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Process> systemListProcesses(State state) throws RuntimeServiceException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "#SYSTEM# Listing all processes in " + ((state != null)?"state="+state:"all states"));
+        try {
+            
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) ) {
+                throw new AccessDeniedException("only super user can list all processes");
+            }
+            
+            TypedQuery<Process> query;
+            if ( state != null ) {
+                query = em.createNamedQuery("findProcessByState", Process.class).setParameter("state", state);
+            } else {
+                query = em.createNamedQuery("findAllProcess", Process.class);
+            }
+            
+            List<Process> rprocesses = new ArrayList<Process>();
+            for (Process process : query.getResultList()) {
+                try {
+                    String ikey = registry.lookup(process.getObjectIdentifier());
+                    process.setKey(ikey);
+                    rprocesses.add(process);
+                } catch ( IdentifierNotRegisteredException e ) {
+                    LOGGER.log(Level.WARNING, "unregistered process found in storage for id: " + process.getId());
+                }
+            }
+            return rprocesses;
+        } catch ( RegistryServiceException e ) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while listing processes", e);
+            throw new RuntimeServiceException("unable to list processes", e);
+        }
+    }
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -509,6 +546,19 @@ public class RuntimeServiceBean implements RuntimeService {
     }
 
 	@Override
+	@RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<HumanTask> systemListTasks() throws RuntimeServiceException {
+        LOGGER.log(Level.INFO, "#SYSTEM# Listing all tasks");
+        try {
+            return engine.listAllTasks();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while listing all tasks", e);
+            throw new RuntimeServiceException("unable to list all tasks", e);
+        }
+    }
+
+    @Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<HumanTask> listCandidateTasks() throws RuntimeServiceException {
 		LOGGER.log(Level.INFO, "Listing candidate tasks");

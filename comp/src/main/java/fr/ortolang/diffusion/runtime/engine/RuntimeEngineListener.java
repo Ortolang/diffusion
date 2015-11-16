@@ -81,24 +81,31 @@ public class RuntimeEngineListener {
                     getRuntimeService().appendProcessTrace(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage() + "\r\n" + event.getTrace());
                     break;
                 case PROCESS_ACTIVITY_STARTED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), event.getActivityName());
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[STARTED] " + event.getActivityName());
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case PROCESS_ACTIVITY_ERROR:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "");
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[ERROR] " + event.getActivityName());
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case PROCESS_ACTIVITY_PROGRESS:
-                    // TODO Increase RuntimeService Process model to include activity progression field
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[IN PROGRESS: " + event.getActivityProgress() + "%]" + event.getActivityName());
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case PROCESS_ACTIVITY_COMPLETED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "");
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[COMPLETED] " + event.getActivityName());
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case TASK_CREATED:
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[CREATED] " + event.getActivityName());
+                    getRuntimeService().pushTaskEvent(event.getPid(), event.getCandidates(), event.getType());
+                    break;
                 case TASK_ASSIGNED:
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[ASSIGNED] " + event.getActivityName());
+                    getRuntimeService().pushTaskEvent(event.getPid(), event.getCandidates(), event.getType());
+                    break;
                 case TASK_COMPLETED:
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[COMPLETED] " + event.getActivityName());
                     getRuntimeService().pushTaskEvent(event.getPid(), event.getCandidates(), event.getType());
                     break;
             }

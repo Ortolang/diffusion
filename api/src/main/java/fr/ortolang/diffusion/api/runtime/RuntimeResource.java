@@ -103,7 +103,7 @@ public class RuntimeResource {
 	@Path("/types")
 	public Response listDefinitions() throws RuntimeServiceException {
 		LOGGER.log(Level.INFO, "GET /runtime/types");
-		List<ProcessType> types = runtime.listProcessTypes();
+		List<ProcessType> types = runtime.listProcessTypes(true);
 		
 		GenericCollectionRepresentation<ProcessTypeRepresentation> representation = new GenericCollectionRepresentation<ProcessTypeRepresentation>();
 		for (ProcessType type : types) {

@@ -610,7 +610,7 @@ public class MembershipServiceBean implements MembershipService {
     }
 
     @Override
-    @RolesAllowed("system")
+    @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public boolean systemValidateTOTP(String identifier, String totp) throws MembershipServiceException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "#SYSTEM# validating TOTP for identifier");
@@ -633,7 +633,7 @@ public class MembershipServiceBean implements MembershipService {
     }
 
     @Override
-    @RolesAllowed("system")
+    @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public String systemReadProfileSecret(String identifier) throws MembershipServiceException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "#SYSTEM# validating TOTP for identifier");

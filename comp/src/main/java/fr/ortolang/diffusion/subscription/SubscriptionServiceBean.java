@@ -160,7 +160,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
     }
 
     @Override
-    @RolesAllowed("system")
+    @RolesAllowed("admin")
     public void addAdminFilters() throws SubscriptionServiceException {
         String username = membership.getProfileKeyForConnectedIdentifier();
         if (username != null) {

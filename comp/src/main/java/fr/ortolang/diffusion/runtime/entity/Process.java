@@ -54,7 +54,7 @@ import fr.ortolang.diffusion.runtime.RuntimeService;
 
 @Entity
 @Table(indexes = { @Index(columnList = "initier,state") })
-@NamedQueries({ @NamedQuery(name = "findAllProcesses", query = "select p from Process p"),
+@NamedQueries({ @NamedQuery(name = "findAllProcess", query = "select p from Process p order by p.start desc"),
 		@NamedQuery(name = "findProcessByState", query = "select p from Process p where p.state = :state"),
 		@NamedQuery(name = "findProcessByInitier", query = "select p from Process p where p.initier = :initier"),
 		@NamedQuery(name = "findProcessByIniterAndState", query = "select p from Process p where p.state = :state and p.initier = :initier"),

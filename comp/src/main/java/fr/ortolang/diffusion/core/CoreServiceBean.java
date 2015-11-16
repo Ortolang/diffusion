@@ -110,6 +110,7 @@ import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
@@ -257,6 +258,7 @@ public class CoreServiceBean implements CoreService {
             String eventfeed = UUID.randomUUID().toString();
             events.createEventFeed(eventfeed, name + "'s Event Feed", "EventFeed for tracking workspace activity");
             events.addEventFeedFilter(eventfeed, ".*", wskey, Workspace.OBJECT_TYPE, ".*");
+            events.addEventFeedFilter(eventfeed, ".*", members, Group.OBJECT_TYPE, ".*");
 
             Map<String, List<String>> rules = new HashMap<String, List<String>>();
             rules.put(members, Arrays.asList("read"));

@@ -74,7 +74,7 @@ public class NotifyTask extends RuntimeEngineTask {
                     }
                 } catch (MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier: " + e.getMessage()));
-                    throw new RuntimeEngineTaskException("unable to notify initier", e);
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error during notifying initier",  e));
                 }
                 try {
                     Group moderators = getMembershipService().readGroup(MembershipService.MODERATOR_GROUP_KEY);
@@ -96,7 +96,7 @@ public class NotifyTask extends RuntimeEngineTask {
                     }
                 } catch (AccessDeniedException | MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify moderators: " + e.getMessage()));
-                    throw new RuntimeEngineTaskException("unable to notify moderators", e);
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error during notifying moderators",  e));
                 }
                 break;
             case ACTION_ACCEPT:
@@ -116,7 +116,7 @@ public class NotifyTask extends RuntimeEngineTask {
                     }
                 } catch (MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier: " + e.getMessage()));
-                    throw new RuntimeEngineTaskException("unable to notify initier", e);
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error during notifying initier",  e));
                 }
                 break;
             case ACTION_REJECT:
@@ -136,7 +136,7 @@ public class NotifyTask extends RuntimeEngineTask {
                     }
                 } catch (MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier: " + e.getMessage()));
-                    throw new RuntimeEngineTaskException("unable to notify initier", e);
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error during notifying initier",  e));
                 }
                 break;
             case ACTION_REMIND:
@@ -159,8 +159,8 @@ public class NotifyTask extends RuntimeEngineTask {
                         }
                     }
                 } catch (AccessDeniedException | MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier: " + e.getMessage()));
-                    throw new RuntimeEngineTaskException("unable to notify initier", e);
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify moderators: " + e.getMessage()));
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error during notifying moderators",  e));
                 }
                 break;
             default:

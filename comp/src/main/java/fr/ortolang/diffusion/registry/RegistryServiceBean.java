@@ -507,7 +507,7 @@ public class RegistryServiceBean implements RegistryService {
 	//Admin interface
 	
 	@Override
-	@RolesAllowed("system")
+	@RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public long systemCountAllEntries(String identifierFilter) throws RegistryServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting all entries with identifierFilter:" + identifierFilter);
@@ -521,7 +521,7 @@ public class RegistryServiceBean implements RegistryService {
     }
 	
 	@Override
-    @RolesAllowed("system")
+    @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public long systemCountDeletedEntries(String identifierFilter) throws RegistryServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting deleted entries with identifierFilter:" + identifierFilter);
@@ -535,7 +535,7 @@ public class RegistryServiceBean implements RegistryService {
     }
 	
 	@Override
-    @RolesAllowed("system")
+    @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public long systemCountHiddenEntries(String identifierFilter) throws RegistryServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting hidden entries with identifierFilter:" + identifierFilter);
@@ -549,7 +549,7 @@ public class RegistryServiceBean implements RegistryService {
     }
 	
 	@Override
-    @RolesAllowed("system")
+    @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<RegistryEntry> systemListEntries(String keyFilter) throws RegistryServiceException {
             LOGGER.log(Level.FINE, "#SYSTEM# list entries for key filter [" + keyFilter + "]");
