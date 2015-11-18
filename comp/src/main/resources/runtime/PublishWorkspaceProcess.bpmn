@@ -17,13 +17,7 @@
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${initier.equals("root")}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="flow17" sourceRef="tag" targetRef="publish"></sequenceFlow>
-    <serviceTask id="lock" name="Lock Workspace" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LockWorkspaceTask">
-      <extensionElements>
-        <activiti:field name="action">
-          <activiti:string><![CDATA[lock]]></activiti:string>
-        </activiti:field>
-      </extensionElements>
-    </serviceTask>
+    <serviceTask id="lock" name="Lock Workspace" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LockWorkspaceTask"></serviceTask>
     <sequenceFlow id="flow19" name="basicuser" sourceRef="issuperuser" targetRef="lock">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!initier.equals("root")}]]></conditionExpression>
     </sequenceFlow>
@@ -53,7 +47,7 @@
     </serviceTask>
     <boundaryEvent id="remindertimer" name="Reminder Timer" attachedToRef="review" cancelActivity="false">
       <timerEventDefinition>
-        <timeCycle>R/PT5M</timeCycle>
+        <timeCycle>* 30 8 * * ?</timeCycle>
       </timerEventDefinition>
     </boundaryEvent>
     <serviceTask id="notifyremind" name="Notify Remind" activiti:class="fr.ortolang.diffusion.runtime.engine.task.NotifyTask">
@@ -64,13 +58,7 @@
       </extensionElements>
     </serviceTask>
     <sequenceFlow id="flow38" sourceRef="remindertimer" targetRef="notifyremind"></sequenceFlow>
-    <serviceTask id="unlock" name="Unlock Workspace" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LockWorkspaceTask">
-      <extensionElements>
-        <activiti:field name="action">
-          <activiti:string><![CDATA[unlock]]></activiti:string>
-        </activiti:field>
-      </extensionElements>
-    </serviceTask>
+    <serviceTask id="unlock" name="Unlock Workspace" activiti:class="fr.ortolang.diffusion.runtime.engine.task.UnlockWorkspaceTask"></serviceTask>
     <sequenceFlow id="flow41" name="accepted" sourceRef="unlock" targetRef="tag">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${accepted.equals("true")}]]></conditionExpression>
     </sequenceFlow>

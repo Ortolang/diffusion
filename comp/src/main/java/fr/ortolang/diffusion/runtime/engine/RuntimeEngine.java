@@ -67,11 +67,17 @@ public interface RuntimeEngine {
 	
 	public List<HumanTask> listAllTasks() throws RuntimeEngineException;
 	
+	public boolean isCandidate(String id, String user, List<String> groups) throws RuntimeEngineException;
+	
 	public List<HumanTask> listCandidateTasks(String user, List<String> groups) throws RuntimeEngineException;
+	
+	public boolean isAssigned(String id, String user) throws RuntimeEngineException;
 
 	public List<HumanTask> listAssignedTasks(String user) throws RuntimeEngineException;
 	
 	public void claimTask(String id, String user) throws RuntimeEngineException;
+	
+	public void unclaimTask(String id) throws RuntimeEngineException;
 	
 	public void completeTask(String id, Map<String, Object> variables) throws RuntimeEngineException;
 	

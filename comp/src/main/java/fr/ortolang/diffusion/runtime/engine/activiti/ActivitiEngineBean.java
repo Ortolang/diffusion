@@ -277,6 +277,18 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
             throw new RuntimeEngineException("unexpected error while listing all tasks", e);
         }
     }
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public boolean isCandidate(String taskid, String user, List<String> groups) throws RuntimeEngineException {
+        try {
+            Task t1 = engine.getTaskService().createTaskQuery().taskId(taskid).taskCandidateUser(user).singleResult();
+            Task t2 = engine.getTaskService().createTaskQuery().taskId(taskid).taskCandidateGroupIn(groups).singleResult();
+            return t1 != null || t2 != null;
+        } catch (ActivitiException e) {
+            throw new RuntimeEngineException("unexpected error while checking if is candidate", e);
+        }
+    }
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -302,6 +314,17 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 			throw new RuntimeEngineException("unexpected error while listing candidate tasks", e);
 		}
 	}
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public boolean isAssigned(String taskid, String user) throws RuntimeEngineException {
+        try {
+            Task cutask = engine.getTaskService().createTaskQuery().taskId(taskid).taskAssignee(user).singleResult();
+            return cutask != null;
+        } catch (ActivitiException e) {
+            throw new RuntimeEngineException("unexpected error while checking if is assigned", e);
+        }
+    }
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -328,6 +351,16 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 			throw new RuntimeEngineException("unexpected error while claiming process task", e);
 		}
 	}
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void unclaimTask(String id) throws RuntimeEngineException {
+        try {
+            engine.getTaskService().unclaim(id);
+        } catch (ActivitiException e) {
+            throw new RuntimeEngineException("unexpected error while unclaiming process task", e);
+        }
+    }
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
@@ -339,7 +372,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 
 	@Override
 	@PermitAll
-	@TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void notify(RuntimeEngineEvent event) throws RuntimeEngineException {
 		listener.onEvent(event);
 	}
@@ -368,17 +401,15 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
                     LOGGER.log(Level.INFO, "Activiti task assigned event received");
                     task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
                     pid = task.getProcessInstance().getBusinessKey();
-                    //TODO include assignee
                     LOGGER.log(Level.FINEST, "pid of task: " + pid);
-                    notify(RuntimeEngineEvent.createTaskAssignedEvent(pid, task.getId(), task.getName(), task.getCandidates()));
+                    notify(RuntimeEngineEvent.createTaskAssignedEvent(pid, task.getId(), task.getName(), task.getAssignee()));
                     break;
                 case TASK_COMPLETED:
                     LOGGER.log(Level.INFO, "Activiti task completed event received");
                     task = (TaskEntity)((ActivitiEntityEvent)event).getEntity();
                     pid = task.getProcessInstance().getBusinessKey();
-                    //TODO include executor
                     LOGGER.log(Level.FINEST, "pid of task: " + pid);
-                    notify(RuntimeEngineEvent.createTaskCompletedEvent(pid, task.getId(), task.getName(), task.getCandidates()));
+                    notify(RuntimeEngineEvent.createTaskCompletedEvent(pid, task.getId(), task.getName(), task.getAssignee()));
                     break;
             }
 		} catch ( RuntimeEngineException e ) {

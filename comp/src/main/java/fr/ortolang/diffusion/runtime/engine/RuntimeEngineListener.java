@@ -62,7 +62,7 @@ public class RuntimeEngineListener {
 	}
 
 	public void onEvent(RuntimeEngineEvent event) {
-		LOGGER.log(Level.FINE, "RuntimeEngineEvent type: " + event.getType() + " pid: " + event.getPid());
+		LOGGER.log(Level.FINE, "RuntimeEngineEvent type: " + event.getType() + " pid: " + event.getPid() + " activityName: " + event.getActivityName());
 		try {
 		    switch (event.getType()) {
                 case PROCESS_START:
@@ -97,16 +97,19 @@ public class RuntimeEngineListener {
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case TASK_CREATED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "Human Task (#" + event.getTid() + ") '" + event.getActivityName() + "' CREATED");
-                    getRuntimeService().pushTaskEvent(event.getPid(), event.getTid(), event.getCandidates(), event.getType());
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[CREATED] Human Task '" + event.getActivityName() + "' (#" + event.getTid() + ")");
+                    getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  HUMAN TASK (#" + event.getTid() + ") " + event.getActivityName() + " CREATED");
+                    getRuntimeService().pushTaskEvent(event.getPid(), event.getTid(), event.getCandidates(), event.getAssignee(), event.getType());
                     break;
                 case TASK_ASSIGNED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "Human Task (#" + event.getTid() + ") '" + event.getActivityName() + "' ASSIGNED");
-                    getRuntimeService().pushTaskEvent(event.getPid(), event.getTid(), event.getCandidates(), event.getType());
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[ASSIGNED] Human Task '" + event.getActivityName() + "' (#" + event.getTid() + ")");
+                    getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  HUMAN TASK (#" + event.getTid() + ") " + event.getActivityName() + " ASSIGNED TO: " + event.getAssignee());
+                    getRuntimeService().pushTaskEvent(event.getPid(), event.getTid(), event.getCandidates(), event.getAssignee(), event.getType());
                     break;
                 case TASK_COMPLETED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "Human Task (#" + event.getTid() + ") '" + event.getActivityName() + "' COMPLETED");
-                    getRuntimeService().pushTaskEvent(event.getPid(), event.getTid(), event.getCandidates(), event.getType());
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[COMPLETED] Human Task '" + event.getActivityName() + "' (#" + event.getTid() + ")");
+                    getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  HUMAN TASK (#" + event.getTid() + ") " + event.getActivityName() + " COMPLETED");
+                    getRuntimeService().pushTaskEvent(event.getPid(), event.getTid(), event.getCandidates(), event.getAssignee(), event.getType());
                     break;
             }
 		} catch (Exception e) {

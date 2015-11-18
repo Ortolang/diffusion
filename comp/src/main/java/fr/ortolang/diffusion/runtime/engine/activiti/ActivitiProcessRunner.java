@@ -63,7 +63,7 @@ public class ActivitiProcessRunner implements Runnable {
 	
 	@Override
 	public void run() {
-		LOGGER.log(Level.INFO, "ActivitiProcessRunner starting new instance of type " + type  + " with business key: " + key);
+		LOGGER.log(Level.INFO, "ActivitiProcessRunner starting new instance of type " + type  + " with pid: " + key);
 		try {
 			try {
 				engine.notify(RuntimeEngineEvent.createProcessStartEvent(key));
@@ -73,9 +73,9 @@ public class ActivitiProcessRunner implements Runnable {
 				engine.notify(RuntimeEngineEvent.createProcessAbortEvent(key, e.getMessage()));
 			}
 		} catch ( RuntimeEngineException e ) {
-			LOGGER.log(Level.WARNING, "unexpected error during process runner execution", e);
+			LOGGER.log(Level.WARNING, "unexpected error during process runner execution of pid: " + key, e);
 		}
-		LOGGER.log(Level.INFO, "ActivitiProcessRunner stopped for business key: " + key);
+		LOGGER.log(Level.INFO, "ActivitiProcessRunner stopped for pid: " + key);
 	}
 
 }

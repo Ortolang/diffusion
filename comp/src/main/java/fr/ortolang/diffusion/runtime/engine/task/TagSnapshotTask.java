@@ -48,7 +48,7 @@ public class TagSnapshotTask extends RuntimeEngineTask {
 		
 		try {
 			if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
-				LOGGER.log(Level.FINE, "starting new user transaction.");
+			    LOGGER.log(Level.FINE, "START User Transaction");
 				getUserTransaction().begin();
 			}
 		} catch (Exception e) {

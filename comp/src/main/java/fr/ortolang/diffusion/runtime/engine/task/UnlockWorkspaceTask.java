@@ -14,12 +14,12 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 
-public class LockWorkspaceTask extends RuntimeEngineTask {
+public class UnlockWorkspaceTask extends RuntimeEngineTask {
 
-    private static final Logger LOGGER = Logger.getLogger(LockWorkspaceTask.class.getName());
-    public static final String NAME = "Lock Workspace";
+    private static final Logger LOGGER = Logger.getLogger(UnlockWorkspaceTask.class.getName());
+    public static final String NAME = "Unlock Workspace";
 
-    public LockWorkspaceTask() {
+    public UnlockWorkspaceTask() {
     }
 
     @Override
@@ -37,8 +37,8 @@ public class LockWorkspaceTask extends RuntimeEngineTask {
         }
         
         try {
-            LOGGER.log(Level.FINE, "locking workspace with key: " + wskey);
-            getCoreService().systemSetWorkspaceReadOnly(wskey, true);
+            LOGGER.log(Level.FINE, "unlocking workspace with key: " + wskey);
+            getCoreService().systemSetWorkspaceReadOnly(wskey, false);
         } catch (SecurityException | IllegalStateException | EJBTransactionRolledbackException | CoreServiceException | KeyNotFoundException e) {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
             throw new RuntimeEngineTaskException("unexpected error occurred", e);

@@ -91,12 +91,14 @@ public interface RuntimeService extends OrtolangService {
 	public List<HumanTask> listCandidateTasks() throws RuntimeServiceException;
 
 	public List<HumanTask> listAssignedTasks() throws RuntimeServiceException;
-
+	
 	public void claimTask(String id) throws RuntimeServiceException;
 
-	public void completeTask(String id, Map<String, Object> variables) throws RuntimeServiceException;
+	public void unclaimTask(String id) throws RuntimeServiceException;
 
-	void pushTaskEvent(String pid, String tid, Set<IdentityLink> candidates, RuntimeEngineEvent.Type type);
+    public void completeTask(String id, Map<String, Object> variables) throws RuntimeServiceException;
+
+	void pushTaskEvent(String pid, String tid, Set<IdentityLink> candidates, String assignee, RuntimeEngineEvent.Type type);
 
 	public RemoteProcess createRemoteProcess(String key, String tool, String name, String toolKey) throws RuntimeServiceException, AccessDeniedException;
 

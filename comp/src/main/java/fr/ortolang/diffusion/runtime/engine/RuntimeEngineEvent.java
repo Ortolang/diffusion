@@ -62,8 +62,7 @@ public class RuntimeEngineEvent implements Serializable {
     private String trace;
     private Set<IdentityLink> candidates;
     private String assignee;
-    private String actor;
-
+    
     private RuntimeEngineEvent() {
     }
 
@@ -137,6 +136,14 @@ public class RuntimeEngineEvent implements Serializable {
 
     public void setCandidates(Set<IdentityLink> candidates) {
         this.candidates = candidates;
+    }
+
+    public String getAssignee() {
+        return assignee;
+    }
+
+    public void setAssignee(String assignee) {
+        this.assignee = assignee;
     }
 
     public static RuntimeEngineEvent createProcessStartEvent(String pid) {
@@ -243,25 +250,25 @@ public class RuntimeEngineEvent implements Serializable {
         return event;
     }
 
-    public static RuntimeEngineEvent createTaskAssignedEvent(String pid, String tid, String name, Set<IdentityLink> candidates) {
+    public static RuntimeEngineEvent createTaskAssignedEvent(String pid, String tid, String name, String assignee) {
         RuntimeEngineEvent event = new RuntimeEngineEvent();
         event.setTimestamp(System.currentTimeMillis());
         event.setType(Type.TASK_ASSIGNED);
         event.setPid(pid);
         event.setTid(tid);
         event.setActivityName(name);
-        event.setCandidates(candidates);
+        event.setAssignee(assignee);
         return event;
     }
 
-    public static RuntimeEngineEvent createTaskCompletedEvent(String pid, String tid, String name, Set<IdentityLink> candidates) {
+    public static RuntimeEngineEvent createTaskCompletedEvent(String pid, String tid, String name, String assignee) {
         RuntimeEngineEvent event = new RuntimeEngineEvent();
         event.setTimestamp(System.currentTimeMillis());
         event.setType(Type.TASK_COMPLETED);
         event.setPid(pid);
         event.setTid(tid);
         event.setActivityName(name);
-        event.setCandidates(candidates);
+        event.setAssignee(assignee);
         return event;
     }
 }

@@ -11,6 +11,7 @@ import javax.mail.MessagingException;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.transaction.Status;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
@@ -53,6 +54,17 @@ public class NotifyTask extends RuntimeEngineTask {
 
     @Override
     public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
+        
+        try {
+            LOGGER.log(Level.FINE, "User Transaction Status: " + getUserTransaction().getStatus());
+            if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
+                LOGGER.log(Level.FINE, "START User Transaction");
+                getUserTransaction().begin();
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
+        }
+        
         try {
             String initier = execution.getVariable(Process.INITIER_VAR_NAME, String.class);
             String lang = "fr";
@@ -63,7 +75,6 @@ public class NotifyTask extends RuntimeEngineTask {
                     String initierEmail = getMembershipService().systemReadProfileEmail(initier);
                     if (initierEmail == null || initierEmail.length() == 0) {
                         throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier [" + initier + "], no email provided in profile"));
-                        //TODO maybe notify user in its profile feed
                     } else {
                         ProfileData language = getMembershipService().systemGetProfileInfo(initier, "language");
                         if ( language != null ) {
@@ -84,7 +95,6 @@ public class NotifyTask extends RuntimeEngineTask {
                         if (moderatorEmail == null || moderatorEmail.length() == 0) {
                             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify moderator [" + moderator
                                     + "], no email provided in profile"));
-                          //TODO maybe notify user in its profile feed
                         } else {
                             ProfileData language = getMembershipService().systemGetProfileInfo(moderator, "language");
                             if ( language != null ) {
@@ -170,6 +180,14 @@ public class NotifyTask extends RuntimeEngineTask {
         } catch (SecurityException | IllegalStateException | EJBTransactionRolledbackException e) {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
             throw new RuntimeEngineTaskException("unexpected error occurred", e);
+        }
+        
+        try {
+            LOGGER.log(Level.FINE, "COMMIT Active User Transaction.");
+            getUserTransaction().commit();
+            getUserTransaction().begin();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
         }
     }
 

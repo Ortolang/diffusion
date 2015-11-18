@@ -39,6 +39,8 @@ package fr.ortolang.diffusion.runtime.engine.task;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.transaction.Status;
+
 import org.activiti.engine.delegate.DelegateExecution;
 
 import fr.ortolang.diffusion.OrtolangObjectState;
@@ -63,27 +65,45 @@ public class LoadSnapshotTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		if (!execution.hasVariable(WORKSPACE_KEY_PARAM_NAME)) {
-			throw new RuntimeEngineTaskException("execution variable " + WORKSPACE_KEY_PARAM_NAME + " is not set");
-		}
+	    checkParameters(execution);
 		String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
 		
 		try {
+            LOGGER.log(Level.FINE, "User Transaction Status: " + getUserTransaction().getStatus());
+            if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
+                LOGGER.log(Level.FINE, "START User Transaction");
+                getUserTransaction().begin();
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
+        }
+        
+        try {
 			Workspace workspace = getCoreService().readWorkspace(wskey);
 			if ( workspace.getAlias() != null && workspace.getAlias().length() > 0 ) {
 			    execution.setVariable(WORKSPACE_ALIAS_PARAM_NAME, workspace.getAlias());
 			} else {
 			    execution.setVariable(WORKSPACE_ALIAS_PARAM_NAME, wskey);
 			}
+			
 			String snapshotName;
 			String rootCollection;
 			if (!execution.hasVariable(SNAPSHOT_NAME_PARAM_NAME)) {
 				if (workspace.hasChanged()) {
-					LOGGER.log(Level.FINE, "Snapshot name NOT provided and workspace has changed since last snapshot, generating a new snapshot");
-					snapshotName = getCoreService().snapshotWorkspace(wskey);
+				    LOGGER.log(Level.FINE, "Snapshot name NOT provided and workspace has changed since last snapshot, generating a new snapshot");
+				    snapshotName = getCoreService().snapshotWorkspace(wskey);
 					throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "New snapshot [" + snapshotName + "] created"));
 					execution.setVariable(SNAPSHOT_NAME_PARAM_NAME, snapshotName);
-				} else {
+					try {
+		                LOGGER.log(Level.FINE, "User Transaction Status: " + getUserTransaction().getStatus());
+		                if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
+		                    LOGGER.log(Level.FINE, "START User Transaction");
+		                    getUserTransaction().begin();
+		                }
+		            } catch (Exception e) {
+		                LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
+		            }
+		        } else {
 					LOGGER.log(Level.FINE, "Snapshot name NOT provided and workspace has not changed since last snapshot, loading latest snapshot");
 					String head = workspace.getHead();
 					String root = getRegistryService().getParent(head);
@@ -122,7 +142,21 @@ public class LoadSnapshotTask extends RuntimeEngineTask {
 		} catch (CoreServiceException | KeyNotFoundException | AccessDeniedException | RegistryServiceException | WorkspaceReadOnlyException e) {
 			throw new RuntimeEngineTaskException("unexpected error during snapshot task execution", e);
 		}
+        
+        try {
+            LOGGER.log(Level.FINE, "COMMIT Active User Transaction.");
+            getUserTransaction().commit();
+            getUserTransaction().begin();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
+        }
 	}
+	
+	private void checkParameters(DelegateExecution execution) throws RuntimeEngineTaskException {
+        if (!execution.hasVariable(WORKSPACE_KEY_PARAM_NAME)) {
+            throw new RuntimeEngineTaskException("execution variable " + WORKSPACE_KEY_PARAM_NAME + " is not set");
+        }
+    }
 
 	@Override
 	public String getTaskName() {

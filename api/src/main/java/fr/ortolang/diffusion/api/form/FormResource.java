@@ -89,6 +89,7 @@ public class FormResource {
     }
 
     @PUT
+    @Path("/{key}")
     public Response updateForm(@PathParam(value = "key") String key, FormRepresentation formRepresentation) throws FormServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "PUT /forms/" + key);
         service.updateForm(key, formRepresentation.getName(), formRepresentation.getDefinition());
