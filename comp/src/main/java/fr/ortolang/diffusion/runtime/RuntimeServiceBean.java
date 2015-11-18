@@ -531,23 +531,23 @@ public class RuntimeServiceBean implements RuntimeService {
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void pushTaskEvent(String pid, String tid, Set<IdentityLink> candidates, String assignee, RuntimeEngineEvent.Type type) {
         LOGGER.log(Level.INFO, "Pushing task event to notification service, pid:" + pid + ", tid: " + tid);
-        ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("tid", tid);
-        String eventName = type.name().substring(type.name().lastIndexOf("_") + 1).toLowerCase();
-        if (candidates != null) {
-            for (IdentityLink candidate : candidates) {
-                if (candidate.getUserId() != null) {
-                    argumentsBuilder.addArgument("user", candidate.getUserId());
-                }
-                if (candidate.getGroupId() != null) {
-                    argumentsBuilder.addArgument("group", candidate.getGroupId());
+        try {
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("tid", tid);
+            String eventName = type.name().substring(type.name().lastIndexOf("_") + 1).toLowerCase();
+            if (candidates != null) {
+                for (IdentityLink candidate : candidates) {
+                    if (candidate.getUserId() != null) {
+                        argumentsBuilder.addArgument("user", candidate.getUserId());
+                    }
+                    if (candidate.getGroupId() != null) {
+                        argumentsBuilder.addArgument("group", candidate.getGroupId());
+                    }
                 }
             }
-        }
-        if (assignee != null) {
-            argumentsBuilder.addArgument("assignee", assignee);
-        }
-        try {
-            notification.throwEvent(pid, RuntimeService.SERVICE_NAME, HumanTask.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, HumanTask.OBJECT_TYPE, eventName),argumentsBuilder.build());
+            if (assignee != null) {
+                argumentsBuilder.addArgument("assignee", assignee);
+            }
+            notification.throwEvent(tid, RuntimeService.SERVICE_NAME, HumanTask.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, HumanTask.OBJECT_TYPE, eventName),argumentsBuilder.build());
         } catch (NotificationServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while pushing task event", e);
         }

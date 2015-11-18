@@ -371,7 +371,6 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	}
 
 	@Override
-	@PermitAll
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public void notify(RuntimeEngineEvent event) throws RuntimeEngineException {
 		listener.onEvent(event);
