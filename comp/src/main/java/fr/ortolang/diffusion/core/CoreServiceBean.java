@@ -2333,6 +2333,7 @@ public class CoreServiceBean implements CoreService {
                     ctx.setRollbackOnly();
                     throw new CoreServiceException("unable to load collection with id [" + tidentifier.getId() + "] from storage");
                 }
+                collection.setKey(tkey);
                 for (MetadataElement mde : collection.getMetadatas()) {
                     if (mde.getName().equals(name)) {
                         ctx.setRollbackOnly();
@@ -2341,6 +2342,7 @@ public class CoreServiceBean implements CoreService {
                 }
                 if (collection.getClock() < ws.getClock()) {
                     Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
+                    tkey = clone.getKey();
                     if (parent != null) {
                         parent.removeElement(element);
                         parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, clone.getKey()));
@@ -2359,6 +2361,7 @@ public class CoreServiceBean implements CoreService {
                     ctx.setRollbackOnly();
                     throw new CoreServiceException("unable to load object with id [" + tidentifier.getId() + "] from storage");
                 }
+                object.setKey(tkey);
                 for (MetadataElement mde : object.getMetadatas()) {
                     if (mde.getName().equals(name)) {
                         ctx.setRollbackOnly();
@@ -2367,6 +2370,7 @@ public class CoreServiceBean implements CoreService {
                 }
                 if (object.getClock() < ws.getClock()) {
                     DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
+                    tkey = clone.getKey();
                     parent.removeElement(element);
                     parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey()));
                     em.merge(parent);
@@ -2383,6 +2387,7 @@ public class CoreServiceBean implements CoreService {
                     ctx.setRollbackOnly();
                     throw new CoreServiceException("unable to load link with id [" + tidentifier.getId() + "] from storage");
                 }
+                link.setKey(tkey);
                 for (MetadataElement mde : link.getMetadatas()) {
                     if (mde.getName().equals(name)) {
                         ctx.setRollbackOnly();
@@ -2391,6 +2396,7 @@ public class CoreServiceBean implements CoreService {
                 }
                 if (link.getClock() < ws.getClock()) {
                     Link clone = cloneLink(ws.getHead(), link, ws.getClock());
+                    tkey = clone.getKey();
                     parent.removeElement(element);
                     parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, clone.getKey()));
                     em.merge(parent);
@@ -2555,6 +2561,7 @@ public class CoreServiceBean implements CoreService {
                     }
                     if (collection.getClock() < ws.getClock()) {
                         Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
+                        tkey = clone.getKey();
                         if (parent != null) {
                             parent.removeElement(element);
                             parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, clone.getKey()));
@@ -2573,6 +2580,7 @@ public class CoreServiceBean implements CoreService {
                     }
                     if (object.getClock() < ws.getClock()) {
                         DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
+                        tkey = clone.getKey();
                         parent.removeElement(element);
                         parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey()));
                         object = clone;
@@ -2589,6 +2597,7 @@ public class CoreServiceBean implements CoreService {
                     }
                     if (link.getClock() < ws.getClock()) {
                         Link clone = cloneLink(ws.getHead(), link, ws.getClock());
+                        tkey = clone.getKey();
                         parent.removeElement(element);
                         parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, clone.getKey()));
                         link = clone;

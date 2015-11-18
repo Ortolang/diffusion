@@ -282,7 +282,7 @@ public class WorkspaceResource {
         OrtolangObjectState state = browser.getState(ekey);
         CacheControl cc = new CacheControl();
         cc.setPrivate(true);
-        if ( state.isLocked() ) {
+        if ( root != null && !root.equals(Workspace.HEAD) && state.isLocked() ) {
             cc.setMaxAge(691200);
             cc.setMustRevalidate(false);
         } else {
