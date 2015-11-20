@@ -92,10 +92,7 @@ public class PathBuilder {
 	}
 	
 	public boolean isRoot() {
-		if ( builder.length() <= 1 ) {
-			return true;
-		}
-		return false;
+		return builder.length() <= 1;
 	}
 	
 	public int depth() {

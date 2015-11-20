@@ -327,7 +327,7 @@ public class AuthorisationServiceBean implements AuthorisationService {
 
 	@Override
 	public void checkAuthentified(List<String> subjects) throws AuthorisationServiceException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "checking authentification state");
+		LOGGER.log(Level.FINE, "checking authentication state");
 		if (subjects.contains(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY)) {
 			return;
 		}

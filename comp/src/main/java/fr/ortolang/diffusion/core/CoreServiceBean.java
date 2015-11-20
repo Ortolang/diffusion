@@ -2694,7 +2694,12 @@ public class CoreServiceBean implements CoreService {
             Collection parent = loadCollectionAtPath(ws.getHead(), ppath, ws.getClock());
             LOGGER.log(Level.FINEST, "parent collection loaded for path " + ppath.build());
 
-            CollectionElement element = parent.findElementByName(npath.part());
+            CollectionElement element;
+            if (npath.isRoot()) {
+                element = new CollectionElement(Collection.OBJECT_TYPE, parent.getName(), -1, 0, Collection.MIME_TYPE, parent.getKey());
+            } else {
+                element = parent.findElementByName(npath.part());
+            }
             if (element == null) {
                 throw new PathNotFoundException(npath.build());
             }
