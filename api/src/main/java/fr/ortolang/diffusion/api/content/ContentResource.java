@@ -7,8 +7,6 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -19,7 +17,6 @@ import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.CookieParam;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -39,7 +36,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.StreamingOutput;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
@@ -56,6 +52,7 @@ import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.api.auth.AuthResource;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.AliasNotFoundException;
@@ -82,9 +79,8 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.template.TemplateEngine;
 import fr.ortolang.diffusion.template.TemplateEngineException;
-import fr.ortolang.diffusion.thumbnail.Thumbnail;
 import fr.ortolang.diffusion.thumbnail.ThumbnailService;
-import fr.ortolang.diffusion.thumbnail.ThumbnailServiceException;
+import fr.ortolang.diffusion.viewer.ViewerService;
 
 @Path("/content")
 @Produces({ MediaType.TEXT_HTML })
@@ -92,9 +88,6 @@ public class ContentResource {
 
     private static final Logger LOGGER = Logger.getLogger(ContentResource.class.getName());
 
-    private static final String REDIRECT_PATH_PARAM_NAME = "redirect";
-    private static final String DEFAULT_THUMBNAIL_IMAGE = "empty.png";
-    private static final String DEFAULT_THUMBNAIL_MIMETYPE = "image/png";
     private static final ClassLoader TEMPLATE_ENGINE_CL = ContentResource.class.getClassLoader();
 
     @EJB
@@ -106,95 +99,11 @@ public class ContentResource {
     @EJB
     private ThumbnailService thumbnails;
     @EJB
+    private ViewerService viewer;
+    @EJB
     private SecurityService security;
     @Context
     private UriInfo uriInfo;
-
-    private File defaultThumb = null;
-
-    private File getDefaultThumb() {
-        if (defaultThumb == null) {
-            try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(DEFAULT_THUMBNAIL_IMAGE)) {
-                java.nio.file.Path thumbPath = Files.createTempFile("default_thumb", ".png");
-                Files.copy(is, thumbPath, StandardCopyOption.REPLACE_EXISTING);
-                defaultThumb = thumbPath.toFile();
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            }
-        }
-        return defaultThumb;
-    }
-
-    @GET
-    @Path("/auth")
-    public Response authenticate(@CookieParam(REDIRECT_PATH_PARAM_NAME) String credirect, @QueryParam(REDIRECT_PATH_PARAM_NAME) String qredirect) {
-        LOGGER.log(Level.INFO, "GET /content/auth");
-        UriBuilder builder = uriInfo.getBaseUriBuilder().path(ContentResource.class);
-        if (credirect != null && credirect.length() > 0) {
-            LOGGER.log(Level.FINE, "redirecting to path found in cookie : " + credirect);
-            builder.path(credirect);
-        } else if (qredirect != null && qredirect.length() > 0) {
-            LOGGER.log(Level.FINE, "redirecting to path found in query : " + qredirect);
-            builder.path(qredirect);
-        }
-        return Response.seeOther(builder.build()).build();
-    }
-
-    @GET
-    @Path("/thumb/{key}")
-    @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-    public Response get(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size, @QueryParam("l") @DefaultValue("true") boolean login,
-            @Context SecurityContext security, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, ThumbnailServiceException {
-        LOGGER.log(Level.INFO, "GET /content/thumb/" + key);
-
-        try {
-            OrtolangObjectState state = browser.getState(key);
-            CacheControl cc = new CacheControl();
-            cc.setPrivate(true);
-            if (state.isLocked()) {
-                cc.setMaxAge(691200);
-                cc.setMustRevalidate(false);
-            } else {
-                cc.setMaxAge(0);
-                cc.setMustRevalidate(true);
-            }
-            Date lmd = new Date(state.getLastModification() / 1000 * 1000);
-            ResponseBuilder builder = null;
-            if (System.currentTimeMillis() - state.getLastModification() > 1000) {
-                builder = request.evaluatePreconditions(lmd);
-            }
-            if (builder == null) {
-                try {
-                    Thumbnail thumbnail = thumbnails.getThumbnail(key, size);
-                    builder = Response.ok(thumbnail.getFile()).header("Content-Type", thumbnail.getContentType());
-                    builder.lastModified(lmd);
-                } catch (Exception e) {
-                    LOGGER.log(Level.FINE, "unable to generate thumbnail, sending transparent image");
-                    builder = Response.ok(getDefaultThumb()).header("Content-Type", DEFAULT_THUMBNAIL_MIMETYPE);
-                    builder.lastModified(lmd);
-                }
-            }
-
-            builder.cacheControl(cc);
-            return builder.build();
-        } catch (AccessDeniedException e) {
-            if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
-                if (login) {
-                    LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/thumb/" + key, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo.getBaseUri()
-                            .getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").queryParam(REDIRECT_PATH_PARAM_NAME, "/thumb/" + key).build()).cookie(rcookie)
-                            .build();
-                } else {
-                    LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
-                    return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
-                }
-            } else {
-                LOGGER.log(Level.FINE, "user is already authenticated, access denied");
-                return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
-            }
-        }
-    }
 
     @POST
     @Path("/export")
@@ -377,7 +286,7 @@ public class ContentResource {
             @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext ctx, @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException,
             AccessDeniedException, InvalidPathException, OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException,
             UnsupportedEncodingException, SecurityServiceException {
-        LOGGER.log(Level.INFO, "GET /key/" + key);
+        LOGGER.log(Level.INFO, "GET /content/key/" + key);
         try {
             OrtolangObjectState state = browser.getState(key);
             CacheControl cc = new CacheControl();
@@ -397,9 +306,9 @@ public class ContentResource {
             if (builder == null) {
                 OrtolangObject object = browser.findObject(key);
                 if (object instanceof DataObject) {
-                    File content = store.getFile(((DataObject) object).getStream());
+                    String sha1 = ((DataObject) object).getStream();
+                    File content = store.getFile(sha1);
                     security.checkPermission(key, "download");
-                    // TODO log download
                     builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize())
                             .header("Accept-Ranges", "bytes");
                     if (download) {
@@ -411,7 +320,6 @@ public class ContentResource {
                 } else if (object instanceof MetadataObject) {
                     File content = store.getFile(((MetadataObject) object).getStream());
                     security.checkPermission(key, "download");
-                    // TODO log download
                     builder = Response.ok(content).header("Content-Type", ((MetadataObject) object).getContentType()).header("Content-Length", ((MetadataObject) object).getSize())
                             .header("Accept-Ranges", "bytes");
                     if (download) {
@@ -478,9 +386,9 @@ public class ContentResource {
             if (ctx.getUserPrincipal() == null || ctx.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/key/" + key, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo.getBaseUri()
+                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, "/key/" + key, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo.getBaseUri()
                             .getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").queryParam(REDIRECT_PATH_PARAM_NAME, "/key/" + key).build()).cookie(rcookie).build();
+                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, "/content/key/" + key).build()).cookie(rcookie).build();
                 } else {
                     LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
                     return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
@@ -521,9 +429,9 @@ public class ContentResource {
             if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, "/", OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo.getBaseUri().getHost(), 1,
+                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, "/", OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo.getBaseUri().getHost(), 1,
                             "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").queryParam(REDIRECT_PATH_PARAM_NAME, "/").build()).cookie(rcookie).build();
+                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, "/content").build()).cookie(rcookie).build();
                 } else {
                     LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
                     return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
@@ -596,9 +504,9 @@ public class ContentResource {
             if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo
+                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo
                             .getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").queryParam(REDIRECT_PATH_PARAM_NAME, representation.getPath()).build())
+                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getPath()).build())
                             .cookie(rcookie).build();
                 } else {
                     LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
@@ -715,9 +623,9 @@ public class ContentResource {
             if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo
+                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo
                             .getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").queryParam(REDIRECT_PATH_PARAM_NAME, representation.getPath()).build())
+                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getPath()).build())
                             .cookie(rcookie).build();
                 } else {
                     LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
@@ -736,7 +644,8 @@ public class ContentResource {
     public Response path(@PathParam("alias") String alias, @PathParam("root") final String root, @PathParam("path") String path, @QueryParam("fd") boolean download,
             @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext ctx,
             @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, AliasNotFoundException, InvalidPathException,
-            OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException, SecurityServiceException, PathNotFoundException {
+            OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException, SecurityServiceException,
+            PathNotFoundException {
         LOGGER.log(Level.INFO, "GET /content/" + alias + "/" + root + "/" + path);
         ContentRepresentation representation = new ContentRepresentation();
         representation.setContext(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT));
@@ -844,9 +753,9 @@ public class ContentResource {
             if (ctx.getUserPrincipal() == null || ctx.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo
+                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo
                             .getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path("auth").queryParam(REDIRECT_PATH_PARAM_NAME, representation.getPath()).build())
+                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getPath()).build())
                             .cookie(rcookie).build();
                 } else {
                     LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");

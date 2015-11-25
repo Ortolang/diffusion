@@ -251,6 +251,7 @@ public class BootstrapServiceBean implements BootstrapService {
         try {
             LOGGER.log(Level.INFO, "import process types");
             runtime.importProcessTypes();
+            
             LOGGER.log(Level.FINE, "import metadataformat schemas");
             InputStream schema13InputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.13.json");
             String schema13Hash = core.put(schema13InputStream);

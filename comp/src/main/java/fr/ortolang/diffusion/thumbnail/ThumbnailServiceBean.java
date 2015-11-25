@@ -99,7 +99,7 @@ public class ThumbnailServiceBean implements ThumbnailService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Thumbnail getThumbnail(String key, int size) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException {
-		LOGGER.log(Level.FINE, "get thumbnail size for key [" + key + "] and size [" + size + "]");
+		LOGGER.log(Level.FINE, "get thumbnail for key [" + key + "] and size [" + size + "]");
 		try {
 			OrtolangObjectState state = browser.getState(key);
 			if (needGeneration(key, size, state.getLastModification())) {

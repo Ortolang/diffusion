@@ -43,6 +43,7 @@ import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
 import fr.ortolang.diffusion.api.admin.AdminResource;
+import fr.ortolang.diffusion.api.auth.AuthResource;
 import fr.ortolang.diffusion.api.config.ConfigResource;
 import fr.ortolang.diffusion.api.content.ContentResource;
 import fr.ortolang.diffusion.api.event.EventFeedResource;
@@ -71,6 +72,8 @@ import fr.ortolang.diffusion.api.referentiel.ReferentielEntityResource;
 import fr.ortolang.diffusion.api.runtime.RuntimeResource;
 import fr.ortolang.diffusion.api.search.SearchResource;
 import fr.ortolang.diffusion.api.statistics.StatisticsResource;
+import fr.ortolang.diffusion.api.thumbnail.ThumbnailResource;
+import fr.ortolang.diffusion.api.viewer.ViewerResource;
 import fr.ortolang.diffusion.api.workspace.WorkspaceResource;
 import fr.ortolang.diffusion.subscription.SubscriptionResource;
 
@@ -89,7 +92,10 @@ public class ApiApplication extends Application {
 		classes.add(MetadataFormatResource.class);
 		classes.add(ReferentielEntityResource.class);
 		classes.add(AdminResource.class);
+		classes.add(AuthResource.class);
 		classes.add(ContentResource.class);
+		classes.add(ThumbnailResource.class);
+		classes.add(ViewerResource.class);
 		classes.add(ConfigResource.class);
 		classes.add(SubscriptionResource.class);
 		classes.add(StatisticsResource.class);
