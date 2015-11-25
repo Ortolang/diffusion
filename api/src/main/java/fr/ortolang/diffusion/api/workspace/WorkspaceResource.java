@@ -36,19 +36,18 @@ package fr.ortolang.diffusion.api.workspace;
  * #L%
  */
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -68,14 +67,16 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.core.entity.*;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
+import fr.ortolang.diffusion.store.binary.BinaryStoreService;
+import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
+import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
-import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectInfos;
-import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.filter.CORSFilter;
 import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
@@ -92,13 +93,6 @@ import fr.ortolang.diffusion.core.PathAlreadyExistsException;
 import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.PathNotFoundException;
 import fr.ortolang.diffusion.core.WorkspaceReadOnlyException;
-import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.DataObject;
-import fr.ortolang.diffusion.core.entity.Link;
-import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.core.entity.MetadataObject;
-import fr.ortolang.diffusion.core.entity.MetadataSource;
-import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
@@ -122,6 +116,8 @@ public class WorkspaceResource {
     private CoreService core;
     @EJB
     private BrowserService browser;
+    @EJB
+    private BinaryStoreService binary;
     @EJB
     private MembershipService membership;
     @EJB
@@ -269,8 +265,9 @@ public class WorkspaceResource {
     @GET
     @Path("/{wskey}/elements")
     public Response getWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
-            @QueryParam(value = "metadata") String metadata, @Context Request request) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, OrtolangException,
-            BrowserServiceException, PropertyNotFoundException, PathNotFoundException {
+            @QueryParam(value = "metadata") String metadata, @QueryParam(value = "policy") @DefaultValue("false") boolean policy, @Context Request request)
+            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, OrtolangException, BrowserServiceException, PropertyNotFoundException,
+            PathNotFoundException, DataNotFoundException, BinaryStoreServiceException, IOException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/elements?root=" + root + "&path=" + path + "&metadata=" + metadata);
         if (path == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
@@ -289,9 +286,16 @@ public class WorkspaceResource {
             cc.setMaxAge(0);
             cc.setMustRevalidate(true);
         }
-        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        long lastModification;
+        if (root == null || root.equals(Workspace.HEAD)) {
+            OrtolangObjectState workspaceState = browser.getState(wskey);
+            lastModification = workspaceState.getLastModification();
+        } else {
+            lastModification = state.getLastModification();
+        }
+        Date lmd = new Date(lastModification / 1000 * 1000);
         ResponseBuilder builder = null;
-        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+        if (System.currentTimeMillis() - lastModification > 1000) {
             builder = request.evaluatePreconditions(lmd);
         }
 
@@ -326,6 +330,22 @@ public class WorkspaceResource {
                 representation.setPath(npath.build());
                 representation.setPathParts(npath.buildParts());
                 representation.setWorkspace(wskey);
+                if (policy) {
+                    boolean found = false;
+                    while (!found) {
+                        String publicationPolicy = readPublicationPolicy(object);
+                        if (publicationPolicy != null) {
+                            found = true;
+                            representation.setPublicationPolicy(publicationPolicy);
+                        } else if (npath.isRoot()) {
+                            found = true;
+                            representation.setPublicationPolicy(AuthorisationPolicyTemplate.FORALL);
+                        } else {
+                            npath = npath.parent();
+                            object = browser.findObject(core.resolveWorkspacePath(wskey, root, npath.build()));
+                        }
+                    }
+                }
                 builder = Response.ok(representation);
                 builder.lastModified(lmd);
             } else {
@@ -391,10 +411,10 @@ public class WorkspaceResource {
                         }
                     }
                     if (mdexists) {
-                        core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename());
+                        core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
                         return Response.ok().build();
                     } else {
-                        core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename());
+                        core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
                         URI newly = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build())
                                 .queryParam("metadataname", name).build();
                         return Response.created(newly).build();
@@ -461,7 +481,7 @@ public class WorkspaceResource {
                 }
                 break;
             case MetadataObject.OBJECT_TYPE:
-                core.updateMetadataObject(wskey, npath.build(), representation.getName(), representation.getStream(), null);
+                core.updateMetadataObject(wskey, npath.build(), representation.getName(), representation.getStream(), null, false);
                 break;
             default:
                 return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + representation.getType()).build();
@@ -494,7 +514,7 @@ public class WorkspaceResource {
         }
 
         if (metadataname != null && metadataname.length() > 0) {
-            core.deleteMetadataObject(wskey, path, metadataname);
+            core.deleteMetadataObject(wskey, path, metadataname, false);
         } else {
             String ekey = core.resolveWorkspacePath(wskey, root, path);
             OrtolangObjectIdentifier identifier = browser.lookup(ekey);
@@ -520,6 +540,35 @@ public class WorkspaceResource {
     public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceReadOnlyException {
         LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/snapshots");
         core.snapshotWorkspace(wskey);
+        return Response.ok().build();
+    }
+
+    @PUT
+    @Path("/{wskey}/elements/publication")
+    public Response setPublicationPolicy(@PathParam(value = "wskey") String wskey, @QueryParam("path") String path, @QueryParam("recursive") @DefaultValue("true") boolean recursive, PublicationPolicy publicationPolicy)
+            throws BrowserServiceException, AccessDeniedException, PathNotFoundException, KeyAlreadyExistsException, CoreServiceException, KeyNotFoundException, MetadataFormatException,
+            WorkspaceReadOnlyException, PathAlreadyExistsException, InvalidPathException, OrtolangException, DataCollisionException, BinaryStoreServiceException, IOException {
+        LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements/publication");
+        JsonObject jsonObject = Json.createObjectBuilder().add("template", publicationPolicy.getTemplate()).build();
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(jsonObject.toString().getBytes());
+        String hash = binary.put(byteArrayInputStream);
+        String key = core.resolveWorkspacePath(wskey, Workspace.HEAD, path);
+        OrtolangObject object = browser.findObject(key);
+        MetadataElement metadataElement = null;
+        if (object instanceof Collection) {
+            metadataElement = ((Collection) object).findMetadataByName(MetadataFormat.ACL);
+        }
+        if (object instanceof DataObject) {
+            metadataElement = ((DataObject) object).findMetadataByName(MetadataFormat.ACL);
+        }
+        if (object instanceof Link) {
+            metadataElement = ((Link) object).findMetadataByName(MetadataFormat.ACL);
+        }
+        if (metadataElement != null) {
+            core.updateMetadataObject(wskey, path, MetadataFormat.ACL, hash, null, recursive);
+        } else {
+            core.createMetadataObject(wskey, path, MetadataFormat.ACL, hash, null, recursive);
+        }
         return Response.ok().build();
     }
 
@@ -578,6 +627,46 @@ public class WorkspaceResource {
                 metadatas.put(metadataElement.getName(), metadataElement.getKey());
             }
             representation.setMetadatas(metadatas);
+        }
+    }
+
+    private String readPublicationPolicy(OrtolangObject object) throws OrtolangException, DataNotFoundException, BinaryStoreServiceException, IOException {
+        MetadataElement metadataElement = null;
+        if (object instanceof Collection) {
+            metadataElement = ((Collection) object).findMetadataByName(MetadataFormat.ACL);
+        }
+        if (object instanceof DataObject) {
+            metadataElement = ((DataObject) object).findMetadataByName(MetadataFormat.ACL);
+        }
+        if (object instanceof Link) {
+            metadataElement = ((Link) object).findMetadataByName(MetadataFormat.ACL);
+        }
+        if (metadataElement != null) {
+            MetadataObject metadataObject = (MetadataObject) browser.findObject(metadataElement.getKey());
+            ObjectMapper mapper = new ObjectMapper();
+            PublicationPolicy publicationPolicy = mapper.readValue(binary.getFile(metadataObject.getStream()), PublicationPolicy.class);
+            return publicationPolicy.getTemplate();
+        }
+        return null;
+    }
+
+    private static class PublicationPolicy {
+
+        private String template;
+
+        public PublicationPolicy() {
+        }
+
+        public PublicationPolicy(String template) {
+            this.template = template;
+        }
+
+        public String getTemplate() {
+            return template;
+        }
+
+        public void setTemplate(String template) {
+            this.template = template;
         }
     }
 }

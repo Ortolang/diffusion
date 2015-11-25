@@ -359,7 +359,7 @@ public class CoreServiceTest {
 			String metak = UUID.randomUUID().toString();
 			InputStream metadataInputStream = getClass().getClassLoader().getResourceAsStream("json/meta.json");
 			String metadataHash = core.put(metadataInputStream);
-			core.createMetadataObject(wsk, metak, "/", mf.getName(), metadataHash, "meta.json");
+			core.createMetadataObject(wsk, metak, "/", mf.getName(), metadataHash, "meta.json", false);
 			MetadataObject metadata = core.readMetadataObject(metak);
 			assertEquals("ortolang-item-json:1", metadata.getFormat());
 			

@@ -284,7 +284,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			String hash = getCoreService().put(is);
 			is.close();
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
-			getCoreService().createMetadataObject(wskey, path, name, hash, null);
+			getCoreService().createMetadataObject(wskey, path, name, hash, null, false);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
@@ -298,7 +298,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			String hash = getCoreService().put(is);
 			is.close();
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
-			getCoreService().updateMetadataObject(wskey, path, name, hash, null);
+			getCoreService().updateMetadataObject(wskey, path, name, hash, null, false);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
 		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
@@ -309,7 +309,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 	private void deleteMetadata(String path, String name) throws InvalidPathException, RuntimeEngineTaskException, PathNotFoundException {
 		try {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
-			getCoreService().deleteMetadataObject(wskey, path, name);
+			getCoreService().deleteMetadataObject(wskey, path, name, false);
 		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
 			throw new RuntimeEngineTaskException("Error deleting metadata for path [" + path + "]", e);
 		} 

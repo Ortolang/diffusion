@@ -41,10 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import fr.ortolang.diffusion.OrtolangBinaryService;
-import fr.ortolang.diffusion.OrtolangIndexableService;
-import fr.ortolang.diffusion.OrtolangObjectPid;
-import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
@@ -157,9 +154,9 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     
     /*MetadataObject*/
 
-    public void createMetadataObject(String wskey, String path, String name, String hash, String filename) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
+    public void createMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
 
-    public void createMetadataObject(String wskey, String key, String path, String name, String hash, String filename) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
+    public void createMetadataObject(String wskey, String key, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
 
     public List<String> findMetadataObjectsForTarget(String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
@@ -167,9 +164,9 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
     public MetadataObject readMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
-    public void updateMetadataObject(String wskey, String path, String name, String hash, String filename) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
+    public void updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
 
-    public void deleteMetadataObject(String wskey, String path, String name) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException;
+    public void deleteMetadataObject(String wskey, String path, String name, boolean recursive) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException;
 
 	/*MetadataFormat*/
 

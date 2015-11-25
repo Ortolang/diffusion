@@ -482,10 +482,10 @@ public class CoreServiceBean implements CoreService {
 
                 if (mds.isEmpty()) {
                     LOGGER.log(Level.INFO, "creating workspace metadata for root collection");
-                    createMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash, null);
+                    createMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash, null, false);
                 } else {
                     LOGGER.log(Level.INFO, "updating workspace metadata for root collection");
-                    updateMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash, null);
+                    updateMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash, null, false);
                 }
             } catch (BinaryStoreServiceException | DataCollisionException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | MetadataFormatException
                     | PathNotFoundException e) {
@@ -2229,12 +2229,12 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createMetadataObject(String workspace, String path, String name, String hash, String filename)
+    public void createMetadataObject(String workspace, String path, String name, String hash, String filename, boolean purgeChildren)
             throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException {
         String key = UUID.randomUUID().toString();
 
         try {
-            createMetadataObject(workspace, key, path, name, hash, filename);
+            createMetadataObject(workspace, key, path, name, hash, filename, purgeChildren);
         } catch (KeyAlreadyExistsException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.WARNING, "the generated key already exists : " + key);
@@ -2243,7 +2243,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createMetadataObject(String wskey, String key, String path, String name, String hash, String filename)
+    public void createMetadataObject(String wskey, String key, String path, String name, String hash, String filename, boolean purgeChildren)
             throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException,
             WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "create metadataobject with key [" + key + "] into workspace [" + wskey + "] for path [" + path + "] with name [" + name + "]");
@@ -2354,6 +2354,10 @@ public class CoreServiceBean implements CoreService {
                 }
                 collection.addMetadata(new MetadataElement(name, key));
                 em.merge(collection);
+                if (purgeChildren) {
+                    LOGGER.log(Level.FINE, "Purging children metadata");
+                    purgeChildrenMetadata(collection, wskey, path, name);
+                }
                 break;
             case DataObject.OBJECT_TYPE:
                 DataObject object = em.find(DataObject.class, tidentifier.getId());
@@ -2420,7 +2424,7 @@ public class CoreServiceBean implements CoreService {
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", key).addArgument("tkey", tkey).addArgument("path", npath.build()).addArgument("name", name);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "create"), argsBuilder.build());
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
-                | MembershipServiceException | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException e) {
+                | MembershipServiceException | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException | OrtolangException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred during metadata creation", e);
             throw new CoreServiceException("unable to create metadata into workspace [" + wskey + "] for path [" + path + "]", e);
@@ -2453,7 +2457,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateMetadataObject(String wskey, String path, String name, String hash, String filename)
+    public void updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren)
             throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "updating metadata content into workspace [" + wskey + "] for path [" + path + "] and name [" + name + "]");
         try {
@@ -2569,6 +2573,10 @@ public class CoreServiceBean implements CoreService {
                         collection = clone;
                     }
                     mdelement = collection.findMetadataByName(name);
+                    if (purgeChildren) {
+                        LOGGER.log(Level.FINE, "Purging children metadata");
+                        purgeChildrenMetadata(collection, wskey, path, name);
+                    }
                     break;
                 case DataObject.OBJECT_TYPE:
                     DataObject object = em.find(DataObject.class, tidentifier.getId());
@@ -2654,7 +2662,7 @@ public class CoreServiceBean implements CoreService {
                 LOGGER.log(Level.FINEST, "no changes detected with current metadata object, nothing to do");
             }
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
-                | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException e) {
+                | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException | OrtolangException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred during metadata creation", e);
             throw new CoreServiceException("unable to create metadata into workspace [" + wskey + "] for path [" + path + "] and name [" + name + "]", e);
@@ -2663,7 +2671,8 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void deleteMetadataObject(String wskey, String path, String name) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, WorkspaceReadOnlyException {
+    public void deleteMetadataObject(String wskey, String path, String name, boolean recursive)
+            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "deleting metadataobject into workspace [" + wskey + "] for path [" + path + "] with name [" + name + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -2729,6 +2738,10 @@ public class CoreServiceBean implements CoreService {
                 mdelement = collection.findMetadataByName(name);
                 collection.removeMetadata(mdelement);
                 em.merge(collection);
+                if (recursive) {
+                    LOGGER.log(Level.FINE, "Purging children metadata");
+                    purgeChildrenMetadata(collection, wskey, path, name);
+                }
                 break;
             case DataObject.OBJECT_TYPE:
                 DataObject object = em.find(DataObject.class, tidentifier.getId());
@@ -2786,10 +2799,14 @@ public class CoreServiceBean implements CoreService {
             registry.update(element.getKey());
             indexing.index(element.getKey());
 
+            ws.setChanged(true);
+            em.merge(ws);
+            registry.update(ws.getKey());
+
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", mdelement.getKey()).addArgument("tkey", element.getKey()).addArgument("path", npath.build()).addArgument("name", name);
-            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "update"), argsBuilder.build());
+            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "delete"), argsBuilder.build());
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException | CloneException
-                | IndexingServiceException e) {
+                | IndexingServiceException | OrtolangException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred during metadata creation", e);
             throw new CoreServiceException("unable to create metadata into workspace [" + wskey + "] for path [" + path + "]", e);
@@ -3058,23 +3075,16 @@ public class CoreServiceBean implements CoreService {
                 throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
             }
 
-            if (identifier.getType().equals(Workspace.OBJECT_TYPE)) {
+            switch (identifier.getType()) {
+            case Workspace.OBJECT_TYPE:
                 return readWorkspace(key);
-            }
-
-            if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
+            case DataObject.OBJECT_TYPE:
                 return readDataObject(key);
-            }
-
-            if (identifier.getType().equals(Collection.OBJECT_TYPE)) {
+            case Collection.OBJECT_TYPE:
                 return readCollection(key);
-            }
-
-            if (identifier.getType().equals(Link.OBJECT_TYPE)) {
+            case Link.OBJECT_TYPE:
                 return readLink(key);
-            }
-
-            if (identifier.getType().equals(MetadataObject.OBJECT_TYPE)) {
+            case MetadataObject.OBJECT_TYPE:
                 return readMetadataObject(key);
             }
 
@@ -3744,6 +3754,34 @@ public class CoreServiceBean implements CoreService {
                     registry.delete(element.getKey());
 
                 }
+            }
+        }
+    }
+
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    private void purgeChildrenMetadata(Collection collection, String wskey, String path, String name)
+            throws OrtolangException, AccessDeniedException, KeyNotFoundException, InvalidPathException, PathNotFoundException, WorkspaceReadOnlyException, CoreServiceException,
+            RegistryServiceException {
+        MetadataElement metadataElement;
+        for (CollectionElement collectionElement : collection.getElements()) {
+            metadataElement = null;
+            switch (collectionElement.getType()) {
+            case Collection.OBJECT_TYPE:
+                Collection subCollection = readCollection(collectionElement.getKey());
+                metadataElement = subCollection.findMetadataByName(name);
+                purgeChildrenMetadata(subCollection, wskey, path + "/" + subCollection.getName(), name);
+                break;
+            case DataObject.OBJECT_TYPE:
+                DataObject dataObject = readDataObject(collectionElement.getKey());
+                metadataElement = dataObject.findMetadataByName(name);
+                break;
+            case Link.OBJECT_TYPE:
+                Link link = readLink(collectionElement.getKey());
+                metadataElement = link.findMetadataByName(name);
+                break;
+            }
+            if (metadataElement != null) {
+                deleteMetadataObject(wskey, path + "/" + collectionElement.getName(), name, false);
             }
         }
     }
