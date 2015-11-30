@@ -506,7 +506,7 @@ public class ContentResource {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
                     NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo
                             .getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getPath()).build())
+                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getBase() + representation.getPath()).build())
                             .cookie(rcookie).build();
                 } else {
                     LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
@@ -625,7 +625,7 @@ public class ContentResource {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
                     NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo
                             .getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getPath()).build())
+                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getBase() + representation.getPath()).build())
                             .cookie(rcookie).build();
                 } else {
                     LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
@@ -755,7 +755,7 @@ public class ContentResource {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
                     NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getPath(), OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo
                             .getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getPath()).build())
+                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getBase() + representation.getPath()).build())
                             .cookie(rcookie).build();
                 } else {
                     LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
