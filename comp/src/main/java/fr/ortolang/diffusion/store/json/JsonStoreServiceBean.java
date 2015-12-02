@@ -122,11 +122,11 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	public void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException {
 		LOGGER.log(Level.FINE, "Indexing object with key: " + object.getKey());
 		try (ODatabaseDocumentTx db = pool.acquire()) {
-			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object);
 			ODocument oldDoc = getDocumentByKey(object.getKey());
-			if (oldDoc != null) {
-				oldDoc.delete();
-			}
+			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object, oldDoc);
+//			if (oldDoc != null) {
+//				oldDoc.delete();
+//			}
 			db.save(doc);
 			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
 			ortolangKeyIdx.remove(object.getKey());
