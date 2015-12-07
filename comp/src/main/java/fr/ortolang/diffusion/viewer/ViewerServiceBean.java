@@ -41,6 +41,7 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.thumbnail.ThumbnailService;
 import fr.ortolang.diffusion.viewer.engine.MarkdownViewer;
+import fr.ortolang.diffusion.viewer.engine.XmlViewer;
 
 @Startup
 @Local(ViewerService.class)
@@ -85,6 +86,8 @@ public class ViewerServiceBean implements ViewerService {
         LOGGER.log(Level.INFO, "Registering engines: ");
         ViewerEngine md = new MarkdownViewer();
         engines.put(md.getId(), md);
+        ViewerEngine xml = new XmlViewer();
+        engines.put(xml.getId(), xml);
         LOGGER.log(Level.INFO, engines.size() + " engines registered.");
     }
 

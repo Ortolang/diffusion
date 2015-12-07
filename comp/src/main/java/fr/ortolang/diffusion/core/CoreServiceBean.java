@@ -946,7 +946,7 @@ public class CoreServiceBean implements CoreService {
                         for (int i = 0; i < jpids.size(); i++) {
                             JsonObject jpid = jpids.getJsonObject(i);
                             LOGGER.log(Level.FINE, "Generating metadata based pid for key: " + key);
-                            String ctarget = targetBase + "/" + wsalias + "/" + tag + path.build();
+                            String ctarget = targetBase + "/" + wsalias + "/" + tag + ((path.isRoot())?"":path.build());
                             pids.add(new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, jpid.getString("value"), key, ctarget));
                         }
                     }
