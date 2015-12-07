@@ -71,7 +71,9 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 
     public static final String PROFILES_PATH_PARAM_NAME = "profilespath";
     public static final String PROFILES_OVERWRITE_PARAM_NAME = "profilesoverwrites";
-
+    
+    public static final String HANDLES_PATH_PARAM_NAME = "handlespath";
+    
     public static final String BAG_PATH_PARAM_NAME = "bagpath";
     public static final String BAG_VERSIONS_PARAM_NAME = "bagversions";
     public static final String BAG_VERSION_PARAM_NAME = "bagversion";
@@ -98,6 +100,8 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     public static final String TASK_ACTION = "action";
     
     public static final String FORCE_PARAM_NAME = "force";
+    
+    public static final String INITIER_PARAM_NAME = "initier";
 
     private static final Logger LOGGER = Logger.getLogger(RuntimeEngineTask.class.getName());
 
