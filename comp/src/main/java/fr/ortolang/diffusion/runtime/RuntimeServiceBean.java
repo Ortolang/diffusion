@@ -505,7 +505,7 @@ public class RuntimeServiceBean implements RuntimeService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
-    public void updateProcessActivity(String pid, String name) throws RuntimeServiceException {
+    public void updateProcessActivity(String pid, String name, int progress) throws RuntimeServiceException {
         LOGGER.log(Level.INFO, "Updating activity of process with pid: " + pid);
         try {
             Process process = em.find(Process.class, pid);
@@ -518,7 +518,8 @@ public class RuntimeServiceBean implements RuntimeService {
             String key = registry.lookup(process.getObjectIdentifier());
             registry.update(key);
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("activity", name);
-            notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "change-activity"),
+            argumentsBuilder.addArgument("progress", Integer.toString(progress));
+            notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-activity"),
                     argumentsBuilder.build());
         } catch (Exception e) {
             ctx.setRollbackOnly();

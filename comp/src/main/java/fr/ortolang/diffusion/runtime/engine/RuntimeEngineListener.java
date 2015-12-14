@@ -81,33 +81,33 @@ public class RuntimeEngineListener {
                     getRuntimeService().appendProcessTrace(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage() + "\r\n" + event.getTrace());
                     break;
                 case PROCESS_ACTIVITY_STARTED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "[STARTED] " + event.getActivityName());
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[STARTED] " + event.getActivityName(), 0);
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case PROCESS_ACTIVITY_ERROR:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "[ERROR] " + event.getActivityName());
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[ERROR] " + event.getActivityName(), 0);
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case PROCESS_ACTIVITY_PROGRESS:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "[IN PROGRESS: " + event.getActivityProgress() + "%]" + event.getActivityName());
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[IN PROGRESS]" + event.getActivityName(), event.getActivityProgress());
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case PROCESS_ACTIVITY_COMPLETED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "[COMPLETED] " + event.getActivityName());
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[COMPLETED] " + event.getActivityName(), 100);
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());
                     break;
                 case TASK_CREATED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "[CREATED] Human Task '" + event.getActivityName() + "' (#" + event.getTid() + ")");
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[CREATED] Human Task '" + event.getActivityName() + "' (#" + event.getTid() + ")", 0);
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  HUMAN TASK (#" + event.getTid() + ") " + event.getActivityName() + " CREATED");
                     getRuntimeService().pushTaskEvent(event.getPid(), event.getTid(), event.getCandidates(), event.getAssignee(), event.getType());
                     break;
                 case TASK_ASSIGNED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "[ASSIGNED] Human Task '" + event.getActivityName() + "' (#" + event.getTid() + ")");
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[ASSIGNED] Human Task '" + event.getActivityName() + "' (#" + event.getTid() + ")", 10);
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  HUMAN TASK (#" + event.getTid() + ") " + event.getActivityName() + " ASSIGNED TO: " + event.getAssignee());
                     getRuntimeService().pushTaskEvent(event.getPid(), event.getTid(), event.getCandidates(), event.getAssignee(), event.getType());
                     break;
                 case TASK_COMPLETED:
-                    getRuntimeService().updateProcessActivity(event.getPid(), "[COMPLETED] Human Task '" + event.getActivityName() + "' (#" + event.getTid() + ")");
+                    getRuntimeService().updateProcessActivity(event.getPid(), "[COMPLETED] Human Task '" + event.getActivityName() + "' (#" + event.getTid() + ")", 100);
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  HUMAN TASK (#" + event.getTid() + ") " + event.getActivityName() + " COMPLETED");
                     getRuntimeService().pushTaskEvent(event.getPid(), event.getTid(), event.getCandidates(), event.getAssignee(), event.getType());
                     break;

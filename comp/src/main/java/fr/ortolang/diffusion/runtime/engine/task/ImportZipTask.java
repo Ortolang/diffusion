@@ -90,7 +90,7 @@ public class ImportZipTask extends RuntimeEngineTask {
                 try {
                     for (Pattern pattern : IGNORED_FILES) {
                         if (pattern.matcher(entry.getName()).matches()) {
-                            LOGGER.log(Level.FINEST, "Zip entry ignored");
+                            LOGGER.log(Level.FINEST, "Zip entry ignored: " + entry.getName());
                             ignore = true;
                             break;
                         }
@@ -151,7 +151,7 @@ public class ImportZipTask extends RuntimeEngineTask {
                     partial = true;
                     report.append("[ERROR] unexpected error: " + e2.getMessage() + "\r\n");
                 }
-                if ( (cpt * 100) / zip.size() > 5 ) {
+                if ( (cpt * 100) / zip.size() > 10 ) {
                     progress += cpt;
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityProgressEvent(execution.getProcessBusinessKey(), getTaskName(), "extracting files...", (progress*100)/zip.size()));
                     cpt = 0;
