@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 
 public class OrtolangConfig {
 
-    private static final String CURRENT_CONFIG_VERSION = "7";
+    private static final String CURRENT_CONFIG_VERSION = "8";
     private static final Logger LOGGER = Logger.getLogger(OrtolangConfig.class.getName());
     private static OrtolangConfig config;
     private Properties props;
@@ -111,11 +111,14 @@ public class OrtolangConfig {
         API_PATH_CONTENT ("api.path.content"),
         API_PATH_SUB ("api.path.sub"),
         API_PATH_OAI ("api.path.oai"),
+        API_PATH_SEO ("api.path.seo"),
 
         AUTH_SERVER_URL ("auth.server.url"),
         AUTH_CLIENT_PUBKEY ("auth.pubkey"),
         AUTH_REALM ("auth.realm"),
         AUTH_CLIENT ("auth.client"),
+
+        MARKET_SERVER_URL ("market.server.url"),
 
         RUNTIME_DEFINITIONS ("runtime.definitions"),
 

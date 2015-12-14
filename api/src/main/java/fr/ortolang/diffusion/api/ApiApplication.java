@@ -72,6 +72,7 @@ import fr.ortolang.diffusion.api.referentiel.ReferentielEntityResource;
 import fr.ortolang.diffusion.api.rendering.RenderingResource;
 import fr.ortolang.diffusion.api.runtime.RuntimeResource;
 import fr.ortolang.diffusion.api.search.SearchResource;
+import fr.ortolang.diffusion.api.seo.SeoResource;
 import fr.ortolang.diffusion.api.statistics.StatisticsResource;
 import fr.ortolang.diffusion.api.thumbnail.ThumbnailResource;
 import fr.ortolang.diffusion.api.workspace.WorkspaceResource;
@@ -102,6 +103,7 @@ public class ApiApplication extends Application {
 		classes.add(SearchResource.class);
 		classes.add(OAIPMHServlet.class);
 		classes.add(EventFeedResource.class);
+		classes.add(SeoResource.class);
 	}
 
 	@Override

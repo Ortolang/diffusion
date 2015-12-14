@@ -3,6 +3,7 @@ package fr.ortolang.diffusion.store.json;
 import java.io.InputStream;
 import java.util.List;
 
+import com.orientechnologies.orient.core.record.impl.ODocument;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangService;
 
@@ -26,7 +27,9 @@ public interface JsonStoreService extends OrtolangService {
 	public void remove(String key) throws JsonStoreServiceException;
 	
 	public List<String> search(String query) throws JsonStoreServiceException;
-	
+
+    public List<ODocument> systemSearch(String query) throws JsonStoreServiceException;
+
     public void systemInsertDocument(String type, InputStream document) throws JsonStoreServiceException;
     
     public void systemInsertDocument(String type, String document) throws JsonStoreServiceException;
