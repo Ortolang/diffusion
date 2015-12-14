@@ -116,6 +116,8 @@ public class CoreServiceTest {
 		jar.addPackage("fr.ortolang.diffusion.security.authorisation.entity");
 		jar.addPackage("fr.ortolang.diffusion.store.binary");
 		jar.addPackage("fr.ortolang.diffusion.store.binary.hash");
+		jar.addPackage("fr.ortolang.diffusion.store.handle");
+		jar.addPackage("fr.ortolang.diffusion.store.handle.entity");
 		jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
 		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreServiceException");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
@@ -123,13 +125,6 @@ public class CoreServiceTest {
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreService");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
-		jar.addClass("fr.ortolang.diffusion.store.handle.HandleStoreService");
-		jar.addClass("fr.ortolang.diffusion.store.handle.HandleStoreServiceBean");
-		jar.addClass("fr.ortolang.diffusion.store.handle.HandleNotFoundException");
-		jar.addClass("fr.ortolang.diffusion.store.handle.HandleStoreServiceException");
-		jar.addClass("fr.ortolang.diffusion.store.handle.entity.Handle");
-		jar.addClass("fr.ortolang.diffusion.store.handle.entity.HandlePK");
-		jar.addClass("fr.ortolang.diffusion.store.handle.entity.Na");
 		jar.addAsResource("config.properties");
 		jar.addAsResource("schema/ortolang-item-schema.json");
 		jar.addAsResource("schema/ortolang-workspace-schema.json");
