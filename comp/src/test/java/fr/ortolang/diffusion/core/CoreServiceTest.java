@@ -124,7 +124,12 @@ public class CoreServiceTest {
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
 		jar.addClass("fr.ortolang.diffusion.store.handle.HandleStoreService");
+		jar.addClass("fr.ortolang.diffusion.store.handle.HandleStoreServiceBean");
+		jar.addClass("fr.ortolang.diffusion.store.handle.HandleNotFoundException");
 		jar.addClass("fr.ortolang.diffusion.store.handle.HandleStoreServiceException");
+		jar.addClass("fr.ortolang.diffusion.store.handle.entity.Handle");
+		jar.addClass("fr.ortolang.diffusion.store.handle.entity.HandlePK");
+		jar.addClass("fr.ortolang.diffusion.store.handle.entity.Na");
 		jar.addAsResource("config.properties");
 		jar.addAsResource("schema/ortolang-item-schema.json");
 		jar.addAsResource("schema/ortolang-workspace-schema.json");
