@@ -113,6 +113,29 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	}
 	
 	@Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void dropHandle(String handle) throws HandleStoreServiceException {
+	    String name = handle.toUpperCase(Locale.ENGLISH);
+	    LOGGER.log(Level.FINE, "dropping handle : " + handle);
+        List<Handle> handles = null;
+        TypedQuery<Handle> query = em.createNamedQuery("findHandleByName", Handle.class).setParameter("name", name.getBytes()); 
+        handles = query.getResultList();
+        if ( handles != null && handles.size() > 0 ) {
+            for ( Handle hdl : handles ) {
+                em.remove(hdl);
+            }
+        }
+    }
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Handle> searchHandles(int offset, int limit, String filter) throws HandleStoreServiceException {
+        String name = filter.toUpperCase(Locale.ENGLISH) + "%";
+        TypedQuery<Handle> query = em.createNamedQuery("searchHandleByName", Handle.class).setFirstResult(offset).setMaxResults(limit).setParameter("name", name.getBytes()); 
+        return query.getResultList();
+    }
+	
+	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<Handle> listHandleValues(String handle) throws HandleStoreServiceException, HandleNotFoundException {
 		String name = handle.toUpperCase(Locale.ENGLISH);
@@ -127,13 +150,10 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> findHandlesForKey(String key) throws HandleStoreServiceException, HandleNotFoundException {
+	public List<String> findHandlesForKey(String key) throws HandleStoreServiceException {
 		List<String> names = new ArrayList<String> ();
 		TypedQuery<byte[]> query = em.createNamedQuery("findHandleNameForKey", byte[].class).setParameter("key", key);
 		List<byte[]> bnames = query.getResultList(); 
-		if ( bnames == null || bnames.size() == 0 ) {
-			throw new HandleNotFoundException("no name found for key [" + key + "]");
-		}
 		try {
 			for (byte[] bname : bnames) {
 				names.add(new String(bname, "UTF-8"));

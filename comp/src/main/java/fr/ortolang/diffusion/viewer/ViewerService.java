@@ -24,5 +24,5 @@ public interface ViewerService extends OrtolangService {
     public File getView(String key) throws ViewerServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException;
     
     public File getView(String key, String viewer) throws ViewerServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException;
-
+    
 }

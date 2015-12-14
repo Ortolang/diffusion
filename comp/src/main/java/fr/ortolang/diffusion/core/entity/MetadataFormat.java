@@ -21,6 +21,7 @@ public class MetadataFormat {
     public static final String WORKSPACE = "ortolang-workspace-json";
     public static final String PID = "ortolang-pid-json";
     public static final String THUMB = "ortolang-thumb-json";
+    public static final String TEMPLATE = "ortolang-template-json";
 
 
     @Id

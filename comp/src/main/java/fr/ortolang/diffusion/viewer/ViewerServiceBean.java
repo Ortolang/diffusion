@@ -40,8 +40,8 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.thumbnail.ThumbnailService;
-import fr.ortolang.diffusion.viewer.engine.MarkdownViewer;
-import fr.ortolang.diffusion.viewer.engine.XmlViewer;
+import fr.ortolang.diffusion.viewer.engine.MarkdownEngine;
+import fr.ortolang.diffusion.viewer.engine.TEIBoilerPlateEngine;
 
 @Startup
 @Local(ViewerService.class)
@@ -84,9 +84,9 @@ public class ViewerServiceBean implements ViewerService {
             LOGGER.log(Level.SEVERE, "unable to initialize views store", e);
         }
         LOGGER.log(Level.INFO, "Registering engines: ");
-        ViewerEngine md = new MarkdownViewer();
+        ViewerEngine md = new MarkdownEngine();
         engines.put(md.getId(), md);
-        ViewerEngine xml = new XmlViewer();
+        ViewerEngine xml = new TEIBoilerPlateEngine();
         engines.put(xml.getId(), xml);
         LOGGER.log(Level.INFO, engines.size() + " engines registered.");
     }
@@ -141,7 +141,7 @@ public class ViewerServiceBean implements ViewerService {
             throw new ViewerServiceException("error while getting view", e);
         }
     }
-
+    
     @Override
     public File getView(String key, String engineid) throws ViewerServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException {
         LOGGER.log(Level.FINE, "get view of key [" + key + "] using engine: [" + engineid + "]");
@@ -155,6 +155,7 @@ public class ViewerServiceBean implements ViewerService {
             if (object.getObjectIdentifier().getService().equals(CoreService.SERVICE_NAME) && object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE)) {
                 ViewerEngine engine = engines.get(engineid);
                 if (engine.canRender(((DataObject) object).getMimeType())) {
+                    //TODO include in stale the params value
                     if (isStale(key, engine.getId(), state.getLastModification())) {
                         LOGGER.log(Level.FINE, "cache is stale, generating new view");
                         rendered = render(key, ((DataObject) object).getStream(), engine);

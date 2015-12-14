@@ -154,7 +154,7 @@ public class HandleStoreServiceTest {
 			assertEquals(1, namesK2.size());
 			assertFalse(namesK2.contains("11403/444"));
 			assertEquals(2, namesK3.size());
-		} catch (HandleStoreServiceException | HandleNotFoundException e) {
+		} catch (HandleStoreServiceException e) {
 			fail(e.getMessage());
 		}
 	}

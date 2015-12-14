@@ -329,6 +329,7 @@ public class ContentResource {
                     }
                     builder.lastModified(lmd);
                 } else if (object instanceof Collection) {
+                    //TODO make this to use template engine 
                     ContentRepresentation representation = new ContentRepresentation();
                     representation.setContext(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT));
                     representation.setBase("/content/key");

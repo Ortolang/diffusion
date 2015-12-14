@@ -79,6 +79,7 @@ import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.handle.HandleStoreService;
 
 @Path("/objects")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -96,6 +97,8 @@ public class ObjectResource {
 	private CoreService core;
 	@EJB
 	private MembershipService membership;
+	@EJB
+	private HandleStoreService handleStore;
 
 	public ObjectResource() {
 	}
@@ -152,6 +155,7 @@ public class ObjectResource {
 			OrtolangObjectInfos infos = browser.getInfos(key);
 			List<OrtolangObjectProperty> properties = browser.listProperties(key);
 			List<OrtolangObjectVersion> versions = browser.getHistory(key);
+			List<String> handles = browser.listHandles(key);
 			String owner = security.getOwner(key);
 			Map<String, List<String>> permissions = security.listRules(key);
 			
@@ -177,6 +181,7 @@ public class ObjectResource {
 				representation.getProperties().put(property.getName(), property.getValue());
 			}
 			representation.setHistory(versions);
+			representation.setHandles(handles);			
 
 			builder = Response.ok(representation);
 			builder.lastModified(lmd);

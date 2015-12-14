@@ -73,6 +73,8 @@ public interface BrowserService extends OrtolangService {
 	 
 	public List<OrtolangObjectVersion> getHistory(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
 	
+	public List<String> listHandles(String key) throws BrowserServiceException;
+	
 	public void index(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
 	
 }

@@ -69,11 +69,11 @@ import fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet;
 import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.profile.ProfileResource;
 import fr.ortolang.diffusion.api.referentiel.ReferentielEntityResource;
+import fr.ortolang.diffusion.api.rendering.RenderingResource;
 import fr.ortolang.diffusion.api.runtime.RuntimeResource;
 import fr.ortolang.diffusion.api.search.SearchResource;
 import fr.ortolang.diffusion.api.statistics.StatisticsResource;
 import fr.ortolang.diffusion.api.thumbnail.ThumbnailResource;
-import fr.ortolang.diffusion.api.viewer.ViewerResource;
 import fr.ortolang.diffusion.api.workspace.WorkspaceResource;
 import fr.ortolang.diffusion.subscription.SubscriptionResource;
 
@@ -95,7 +95,7 @@ public class ApiApplication extends Application {
 		classes.add(AuthResource.class);
 		classes.add(ContentResource.class);
 		classes.add(ThumbnailResource.class);
-		classes.add(ViewerResource.class);
+		classes.add(RenderingResource.class);
 		classes.add(ConfigResource.class);
 		classes.add(SubscriptionResource.class);
 		classes.add(StatisticsResource.class);

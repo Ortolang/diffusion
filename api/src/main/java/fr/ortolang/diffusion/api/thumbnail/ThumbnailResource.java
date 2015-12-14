@@ -31,7 +31,6 @@ import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.api.auth.AuthResource;
-import fr.ortolang.diffusion.api.viewer.ViewerResource;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -44,7 +43,7 @@ import fr.ortolang.diffusion.thumbnail.ThumbnailServiceException;
 @Path("/thumb")
 public class ThumbnailResource {
     
-    private static final Logger LOGGER = Logger.getLogger(ViewerResource.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ThumbnailResource.class.getName());
     
     private static final String DEFAULT_THUMBNAIL_IMAGE = "empty.png";
     private static final String DEFAULT_THUMBNAIL_MIMETYPE = "image/png";

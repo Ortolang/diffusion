@@ -19,15 +19,15 @@ import org.pegdown.PegDownProcessor;
 
 import fr.ortolang.diffusion.viewer.ViewerEngine;
 
-public class MarkdownViewer implements ViewerEngine {
+public class MarkdownEngine implements ViewerEngine {
 
-    private static final Logger LOGGER = Logger.getLogger(MarkdownViewer.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MarkdownEngine.class.getName());
     private static final List<String> SUPPORTED_MIME_TYPES = Arrays.asList("text/x-web-markdown", "text/x-markdown", "text/markdown");
     private static final String ID = "md";
 
     private PegDownProcessor processor;
 
-    public MarkdownViewer() {
+    public MarkdownEngine() {
         processor = new PegDownProcessor(Extensions.WIKILINKS);
     }
 

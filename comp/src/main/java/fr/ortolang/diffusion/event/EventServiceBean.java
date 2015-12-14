@@ -109,26 +109,37 @@ public class EventServiceBean implements EventService {
             }
             feed.setKey(key);
             
-            //TODO optimize to set a limit in event initial list.
-            List<Event> events = em.createNamedQuery("listAllEventsByDate", Event.class).getResultList();
             int cpt = 0;
-            for ( Event event : events ) {
-                for ( EventFeedFilter filter : feed.getFilters() ) {
-                    if ( filter.match(event) ) {
-                        try {
-                            if ( event.getFromObject() != null && event.getFromObject().length() > 0 ) {
-                                authorisation.checkPermission(event.getFromObject(), subjects, "read");
+            int offset = 0;
+            int limit = 1000;
+            boolean endOfEvents = false;
+            while ( cpt < feed.getSize() || endOfEvents ) {
+                List<Event> events = em.createNamedQuery("listAllEventsByDate", Event.class).setFirstResult(offset).setMaxResults(limit).getResultList();
+                if ( events.size() < limit ) {
+                    LOGGER.log(Level.FINEST, "listAllEventsByDate returned only " + events.size() + " events, seem that end is reached.");
+                    endOfEvents = true;
+                } else {
+                    LOGGER.log(Level.FINEST, "listAllEventsByDate returned " + limit + " results, setting offset to next segment.");
+                    offset += limit;
+                }
+                for ( Event event : events ) {
+                    for ( EventFeedFilter filter : feed.getFilters() ) {
+                        if ( filter.match(event) ) {
+                            try {
+                                if ( event.getFromObject() != null && event.getFromObject().length() > 0 ) {
+                                    authorisation.checkPermission(event.getFromObject(), subjects, "read");
+                                }
+                                feed.pushEvent(event);
+                                cpt++;
+                            } catch ( AccessDeniedException e ) {
+                                LOGGER.log(Level.FINEST, "no permission to read event with id: " + event.getId());
                             }
-                            feed.pushEvent(event);
-                            cpt++;
-                        } catch ( AccessDeniedException e ) {
-                            LOGGER.log(Level.FINEST, "no permission to read event with id: " + event.getId());
+                            break;
                         }
+                    }
+                    if ( cpt >= feed.getSize() ) {
                         break;
                     }
-                }
-                if ( cpt >= feed.getSize() ) {
-                    break;
                 }
             }
 
