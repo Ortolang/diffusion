@@ -15,13 +15,13 @@ import javax.persistence.Version;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MetadataFormat {
 
-    public static final String ACL = "ortolang-acl-json";
-    public static final String ITEM = "ortolang-item-json";
-    public static final String ORGANIZATION = "ortolang-organization-json";
-    public static final String WORKSPACE = "ortolang-workspace-json";
-    public static final String PID = "ortolang-pid-json";
-    public static final String THUMB = "ortolang-thumb-json";
-    public static final String TEMPLATE = "ortolang-template-json";
+    public static final String ACL = "acl";
+    public static final String ITEM = "item";
+    public static final String ORGANIZATION = "organization";
+    public static final String WORKSPACE = "workspace";
+    public static final String PID = "pid";
+    public static final String THUMB = "thumbnail";
+    public static final String TEMPLATE = "template";
 
 
     @Id

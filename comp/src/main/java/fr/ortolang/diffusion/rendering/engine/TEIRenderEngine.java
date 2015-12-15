@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.viewer.engine;
+package fr.ortolang.diffusion.rendering.engine;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,17 +19,17 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import fr.ortolang.diffusion.viewer.ViewerEngine;
+import fr.ortolang.diffusion.rendering.RenderEngine;
 
-public class TEIBoilerPlateEngine implements ViewerEngine {
+public class TEIRenderEngine implements RenderEngine {
 
-    private static final Logger LOGGER = Logger.getLogger(TEIBoilerPlateEngine.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(TEIRenderEngine.class.getName());
     private static final List<String> SUPPORTED_MIME_TYPES = Arrays.asList("application/xml");
     private static final String ID = "xml";
 
     private TransformerFactory tFactory;
 
-    public TEIBoilerPlateEngine() {
+    public TEIRenderEngine() {
         tFactory = TransformerFactory.newInstance();
     }
 

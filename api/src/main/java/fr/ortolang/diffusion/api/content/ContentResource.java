@@ -71,6 +71,7 @@ import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rendering.RenderingService;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -80,7 +81,6 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.template.TemplateEngine;
 import fr.ortolang.diffusion.template.TemplateEngineException;
 import fr.ortolang.diffusion.thumbnail.ThumbnailService;
-import fr.ortolang.diffusion.viewer.ViewerService;
 
 @Path("/content")
 @Produces({ MediaType.TEXT_HTML })
@@ -99,7 +99,7 @@ public class ContentResource {
     @EJB
     private ThumbnailService thumbnails;
     @EJB
-    private ViewerService viewer;
+    private RenderingService viewer;
     @EJB
     private SecurityService security;
     @Context

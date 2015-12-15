@@ -1,9 +1,9 @@
-package fr.ortolang.diffusion.viewer;
+package fr.ortolang.diffusion.rendering;
 
 import java.nio.file.Path;
 import java.util.Locale;
 
-public interface ViewerEngine {
+public interface RenderEngine {
     
     public String getId();
     

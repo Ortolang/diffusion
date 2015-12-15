@@ -27,7 +27,7 @@ public class TemplateEngine {
         cfg.setSharedVariable("formatsize", new FormatSizeMethod());
         cfg.setSharedVariable("fileicon", new FileIconMethod());
 	}
-
+	
 	public static TemplateEngine getInstance(ClassLoader cl) {
 	    if ( !TemplateEngineHolder.instances.containsKey(cl) ) {
 	        TemplateEngineHolder.instances.put(cl, new TemplateEngine(cl));
@@ -45,6 +45,5 @@ public class TemplateEngine {
 			throw new TemplateEngineException("unable to process template " + name, e);
 		}
 	}
-
 
 }

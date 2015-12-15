@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.viewer.engine;
+package fr.ortolang.diffusion.rendering.engine;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,17 +17,17 @@ import org.apache.tika.io.IOUtils;
 import org.pegdown.Extensions;
 import org.pegdown.PegDownProcessor;
 
-import fr.ortolang.diffusion.viewer.ViewerEngine;
+import fr.ortolang.diffusion.rendering.RenderEngine;
 
-public class MarkdownEngine implements ViewerEngine {
+public class MarkdownRenderEngine implements RenderEngine {
 
-    private static final Logger LOGGER = Logger.getLogger(MarkdownEngine.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MarkdownRenderEngine.class.getName());
     private static final List<String> SUPPORTED_MIME_TYPES = Arrays.asList("text/x-web-markdown", "text/x-markdown", "text/markdown");
-    private static final String ID = "md";
+    public static final String ID = "md";
 
     private PegDownProcessor processor;
 
-    public MarkdownEngine() {
+    public MarkdownRenderEngine() {
         processor = new PegDownProcessor(Extensions.WIKILINKS);
     }
 
