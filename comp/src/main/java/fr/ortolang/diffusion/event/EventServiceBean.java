@@ -113,7 +113,7 @@ public class EventServiceBean implements EventService {
             int offset = 0;
             int limit = 1000;
             boolean endOfEvents = false;
-            while ( cpt < feed.getSize() || endOfEvents ) {
+            while ( cpt < feed.getSize() && !endOfEvents ) {
                 List<Event> events = em.createNamedQuery("listAllEventsByDate", Event.class).setFirstResult(offset).setMaxResults(limit).getResultList();
                 if ( events.size() < limit ) {
                     LOGGER.log(Level.FINEST, "listAllEventsByDate returned only " + events.size() + " events, seem that end is reached.");
