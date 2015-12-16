@@ -36,20 +36,18 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ejb.Local;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import javax.ejb.*;
 
+import fr.ortolang.diffusion.runtime.RuntimeService;
+import fr.ortolang.diffusion.runtime.RuntimeServiceException;
+import fr.ortolang.diffusion.runtime.entity.HumanTask;
+import fr.ortolang.diffusion.runtime.entity.Process;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -77,6 +75,8 @@ public class SubscriptionServiceBean implements SubscriptionService {
     
     @EJB
     private MembershipService membership;
+    @EJB
+    private RuntimeService runtime;
     @EJB
     private CoreService core;
     private Map<String, Subscription> subscriptionRegistry = new HashMap<>();
@@ -118,7 +118,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
     }
 
     @Override
-    public void addDefaultFilters() throws SubscriptionServiceException {
+    public void addDefaultFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException {
         String username = membership.getProfileKeyForConnectedIdentifier();
         List<String> profileGroups = null;
         List<String> workspaces = null;
@@ -131,13 +131,20 @@ public class SubscriptionServiceBean implements SubscriptionService {
         if (username != null) {
             LOGGER.log(Level.FINE, "Adding default filters to user " + username + " subscription");
             // Core events
-            addFilter(username, new Filter("core\\.workspace\\.create", null, username));
-            addFilter(username, new Filter("core\\.workspace\\.delete", null, username));
+            addFilter(username, new Filter("core\\.workspace\\.(?:create|delete)", null, username));
             // Membership events
-            addFilter(username, new Filter("membership\\.group\\.add-member", null, null, "member," + username));
+            addFilter(username, new Filter(MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN, null, null, "member," + username));
             // Runtime events
-            addFilter(username, new Filter("runtime\\.process\\.create", null, username));
-            addFilter(username, new Filter("runtime\\.task\\..*", null, null, "user," + username));
+            List<Process> processes = runtime.listCallerProcesses(null);
+            for (Process process : processes) {
+                if (!process.getState().equals(Process.State.ABORTED) && !process.getState().equals(Process.State.COMPLETED)) {
+                    addFilter(username, new Filter(RUNTIME_PROCESS_PATTERN, process.getKey(), null));
+                }
+            }
+            List<HumanTask> candidateTasks = runtime.listCandidateTasks();
+            for (HumanTask candidateTask : candidateTasks) {
+                addFilter(username, new Filter("runtime\\.task\\..*", candidateTask.getId(), null));
+            }
             // User's workspaces related filters
             if (workspaces != null) {
                 for (String workspace : workspaces) {
@@ -148,7 +155,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
             if (profileGroups != null) {
                 for (String profileGroup : profileGroups) {
                     if (profileGroup != null && profileGroup.length() > 0) {
-                        addFilter(username, new Filter("core\\.workspace\\.snapshot", null, null, "group," + profileGroup));
+                        addFilter(username, new Filter(MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN, profileGroup, null));
                         addFilter(username, new Filter("runtime\\.task\\..*", null, null, "group," + profileGroup));
                     }
                 }
@@ -179,6 +186,27 @@ public class SubscriptionServiceBean implements SubscriptionService {
     @Override
     public Map<String, Subscription> getSubscriptions() {
         return subscriptionRegistry;
+    }
+
+    @Schedule(hour = "5")
+    private void cleanupSubscriptions() {
+        LOGGER.log(Level.INFO, "Starting to cleanup subscriptions (registry size: " + subscriptionRegistry.size() + ")");
+        Set<String> subscriptionsToBeRemoved = new HashSet<>();
+        subscriptionRegistry.entrySet().stream().filter(subscriptionRegistryEntry -> subscriptionRegistryEntry.getValue().getBroadcaster().getAtmosphereResources().isEmpty())
+                .forEach(subscriptionRegistryEntry -> {
+                    LOGGER.log(Level.INFO, "No more resources associated to " + subscriptionRegistryEntry.getKey() + " broadcaster; destroying broadcaster");
+                    subscriptionRegistryEntry.getValue().getBroadcaster().destroy();
+                    subscriptionsToBeRemoved.add(subscriptionRegistryEntry.getKey());
+                });
+        if (subscriptionsToBeRemoved.isEmpty()) {
+            LOGGER.log(Level.INFO, "No subscription removed from subscription registry");
+        } else {
+            for (String key : subscriptionsToBeRemoved) {
+                LOGGER.log(Level.FINE, "Removing subscription of user " + key);
+                subscriptionRegistry.remove(key);
+            }
+            LOGGER.log(Level.INFO, subscriptionsToBeRemoved.size() + " subscription(s) removed from subscription registry (registry new size: " + subscriptionRegistry.size() + ")");
+        }
     }
     
     //Service methods
