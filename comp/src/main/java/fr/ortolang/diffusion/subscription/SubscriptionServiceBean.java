@@ -100,12 +100,13 @@ public class SubscriptionServiceBean implements SubscriptionService {
 
     @Override
     public void addFilter(String username, Filter filter) throws SubscriptionServiceException {
-        LOGGER.log(Level.FINE, "Adding filter to user " + username + " subscription " + filter);
         if (!subscriptionRegistry.containsKey(username)) {
             throw new SubscriptionServiceException("Could not find subscription for user [" + username + "]");
         }
         if (!subscriptionRegistry.get(username).addFilter(filter)) {
-            LOGGER.log(Level.FINE, "Filter already present");
+            LOGGER.log(Level.FINE, "Filter already present for user " + username + " " + filter);
+        } else {
+            LOGGER.log(Level.FINE, "Filter added to user " + username + " subscription " + filter);
         }
     }
 
