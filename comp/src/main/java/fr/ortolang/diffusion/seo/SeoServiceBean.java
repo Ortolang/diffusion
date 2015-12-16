@@ -119,8 +119,12 @@ public class SeoServiceBean implements SeoService {
 
         String marketServerUrl = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL);
 
-        generateMarketSectionEntries(urlset, doc, marketServerUrl);
-        generateWorkspacesEntries(urlset, doc, marketServerUrl);
+        // TODO Remove fake sitemap code
+//        generateMarketSectionEntries(urlset, doc, marketServerUrl);
+//        generateWorkspacesEntries(urlset, doc, marketServerUrl);
+        String loc = marketServerUrl + "market/corpora/scienceshumaines";
+        Element url = buildSiteMapEntry(loc, null, ChangeFrequency.ALWAYS, "0.8", doc);
+        urlset.appendChild(url);
 
         doc.appendChild(urlset);
 
