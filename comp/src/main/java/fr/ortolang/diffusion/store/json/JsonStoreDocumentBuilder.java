@@ -20,10 +20,6 @@ public class JsonStoreDocumentBuilder {
     public static final String META_PROPERTY = "meta";
     public static final String LAST_MODIFICATION_DATE_PROPERTY = "lastModificationDate";
 
-    public static ODocument buildDocument(OrtolangIndexableObject<IndexableJsonContent> object) {
-        return buildDocument(object, null);
-    }
-
     public static ODocument buildDocument(OrtolangIndexableObject<IndexableJsonContent> object, ODocument oldDoc) {
 
         ODocument doc = null;
@@ -40,7 +36,7 @@ public class JsonStoreDocumentBuilder {
         if (object.getContent() != null && object.getContent().getStream() != null) {
             for (Map.Entry<String, InputStream> entry : object.getContent().getStream().entrySet()) {
                 try {
-                    doc.field(META_PROPERTY + "_" + entry.getKey(), new ODocument(MetadataObject.OBJECT_TYPE).fromJSON(entry.getValue()));
+                	doc.field(META_PROPERTY + "_" + entry.getKey(), new ODocument(MetadataObject.OBJECT_TYPE).fromJSON(entry.getValue()));
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "unable to get object json content", e);
                 } finally {
