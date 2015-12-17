@@ -36,6 +36,9 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
+import fr.ortolang.diffusion.runtime.RuntimeServiceException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+
 import javax.ejb.EJB;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -58,7 +61,7 @@ public class SubscriptionResource {
 	}
 
 	@GET
-	public Response addDefaultFilter() throws SubscriptionServiceException {
+	public Response addDefaultFilter() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException {
 		LOGGER.log(Level.INFO, "GET /subscription");
 		subscription.addDefaultFilters();
 		return Response.ok().build();

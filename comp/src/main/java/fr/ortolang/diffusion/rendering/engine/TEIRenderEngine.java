@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.viewer.engine;
+package fr.ortolang.diffusion.rendering.engine;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,17 +19,17 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import fr.ortolang.diffusion.viewer.ViewerEngine;
+import fr.ortolang.diffusion.rendering.RenderEngine;
 
-public class XmlViewer implements ViewerEngine {
+public class TEIRenderEngine implements RenderEngine {
 
-    private static final Logger LOGGER = Logger.getLogger(XmlViewer.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(TEIRenderEngine.class.getName());
     private static final List<String> SUPPORTED_MIME_TYPES = Arrays.asList("application/xml");
     private static final String ID = "xml";
 
     private TransformerFactory tFactory;
 
-    public XmlViewer() {
+    public TEIRenderEngine() {
         tFactory = TransformerFactory.newInstance();
     }
 
@@ -49,9 +49,9 @@ public class XmlViewer implements ViewerEngine {
     @Override
     public String getDescription(Locale locale) {
         if (locale.equals(Locale.ENGLISH)) {
-            return "This viewer engine is able to apply xsl stylsheet included in xml processing instructions using Xalan XSLT 2 processor.";
+            return "This viewer engine is able to apply the TEI BoilerPlate xsl stylsheet to an XML document.";
         }
-        return "Ce moteur de transformation est capable d'appliquer une feuille de style xsl inclue dans les instructions de traitement d'un fichier xml ; il utilise le moteur de transformation XSLT 2 Xalan.";
+        return "Ce moteur de transformation est capable d'appliquer la feuille de style xsl de TEI BoilerPlate à un document XML.";
     }
 
     @Override
@@ -67,6 +67,7 @@ public class XmlViewer implements ViewerEngine {
         try (InputStream is = Files.newInputStream(input); OutputStream os = Files.newOutputStream(output, StandardOpenOption.WRITE)) {
             LOGGER.log(Level.FINE, "Starting XSLT rendering");
             String media = null, title = null, charset = null;
+            //TODO load TEIBoilerPlate online Stylesheet
             Source stylesheet = tFactory.getAssociatedStylesheet(new StreamSource(is), media, title, charset);
             Transformer transformer = tFactory.newTransformer(stylesheet);
             transformer.transform(new StreamSource(is), new StreamResult(os));

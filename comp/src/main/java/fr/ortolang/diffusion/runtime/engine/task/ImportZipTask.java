@@ -80,15 +80,17 @@ public class ImportZipTask extends RuntimeEngineTask {
             boolean ignore;
             boolean needcommit;
             long tscommit = System.currentTimeMillis();
+            int cpt = 0, progress = 0;
             for (Enumeration<? extends ZipEntry> e = zip.entries(); e.hasMoreElements();) {
                 ZipEntry entry = e.nextElement();
                 LOGGER.log(Level.FINE, " zip entry found: " + entry.getName());
+                cpt++;
                 needcommit = false;
                 ignore = false;
                 try {
                     for (Pattern pattern : IGNORED_FILES) {
                         if (pattern.matcher(entry.getName()).matches()) {
-                            LOGGER.log(Level.FINEST, "Zip entry ignored");
+                            LOGGER.log(Level.FINEST, "Zip entry ignored: " + entry.getName());
                             ignore = true;
                             break;
                         }
@@ -149,6 +151,11 @@ public class ImportZipTask extends RuntimeEngineTask {
                     partial = true;
                     report.append("[ERROR] unexpected error: " + e2.getMessage() + "\r\n");
                 }
+                if ( (cpt * 100) / zip.size() > 10 ) {
+                    progress += cpt;
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityProgressEvent(execution.getProcessBusinessKey(), getTaskName(), "extracting files...", (progress*100)/zip.size()));
+                    cpt = 0;
+                }
                 if ( System.currentTimeMillis() - tscommit > 300000 ) {
                     LOGGER.log(Level.FINE, "current transaction exceed 5min, need commit.");
                     needcommit = true;
@@ -166,7 +173,10 @@ public class ImportZipTask extends RuntimeEngineTask {
             }
             zip.close();
             if ( partial ) {
+                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityProgressEvent(execution.getProcessBusinessKey(), getTaskName(), "some files have not been extracted", 100));
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some objects has not been imported (see trace for detail)"));
+            } else {
+                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityProgressEvent(execution.getProcessBusinessKey(), getTaskName(), "all files extracted", 100));
             }
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import Zip content done"));
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), report.toString(), null));

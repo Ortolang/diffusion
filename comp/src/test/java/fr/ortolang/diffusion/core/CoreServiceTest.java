@@ -116,6 +116,8 @@ public class CoreServiceTest {
 		jar.addPackage("fr.ortolang.diffusion.security.authorisation.entity");
 		jar.addPackage("fr.ortolang.diffusion.store.binary");
 		jar.addPackage("fr.ortolang.diffusion.store.binary.hash");
+		jar.addPackage("fr.ortolang.diffusion.store.handle");
+		jar.addPackage("fr.ortolang.diffusion.store.handle.entity");
 		jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
 		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreServiceException");
 		jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");

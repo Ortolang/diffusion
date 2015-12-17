@@ -5,10 +5,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,13 +13,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
-import javax.ejb.Local;
-import javax.ejb.Lock;
-import javax.ejb.LockType;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
+import javax.ejb.*;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -50,71 +41,82 @@ import fr.ortolang.diffusion.OrtolangObjectSize;
 @PermitAll
 public class JsonStoreServiceBean implements JsonStoreService {
 
-	private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceBean.class.getName());
-	public static final String DEFAULT_JSON_HOME = "/json-store";
-	
-	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceBean.class.getName());
+    public static final String DEFAULT_JSON_HOME = "/json-store";
+
+    private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
+
     private Path base;
-	private OServer server;
-	private OPartitionedDatabasePool pool;
-	
-	public JsonStoreServiceBean() {
-		LOGGER.log(Level.FINE, "Instantiating json store service");
-		this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_JSON_HOME);
-	}
+    private OServer server;
+    private OPartitionedDatabasePool pool;
 
-	public Path getBase() {
-		return base;
-	}
+    public JsonStoreServiceBean() {
+        LOGGER.log(Level.FINE, "Instantiating json store service");
+        this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_JSON_HOME);
+    }
 
-	@PostConstruct
-	public void init() {
-		LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
-		try {
-			Files.createDirectories(base);
-			server = OServerMain.create();
-			server.startup(this.getClass().getResourceAsStream("/orientdb-config.xml"));
-			server.activate();
-			try (ODatabaseDocumentTx db = new ODatabaseDocumentTx("plocal:" + this.base.toFile().getAbsolutePath())) {
-				if (!db.exists()) {
-					db.create();
-					db.command(new OCommandSQL("CREATE INDEX ortolangKey unique string")).execute();
-				}
-			}
-			pool = new OPartitionedDatabasePool("plocal:" + this.base.toFile().getAbsolutePath(), "admin", "admin");
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to initialize json store", e);
-		}
-	}
+    public Path getBase() {
+        return base;
+    }
 
-	@PreDestroy
-	public void shutdown() {
-		LOGGER.log(Level.INFO, "Shutting down json store");
-		try {
-			pool.close();
-			server.shutdown();
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to shutdown json store", e);
-		}
-	}
+    @PostConstruct
+    public void init() {
+        LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
+        try {
+            Files.createDirectories(base);
+            server = OServerMain.create();
+            server.startup(this.getClass().getResourceAsStream("/orientdb-config.xml"));
+            server.activate();
+            try (ODatabaseDocumentTx db = new ODatabaseDocumentTx("plocal:" + this.base.toFile().getAbsolutePath())) {
+                if (!db.exists()) {
+                    db.create();
+                    db.command(new OCommandSQL("CREATE INDEX ortolangKey unique string")).execute();
+                }
+            }
+            pool = new OPartitionedDatabasePool("plocal:" + this.base.toFile().getAbsolutePath(), "admin", "admin");
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to initialize json store", e);
+        }
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> search(String query) throws JsonStoreServiceException {
-		List<String> jsonResults = new ArrayList<String>();
-		try (ODatabaseDocumentTx db = pool.acquire()) {
-			List<ODocument> results = db.query(new OSQLSynchQuery<ODocument>(query));
-			for (ODocument doc : results) {
-				jsonResults.add(doc.toJSON());
-			}
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "query failed in json store : " + e.getMessage());
-			throw new JsonStoreServiceException(e.getMessage());
-		}
-		return jsonResults;
-	}
+    @PreDestroy
+    public void shutdown() {
+        LOGGER.log(Level.INFO, "Shutting down json store");
+        try {
+            pool.close();
+            server.shutdown();
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to shutdown json store", e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<String> search(String query) throws JsonStoreServiceException {
+        List<String> jsonResults = new ArrayList<String>();
+        try (ODatabaseDocumentTx db = pool.acquire()) {
+            List<ODocument> results = db.query(new OSQLSynchQuery<ODocument>(query));
+            for (ODocument doc : results) {
+                jsonResults.add(doc.toJSON());
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "query failed in json store : " + e.getMessage());
+            throw new JsonStoreServiceException(e.getMessage());
+        }
+        return jsonResults;
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<ODocument> systemSearch(String query) throws JsonStoreServiceException {
+        try (ODatabaseDocumentTx db = pool.acquire()) {
+            return db.query(new OSQLSynchQuery<ODocument>(query));
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "query failed in json store : " + e.getMessage());
+            throw new JsonStoreServiceException(e.getMessage());
+        }
+    }
 
 	@Override
 	@Lock(LockType.WRITE)
@@ -144,52 +146,52 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		}
 	}
 
-	@Override
-	@Lock(LockType.WRITE)
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void remove(String key) throws JsonStoreServiceException {
-		LOGGER.log(Level.FINE, "Removing object with key: " + key);
-		try (ODatabaseDocumentTx db = pool.acquire()) {
-			ODocument oldDoc = getDocumentByKey(key);
-			if (oldDoc != null) {
-				oldDoc.delete();
-			}
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to remove object ", e);
-		}
-	}
-	
-	@Override
+    @Override
     @Lock(LockType.WRITE)
-	@RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void remove(String key) throws JsonStoreServiceException {
+        LOGGER.log(Level.FINE, "Removing object with key: " + key);
+        try (ODatabaseDocumentTx db = pool.acquire()) {
+            ODocument oldDoc = getDocumentByKey(key);
+            if (oldDoc != null) {
+                oldDoc.delete();
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to remove object ", e);
+        }
+    }
+
+    @Override
+    @Lock(LockType.WRITE)
+    @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void systemInsertDocument(String type, InputStream document) throws JsonStoreServiceException {
         LOGGER.log(Level.FINE, "Importing document type " + type);
-		try (ODatabaseDocumentTx db = pool.acquire()) {
-			ODocument doc = new ODocument(type).fromJSON(document);
-			db.save(doc);
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "unable to import document", e);
-		}
+        try (ODatabaseDocumentTx db = pool.acquire()) {
+            ODocument doc = new ODocument(type).fromJSON(document);
+            db.save(doc);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "unable to import document", e);
+        }
     }
-	
-	@Override
+
+    @Override
     @Lock(LockType.WRITE)
-	@RolesAllowed("admin")
+    @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void systemInsertDocument(String type, String document) throws JsonStoreServiceException {
         LOGGER.log(Level.FINE, "Importing document type " + type);
-		try (ODatabaseDocumentTx db = pool.acquire()) {
-			ODocument doc = new ODocument(type).fromJSON(document);
-			db.save(doc);
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "unable to import document", e);
-		}
+        try (ODatabaseDocumentTx db = pool.acquire()) {
+            ODocument doc = new ODocument(type).fromJSON(document);
+            db.save(doc);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "unable to import document", e);
+        }
     }
-    
+
     @Override
-	@RolesAllowed("admin")
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    @RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public String systemGetDocument(String key) throws JsonStoreServiceException {
         String json = getJSONByKey(key);
         if ( json != null ) {
@@ -197,14 +199,14 @@ public class JsonStoreServiceBean implements JsonStoreService {
         }
         return null;
     }
-    
+
     //Service methods
-    
+
     @Override
     public String getServiceName() {
         return JsonStoreService.SERVICE_NAME;
     }
-    
+
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {
@@ -218,13 +220,13 @@ public class JsonStoreServiceBean implements JsonStoreService {
         } catch ( Exception e ) {
             //
         }
-	    try (ODatabaseDocumentTx db = pool.acquire()) {
-		    infos.put(INFO_DB_NAME, db.getName());
-		    infos.put(INFO_DB_SIZE, Long.toString(db.getSize()));
-		    infos.put(INFO_DB_STATUS, db.getStatus().toString());
-	    } catch (Exception e) {
-		    //
-	    }
+        try (ODatabaseDocumentTx db = pool.acquire()) {
+            infos.put(INFO_DB_NAME, db.getName());
+            infos.put(INFO_DB_SIZE, Long.toString(db.getSize()));
+            infos.put(INFO_DB_STATUS, db.getStatus().toString());
+        } catch (Exception e) {
+            //
+        }
         return infos;
     }
 
@@ -247,27 +249,27 @@ public class JsonStoreServiceBean implements JsonStoreService {
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");
     }
-	
-	protected ODocument getDocumentByKey(String key) {
-		try (ODatabaseDocumentTx db = pool.acquire()) {
-			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
-			OIdentifiable ident = (OIdentifiable) ortolangKeyIdx.get(key);
-			if (ident != null) {
-				return (ODocument) ident.getRecord();
-			}
-		}
-		return null;
-	}
 
-	protected String getJSONByKey(String key) {
-		try (ODatabaseDocumentTx db = pool.acquire()) {
-			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
-			OIdentifiable ident = (OIdentifiable) ortolangKeyIdx.get(key);
-			if (ident != null) {
-				ODocument document = ident.getRecord();
-				return document.toJSON("fetchPlan:*:-1");
-			}
-		}
+    protected ODocument getDocumentByKey(String key) {
+        try (ODatabaseDocumentTx db = pool.acquire()) {
+            OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
+            OIdentifiable ident = (OIdentifiable) ortolangKeyIdx.get(key);
+            if (ident != null) {
+                return (ODocument) ident.getRecord();
+            }
+        }
+        return null;
+    }
+
+    protected String getJSONByKey(String key) {
+        try (ODatabaseDocumentTx db = pool.acquire()) {
+            OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
+            OIdentifiable ident = (OIdentifiable) ortolangKeyIdx.get(key);
+            if (ident != null) {
+                ODocument document = ident.getRecord();
+                return document.toJSON("fetchPlan:*:-1");
+            }
+        }
         return null;
     }
 
@@ -288,8 +290,8 @@ public class JsonStoreServiceBean implements JsonStoreService {
 	private long getStoreSize() throws IOException {
 		return Files.walk(base).mapToLong(this::size).sum();
     }
-    
-	private long size(Path p) {
+
+    private long size(Path p) {
         try {
             return Files.size(p);
         } catch ( Exception e ) {

@@ -40,9 +40,10 @@ import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.event.entity.Event;
+import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.entity.Process;
-
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.security.PermitAll;
@@ -51,7 +52,6 @@ import javax.ejb.EJB;
 import javax.ejb.MessageDriven;
 import javax.jms.Message;
 import javax.jms.MessageListener;
-
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
@@ -68,7 +68,9 @@ public class AtmosphereListenerBean implements MessageListener {
 
     private static final Logger LOGGER = Logger.getLogger(AtmosphereListenerBean.class.getName());
 
-    private static final String PROCESS_UPDATE_STATE_TYPE = buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "update-state");
+    private static final String PROCESS_CHANGE_STATE_TYPE = buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "change-state");
+    private static final String PROCESS_CREATE_TYPE = buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "create");
+    private static final String MEMBERSHIP_GROUP_ADD_MEMBER_TYPE = buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "add-member");
     private static final String WORKSPACE_DELETE_TYPE = buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "delete");
 
     @EJB
@@ -80,7 +82,21 @@ public class AtmosphereListenerBean implements MessageListener {
         try {
             Event event = new Event();
             event.fromJMSMessage(message);
-           for (Map.Entry<String, Subscription> subscriptionRegistryEntry : subscription.getSubscriptions().entrySet()) {
+
+            if (event.getType().equals(PROCESS_CREATE_TYPE)) {
+                if (subscription.getSubscriptions().containsKey(event.getThrowedBy())) {
+                    LOGGER.log(Level.FINE, "Process created by user " + event.getThrowedBy() + "; adding filter to follow process events");
+                    subscription.getSubscriptions().get(event.getThrowedBy()).addFilter(new Filter(SubscriptionService.RUNTIME_PROCESS_PATTERN, event.getFromObject(), null));
+                }
+            } else if (event.getType().equals(MEMBERSHIP_GROUP_ADD_MEMBER_TYPE)) {
+                Map<String, String> arguments = event.getArguments();
+                if (arguments.containsKey("member") && subscription.getSubscriptions().containsKey(arguments.get("member"))) {
+                    LOGGER.log(Level.FINE, "User " + arguments.get("member") + " added to group " + event.getFromObject() + "; adding filter to follow group events");
+                    subscription.getSubscriptions().get(arguments.get("member")).addFilter(new Filter(SubscriptionService.MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN, event.getFromObject(), null));
+                }
+            }
+
+            for (Map.Entry<String, Subscription> subscriptionRegistryEntry : subscription.getSubscriptions().entrySet()) {
                 Iterator<Filter> iterator = subscriptionRegistryEntry.getValue().getFilters().iterator();
                 while (iterator.hasNext()) {
                     Filter filter = iterator.next();
@@ -102,8 +118,8 @@ public class AtmosphereListenerBean implements MessageListener {
     }
 
     private boolean hasToBeRemoved(Filter filter, Event event) {
-        if (event.getType().equals(PROCESS_UPDATE_STATE_TYPE)) {
-            if (event.getArguments().containsKey("state") && event.getArguments().get("state").equals(Process.State.COMPLETED)) {
+        if (event.getType().equals(PROCESS_CHANGE_STATE_TYPE)) {
+            if (event.getArguments().containsKey("state") && event.getArguments().get("state").equals(Process.State.COMPLETED.name())) {
                 return true;
             }
         } else if (event.getType().equals(WORKSPACE_DELETE_TYPE)) {

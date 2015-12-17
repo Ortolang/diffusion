@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.subscription;
+package fr.ortolang.diffusion.seo;
 
 /*
  * #%L
@@ -36,35 +36,17 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import java.util.Map;
-
-import fr.ortolang.diffusion.runtime.RuntimeServiceException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.Broadcaster;
-
 import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 
-public interface SubscriptionService extends OrtolangService {
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 
-    public static final String SERVICE_NAME = "subscription";
+public interface SeoService extends OrtolangService {
 
-    String MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN = "membership\\.group\\.add-member";
+    String SERVICE_NAME = "seo";
 
-    String RUNTIME_PROCESS_PATTERN = "runtime\\.process\\.(?:change-state|update-activity)";
+    String INFO_SITEMAP_ENTRIES_ALL = "sitemap.entries.all";
 
-    public Broadcaster getBroadcaster(String username);
-
-    public void registerBroadcaster(String username, AtmosphereResource atmosphereResource);
-
-    public void addFilter(String username, Filter filter) throws SubscriptionServiceException;
-
-    public void removeFilter(String username, Filter filter);
-
-    public void addDefaultFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException;
-
-    public void addAdminFilters() throws SubscriptionServiceException;
-
-    public Map<String, Subscription> getSubscriptions();
-
+    String generateSiteMap() throws JsonStoreServiceException, ParserConfigurationException, TransformerException, SeoServiceException;
 }

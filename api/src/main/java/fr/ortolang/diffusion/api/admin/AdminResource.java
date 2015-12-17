@@ -36,6 +36,7 @@ import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.index.IndexStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
@@ -53,6 +54,8 @@ public class AdminResource {
     private JsonStoreService json;
     @EJB
     private IndexStoreService index;
+    @EJB
+    private HandleStoreService handle;
     @EJB
     private RegistryService registry;
     @EJB
@@ -125,11 +128,19 @@ public class AdminResource {
         List<HumanTaskRepresentation> entries = runtime.systemListTasks().stream().map(HumanTaskRepresentation::fromHumanTask).collect(Collectors.toCollection(ArrayList::new));
         return Response.ok(entries).build();
     }
+    
+    @GET
+    @Path("/handles")
+    public Response listAllHandles(@QueryParam("o") int offset, @QueryParam("l") int limit, @QueryParam("filter") String filter) throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "GET /admin/handles");
+        List<HumanTaskRepresentation> entries = runtime.systemListTasks().stream().map(HumanTaskRepresentation::fromHumanTask).collect(Collectors.toCollection(ArrayList::new));
+        return Response.ok(entries).build();
+    }
 
     @GET
-    @Path("/json/documents/{key}")
+    @Path("/json/{key}")
     public Response getJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/json/documents/" + key);
+        LOGGER.log(Level.INFO, "GET /admin/json/" + key);
         String document = json.systemGetDocument(key);
         return Response.ok(document).build();
     }

@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.subscription;
+package fr.ortolang.diffusion.api.seo;
 
 /*
  * #%L
@@ -36,35 +36,38 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import java.util.Map;
-
-import fr.ortolang.diffusion.runtime.RuntimeServiceException;
+import fr.ortolang.diffusion.event.EventServiceException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.Broadcaster;
+import fr.ortolang.diffusion.seo.SeoService;
+import fr.ortolang.diffusion.seo.SeoServiceException;
+import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 
-import fr.ortolang.diffusion.OrtolangService;
+import javax.ejb.EJB;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Response;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public interface SubscriptionService extends OrtolangService {
+@Path("/seo")
+public class SeoResource {
 
-    public static final String SERVICE_NAME = "subscription";
+    private static final Logger LOGGER = Logger.getLogger(SeoResource.class.getName());
 
-    String MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN = "membership\\.group\\.add-member";
+    @EJB
+    private SeoService seo;
 
-    String RUNTIME_PROCESS_PATTERN = "runtime\\.process\\.(?:change-state|update-activity)";
-
-    public Broadcaster getBroadcaster(String username);
-
-    public void registerBroadcaster(String username, AtmosphereResource atmosphereResource);
-
-    public void addFilter(String username, Filter filter) throws SubscriptionServiceException;
-
-    public void removeFilter(String username, Filter filter);
-
-    public void addDefaultFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException;
-
-    public void addAdminFilters() throws SubscriptionServiceException;
-
-    public Map<String, Subscription> getSubscriptions();
-
+    @GET
+    @Produces("application/xml")
+    @Path("/sitemap")
+    public Response getEventFeed()
+            throws KeyNotFoundException, AccessDeniedException, EventServiceException, JsonStoreServiceException, TransformerException, ParserConfigurationException, SeoServiceException {
+        LOGGER.log(Level.INFO, "GET /sitemap/");
+        String siteMap = seo.generateSiteMap();
+        return Response.ok(siteMap).build();
+    }
 }

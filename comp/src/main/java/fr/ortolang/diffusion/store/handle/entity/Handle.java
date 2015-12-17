@@ -16,9 +16,10 @@ import org.hibernate.annotations.Type;
 
 @Entity
 @IdClass(HandlePK.class)
-@Table(name = "handles", indexes = { @Index(columnList = "handle, data") })
+@Table(name = "handles", indexes = { @Index(columnList = "handle, key") })
 @NamedQueries({ 
 	@NamedQuery(name = "findHandleByName", query = "SELECT h FROM Handle h WHERE h.handle = :name"),
+	@NamedQuery(name = "searchHandleByName", query = "SELECT h FROM Handle h WHERE h.handle LIKE :name"),
 	@NamedQuery(name = "findHandleNameForKey", query = "SELECT DISTINCT(h.handle) FROM Handle h WHERE h.key = :key"),
 	@NamedQuery(name = "countHandles", query = "SELECT COUNT(h) FROM Handle h GROUP BY h.handle")})
 @SuppressWarnings("serial")

@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.api.viewer;
+package fr.ortolang.diffusion.api.rendering;
 
 import java.io.File;
 import java.util.Date;
@@ -32,22 +32,22 @@ import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.rendering.RenderingService;
+import fr.ortolang.diffusion.rendering.RenderingServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.thumbnail.ThumbnailServiceException;
-import fr.ortolang.diffusion.viewer.ViewerService;
-import fr.ortolang.diffusion.viewer.ViewerServiceException;
 
-@Path("/viewer")
+@Path("/render")
 @Produces({ MediaType.TEXT_HTML })
-public class ViewerResource {
+public class RenderingResource {
     
-    private static final Logger LOGGER = Logger.getLogger(ViewerResource.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(RenderingResource.class.getName());
     
     @EJB
     private BrowserService browser;
     @EJB
-    private ViewerService viewer;
+    private RenderingService render;
     @Context
     private UriInfo uriInfo;
     
@@ -55,8 +55,8 @@ public class ViewerResource {
     @Path("/key/{key}")
     @Produces({ MediaType.TEXT_HTML })
     public Response getView(@PathParam(value = "key") String key, @QueryParam("engine") String engine, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security,
-            @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, ThumbnailServiceException, ViewerServiceException, CoreServiceException, BinaryStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /viewer/key/" + key);
+            @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, ThumbnailServiceException, RenderingServiceException, CoreServiceException, BinaryStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /render/key/" + key);
         try {
             OrtolangObjectState state = browser.getState(key);
             CacheControl cc = new CacheControl();
@@ -74,12 +74,7 @@ public class ViewerResource {
                 builder = request.evaluatePreconditions(lmd);
             }
             if (builder == null) {
-                File view;
-                if (engine != null && engine.length() > 0) {
-                    view = viewer.getView(key, engine);
-                } else {
-                    view = viewer.getView(key);
-                }
+                File view = render.getView(key, engine);
                 builder = Response.ok(view).header("Content-Type", MediaType.TEXT_HTML_TYPE);
                 builder.lastModified(lmd);
             }

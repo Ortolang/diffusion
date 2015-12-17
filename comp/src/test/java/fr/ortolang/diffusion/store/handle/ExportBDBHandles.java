@@ -1,7 +1,10 @@
 package fr.ortolang.diffusion.store.handle;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Enumeration;
 
 import net.handle.hdllib.Encoder;
@@ -37,7 +40,7 @@ public class ExportBDBHandles {
 		envConfig.setReadOnly(false);
 		envConfig.setAllowCreate(true);
 		envConfig.setSharedCache(true);
-		env = new Environment(new File("/var/hs/sldr/bdbje"), envConfig);
+		env = new Environment(new File("/media/space/jerome/Data/SLDR/bdbje"), envConfig);
 		nasDB = new DBWrapper(env, "nas");
 		handlesDB = new DBWrapper(env, "handles");
 	}
@@ -51,21 +54,32 @@ public class ExportBDBHandles {
 
 	@Test
 	public void export() throws HandleException {
-		this.scanHandles(new ScanCallback() {
-			int cpt = 0; 
-			@Override
-			public void scanHandle(byte[] handle) throws HandleException {
-				cpt++;
-				System.out.println(cpt + " " + Util.decodeString(handle));
-				byte[][] rawvalues = getRawHandleValues(handle, null, null);
-				for (int i=0; i<rawvalues.length; i++) {
-					HandleValue value = new HandleValue();
-					Encoder.decodeHandleValue(rawvalues[i], 0, value);
-					System.out.println(value.toDetailedString());
-				}
-			}
-		});
-		
+	    try (BufferedWriter writer = Files.newBufferedWriter(Paths.get("/home/jerome/sldr_handles.json"))) {
+	        writer.append("[");
+    	    this.scanHandles(new ScanCallback() {
+    			@Override
+    			public void scanHandle(byte[] handle) throws HandleException {
+    				byte[][] rawvalues = getRawHandleValues(handle, null, null);
+    				for (int i=0; i<rawvalues.length; i++) {
+    					HandleValue value = new HandleValue();
+    					Encoder.decodeHandleValue(rawvalues[i], 0, value);
+    					if ( value.getTypeAsString().equals("URL") ) {
+    					    try {
+                                writer.write("{\"handle\":\"" + Util.decodeString(handle) + "\",");
+                                writer.write("\"url\":\"" + value.getDataAsString() + "\"}");
+                                writer.write(",\r\n");
+                            } catch (IOException e) {
+                                System.err.println("Error during exporting handles: " + e.getMessage());
+                            }
+    					}
+    				}
+    			}
+    		});
+    	    writer.append("]");
+    	    writer.flush();
+	    } catch ( IOException e ) {
+	        System.err.println("Error during exporting handles: " + e.getMessage());
+	    }
 	}
 
 	private final void scanHandles(ScanCallback callback) throws HandleException {

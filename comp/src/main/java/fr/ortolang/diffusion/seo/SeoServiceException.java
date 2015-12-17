@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.subscription;
+package fr.ortolang.diffusion.seo;
 
 /*
  * #%L
@@ -36,35 +36,25 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import java.util.Map;
+public class SeoServiceException extends Exception {
 
-import fr.ortolang.diffusion.runtime.RuntimeServiceException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.Broadcaster;
+    public SeoServiceException() {
+        super();
+    }
 
-import fr.ortolang.diffusion.OrtolangService;
+    public SeoServiceException(String message) {
+        super(message);
+    }
 
-public interface SubscriptionService extends OrtolangService {
+    public SeoServiceException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-    public static final String SERVICE_NAME = "subscription";
+    public SeoServiceException(Throwable cause) {
+        super(cause);
+    }
 
-    String MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN = "membership\\.group\\.add-member";
-
-    String RUNTIME_PROCESS_PATTERN = "runtime\\.process\\.(?:change-state|update-activity)";
-
-    public Broadcaster getBroadcaster(String username);
-
-    public void registerBroadcaster(String username, AtmosphereResource atmosphereResource);
-
-    public void addFilter(String username, Filter filter) throws SubscriptionServiceException;
-
-    public void removeFilter(String username, Filter filter);
-
-    public void addDefaultFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException;
-
-    public void addAdminFilters() throws SubscriptionServiceException;
-
-    public Map<String, Subscription> getSubscriptions();
-
+    protected SeoServiceException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

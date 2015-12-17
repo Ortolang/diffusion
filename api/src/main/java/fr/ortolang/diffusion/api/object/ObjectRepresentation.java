@@ -36,8 +36,7 @@ package fr.ortolang.diffusion.api.object;
  * #L%
  */
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -65,12 +64,14 @@ public class ObjectRepresentation {
 	private String owner;
 	private Map<String, List<String>> permissions;
 	private List<OrtolangObjectVersion> history;
+	private List<String> handles;
 	private OrtolangObject object;
 
 	public ObjectRepresentation() {
-		properties = new HashMap<String, String>();
-		permissions = new HashMap<String, List<String>>();
-		history = new ArrayList<OrtolangObjectVersion>();
+		properties = Collections.emptyMap();
+		permissions = Collections.emptyMap();
+		history = Collections.emptyList();
+		handles = Collections.emptyList();
 	}
 
 	public String getKey() {
@@ -192,5 +193,13 @@ public class ObjectRepresentation {
 	public void setHistory(List<OrtolangObjectVersion> history) {
 		this.history = history;
 	}
+
+    public List<String> getHandles() {
+        return handles;
+    }
+
+    public void setHandles(List<String> handles) {
+        this.handles = handles;
+    }
 	
 }
