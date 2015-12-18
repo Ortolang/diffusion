@@ -914,8 +914,9 @@ public class CoreServiceBean implements CoreService {
             String root = workspace.findSnapshotByName(snapshot).getKey();
 
             Set<OrtolangObjectPid> pids = new HashSet<OrtolangObjectPid>();
-            String targetBase = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL) + OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_CONTENT);
-            buildPidList(workspace.getAlias(), tag, root, pids, PathBuilder.newInstance(), targetBase);
+            String apiBase = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL) + OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_CONTENT);
+            String marketBase = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL) + "#/market/item";
+            buildPidList(workspace.getAlias(), tag, root, pids, PathBuilder.newInstance(), apiBase, marketBase);
             return pids;
         } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException | InvalidPathException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during building workspace pid list", e);
@@ -924,11 +925,16 @@ public class CoreServiceBean implements CoreService {
     }
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    private void buildPidList(String wsalias, String tag, String key, Set<OrtolangObjectPid> pids, PathBuilder path, String targetBase) throws CoreServiceException, KeyNotFoundException,
+    private void buildPidList(String wsalias, String tag, String key, Set<OrtolangObjectPid> pids, PathBuilder path, String apiBase, String marketBase) throws CoreServiceException, KeyNotFoundException,
             AccessDeniedException, OrtolangException, InvalidPathException {
-        Object object = findObject(key);
+        OrtolangObject object = findObject(key);
         LOGGER.log(Level.FINE, "Generating default pid for key: " + key);
-        String target = targetBase + "/" + wsalias + "/" + tag + path.build();
+        String target;
+        if ( path.isRoot() ) {
+            target = marketBase + "/" + wsalias + "/" + tag;
+        } else {
+            target = apiBase + "/" + wsalias + "/" + tag + path.build();
+        }
         String dynHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + path.build();
         String staticHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + "/" + tag + path.build();
         pids.add(new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, dynHandle, key, target));
@@ -946,7 +952,7 @@ public class CoreServiceBean implements CoreService {
                         for (int i = 0; i < jpids.size(); i++) {
                             JsonObject jpid = jpids.getJsonObject(i);
                             LOGGER.log(Level.FINE, "Generating metadata based pid for key: " + key);
-                            String ctarget = targetBase + "/" + wsalias + "/" + tag + ((path.isRoot())?"":path.build());
+                            String ctarget = apiBase + "/" + wsalias + "/" + tag + ((path.isRoot())?"":path.build());
                             pids.add(new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, jpid.getString("value"), key, ctarget));
                         }
                     }
@@ -956,9 +962,9 @@ public class CoreServiceBean implements CoreService {
                 }
             }
         }
-        if (object instanceof Collection) {
+        if (object.getObjectIdentifier().getType().equals(Collection.OBJECT_TYPE)) {
             for (CollectionElement element : ((Collection) object).getElements()) {
-                buildPidList(wsalias, tag, element.getKey(), pids, path.clone().path(element.getName()), targetBase);
+                buildPidList(wsalias, tag, element.getKey(), pids, path.clone().path(element.getName()), apiBase, marketBase);
             }
         }
     }

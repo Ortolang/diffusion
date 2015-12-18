@@ -171,6 +171,10 @@ public class BootstrapServiceBean implements BootstrapService {
                 LOGGER.log(Level.FINE, "creating esr group");
                 membership.createGroup(MembershipService.ESR_GROUP_KEY, "ESR Members", "People from Superior Teaching and Research Group");
                 authorisation.setPolicyRules(MembershipService.ESR_GROUP_KEY, anonReadRules);
+                
+                LOGGER.log(Level.FINE, "creating admins group");
+                membership.createGroup(MembershipService.ADMIN_GROUP_KEY, "Administrators", "Administrators of the platform");
+                authorisation.setPolicyRules(MembershipService.ADMIN_GROUP_KEY, anonReadRules);
 
                 LOGGER.log(Level.FINE, "create system workspace");
                 core.createWorkspace(BootstrapService.WORKSPACE_KEY, "system", "System Workspace", WorkspaceType.SYSTEM.toString());

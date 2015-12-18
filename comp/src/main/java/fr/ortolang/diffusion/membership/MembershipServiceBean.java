@@ -172,6 +172,12 @@ public class MembershipServiceBean implements MembershipService {
                     subjects.add(MembershipService.UNAUTHENTIFIED_IDENTIFIER);
                     subjects.add(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY);
                 }
+                if (ctx.isCallerInRole(MembershipService.ADMIN_GROUP_KEY)) {
+                    subjects.add(MembershipService.ADMIN_GROUP_KEY);
+                }
+                if (ctx.isCallerInRole(MembershipService.ESR_GROUP_KEY)) {
+                    subjects.add(MembershipService.ESR_GROUP_KEY);
+                }
                 subjects.addAll(Arrays.asList(groups));
             }
 
