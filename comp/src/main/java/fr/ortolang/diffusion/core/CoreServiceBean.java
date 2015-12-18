@@ -2861,7 +2861,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public String createMetadataFormat(String name, String description, String schema, String form, boolean validationNeeded) throws CoreServiceException {
+    public String createMetadataFormat(String name, String description, String schema, String form, boolean validationNeeded, boolean indexable) throws CoreServiceException {
         LOGGER.log(Level.FINE, "creating metadataformat with name [" + name + "]");
         try {
             MetadataFormat newmdf = new MetadataFormat();
@@ -2869,6 +2869,7 @@ public class CoreServiceBean implements CoreService {
             newmdf.setDescription(description);
             newmdf.setForm(form);
             newmdf.setValidationNeeded(validationNeeded);
+            newmdf.setIndexable(indexable);
             if (schema != null && schema.length() > 0) {
                 newmdf.setSize(binarystore.size(schema));
                 newmdf.setMimeType(binarystore.type(schema));
@@ -3186,8 +3187,13 @@ public class CoreServiceBean implements CoreService {
                     if (metadata == null) {
                         throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
                     }
+                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
+                    if (format == null) {
+                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
+                        break;
+                    }
                     try {
-                        if (metadata.getStream() != null && metadata.getStream().length() > 0) {
+                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
                             content.addContentPart(binarystore.extract(metadata.getStream()));
                         }
                     } catch (DataNotFoundException | BinaryStoreServiceException e) {
@@ -3209,8 +3215,13 @@ public class CoreServiceBean implements CoreService {
                     if (metadata == null) {
                         throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
                     }
+                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
+                    if (format == null) {
+                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
+                        break;
+                    }
                     try {
-                        if (metadata.getStream() != null && metadata.getStream().length() > 0) {
+                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
                             content.addContentPart(binarystore.extract(metadata.getStream()));
                         }
                     } catch (DataNotFoundException | BinaryStoreServiceException e) {
@@ -3232,8 +3243,13 @@ public class CoreServiceBean implements CoreService {
                     if (metadata == null) {
                         throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
                     }
+                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
+                    if (format == null) {
+                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
+                        break;
+                    }
                     try {
-                        if (metadata.getStream() != null && metadata.getStream().length() > 0) {
+                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
                             content.addContentPart(binarystore.extract(metadata.getStream()));
                         }
                     } catch (DataNotFoundException | BinaryStoreServiceException e) {
@@ -3274,8 +3290,13 @@ public class CoreServiceBean implements CoreService {
                     if (metadata == null) {
                         throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
                     }
+                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
+                    if (format == null) {
+                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
+                        break;
+                    }
                     try {
-                        if (metadata.getStream() != null && metadata.getStream().length() > 0) {
+                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
                             content.put(metadata.getName(), binarystore.get(metadata.getStream()));
                         }
                     } catch (DataNotFoundException | BinaryStoreServiceException e) {
@@ -3296,8 +3317,13 @@ public class CoreServiceBean implements CoreService {
                     if (metadata == null) {
                         throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
                     }
+                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
+                    if (format == null) {
+                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
+                        break;
+                    }
                     try {
-                        if (metadata.getStream() != null && metadata.getStream().length() > 0) {
+                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
                             content.put(metadata.getName(), binarystore.get(metadata.getStream()));
                         }
                     } catch (DataNotFoundException | BinaryStoreServiceException e) {

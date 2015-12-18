@@ -255,27 +255,27 @@ public class BootstrapServiceBean implements BootstrapService {
             LOGGER.log(Level.FINE, "import metadataformat schemas");
             InputStream schema13InputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.13.json");
             String schema13Hash = core.put(schema13InputStream);
-            core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schema13Hash, "ortolang-item-form", true);
+            core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schema13Hash, "ortolang-item-form", true, true);
 
             InputStream schemaInputStream2 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-acl-schema.json");
             String schemaHash2 = core.put(schemaInputStream2);
-            core.createMetadataFormat(MetadataFormat.ACL, "Les métadonnées de contrôle d'accès permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, "", true);
+            core.createMetadataFormat(MetadataFormat.ACL, "Les métadonnées de contrôle d'accès permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, "", true, false);
 
             InputStream schemaWorkspaceInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-workspace-schema.json");
             String schemaWorkspaceHash = core.put(schemaWorkspaceInputStream);
-            core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "", true);
+            core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "", true, true);
 
             InputStream schemaPidInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-pid-schema.json");
             String schemaPidHash = core.put(schemaPidInputStream);
-            core.createMetadataFormat(MetadataFormat.PID, "Les métadonnées associées aux pids d'un object.", schemaPidHash, "", true);
+            core.createMetadataFormat(MetadataFormat.PID, "Les métadonnées associées aux pids d'un object.", schemaPidHash, "", true, false);
 
             InputStream schemaThumbInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-thumb-schema.json");
             String schemaThumbHash = core.put(schemaThumbInputStream);
-            core.createMetadataFormat(MetadataFormat.THUMB, "Schema for ORTOLANG objects thumbnail", schemaThumbHash, "", false);
+            core.createMetadataFormat(MetadataFormat.THUMB, "Schema for ORTOLANG objects thumbnail", schemaThumbHash, "", false, false);
             
             InputStream schemaTemplateInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-template-schema.json");
             String schemaTemplateHash = core.put(schemaTemplateInputStream);
-            core.createMetadataFormat(MetadataFormat.TEMPLATE, "Schema for ORTOLANG collection template", schemaTemplateHash, "", false);
+            core.createMetadataFormat(MetadataFormat.TEMPLATE, "Schema for ORTOLANG collection template", schemaTemplateHash, "", false, false);
         } catch (RuntimeServiceException | CoreServiceException | DataCollisionException e1) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while importing process types and metadataformat schemas", e1);
         }
