@@ -83,6 +83,8 @@ public class SeoServiceBean implements SeoService {
 
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
 
+    private static final String SITEMAP_NS_URI = "http://www.sitemaps.org/schemas/sitemap/0.9";
+
     private Map<String, String> marketTypes;
 
     public SeoServiceBean() {
@@ -115,7 +117,7 @@ public class SeoServiceBean implements SeoService {
         Document doc = docBuilder.newDocument();
 
         Element urlset = doc.createElement("urlset");
-        urlset.setAttribute("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9");
+        urlset.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", SITEMAP_NS_URI);
 
         String marketServerUrl = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL);
 
@@ -215,29 +217,29 @@ public class SeoServiceBean implements SeoService {
     }
 
     private Element buildSiteMapEntry(String loc, String lastmod, ChangeFrequency changefreq, String priority, Document doc) throws SeoServiceException {
-        Element url = doc.createElement("url");
+        Element url = doc.createElementNS(SITEMAP_NS_URI, "url");
 
         if (loc == null || loc.length() == 0) {
             throw new SeoServiceException("Cannot generate site map entry: 'loc' is mandatory");
         }
-        Element locElement = doc.createElement("loc");
+        Element locElement = doc.createElementNS(SITEMAP_NS_URI, "loc");
         locElement.appendChild(doc.createTextNode(loc));
         url.appendChild(locElement);
 
         if (lastmod != null) {
-            Element lastmodElement = doc.createElement("lastmod");
+            Element lastmodElement = doc.createElementNS(SITEMAP_NS_URI, "lastmod");
             lastmodElement.appendChild(doc.createTextNode(lastmod));
             url.appendChild(lastmodElement);
         }
 
         if (changefreq != null) {
-            Element changefreqElement = doc.createElement("changefreq");
+            Element changefreqElement = doc.createElementNS(SITEMAP_NS_URI, "changefreq");
             changefreqElement.appendChild(doc.createTextNode(changefreq.name().toLowerCase()));
             url.appendChild(changefreqElement);
         }
 
         if (priority != null) {
-            Element priorityElement = doc.createElement("priority");
+            Element priorityElement = doc.createElementNS(SITEMAP_NS_URI, "priority");
             priorityElement.appendChild(doc.createTextNode(priority));
             url.appendChild(priorityElement);
         }

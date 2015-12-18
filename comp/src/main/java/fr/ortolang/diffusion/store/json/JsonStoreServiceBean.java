@@ -126,9 +126,17 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		try (ODatabaseDocumentTx db = pool.acquire()) {
 			ODocument oldDoc = getDocumentByKey(object.getKey());
 			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object, oldDoc);
-			//			if (oldDoc != null) {
-			//				oldDoc.delete();
-			//			}
+
+			String json = doc.toJSON();
+
+			List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(json);
+			
+			for(String ortolangKey : ortolangKeys) {
+				json = replaceOrtolangKey(ortolangKey, json);
+			}
+
+			doc = new ODocument(doc.getClassName()).fromJSON(json);
+			
 			db.save(doc);
 			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
 			ortolangKeyIdx.remove(object.getKey());
@@ -265,8 +273,22 @@ public class JsonStoreServiceBean implements JsonStoreService {
         return null;
     }
 
-    private long getStoreSize() throws IOException {
-        return Files.walk(base).mapToLong(this::size).sum();
+	protected String replaceOrtolangKey(String ortolangKey, String json) throws JsonStoreServiceException {
+		ODocument doc = getDocumentByKey(ortolangKey);
+		
+		if(doc!=null) {
+			String identity = doc.getIdentity().toString();
+			json = json.replace(OrtolangKeyExtractor.getMarker(ortolangKey), identity);
+		} else {
+			LOGGER.log(Level.WARNING, "cannot found ortolang key : " + ortolangKey);
+			throw new JsonStoreServiceException("cannot found ortolang key : " + ortolangKey);
+		}
+		
+		return json;
+    }
+
+	private long getStoreSize() throws IOException {
+		return Files.walk(base).mapToLong(this::size).sum();
     }
 
     private long size(Path p) {

@@ -15,7 +15,7 @@ import javax.ws.rs.core.Response;
 import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.referentiel.ReferentielService;
 import fr.ortolang.diffusion.referentiel.ReferentielServiceException;
-import fr.ortolang.diffusion.referentiel.entity.ReferentielEntity;
+import fr.ortolang.diffusion.referentiel.entity.OrganizationEntity;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 
 
@@ -32,14 +32,15 @@ public class ReferentielEntityResource {
     private ReferentielService referentiel;
 
 	@GET
+	@Path("/organizations")
 	public Response list() throws ReferentielServiceException {
-		LOGGER.log(Level.INFO, "GET /referentiels");
+		LOGGER.log(Level.INFO, "GET /organizations");
 		
-		List<ReferentielEntity> refs = referentiel.listReferentielEntities();
+		List<OrganizationEntity> refs = referentiel.listOrganizationEntities();
 		
-		GenericCollectionRepresentation<ReferentielEntityRepresentation> representation = new GenericCollectionRepresentation<ReferentielEntityRepresentation> ();
-		for(ReferentielEntity ref : refs) {
-		    representation.addEntry(ReferentielEntityRepresentation.fromReferentielEntity(ref));
+		GenericCollectionRepresentation<OrganizationEntityRepresentation> representation = new GenericCollectionRepresentation<OrganizationEntityRepresentation> ();
+		for(OrganizationEntity ref : refs) {
+		    representation.addEntry(OrganizationEntityRepresentation.fromReferentielEntity(ref));
 		}
 		representation.setOffset(0);
 		representation.setSize(refs.size());
@@ -49,11 +50,11 @@ public class ReferentielEntityResource {
 	}
 
 	@GET
-	@Path("/{key}")
+	@Path("/organizations/{key}")
 	public Response get(@PathParam(value = "key") String key) throws ReferentielServiceException, KeyNotFoundException {
 		LOGGER.log(Level.INFO, "GET /referentiels/" + key);
 				
-		ReferentielEntityRepresentation representation = ReferentielEntityRepresentation.fromReferentielEntity(referentiel.readReferentielEntity(key));
+		OrganizationEntityRepresentation representation = OrganizationEntityRepresentation.fromReferentielEntity(referentiel.readOrganizationEntity(key));
 		
 		return Response.ok(representation).build();
 	}

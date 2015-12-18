@@ -202,7 +202,8 @@ public class RuntimeServiceBean implements RuntimeService {
             registry.register(key, new OrtolangObjectIdentifier(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, id), caller);
             authorisation.createPolicy(key, caller);
 
-            notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "create"));
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("type", type).addArgument("workspace", workspace);
+            notification.throwEvent(key, caller, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "create"), argumentsBuilder.build());
             return process;
         } catch (RuntimeEngineException | RegistryServiceException | KeyAlreadyExistsException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | NotificationServiceException e) {
             ctx.setRollbackOnly();

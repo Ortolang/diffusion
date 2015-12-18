@@ -38,6 +38,8 @@ package fr.ortolang.diffusion.subscription;
 
 import java.util.Map;
 
+import fr.ortolang.diffusion.runtime.RuntimeServiceException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 
@@ -47,6 +49,10 @@ public interface SubscriptionService extends OrtolangService {
 
     public static final String SERVICE_NAME = "subscription";
 
+    String MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN = "membership\\.group\\.add-member";
+
+    String RUNTIME_PROCESS_PATTERN = "runtime\\.process\\.(?:change-state|update-activity)";
+
     public Broadcaster getBroadcaster(String username);
 
     public void registerBroadcaster(String username, AtmosphereResource atmosphereResource);
@@ -55,7 +61,7 @@ public interface SubscriptionService extends OrtolangService {
 
     public void removeFilter(String username, Filter filter);
 
-    public void addDefaultFilters() throws SubscriptionServiceException;
+    public void addDefaultFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException;
 
     public void addAdminFilters() throws SubscriptionServiceException;
 

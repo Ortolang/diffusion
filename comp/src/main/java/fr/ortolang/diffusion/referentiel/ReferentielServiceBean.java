@@ -1,6 +1,7 @@
 package fr.ortolang.diffusion.referentiel;
 
 import java.io.ByteArrayInputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +18,9 @@ import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
@@ -35,8 +39,11 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.referentiel.entity.ReferentielEntity;
-import fr.ortolang.diffusion.referentiel.entity.ReferentielType;
+import fr.ortolang.diffusion.referentiel.entity.LicenseEntity;
+import fr.ortolang.diffusion.referentiel.entity.OrganizationEntity;
+import fr.ortolang.diffusion.referentiel.entity.PersonEntity;
+import fr.ortolang.diffusion.referentiel.entity.StatusOfUseEntity;
+import fr.ortolang.diffusion.referentiel.entity.TermEntity;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
 import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
@@ -49,6 +56,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
+import fr.ortolang.diffusion.store.json.OrtolangKeyExtractor;
 
 @Local(ReferentielService.class)
 @Stateless(name = ReferentielService.SERVICE_NAME)
@@ -58,9 +66,8 @@ public class ReferentielServiceBean implements ReferentielService {
 
     private static final Logger LOGGER = Logger.getLogger(ReferentielServiceBean.class.getName());
 
-    private static final String[] OBJECT_TYPE_LIST = new String[] { ReferentielEntity.OBJECT_TYPE };
-    private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { { ReferentielEntity.OBJECT_TYPE, "read,update,delete" } };
-    public static final String PREFIX_KEY = "person";
+    private static final String[] OBJECT_TYPE_LIST = new String[] { OrganizationEntity.OBJECT_TYPE, PersonEntity.OBJECT_TYPE, StatusOfUseEntity.OBJECT_TYPE, LicenseEntity.OBJECT_TYPE, TermEntity.OBJECT_TYPE };
+    private static final String[][] OBJECT_PERMISSIONS_LIST = new String[][] { { OrganizationEntity.OBJECT_TYPE, PersonEntity.OBJECT_TYPE, StatusOfUseEntity.OBJECT_TYPE, LicenseEntity.OBJECT_TYPE, TermEntity.OBJECT_TYPE, "read,update,delete" } };
 
     @EJB
     private RegistryService registry;
@@ -171,10 +178,21 @@ public class ReferentielServiceBean implements ReferentielService {
                 throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
             }
 
-            if (identifier.getType().equals(ReferentielEntity.OBJECT_TYPE)) {
-                return readReferentielEntity(key);
+            if (identifier.getType().equals(OrganizationEntity.OBJECT_TYPE)) {
+        		return readOrganizationEntity(key);
             }
-
+            if (identifier.getType().equals(PersonEntity.OBJECT_TYPE)) {
+        		return readPersonEntity(key);
+            }
+            if (identifier.getType().equals(StatusOfUseEntity.OBJECT_TYPE)) {
+        		return readStatusOfUseEntity(key);
+            }
+            if (identifier.getType().equals(LicenseEntity.OBJECT_TYPE)) {
+        		return readLicenseEntity(key);
+            }
+            if (identifier.getType().equals(TermEntity.OBJECT_TYPE)) {
+        		return readTermEntity(key);
+            }
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
         } catch (ReferentielServiceException | RegistryServiceException | KeyNotFoundException e) {
             throw new OrtolangException("unable to find an object for key " + key);
@@ -188,131 +206,624 @@ public class ReferentielServiceBean implements ReferentielService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<ReferentielEntity> listReferentielEntities() throws ReferentielServiceException {
-        LOGGER.log(Level.INFO, "Listing all ReferentielEntitys");
-        try {
-            TypedQuery<ReferentielEntity> query = em.createNamedQuery("findAllReferentielEntities", ReferentielEntity.class);
-            List<ReferentielEntity> refEntitys = query.getResultList();
-            List<ReferentielEntity> rrefEntitys = new ArrayList<ReferentielEntity>();
-            for (ReferentielEntity refEntity : refEntitys) {
-                try {
-                    String ikey = registry.lookup(refEntity.getObjectIdentifier());
-                    refEntity.setKey(ikey);
-                    rrefEntitys.add(refEntity);
-                } catch (IdentifierNotRegisteredException e) {
-                    LOGGER.log(Level.FINE, "unregistered form found in storage for id: " + refEntity.getId());
-                }
-            }
-            return rrefEntitys;
-        } catch (RegistryServiceException e) {
-            LOGGER.log(Level.SEVERE, "unexpected error occured while listing ReferentielEntitys", e);
-            throw new ReferentielServiceException("unable to list ReferentielEntitys", e);
-        }
+    public List<OrganizationEntity> listOrganizationEntities() throws ReferentielServiceException {
+    	LOGGER.log(Level.INFO, "Listing all OrganizationEntities");
+    	try {
+    		TypedQuery<OrganizationEntity> query = em.createNamedQuery("findAllOrganizationEntities", OrganizationEntity.class);
+    		List<OrganizationEntity> refEntitys = query.getResultList();
+    		List<OrganizationEntity> rrefEntitys = new ArrayList<OrganizationEntity>();
+    		for (OrganizationEntity refEntity : refEntitys) {
+    			try {
+    				String ikey = registry.lookup(refEntity.getObjectIdentifier());
+    				refEntity.setKey(ikey);
+    				rrefEntitys.add(refEntity);
+    			} catch (IdentifierNotRegisteredException e) {
+    				LOGGER.log(Level.FINE, "unregistered OrganizationEntity found in storage for id: " + refEntity.getId());
+    			}
+    		}
+    		return rrefEntitys;
+    	} catch (RegistryServiceException e) {
+    		LOGGER.log(Level.SEVERE, "unexpected error occured while listing OrganizationEntities", e);
+    		throw new ReferentielServiceException("unable to list OrganizationEntities", e);
+    	}
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createReferentielEntity(String name, ReferentielType type, String content) throws ReferentielServiceException, KeyAlreadyExistsException, AccessDeniedException {
-        LOGGER.log(Level.FINE, "creating ReferentielEntity for identifier name [" + name + "]");
-        try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
-            List<String> subjects = membership.getConnectedIdentifierSubjects();
-            authorisation.checkAuthentified(subjects);
+    public void createOrganizationEntity(String name, String content) throws ReferentielServiceException, KeyAlreadyExistsException, AccessDeniedException {
+    	LOGGER.log(Level.FINE, "creating ReferentielEntity for identifier name [" + name + "]");
+    	try {
+    		String caller = membership.getProfileKeyForConnectedIdentifier();
+    		List<String> subjects = membership.getConnectedIdentifierSubjects();
+    		authorisation.checkAuthentified(subjects);
 
-            String key = type.toString() + ":" + name;
-            ReferentielEntity refEntity = new ReferentielEntity();
-            refEntity.setId(UUID.randomUUID().toString());
-            refEntity.setKey(key);
-            refEntity.setName(name);
-            refEntity.setType(type);
-            refEntity.setContent(content);
-            em.persist(refEntity);
+    		String key = SERVICE_NAME + ":" + name;
+    		OrganizationEntity refEntity = new OrganizationEntity();
+    		refEntity.setId(UUID.randomUUID().toString());
+    		refEntity.setKey(key);
+    		refEntity.setContent(content);
+    		em.persist(refEntity);
 
-            registry.register(key, refEntity.getObjectIdentifier(), caller);
-            registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
-            indexing.index(key);
+    		registry.register(key, refEntity.getObjectIdentifier(), caller);
+    		registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
+    		indexing.index(key);
 
-            authorisation.createPolicy(key, caller);
+    		authorisation.createPolicy(key, caller);
 
-            notification.throwEvent(key, caller, ReferentielEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, ReferentielEntity.OBJECT_TYPE, "create"));
-        } catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException
-                | KeyLockedException | IndexingServiceException e) {
-            ctx.setRollbackOnly();
-            throw new ReferentielServiceException("unable to create ReferentielEntity with name [" + name + "]", e);
-        }
+    		notification.throwEvent(key, caller, OrganizationEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, OrganizationEntity.OBJECT_TYPE, "create"));
+    	} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException
+    			| KeyLockedException | IndexingServiceException e) {
+    		ctx.setRollbackOnly();
+    		throw new ReferentielServiceException("unable to create ReferentielEntity with name [" + name + "]", e);
+    	}
     }
 
     @Override
-    public ReferentielEntity readReferentielEntity(String key) throws ReferentielServiceException, KeyNotFoundException {
-        LOGGER.log(Level.FINE, "reading form for key [" + key + "]");
-        try {
-//            String key = PREFIX_KEY + ":" + name;
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public OrganizationEntity readOrganizationEntity(String name) throws ReferentielServiceException, KeyNotFoundException {
+    	LOGGER.log(Level.FINE, "reading OrganizationEntity for name [" + name + "]");
+    	try {
 
-            OrtolangObjectIdentifier identifier = registry.lookup(key);
-            checkObjectType(identifier, ReferentielEntity.OBJECT_TYPE);
-            ReferentielEntity refEntity = em.find(ReferentielEntity.class, identifier.getId());
-            if (refEntity == null) {
-                throw new ReferentielServiceException("unable to find a ReferentielEntity for id " + identifier.getId());
-            }
-            refEntity.setKey(key);
+    		String key = SERVICE_NAME + ":" + name;
+    		OrtolangObjectIdentifier identifier = registry.lookup(key);
+    		checkObjectType(identifier, OrganizationEntity.OBJECT_TYPE);
+    		OrganizationEntity refEntity = em.find(OrganizationEntity.class, identifier.getId());
+    		if (refEntity == null) {
+    			throw new ReferentielServiceException("unable to find a OrganizationEntity for id " + identifier.getId());
+    		}
+    		refEntity.setKey(key);
 
-            return refEntity;
-        } catch (RegistryServiceException e) {
-            throw new ReferentielServiceException("unable to read the ReferentielEntity with key [" + key + "]", e);
-        }
+    		return refEntity;
+    	} catch (RegistryServiceException e) {
+    		throw new ReferentielServiceException("unable to read the OrganizationEntity with name [" + name + "]", e);
+    	}
     }
 
     @Override
-    public void updateReferentielEntity(String key, String content) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.FINE, "updating form for key [" + key + "]");
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void updateOrganizationEntity(String name, String content) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException {
+    	LOGGER.log(Level.FINE, "updating OrganizationEntity for name [" + name + "]");
         try {
-//            String key = PREFIX_KEY + ":" + name;
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
+    		String key = SERVICE_NAME + ":" + name;
             authorisation.checkPermission(key, subjects, "update");
 
             OrtolangObjectIdentifier identifier = registry.lookup(key);
-            checkObjectType(identifier, ReferentielEntity.OBJECT_TYPE);
-            ReferentielEntity refEntity = em.find(ReferentielEntity.class, identifier.getId());
+            checkObjectType(identifier, OrganizationEntity.OBJECT_TYPE);
+            OrganizationEntity refEntity = em.find(OrganizationEntity.class, identifier.getId());
             if (refEntity == null) {
-                throw new ReferentielServiceException("unable to find a form for id " + identifier.getId());
+                throw new ReferentielServiceException("unable to find a OrganizationEntity for id " + identifier.getId());
             }
             refEntity.setKey(key);
-//            refEntity.setName(name);
             refEntity.setContent(content);
             em.merge(refEntity);
 
             registry.update(key);
             indexing.index(key);
 
-            notification.throwEvent(key, caller, ReferentielEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, ReferentielEntity.OBJECT_TYPE, "update"));
+            notification.throwEvent(key, caller, OrganizationEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, OrganizationEntity.OBJECT_TYPE, "update"));
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
-            throw new ReferentielServiceException("error while trying to update the ReferentielEntity with key [" + key + "]");
+            throw new ReferentielServiceException("error while trying to update the OrganizationEntity with name [" + name + "]");
         }
     }
 
+	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<PersonEntity> listPersonEntities() throws ReferentielServiceException {
+		LOGGER.log(Level.INFO, "Listing all PersonEntity");
+    	try {
+    		TypedQuery<PersonEntity> query = em.createNamedQuery("findAllPersonEntities", PersonEntity.class);
+    		List<PersonEntity> refEntitys = query.getResultList();
+    		List<PersonEntity> rrefEntitys = new ArrayList<PersonEntity>();
+    		for (PersonEntity refEntity : refEntitys) {
+    			try {
+    				String ikey = registry.lookup(refEntity.getObjectIdentifier());
+    				refEntity.setKey(ikey);
+    				rrefEntitys.add(refEntity);
+    			} catch (IdentifierNotRegisteredException e) {
+    				LOGGER.log(Level.FINE, "unregistered PersonEntity found in storage for id: " + refEntity.getId());
+    			}
+    		}
+    		return rrefEntitys;
+    	} catch (RegistryServiceException e) {
+    		LOGGER.log(Level.SEVERE, "unexpected error occured while listing PersonEntities", e);
+    		throw new ReferentielServiceException("unable to list PersonEntities", e);
+    	}
+	}
+ 
+
     @Override
-    public void deleteReferentielEntity(String key) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.FINE, "deleting form for key [" + key + "]");
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void createPersonEntity(String name, String content) throws ReferentielServiceException, KeyAlreadyExistsException, AccessDeniedException {
+    	LOGGER.log(Level.FINE, "creating PersonEntity for identifier name [" + name + "]");
+    	try {
+    		String caller = membership.getProfileKeyForConnectedIdentifier();
+    		List<String> subjects = membership.getConnectedIdentifierSubjects();
+    		authorisation.checkAuthentified(subjects);
+
+    		OrganizationEntity orgEntity = null;
+    		String organization = extractField(content, "organization");
+//    		organization = organization.replaceAll(JsonStoreServiceBean.PREFIX_REF, "");
+    		
+    		if(organization!=null) {
+	    		List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(organization);
+	    		if(ortolangKeys.size()==1) {
+	    			organization = ortolangKeys.get(0);
+	//    		if(organization!=null) {
+	    			OrtolangObjectIdentifier identifier = registry.lookup(organization);
+	        		checkObjectType(identifier, OrganizationEntity.OBJECT_TYPE);
+	        		orgEntity = em.find(OrganizationEntity.class, identifier.getId());
+	        		if (orgEntity == null) {
+	        			throw new ReferentielServiceException("unable to find a OrganizationEntity for id " + identifier.getId() + " and key " + organization);
+	        		}
+	        		orgEntity.setKey(organization);
+	    		} else {
+	    			LOGGER.log(Level.SEVERE, "unable to extract Organization in "+organization);
+	    			throw new ReferentielServiceException("unable to extract a OrganizationEntity in "+organization);
+	    		}
+    		}
+    		
+    		String key = SERVICE_NAME + ":" + name;
+    		PersonEntity refEntity = new PersonEntity();
+    		refEntity.setId(UUID.randomUUID().toString());
+    		refEntity.setKey(key);
+    		refEntity.setContent(content);
+    		if(orgEntity!=null) {
+    			refEntity.setOrganization(orgEntity.getKey());
+    		}
+    		em.persist(refEntity);
+
+    		registry.register(key, refEntity.getObjectIdentifier(), caller);
+    		registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
+    		indexing.index(key);
+
+    		authorisation.createPolicy(key, caller);
+
+    		notification.throwEvent(key, caller, PersonEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, PersonEntity.OBJECT_TYPE, "create"));
+    	} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException
+    			| KeyLockedException | IndexingServiceException e) {
+    		ctx.setRollbackOnly();
+    		throw new ReferentielServiceException("unable to create PersonEntity with name [" + name + "]", e);
+    	}
+    }
+	
+    public PersonEntity readPersonEntity(String name) throws ReferentielServiceException, KeyNotFoundException {
+    	LOGGER.log(Level.FINE, "reading PersonEntity for name [" + name + "]");
+    	try {
+
+    		String key = SERVICE_NAME + ":" + name;
+    		OrtolangObjectIdentifier identifier = registry.lookup(key);
+    		checkObjectType(identifier, PersonEntity.OBJECT_TYPE);
+    		PersonEntity refEntity = em.find(PersonEntity.class, identifier.getId());
+    		if (refEntity == null) {
+    			throw new ReferentielServiceException("unable to find a PersonEntity for id " + identifier.getId());
+    		}
+    		refEntity.setKey(key);
+
+    		return refEntity;
+    	} catch (RegistryServiceException e) {
+    		throw new ReferentielServiceException("unable to read the PersonEntity with name [" + name + "]", e);
+    	}
+    }
+    
+    public void updatePersonEntity(String name, String content) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException {
+    	LOGGER.log(Level.FINE, "updating PersonEntity for name [" + name + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
-//            String key = PREFIX_KEY + ":" + name;
-            authorisation.checkPermission(key, subjects, "delete");
+
+    		String key = SERVICE_NAME + ":" + name;
+            authorisation.checkPermission(key, subjects, "update");
 
             OrtolangObjectIdentifier identifier = registry.lookup(key);
-            checkObjectType(identifier, ReferentielEntity.OBJECT_TYPE);
-            registry.delete(key);
-            indexing.remove(key);
+            checkObjectType(identifier, PersonEntity.OBJECT_TYPE);
+            PersonEntity refEntity = em.find(PersonEntity.class, identifier.getId());
+            if (refEntity == null) {
+                throw new ReferentielServiceException("unable to find a PersonEntity for id " + identifier.getId());
+            }
             
-            notification.throwEvent(key, caller, ReferentielEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, ReferentielEntity.OBJECT_TYPE, "delete"));
+            OrganizationEntity orgEntity = null;
+            String organization = extractField(content, "organization");
+//    		organization = organization.replaceAll(JsonStoreServiceBean.PREFIX_REF, "");
+//    		if(organization!=null) {
+
+    		List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(organization);
+    		if(ortolangKeys.size()==1) {
+    			organization = ortolangKeys.get(0);
+    			
+    			OrtolangObjectIdentifier identifierOrganization = registry.lookup(organization);
+        		checkObjectType(identifierOrganization, OrganizationEntity.OBJECT_TYPE);
+        		orgEntity = em.find(OrganizationEntity.class, identifierOrganization.getId());
+        		if (orgEntity == null) {
+        			throw new ReferentielServiceException("unable to find a OrganizationEntity for id " + identifierOrganization.getId() + " and key " + organization);
+        		}
+        		orgEntity.setKey(organization);
+    		} else {
+    			LOGGER.log(Level.SEVERE, "unable to extract Organization in "+organization);
+    			throw new ReferentielServiceException("unable to extract a OrganizationEntity in "+organization);
+    		}
+    		
+            refEntity.setKey(key);
+            refEntity.setContent(content);
+            if(orgEntity!=null) {
+            	refEntity.setOrganization(orgEntity.getKey());
+            }
+            em.merge(refEntity);
+
+            registry.update(key);
+            indexing.index(key);
+
+            notification.throwEvent(key, caller, PersonEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, PersonEntity.OBJECT_TYPE, "update"));
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
-            throw new ReferentielServiceException("unable to delete ReferentielEntity with key [" + key + "]", e);
+            throw new ReferentielServiceException("error while trying to update the PersonEntity with name [" + name + "]");
+        }
+    }
+	
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<StatusOfUseEntity> listStatusOfUseEntities() throws ReferentielServiceException {
+    	LOGGER.log(Level.INFO, "Listing all StatusOfUseEntity");
+    	try {
+    		TypedQuery<StatusOfUseEntity> query = em.createNamedQuery("findAllStatusOfUseEntities", StatusOfUseEntity.class);
+    		List<StatusOfUseEntity> refEntitys = query.getResultList();
+    		List<StatusOfUseEntity> rrefEntitys = new ArrayList<StatusOfUseEntity>();
+    		for (StatusOfUseEntity refEntity : refEntitys) {
+    			try {
+    				String ikey = registry.lookup(refEntity.getObjectIdentifier());
+    				refEntity.setKey(ikey);
+    				rrefEntitys.add(refEntity);
+    			} catch (IdentifierNotRegisteredException e) {
+    				LOGGER.log(Level.FINE, "unregistered StatusOfUseEntity found in storage for id: " + refEntity.getId());
+    			}
+    		}
+    		return rrefEntitys;
+    	} catch (RegistryServiceException e) {
+    		LOGGER.log(Level.SEVERE, "unexpected error occured while listing StatusOfUse entities", e);
+    		throw new ReferentielServiceException("unable to list of StatusOfUseEntity", e);
+    	}
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void createStatusOfUseEntity(String name, String content) throws ReferentielServiceException, KeyAlreadyExistsException, AccessDeniedException {
+    	LOGGER.log(Level.FINE, "creating StatusOfUseEntity for identifier name [" + name + "]");
+    	try {
+    		String caller = membership.getProfileKeyForConnectedIdentifier();
+    		List<String> subjects = membership.getConnectedIdentifierSubjects();
+    		authorisation.checkAuthentified(subjects);
+
+    		String key = SERVICE_NAME + ":" + name;
+    		StatusOfUseEntity refEntity = new StatusOfUseEntity();
+    		refEntity.setId(UUID.randomUUID().toString());
+    		refEntity.setKey(key);
+    		refEntity.setContent(content);
+    		em.persist(refEntity);
+
+    		registry.register(key, refEntity.getObjectIdentifier(), caller);
+    		registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
+    		indexing.index(key);
+
+    		authorisation.createPolicy(key, caller);
+
+    		notification.throwEvent(key, caller, StatusOfUseEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, StatusOfUseEntity.OBJECT_TYPE, "create"));
+    	} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException
+    			| KeyLockedException | IndexingServiceException e) {
+    		ctx.setRollbackOnly();
+    		throw new ReferentielServiceException("unable to create StatusOfUseEntity with name [" + name + "]", e);
+    	}
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public StatusOfUseEntity readStatusOfUseEntity(String name) throws ReferentielServiceException, KeyNotFoundException {
+    	LOGGER.log(Level.FINE, "reading StatusOfUseEntity for name [" + name + "]");
+    	try {
+
+    		String key = SERVICE_NAME + ":" + name;
+    		OrtolangObjectIdentifier identifier = registry.lookup(key);
+    		checkObjectType(identifier, StatusOfUseEntity.OBJECT_TYPE);
+    		StatusOfUseEntity refEntity = em.find(StatusOfUseEntity.class, identifier.getId());
+    		if (refEntity == null) {
+    			throw new ReferentielServiceException("unable to find a StatusOfUseEntity for id " + identifier.getId());
+    		}
+    		refEntity.setKey(key);
+
+    		return refEntity;
+    	} catch (RegistryServiceException e) {
+    		throw new ReferentielServiceException("unable to read the StatusOfUseEntity with name [" + name + "]", e);
+    	}
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void updateStatusOfUseEntity(String name, String content) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException {
+    	LOGGER.log(Level.FINE, "updating StatusOfUseEntity for name [" + name + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+    		String key = SERVICE_NAME + ":" + name;
+            authorisation.checkPermission(key, subjects, "update");
+
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, StatusOfUseEntity.OBJECT_TYPE);
+            StatusOfUseEntity refEntity = em.find(StatusOfUseEntity.class, identifier.getId());
+            if (refEntity == null) {
+                throw new ReferentielServiceException("unable to find a StatusOfUseEntity for id " + identifier.getId());
+            }
+            refEntity.setKey(key);
+            refEntity.setContent(content);
+            em.merge(refEntity);
+
+            registry.update(key);
+            indexing.index(key);
+
+            notification.throwEvent(key, caller, StatusOfUseEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, StatusOfUseEntity.OBJECT_TYPE, "update"));
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
+            ctx.setRollbackOnly();
+            throw new ReferentielServiceException("error while trying to update the StatusOfUseEntity with name [" + name + "]");
         }
     }
 
+	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<LicenseEntity> listLicenseEntities() throws ReferentielServiceException {
+		LOGGER.log(Level.INFO, "Listing all LicenseEntity");
+    	try {
+    		TypedQuery<LicenseEntity> query = em.createNamedQuery("findAllLicenseEntities", LicenseEntity.class);
+    		List<LicenseEntity> refEntitys = query.getResultList();
+    		List<LicenseEntity> rrefEntitys = new ArrayList<LicenseEntity>();
+    		for (LicenseEntity refEntity : refEntitys) {
+    			try {
+    				String ikey = registry.lookup(refEntity.getObjectIdentifier());
+    				refEntity.setKey(ikey);
+    				rrefEntitys.add(refEntity);
+    			} catch (IdentifierNotRegisteredException e) {
+    				LOGGER.log(Level.FINE, "unregistered LicenseEntity found in storage for id: " + refEntity.getId());
+    			}
+    		}
+    		return rrefEntitys;
+    	} catch (RegistryServiceException e) {
+    		LOGGER.log(Level.SEVERE, "unexpected error occured while listing LicenseEntities", e);
+    		throw new ReferentielServiceException("unable to list LicenseEntities", e);
+    	}
+	}
+ 
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void createLicenseEntity(String name, String content) throws ReferentielServiceException, KeyAlreadyExistsException, AccessDeniedException {
+    	LOGGER.log(Level.FINE, "creating LicenseEntity for identifier name [" + name + "]");
+    	try {
+    		String caller = membership.getProfileKeyForConnectedIdentifier();
+    		List<String> subjects = membership.getConnectedIdentifierSubjects();
+    		authorisation.checkAuthentified(subjects);
+
+    		StatusOfUseEntity statusOfUseEntity = null;
+    		String statusOfUse = extractField(content, "status");
+//    		statusOfUse = statusOfUse.replaceAll(JsonStoreServiceBean.PREFIX_REF, "");
+//    		if(statusOfUse!=null) {
+
+    		List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(statusOfUse);
+    		if(ortolangKeys.size()==1) {
+    			statusOfUse = ortolangKeys.get(0);
+    			
+    			OrtolangObjectIdentifier identifier = registry.lookup(statusOfUse);
+        		checkObjectType(identifier, StatusOfUseEntity.OBJECT_TYPE);
+        		statusOfUseEntity = em.find(StatusOfUseEntity.class, identifier.getId());
+        		if (statusOfUseEntity == null) {
+        			throw new ReferentielServiceException("unable to find a StatusOfUseEntity for id " + identifier.getId() + " and key " + statusOfUse);
+        		}
+        		statusOfUseEntity.setKey(statusOfUse);
+    		} else {
+    			LOGGER.log(Level.SEVERE, "unable to extract StatusOfUse in "+statusOfUse);
+    			throw new ReferentielServiceException("unable to extract a StatusOfUse in "+statusOfUse);
+    		}
+    		
+    		LicenseEntity refEntity = new LicenseEntity();
+    		String key = SERVICE_NAME + ":" + name;
+    		refEntity.setId(UUID.randomUUID().toString());
+    		refEntity.setKey(key);
+    		refEntity.setContent(content);
+    		if(statusOfUseEntity!=null) {
+    			refEntity.setStatusOfUse(statusOfUseEntity.getKey());
+    		}
+    		em.persist(refEntity);
+
+    		registry.register(key, refEntity.getObjectIdentifier(), caller);
+    		registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
+    		indexing.index(key);
+
+    		authorisation.createPolicy(key, caller);
+
+    		notification.throwEvent(key, caller, LicenseEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, LicenseEntity.OBJECT_TYPE, "create"));
+    	} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException
+    			| KeyLockedException | IndexingServiceException e) {
+    		ctx.setRollbackOnly();
+    		throw new ReferentielServiceException("unable to create LicenseEntity with name [" + name + "]", e);
+    	}
+    }
+	
+    public LicenseEntity readLicenseEntity(String name) throws ReferentielServiceException, KeyNotFoundException {
+    	LOGGER.log(Level.FINE, "reading LicenseEntity for name [" + name + "]");
+    	try {
+
+    		String key = SERVICE_NAME + ":" + name;
+    		OrtolangObjectIdentifier identifier = registry.lookup(key);
+    		checkObjectType(identifier, LicenseEntity.OBJECT_TYPE);
+    		LicenseEntity refEntity = em.find(LicenseEntity.class, identifier.getId());
+    		if (refEntity == null) {
+    			throw new ReferentielServiceException("unable to find a LicenseEntity for id " + identifier.getId());
+    		}
+    		refEntity.setKey(key);
+
+    		return refEntity;
+    	} catch (RegistryServiceException e) {
+    		throw new ReferentielServiceException("unable to read the LicenseEntity with name [" + name + "]", e);
+    	}
+    }
+    
+    public void updateLicenseEntity(String name, String content) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException {
+    	LOGGER.log(Level.FINE, "updating LicenseEntity for name [" + name + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+    		String key = SERVICE_NAME + ":" + name;
+            authorisation.checkPermission(key, subjects, "update");
+
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, LicenseEntity.OBJECT_TYPE);
+            LicenseEntity refEntity = em.find(LicenseEntity.class, identifier.getId());
+            if (refEntity == null) {
+                throw new ReferentielServiceException("unable to find a LicenseEntity for id " + identifier.getId());
+            }
+            
+            StatusOfUseEntity statusOfUseEntity = null;
+    		String statusOfUse = extractField(content, "status");
+//    		statusOfUse = statusOfUse.replaceAll(JsonStoreServiceBean.PREFIX_REF, "");
+//    		if(statusOfUse!=null) {
+
+    		List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(statusOfUse);
+    		if(ortolangKeys.size()==1) {
+    			statusOfUse = ortolangKeys.get(0);
+    			
+    			OrtolangObjectIdentifier identifierStatusOfUse = registry.lookup(statusOfUse);
+        		checkObjectType(identifierStatusOfUse, StatusOfUseEntity.OBJECT_TYPE);
+        		statusOfUseEntity = em.find(StatusOfUseEntity.class, identifierStatusOfUse.getId());
+        		if (statusOfUseEntity == null) {
+        			throw new ReferentielServiceException("unable to find a StatusOfUseEntity for id " + identifierStatusOfUse.getId() + " and key " + statusOfUse);
+        		}
+        		statusOfUseEntity.setKey(statusOfUse);
+    		} else {
+    			throw new ReferentielServiceException("unable to extract status of use ("+statusOfUse+") in license named " + name);
+    		}
+    		
+            refEntity.setKey(key);
+            refEntity.setContent(content);
+            if(statusOfUseEntity!=null) {
+            	refEntity.setStatusOfUse(statusOfUseEntity.getKey());
+            }
+            em.merge(refEntity);
+
+            registry.update(key);
+            indexing.index(key);
+
+            notification.throwEvent(key, caller, LicenseEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, LicenseEntity.OBJECT_TYPE, "update"));
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
+            ctx.setRollbackOnly();
+            throw new ReferentielServiceException("error while trying to update the LicenseEntity with name [" + name + "]");
+        }
+    }
+	
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<TermEntity> listTermEntities() throws ReferentielServiceException {
+    	LOGGER.log(Level.INFO, "Listing all TermEntities");
+    	try {
+    		TypedQuery<TermEntity> query = em.createNamedQuery("findAllTermEntities", TermEntity.class);
+    		List<TermEntity> refEntitys = query.getResultList();
+    		List<TermEntity> rrefEntitys = new ArrayList<TermEntity>();
+    		for (TermEntity refEntity : refEntitys) {
+    			try {
+    				String ikey = registry.lookup(refEntity.getObjectIdentifier());
+    				refEntity.setKey(ikey);
+    				rrefEntitys.add(refEntity);
+    			} catch (IdentifierNotRegisteredException e) {
+    				LOGGER.log(Level.FINE, "unregistered TermEntity found in storage for id: " + refEntity.getId());
+    			}
+    		}
+    		return rrefEntitys;
+    	} catch (RegistryServiceException e) {
+    		LOGGER.log(Level.SEVERE, "unexpected error occured while listing TermEntities", e);
+    		throw new ReferentielServiceException("unable to list TermEntities", e);
+    	}
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void createTermEntity(String name, String content) throws ReferentielServiceException, KeyAlreadyExistsException, AccessDeniedException {
+    	LOGGER.log(Level.FINE, "creating TermEntity for identifier name [" + name + "]");
+    	try {
+    		String caller = membership.getProfileKeyForConnectedIdentifier();
+    		List<String> subjects = membership.getConnectedIdentifierSubjects();
+    		authorisation.checkAuthentified(subjects);
+
+    		String key = SERVICE_NAME + ":" + name;
+    		TermEntity refEntity = new TermEntity();
+    		refEntity.setId(UUID.randomUUID().toString());
+    		refEntity.setKey(key);
+    		refEntity.setContent(content);
+    		em.persist(refEntity);
+
+    		registry.register(key, refEntity.getObjectIdentifier(), caller);
+    		registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
+    		indexing.index(key);
+
+    		authorisation.createPolicy(key, caller);
+
+    		notification.throwEvent(key, caller, TermEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, TermEntity.OBJECT_TYPE, "create"));
+    	} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException
+    			| KeyLockedException | IndexingServiceException e) {
+    		ctx.setRollbackOnly();
+    		throw new ReferentielServiceException("unable to create ReferentielEntity with name [" + name + "]", e);
+    	}
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public TermEntity readTermEntity(String name) throws ReferentielServiceException, KeyNotFoundException {
+    	LOGGER.log(Level.FINE, "reading TermEntity for name [" + name + "]");
+    	try {
+
+    		String key = SERVICE_NAME + ":" + name;
+    		OrtolangObjectIdentifier identifier = registry.lookup(key);
+    		checkObjectType(identifier, TermEntity.OBJECT_TYPE);
+    		TermEntity refEntity = em.find(TermEntity.class, identifier.getId());
+    		if (refEntity == null) {
+    			throw new ReferentielServiceException("unable to find a TermEntity for id " + identifier.getId());
+    		}
+    		refEntity.setKey(key);
+
+    		return refEntity;
+    	} catch (RegistryServiceException e) {
+    		throw new ReferentielServiceException("unable to read the TermEntity with name [" + name + "]", e);
+    	}
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void updateTermEntity(String name, String content) throws ReferentielServiceException, KeyNotFoundException, AccessDeniedException {
+    	LOGGER.log(Level.FINE, "updating TermEntity for name [" + name + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            String key = SERVICE_NAME + ":" + name;
+            authorisation.checkPermission(key, subjects, "update");
+
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, TermEntity.OBJECT_TYPE);
+            TermEntity refEntity = em.find(TermEntity.class, identifier.getId());
+            if (refEntity == null) {
+                throw new ReferentielServiceException("unable to find a TermEntity for id " + identifier.getId());
+            }
+            refEntity.setKey(key);
+            refEntity.setContent(content);
+            em.merge(refEntity);
+
+            registry.update(key);
+            indexing.index(key);
+
+            notification.throwEvent(key, caller, TermEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentielService.SERVICE_NAME, TermEntity.OBJECT_TYPE, "update"));
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
+            ctx.setRollbackOnly();
+            throw new ReferentielServiceException("error while trying to update the TermEntity with name [" + name + "]");
+        }
+    }
+
+    
+    
     private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws ReferentielServiceException {
         if (!identifier.getService().equals(getServiceName())) {
             throw new ReferentielServiceException("object identifier " + identifier + " does not refer to service " + getServiceName());
@@ -350,13 +861,56 @@ public class ReferentielServiceBean implements ReferentielService {
             }
             IndexableJsonContent content = new IndexableJsonContent();
 
-            if (identifier.getType().equals(ReferentielEntity.OBJECT_TYPE)) {
-                ReferentielEntity referentielEntity = em.find(ReferentielEntity.class, identifier.getId());
-                if (referentielEntity == null) {
-                    throw new OrtolangException("unable to load ReferentielEntity with id [" + identifier.getId() + "] from storage");
+//            if (identifier.getType().equals(ReferentielEntity.OBJECT_TYPE)) {
+//                ReferentielEntity referentielEntity = em.find(ReferentielEntity.class, identifier.getId());
+//                if (referentielEntity == null) {
+//                    throw new OrtolangException("unable to load ReferentielEntity with id [" + identifier.getId() + "] from storage");
+//                }
+//
+//                content.put("ortolang-referentiel-json", new ByteArrayInputStream(referentielEntity.getContent().getBytes()));
+//            }
+            
+            if (identifier.getType().equals(OrganizationEntity.OBJECT_TYPE)) {
+            	OrganizationEntity organizationEntity = em.find(OrganizationEntity.class, identifier.getId());
+                if (organizationEntity == null) {
+                    throw new OrtolangException("unable to load OrganizationEntity with id [" + identifier.getId() + "] from storage");
                 }
 
-                content.put("ortolang-referentiel-json", new ByteArrayInputStream(referentielEntity.getContent().getBytes()));
+                content.put("ortolang-referentiel-json", new ByteArrayInputStream(organizationEntity.getContent().getBytes()));
+            }
+
+            if (identifier.getType().equals(StatusOfUseEntity.OBJECT_TYPE)) {
+            	StatusOfUseEntity statusOfUseEntity = em.find(StatusOfUseEntity.class, identifier.getId());
+                if (statusOfUseEntity == null) {
+                    throw new OrtolangException("unable to load StatusOfUseEntity with id [" + identifier.getId() + "] from storage");
+                }
+
+                content.put("ortolang-referentiel-json", new ByteArrayInputStream(statusOfUseEntity.getContent().getBytes()));
+            }
+
+            if (identifier.getType().equals(TermEntity.OBJECT_TYPE)) {
+            	TermEntity termEntity = em.find(TermEntity.class, identifier.getId());
+                if (termEntity == null) {
+                    throw new OrtolangException("unable to load TermEntity with id [" + identifier.getId() + "] from storage");
+                }
+
+                content.put("ortolang-referentiel-json", new ByteArrayInputStream(termEntity.getContent().getBytes()));
+            }
+
+            if (identifier.getType().equals(PersonEntity.OBJECT_TYPE)) {
+            	PersonEntity personEntity = em.find(PersonEntity.class, identifier.getId());
+                if (personEntity == null) {
+                    throw new OrtolangException("unable to load PersonEntity with id [" + identifier.getId() + "] from storage");
+                }
+                content.put("ortolang-referentiel-json", new ByteArrayInputStream(personEntity.getContent().getBytes()));
+            }
+
+            if (identifier.getType().equals(LicenseEntity.OBJECT_TYPE)) {
+            	LicenseEntity licenseEntity = em.find(LicenseEntity.class, identifier.getId());
+                if (licenseEntity == null) {
+                    throw new OrtolangException("unable to load LicenseEntity with id [" + identifier.getId() + "] from storage");
+                }
+                content.put("ortolang-referentiel-json", new ByteArrayInputStream(licenseEntity.getContent().getBytes()));
             }
 
             return content;
@@ -364,4 +918,23 @@ public class ReferentielServiceBean implements ReferentielService {
             throw new OrtolangException("unable to find an object for key " + key);
         }
     }
+
+
+	private String extractField(String jsonContent, String fieldName) {
+		String fieldValue = null;
+		StringReader reader = new StringReader(jsonContent);
+		JsonReader jsonReader = Json.createReader(reader);
+		try {
+			JsonObject jsonObj = jsonReader.readObject();
+			fieldValue = jsonObj.getString(fieldName);
+		} catch(NullPointerException | ClassCastException e) {
+			LOGGER.log(Level.WARNING, "No property '"+fieldName+"' in json object");
+		} finally {
+			jsonReader.close();
+			reader.close();
+		}
+
+		return fieldValue;
+	}
+
 }
