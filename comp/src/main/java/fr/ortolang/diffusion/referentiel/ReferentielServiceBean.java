@@ -345,13 +345,12 @@ public class ReferentielServiceBean implements ReferentielService {
 
     		OrganizationEntity orgEntity = null;
     		String organization = extractField(content, "organization");
-//    		organization = organization.replaceAll(JsonStoreServiceBean.PREFIX_REF, "");
     		
     		if(organization!=null) {
 	    		List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(organization);
 	    		if(ortolangKeys.size()==1) {
 	    			organization = ortolangKeys.get(0);
-	//    		if(organization!=null) {
+
 	    			OrtolangObjectIdentifier identifier = registry.lookup(organization);
 	        		checkObjectType(identifier, OrganizationEntity.OBJECT_TYPE);
 	        		orgEntity = em.find(OrganizationEntity.class, identifier.getId());
@@ -426,24 +425,25 @@ public class ReferentielServiceBean implements ReferentielService {
             
             OrganizationEntity orgEntity = null;
             String organization = extractField(content, "organization");
-//    		organization = organization.replaceAll(JsonStoreServiceBean.PREFIX_REF, "");
-//    		if(organization!=null) {
 
-    		List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(organization);
-    		if(ortolangKeys.size()==1) {
-    			organization = ortolangKeys.get(0);
-    			
-    			OrtolangObjectIdentifier identifierOrganization = registry.lookup(organization);
-        		checkObjectType(identifierOrganization, OrganizationEntity.OBJECT_TYPE);
-        		orgEntity = em.find(OrganizationEntity.class, identifierOrganization.getId());
-        		if (orgEntity == null) {
-        			throw new ReferentielServiceException("unable to find a OrganizationEntity for id " + identifierOrganization.getId() + " and key " + organization);
+
+            if(organization!=null) {
+        		List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(organization);
+        		if(ortolangKeys.size()==1) {
+        			organization = ortolangKeys.get(0);
+        			
+        			OrtolangObjectIdentifier identifierOrganization = registry.lookup(organization);
+            		checkObjectType(identifierOrganization, OrganizationEntity.OBJECT_TYPE);
+            		orgEntity = em.find(OrganizationEntity.class, identifierOrganization.getId());
+            		if (orgEntity == null) {
+            			throw new ReferentielServiceException("unable to find a OrganizationEntity for id " + identifierOrganization.getId() + " and key " + organization);
+            		}
+            		orgEntity.setKey(organization);
+        		} else {
+        			LOGGER.log(Level.SEVERE, "unable to extract Organization in "+organization);
+        			throw new ReferentielServiceException("unable to extract a OrganizationEntity in "+organization);
         		}
-        		orgEntity.setKey(organization);
-    		} else {
-    			LOGGER.log(Level.SEVERE, "unable to extract Organization in "+organization);
-    			throw new ReferentielServiceException("unable to extract a OrganizationEntity in "+organization);
-    		}
+            }
     		
             refEntity.setKey(key);
             refEntity.setContent(content);
