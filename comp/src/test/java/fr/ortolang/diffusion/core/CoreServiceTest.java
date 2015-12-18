@@ -342,7 +342,7 @@ public class CoreServiceTest {
 
 			InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
 			String schemaHash = core.put(schemaInputStream);
-			String id = core.createMetadataFormat("ortolang-item-json", "ORTOLANG Item", schemaHash, null, true);
+			String id = core.createMetadataFormat("ortolang-item-json", "ORTOLANG Item", schemaHash, null, true, true);
 			
 			List<MetadataFormat> mfs = core.listMetadataFormat();
 			assertEquals(1, mfs.size());
@@ -415,7 +415,7 @@ public class CoreServiceTest {
 
 			InputStream schemaWorkspaceInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-workspace-schema.json");
 			String schemaWorkspaceHash = core.put(schemaWorkspaceInputStream);
-			core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "", true);
+			core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "", true, true);
 			
 			Workspace workspace = core.readWorkspace(wsk);
 			assertEquals(0, workspace.getSnapshots().size());

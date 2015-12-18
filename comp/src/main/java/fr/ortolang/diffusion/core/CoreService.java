@@ -170,7 +170,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
 	/*MetadataFormat*/
 
-    public String createMetadataFormat(String name, String description, String schema, String form, boolean validationNeeded) throws CoreServiceException;
+    public String createMetadataFormat(String name, String description, String schema, String form, boolean validationNeeded, boolean indexable) throws CoreServiceException;
 
     public MetadataFormat getMetadataFormat(String name) throws CoreServiceException;
 

@@ -17,10 +17,9 @@ public class MetadataFormat {
 
     public static final String ACL = "ortolang-acl-json";
     public static final String ITEM = "ortolang-item-json";
-    public static final String ORGANIZATION = "ortolang-organization-json";
     public static final String WORKSPACE = "ortolang-workspace-json";
     public static final String PID = "ortolang-pid-json";
-    public static final String THUMB = "ortolang-thumbnail-json";
+    public static final String THUMB = "thumbnail";
     public static final String TEMPLATE = "ortolang-template-json";
 
 
@@ -37,10 +36,12 @@ public class MetadataFormat {
     private String schema;
     private String form;
     private boolean validationNeeded;
+    private boolean indexable;
 
     public MetadataFormat() {
         serial = 1;
         validationNeeded = true;
+        indexable = true;
     }
 
     public String getId() {
@@ -123,6 +124,14 @@ public class MetadataFormat {
         this.validationNeeded = validationSkipped;
     }
 
+    public boolean isIndexable() {
+        return indexable;
+    }
+
+    public void setIndexable(boolean indexable) {
+        this.indexable = indexable;
+    }
+
     @Override public boolean equals(Object o) {
         if (this == o)
             return true;
@@ -134,6 +143,8 @@ public class MetadataFormat {
         if (size != that.size)
             return false;
         if (validationNeeded != that.validationNeeded)
+            return false;
+        if (indexable != that.indexable)
             return false;
         if (name != null ? !name.equals(that.name) : that.name != null)
             return false;
@@ -157,6 +168,7 @@ public class MetadataFormat {
         result = 31 * result + (schema != null ? schema.hashCode() : 0);
         result = 31 * result + (form != null ? form.hashCode() : 0);
         result = 31 * result + (validationNeeded ? 1 : 0);
+        result = 31 * result + (indexable ? 1 : 0);
         return result;
     }
 }
