@@ -34,7 +34,7 @@
 		<version.ejb.plugin>2.5.1</version.ejb.plugin>
 		<version.war.plugin>2.6</version.war.plugin>
 		<version.assembly.plugin>2.5.2</version.assembly.plugin>
-		<version.wildfly.maven.plugin>1.1.0.Alpha4</version.wildfly.maven.plugin>
+		<version.wildfly.maven.plugin>1.1.0.Alpha5</version.wildfly.maven.plugin>
 		<version.wildfly>9.0.1.Final</version.wildfly>
 		<slf4j.version>1.6.4</slf4j.version>
 		<version.apache.tika>1.8</version.apache.tika>
@@ -46,12 +46,12 @@
 		<version.shrinkwrap>1.2.2</version.shrinkwrap>
 		<version.shrinkwrap-resolver>2.1.1</version.shrinkwrap-resolver>
 		<version.arquillian>1.1.8.Final</version.arquillian>
-		<version.fasterxml.jackson>2.6.2</version.fasterxml.jackson>
+		<version.fasterxml.jackson>2.6.4</version.fasterxml.jackson>
 		<version.commons-io>2.4</version.commons-io>
 		<version.springframework.spring-context>4.0.9.RELEASE</version.springframework.spring-context>
 		<version.lyncode.xoai>4.1.0</version.lyncode.xoai>
 		<version.json>20141113</version.json>
-		<version.thetransactioncompany.cors-filter>2.4</version.thetransactioncompany.cors-filter>
+		<version.thetransactioncompany.cors-filter>2.5</version.thetransactioncompany.cors-filter>
 		<version.json-glassfish>1.0.4</version.json-glassfish>
 		<version.base64>2.3.8</version.base64>
 		<version.commons-cli>1.2</version.commons-cli>
@@ -60,7 +60,7 @@
 		<version.apache.lucene>4.6.0</version.apache.lucene>
 		<version.openrdf.sesame>2.8.3</version.openrdf.sesame>
 		<version.orientechnologies.orientdb>2.0.15</version.orientechnologies.orientdb>
-		<version.common-compress>1.8.1</version.common-compress>
+		<version.common-compress>1.10</version.common-compress>
 		<version.hdlnet>7.3.1</version.hdlnet>
 		<version.bagit>4.9.0</version.bagit>
 		<version.hibernate-core>4.3.5.Final</version.hibernate-core>
