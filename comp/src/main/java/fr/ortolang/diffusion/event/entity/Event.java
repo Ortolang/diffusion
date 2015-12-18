@@ -69,118 +69,118 @@ import fr.ortolang.diffusion.OrtolangEvent;
 @Entity
 @SuppressWarnings("serial")
 @Table(indexes={@Index(columnList="date", name="eventDateIndex")})
-@NamedQueries({ 
-    @NamedQuery(name = "listAllEventsByDate", query = "SELECT e FROM Event e ORDER BY e.date DESC") 
+@NamedQueries({
+        @NamedQuery(name = "listAllEventsByDate", query = "SELECT e FROM Event e ORDER BY e.date DESC")
 })
 public class Event extends OrtolangEvent implements Serializable {
-    
+
     private static final Logger LOGGER = Logger.getLogger(Event.class.getName());
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
-	private String fromObject;
-	private String throwedBy;
-	private String objectType;
-	@Temporal(TemporalType.TIMESTAMP)
-	private Date date;
-	private String type;
-	@Transient
-	private Map<String, String> args;
-	@Column(columnDefinition="TEXT")
-	private String serializedArgs;
+    private String fromObject;
+    private String throwedBy;
+    private String objectType;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date date;
+    private String type;
+    @Transient
+    private Map<String, String> args;
+    @Column(columnDefinition="TEXT")
+    private String serializedArgs;
 
-	public Event() {
-		args = Collections.emptyMap();
-	}
+    public Event() {
+        args = Collections.emptyMap();
+    }
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	@Override
-	public String getFromObject() {
-		return fromObject;
-	}
+    @Override
+    public String getFromObject() {
+        return fromObject;
+    }
 
-	@Override
-	public void setFromObject(String fromObject) {
-		this.fromObject = fromObject;
-	}
+    @Override
+    public void setFromObject(String fromObject) {
+        this.fromObject = fromObject;
+    }
 
-	@Override
-	public String getThrowedBy() {
-		return throwedBy;
-	}
+    @Override
+    public String getThrowedBy() {
+        return throwedBy;
+    }
 
-	@Override
-	public void setThrowedBy(String throwedBy) {
-		this.throwedBy = throwedBy;
-	}
+    @Override
+    public void setThrowedBy(String throwedBy) {
+        this.throwedBy = throwedBy;
+    }
 
-	@Override
-	public String getObjectType() {
-		return objectType;
-	}
+    @Override
+    public String getObjectType() {
+        return objectType;
+    }
 
-	@Override
-	public void setObjectType(String objectType) {
-		this.objectType = objectType;
-	}
+    @Override
+    public void setObjectType(String objectType) {
+        this.objectType = objectType;
+    }
 
-	@Override
-	public Date getDate() {
-		return date;
-	}
+    @Override
+    public Date getDate() {
+        return date;
+    }
 
-	@Override
-	public void setDate(Date date) {
-		this.date = date;
-	}
+    @Override
+    public void setDate(Date date) {
+        this.date = date;
+    }
 
-	@Override
-	public String getType() {
-		return type;
-	}
+    @Override
+    public String getType() {
+        return type;
+    }
 
-	@Override
-	public void setType(String type) {
-		this.type = type;
-	}
+    @Override
+    public void setType(String type) {
+        this.type = type;
+    }
 
-	@Override
-	public Map<String, String> getArguments() {
-	    return args;
-	}
+    @Override
+    public Map<String, String> getArguments() {
+        return args;
+    }
 
-	@Override
-	public void setArguments(Map<String, String> args) {
-		this.args = args;
-		try {
+    @Override
+    public void setArguments(Map<String, String> args) {
+        this.args = args;
+        try {
             this.serializedArgs = serializeArgs(args);
             LOGGER.log(Level.FINEST, "arguments serialized for event");
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "unable to serialize event arguments");
         }
-	}
-	
-	@PostLoad 
-	private void onPostLoad() {
-	    if (serializedArgs != null && serializedArgs.length() > 0 ) {
-    	    try {
-    	        this.args = deserializeArgs(serializedArgs);
+    }
+
+    @PostLoad
+    private void onPostLoad() {
+        if (serializedArgs != null && serializedArgs.length() > 0 ) {
+            try {
+                this.args = deserializeArgs(serializedArgs);
                 LOGGER.log(Level.FINEST, "arguments deserialized for event");
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "unable to deserialize event arguments");
             }
-	    }
-	}
-	
-	@PostUpdate
+        }
+    }
+
+    @PostUpdate
     private void onPostUpdate() {
         if (serializedArgs != null && serializedArgs.length() > 0 ) {
             try {
@@ -191,20 +191,22 @@ public class Event extends OrtolangEvent implements Serializable {
             }
         }
     }
-	
-	private static String serializeArgs(Map<String, String> args) throws IOException {
+
+    private static String serializeArgs(Map<String, String> args) throws IOException {
         if (args == null || args.size() == 0 ) {
             return "";
         }
         Properties props = new Properties();
         for ( Entry<String, String> entry : args.entrySet() ) {
-            props.setProperty(entry.getKey(), entry.getValue());
+            if (entry.getValue() != null) {
+                props.setProperty(entry.getKey(), entry.getValue());
+            }
         }
         StringWriter out = new StringWriter();
         props.store(out, null);
         return out.toString();
     }
-    
+
     private static Map<String, String> deserializeArgs(String serializedArgs) throws IOException {
         if (serializedArgs != null && serializedArgs.length() > 0 ) {
             Properties props = new Properties();
@@ -217,18 +219,18 @@ public class Event extends OrtolangEvent implements Serializable {
         }
         return Collections.emptyMap();
     }
-    
+
 
     @Override
-	public String toString() {
-		return "Event{" +
-				"id=" + id +
-				", fromObject='" + fromObject + '\'' +
-				", throwedBy='" + throwedBy + '\'' +
-				", objectType='" + objectType + '\'' +
-				", date=" + date +
-				", type='" + type + '\'' +
-				", arguments=" + args +
-				'}';
-	}
+    public String toString() {
+        return "Event{" +
+                "id=" + id +
+                ", fromObject='" + fromObject + '\'' +
+                ", throwedBy='" + throwedBy + '\'' +
+                ", objectType='" + objectType + '\'' +
+                ", date=" + date +
+                ", type='" + type + '\'' +
+                ", arguments=" + args +
+                '}';
+    }
 }
