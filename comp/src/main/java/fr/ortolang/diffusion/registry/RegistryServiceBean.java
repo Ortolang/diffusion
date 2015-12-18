@@ -560,6 +560,15 @@ public class RegistryServiceBean implements RegistryService {
             return query.getResultList();
     }
 	
+	@Override
+    @RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public RegistryEntry systemReadEntry(String key) throws RegistryServiceException, KeyNotFoundException {
+            LOGGER.log(Level.FINE, "#SYSTEM# read entry for key [" + key + "]");
+            RegistryEntry entry = em.find(RegistryEntry.class, key);
+            return entry;
+    }
+	
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private RegistryEntry findEntryByKey(String key) throws KeyNotFoundException {
 		RegistryEntry entry = em.find(RegistryEntry.class, key);

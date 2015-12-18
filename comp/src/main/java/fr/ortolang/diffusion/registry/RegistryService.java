@@ -126,8 +126,10 @@ public interface RegistryService extends OrtolangService {
 	
 
 	public List<RegistryEntry> systemListEntries(String keyFilter) throws RegistryServiceException;
-    
-    public long systemCountAllEntries(String identifierFilter) throws RegistryServiceException;
+	
+	public RegistryEntry systemReadEntry(String key) throws RegistryServiceException, KeyNotFoundException;
+	
+	public long systemCountAllEntries(String identifierFilter) throws RegistryServiceException;
     
     public long systemCountDeletedEntries(String identifierFilter) throws RegistryServiceException;
     

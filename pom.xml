@@ -42,7 +42,7 @@
 		<version.apache.velocity-tools>2.0</version.apache.velocity-tools>
 		<version.javax.javaee>7.0</version.javax.javaee>
 		<version.jboss.resteasy>3.0.11.Final</version.jboss.resteasy>
-		<version.keycloak>1.4.0.Final</version.keycloak>
+		<version.keycloak>1.7.0.Final</version.keycloak>
 		<version.shrinkwrap>1.2.2</version.shrinkwrap>
 		<version.shrinkwrap-resolver>2.1.1</version.shrinkwrap-resolver>
 		<version.arquillian>1.1.8.Final</version.arquillian>

@@ -54,7 +54,7 @@ public class ExportBDBHandles {
 
 	@Test
 	public void export() throws HandleException {
-	    try (BufferedWriter writer = Files.newBufferedWriter(Paths.get("/home/jerome/sldr_handles.json"))) {
+	    try (BufferedWriter writer = Files.newBufferedWriter(Paths.get("/home/jerome/sldr_handles_new.json"))) {
 	        writer.append("[");
     	    this.scanHandles(new ScanCallback() {
     			@Override

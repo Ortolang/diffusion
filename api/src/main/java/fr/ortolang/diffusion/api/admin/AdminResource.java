@@ -79,14 +79,22 @@ public class AdminResource {
         List<RegistryEntry> entries = registry.systemListEntries(filter);
         return Response.ok(entries).build();
     }
+    
+    @GET
+    @Path("/registry/entries/{key}")
+    public Response readEntry(@PathParam("key") String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "GET /admin/registry/entries/" + key);
+        RegistryEntry entry = registry.systemReadEntry(key);
+        return Response.ok(entry).build();
+    }
 
     @PUT
     @Path("/registry/entries/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response updateEntry(@PathParam("key") String key, RegistryEntry entry) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-        LOGGER.log(Level.INFO, "UPDATE /admin/registry/entries/" + key);
+    public Response updateEntry(@PathParam("key") String key, RegistryEntry entry) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "PUT /admin/registry/entries/" + key);
         // TODO compare what changes in order to update state...
-        return Response.ok().build();
+        return Response.serverError().entity("NOT IMPLEMENTED").build();
     }
 
     @DELETE
