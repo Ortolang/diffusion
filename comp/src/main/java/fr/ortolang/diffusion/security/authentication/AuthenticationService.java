@@ -44,5 +44,5 @@ public interface AuthenticationService extends OrtolangService {
 	public static final String SERVICE_NAME = "authentication";
     
     public String getConnectedIdentifier();
-
+    
 }
