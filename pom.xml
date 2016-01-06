@@ -57,10 +57,10 @@
 		<version.base64>2.3.8</version.base64>
 		<version.commons-cli>1.2</version.commons-cli>
 		<version.javamelody>1.58.0</version.javamelody>
-		<version.atmopshere>2.4.1.4</version.atmopshere>
+		<version.atmopshere>2.4.2</version.atmopshere>
 		<version.apache.lucene>4.6.0</version.apache.lucene>
 		<version.openrdf.sesame>2.8.3</version.openrdf.sesame>
-		<version.orientechnologies.orientdb>2.0.15</version.orientechnologies.orientdb>
+		<version.orientechnologies.orientdb>2.1.8</version.orientechnologies.orientdb>
 		<version.common-compress>1.10</version.common-compress>
 		<version.hdlnet>7.3.1</version.hdlnet>
 		<version.bagit>4.9.0</version.bagit>
