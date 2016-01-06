@@ -48,8 +48,8 @@ import java.util.StringTokenizer;
 public class InsertDeleteFirst {
     
     public static void main(String args[]) {
-        Path input = Paths.get("/home/jerome/ortolang_sldr_handles_new.sql");
-        Path output = Paths.get("/home/jerome/ortolang_sldr_handles_new_with_delete.sql");
+        Path input = Paths.get("/home/jerome/ortolang_comere_handles_new_corrected.sql");
+        Path output = Paths.get("/home/jerome/ortolang_comere_handles_new_corrected_with_delete.sql");
         
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] buf = new byte[1024];

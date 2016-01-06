@@ -46,6 +46,7 @@ import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -107,16 +108,20 @@ public class ConfigResource {
 	}
 	
 	@GET
-	@Path("/client/auth")
+	@Path("/client/{resource}")
 	@Produces({ MediaType.APPLICATION_JSON })
-	public Response getClientKeycloakConfig() throws TemplateEngineException {
+	public Response getMarketClientKeycloakConfig(@PathParam("resource") String resource) throws TemplateEngineException {
 		StringBuilder builder = new StringBuilder();
 		builder.append("{\r\n");
 		builder.append("\t\"realm\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_REALM)).append("\",\r\n");
 		builder.append("\t\"realm-public-key\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_CLIENT_PUBKEY)).append("\",\r\n");
 		builder.append("\t\"auth-server-url\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_SERVER_URL)).append("\",\r\n");
 		builder.append("\t\"ssl-required\": \"external\",\r\n");
-		builder.append("\t\"resource\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_CLIENT)).append("\",\r\n");
+		if ( resource.equals("auth") ) {
+		    builder.append("\t\"resource\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_CLIENT)).append("\",\r\n");
+		} else {
+		    builder.append("\t\"resource\": \"").append(resource).append("\",\r\n");
+		}
 		builder.append("\t\"public-client\": true\r\n");
 		builder.append("}");
 		return Response.ok(builder.toString()).build();

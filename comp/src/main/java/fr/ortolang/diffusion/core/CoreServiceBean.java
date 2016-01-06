@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -914,9 +915,9 @@ public class CoreServiceBean implements CoreService {
             String root = workspace.findSnapshotByName(snapshot).getKey();
 
             Set<OrtolangObjectPid> pids = new HashSet<OrtolangObjectPid>();
-            String apiBase = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL) + OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_CONTENT);
-            String marketBase = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL) + "#/market/item";
-            buildPidList(workspace.getAlias(), tag, root, pids, PathBuilder.newInstance(), apiBase, marketBase);
+            String apiUrlBase = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL) + OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_CONTENT);
+            String marketUrlBase = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL) + "#/market/item";
+            buildHandleList(workspace.getAlias(), tag, root, pids, PathBuilder.newInstance(), apiUrlBase, marketUrlBase);
             return pids;
         } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException | InvalidPathException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during building workspace pid list", e);
@@ -925,20 +926,35 @@ public class CoreServiceBean implements CoreService {
     }
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    private void buildPidList(String wsalias, String tag, String key, Set<OrtolangObjectPid> pids, PathBuilder path, String apiBase, String marketBase) throws CoreServiceException, KeyNotFoundException,
+    private void buildHandleList(String wsalias, String tag, String key, Set<OrtolangObjectPid> pids, PathBuilder path, String apiUrlBase, String marketUrlBase) throws CoreServiceException, KeyNotFoundException,
             AccessDeniedException, OrtolangException, InvalidPathException {
         OrtolangObject object = findObject(key);
-        LOGGER.log(Level.FINE, "Generating default pid for key: " + key);
-        String target;
-        if ( path.isRoot() ) {
-            target = marketBase + "/" + wsalias + "/" + tag;
-        } else {
-            target = apiBase + "/" + wsalias + "/" + tag + path.build();
+        LOGGER.log(Level.FINE, "Generating pid for key: " + key);
+        String target = ((path.isRoot())?marketUrlBase:apiUrlBase) + "/" + wsalias + "/" + tag + ((path.isRoot())?"":path.build());
+        String dynHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + ((path.isRoot())?"":path.build());
+        String staticHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + "/" + tag + ((path.isRoot())?"":path.build());
+        OrtolangObjectPid dpid = new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, dynHandle, key, target, false);
+        boolean adddpid = true;
+        for ( OrtolangObjectPid pid : pids ) {
+            if ( pid.getName().equals(dpid.getName()) && pid.isUserbased()) {
+                adddpid = false;
+                break;
+            }
         }
-        String dynHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + path.build();
-        String staticHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + "/" + tag + path.build();
-        pids.add(new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, dynHandle, key, target));
-        pids.add(new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, staticHandle, key, target));
+        if ( adddpid ) {
+            pids.add(dpid);
+        }
+        OrtolangObjectPid spid = new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, staticHandle, key, target, false);
+        boolean addspid = true;
+        for ( OrtolangObjectPid pid : pids ) {
+            if ( pid.getName().equals(spid.getName()) && pid.isUserbased()) {
+                addspid = false;
+                break;
+            }
+        }
+        if ( addspid ) {
+            pids.add(spid);
+        }
         if (object instanceof MetadataSource) {
             MetadataElement mde = ((MetadataSource) object).findMetadataByName(MetadataFormat.PID);
             if (mde != null) {
@@ -952,8 +968,16 @@ public class CoreServiceBean implements CoreService {
                         for (int i = 0; i < jpids.size(); i++) {
                             JsonObject jpid = jpids.getJsonObject(i);
                             LOGGER.log(Level.FINE, "Generating metadata based pid for key: " + key);
-                            String ctarget = apiBase + "/" + wsalias + "/" + tag + ((path.isRoot())?"":path.build());
-                            pids.add(new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, jpid.getString("value"), key, ctarget));
+                            String ctarget = apiUrlBase + "/" + wsalias + "/" + tag + ((path.isRoot())?"":path.build());
+                            OrtolangObjectPid upid = new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, jpid.getString("value"), key, ctarget, true);
+                            Iterator<OrtolangObjectPid> iter = pids.iterator();
+                            while ( iter.hasNext() ) {
+                                OrtolangObjectPid pid = iter.next();
+                                if ( pid.getName().equals(upid.getName()) ) {
+                                    iter.remove();
+                                }
+                            }
+                            pids.add(upid);
                         }
                     }
                     reader.close();
@@ -964,7 +988,7 @@ public class CoreServiceBean implements CoreService {
         }
         if (object.getObjectIdentifier().getType().equals(Collection.OBJECT_TYPE)) {
             for (CollectionElement element : ((Collection) object).getElements()) {
-                buildPidList(wsalias, tag, element.getKey(), pids, path.clone().path(element.getName()), apiBase, marketBase);
+                buildHandleList(wsalias, tag, element.getKey(), pids, path.clone().path(element.getName()), apiUrlBase, marketUrlBase);
             }
         }
     }

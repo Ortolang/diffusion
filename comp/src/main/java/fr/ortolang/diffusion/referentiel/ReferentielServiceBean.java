@@ -243,7 +243,7 @@ public class ReferentielServiceBean implements ReferentielService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<OrganizationEntity> listOrganizationEntities() throws ReferentielServiceException {
-    	LOGGER.log(Level.INFO, "Listing all OrganizationEntities");
+    	LOGGER.log(Level.FINE, "Listing all OrganizationEntities");
     	try {
     		TypedQuery<OrganizationEntity> query = em.createNamedQuery("findAllOrganizationEntities", OrganizationEntity.class);
     		List<OrganizationEntity> refEntitys = query.getResultList();
@@ -348,7 +348,7 @@ public class ReferentielServiceBean implements ReferentielService {
 	@Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<PersonEntity> listPersonEntities() throws ReferentielServiceException {
-		LOGGER.log(Level.INFO, "Listing all PersonEntity");
+		LOGGER.log(Level.FINE, "Listing all PersonEntity");
     	try {
     		TypedQuery<PersonEntity> query = em.createNamedQuery("findAllPersonEntities", PersonEntity.class);
     		List<PersonEntity> refEntitys = query.getResultList();
@@ -501,7 +501,7 @@ public class ReferentielServiceBean implements ReferentielService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<StatusOfUseEntity> listStatusOfUseEntities() throws ReferentielServiceException {
-    	LOGGER.log(Level.INFO, "Listing all StatusOfUseEntity");
+    	LOGGER.log(Level.FINE, "Listing all StatusOfUseEntity");
     	try {
     		TypedQuery<StatusOfUseEntity> query = em.createNamedQuery("findAllStatusOfUseEntities", StatusOfUseEntity.class);
     		List<StatusOfUseEntity> refEntitys = query.getResultList();
@@ -606,7 +606,7 @@ public class ReferentielServiceBean implements ReferentielService {
 	@Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<LicenseEntity> listLicenseEntities() throws ReferentielServiceException {
-		LOGGER.log(Level.INFO, "Listing all LicenseEntity");
+		LOGGER.log(Level.FINE, "Listing all LicenseEntity");
     	try {
     		TypedQuery<LicenseEntity> query = em.createNamedQuery("findAllLicenseEntities", LicenseEntity.class);
     		List<LicenseEntity> refEntitys = query.getResultList();
@@ -756,7 +756,7 @@ public class ReferentielServiceBean implements ReferentielService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<TermEntity> listTermEntities() throws ReferentielServiceException {
-    	LOGGER.log(Level.INFO, "Listing all TermEntities");
+    	LOGGER.log(Level.FINE, "Listing all TermEntities");
     	try {
     		TypedQuery<TermEntity> query = em.createNamedQuery("findAllTermEntities", TermEntity.class);
     		List<TermEntity> refEntitys = query.getResultList();

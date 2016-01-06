@@ -99,7 +99,7 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 								File jsonFile = filepath.toFile();
 								String content = getContent(jsonFile);
 								if(content==null) {
-									LOGGER.log(Level.INFO, "Referential entity content is empty for file " + jsonFile);
+									LOGGER.log(Level.FINE, "Referential entity content is empty for file " + jsonFile);
 									return FileVisitResult.CONTINUE;
 								}
 								
@@ -190,7 +190,7 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 	
 	private void createReferentialEntity(String name, String type, String content) throws RuntimeEngineTaskException {
 		try {
-			LOGGER.log(Level.INFO, "  add referential entity "+name);
+			LOGGER.log(Level.FINE, "  add referential entity "+name);
 			switch(type) {
 				case "License":
 					getReferentielService().createLicenseEntity(name, content);
@@ -216,7 +216,7 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 
 	private void updateReferentialEntity(String name, String type, String content) throws RuntimeEngineTaskException {
 		try {
-			LOGGER.log(Level.INFO, "  update referential entity "+name);
+			LOGGER.log(Level.FINE, "  update referential entity "+name);
 			switch(type) {
 				case "License":
 					getReferentielService().updateLicenseEntity(name, content);

@@ -42,17 +42,19 @@ public class OrtolangObjectPid {
 	private String name;
 	private String key;
 	private String target;
+	private boolean userbased;
 	
 	public OrtolangObjectPid() {
 		super();
 	}
 
-	public OrtolangObjectPid(Type type, String name, String key, String target) {
+	public OrtolangObjectPid(Type type, String name, String key, String target, boolean userbased) {
 		super();
 		this.type = type;
 		this.name = name;
 		this.key = key;
 		this.target = target;
+		this.userbased = userbased;
 	}
 
 	public Type getType() {
@@ -87,6 +89,10 @@ public class OrtolangObjectPid {
 		this.target = target;
 	}
 	
+	public boolean isUserbased() {
+        return userbased;
+    }
+	
 	@Override
 	public String toString() {
 		return "OrtolangObjectPID{" +
@@ -94,6 +100,7 @@ public class OrtolangObjectPid {
 				", type=" + type +
 				", name=" + name +
 				", target=" + target +
+				", userbased=" + userbased +
 				'}';
 	}
 	
