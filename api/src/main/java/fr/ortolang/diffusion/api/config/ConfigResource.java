@@ -46,7 +46,6 @@ import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -108,23 +107,52 @@ public class ConfigResource {
 	}
 	
 	@GET
-	@Path("/client/{resource}")
+	@Path("/client/auth")
 	@Produces({ MediaType.APPLICATION_JSON })
-	public Response getMarketClientKeycloakConfig(@PathParam("resource") String resource) throws TemplateEngineException {
+	public Response getClientKeycloakConfig() throws TemplateEngineException {
 		StringBuilder builder = new StringBuilder();
 		builder.append("{\r\n");
 		builder.append("\t\"realm\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_REALM)).append("\",\r\n");
 		builder.append("\t\"realm-public-key\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_CLIENT_PUBKEY)).append("\",\r\n");
 		builder.append("\t\"auth-server-url\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_SERVER_URL)).append("\",\r\n");
 		builder.append("\t\"ssl-required\": \"external\",\r\n");
-		if ( resource.equals("auth") ) {
-		    builder.append("\t\"resource\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_CLIENT)).append("\",\r\n");
-		} else {
-		    builder.append("\t\"resource\": \"").append(resource).append("\",\r\n");
-		}
+		builder.append("\t\"resource\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_CLIENT)).append("\",\r\n");
 		builder.append("\t\"public-client\": true\r\n");
 		builder.append("}");
 		return Response.ok(builder.toString()).build();
 	}
+	
+	@GET
+    @Path("/admin")
+    @Produces({ MediaType.TEXT_PLAIN })
+    public Response getAdminConfig() throws TemplateEngineException {
+        StringBuilder builder = new StringBuilder();
+        builder.append("var OrtolangConfig = {};\r\n");
+        builder.append("OrtolangConfig.apiServerUrlDefault='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("';\r\n");
+        builder.append("OrtolangConfig.apiServerUrlNoSSL='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_NOSSL)).append("';\r\n");
+        builder.append("OrtolangConfig.apiContentPath='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_CONTENT)).append("';\r\n");
+        builder.append("OrtolangConfig.apiSubPath='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_SUB)).append("';\r\n");
+        builder.append("OrtolangConfig.piwikHost='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_HOST)).append("';\r\n");
+        builder.append("OrtolangConfig.piwikSiteId='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID)).append("';\r\n");
+        builder.append("OrtolangConfig.keycloakConfigLocation ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("/config/admin/auth").append("';\r\n");
+        builder.append("OrtolangConfig.staticSiteVersion ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.STATIC_SITE_VERSION)).append("';\r\n");
+        return Response.ok(builder.toString()).build();
+    }
+    
+    @GET
+    @Path("/admin/auth")
+    @Produces({ MediaType.APPLICATION_JSON })
+    public Response getAdminKeycloakConfig() throws TemplateEngineException {
+        StringBuilder builder = new StringBuilder();
+        builder.append("{\r\n");
+        builder.append("\t\"realm\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_REALM)).append("\",\r\n");
+        builder.append("\t\"realm-public-key\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_CLIENT_PUBKEY)).append("\",\r\n");
+        builder.append("\t\"auth-server-url\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_SERVER_URL)).append("\",\r\n");
+        builder.append("\t\"ssl-required\": \"external\",\r\n");
+        builder.append("\t\"resource\": \"admin\",\r\n");
+        builder.append("\t\"public-client\": true\r\n");
+        builder.append("}");
+        return Response.ok(builder.toString()).build();
+    }
 	
 }
