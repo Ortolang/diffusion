@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.api.search;
 import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.search.SearchServiceException;
+import org.jboss.resteasy.annotations.GZIP;
 
 import javax.ejb.EJB;
 import javax.ws.rs.*;
@@ -77,6 +78,7 @@ public class SearchResource {
     @POST
     @Path("/json")
     @Consumes({ MediaType.APPLICATION_FORM_URLENCODED })
+    @GZIP
     public Response jsonSearch(@FormParam(value = "query") String query) {
         LOGGER.log(Level.INFO, "POST /search/json");
         List<String> results;

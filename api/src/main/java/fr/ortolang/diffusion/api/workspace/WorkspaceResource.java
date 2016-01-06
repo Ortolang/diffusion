@@ -75,6 +75,7 @@ import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTe
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import fr.ortolang.diffusion.api.ApiUriBuilder;
@@ -129,6 +130,7 @@ public class WorkspaceResource {
     }
 
     @GET
+    @GZIP
     public Response listProfileWorkspaces(@QueryParam("md") @DefaultValue("false") boolean md)
             throws CoreServiceException, KeyNotFoundException, AccessDeniedException, BrowserServiceException, SecurityServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces");
@@ -157,6 +159,7 @@ public class WorkspaceResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @GZIP
     public Response createWorkspace(@FormParam("type") @DefaultValue("default") String type, @FormParam("name") @DefaultValue("No Name Provided") String name, @FormParam("alias") String alias)
             throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException {
         LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
@@ -179,6 +182,7 @@ public class WorkspaceResource {
 
     @DELETE
     @Path("/{wskey}")
+    @GZIP
     public Response deleteWorkspace(@PathParam(value = "wskey") String wskey)
             throws CoreServiceException, AccessDeniedException, KeyNotFoundException, RuntimeServiceException, KeyAlreadyExistsException {
         if (core.findWorkspaceLatestPublishedSnapshot(wskey) != null) {
@@ -194,6 +198,7 @@ public class WorkspaceResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
+    @GZIP
     public Response createWorkspace(WorkspaceRepresentation representation)
             throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException {
         LOGGER.log(Level.INFO, "POST(application/json) /workspaces");
@@ -216,6 +221,7 @@ public class WorkspaceResource {
 
     @GET
     @Path("/{wskey}")
+    @GZIP
     public Response getWorkspace(@PathParam(value = "wskey") String wskey, @QueryParam("md") @DefaultValue("false") boolean md, @Context Request request)
             throws CoreServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException, SecurityServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey);
@@ -264,6 +270,7 @@ public class WorkspaceResource {
 
     @GET
     @Path("/{wskey}/elements")
+    @GZIP
     public Response getWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
             @QueryParam(value = "metadata") String metadata, @QueryParam(value = "policy") @DefaultValue("false") boolean policy, @Context Request request)
             throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, OrtolangException, BrowserServiceException, PropertyNotFoundException,
@@ -361,6 +368,7 @@ public class WorkspaceResource {
     @POST
     @Path("/{wskey}/elements")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @GZIP
     public Response createWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form, @Context HttpHeaders headers)
             throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/elements");
@@ -574,6 +582,7 @@ public class WorkspaceResource {
 
     @GET
     @Path("/alias/{alias}/ftp")
+    @GZIP
     public Response getFtpUrl(@PathParam(value = "alias") String alias) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, MembershipServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces/alias/" + alias + "/ftp");
         StringBuilder url = new StringBuilder();
@@ -594,6 +603,7 @@ public class WorkspaceResource {
 
     @GET
     @Path("/alias/{alias}")
+    @GZIP
     public Response getWorkspaceFromAlias(@PathParam(value = "alias") String alias, @QueryParam("md") @DefaultValue("false") boolean md, @Context Request request)
             throws CoreServiceException, AliasNotFoundException, AccessDeniedException, KeyNotFoundException, SecurityServiceException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces/alias/" + alias);
@@ -604,6 +614,7 @@ public class WorkspaceResource {
     @GET
     @Path("/alias/{alias}/available")
     @Produces(MediaType.APPLICATION_JSON)
+    @GZIP
     public Response checkAliasAvailability(@PathParam(value = "alias") String alias) throws AccessDeniedException, KeyNotFoundException, CoreServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces/alias/" + alias + "/available");
         boolean available = false;
