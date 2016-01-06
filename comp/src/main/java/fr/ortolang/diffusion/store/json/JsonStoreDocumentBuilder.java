@@ -58,7 +58,7 @@ public class JsonStoreDocumentBuilder {
 
     public static ODocument buildDocument(OrtolangIndexableObject<IndexableJsonContent> object, ODocument oldDoc) {
 
-        ODocument doc = null;
+        ODocument doc;
         if (oldDoc != null) {
             doc = oldDoc;
         } else {

@@ -78,7 +78,7 @@ import fr.ortolang.diffusion.OrtolangObjectSize;
 public class JsonStoreServiceBean implements JsonStoreService {
 
     private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceBean.class.getName());
-    public static final String DEFAULT_JSON_HOME = "/json-store";
+    public static final String DEFAULT_JSON_HOME = "/databases/json-store";
 
     private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
@@ -102,7 +102,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
         try {
             Files.createDirectories(base);
             server = OServerMain.create();
-            server.startup(this.getClass().getResourceAsStream("/orientdb-config.xml"));
+            server.startup(Files.newInputStream(OrtolangConfig.getInstance().getOrientdbConfigPath()));
             server.activate();
             try (ODatabaseDocumentTx db = new ODatabaseDocumentTx("plocal:" + this.base.toFile().getAbsolutePath())) {
                 if (!db.exists()) {

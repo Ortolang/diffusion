@@ -6,31 +6,31 @@
   "properties": {
     "id": {
       "id": "http://www.ortolang.fr/id",
-      "type": "string",
+      "type": "string"
     },
     "name": {
       "id": "http://www.ortolang.fr/name",
-      "type": "string",
+      "type": "string"
     },
     "acronym": {
       "id": "http://jsonschema.net/acronym",
-      "type": "string",
+      "type": "string"
     },
     "city": {
       "id": "http://jsonschema.net/city",
-      "type": "string",
+      "type": "string"
     },
     "country": {
       "id": "http://jsonschema.net/country",
-      "type": "string",
+      "type": "string"
     },
     "homepage": {
       "id": "http://jsonschema.net/homepage",
-      "type": "string",
+      "type": "string"
     },
     "img": {
       "id": "http://jsonschema.net/img",
-      "type": "string",
+      "type": "string"
     }
   },
   "required": [
