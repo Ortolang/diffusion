@@ -308,6 +308,7 @@
             "items": {
                 "id": "http://www.ortolang.fr/schema/013#contributors/item",
                 "type": "object",
+                "additionalProperties": false,
                 "properties": {
                     "roles": {
                         "id": "http://www.ortolang.fr/schema/013#contributors/item/roles",
@@ -332,6 +333,9 @@
                                       "type": "string"
                                     },
                                     "firstname": {
+                                      "type": "string"
+                                    },
+                                    "midname": {
                                       "type": "string"
                                     },
                                     "lastname": {
