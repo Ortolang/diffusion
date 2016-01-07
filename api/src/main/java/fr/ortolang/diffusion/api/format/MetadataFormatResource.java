@@ -62,6 +62,7 @@ import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import org.jboss.resteasy.annotations.GZIP;
 
 /**
  * @resourceDescription Operations on Objects
@@ -70,66 +71,67 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 @Produces({ MediaType.APPLICATION_JSON })
 public class MetadataFormatResource {
 
-	private static final Logger LOGGER = Logger.getLogger(MetadataFormatResource.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MetadataFormatResource.class.getName());
 
-	@EJB
-	private CoreService core;
-	@EJB
-	private BinaryStoreService store;
+    @EJB
+    private CoreService core;
+    @EJB
+    private BinaryStoreService store;
 
-	@GET
-	public Response listMetadataFormat(@QueryParam(value = "name") String name) throws CoreServiceException {
-		LOGGER.log(Level.INFO, "GET /metadataformats");
-		
-		GenericCollectionRepresentation<MetadataFormat> representation = new GenericCollectionRepresentation<MetadataFormat>();
-		if(name!=null) {
-			MetadataFormat md = core.getMetadataFormat(name);
-			
-			representation.addEntry(md);
-			representation.setSize(1);
-			representation.setLimit(1);
-		} else {
-			List<MetadataFormat> mdfs = core.listMetadataFormat();
-			
-			for (MetadataFormat mdf : mdfs) {
-				representation.addEntry(mdf);
-			}
-			
-			representation.setSize(mdfs.size());
-			representation.setLimit(mdfs.size());
-		}
-		
-		representation.setOffset(0);
-		return Response.ok(representation).build();
-	}
+    @GET
+    @GZIP
+    public Response listMetadataFormat(@QueryParam(value = "name") String name) throws CoreServiceException {
+        LOGGER.log(Level.INFO, "GET /metadataformats");
 
-	@GET
-	@Path("/download")
-	public void download(final @QueryParam(value = "id") String id, final @QueryParam(value = "name") String name, @Context HttpServletResponse response) throws OrtolangException, CoreServiceException, DataNotFoundException, IOException, BinaryStoreServiceException {
-		LOGGER.log(Level.INFO, "GET /metadataformats/download");
-		
-		MetadataFormat format = null;
-		if ( id != null && id.length() > 0 ) {
-			format = core.findMetadataFormatById(id);
-		} else if ( name != null && name.length() > 0 ) {
-			format = core.getMetadataFormat(name);
-		} else {
-			throw new DataNotFoundException("either id or name must be provided in order to find metadata format");
-		}
-		if ( format != null ) {
-			response.setHeader("Content-Disposition", "attachment; filename=" + format.getName());
-			response.setContentType(format.getMimeType());
-			response.setContentLength((int)format.getSize());
-			InputStream input = store.get(format.getSchema());
-			try {
-				IOUtils.copy(input, response.getOutputStream());
-			} finally {
-				IOUtils.closeQuietly(input);
-			}
-		} else {
-			throw new DataNotFoundException("unable to find a metadata format for this name or this id");
-		}
-		
-	}
-	
+        GenericCollectionRepresentation<MetadataFormat> representation = new GenericCollectionRepresentation<MetadataFormat>();
+        if(name!=null) {
+            MetadataFormat md = core.getMetadataFormat(name);
+
+            representation.addEntry(md);
+            representation.setSize(1);
+            representation.setLimit(1);
+        } else {
+            List<MetadataFormat> mdfs = core.listMetadataFormat();
+
+            for (MetadataFormat mdf : mdfs) {
+                representation.addEntry(mdf);
+            }
+
+            representation.setSize(mdfs.size());
+            representation.setLimit(mdfs.size());
+        }
+
+        representation.setOffset(0);
+        return Response.ok(representation).build();
+    }
+
+    @GET
+    @Path("/download")
+    public void download(final @QueryParam(value = "id") String id, final @QueryParam(value = "name") String name, @Context HttpServletResponse response) throws OrtolangException, CoreServiceException, DataNotFoundException, IOException, BinaryStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /metadataformats/download");
+
+        MetadataFormat format = null;
+        if ( id != null && id.length() > 0 ) {
+            format = core.findMetadataFormatById(id);
+        } else if ( name != null && name.length() > 0 ) {
+            format = core.getMetadataFormat(name);
+        } else {
+            throw new DataNotFoundException("either id or name must be provided in order to find metadata format");
+        }
+        if ( format != null ) {
+            response.setHeader("Content-Disposition", "attachment; filename=" + format.getName());
+            response.setContentType(format.getMimeType());
+            response.setContentLength((int)format.getSize());
+            InputStream input = store.get(format.getSchema());
+            try {
+                IOUtils.copy(input, response.getOutputStream());
+            } finally {
+                IOUtils.closeQuietly(input);
+            }
+        } else {
+            throw new DataNotFoundException("unable to find a metadata format for this name or this id");
+        }
+
+    }
+
 }

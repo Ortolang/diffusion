@@ -78,6 +78,7 @@ import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
+import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -101,6 +102,7 @@ public class AdminResource {
 
     @GET
     @Path("/infos/{service}")
+    @GZIP
     public Response getRegistryInfos(@PathParam(value = "service") String serviceName) throws OrtolangException {
         LOGGER.log(Level.INFO, "GET /infos/" + serviceName);
         OrtolangService service = OrtolangServiceLocator.findService(serviceName);
@@ -110,6 +112,7 @@ public class AdminResource {
 
     @GET
     @Path("/registry/entries")
+    @GZIP
     public Response listEntries(@QueryParam("filter") String filter) throws RegistryServiceException {
         LOGGER.log(Level.INFO, "GET /admin/registry/entries?filter=" + filter);
         List<RegistryEntry> entries = registry.systemListEntries(filter);
@@ -118,6 +121,7 @@ public class AdminResource {
     
     @GET
     @Path("/registry/entries/{key}")
+    @GZIP
     public Response readEntry(@PathParam("key") String key) throws RegistryServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /admin/registry/entries/" + key);
         RegistryEntry entry = registry.systemReadEntry(key);
@@ -127,6 +131,7 @@ public class AdminResource {
     @PUT
     @Path("/registry/entries/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @GZIP
     public Response updateEntry(@PathParam("key") String key, RegistryEntry entry) throws RegistryServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /admin/registry/entries/" + key);
         // TODO compare what changes in order to update state...
@@ -143,6 +148,7 @@ public class AdminResource {
 
     @GET
     @Path("/runtime/types")
+    @GZIP
     public Response listDefinitions() throws RuntimeServiceException {
         LOGGER.log(Level.INFO, "GET /admin/runtime/types");
         List<ProcessTypeRepresentation> types = runtime.listProcessTypes(false).stream().map(ProcessTypeRepresentation::fromProcessType).collect(Collectors.toCollection(ArrayList::new));
@@ -151,6 +157,7 @@ public class AdminResource {
 
     @GET
     @Path("/runtime/processes")
+    @GZIP
     public Response listProcesses(@QueryParam("state") String state) throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /admin/runtime/processes?state=" + state);
         State estate = null;
@@ -167,6 +174,7 @@ public class AdminResource {
 
     @GET
     @Path("/runtime/tasks")
+    @GZIP
     public Response listTasks() throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /admin/runtime/tasks");
         List<HumanTaskRepresentation> entries = runtime.systemListTasks().stream().map(HumanTaskRepresentation::fromHumanTask).collect(Collectors.toCollection(ArrayList::new));
@@ -175,6 +183,7 @@ public class AdminResource {
     
     @GET
     @Path("/handles")
+    @GZIP
     public Response listAllHandles(@QueryParam("o") int offset, @QueryParam("l") int limit, @QueryParam("filter") String filter) throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /admin/handles");
         List<HumanTaskRepresentation> entries = runtime.systemListTasks().stream().map(HumanTaskRepresentation::fromHumanTask).collect(Collectors.toCollection(ArrayList::new));
@@ -183,6 +192,7 @@ public class AdminResource {
 
     @GET
     @Path("/json/{key}")
+    @GZIP
     public Response getJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/json/" + key);
         String document = json.systemGetDocument(key);

@@ -45,6 +45,7 @@ import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
+import org.jboss.resteasy.annotations.GZIP;
 
 import javax.ejb.EJB;
 import javax.ws.rs.*;
@@ -71,6 +72,7 @@ public class GroupResource {
 
     @GET
     @Path("/{key}")
+    @GZIP
     public Response getGroup(@PathParam(value = "key") String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /groups/" + key);
         Group group = membership.readGroup(key);
@@ -83,6 +85,7 @@ public class GroupResource {
 
     @GET
     @Path("/{key}/cards")
+    @GZIP
     public Response getGroupCards(@PathParam(value = "key") String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /groups/" + key + "/cards");
         Group group = membership.readGroup(key);
@@ -93,6 +96,7 @@ public class GroupResource {
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @GZIP
     public Response addMember(@PathParam(value = "key") String key, @FormParam(value = "member") String member) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /groups/" + key);
         Group group = membership.addMemberInGroup(key, member);
@@ -103,6 +107,7 @@ public class GroupResource {
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @GZIP
     public Response addMemberRepresentation(@PathParam(value = "key") String key, ProfileRepresentation profileRepresentation) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /groups/" + key);
         Group group = membership.addMemberInGroup(key, profileRepresentation.getKey());
@@ -113,6 +118,7 @@ public class GroupResource {
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @GZIP
     public Response addMemberRepresentation(@PathParam(value = "key") String key, ProfileCardRepresentation profileCardRepresentation) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /groups/" + key);
         Group group = membership.addMemberInGroup(key, profileCardRepresentation.getKey());

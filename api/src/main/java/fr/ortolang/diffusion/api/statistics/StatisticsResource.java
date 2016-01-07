@@ -52,6 +52,7 @@ import javax.ws.rs.core.MediaType;
 import fr.ortolang.diffusion.statistics.StatisticNameNotFoundException;
 import fr.ortolang.diffusion.statistics.StatisticsService;
 import fr.ortolang.diffusion.statistics.StatisticsServiceException;
+import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/stats")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -63,6 +64,7 @@ public class StatisticsResource {
     private StatisticsService stats;
     
     @GET
+    @GZIP
     public List<String> getNames() throws StatisticsServiceException {
         LOGGER.log(Level.INFO, "GET /stats");
         return stats.list();
@@ -70,6 +72,7 @@ public class StatisticsResource {
     
     @GET
     @Path("/{name}")
+    @GZIP
     public StatisticsRepresentation getValue(@PathParam("name") String name, @QueryParam("from") @DefaultValue("0") String from, @QueryParam("to") @DefaultValue("5000000000000") String to)
             throws NumberFormatException, StatisticsServiceException, StatisticNameNotFoundException {
         LOGGER.log(Level.INFO, "GET /stats/" + name);

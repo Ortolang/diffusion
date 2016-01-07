@@ -78,6 +78,7 @@ import fr.ortolang.diffusion.security.authentication.TicketHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/profiles")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -97,6 +98,7 @@ public class ProfileResource {
 
     @GET
     @Path("/connected")
+    @GZIP
     public Response getConnected() throws MembershipServiceException, KeyNotFoundException, ProfileAlreadyExistsException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /profiles/connected");
         String key = membership.getProfileKeyForConnectedIdentifier();
@@ -112,6 +114,7 @@ public class ProfileResource {
     
     @GET
     @Path("/totp")
+    @GZIP
     public Response getProfileTotp() throws AccessDeniedException, OrtolangException, KeyNotFoundException, MembershipServiceException {
         LOGGER.log(Level.INFO, "GET /profiles/totp");
         String totp = membership.generateConnectedIdentifierTOTP();
@@ -122,6 +125,7 @@ public class ProfileResource {
 
     @GET
     @Path("/list")
+    @GZIP
     public Response getProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, AuthorisationServiceException {
         LOGGER.log(Level.INFO, "GET /profiles/list");
         GenericCollectionRepresentation<ProfileRepresentation> representation = new GenericCollectionRepresentation<ProfileRepresentation>();
@@ -138,6 +142,7 @@ public class ProfileResource {
 
     @GET
     @Path("/{key}")
+    @GZIP
     public Response getProfile(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /profiles/" + key);
 
@@ -165,6 +170,7 @@ public class ProfileResource {
 
     @GET
     @Path("/{key}/card")
+    @GZIP
     public Response getProfileCard(@PathParam(value = "key") String key, @Context Request request) throws MembershipServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /profiles/" + key + "/card");
 
@@ -193,6 +199,7 @@ public class ProfileResource {
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @GZIP
     public Response updateProfile(@PathParam(value = "key") String key, ProfileRepresentation representation) throws MembershipServiceException, KeyNotFoundException,
             AccessDeniedException {
         LOGGER.log(Level.INFO, "PUT /profiles/" + key);
@@ -203,6 +210,7 @@ public class ProfileResource {
 
     @GET
     @Path("/{key}/keys")
+    @GZIP
     public Response getProfilePublicKeys(@PathParam(value = "key") String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /profiles/" + key + "/keys");
         Profile profile = membership.readProfile(key);
@@ -229,6 +237,7 @@ public class ProfileResource {
 
     @GET
     @Path("/{key}/infos")
+    @GZIP
     public Response getInfos(@PathParam(value = "key") String key, @QueryParam(value = "filter") String filter, @Context Request request) throws MembershipServiceException, BrowserServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /profiles/" + key + "/infos");
 

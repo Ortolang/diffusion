@@ -42,6 +42,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.seo.SeoService;
 import fr.ortolang.diffusion.seo.SeoServiceException;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
+import org.jboss.resteasy.annotations.GZIP;
 
 import javax.ejb.EJB;
 import javax.ws.rs.GET;
@@ -64,6 +65,7 @@ public class SeoResource {
     @GET
     @Produces("application/xml")
     @Path("/sitemap")
+    @GZIP
     public Response getEventFeed()
             throws KeyNotFoundException, AccessDeniedException, EventServiceException, JsonStoreServiceException, TransformerException, ParserConfigurationException, SeoServiceException {
         LOGGER.log(Level.INFO, "GET /sitemap/");
