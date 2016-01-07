@@ -94,25 +94,4 @@ public class SearchResource {
         return Response.ok(results).build();
     }
 
-    @GET
-    @Path("/list/{type}")
-    public Response listAllOfType(@PathParam(value = "type") String type) throws SearchServiceException {
-        LOGGER.log(Level.INFO, "GET /search/list/" + type);
-        String convertedType = null;
-        switch (type) {
-        case "corpora":
-            convertedType = "Corpus";
-            break;
-        }
-        List<String> results;
-        if (convertedType != null) {
-            String query = "SELECT key, meta_ortolang-item-json.title as title, meta_ortolang-item-json.description as description, meta_ortolang-item-json.image as image FROM collection"
-                    + " WHERE status = 'published' AND (meta_ortolang-item-json.type = '" + convertedType + "')";
-            results = search.jsonSearch(query);
-        } else {
-            results = Collections.emptyList();
-        }
-        return Response.ok(results).build();
-    }
-
 }
