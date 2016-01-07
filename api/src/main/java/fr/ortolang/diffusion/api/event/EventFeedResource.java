@@ -61,6 +61,7 @@ import fr.ortolang.diffusion.event.entity.EventFeed;
 import fr.ortolang.diffusion.event.entity.EventFeedFilter;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/feeds")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -75,6 +76,7 @@ public class EventFeedResource {
 
     @GET
     @Path("/{key}")
+    @GZIP
     public Response getEventFeed(@PathParam(value = "key") String key, @Context Request request) throws KeyNotFoundException, AccessDeniedException, EventServiceException {
         LOGGER.log(Level.INFO, "GET /feeds/" + key);
         EventFeed feed = events.readEventFeed(key);
@@ -85,6 +87,7 @@ public class EventFeedResource {
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @GZIP
     public Response updateEventFeed(@PathParam(value = "key") String key, EventFeedRepresentation representation) throws EventServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "PUT /feeds/" + key);
         events.updateEventFeed(key, representation.getName(), representation.getDescription());
@@ -95,6 +98,7 @@ public class EventFeedResource {
     
     @GET
     @Path("/{key}/filters")
+    @GZIP
     public Response listEventFeedFilters(@PathParam(value = "key") String key, @Context Request request) throws KeyNotFoundException, AccessDeniedException, EventServiceException {
         LOGGER.log(Level.INFO, "GET /feeds/" + key + "/filters");
         EventFeed feed = events.readEventFeed(key);
