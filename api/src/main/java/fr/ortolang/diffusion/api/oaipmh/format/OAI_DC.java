@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.api.oaipmh.format;
 
+import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,9 +8,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
+import javax.json.JsonReader;
 import javax.json.JsonString;
+
+import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
 
 public class OAI_DC {
 
@@ -72,83 +77,127 @@ public class OAI_DC {
         //TODO Mettre le handle
         //TODO Pictogramme ? Pas exploiter par Isidore
         //TODO ARK
-        
         try {
-            JsonArray multilingualTitles = doc.getJsonArray("meta_ortolang-item-jsontitle");
-            for(JsonObject multilingualTitle : multilingualTitles.getValuesAs(JsonObject.class)) {
-                oai_dc.addDcMultilingualField("title", multilingualTitle.getString("lang"), multilingualTitle.getString("value"));
-            }
-//            JsonArray multilingualDescriptions = doc.getJsonArray("meta_ortolang-item-jsondescription");
-//            for(JsonObject multilingualDescription : multilingualDescriptions.getValuesAs(JsonObject.class)) {
-//                oai_dc.putDescription(multilingualDescription.getString("lang"), multilingualDescription.getString("value"));
-//            }
-            JsonArray corporaLanguages = doc.getJsonArray("meta_ortolang-item-jsoncorporaLanguages");
-            if(corporaLanguages!=null) {
-                for(JsonString corporaLanguage : corporaLanguages.getValuesAs(JsonString.class)) {
-                	oai_dc.addDcMultilingualField("subject", "fr", corporaLanguage.getString());
-                	oai_dc.addDcMultilingualField("language", "fr", corporaLanguage.getString());
-                    //TODO mettre le code ISO ?
-                }
-            }
-            
-            JsonArray multilingualKeywords = doc.getJsonArray("meta_ortolang-item-jsonkeywords");
-            if(multilingualKeywords!=null) {
-                for(JsonObject multilingualKeyword : multilingualKeywords.getValuesAs(JsonObject.class)) {
-                	oai_dc.addDcMultilingualField("subject", multilingualKeyword.getString("lang"), multilingualKeyword.getString("value"));
-                }
-            }
-            
-            JsonArray contributors = doc.getJsonArray("meta_ortolang-item-jsoncontributors");
-            for(JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
-                JsonArray roles = contributor.getJsonArray("role");
-                for(JsonString role : roles.getValuesAs(JsonString.class)) {
-                    if(role.getString().equals("producer")) {
-                        JsonObject entityContributor = contributor.getJsonObject("entity");
-                        String fullname = entityContributor.getString("fullname");
-                        oai_dc.addDcField("publisher", fullname);
-                    } else {
-                        oai_dc.addDcField("contributor", contributor(contributor, role.getString()));
-                    }
-                    
-                    if(role.getString().equals("author")) {
-                        oai_dc.addDcField("creator", creator(contributor));
-                    }
-                }
-            }
+        	JsonString metaString = doc.getJsonString("meta_ortolang-item-json");
+        	
+        	StringReader reader = new StringReader(metaString.getString());
+            JsonReader jsonReader = Json.createReader(reader);
+            JsonObject meta = jsonReader.readObject();
 
-            JsonString statusOfUse = doc.getJsonString("meta_ortolang-item-jsonstatusOfUse");
-            if(statusOfUse!=null) {
-                oai_dc.addDcField("rights", statusOfUse.getString());
-            }
-            JsonString conditionsOfUse = doc.getJsonString("meta_ortolang-item-jsonconditionsOfUse");
-            if(conditionsOfUse!=null) {
-                oai_dc.addDcField("rights", conditionsOfUse.getString());
-            }
-
-            JsonArray linguisticSubjects = doc.getJsonArray("meta_ortolang-item-jsonlinguisticSubjects");
-            if(linguisticSubjects!=null) {
-                for(JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
-                    oai_dc.addDcField("subject", "linguistic field: "+linguisticSubject.getString());
-                }
-            }
-            JsonString linguisticDataType = doc.getJsonString("meta_ortolang-item-jsonlinguisticDataType");
-            if(linguisticDataType!=null) {
-                oai_dc.addDcField("type", "linguistic-type: "+linguisticDataType.getString());
-            }
-            JsonArray discourseTypes = doc.getJsonArray("meta_ortolang-item-jsondiscourseTypes");
-            if(discourseTypes!=null) {
-                for(JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
-                    oai_dc.addDcField("type", "discourse-type: "+discourseType.getString());
-                }
-            }
-            JsonString creationDate = doc.getJsonString("meta_ortolang-item-jsoncreationDate");
-            if(creationDate!=null) {
-                oai_dc.addDcField("date", creationDate.getString());
-            } else {
-                JsonString publicationDate = doc.getJsonString("meta_ortolang-item-jsonpublicationDate");
-                if(publicationDate!=null) {
-                    oai_dc.addDcField("date", publicationDate.getString());
-                }
+            try {
+	            JsonArray multilingualTitles = meta.getJsonArray("title");
+	            for(JsonObject multilingualTitle : multilingualTitles.getValuesAs(JsonObject.class)) {
+	                oai_dc.addDcMultilingualField("title", multilingualTitle.getString("lang"), multilingualTitle.getString("value"));
+	            }
+	            
+	            JsonArray multilingualDescriptions = meta.getJsonArray("description");
+	            for(JsonObject multilingualTitle : multilingualDescriptions.getValuesAs(JsonObject.class)) {
+	            	String nohtml = multilingualTitle.getString("value").toString().replaceAll("\\<.*?>","").replaceAll("\\&nbsp;"," ").replaceAll("\\&","");
+	                oai_dc.addDcMultilingualField("description", multilingualTitle.getString("lang"), nohtml);
+	            }
+	            
+	            JsonArray corporaLanguages = meta.getJsonArray("corporaLanguages");
+	            if(corporaLanguages!=null) {
+	                for(JsonObject corporaLanguage : corporaLanguages.getValuesAs(JsonObject.class)) {
+	                	JsonObject metaLanguage = corporaLanguage.getJsonObject("meta_ortolang-referentiel-json");
+	                	JsonArray multilingualLabels = metaLanguage.getJsonArray("labels");
+	                	
+	                	for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+	                		oai_dc.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
+		                	oai_dc.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
+	                	}
+	                	oai_dc.addDcField("language", metaLanguage.getString("id"));
+	                }
+	            }
+	            
+	            JsonArray multilingualKeywords = meta.getJsonArray("keywords");
+	            if(multilingualKeywords!=null) {
+	                for(JsonObject multilingualKeyword : multilingualKeywords.getValuesAs(JsonObject.class)) {
+	                	oai_dc.addDcMultilingualField("subject", multilingualKeyword.getString("lang"), multilingualKeyword.getString("value"));
+	                }
+	            }
+	            
+	            JsonArray producers = meta.getJsonArray("producers");
+	            if(producers!=null) {
+	            	for(JsonObject producer : producers.getValuesAs(JsonObject.class)) {
+		            	JsonObject metaOrganization = producer.getJsonObject("meta_ortolang-referentiel-json");
+		            	
+		            	if(metaOrganization.containsKey("fullname")) {
+		            		oai_dc.addDcField("publisher", metaOrganization.getString("fullname"));
+		            	}
+		            }
+	            }
+	            
+//	            JsonArray contributors = meta.getJsonArray("contributors");
+//	            if(contributors!=null) {
+//	            	for(JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
+//		                JsonArray roles = contributor.getJsonArray("roles");
+//		                for(JsonString role : roles.getValuesAs(JsonString.class)) {
+//		                    oai_dc.addDcField("contributor", contributor(contributor, role.getString()));
+//		                    
+//		                    if(role.getString().equals("author")) {
+//		                        oai_dc.addDcField("creator", creator(contributor));
+//		                    }
+//		                }
+//		            }
+//	            }
+	
+	            JsonObject statusOfUse = meta.getJsonObject("statusOfUse");
+	            if(statusOfUse!=null) {
+	            	JsonObject metaStatusOfUse = statusOfUse.getJsonObject("meta_ortolang-referentiel-json");
+	            	String idStatusOfUse = metaStatusOfUse.getString("id");
+	                oai_dc.addDcField("rights", idStatusOfUse);
+	                
+	                JsonArray multilingualLabels = metaStatusOfUse.getJsonArray("labels");
+                	for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+                		oai_dc.addDcMultilingualField("rights", label.getString("lang"), label.getString("value"));
+                	}
+	            }
+	            JsonArray conditionsOfUse = meta.getJsonArray("conditionsOfUse");
+	            if(conditionsOfUse!=null) {
+	            	for(JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
+                		oai_dc.addDcMultilingualField("rights", label.getString("lang"), label.getString("value"));
+                	}
+	            }
+	            
+	            JsonObject license = meta.getJsonObject("license");
+	            if(license!=null) {
+	            	JsonObject metaLicense = license.getJsonObject("meta_ortolang-referentiel-json");
+	            	if(metaLicense!=null) {
+	            		oai_dc.addDcMultilingualField("rights", "fr", metaLicense.getString("label"));
+	            	}
+	            }
+	
+	            JsonArray linguisticSubjects = meta.getJsonArray("linguisticSubjects");
+	            if(linguisticSubjects!=null) {
+	                for(JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
+	                    oai_dc.addDcField("subject", "linguistic field: "+linguisticSubject.getString());
+	                }
+	            }
+	            JsonString linguisticDataType = meta.getJsonString("linguisticDataType");
+	            if(linguisticDataType!=null) {
+	                oai_dc.addDcField("type", "linguistic-type: "+linguisticDataType.getString());
+	            }
+	            JsonArray discourseTypes = meta.getJsonArray("discourseTypes");
+	            if(discourseTypes!=null) {
+	                for(JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
+	                    oai_dc.addDcField("type", "discourse-type: "+discourseType.getString());
+	                }
+	            }
+	            JsonString creationDate = meta.getJsonString("originDate");
+	            if(creationDate!=null) {
+	                oai_dc.addDcField("date", creationDate.getString());
+	            } else {
+	                JsonString publicationDate = meta.getJsonString("publicationDate");
+	                if(publicationDate!=null) {
+	                    oai_dc.addDcField("date", publicationDate.getString());
+	                }
+	            }
+            } catch(NullPointerException | ClassCastException | NumberFormatException e) {
+                LOGGER.log(Level.WARNING, "Cannot parse JSON property from meta_ortolang-item-json", e);
+            } finally {
+                jsonReader.close();
+                reader.close();
             }
         } catch(NullPointerException | ClassCastException | NumberFormatException e) {
             LOGGER.log(Level.WARNING, "Cannot parse JSON property", e);
