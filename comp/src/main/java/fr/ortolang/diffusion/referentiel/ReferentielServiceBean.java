@@ -1,5 +1,41 @@
 package fr.ortolang.diffusion.referentiel;
 
+/*
+ * #%L
+ * ORTOLANG
+ * A online network structure for hosting language resources and tools.
+ * 
+ * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
+ * Etienne Petitjean / ATILF UMR 7118 - CNRS
+ * Jérôme Blanchard / ATILF UMR 7118 - CNRS
+ * Bertrand Gaiffe / ATILF UMR 7118 - CNRS
+ * Cyril Pestel / ATILF UMR 7118 - CNRS
+ * Marie Tonnelier / ATILF UMR 7118 - CNRS
+ * Ulrike Fleury / ATILF UMR 7118 - CNRS
+ * Frédéric Pierre / ATILF UMR 7118 - CNRS
+ * Céline Moro / ATILF UMR 7118 - CNRS
+ *  
+ * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
+ * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
+ * %%
+ * Copyright (C) 2013 - 2015 Ortolang Team
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Lesser Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Lesser Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/lgpl-3.0.html>.
+ * #L%
+ */
+
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -207,7 +243,7 @@ public class ReferentielServiceBean implements ReferentielService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<OrganizationEntity> listOrganizationEntities() throws ReferentielServiceException {
-    	LOGGER.log(Level.INFO, "Listing all OrganizationEntities");
+    	LOGGER.log(Level.FINE, "Listing all OrganizationEntities");
     	try {
     		TypedQuery<OrganizationEntity> query = em.createNamedQuery("findAllOrganizationEntities", OrganizationEntity.class);
     		List<OrganizationEntity> refEntitys = query.getResultList();
@@ -312,7 +348,7 @@ public class ReferentielServiceBean implements ReferentielService {
 	@Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<PersonEntity> listPersonEntities() throws ReferentielServiceException {
-		LOGGER.log(Level.INFO, "Listing all PersonEntity");
+		LOGGER.log(Level.FINE, "Listing all PersonEntity");
     	try {
     		TypedQuery<PersonEntity> query = em.createNamedQuery("findAllPersonEntities", PersonEntity.class);
     		List<PersonEntity> refEntitys = query.getResultList();
@@ -465,7 +501,7 @@ public class ReferentielServiceBean implements ReferentielService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<StatusOfUseEntity> listStatusOfUseEntities() throws ReferentielServiceException {
-    	LOGGER.log(Level.INFO, "Listing all StatusOfUseEntity");
+    	LOGGER.log(Level.FINE, "Listing all StatusOfUseEntity");
     	try {
     		TypedQuery<StatusOfUseEntity> query = em.createNamedQuery("findAllStatusOfUseEntities", StatusOfUseEntity.class);
     		List<StatusOfUseEntity> refEntitys = query.getResultList();
@@ -570,7 +606,7 @@ public class ReferentielServiceBean implements ReferentielService {
 	@Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<LicenseEntity> listLicenseEntities() throws ReferentielServiceException {
-		LOGGER.log(Level.INFO, "Listing all LicenseEntity");
+		LOGGER.log(Level.FINE, "Listing all LicenseEntity");
     	try {
     		TypedQuery<LicenseEntity> query = em.createNamedQuery("findAllLicenseEntities", LicenseEntity.class);
     		List<LicenseEntity> refEntitys = query.getResultList();
@@ -720,7 +756,7 @@ public class ReferentielServiceBean implements ReferentielService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<TermEntity> listTermEntities() throws ReferentielServiceException {
-    	LOGGER.log(Level.INFO, "Listing all TermEntities");
+    	LOGGER.log(Level.FINE, "Listing all TermEntities");
     	try {
     		TypedQuery<TermEntity> query = em.createNamedQuery("findAllTermEntities", TermEntity.class);
     		List<TermEntity> refEntitys = query.getResultList();

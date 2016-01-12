@@ -53,6 +53,7 @@ import fr.ortolang.diffusion.form.FormServiceException;
 import fr.ortolang.diffusion.form.entity.Form;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/forms")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -66,6 +67,7 @@ public class FormResource {
     private UriInfo uriInfo;
 
     @GET
+    @GZIP
     public Response list() throws FormServiceException {
         LOGGER.log(Level.INFO, "GET /forms");
         List<Form> forms = service.listForms();
@@ -81,6 +83,7 @@ public class FormResource {
 
     @GET
     @Path("/{key}")
+    @GZIP
     public Response get(@PathParam(value = "key") String key) throws FormServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /forms/" + key);
         Form form = service.readForm(key);

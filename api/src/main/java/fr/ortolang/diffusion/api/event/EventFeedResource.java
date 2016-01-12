@@ -1,5 +1,41 @@
 package fr.ortolang.diffusion.api.event;
 
+/*
+ * #%L
+ * ORTOLANG
+ * A online network structure for hosting language resources and tools.
+ * 
+ * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
+ * Etienne Petitjean / ATILF UMR 7118 - CNRS
+ * Jérôme Blanchard / ATILF UMR 7118 - CNRS
+ * Bertrand Gaiffe / ATILF UMR 7118 - CNRS
+ * Cyril Pestel / ATILF UMR 7118 - CNRS
+ * Marie Tonnelier / ATILF UMR 7118 - CNRS
+ * Ulrike Fleury / ATILF UMR 7118 - CNRS
+ * Frédéric Pierre / ATILF UMR 7118 - CNRS
+ * Céline Moro / ATILF UMR 7118 - CNRS
+ *  
+ * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
+ * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
+ * %%
+ * Copyright (C) 2013 - 2015 Ortolang Team
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Lesser Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Lesser Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/lgpl-3.0.html>.
+ * #L%
+ */
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +61,7 @@ import fr.ortolang.diffusion.event.entity.EventFeed;
 import fr.ortolang.diffusion.event.entity.EventFeedFilter;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/feeds")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -39,6 +76,7 @@ public class EventFeedResource {
 
     @GET
     @Path("/{key}")
+    @GZIP
     public Response getEventFeed(@PathParam(value = "key") String key, @Context Request request) throws KeyNotFoundException, AccessDeniedException, EventServiceException {
         LOGGER.log(Level.INFO, "GET /feeds/" + key);
         EventFeed feed = events.readEventFeed(key);
@@ -49,6 +87,7 @@ public class EventFeedResource {
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @GZIP
     public Response updateEventFeed(@PathParam(value = "key") String key, EventFeedRepresentation representation) throws EventServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "PUT /feeds/" + key);
         events.updateEventFeed(key, representation.getName(), representation.getDescription());
@@ -59,6 +98,7 @@ public class EventFeedResource {
     
     @GET
     @Path("/{key}/filters")
+    @GZIP
     public Response listEventFeedFilters(@PathParam(value = "key") String key, @Context Request request) throws KeyNotFoundException, AccessDeniedException, EventServiceException {
         LOGGER.log(Level.INFO, "GET /feeds/" + key + "/filters");
         EventFeed feed = events.readEventFeed(key);

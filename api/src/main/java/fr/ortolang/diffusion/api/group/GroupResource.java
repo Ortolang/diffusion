@@ -4,7 +4,7 @@ package fr.ortolang.diffusion.api.group;
  * #%L
  * ORTOLANG
  * A online network structure for hosting language resources and tools.
- *
+ * *
  * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
  * Etienne Petitjean / ATILF UMR 7118 - CNRS
  * Jérôme Blanchard / ATILF UMR 7118 - CNRS
@@ -14,7 +14,7 @@ package fr.ortolang.diffusion.api.group;
  * Ulrike Fleury / ATILF UMR 7118 - CNRS
  * Frédéric Pierre / ATILF UMR 7118 - CNRS
  * Céline Moro / ATILF UMR 7118 - CNRS
- *
+ * *
  * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
  * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
  * %%
@@ -24,12 +24,12 @@ package fr.ortolang.diffusion.api.group;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -45,6 +45,7 @@ import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
+import org.jboss.resteasy.annotations.GZIP;
 
 import javax.ejb.EJB;
 import javax.ws.rs.*;
@@ -71,6 +72,7 @@ public class GroupResource {
 
     @GET
     @Path("/{key}")
+    @GZIP
     public Response getGroup(@PathParam(value = "key") String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /groups/" + key);
         Group group = membership.readGroup(key);
@@ -83,6 +85,7 @@ public class GroupResource {
 
     @GET
     @Path("/{key}/cards")
+    @GZIP
     public Response getGroupCards(@PathParam(value = "key") String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /groups/" + key + "/cards");
         Group group = membership.readGroup(key);
@@ -93,6 +96,7 @@ public class GroupResource {
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @GZIP
     public Response addMember(@PathParam(value = "key") String key, @FormParam(value = "member") String member) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /groups/" + key);
         Group group = membership.addMemberInGroup(key, member);
@@ -103,6 +107,7 @@ public class GroupResource {
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @GZIP
     public Response addMemberRepresentation(@PathParam(value = "key") String key, ProfileRepresentation profileRepresentation) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /groups/" + key);
         Group group = membership.addMemberInGroup(key, profileRepresentation.getKey());
@@ -113,6 +118,7 @@ public class GroupResource {
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @GZIP
     public Response addMemberRepresentation(@PathParam(value = "key") String key, ProfileCardRepresentation profileCardRepresentation) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /groups/" + key);
         Group group = membership.addMemberInGroup(key, profileCardRepresentation.getKey());

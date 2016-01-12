@@ -51,6 +51,7 @@ public class OrtolangConfig {
     private static OrtolangConfig config;
     private Properties props;
     private Path home;
+    private Path orientdbConfig;
 
     private OrtolangConfig() throws Exception {
         if ( System.getenv("ORTOLANG_HOME") != null ) {
@@ -76,6 +77,11 @@ public class OrtolangConfig {
                 throw new Exception("Version mismatch between config file version: " + fileVersion + " and current config version: " + CURRENT_CONFIG_VERSION + " !! Please update your config file");
             }
         }
+        orientdbConfig = Paths.get(home.toString(), "orientdb-config.xml");
+        Path orientdbConfigFilePath = Paths.get(home.toString(), "orientdb-config.xml");
+        if ( !Files.exists(orientdbConfigFilePath) ) {
+            Files.copy(OrtolangConfig.class.getClassLoader().getResourceAsStream("orientdb-config.xml"), orientdbConfigFilePath);
+        }
     }
 
     public static synchronized OrtolangConfig getInstance() {
@@ -92,6 +98,10 @@ public class OrtolangConfig {
 
     public Path getHomePath() {
         return home;
+    }
+
+    public Path getOrientdbConfigPath() {
+        return orientdbConfig;
     }
 
     public String getProperty(OrtolangConfig.Property property) {

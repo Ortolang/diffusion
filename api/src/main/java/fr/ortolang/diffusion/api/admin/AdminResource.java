@@ -1,5 +1,41 @@
 package fr.ortolang.diffusion.api.admin;
 
+/*
+ * #%L
+ * ORTOLANG
+ * A online network structure for hosting language resources and tools.
+ * 
+ * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
+ * Etienne Petitjean / ATILF UMR 7118 - CNRS
+ * Jérôme Blanchard / ATILF UMR 7118 - CNRS
+ * Bertrand Gaiffe / ATILF UMR 7118 - CNRS
+ * Cyril Pestel / ATILF UMR 7118 - CNRS
+ * Marie Tonnelier / ATILF UMR 7118 - CNRS
+ * Ulrike Fleury / ATILF UMR 7118 - CNRS
+ * Frédéric Pierre / ATILF UMR 7118 - CNRS
+ * Céline Moro / ATILF UMR 7118 - CNRS
+ *  
+ * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
+ * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
+ * %%
+ * Copyright (C) 2013 - 2015 Ortolang Team
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Lesser Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Lesser Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/lgpl-3.0.html>.
+ * #L%
+ */
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +78,7 @@ import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
+import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -65,6 +102,7 @@ public class AdminResource {
 
     @GET
     @Path("/infos/{service}")
+    @GZIP
     public Response getRegistryInfos(@PathParam(value = "service") String serviceName) throws OrtolangException {
         LOGGER.log(Level.INFO, "GET /infos/" + serviceName);
         OrtolangService service = OrtolangServiceLocator.findService(serviceName);
@@ -74,6 +112,7 @@ public class AdminResource {
 
     @GET
     @Path("/registry/entries")
+    @GZIP
     public Response listEntries(@QueryParam("filter") String filter) throws RegistryServiceException {
         LOGGER.log(Level.INFO, "GET /admin/registry/entries?filter=" + filter);
         List<RegistryEntry> entries = registry.systemListEntries(filter);
@@ -82,6 +121,7 @@ public class AdminResource {
     
     @GET
     @Path("/registry/entries/{key}")
+    @GZIP
     public Response readEntry(@PathParam("key") String key) throws RegistryServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /admin/registry/entries/" + key);
         RegistryEntry entry = registry.systemReadEntry(key);
@@ -91,6 +131,7 @@ public class AdminResource {
     @PUT
     @Path("/registry/entries/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @GZIP
     public Response updateEntry(@PathParam("key") String key, RegistryEntry entry) throws RegistryServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /admin/registry/entries/" + key);
         // TODO compare what changes in order to update state...
@@ -107,6 +148,7 @@ public class AdminResource {
 
     @GET
     @Path("/runtime/types")
+    @GZIP
     public Response listDefinitions() throws RuntimeServiceException {
         LOGGER.log(Level.INFO, "GET /admin/runtime/types");
         List<ProcessTypeRepresentation> types = runtime.listProcessTypes(false).stream().map(ProcessTypeRepresentation::fromProcessType).collect(Collectors.toCollection(ArrayList::new));
@@ -115,6 +157,7 @@ public class AdminResource {
 
     @GET
     @Path("/runtime/processes")
+    @GZIP
     public Response listProcesses(@QueryParam("state") String state) throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /admin/runtime/processes?state=" + state);
         State estate = null;
@@ -131,6 +174,7 @@ public class AdminResource {
 
     @GET
     @Path("/runtime/tasks")
+    @GZIP
     public Response listTasks() throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /admin/runtime/tasks");
         List<HumanTaskRepresentation> entries = runtime.systemListTasks().stream().map(HumanTaskRepresentation::fromHumanTask).collect(Collectors.toCollection(ArrayList::new));
@@ -139,6 +183,7 @@ public class AdminResource {
     
     @GET
     @Path("/handles")
+    @GZIP
     public Response listAllHandles(@QueryParam("o") int offset, @QueryParam("l") int limit, @QueryParam("filter") String filter) throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /admin/handles");
         List<HumanTaskRepresentation> entries = runtime.systemListTasks().stream().map(HumanTaskRepresentation::fromHumanTask).collect(Collectors.toCollection(ArrayList::new));
@@ -147,6 +192,7 @@ public class AdminResource {
 
     @GET
     @Path("/json/{key}")
+    @GZIP
     public Response getJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/json/" + key);
         String document = json.systemGetDocument(key);
