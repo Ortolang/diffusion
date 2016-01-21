@@ -84,6 +84,7 @@ public class GroupResource {
     }
 
     @GET
+    @Deprecated
     @Path("/{key}/cards")
     @GZIP
     public Response getGroupCards(@PathParam(value = "key") String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
