@@ -240,6 +240,9 @@ public class Profile extends OrtolangObject {
         if (isMemberOf(group)) {
             groupsList = groupsList.replaceAll("(" + group + "){1},?", "");
         }
+        if ( groupsList.endsWith(",") ) {
+            groupsList = groupsList.substring(0, groupsList.length()-1);
+        }
     }
 
     @JsonIgnore
