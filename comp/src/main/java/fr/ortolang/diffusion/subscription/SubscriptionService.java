@@ -51,6 +51,8 @@ public interface SubscriptionService extends OrtolangService {
 
     String MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN = "membership\\.group\\.add-member";
 
+    String MEMBERSHIP_GROUP_ALL_PATTERN = "membership\\.group\\..*";
+
     String RUNTIME_PROCESS_PATTERN = "runtime\\.process\\.(?:change-state|update-activity)";
 
     public Broadcaster getBroadcaster(String username);

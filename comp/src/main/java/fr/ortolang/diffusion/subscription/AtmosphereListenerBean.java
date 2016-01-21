@@ -92,7 +92,7 @@ public class AtmosphereListenerBean implements MessageListener {
                 Map<String, String> arguments = event.getArguments();
                 if (arguments.containsKey("member") && subscription.getSubscriptions().containsKey(arguments.get("member"))) {
                     LOGGER.log(Level.FINE, "User " + arguments.get("member") + " added to group " + event.getFromObject() + "; adding filter to follow group events");
-                    subscription.getSubscriptions().get(arguments.get("member")).addFilter(new Filter(SubscriptionService.MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN, event.getFromObject(), null));
+                    subscription.getSubscriptions().get(arguments.get("member")).addFilter(new Filter(SubscriptionService.MEMBERSHIP_GROUP_ALL_PATTERN, event.getFromObject(), null));
                 }
             }
 

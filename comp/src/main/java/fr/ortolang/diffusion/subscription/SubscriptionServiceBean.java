@@ -156,7 +156,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
             if (profileGroups != null) {
                 for (String profileGroup : profileGroups) {
                     if (profileGroup != null && profileGroup.length() > 0) {
-                        addFilter(username, new Filter(MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN, profileGroup, null));
+                        addFilter(username, new Filter(MEMBERSHIP_GROUP_ALL_PATTERN, profileGroup, null));
                         addFilter(username, new Filter("runtime\\.task\\..*", null, null, "group," + profileGroup));
                     }
                 }
