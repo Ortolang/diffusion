@@ -134,6 +134,9 @@ public class Group extends OrtolangObject {
 		if (isMember(member)) {
 			membersList = membersList.replaceAll("(" + member + "){1},?", "");
 		}
+		if ( membersList.endsWith(",") ) {
+		    membersList = membersList.substring(0, membersList.length()-1);
+        }
 	}
 
 	public String[] getMembers() {
