@@ -49,9 +49,8 @@ public class GroupRepresentation {
 
     @XmlAttribute(name = "key")
     private String key;
-
     private String name;
-
+    private String description;
     private List<ProfileCardRepresentation> members;
 
     public GroupRepresentation() {
@@ -73,6 +72,14 @@ public class GroupRepresentation {
     public void setName(String name) {
         this.name = name;
     }
+    
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
     public List<ProfileCardRepresentation> getMembers() {
         return members;
@@ -90,6 +97,7 @@ public class GroupRepresentation {
         GroupRepresentation representation = new GroupRepresentation();
         representation.setKey(group.getKey());
         representation.setName(group.getName());
+        representation.setDescription(group.getDescription());
         return representation;
     }
 }
