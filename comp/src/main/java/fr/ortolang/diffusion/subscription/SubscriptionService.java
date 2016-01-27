@@ -47,7 +47,7 @@ import fr.ortolang.diffusion.OrtolangService;
 
 public interface SubscriptionService extends OrtolangService {
 
-    public static final String SERVICE_NAME = "subscription";
+    String SERVICE_NAME = "subscription";
 
     String MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN = "membership\\.group\\.add-member";
 
@@ -55,18 +55,18 @@ public interface SubscriptionService extends OrtolangService {
 
     String RUNTIME_PROCESS_PATTERN = "runtime\\.process\\.(?:change-state|update-activity)";
 
-    public Broadcaster getBroadcaster(String username);
+    Broadcaster getBroadcaster(String username);
 
-    public void registerBroadcaster(String username, AtmosphereResource atmosphereResource);
+    void registerBroadcaster(String username, AtmosphereResource atmosphereResource);
 
-    public void addFilter(String username, Filter filter) throws SubscriptionServiceException;
+    void addFilter(String username, Filter filter) throws SubscriptionServiceException;
 
-    public void removeFilter(String username, Filter filter);
+    void removeFilter(String username, Filter filter);
 
-    public void addDefaultFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException;
+    void addDefaultFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException;
 
-    public void addAdminFilters() throws SubscriptionServiceException;
+    void addAdminFilters() throws SubscriptionServiceException;
 
-    public Map<String, Subscription> getSubscriptions();
+    Map<String, Subscription> getSubscriptions();
 
 }
