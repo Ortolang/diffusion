@@ -51,6 +51,7 @@ import fr.ortolang.diffusion.api.filter.ContentTypeSetterPreProcessorInterceptor
 import fr.ortolang.diffusion.api.form.FormResource;
 import fr.ortolang.diffusion.api.format.MetadataFormatResource;
 import fr.ortolang.diffusion.api.group.GroupResource;
+import fr.ortolang.diffusion.api.item.ItemResource;
 import fr.ortolang.diffusion.api.mapper.AccessDeniedExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.AliasNotFoundExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.BrowserServiceExceptionMapper;
@@ -62,13 +63,14 @@ import fr.ortolang.diffusion.api.mapper.KeyNotFoundExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.PathAlreadyExistsExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.PathNotFoundExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.PropertyNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.ReferentialEntityExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SearchServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SecurityServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SubscriptionServiceExceptionMapper;
 import fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet;
 import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.profile.ProfileResource;
-import fr.ortolang.diffusion.api.referentiel.ReferentielEntityResource;
+import fr.ortolang.diffusion.api.referential.ReferentialEntityResource;
 import fr.ortolang.diffusion.api.rendering.RenderingResource;
 import fr.ortolang.diffusion.api.runtime.RuntimeResource;
 import fr.ortolang.diffusion.api.search.SearchResource;
@@ -91,7 +93,7 @@ public class ApiApplication extends Application {
 		classes.add(RuntimeResource.class);
 		classes.add(FormResource.class);
 		classes.add(MetadataFormatResource.class);
-		classes.add(ReferentielEntityResource.class);
+		classes.add(ReferentialEntityResource.class);
 		classes.add(AdminResource.class);
 		classes.add(AuthResource.class);
 		classes.add(ContentResource.class);
@@ -99,6 +101,7 @@ public class ApiApplication extends Application {
 		classes.add(ConfigResource.class);
 		classes.add(SubscriptionResource.class);
 		classes.add(StatisticsResource.class);
+		classes.add(ItemResource.class);
 		classes.add(SearchResource.class);
 		classes.add(OAIPMHServlet.class);
 		classes.add(EventFeedResource.class);
@@ -119,6 +122,7 @@ public class ApiApplication extends Application {
 		set.add(new BrowserServiceExceptionMapper());
 		set.add(new KeyAlreadyExistsExceptionMapper());
 		set.add(new KeyNotFoundExceptionMapper());
+		set.add(new ReferentialEntityExceptionMapper());
 		set.add(new AliasNotFoundExceptionMapper());
 		set.add(new InvalidPathExceptionMapper());
 		set.add(new PropertyNotFoundExceptionMapper());

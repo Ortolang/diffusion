@@ -51,7 +51,7 @@ public class OrtolangCli {
 		commands.put("publish-workspace", PublishWorkspaceCommand.class.getName());
 		commands.put("import-zip", ImportZipCommand.class.getName());
 		commands.put("import-profiles", ImportProfilesCommand.class.getName());
-		commands.put("import-referentiel", ImportReferentielCommand.class.getName());
+		commands.put("import-referential", ImportReferentialCommand.class.getName());
 	}
 	
 	public static OrtolangCli getInstance() {
