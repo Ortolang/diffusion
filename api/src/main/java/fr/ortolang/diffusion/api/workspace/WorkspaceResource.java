@@ -514,7 +514,7 @@ public class WorkspaceResource {
     @DELETE
     @Path("/{wskey}/elements")
     public Response deleteWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
-            @QueryParam(value = "metadataname") String metadataname) throws CoreServiceException, InvalidPathException, AccessDeniedException, KeyNotFoundException,
+            @QueryParam(value = "metadataname") String metadataname, @QueryParam(value = "force") @DefaultValue("false") boolean force) throws CoreServiceException, InvalidPathException, AccessDeniedException, KeyNotFoundException,
             BrowserServiceException, CollectionNotEmptyException, PathNotFoundException, WorkspaceReadOnlyException {
         LOGGER.log(Level.INFO, "DELETE /workspaces/" + wskey + "/elements");
         if (path == null) {
@@ -531,7 +531,7 @@ public class WorkspaceResource {
                 core.deleteDataObject(wskey, path);
                 break;
             case Collection.OBJECT_TYPE:
-                core.deleteCollection(wskey, path);
+                core.deleteCollection(wskey, path, force);
                 break;
             case Link.OBJECT_TYPE:
                 core.deleteLink(wskey, path);
@@ -626,6 +626,16 @@ public class WorkspaceResource {
         Map<String, Boolean> availableInfo = new HashMap<>(1);
         availableInfo.put("available", available);
         return Response.ok(availableInfo).build();
+    }
+
+    @POST
+    @Path("/{wskey}/owner")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response changeWorkspaceOwner(@PathParam(value = "wskey") String wskey, @FormParam(value = "newowner") String newowner)
+            throws AccessDeniedException, SecurityServiceException, KeyNotFoundException, CoreServiceException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/owner");
+        core.changeWorkspaceOwner(wskey, newowner);
+        return Response.ok().build();
     }
 
     private void addMetadatasToRepresentation(WorkspaceRepresentation representation) throws CoreServiceException, AccessDeniedException, KeyNotFoundException {
