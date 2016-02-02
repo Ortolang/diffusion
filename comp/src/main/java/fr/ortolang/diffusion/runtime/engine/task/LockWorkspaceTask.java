@@ -42,6 +42,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJBTransactionRolledbackException;
 import javax.transaction.Status;
 
+import fr.ortolang.diffusion.notification.NotificationServiceException;
 import org.activiti.engine.delegate.DelegateExecution;
 
 import fr.ortolang.diffusion.core.CoreServiceException;
@@ -75,11 +76,11 @@ public class LockWorkspaceTask extends RuntimeEngineTask {
         try {
             LOGGER.log(Level.FINE, "locking workspace with key: " + wskey);
             getCoreService().systemSetWorkspaceReadOnly(wskey, true);
-        } catch (SecurityException | IllegalStateException | EJBTransactionRolledbackException | CoreServiceException | KeyNotFoundException e) {
-            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
+        } catch (SecurityException | IllegalStateException | EJBTransactionRolledbackException | CoreServiceException | KeyNotFoundException | NotificationServiceException e) {
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occurred: " + e.getMessage()));
             throw new RuntimeEngineTaskException("unexpected error occurred", e);
         }
-        
+
         try {
             LOGGER.log(Level.FINE, "COMMIT Active User Transaction.");
             getUserTransaction().commit();

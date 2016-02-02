@@ -91,7 +91,7 @@ public class EventFeedFilter implements Serializable {
     }
 
     public boolean match(Event e) {
-        return (e.getFromObject() == null || e.getFromObject().matches(fromObjectRE)) && e.getType().matches(eventTypeRE) && e.getObjectType().matches(objectTypeRE) && e.getThrowedBy().matches(throwedByRE);
+        return (e.getFromObject() == null || e.getFromObject().matches(fromObjectRE)) && e.getType().matches(eventTypeRE) && e.getObjectType().matches(objectTypeRE) && (e.getThrowedBy() == null || e.getThrowedBy().matches(throwedByRE));
     }
 
 }
