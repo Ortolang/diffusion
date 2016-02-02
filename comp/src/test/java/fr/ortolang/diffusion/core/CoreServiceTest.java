@@ -111,6 +111,7 @@ public class CoreServiceTest {
 		jar.addPackage("fr.ortolang.diffusion.notification");
 		jar.addPackage("fr.ortolang.diffusion.registry");
 		jar.addPackage("fr.ortolang.diffusion.registry.entity");
+		jar.addPackage("fr.ortolang.diffusion.security");
 		jar.addPackage("fr.ortolang.diffusion.security.authentication");
 		jar.addPackage("fr.ortolang.diffusion.security.authorisation");
 		jar.addPackage("fr.ortolang.diffusion.security.authorisation.entity");
