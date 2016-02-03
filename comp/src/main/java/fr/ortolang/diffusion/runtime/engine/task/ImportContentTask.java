@@ -154,9 +154,9 @@ public class ImportContentTask extends RuntimeEngineTask {
 							report.append("[ERROR] " + line + " \r\n\t -> Unknown operation\r\n");
 					}
 				} catch ( Exception e ) {
-					LOGGER.log(Level.FINE, "ImportContentTask exception raised", e);
 					partial = true;
 					report.append("[ERROR] " + line + " \r\n\t -> Message: " + e.getMessage() + "\r\n");
+					LOGGER.log(Level.FINE, "ImportContentTask exception raised", e);
 				}
 				if ( System.currentTimeMillis() - tscommit > 30000 ) {
 					LOGGER.log(Level.FINE, "current transaction exceed 30sec, need commit.");
@@ -171,6 +171,10 @@ public class ImportContentTask extends RuntimeEngineTask {
 					}
 				} catch (Exception e) {
 					LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
+				}
+				if ( partial ) {
+				    report.append("[ERROR] Stopping content import due to previous errors... \r\n");
+				    break;
 				}
 			}
 		} catch (IOException e) {
@@ -193,12 +197,14 @@ public class ImportContentTask extends RuntimeEngineTask {
 		}
 		LOGGER.log(Level.FINE, "- import content done");
 		execution.setVariable("partial", partial);
+		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), report.toString(), null));
 		if ( partial ) {
-		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some content has not been imported (see trace for detail)"));
+		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some content has not been imported (see trace for detail), import aborted !!"));
+		    throw new RuntimeEngineTaskException("Unable to fullfill the import content task due to errors");
 		} else {
 		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All content imported successfully"));
 		}
-		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), report.toString(), null));
+		
 	}
 
 	@Override
@@ -243,11 +249,11 @@ public class ImportContentTask extends RuntimeEngineTask {
 			}
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to create workspace", e);
-			throw new RuntimeEngineTaskException("unable to create workspace", e);
+			throw new RuntimeEngineTaskException("unable to create workspace : " + e.getMessage(), e);
 		}
 	}
 
-	private void createObject(Bag bag, String bagpath, String sha1, String path) throws RuntimeEngineTaskException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException {
+	private void createObject(Bag bag, String bagpath, String sha1, String path) throws RuntimeEngineTaskException {
 		try {
 			if ( sha1 == null || (sha1 != null && !getBinaryStore().contains(sha1)) ) {
 				InputStream is = bag.getBagFile(bagpath).newInputStream();
@@ -275,12 +281,12 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().createDataObject(wskey, current, sha1);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
-			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "]", e);
+		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | PathAlreadyExistsException e) {
+			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "] : " + e.getMessage(), e);
 		} 
 	}
 
-	private void updateObject(Bag bag, String bagpath, String path) throws InvalidPathException, RuntimeEngineTaskException, PathNotFoundException {
+	private void updateObject(Bag bag, String bagpath, String path) throws RuntimeEngineTaskException {
 		try {
 			InputStream is = bag.getBagFile(bagpath).newInputStream();
 			String hash = getCoreService().put(is);
@@ -289,32 +295,31 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().updateDataObject(wskey, path, hash);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
-			throw new RuntimeEngineTaskException("Error updating object for path [" + path + "]", e);
+		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException e) {
+			throw new RuntimeEngineTaskException("Error updating object for path [" + path + "] : " + e.getMessage(), e);
 		}
 	}
 
-	private void deleteObject(String path) throws InvalidPathException, RuntimeEngineTaskException, PathNotFoundException {
+	private void deleteObject(String path) throws RuntimeEngineTaskException {
 		try {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().deleteDataObject(wskey, path);
-		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
+			PathBuilder opath = PathBuilder.fromPath(path).parent();
+	        while (!opath.isRoot()) {
+	            try {
+	                getCoreService().deleteCollection(wskey, opath.build());
+	            } catch (CollectionNotEmptyException | CoreServiceException | KeyNotFoundException | AccessDeniedException | WorkspaceReadOnlyException e) {
+	                break;
+	            }
+	            opath.parent();
+	        }
+		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException e ) {
 			LOGGER.log(Level.FINE, "Error deleting object for path: " + path, e);
-			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "]", e);
-		}
-
-		PathBuilder opath = PathBuilder.fromPath(path).parent();
-		while (!opath.isRoot()) {
-			try {
-				getCoreService().deleteCollection(wskey, opath.build());
-			} catch (CollectionNotEmptyException | CoreServiceException | KeyNotFoundException | AccessDeniedException | WorkspaceReadOnlyException e) {
-				break;
-			}
-			opath.parent();
+			throw new RuntimeEngineTaskException("Error deleting object for path [" + path + "] : " + e.getMessage(), e);
 		}
 	}
 
-	private void createMetadata(Bag bag, String bagpath, String path, String name) throws InvalidPathException, RuntimeEngineTaskException, MetadataFormatException, PathNotFoundException {
+	private void createMetadata(Bag bag, String bagpath, String path, String name) throws RuntimeEngineTaskException {
 		try {
 			InputStream is = bag.getBagFile(bagpath).newInputStream();
 			String hash = getCoreService().put(is);
@@ -323,12 +328,12 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().createMetadataObject(wskey, path, name, hash, null, false);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
-			throw new RuntimeEngineTaskException("Error creating metadata for path [" + path + "]", e);
+		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | MetadataFormatException e ) {
+			throw new RuntimeEngineTaskException("Error creating metadata for path [" + path + "] : " + e.getMessage(), e);
 		} 
 	}
 
-	private void updateMetadata(Bag bag, String bagpath, String path, String name) throws InvalidPathException, RuntimeEngineTaskException, MetadataFormatException, PathNotFoundException {
+	private void updateMetadata(Bag bag, String bagpath, String path, String name) throws RuntimeEngineTaskException {
 		try {
 			InputStream is = bag.getBagFile(bagpath).newInputStream();
 			String hash = getCoreService().put(is);
@@ -337,17 +342,17 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().updateMetadataObject(wskey, path, name, hash, null, false);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
-			throw new RuntimeEngineTaskException("Error updating metadata for path [" + path + "]", e);
+		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | MetadataFormatException e) {
+			throw new RuntimeEngineTaskException("Error updating metadata for path [" + path + "] : " + e.getMessage(), e);
 		} 
 	}
 
-	private void deleteMetadata(String path, String name) throws InvalidPathException, RuntimeEngineTaskException, PathNotFoundException {
+	private void deleteMetadata(String path, String name) throws RuntimeEngineTaskException {
 		try {
 			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
 			getCoreService().deleteMetadataObject(wskey, path, name, false);
-		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
-			throw new RuntimeEngineTaskException("Error deleting metadata for path [" + path + "]", e);
+		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException e) {
+			throw new RuntimeEngineTaskException("Error deleting metadata for path [" + path + "] : " + e.getMessage(), e);
 		} 
 	}
 
@@ -355,7 +360,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		try {
 			getCoreService().snapshotWorkspace(wskey);
 		} catch ( CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
-			throw new RuntimeEngineTaskException("Error snapshoting workspace", e);
+			throw new RuntimeEngineTaskException("Error snapshoting workspace : " + e.getMessage(), e);
 		} 
 	}
 
