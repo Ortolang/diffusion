@@ -37,12 +37,7 @@ package fr.ortolang.diffusion.subscription;
  */
 
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.event.entity.Event;
-import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.membership.entity.Group;
-import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.entity.Process;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -52,12 +47,10 @@ import javax.ejb.EJB;
 import javax.ejb.MessageDriven;
 import javax.jms.Message;
 import javax.jms.MessageListener;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
 
 @MessageDriven(name = "AtmosphereMDB", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/notification"),
@@ -68,10 +61,11 @@ public class AtmosphereListenerBean implements MessageListener {
 
     private static final Logger LOGGER = Logger.getLogger(AtmosphereListenerBean.class.getName());
 
-    private static final String PROCESS_CHANGE_STATE_TYPE = buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "change-state");
-    private static final String PROCESS_CREATE_TYPE = buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "create");
-    private static final String MEMBERSHIP_GROUP_ADD_MEMBER_TYPE = buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "add-member");
-    private static final String WORKSPACE_DELETE_TYPE = buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "delete");
+    private static final String PROCESS_CHANGE_STATE_TYPE = "runtime.process.change-state";
+    private static final String PROCESS_CREATE_TYPE = "runtime.object.create";
+    private static final String MEMBERSHIP_GROUP_ADD_MEMBER_TYPE = "membership.group.add-member";
+    private static final String WORKSPACE_CREATE_TYPE = "core.workspace.create";
+    private static final String WORKSPACE_DELETE_TYPE = "core.workspace.delete";
 
     @EJB
     SubscriptionService subscription;
@@ -83,34 +77,39 @@ public class AtmosphereListenerBean implements MessageListener {
             Event event = new Event();
             event.fromJMSMessage(message);
 
-            if (event.getType().equals(PROCESS_CREATE_TYPE)) {
+            switch (event.getType()) {
+            case PROCESS_CREATE_TYPE:
                 if (subscription.getSubscriptions().containsKey(event.getThrowedBy())) {
                     LOGGER.log(Level.FINE, "Process created by user " + event.getThrowedBy() + "; adding filter to follow process events");
                     subscription.getSubscriptions().get(event.getThrowedBy()).addFilter(new Filter(SubscriptionService.RUNTIME_PROCESS_PATTERN, event.getFromObject(), null));
                 }
-            } else if (event.getType().equals(MEMBERSHIP_GROUP_ADD_MEMBER_TYPE)) {
+                break;
+            case MEMBERSHIP_GROUP_ADD_MEMBER_TYPE:
                 Map<String, String> arguments = event.getArguments();
                 if (arguments.containsKey("member") && subscription.getSubscriptions().containsKey(arguments.get("member"))) {
                     LOGGER.log(Level.FINE, "User " + arguments.get("member") + " added to group " + event.getFromObject() + "; adding filter to follow group events");
-                    subscription.getSubscriptions().get(arguments.get("member")).addFilter(new Filter(SubscriptionService.MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN, event.getFromObject(), null));
+                    subscription.getSubscriptions().get(arguments.get("member")).addFilter(new Filter(SubscriptionService.MEMBERSHIP_GROUP_ALL_PATTERN, event.getFromObject(), null));
                 }
+                break;
+            case WORKSPACE_CREATE_TYPE:
+                if (subscription.getSubscriptions().containsKey(event.getThrowedBy())) {
+                    LOGGER.log(Level.FINE, "Workspace created by user " + event.getThrowedBy() + "; adding filter to follow workspace events");
+                    subscription.getSubscriptions().get(event.getThrowedBy()).addFilter(new Filter(null, event.getFromObject(), null));
+                }
+                break;
             }
 
             for (Map.Entry<String, Subscription> subscriptionRegistryEntry : subscription.getSubscriptions().entrySet()) {
-                Iterator<Filter> iterator = subscriptionRegistryEntry.getValue().getFilters().iterator();
-                while (iterator.hasNext()) {
-                    Filter filter = iterator.next();
-                    if (filter.matches(event)) {
-                        LOGGER.log(Level.FINE, "Matching filter " + filter);
-                        LOGGER.log(Level.INFO, "Sending atmosphere message to " + subscriptionRegistryEntry.getKey());
-                        subscriptionRegistryEntry.getValue().getBroadcaster().broadcast(event);
-                        if (hasToBeRemoved(filter, event)) {
-                            LOGGER.log(Level.INFO, "Removing filter from " + subscriptionRegistryEntry.getKey() + " subscription");
-                            iterator.remove();
-                        }
+                HashSet<Filter> filters = new HashSet<>(subscriptionRegistryEntry.getValue().getFilters());
+                filters.stream().filter(filter -> filter.matches(event)).forEach(filter -> {
+                    LOGGER.log(Level.FINE, "Matching filter " + filter);
+                    LOGGER.log(Level.INFO, "Sending atmosphere message to " + subscriptionRegistryEntry.getKey());
+                    subscriptionRegistryEntry.getValue().getBroadcaster().broadcast(event);
+                    if (hasToBeRemoved(filter, event)) {
+                        LOGGER.log(Level.INFO, "Removing filter from " + subscriptionRegistryEntry.getKey() + " subscription");
+                        subscriptionRegistryEntry.getValue().removeFilter(filter);
                     }
-
-                }
+                });
             }
         } catch (OrtolangException e) {
             LOGGER.log(Level.WARNING, "unable to process event", e);

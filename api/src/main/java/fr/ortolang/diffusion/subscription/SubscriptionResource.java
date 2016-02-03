@@ -52,18 +52,26 @@ import java.util.logging.Logger;
 @Produces({ MediaType.APPLICATION_JSON })
 public class SubscriptionResource {
 
-	private static final Logger LOGGER = Logger.getLogger(SubscriptionResource.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(SubscriptionResource.class.getName());
 
-	@EJB
-	private SubscriptionService subscription;
+    @EJB
+    private SubscriptionService subscription;
 
-	public SubscriptionResource() {
-	}
+    public SubscriptionResource() {
+    }
 
-	@GET
-	public Response addDefaultFilter() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException {
-		LOGGER.log(Level.INFO, "GET /subscription");
-		subscription.addDefaultFilters();
-		return Response.ok().build();
-	}
+    @GET
+    public Response addDefaultFilter() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "GET /subscription");
+        subscription.addDefaultFilters();
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("/workspaces")
+    public Response refreshWorkspacesFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "GET /subscription/workspaces");
+        subscription.addWorkspacesFilters();
+        return Response.ok().build();
+    }
 }

@@ -73,6 +73,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import fr.ortolang.diffusion.security.SecurityService;
+import fr.ortolang.diffusion.security.SecurityServiceException;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -161,6 +163,8 @@ public class CoreServiceBean implements CoreService {
     private IndexingService indexing;
     @EJB
     private NotificationService notification;
+    @EJB
+    private SecurityService security;
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
     @Resource
@@ -553,8 +557,9 @@ public class CoreServiceBean implements CoreService {
                     throw new CoreServiceException(pname.part() + " is reserved and cannot be used as tag name");
                 }
                 tag = pname.part();
-                if (workspace.findTagByName(tag) != null) {
-                    throw new CoreServiceException("the tag name '" + tag + "' is already used in this workspace");
+                TagElement tagElement = workspace.findTagByName(tag);
+                if (tagElement != null) {
+                    workspace.removeTag(tagElement);
                 }
                 if (!workspace.containsSnapshotName(snapshot)) {
                     throw new CoreServiceException("the snapshot with name '" + snapshot + "' does not exists in this workspace");
@@ -668,6 +673,21 @@ public class CoreServiceBean implements CoreService {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred while deleting workspace", e);
             throw new CoreServiceException("unable to delete workspace with key [" + wskey + "]", e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void changeWorkspaceOwner(String wskey, String newOwner) throws CoreServiceException {
+        try {
+            Workspace workspace = readWorkspace(wskey);
+            security.changeOwner(wskey, newOwner);
+            security.changeOwner(workspace.getMembers(), newOwner);
+            security.changeOwner(workspace.getEventFeed(), newOwner);
+        } catch (SecurityServiceException | AccessDeniedException | KeyNotFoundException e) {
+            ctx.setRollbackOnly();
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while changing workspace owner", e);
+            throw new CoreServiceException("unable to change owner of workspace with key [" + wskey + "]", e);
         }
     }
 
@@ -3478,9 +3498,10 @@ public class CoreServiceBean implements CoreService {
     
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void systemSetWorkspaceReadOnly(String wskey, boolean readonly) throws CoreServiceException, KeyNotFoundException {
+    public void systemSetWorkspaceReadOnly(String wskey, boolean readonly) throws CoreServiceException, KeyNotFoundException, NotificationServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# setting workspace [" + wskey + "] read only to [" + readonly + "]");
         try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
             OrtolangObjectIdentifier identifier = registry.lookup(wskey);
             checkObjectType(identifier, Workspace.OBJECT_TYPE);
             
@@ -3492,6 +3513,8 @@ public class CoreServiceBean implements CoreService {
             em.merge(workspace);
 
             registry.update(wskey);
+
+            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, readonly ? "lock" : "unlock"));
         } catch (KeyLockedException | RegistryServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred while setting workspace read only mode to [" + readonly + "]", e);

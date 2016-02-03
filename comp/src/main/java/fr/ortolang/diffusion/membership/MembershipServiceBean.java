@@ -528,7 +528,7 @@ public class MembershipServiceBean implements MembershipService {
             em.merge(profile);
 
             registry.update(key);
-            indexing.index(key);
+            indexing.remove(key);
 
             notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "delete"));
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | IndexingServiceException e) {
@@ -846,11 +846,12 @@ public class MembershipServiceBean implements MembershipService {
 
             registry.update(key);
             registry.update(member);
+            indexing.index(member);
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", member);
             notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "add-member"), argumentsBuilder.build());
             return group;
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MembershipServiceException("unable to add member in group with key [" + key + "]", e);
         }
@@ -889,10 +890,11 @@ public class MembershipServiceBean implements MembershipService {
 
             registry.update(key);
             registry.update(member);
+            indexing.index(member);
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", member);
             notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "remove-member"), argumentsBuilder.build());
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MembershipServiceException("unable to remove member from group with key [" + key + "]", e);
         }
@@ -927,10 +929,11 @@ public class MembershipServiceBean implements MembershipService {
 
             registry.update(key);
             registry.update(caller);
+            indexing.index(caller);
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", caller);
             notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "add-member"), argumentsBuilder.build());
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MembershipServiceException("unable to join group with key [" + key + "]", e);
         }
@@ -968,10 +971,11 @@ public class MembershipServiceBean implements MembershipService {
 
             registry.update(key);
             registry.update(caller);
+            indexing.index(caller);
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", caller);
             notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "remove-member"), argumentsBuilder.build());
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MembershipServiceException("unable to leave group with key [" + key + "]", e);
         }
