@@ -36,6 +36,10 @@ package fr.ortolang.diffusion.event;
  * #L%
  */
 
+import java.util.Date;
+import java.util.List;
+
+import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.event.entity.EventFeed;
@@ -56,7 +60,13 @@ public interface EventService extends OrtolangService {
 
     public void removeEventFeedFilter(String key, String id) throws EventServiceException, AccessDeniedException, KeyNotFoundException;
 
-    public EventFeed readEventFeed(String key) throws EventServiceException, AccessDeniedException, KeyNotFoundException; 
+    public EventFeed readEventFeed(String key) throws EventServiceException, AccessDeniedException, KeyNotFoundException;
+    
+    public List<OrtolangEvent> browseEventFeed(String key, int offset, int limit) throws EventServiceException, AccessDeniedException, KeyNotFoundException;
+    
+    public List<OrtolangEvent> browseEventFeedSinceDate(String key, Date from) throws EventServiceException, AccessDeniedException, KeyNotFoundException;
+    
+    public List<OrtolangEvent> browseEventFeedSinceEvent(String key, long id) throws EventServiceException, AccessDeniedException, KeyNotFoundException;
     
     public void updateEventFeed(String key, String name, String description) throws EventServiceException, AccessDeniedException, KeyNotFoundException;
 

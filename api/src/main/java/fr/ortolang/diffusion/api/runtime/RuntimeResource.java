@@ -298,7 +298,6 @@ public class RuntimeResource {
     @POST
     @Path("/tasks/{id}")
     @Consumes( MediaType.APPLICATION_JSON)
-
     public Response performTaskAction(@PathParam("id") String id, ProcessTaskActionRepresentation action) throws RuntimeServiceException {
         LOGGER.log(Level.INFO, "POST /runtime/tasks");
         switch (action.getAction()) {

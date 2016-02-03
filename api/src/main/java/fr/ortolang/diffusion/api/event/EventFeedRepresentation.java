@@ -98,7 +98,6 @@ public class EventFeedRepresentation {
         representation.setKey(feed.getKey());
         representation.setName(feed.getName());
         representation.setDescription(feed.getDescription());
-        representation.setEvents(feed.getEvents());
         return representation;
     }
 
