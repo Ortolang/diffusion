@@ -208,7 +208,7 @@ public class CoreServiceTest {
 		}
 	}
 	
-	@Test(expected = CoreServiceException.class)
+	@Test(expected = AliasAlreadyExistsException.class)
 	public void testCreateWorkspaceWithExistingAlias()
 			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, AliasAlreadyExistsException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
