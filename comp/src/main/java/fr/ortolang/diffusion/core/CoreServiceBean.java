@@ -1245,30 +1245,36 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void moveElements(String wskey, List<String> sources, String destination)
-            throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException, RegistryServiceException, PathAlreadyExistsException,
-            WorkspaceReadOnlyException {
+            throws PathAlreadyExistsException, PathNotFoundException, RegistryServiceException, InvalidPathException, AccessDeniedException, WorkspaceReadOnlyException, CoreServiceException,
+            KeyNotFoundException {
         if (!sources.isEmpty()) {
-            String ppath = PathBuilder.fromPath(sources.get(0)).parent().build();
-            for (String source : sources) {
-                String sppath = PathBuilder.fromPath(source).parent().build();
-                if (!ppath.equals(sppath)) {
-                    throw new InvalidPathException("unable to move elements from different collections");
+            try {
+                String ppath = PathBuilder.fromPath(sources.get(0)).parent().build();
+                for (String source : sources) {
+                    String sppath = PathBuilder.fromPath(source).parent().build();
+                    if (!ppath.equals(sppath)) {
+                        throw new InvalidPathException("unable to move elements from different collections");
+                    }
                 }
-            }
-            String parentKey = resolveWorkspacePath(wskey, "head", ppath);
-            OrtolangObjectIdentifier identifier = registry.lookup(parentKey);
-            checkObjectType(identifier, Collection.OBJECT_TYPE);
-            Collection collection = readCollection(parentKey);
+                String parentKey = resolveWorkspacePath(wskey, "head", ppath);
+                OrtolangObjectIdentifier identifier = registry.lookup(parentKey);
+                checkObjectType(identifier, Collection.OBJECT_TYPE);
+                Collection collection = readCollection(parentKey);
 
-            for (String source : sources) {
-                CollectionElement collectionElement = collection.findElementByName(PathBuilder.fromPath(source).part());
-                switch (collectionElement.getType()) {
-                case DataObject.OBJECT_TYPE:
-                    moveDataObject(wskey, source, destination + PathBuilder.PATH_SEPARATOR + collectionElement.getName());
-                    break;
-                case Collection.OBJECT_TYPE:
-                    moveCollection(wskey, source, destination + PathBuilder.PATH_SEPARATOR + collectionElement.getName());
+                for (String source : sources) {
+                    CollectionElement collectionElement = collection.findElementByName(PathBuilder.fromPath(source).part());
+                    switch (collectionElement.getType()) {
+                    case DataObject.OBJECT_TYPE:
+                        moveDataObject(wskey, source, destination + PathBuilder.PATH_SEPARATOR + collectionElement.getName());
+                        break;
+                    case Collection.OBJECT_TYPE:
+                        moveCollection(wskey, source, destination + PathBuilder.PATH_SEPARATOR + collectionElement.getName());
+                    }
                 }
+            } catch (PathAlreadyExistsException | AccessDeniedException | CoreServiceException | RegistryServiceException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | KeyNotFoundException e) {
+                ctx.setRollbackOnly();
+                LOGGER.log(Level.SEVERE, "unexpected error while moving workspace elements", e);
+                throw e;
             }
         }
     }

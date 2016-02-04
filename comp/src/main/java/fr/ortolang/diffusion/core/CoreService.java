@@ -109,8 +109,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     void changeWorkspaceOwner(String wskey, String newOwner) throws CoreServiceException;
 
     void moveElements(String wskey, List<String> sources, String destination)
-            throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException, RegistryServiceException, PathAlreadyExistsException,
-            WorkspaceReadOnlyException;
+            throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException, RegistryServiceException, WorkspaceReadOnlyException,
+            PathAlreadyExistsException;
 	
 	/*Collection*/
 

@@ -72,6 +72,7 @@ import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.core.*;
 import fr.ortolang.diffusion.core.entity.*;
 import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
@@ -532,6 +533,23 @@ public class WorkspaceResource {
             }
         }
         return Response.noContent().build();
+    }
+
+    @PUT
+    @Path("/{wskey}/elements/bulk")
+    @GZIP
+    public Response moveWorkspaceElements(@PathParam(value = "wskey") String wskey, BulkActionRepresentation bulkActionRepresentation)
+            throws WorkspaceReadOnlyException, RegistryServiceException, AccessDeniedException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException,
+            CoreServiceException {
+        LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements/bulk");
+        if (bulkActionRepresentation.getDestination() == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("form parameter 'destination' is mandatory").build();
+        }
+        if (bulkActionRepresentation.getSources() == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("form parameter 'sources' is mandatory").build();
+        }
+        core.moveElements(wskey, bulkActionRepresentation.getSources(), bulkActionRepresentation.getDestination());
+        return Response.ok().build();
     }
 
     @POST
