@@ -51,6 +51,7 @@ import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -67,9 +68,9 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 	
 	/* Workspace */
 
-    Workspace createWorkspace(String wskey, String alias, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
+    Workspace createWorkspace(String wskey, String alias, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, AliasAlreadyExistsException;
 
-    Workspace createWorkspace(String wskey, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException;
+    Workspace createWorkspace(String wskey, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, AliasAlreadyExistsException;
 
     Workspace readWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
@@ -106,6 +107,10 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
     void changeWorkspaceOwner(String wskey, String newOwner) throws CoreServiceException;
+
+    void moveElements(String wskey, List<String> sources, String destination)
+            throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException, RegistryServiceException, PathAlreadyExistsException,
+            WorkspaceReadOnlyException;
 	
 	/*Collection*/
 

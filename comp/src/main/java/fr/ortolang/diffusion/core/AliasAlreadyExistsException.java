@@ -1,6 +1,4 @@
-package fr.ortolang.diffusion.bootstrap;
-
-import fr.ortolang.diffusion.OrtolangService;
+package fr.ortolang.diffusion.core;
 
 /*
  * #%L
@@ -38,12 +36,24 @@ import fr.ortolang.diffusion.OrtolangService;
  * #L%
  */
 
-public interface BootstrapService extends OrtolangService {
-	
-    String VERSION = "3.0";
-    String WORKSPACE_KEY = "system";
-    String SERVICE_NAME = "bootstrap";
 
-    void bootstrap() throws BootstrapServiceException;
+@SuppressWarnings("serial")
+public class AliasAlreadyExistsException extends Exception {
+
+	public AliasAlreadyExistsException(String message) {
+		super(message);
+	}
+
+	public AliasAlreadyExistsException(Throwable cause) {
+		super(cause);
+	}
+
+	public AliasAlreadyExistsException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
+	public AliasAlreadyExistsException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
 
 }

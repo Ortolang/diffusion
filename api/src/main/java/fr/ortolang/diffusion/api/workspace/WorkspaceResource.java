@@ -69,6 +69,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.core.*;
 import fr.ortolang.diffusion.core.entity.*;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
@@ -84,16 +85,6 @@ import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
-import fr.ortolang.diffusion.core.AliasNotFoundException;
-import fr.ortolang.diffusion.core.CollectionNotEmptyException;
-import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.core.InvalidPathException;
-import fr.ortolang.diffusion.core.MetadataFormatException;
-import fr.ortolang.diffusion.core.PathAlreadyExistsException;
-import fr.ortolang.diffusion.core.PathBuilder;
-import fr.ortolang.diffusion.core.PathNotFoundException;
-import fr.ortolang.diffusion.core.WorkspaceReadOnlyException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
@@ -161,7 +152,7 @@ public class WorkspaceResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @GZIP
     public Response createWorkspace(@FormParam("type") @DefaultValue("default") String type, @FormParam("name") @DefaultValue("No Name Provided") String name, @FormParam("alias") String alias)
-            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException {
+            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException, AliasAlreadyExistsException {
         LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
         String key = java.util.UUID.randomUUID().toString();
         Workspace workspace;
@@ -180,27 +171,11 @@ public class WorkspaceResource {
         return Response.created(location).entity(workspaceRepresentation).build();
     }
 
-    @DELETE
-    @Path("/{wskey}")
-    @GZIP
-    public Response deleteWorkspace(@PathParam(value = "wskey") String wskey)
-            throws CoreServiceException, AccessDeniedException, KeyNotFoundException, RuntimeServiceException, KeyAlreadyExistsException {
-        if (core.findWorkspaceLatestPublishedSnapshot(wskey) != null) {
-            return Response.status(Response.Status.FORBIDDEN).entity("Cannot delete an already published workspace").build();
-        }
-        String key = UUID.randomUUID().toString();
-        Map<String, Object> params = new HashMap<>();
-        params.put("wskey", wskey);
-        Process process = runtime.createProcess(key, "delete-workspace", "Delete workspace", wskey);
-        runtime.startProcess(key, params);
-        return Response.status(Response.Status.ACCEPTED).entity(ProcessRepresentation.fromProcess(process)).build();
-    }
-
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @GZIP
     public Response createWorkspace(WorkspaceRepresentation representation)
-            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException {
+            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException, AliasAlreadyExistsException {
         LOGGER.log(Level.INFO, "POST(application/json) /workspaces");
         String key = UUID.randomUUID().toString();
         Workspace workspace;
@@ -266,6 +241,22 @@ public class WorkspaceResource {
         } else {
             return Response.status(Response.Status.BAD_REQUEST).entity("representation does not contains a valid key").build();
         }
+    }
+
+    @DELETE
+    @Path("/{wskey}")
+    @GZIP
+    public Response deleteWorkspace(@PathParam(value = "wskey") String wskey)
+            throws CoreServiceException, AccessDeniedException, KeyNotFoundException, RuntimeServiceException, KeyAlreadyExistsException {
+        if (core.findWorkspaceLatestPublishedSnapshot(wskey) != null) {
+            return Response.status(Response.Status.FORBIDDEN).entity("Cannot delete an already published workspace").build();
+        }
+        String key = UUID.randomUUID().toString();
+        Map<String, Object> params = new HashMap<>();
+        params.put("wskey", wskey);
+        Process process = runtime.createProcess(key, "delete-workspace", "Delete workspace", wskey);
+        runtime.startProcess(key, params);
+        return Response.status(Response.Status.ACCEPTED).entity(ProcessRepresentation.fromProcess(process)).build();
     }
 
     @GET
@@ -609,23 +600,6 @@ public class WorkspaceResource {
         LOGGER.log(Level.INFO, "GET /workspaces/alias/" + alias);
         String wskey = core.resolveWorkspaceAlias(alias);
         return getWorkspace(wskey, md, request);
-    }
-
-    @GET
-    @Path("/alias/{alias}/available")
-    @Produces(MediaType.APPLICATION_JSON)
-    @GZIP
-    public Response checkAliasAvailability(@PathParam(value = "alias") String alias) throws AccessDeniedException, KeyNotFoundException, CoreServiceException {
-        LOGGER.log(Level.INFO, "GET /workspaces/alias/" + alias + "/available");
-        boolean available = false;
-        try {
-            core.resolveWorkspaceAlias(alias);
-        } catch (AliasNotFoundException e) {
-            available = true;
-        }
-        Map<String, Boolean> availableInfo = new HashMap<>(1);
-        availableInfo.put("available", available);
-        return Response.ok(availableInfo).build();
     }
 
     @POST

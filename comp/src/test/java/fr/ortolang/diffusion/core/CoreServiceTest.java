@@ -176,7 +176,8 @@ public class CoreServiceTest {
 	}
 
 	@Test(expected = AccessDeniedException.class)
-	public void testCreateWorkspaceAsUnauthentifiedUser() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException {
+	public void testCreateWorkspaceAsUnauthentifiedUser()
+			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, AliasAlreadyExistsException {
 		LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
 		try {
 			membership.createProfile("Anonymous", "", "anonymous@ortolang.fr");
@@ -188,7 +189,8 @@ public class CoreServiceTest {
 	}
 
 	@Test(expected = KeyAlreadyExistsException.class)
-	public void testCreateWorkspaceWithExistingKey() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException {
+	public void testCreateWorkspaceWithExistingKey()
+			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, AliasAlreadyExistsException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -207,7 +209,8 @@ public class CoreServiceTest {
 	}
 	
 	@Test(expected = CoreServiceException.class)
-	public void testCreateWorkspaceWithExistingAlias() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException {
+	public void testCreateWorkspaceWithExistingAlias()
+			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, AliasAlreadyExistsException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -219,7 +222,7 @@ public class CoreServiceTest {
 			}
 			core.createWorkspace("WSK1", "workspace-001", "Blabla2", "test");
 			core.createWorkspace("WSK2", "workspace-001", "Blabla2", "test");
-			fail("Should have raised a CoreServiceException");
+			fail("Should have raised a AliasAlreadyExistsException");
 		} finally {
 			loginContext.logout();
 		}
@@ -245,8 +248,8 @@ public class CoreServiceTest {
 	}
 
 	@Test
-	public void testReadUnreadableWorkspace() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException,
-			KeyNotFoundException {
+	public void testReadUnreadableWorkspace()
+			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, AliasAlreadyExistsException {
 		final String WORKSPACE_KEY = "WSP";
 		final String WORKSPACE_NAME = "WorkspaceProtected";
 		final String WORKSPACE_TYPE = "test";
@@ -284,7 +287,9 @@ public class CoreServiceTest {
 	}
 
 	@Test
-	public void testCRUDWorkspace() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, WorkspaceReadOnlyException {
+	public void testCRUDWorkspace()
+			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, WorkspaceReadOnlyException,
+			AliasAlreadyExistsException {
 		final String WORKSPACE_KEY = "WS1";
 		final String WORKSPACE_NAME = "Workspace1";
 		final String WORKSPACE_NAME_UPDATE = "Workspace1.update";
@@ -330,7 +335,9 @@ public class CoreServiceTest {
 	}
 
 	@Test
-	public void testMetadataFormat() throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException, InvalidPathException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException {
+	public void testMetadataFormat()
+			throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException,
+			InvalidPathException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException, AliasAlreadyExistsException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -372,8 +379,9 @@ public class CoreServiceTest {
 	}
 
 	@Test
-	public void testCRUDCollection() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException,
-			KeyNotFoundException, InvalidPathException, CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
+	public void testCRUDCollection()
+			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, InvalidPathException,
+			CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {
@@ -475,7 +483,7 @@ public class CoreServiceTest {
 			assertEquals(1, collection.getElements().size());
 			assertEquals(acfclock + 1, collection.getClock());
 			assertEquals("g", collection.getName());
-			
+
 			core.snapshotWorkspace(wsk);
 			core.createCollection(wsk, "/a/c/g/d1");
 			core.createCollection(wsk, "/a/c/g/d1/d2");
@@ -487,7 +495,25 @@ public class CoreServiceTest {
 				//
 			}
 			core.deleteCollection(wsk, "/a/c/g", true);
-			
+
+			// TODO test moveElements
+//			core.snapshotWorkspace(wsk);
+//			core.createCollection(wsk, "/m");
+//			core.createCollection(wsk, "/m/a");
+//			core.createCollection(wsk, "/m/b");
+//			core.createCollection(wsk, "/n");
+//			core.createCollection(wsk, "/n/a");
+//			core.createCollection(wsk, "/n/b");
+//			core.createCollection(wsk, "/o");
+//			core.createCollection(wsk, "/o/a");
+//			List<String> sources = Arrays.asList("/m/a", "n");
+//			try {
+//				core.moveElements(wsk, sources, "/o");
+//				fail("trying to move elements from different collections; should have raised an exception");
+//			} catch (InvalidPathException e) {
+//				//
+//			}
+
 			LOGGER.log(Level.INFO, walkWorkspace(wsk));
 			
 		} finally {
@@ -496,8 +522,9 @@ public class CoreServiceTest {
 	}
 
 	@Test
-	public void testDeleteCollectionElementConcurrently() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException,
-			MembershipServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
+	public void testDeleteCollectionElementConcurrently()
+			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException,
+			AliasAlreadyExistsException {
 		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
 		loginContext.login();
 		try {

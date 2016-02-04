@@ -60,6 +60,7 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import fr.ortolang.diffusion.core.*;
 import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.RunAsPrincipal;
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -68,12 +69,6 @@ import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.core.InvalidPathException;
-import fr.ortolang.diffusion.core.PathAlreadyExistsException;
-import fr.ortolang.diffusion.core.PathNotFoundException;
-import fr.ortolang.diffusion.core.WorkspaceReadOnlyException;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.form.FormService;
@@ -242,7 +237,7 @@ public class BootstrapServiceBean implements BootstrapService {
                 form.createForm("ortolang-item-form", "Schema Form for an ORTOLANG item", jsonDefinition5);
 
                 LOGGER.log(Level.INFO, "bootstrap done.");
-            } catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException
+            } catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException | AliasAlreadyExistsException
                     | AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | FormServiceException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException e1) {
                 LOGGER.log(Level.SEVERE, "unexpected error occurred while bootstrapping platform", e1);
                 throw new BootstrapServiceException("unable to bootstrap platform", e1);

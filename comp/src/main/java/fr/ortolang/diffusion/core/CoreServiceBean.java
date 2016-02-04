@@ -241,7 +241,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Workspace createWorkspace(String wskey, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
+    public Workspace createWorkspace(String wskey, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, AliasAlreadyExistsException {
         WorkspaceAlias alias = new WorkspaceAlias();
         em.persist(alias);
         return createWorkspace(wskey, alias.getValue(), name, type);
@@ -249,7 +249,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Workspace createWorkspace(String wskey, String alias, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException {
+    public Workspace createWorkspace(String wskey, String alias, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, AliasAlreadyExistsException {
         LOGGER.log(Level.FINE, "creating workspace [" + wskey + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -293,7 +293,7 @@ public class CoreServiceBean implements CoreService {
             List<Workspace> results = em.createNamedQuery("findWorkspaceByAlias", Workspace.class).setParameter("alias", alias).getResultList();
             if (!results.isEmpty()) {
                 ctx.setRollbackOnly();
-                throw new CoreServiceException("a workspace with alias [" + alias + "] already exists in storage");
+                throw new AliasAlreadyExistsException("a workspace with alias [" + alias + "] already exists in storage");
             }
             PathBuilder palias;
             try {
@@ -1244,6 +1244,37 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void moveElements(String wskey, List<String> sources, String destination)
+            throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException, RegistryServiceException, PathAlreadyExistsException,
+            WorkspaceReadOnlyException {
+        if (!sources.isEmpty()) {
+            String ppath = PathBuilder.fromPath(sources.get(0)).parent().build();
+            for (String source : sources) {
+                String sppath = PathBuilder.fromPath(source).parent().build();
+                if (!ppath.equals(sppath)) {
+                    throw new InvalidPathException("unable to move elements from different collections");
+                }
+            }
+            String parentKey = resolveWorkspacePath(wskey, "head", ppath);
+            OrtolangObjectIdentifier identifier = registry.lookup(parentKey);
+            checkObjectType(identifier, Collection.OBJECT_TYPE);
+            Collection collection = readCollection(parentKey);
+
+            for (String source : sources) {
+                CollectionElement collectionElement = collection.findElementByName(PathBuilder.fromPath(source).part());
+                switch (collectionElement.getType()) {
+                case DataObject.OBJECT_TYPE:
+                    moveDataObject(wskey, source, destination + PathBuilder.PATH_SEPARATOR + collectionElement.getName());
+                    break;
+                case Collection.OBJECT_TYPE:
+                    moveCollection(wskey, source, destination + PathBuilder.PATH_SEPARATOR + collectionElement.getName());
+                }
+            }
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void moveCollection(String wskey, String source, String destination) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
             PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "moving collection into workspace [" + wskey + "] from path [" + source + "] to path [" + destination + "]");
@@ -1421,7 +1452,6 @@ public class CoreServiceBean implements CoreService {
                 registry.delete(leaf.getKey());
                 indexing.remove(leaf.getKey());
             }
-
             deleteCollectionContent(leaf, ws.getClock());
 
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", leaf.getKey()).addArgument("path", npath.build());
@@ -3790,19 +3820,29 @@ public class CoreServiceBean implements CoreService {
     }
 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    private void deleteCollectionContent(Collection collection, int clock) throws CoreServiceException, RegistryServiceException, KeyNotFoundException, KeyLockedException {
+    private void deleteCollectionContent(Collection collection, int clock) throws CoreServiceException, RegistryServiceException, KeyNotFoundException, KeyLockedException, IndexingServiceException {
         LOGGER.log(Level.FINE, "delete content for collection with id [" + collection.getId() + "]");
         for (CollectionElement element : collection.getElements()) {
-            if (element.getType().equals(Collection.OBJECT_TYPE)) {
+            switch (element.getType()) {
+            case Collection.OBJECT_TYPE: {
                 OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
                 checkObjectType(identifier, Collection.OBJECT_TYPE);
                 Collection coll = em.find(Collection.class, identifier.getId());
                 if (coll == null) {
                     throw new CoreServiceException("unable to load collection with id [" + identifier.getId() + "] from storage");
                 }
-                deleteCollectionContent(coll, clock);
+                if (coll.getClock() == clock) {
+                    deleteCollectionContent(coll, clock);
+                    LOGGER.log(Level.FINEST, "collection clock [" + coll.getClock() + "] is the same, key can be deleted and unindexed");
+                    for (MetadataElement mde : coll.getMetadatas()) {
+                        registry.delete(mde.getKey());
+                    }
+                    registry.delete(element.getKey());
+                    indexing.remove(element.getKey());
+                }
+                break;
             }
-            if (element.getType().equals(DataObject.OBJECT_TYPE)) {
+            case DataObject.OBJECT_TYPE: {
                 OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
                 checkObjectType(identifier, DataObject.OBJECT_TYPE);
                 DataObject object = em.find(DataObject.class, identifier.getId());
@@ -3815,10 +3855,11 @@ public class CoreServiceBean implements CoreService {
                         registry.delete(mde.getKey());
                     }
                     registry.delete(element.getKey());
-
+                    indexing.remove(element.getKey());
                 }
+                break;
             }
-            if (element.getType().equals(Link.OBJECT_TYPE)) {
+            case Link.OBJECT_TYPE: {
                 OrtolangObjectIdentifier identifier = registry.lookup(element.getKey());
                 checkObjectType(identifier, Link.OBJECT_TYPE);
                 Link link = em.find(Link.class, identifier.getId());
@@ -3831,8 +3872,10 @@ public class CoreServiceBean implements CoreService {
                         registry.delete(mde.getKey());
                     }
                     registry.delete(element.getKey());
-
+                    indexing.remove(element.getKey());
                 }
+                break;
+            }
             }
         }
     }

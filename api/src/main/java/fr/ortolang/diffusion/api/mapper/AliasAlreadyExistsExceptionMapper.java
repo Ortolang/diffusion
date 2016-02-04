@@ -1,6 +1,4 @@
-package fr.ortolang.diffusion.bootstrap;
-
-import fr.ortolang.diffusion.OrtolangService;
+package fr.ortolang.diffusion.api.mapper;
 
 /*
  * #%L
@@ -38,12 +36,20 @@ import fr.ortolang.diffusion.OrtolangService;
  * #L%
  */
 
-public interface BootstrapService extends OrtolangService {
-	
-    String VERSION = "3.0";
-    String WORKSPACE_KEY = "system";
-    String SERVICE_NAME = "bootstrap";
+import fr.ortolang.diffusion.core.AliasAlreadyExistsException;
 
-    void bootstrap() throws BootstrapServiceException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 
+@Provider
+public class AliasAlreadyExistsExceptionMapper implements ExceptionMapper<AliasAlreadyExistsException> {
+
+	@Override
+	public Response toResponse(AliasAlreadyExistsException ex) {
+		return Response.status(Status.CONFLICT)
+				.entity(ex.getMessage()).type("text/plain")
+				.build();
+	}
 }
