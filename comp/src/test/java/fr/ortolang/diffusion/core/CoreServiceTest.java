@@ -36,13 +36,9 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -52,6 +48,7 @@ import javax.ejb.EJB;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -82,6 +79,8 @@ import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
+
+import static org.junit.Assert.*;
 
 @RunWith(Arquillian.class)
 public class CoreServiceTest {
@@ -381,7 +380,7 @@ public class CoreServiceTest {
     @Test
     public void testCRUDCollection()
             throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, InvalidPathException,
-            CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException {
+            CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException, RegistryServiceException {
         LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
         loginContext.login();
         try {
@@ -496,24 +495,56 @@ public class CoreServiceTest {
             }
             core.deleteCollection(wsk, "/a/c/g", true);
 
-            // TODO test moveElements
-            // TODO test deleteElements
-            //			core.snapshotWorkspace(wsk);
-            //			core.createCollection(wsk, "/m");
-            //			core.createCollection(wsk, "/m/a");
-            //			core.createCollection(wsk, "/m/b");
-            //			core.createCollection(wsk, "/n");
-            //			core.createCollection(wsk, "/n/a");
-            //			core.createCollection(wsk, "/n/b");
-            //			core.createCollection(wsk, "/o");
-            //			core.createCollection(wsk, "/o/a");
-            //			List<String> sources = Arrays.asList("/m/a", "n");
-            //			try {
-            //				core.moveElements(wsk, sources, "/o");
-            //				fail("trying to move elements from different collections; should have raised an exception");
-            //			} catch (InvalidPathException e) {
-            //				//
-            //			}
+            // Bulk move
+            core.snapshotWorkspace(wsk);
+            core.createCollection(wsk, "/m");
+            core.createCollection(wsk, "/m/a");
+            core.createCollection(wsk, "/m/b");
+            core.createCollection(wsk, "/n");
+            core.createCollection(wsk, "/n/a");
+            core.createCollection(wsk, "/n/b");
+            core.createCollection(wsk, "/o");
+            List<String> sources = Arrays.asList("/m/a", "/n");
+            try {
+                core.moveElements(wsk, sources, "/o");
+                fail("trying to move elements from different collections; should have raised an exception");
+            } catch (InvalidPathException e) {
+                //
+            }
+            sources = Arrays.asList("/m/a", "/m/b");
+            try {
+                core.moveElements(wsk, sources, "/n");
+                fail("trying to move elements with one already existing in destination; should have raised an exception");
+            } catch (PathAlreadyExistsException e){
+                //
+            }
+            String oKey = core.resolveWorkspacePath(wsk, "head", "/o");
+            core.moveElements(wsk, sources, "/o");
+            Collection collectionO = core.readCollection(oKey);
+            assertNotNull(collectionO.findElementByName("a"));
+            assertNotNull(collectionO.findElementByName("b"));
+
+            // Bulk delete
+            sources = Arrays.asList("/o/a", "/n");
+            try {
+                core.deleteElements(wsk, sources, false);
+                fail("trying to delete elements from different collections; should have raised an exception");
+            } catch (InvalidPathException e) {
+                //
+            }
+            sources = Arrays.asList("/o", "/n");
+            try {
+                core.deleteElements(wsk, sources, false);
+                fail("trying to delete non-empty collections; should have raised an exception");
+            } catch (CollectionNotEmptyException e) {
+                //
+            }
+            sources = Arrays.asList("/o", "/n");
+            core.deleteElements(wsk, sources, true);
+            String head = core.resolveWorkspacePath(wsk, "head", "/");
+            Collection collectionHead = core.readCollection(head);
+            assertNull(collectionHead.findElementByName("o"));
+            assertNull(collectionHead.findElementByName("n"));
 
             LOGGER.log(Level.INFO, walkWorkspace(wsk));
 

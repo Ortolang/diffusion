@@ -133,9 +133,7 @@
 			</dependency>
 			<dependency>
 				<groupId>org.wildfly</groupId>
-				<artifactId>
-					wildfly-arquillian-container-managed
-				</artifactId>
+				<artifactId>wildfly-arquillian-container-managed</artifactId>
 				<version>8.2.1.Final</version>
 			</dependency>
 		</dependencies>
