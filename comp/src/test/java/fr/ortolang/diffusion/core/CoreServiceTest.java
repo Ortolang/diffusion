@@ -86,623 +86,624 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 @RunWith(Arquillian.class)
 public class CoreServiceTest {
 
-	private static final Logger LOGGER = Logger.getLogger(CoreServiceTest.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(CoreServiceTest.class.getName());
 
-	@EJB
-	private MembershipService membership;
-	@EJB
-	private CoreService core;
-	@EJB
-	private RegistryService registry;
+    @EJB
+    private MembershipService membership;
+    @EJB
+    private CoreService core;
+    @EJB
+    private RegistryService registry;
 
-	@Deployment
-	public static EnterpriseArchive createDeployment() {
-		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "diffusion-server-ejb.jar");
-		jar.addPackage("fr.ortolang.diffusion");
-		// jar.addPackage("fr.ortolang.diffusion.bootstrap");
-		jar.addPackage("fr.ortolang.diffusion.browser");
-		jar.addPackage("fr.ortolang.diffusion.core");
-		jar.addPackage("fr.ortolang.diffusion.core.entity");
-		jar.addPackage("fr.ortolang.diffusion.event");
-		jar.addPackage("fr.ortolang.diffusion.event.entity");
-		jar.addPackage("fr.ortolang.diffusion.indexing");
-		jar.addPackage("fr.ortolang.diffusion.membership");
-		jar.addPackage("fr.ortolang.diffusion.membership.entity");
-		jar.addPackage("fr.ortolang.diffusion.notification");
-		jar.addPackage("fr.ortolang.diffusion.registry");
-		jar.addPackage("fr.ortolang.diffusion.registry.entity");
-		jar.addPackage("fr.ortolang.diffusion.security");
-		jar.addPackage("fr.ortolang.diffusion.security.authentication");
-		jar.addPackage("fr.ortolang.diffusion.security.authorisation");
-		jar.addPackage("fr.ortolang.diffusion.security.authorisation.entity");
-		jar.addPackage("fr.ortolang.diffusion.store.binary");
-		jar.addPackage("fr.ortolang.diffusion.store.binary.hash");
-		jar.addPackage("fr.ortolang.diffusion.store.handle");
-		jar.addPackage("fr.ortolang.diffusion.store.handle.entity");
-		jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
-		jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreServiceException");
-		jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
+    @Deployment
+    public static EnterpriseArchive createDeployment() {
+        JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "diffusion-server-ejb.jar");
+        jar.addPackage("fr.ortolang.diffusion");
+        // jar.addPackage("fr.ortolang.diffusion.bootstrap");
+        jar.addPackage("fr.ortolang.diffusion.browser");
+        jar.addPackage("fr.ortolang.diffusion.core");
+        jar.addPackage("fr.ortolang.diffusion.core.entity");
+        jar.addPackage("fr.ortolang.diffusion.event");
+        jar.addPackage("fr.ortolang.diffusion.event.entity");
+        jar.addPackage("fr.ortolang.diffusion.indexing");
+        jar.addPackage("fr.ortolang.diffusion.membership");
+        jar.addPackage("fr.ortolang.diffusion.membership.entity");
+        jar.addPackage("fr.ortolang.diffusion.notification");
+        jar.addPackage("fr.ortolang.diffusion.registry");
+        jar.addPackage("fr.ortolang.diffusion.registry.entity");
+        jar.addPackage("fr.ortolang.diffusion.security");
+        jar.addPackage("fr.ortolang.diffusion.security.authentication");
+        jar.addPackage("fr.ortolang.diffusion.security.authorisation");
+        jar.addPackage("fr.ortolang.diffusion.security.authorisation.entity");
+        jar.addPackage("fr.ortolang.diffusion.store.binary");
+        jar.addPackage("fr.ortolang.diffusion.store.binary.hash");
+        jar.addPackage("fr.ortolang.diffusion.store.handle");
+        jar.addPackage("fr.ortolang.diffusion.store.handle.entity");
+        jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
+        jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreServiceException");
+        jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
         jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreDocumentBuilder");
-		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreService");
-		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
-		jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
-		jar.addAsResource("config.properties");
-		jar.addAsResource("schema/ortolang-item-schema.json");
-		jar.addAsResource("schema/ortolang-workspace-schema.json");
-		jar.addAsResource("json/meta.json");
-		jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
-		LOGGER.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
+        jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreService");
+        jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
+        jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
+        jar.addAsResource("config.properties");
+        jar.addAsResource("schema/ortolang-item-schema.json");
+        jar.addAsResource("schema/ortolang-workspace-schema.json");
+        jar.addAsResource("json/meta.json");
+        jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
+        LOGGER.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
 
-		PomEquippedResolveStage pom = Maven.resolver().loadPomFromFile("pom.xml");
+        PomEquippedResolveStage pom = Maven.resolver().loadPomFromFile("pom.xml");
 
-		EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class, "diffusion-server-ear.ear");
-		ear.addAsModule(jar);
-		ear.addAsLibraries(pom.resolve("commons-io:commons-io:2.4").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.wildfly:wildfly-ejb-client-bom:pom:9.0.1.Final").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core:1.7").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-core:4.6.0").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-highlighter:4.6.0").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-analyzers-common:4.6.0").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-queryparser:4.6.0").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core:1.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("org.apache.tika:tika-parsers:1.8").withTransitivity().asFile());
-		ear.addAsLibraries(pom.resolve("com.github.fge:json-schema-validator:2.2.6").withTransitivity().asFile());
-		LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
+        EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class, "diffusion-server-ear.ear");
+        ear.addAsModule(jar);
+        ear.addAsLibraries(pom.resolve("commons-io:commons-io:2.4").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.wildfly:wildfly-ejb-client-bom:pom:9.0.1.Final").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core:1.7").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-core:4.6.0").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-highlighter:4.6.0").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-analyzers-common:4.6.0").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-queryparser:4.6.0").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core:1.8").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-parsers:1.8").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("com.github.fge:json-schema-validator:2.2.6").withTransitivity().asFile());
+        LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 
-		return ear;
-	}
+        return ear;
+    }
 
-	@Before
-	public void setup() {
-		LOGGER.log(Level.INFO, "setting up test environment");
-	}
+    @Before
+    public void setup() {
+        LOGGER.log(Level.INFO, "setting up test environment");
+    }
 
-	@After
-	public void tearDown() {
-		LOGGER.log(Level.INFO, "clearing environment");
-	}
+    @After
+    public void tearDown() {
+        LOGGER.log(Level.INFO, "clearing environment");
+    }
 
-	@Test
-	public void testLogin() throws LoginException {
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("anonymous", "password");
-		loginContext.login();
-		try {
-			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			String key = membership.getProfileKeyForConnectedIdentifier();
-			assertEquals("anonymous", key);
-		} finally {
-			loginContext.logout();
-		}
-	}
+    @Test
+    public void testLogin() throws LoginException {
+        LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("anonymous", "password");
+        loginContext.login();
+        try {
+            LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+            String key = membership.getProfileKeyForConnectedIdentifier();
+            assertEquals("anonymous", key);
+        } finally {
+            loginContext.logout();
+        }
+    }
 
-	@Test(expected = AccessDeniedException.class)
-	public void testCreateWorkspaceAsUnauthentifiedUser()
-			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, AliasAlreadyExistsException {
-		LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-		try {
-			membership.createProfile("Anonymous", "", "anonymous@ortolang.fr");
-		} catch (ProfileAlreadyExistsException e) {
-			LOGGER.log(Level.INFO, "Profile anonymous already exists !!");
-		}
-		core.createWorkspace("K1", "alias", "Blabla", "test");
-		fail("Should have raised an AccessDeniedException");
-	}
+    @Test(expected = AccessDeniedException.class)
+    public void testCreateWorkspaceAsUnauthentifiedUser()
+            throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, AliasAlreadyExistsException {
+        LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+        try {
+            membership.createProfile("Anonymous", "", "anonymous@ortolang.fr");
+        } catch (ProfileAlreadyExistsException e) {
+            LOGGER.log(Level.INFO, "Profile anonymous already exists !!");
+        }
+        core.createWorkspace("K1", "alias", "Blabla", "test");
+        fail("Should have raised an AccessDeniedException");
+    }
 
-	@Test(expected = KeyAlreadyExistsException.class)
-	public void testCreateWorkspaceWithExistingKey()
-			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, AliasAlreadyExistsException {
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
-		loginContext.login();
-		try {
-			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			try {
-				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
-			} catch (ProfileAlreadyExistsException e) {
-				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
-			}
-			core.createWorkspace("K2", "Blabla2", "test");
-			core.createWorkspace("K2", "Blabla3", "test");
-			fail("Should have raised a KeyAlreadyExistsException");
-		} finally {
-			loginContext.logout();
-		}
-	}
-	
-	@Test(expected = AliasAlreadyExistsException.class)
-	public void testCreateWorkspaceWithExistingAlias()
-			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, AliasAlreadyExistsException {
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
-		loginContext.login();
-		try {
-			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			try {
-				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
-			} catch (ProfileAlreadyExistsException e) {
-				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
-			}
-			core.createWorkspace("WSK1", "workspace-001", "Blabla2", "test");
-			core.createWorkspace("WSK2", "workspace-001", "Blabla2", "test");
-			fail("Should have raised a AliasAlreadyExistsException");
-		} finally {
-			loginContext.logout();
-		}
-	}
+    @Test(expected = KeyAlreadyExistsException.class)
+    public void testCreateWorkspaceWithExistingKey()
+            throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, AliasAlreadyExistsException {
+        LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+        loginContext.login();
+        try {
+            LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+            try {
+                membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+            } catch (ProfileAlreadyExistsException e) {
+                LOGGER.log(Level.INFO, "Profile user1 already exists !!");
+            }
+            core.createWorkspace("K2", "Blabla2", "test");
+            core.createWorkspace("K2", "Blabla3", "test");
+            fail("Should have raised a KeyAlreadyExistsException");
+        } finally {
+            loginContext.logout();
+        }
+    }
 
-	@Test(expected = KeyNotFoundException.class)
-	public void testReadUnexistingWorkspace() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException,
-			KeyNotFoundException {
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
-		loginContext.login();
-		try {
-			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			try {
-				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
-			} catch (ProfileAlreadyExistsException e) {
-				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
-			}
-			core.readWorkspace("UNEXISTING");
-			fail("Should have raised a KeyNotFoundException");
-		} finally {
-			loginContext.logout();
-		}
-	}
+    @Test(expected = AliasAlreadyExistsException.class)
+    public void testCreateWorkspaceWithExistingAlias()
+            throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, AliasAlreadyExistsException {
+        LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+        loginContext.login();
+        try {
+            LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+            try {
+                membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+            } catch (ProfileAlreadyExistsException e) {
+                LOGGER.log(Level.INFO, "Profile user1 already exists !!");
+            }
+            core.createWorkspace("WSK1", "workspace-001", "Blabla2", "test");
+            core.createWorkspace("WSK2", "workspace-001", "Blabla2", "test");
+            fail("Should have raised a AliasAlreadyExistsException");
+        } finally {
+            loginContext.logout();
+        }
+    }
 
-	@Test
-	public void testReadUnreadableWorkspace()
-			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, AliasAlreadyExistsException {
-		final String WORKSPACE_KEY = "WSP";
-		final String WORKSPACE_NAME = "WorkspaceProtected";
-		final String WORKSPACE_TYPE = "test";
+    @Test(expected = KeyNotFoundException.class)
+    public void testReadUnexistingWorkspace() throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException,
+            KeyNotFoundException {
+        LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+        loginContext.login();
+        try {
+            LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+            try {
+                membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+            } catch (ProfileAlreadyExistsException e) {
+                LOGGER.log(Level.INFO, "Profile user1 already exists !!");
+            }
+            core.readWorkspace("UNEXISTING");
+            fail("Should have raised a KeyNotFoundException");
+        } finally {
+            loginContext.logout();
+        }
+    }
 
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
-		loginContext.login();
-		try {
-			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			try {
-				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
-			} catch (ProfileAlreadyExistsException e) {
-				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
-			}
-			core.createWorkspace(WORKSPACE_KEY, WORKSPACE_NAME, WORKSPACE_TYPE);
-		} finally {
-			loginContext.logout();
-		}
+    @Test
+    public void testReadUnreadableWorkspace()
+            throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, AliasAlreadyExistsException {
+        final String WORKSPACE_KEY = "WSP";
+        final String WORKSPACE_NAME = "WorkspaceProtected";
+        final String WORKSPACE_TYPE = "test";
 
-		loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user2", "tagada");
-		loginContext.login();
-		try {
-			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			try {
-				membership.createProfile("User", "TWO", "user.two@ortolang.fr");
-			} catch (ProfileAlreadyExistsException e) {
-				LOGGER.log(Level.INFO, "Profile user2 already exists !!");
-			}
-			core.readWorkspace(WORKSPACE_KEY);
-		} catch ( AccessDeniedException e ) {
-			fail("workspaces should be readable by everybody");
-		} finally {
-			loginContext.logout();
-		}
+        LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+        loginContext.login();
+        try {
+            LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+            try {
+                membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+            } catch (ProfileAlreadyExistsException e) {
+                LOGGER.log(Level.INFO, "Profile user1 already exists !!");
+            }
+            core.createWorkspace(WORKSPACE_KEY, WORKSPACE_NAME, WORKSPACE_TYPE);
+        } finally {
+            loginContext.logout();
+        }
 
-	}
+        loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user2", "tagada");
+        loginContext.login();
+        try {
+            LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+            try {
+                membership.createProfile("User", "TWO", "user.two@ortolang.fr");
+            } catch (ProfileAlreadyExistsException e) {
+                LOGGER.log(Level.INFO, "Profile user2 already exists !!");
+            }
+            core.readWorkspace(WORKSPACE_KEY);
+        } catch ( AccessDeniedException e ) {
+            fail("workspaces should be readable by everybody");
+        } finally {
+            loginContext.logout();
+        }
 
-	@Test
-	public void testCRUDWorkspace()
-			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, WorkspaceReadOnlyException,
-			AliasAlreadyExistsException {
-		final String WORKSPACE_KEY = "WS1";
-		final String WORKSPACE_NAME = "Workspace1";
-		final String WORKSPACE_NAME_UPDATE = "Workspace1.update";
-		final String WORKSPACE_TYPE = "test";
+    }
 
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
-		loginContext.login();
-		try {
-			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			try {
-				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
-			} catch (ProfileAlreadyExistsException e) {
-				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
-			}
-			core.createWorkspace(WORKSPACE_KEY, WORKSPACE_NAME, WORKSPACE_TYPE);
-			Workspace ws = core.readWorkspace(WORKSPACE_KEY);
+    @Test
+    public void testCRUDWorkspace()
+            throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, WorkspaceReadOnlyException,
+            AliasAlreadyExistsException {
+        final String WORKSPACE_KEY = "WS1";
+        final String WORKSPACE_NAME = "Workspace1";
+        final String WORKSPACE_NAME_UPDATE = "Workspace1.update";
+        final String WORKSPACE_TYPE = "test";
 
-			assertEquals(WORKSPACE_KEY, ws.getKey());
-			assertEquals(WORKSPACE_NAME, ws.getName());
-			assertEquals(WORKSPACE_TYPE, ws.getType());
-			assertTrue(ws.getHead().length() > 10);
-			assertTrue(ws.getSnapshots().size() == 0);
-			assertTrue(ws.getMembers().length() > 10);
+        LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+        loginContext.login();
+        try {
+            LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+            try {
+                membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+            } catch (ProfileAlreadyExistsException e) {
+                LOGGER.log(Level.INFO, "Profile user1 already exists !!");
+            }
+            core.createWorkspace(WORKSPACE_KEY, WORKSPACE_NAME, WORKSPACE_TYPE);
+            Workspace ws = core.readWorkspace(WORKSPACE_KEY);
 
-			core.updateWorkspace(WORKSPACE_KEY, WORKSPACE_NAME_UPDATE);
-			Workspace wsu = core.readWorkspace(WORKSPACE_KEY);
+            assertEquals(WORKSPACE_KEY, ws.getKey());
+            assertEquals(WORKSPACE_NAME, ws.getName());
+            assertEquals(WORKSPACE_TYPE, ws.getType());
+            assertTrue(ws.getHead().length() > 10);
+            assertTrue(ws.getSnapshots().size() == 0);
+            assertTrue(ws.getMembers().length() > 10);
 
-			assertEquals(WORKSPACE_KEY, wsu.getKey());
-			assertEquals(WORKSPACE_NAME_UPDATE, wsu.getName());
-			assertEquals(WORKSPACE_TYPE, wsu.getType());
+            core.updateWorkspace(WORKSPACE_KEY, WORKSPACE_NAME_UPDATE);
+            Workspace wsu = core.readWorkspace(WORKSPACE_KEY);
 
-			core.deleteWorkspace(WORKSPACE_KEY);
+            assertEquals(WORKSPACE_KEY, wsu.getKey());
+            assertEquals(WORKSPACE_NAME_UPDATE, wsu.getName());
+            assertEquals(WORKSPACE_TYPE, wsu.getType());
 
-			try {
-				core.readWorkspace(WORKSPACE_KEY);
-			} catch (KeyNotFoundException e) {
-				//
-			}
+            core.deleteWorkspace(WORKSPACE_KEY);
 
-		} finally {
-			loginContext.logout();
-		}
-	}
+            try {
+                core.readWorkspace(WORKSPACE_KEY);
+            } catch (KeyNotFoundException e) {
+                //
+            }
 
-	@Test
-	public void testMetadataFormat()
-			throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException,
-			InvalidPathException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException, AliasAlreadyExistsException {
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
-		loginContext.login();
-		try {
-			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			try {
-				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
-			} catch (ProfileAlreadyExistsException e) {
-				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
-			}
+        } finally {
+            loginContext.logout();
+        }
+    }
 
-			InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
-			String schemaHash = core.put(schemaInputStream);
-			String id = core.createMetadataFormat("ortolang-item-json", "ORTOLANG Item", schemaHash, null, true, true);
-			
-			List<MetadataFormat> mfs = core.listMetadataFormat();
-			assertEquals(1, mfs.size());
-			
-			MetadataFormat mf = core.getMetadataFormat("ortolang-item-json");
-			assertEquals("ortolang-item-json", mf.getName());
-			assertEquals("ORTOLANG Item", mf.getDescription());
-			assertEquals(schemaHash, mf.getSchema());
-			
-			MetadataFormat mfid = core.findMetadataFormatById(id);
-			assertEquals("ortolang-item-json", mfid.getName());
+    @Test
+    public void testMetadataFormat()
+            throws LoginException, MembershipServiceException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, DataCollisionException, KeyNotFoundException,
+            InvalidPathException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException, AliasAlreadyExistsException {
+        LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+        loginContext.login();
+        try {
+            LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+            try {
+                membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+            } catch (ProfileAlreadyExistsException e) {
+                LOGGER.log(Level.INFO, "Profile user1 already exists !!");
+            }
 
-			String wsk = UUID.randomUUID().toString();
-			core.createWorkspace(wsk, "WorkspaceCollection", "test");
+            InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
+            String schemaHash = core.put(schemaInputStream);
+            String id = core.createMetadataFormat("ortolang-item-json", "ORTOLANG Item", schemaHash, null, true, true);
 
-			String metak = UUID.randomUUID().toString();
-			InputStream metadataInputStream = getClass().getClassLoader().getResourceAsStream("json/meta.json");
-			String metadataHash = core.put(metadataInputStream);
-			core.createMetadataObject(wsk, metak, "/", mf.getName(), metadataHash, "meta.json", false);
-			MetadataObject metadata = core.readMetadataObject(metak);
-			assertEquals("ortolang-item-json:1", metadata.getFormat());
-			
-		} finally {
-			loginContext.logout();
-		}
-	}
+            List<MetadataFormat> mfs = core.listMetadataFormat();
+            assertEquals(1, mfs.size());
 
-	@Test
-	public void testCRUDCollection()
-			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, InvalidPathException,
-			CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException {
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
-		loginContext.login();
-		try {
-			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			try {
-				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
-			} catch (ProfileAlreadyExistsException e) {
-				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
-			}
+            MetadataFormat mf = core.getMetadataFormat("ortolang-item-json");
+            assertEquals("ortolang-item-json", mf.getName());
+            assertEquals("ORTOLANG Item", mf.getDescription());
+            assertEquals(schemaHash, mf.getSchema());
 
-			String wsk = UUID.randomUUID().toString();
-			core.createWorkspace(wsk, "WorkspaceCollection", "test");
+            MetadataFormat mfid = core.findMetadataFormatById(id);
+            assertEquals("ortolang-item-json", mfid.getName());
 
-			core.createCollection(wsk, "/a");
-			core.createCollection(wsk, "/a/b");
-			core.createCollection(wsk, "/a/c");
+            String wsk = UUID.randomUUID().toString();
+            core.createWorkspace(wsk, "WorkspaceCollection", "test");
 
-			LOGGER.log(Level.INFO, "Workspace created with 3 collections");
-			LOGGER.log(Level.INFO, walkWorkspace(wsk));
+            String metak = UUID.randomUUID().toString();
+            InputStream metadataInputStream = getClass().getClassLoader().getResourceAsStream("json/meta.json");
+            String metadataHash = core.put(metadataInputStream);
+            core.createMetadataObject(wsk, metak, "/", mf.getName(), metadataHash, "meta.json", false);
+            MetadataObject metadata = core.readMetadataObject(metak);
+            assertEquals("ortolang-item-json:1", metadata.getFormat());
 
-			String akey = core.resolveWorkspacePath(wsk, "head", "/a");
-			Collection collection = core.readCollection(akey);
-			assertEquals(1, collection.getClock());
-			assertEquals("a", collection.getName());
-			assertEquals(1, collection.getClock());
-			assertEquals(2, collection.getElements().size());
-			String bkey = core.resolveWorkspacePath(wsk, "head", "/a/b");
-			String ckey = core.resolveWorkspacePath(wsk, "head", "/a/c");
-			assertTrue(collection.findElementByName("b").getKey().equals(bkey));
-			assertTrue(collection.findElementByName("c").getKey().equals(ckey));
+        } finally {
+            loginContext.logout();
+        }
+    }
 
-			core.deleteCollection(wsk, "/a/b");
-			collection = core.readCollection(akey);
-			assertEquals(1, collection.getClock());
-			assertEquals(1, collection.getElements().size());
-			assertTrue(collection.findElementByName("b") == null);
-			assertTrue(collection.findElementByName("c").getKey().equals(ckey));
+    @Test
+    public void testCRUDCollection()
+            throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, InvalidPathException,
+            CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException {
+        LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+        loginContext.login();
+        try {
+            LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+            try {
+                membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+            } catch (ProfileAlreadyExistsException e) {
+                LOGGER.log(Level.INFO, "Profile user1 already exists !!");
+            }
 
-			LOGGER.log(Level.INFO, walkWorkspace(wsk));
+            String wsk = UUID.randomUUID().toString();
+            core.createWorkspace(wsk, "WorkspaceCollection", "test");
 
-			InputStream schemaWorkspaceInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-workspace-schema.json");
-			String schemaWorkspaceHash = core.put(schemaWorkspaceInputStream);
-			core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "", true, true);
-			
-			Workspace workspace = core.readWorkspace(wsk);
-			assertEquals(0, workspace.getSnapshots().size());
-			assertEquals(1, workspace.getClock());
-			assertTrue(workspace.hasChanged());
-			core.snapshotWorkspace(wsk);
-			workspace = core.readWorkspace(wsk);
-			assertEquals(1, workspace.getSnapshots().size());
-			assertEquals(2, workspace.getClock());
-			assertFalse(workspace.hasChanged());
+            core.createCollection(wsk, "/a");
+            core.createCollection(wsk, "/a/b");
+            core.createCollection(wsk, "/a/c");
 
-			LOGGER.log(Level.INFO, "Workspace snapshotted");
-			LOGGER.log(Level.INFO, walkWorkspace(wsk));
+            LOGGER.log(Level.INFO, "Workspace created with 3 collections");
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-			try {
-				core.snapshotWorkspace(wsk);
-				fail("A second snapshot without changes should produce an exception");
-			} catch (Exception e) {
-				LOGGER.log(Level.INFO, e.getMessage());
-			}
+            String akey = core.resolveWorkspacePath(wsk, "head", "/a");
+            Collection collection = core.readCollection(akey);
+            assertEquals(1, collection.getClock());
+            assertEquals("a", collection.getName());
+            assertEquals(1, collection.getClock());
+            assertEquals(2, collection.getElements().size());
+            String bkey = core.resolveWorkspacePath(wsk, "head", "/a/b");
+            String ckey = core.resolveWorkspacePath(wsk, "head", "/a/c");
+            assertTrue(collection.findElementByName("b").getKey().equals(bkey));
+            assertTrue(collection.findElementByName("c").getKey().equals(ckey));
 
-			core.createCollection(wsk, "/a/d");
-			LOGGER.log(Level.INFO, walkWorkspace(wsk));
+            core.deleteCollection(wsk, "/a/b");
+            collection = core.readCollection(akey);
+            assertEquals(1, collection.getClock());
+            assertEquals(1, collection.getElements().size());
+            assertTrue(collection.findElementByName("b") == null);
+            assertTrue(collection.findElementByName("c").getKey().equals(ckey));
 
-			core.snapshotWorkspace(wsk);
-			workspace = core.readWorkspace(wsk);
-			assertEquals(2, workspace.getSnapshots().size());
-			assertEquals(3, workspace.getClock());
-			assertFalse(workspace.hasChanged());
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-			core.deleteCollection(wsk, "/a/d");
-			LOGGER.log(Level.INFO, walkWorkspace(wsk));
+            InputStream schemaWorkspaceInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-workspace-schema.json");
+            String schemaWorkspaceHash = core.put(schemaWorkspaceInputStream);
+            core.createMetadataFormat(MetadataFormat.WORKSPACE, "Les métadonnées associées à un espace de travail.", schemaWorkspaceHash, "", true, true);
 
-			core.createCollection(wsk, "/a/e");
-			core.snapshotWorkspace(wsk);
-			LOGGER.log(Level.INFO, walkWorkspace(wsk));
+            Workspace workspace = core.readWorkspace(wsk);
+            assertEquals(0, workspace.getSnapshots().size());
+            assertEquals(1, workspace.getClock());
+            assertTrue(workspace.hasChanged());
+            core.snapshotWorkspace(wsk);
+            workspace = core.readWorkspace(wsk);
+            assertEquals(1, workspace.getSnapshots().size());
+            assertEquals(2, workspace.getClock());
+            assertFalse(workspace.hasChanged());
 
-			core.createCollection(wsk, "/a/c/f");
-			LOGGER.log(Level.INFO, walkWorkspace(wsk));
+            LOGGER.log(Level.INFO, "Workspace snapshotted");
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-			String acfkey = core.resolveWorkspacePath(wsk, "head", "/a/c/f");
-			int acfclock = core.readCollection(acfkey).getClock();
-			core.moveCollection(wsk, "/a/c/f", "/a/e/f");
-			LOGGER.log(Level.INFO, walkWorkspace(wsk));
-			collection = core.readCollection(acfkey);
-			assertEquals(acfclock, collection.getClock());
-			assertEquals("f", collection.getName());
+            try {
+                core.snapshotWorkspace(wsk);
+                fail("A second snapshot without changes should produce an exception");
+            } catch (Exception e) {
+                LOGGER.log(Level.INFO, e.getMessage());
+            }
 
-			core.snapshotWorkspace(wsk);
-			core.createCollection(wsk, "/a/e/f/h");
-			acfclock = core.readCollection(acfkey).getClock();
-			core.moveCollection(wsk, "/a/e/f", "/a/c/g");
-			LOGGER.log(Level.INFO, walkWorkspace(wsk));
-			acfkey = core.resolveWorkspacePath(wsk, "head", "/a/c/g");
-			collection = core.readCollection(acfkey);
-			assertEquals(1, collection.getElements().size());
-			assertEquals(acfclock + 1, collection.getClock());
-			assertEquals("g", collection.getName());
+            core.createCollection(wsk, "/a/d");
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-			core.snapshotWorkspace(wsk);
-			core.createCollection(wsk, "/a/c/g/d1");
-			core.createCollection(wsk, "/a/c/g/d1/d2");
-			core.createCollection(wsk, "/a/c/g/d1/d2/d3");
-			try {
-				core.deleteCollection(wsk, "/a/c/g");
-				fail("collection is not empty and should have raised an exception");
-			} catch ( CollectionNotEmptyException e ) {
-				//
-			}
-			core.deleteCollection(wsk, "/a/c/g", true);
+            core.snapshotWorkspace(wsk);
+            workspace = core.readWorkspace(wsk);
+            assertEquals(2, workspace.getSnapshots().size());
+            assertEquals(3, workspace.getClock());
+            assertFalse(workspace.hasChanged());
 
-			// TODO test moveElements
-//			core.snapshotWorkspace(wsk);
-//			core.createCollection(wsk, "/m");
-//			core.createCollection(wsk, "/m/a");
-//			core.createCollection(wsk, "/m/b");
-//			core.createCollection(wsk, "/n");
-//			core.createCollection(wsk, "/n/a");
-//			core.createCollection(wsk, "/n/b");
-//			core.createCollection(wsk, "/o");
-//			core.createCollection(wsk, "/o/a");
-//			List<String> sources = Arrays.asList("/m/a", "n");
-//			try {
-//				core.moveElements(wsk, sources, "/o");
-//				fail("trying to move elements from different collections; should have raised an exception");
-//			} catch (InvalidPathException e) {
-//				//
-//			}
+            core.deleteCollection(wsk, "/a/d");
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-			LOGGER.log(Level.INFO, walkWorkspace(wsk));
-			
-		} finally {
-			loginContext.logout();
-		}
-	}
+            core.createCollection(wsk, "/a/e");
+            core.snapshotWorkspace(wsk);
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-	@Test
-	public void testDeleteCollectionElementConcurrently()
-			throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException,
-			AliasAlreadyExistsException {
-		LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
-		loginContext.login();
-		try {
-			LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
-			try {
-				membership.createProfile("User", "ONE", "user.one@ortolang.fr");
-			} catch (ProfileAlreadyExistsException e) {
-				LOGGER.log(Level.INFO, "Profile user1 already exists !!");
-			}
+            core.createCollection(wsk, "/a/c/f");
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-			String wsk = UUID.randomUUID().toString();
-			core.createWorkspace(wsk, "WorkspaceCollection", "test");
+            String acfkey = core.resolveWorkspacePath(wsk, "head", "/a/c/f");
+            int acfclock = core.readCollection(acfkey).getClock();
+            core.moveCollection(wsk, "/a/c/f", "/a/e/f");
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
+            collection = core.readCollection(acfkey);
+            assertEquals(acfclock, collection.getClock());
+            assertEquals("f", collection.getName());
 
-			core.createCollection(wsk, "/a");
-			core.createCollection(wsk, "/a/a");
-			core.createCollection(wsk, "/a/b");
-			core.createCollection(wsk, "/a/c");
-			core.createCollection(wsk, "/a/d");
-			core.createCollection(wsk, "/a/e");
-			core.createCollection(wsk, "/a/f");
-			core.createCollection(wsk, "/a/g");
-			core.createCollection(wsk, "/a/h");
-			core.createCollection(wsk, "/a/i");
-			core.createCollection(wsk, "/a/j");
+            core.snapshotWorkspace(wsk);
+            core.createCollection(wsk, "/a/e/f/h");
+            acfclock = core.readCollection(acfkey).getClock();
+            core.moveCollection(wsk, "/a/e/f", "/a/c/g");
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
+            acfkey = core.resolveWorkspacePath(wsk, "head", "/a/c/g");
+            collection = core.readCollection(acfkey);
+            assertEquals(1, collection.getElements().size());
+            assertEquals(acfclock + 1, collection.getClock());
+            assertEquals("g", collection.getName());
 
-			LOGGER.log(Level.INFO, "Workspace created");
-			LOGGER.log(Level.INFO, walkWorkspace(wsk));
-			
-			String key = core.resolveWorkspacePath(wsk, "head", "/a");
-			Collection col = core.readCollection(key);
-			int initialSize = col.getElements().size();
-			
-			List<CollectionElementDeleter> deleters = new ArrayList<CollectionElementDeleter> ();
-			deleters.add(new CollectionElementDeleter(wsk, "/a/a"));
-			deleters.add(new CollectionElementDeleter(wsk, "/a/b"));
-			deleters.add(new CollectionElementDeleter(wsk, "/a/c"));
-			deleters.add(new CollectionElementDeleter(wsk, "/a/d"));
-			deleters.add(new CollectionElementDeleter(wsk, "/a/e"));
-			deleters.add(new CollectionElementDeleter(wsk, "/a/f"));
-			deleters.add(new CollectionElementDeleter(wsk, "/a/g"));
-			deleters.add(new CollectionElementDeleter(wsk, "/a/h"));
-			deleters.add(new CollectionElementDeleter(wsk, "/a/i"));
-			deleters.add(new CollectionElementDeleter(wsk, "/a/j"));
-			
-			ThreadGroup group = new ThreadGroup("Deleters-ThreadGroup");
-			List<Thread> threads = new ArrayList<Thread>();
-			for (CollectionElementDeleter deleter : deleters) {
-				threads.add(new Thread(group, deleter));
-			}
-			for (Thread thread : threads) {
-				thread.start();
-			}
+            core.snapshotWorkspace(wsk);
+            core.createCollection(wsk, "/a/c/g/d1");
+            core.createCollection(wsk, "/a/c/g/d1/d2");
+            core.createCollection(wsk, "/a/c/g/d1/d2/d3");
+            try {
+                core.deleteCollection(wsk, "/a/c/g");
+                fail("collection is not empty and should have raised an exception");
+            } catch ( CollectionNotEmptyException e ) {
+                //
+            }
+            core.deleteCollection(wsk, "/a/c/g", true);
 
-			while (group.activeCount() > 0) {
-				LOGGER.log(Level.INFO, "wait for threads to finish");
-				try {
-					Thread.sleep(2000);
-				} catch (InterruptedException e) {
-					LOGGER.log(Level.INFO, "interrupted", e);
-				}
-			}
-			
-			int expectedSize = initialSize;
-			for (CollectionElementDeleter deleter : deleters) {
-				if ( deleter.hasBeenDeleted() ) {
-					expectedSize--;
-				}
-			}
+            // TODO test moveElements
+            // TODO test deleteElements
+            //			core.snapshotWorkspace(wsk);
+            //			core.createCollection(wsk, "/m");
+            //			core.createCollection(wsk, "/m/a");
+            //			core.createCollection(wsk, "/m/b");
+            //			core.createCollection(wsk, "/n");
+            //			core.createCollection(wsk, "/n/a");
+            //			core.createCollection(wsk, "/n/b");
+            //			core.createCollection(wsk, "/o");
+            //			core.createCollection(wsk, "/o/a");
+            //			List<String> sources = Arrays.asList("/m/a", "n");
+            //			try {
+            //				core.moveElements(wsk, sources, "/o");
+            //				fail("trying to move elements from different collections; should have raised an exception");
+            //			} catch (InvalidPathException e) {
+            //				//
+            //			}
 
-			key = core.resolveWorkspacePath(wsk, "head", "/a");
-			col = core.readCollection(key);
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-			assertEquals(expectedSize, col.getElements().size());
+        } finally {
+            loginContext.logout();
+        }
+    }
 
-		} finally {
-			loginContext.logout();
-		}
-	}
+    @Test
+    public void testDeleteCollectionElementConcurrently()
+            throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException,
+            AliasAlreadyExistsException {
+        LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+        loginContext.login();
+        try {
+            LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+            try {
+                membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+            } catch (ProfileAlreadyExistsException e) {
+                LOGGER.log(Level.INFO, "Profile user1 already exists !!");
+            }
 
-	public class CollectionElementDeleter implements Runnable {
+            String wsk = UUID.randomUUID().toString();
+            core.createWorkspace(wsk, "WorkspaceCollection", "test");
 
-		private String wskey;
-		private String path;
-		private boolean deleted;
+            core.createCollection(wsk, "/a");
+            core.createCollection(wsk, "/a/a");
+            core.createCollection(wsk, "/a/b");
+            core.createCollection(wsk, "/a/c");
+            core.createCollection(wsk, "/a/d");
+            core.createCollection(wsk, "/a/e");
+            core.createCollection(wsk, "/a/f");
+            core.createCollection(wsk, "/a/g");
+            core.createCollection(wsk, "/a/h");
+            core.createCollection(wsk, "/a/i");
+            core.createCollection(wsk, "/a/j");
 
-		private CollectionElementDeleter(String wskey, String path) {
-			this.wskey = wskey;
-			this.path = path;
-			deleted = false;
-		}
-		
-		public boolean hasBeenDeleted() {
-			return deleted;
-		}
+            LOGGER.log(Level.INFO, "Workspace created");
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-		public void run() {
-			try {
-				LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
-				loginContext.login();
-				try {
-					LOGGER.log(Level.INFO, "Deleting collection at path: " + path);
-					core.deleteCollection(wskey, path);
-					deleted = true;
-				} catch (CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | CollectionNotEmptyException | PathNotFoundException | WorkspaceReadOnlyException e) {
-					LOGGER.log(Level.SEVERE, "error during deleting collection: " + e.getMessage());
-				} finally {
-					loginContext.logout();
-				}
-			} catch (LoginException e) {
-				LOGGER.log(Level.SEVERE, "unable to login", e);
-			}
-		}
-	}
+            String key = core.resolveWorkspacePath(wsk, "head", "/a");
+            Collection col = core.readCollection(key);
+            int initialSize = col.getElements().size();
 
-	private String walkWorkspace(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		StringBuffer buffer = new StringBuffer();
-		Workspace workspace = core.readWorkspace(key);
-		buffer.append("Walking workspace...\r\n");
-		buffer.append("[" + key.substring(0, 6) + "] (WORKSPACE name:" + workspace.getName() + ", clock:" + workspace.getClock() + ")\r\n");
-		buffer.append("# HEAD #\r\n");
-		walkCollection(buffer, workspace.getHead(), 0);
-		for (SnapshotElement snapshot : workspace.getSnapshots()) {
-			buffer.append("# SNAPSHOT #\r\n");
-			walkCollection(buffer, snapshot.getKey(), 0);
-		}
-		buffer.append("----------------- Walk done -------------\r\n");
-		return buffer.toString();
-	}
+            List<CollectionElementDeleter> deleters = new ArrayList<CollectionElementDeleter> ();
+            deleters.add(new CollectionElementDeleter(wsk, "/a/a"));
+            deleters.add(new CollectionElementDeleter(wsk, "/a/b"));
+            deleters.add(new CollectionElementDeleter(wsk, "/a/c"));
+            deleters.add(new CollectionElementDeleter(wsk, "/a/d"));
+            deleters.add(new CollectionElementDeleter(wsk, "/a/e"));
+            deleters.add(new CollectionElementDeleter(wsk, "/a/f"));
+            deleters.add(new CollectionElementDeleter(wsk, "/a/g"));
+            deleters.add(new CollectionElementDeleter(wsk, "/a/h"));
+            deleters.add(new CollectionElementDeleter(wsk, "/a/i"));
+            deleters.add(new CollectionElementDeleter(wsk, "/a/j"));
 
-	private void walkCollection(StringBuffer buffer, String key, int level) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		Collection collection = core.readCollection(key);
-		for (int i = 0; i < level; i++) {
-			buffer.append(" ");
-		}
-		buffer.append("[" + key.substring(0, 6) + "] COLLECTION {name:" + collection.getName() + ", clock:" + collection.getClock() + "}\r\n");
-		for (MetadataElement element : collection.getMetadatas()) {
-			walkMetaDataObject(buffer, element.getName(), element.getKey(), level);
-		}
-		for (CollectionElement element : collection.getElements()) {
-			if (element.getType().equals(Collection.OBJECT_TYPE)) {
-				walkCollection(buffer, element.getKey(), level + 1);
-			}
-			if (element.getType().equals(DataObject.OBJECT_TYPE)) {
-				walkDataObject(buffer, element.getKey(), level + 1);
-			}
-			if (element.getType().equals(Link.OBJECT_TYPE)) {
-				walkLink(buffer, element.getKey(), level + 1);
-			}
-		}
-	}
+            ThreadGroup group = new ThreadGroup("Deleters-ThreadGroup");
+            List<Thread> threads = new ArrayList<Thread>();
+            for (CollectionElementDeleter deleter : deleters) {
+                threads.add(new Thread(group, deleter));
+            }
+            for (Thread thread : threads) {
+                thread.start();
+            }
 
-	private void walkDataObject(StringBuffer buffer, String key, int level) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		DataObject object = core.readDataObject(key);
-		for (int i = 0; i < level; i++) {
-			buffer.append(" ");
-		}
-		buffer.append("[" + key.substring(0, 6) + "] OBJECT {name:" + object.getName() + ", clock:" + object.getClock() + "}\r\n");
-		for (MetadataElement element : object.getMetadatas()) {
-			walkMetaDataObject(buffer, element.getName(), element.getKey(), level);
-		}
-	}
+            while (group.activeCount() > 0) {
+                LOGGER.log(Level.INFO, "wait for threads to finish");
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.INFO, "interrupted", e);
+                }
+            }
 
-	private void walkLink(StringBuffer buffer, String key, int level) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		Link link = core.readLink(key);
-		for (int i = 0; i < level; i++) {
-			buffer.append(" ");
-		}
-		buffer.append("[" + key.substring(0, 6) + "] LINK {name:" + link.getName() + ", clock:" + link.getClock() + "}\r\n");
-		for (MetadataElement element : link.getMetadatas()) {
-			walkMetaDataObject(buffer, element.getName(), element.getKey(), level);
-		}
-	}
+            int expectedSize = initialSize;
+            for (CollectionElementDeleter deleter : deleters) {
+                if ( deleter.hasBeenDeleted() ) {
+                    expectedSize--;
+                }
+            }
 
-	private void walkMetaDataObject(StringBuffer buffer, String name, String key, int level) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
-		for (int i = 0; i < level; i++) {
-			buffer.append(" ");
-		}
-		buffer.append(">>------  METADATA {name: " + name + ", key: " + key.substring(0, 6) + "}\r\n");
-	}
+            key = core.resolveWorkspacePath(wsk, "head", "/a");
+            col = core.readCollection(key);
+
+            assertEquals(expectedSize, col.getElements().size());
+
+        } finally {
+            loginContext.logout();
+        }
+    }
+
+    public class CollectionElementDeleter implements Runnable {
+
+        private String wskey;
+        private String path;
+        private boolean deleted;
+
+        private CollectionElementDeleter(String wskey, String path) {
+            this.wskey = wskey;
+            this.path = path;
+            deleted = false;
+        }
+
+        public boolean hasBeenDeleted() {
+            return deleted;
+        }
+
+        public void run() {
+            try {
+                LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+                loginContext.login();
+                try {
+                    LOGGER.log(Level.INFO, "Deleting collection at path: " + path);
+                    core.deleteCollection(wskey, path);
+                    deleted = true;
+                } catch (CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | CollectionNotEmptyException | PathNotFoundException | WorkspaceReadOnlyException e) {
+                    LOGGER.log(Level.SEVERE, "error during deleting collection: " + e.getMessage());
+                } finally {
+                    loginContext.logout();
+                }
+            } catch (LoginException e) {
+                LOGGER.log(Level.SEVERE, "unable to login", e);
+            }
+        }
+    }
+
+    private String walkWorkspace(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+        StringBuffer buffer = new StringBuffer();
+        Workspace workspace = core.readWorkspace(key);
+        buffer.append("Walking workspace...\r\n");
+        buffer.append("[" + key.substring(0, 6) + "] (WORKSPACE name:" + workspace.getName() + ", clock:" + workspace.getClock() + ")\r\n");
+        buffer.append("# HEAD #\r\n");
+        walkCollection(buffer, workspace.getHead(), 0);
+        for (SnapshotElement snapshot : workspace.getSnapshots()) {
+            buffer.append("# SNAPSHOT #\r\n");
+            walkCollection(buffer, snapshot.getKey(), 0);
+        }
+        buffer.append("----------------- Walk done -------------\r\n");
+        return buffer.toString();
+    }
+
+    private void walkCollection(StringBuffer buffer, String key, int level) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+        Collection collection = core.readCollection(key);
+        for (int i = 0; i < level; i++) {
+            buffer.append(" ");
+        }
+        buffer.append("[" + key.substring(0, 6) + "] COLLECTION {name:" + collection.getName() + ", clock:" + collection.getClock() + "}\r\n");
+        for (MetadataElement element : collection.getMetadatas()) {
+            walkMetaDataObject(buffer, element.getName(), element.getKey(), level);
+        }
+        for (CollectionElement element : collection.getElements()) {
+            if (element.getType().equals(Collection.OBJECT_TYPE)) {
+                walkCollection(buffer, element.getKey(), level + 1);
+            }
+            if (element.getType().equals(DataObject.OBJECT_TYPE)) {
+                walkDataObject(buffer, element.getKey(), level + 1);
+            }
+            if (element.getType().equals(Link.OBJECT_TYPE)) {
+                walkLink(buffer, element.getKey(), level + 1);
+            }
+        }
+    }
+
+    private void walkDataObject(StringBuffer buffer, String key, int level) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+        DataObject object = core.readDataObject(key);
+        for (int i = 0; i < level; i++) {
+            buffer.append(" ");
+        }
+        buffer.append("[" + key.substring(0, 6) + "] OBJECT {name:" + object.getName() + ", clock:" + object.getClock() + "}\r\n");
+        for (MetadataElement element : object.getMetadatas()) {
+            walkMetaDataObject(buffer, element.getName(), element.getKey(), level);
+        }
+    }
+
+    private void walkLink(StringBuffer buffer, String key, int level) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+        Link link = core.readLink(key);
+        for (int i = 0; i < level; i++) {
+            buffer.append(" ");
+        }
+        buffer.append("[" + key.substring(0, 6) + "] LINK {name:" + link.getName() + ", clock:" + link.getClock() + "}\r\n");
+        for (MetadataElement element : link.getMetadatas()) {
+            walkMetaDataObject(buffer, element.getName(), element.getKey(), level);
+        }
+    }
+
+    private void walkMetaDataObject(StringBuffer buffer, String name, String key, int level) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+        for (int i = 0; i < level; i++) {
+            buffer.append(" ");
+        }
+        buffer.append(">>------  METADATA {name: " + name + ", key: " + key.substring(0, 6) + "}\r\n");
+    }
 
 }

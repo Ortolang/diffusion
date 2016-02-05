@@ -540,16 +540,28 @@ public class WorkspaceResource {
     @GZIP
     public Response moveWorkspaceElements(@PathParam(value = "wskey") String wskey, BulkActionRepresentation bulkActionRepresentation)
             throws WorkspaceReadOnlyException, RegistryServiceException, AccessDeniedException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException,
-            CoreServiceException {
-        LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements/bulk");
-        if (bulkActionRepresentation.getDestination() == null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("form parameter 'destination' is mandatory").build();
+            CoreServiceException, CollectionNotEmptyException {
+        LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements/bulk (" + bulkActionRepresentation.getAction() + ")");
+        if (bulkActionRepresentation.getAction() == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'action' is mandatory").build();
         }
-        if (bulkActionRepresentation.getSources() == null) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("form parameter 'sources' is mandatory").build();
+        if (BulkActionRepresentation.Actions.MOVE.toString().equalsIgnoreCase(bulkActionRepresentation.getAction())) {
+            if (bulkActionRepresentation.getDestination() == null) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'destination' is mandatory").build();
+            }
+            if (bulkActionRepresentation.getSources() == null) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'sources' is mandatory").build();
+            }
+            core.moveElements(wskey, bulkActionRepresentation.getSources(), bulkActionRepresentation.getDestination());
+            return Response.ok().build();
+        } else if (BulkActionRepresentation.Actions.DELETE.toString().equalsIgnoreCase(bulkActionRepresentation.getAction())) {
+            if (bulkActionRepresentation.getSources() == null) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'sources' is mandatory").build();
+            }
+            core.deleteElements(wskey, bulkActionRepresentation.getSources(), bulkActionRepresentation.isForce());
+            return Response.ok().build();
         }
-        core.moveElements(wskey, bulkActionRepresentation.getSources(), bulkActionRepresentation.getDestination());
-        return Response.ok().build();
+        return Response.status(Response.Status.BAD_REQUEST).entity("Unknown bulk action: " + bulkActionRepresentation.getAction()).build();
     }
 
     @POST

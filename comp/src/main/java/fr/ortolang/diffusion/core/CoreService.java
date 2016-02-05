@@ -111,6 +111,10 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     void moveElements(String wskey, List<String> sources, String destination)
             throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException, RegistryServiceException, WorkspaceReadOnlyException,
             PathAlreadyExistsException;
+
+    void deleteElements(String wskey, List<String> sources, boolean force)
+            throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException, WorkspaceReadOnlyException, CollectionNotEmptyException,
+            RegistryServiceException;
 	
 	/*Collection*/
 

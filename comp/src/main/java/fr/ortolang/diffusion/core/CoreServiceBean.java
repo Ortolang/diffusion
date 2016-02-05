@@ -1271,9 +1271,52 @@ public class CoreServiceBean implements CoreService {
                         moveCollection(wskey, source, destination + PathBuilder.PATH_SEPARATOR + collectionElement.getName());
                     }
                 }
-            } catch (PathAlreadyExistsException | AccessDeniedException | CoreServiceException | RegistryServiceException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | KeyNotFoundException e) {
+            } catch (AccessDeniedException | CoreServiceException | RegistryServiceException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | KeyNotFoundException e) {
                 ctx.setRollbackOnly();
                 LOGGER.log(Level.SEVERE, "unexpected error while moving workspace elements", e);
+                throw e;
+            } catch (PathAlreadyExistsException e) {
+                ctx.setRollbackOnly();
+                throw e;
+            }
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void deleteElements(String wskey, List<String> sources, boolean force)
+            throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException, WorkspaceReadOnlyException, CollectionNotEmptyException,
+            RegistryServiceException {
+        if (!sources.isEmpty()) {
+            try {
+                String ppath = PathBuilder.fromPath(sources.get(0)).parent().build();
+                for (String source : sources) {
+                    String sppath = PathBuilder.fromPath(source).parent().build();
+                    if (!ppath.equals(sppath)) {
+                        throw new InvalidPathException("unable to delete elements from different collections");
+                    }
+                }
+                String parentKey = resolveWorkspacePath(wskey, "head", ppath);
+                OrtolangObjectIdentifier identifier = registry.lookup(parentKey);
+                checkObjectType(identifier, Collection.OBJECT_TYPE);
+                Collection collection = readCollection(parentKey);
+
+                for (String source : sources) {
+                    CollectionElement collectionElement = collection.findElementByName(PathBuilder.fromPath(source).part());
+                    switch (collectionElement.getType()) {
+                    case DataObject.OBJECT_TYPE:
+                        deleteDataObject(wskey, source);
+                        break;
+                    case Collection.OBJECT_TYPE:
+                        deleteCollection(wskey, source, force);
+                    }
+                }
+            } catch (InvalidPathException | CoreServiceException | PathNotFoundException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | RegistryServiceException e) {
+                ctx.setRollbackOnly();
+                LOGGER.log(Level.SEVERE, "unexpected error while moving workspace elements", e);
+                throw e;
+            } catch (CollectionNotEmptyException e) {
+                ctx.setRollbackOnly();
                 throw e;
             }
         }
@@ -1436,7 +1479,7 @@ public class CoreServiceBean implements CoreService {
             LOGGER.log(Level.FINEST, "collection exists and loaded from storage");
 
             if (!leaf.isEmpty() && !force) {
-                throw new CollectionNotEmptyException("collection at path: [" + path + "] is not empty");
+                throw new CollectionNotEmptyException(path);
             }
 
             parent.removeElement(element);

@@ -42,14 +42,19 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import java.util.HashMap;
+import java.util.Map;
 
 @Provider
 public class CollectionNotEmptyExceptionMapper implements ExceptionMapper<CollectionNotEmptyException> {
 
-	@Override
-	public Response toResponse(CollectionNotEmptyException ex) {
-		return Response.status(Status.FORBIDDEN)
-				.entity("Cannot delete a non-empty collection").type("text/plain")
-				.build();
-	}
+    @Override
+    public Response toResponse(CollectionNotEmptyException ex) {
+        Map<String, String> map = new HashMap<>();
+        map.put("path", ex.getPath());
+        map.put("message", ex.getMessage());
+        return Response.status(Status.FORBIDDEN)
+                .entity(map)
+                .build();
+    }
 }

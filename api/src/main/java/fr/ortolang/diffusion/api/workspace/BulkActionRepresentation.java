@@ -40,11 +40,29 @@ import java.util.List;
 
 public class BulkActionRepresentation {
 
+    public enum Actions {
+        MOVE,
+        DELETE
+    }
+
+    private String action;
+
     private String destination;
 
     private List<String> sources;
 
+    private boolean force;
+
     public BulkActionRepresentation() {
+        this.force = false;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
     }
 
     public String getDestination() {
@@ -61,5 +79,13 @@ public class BulkActionRepresentation {
 
     public void setSources(List<String> sources) {
         this.sources = sources;
+    }
+
+    public boolean isForce() {
+        return force;
+    }
+
+    public void setForce(boolean force) {
+        this.force = force;
     }
 }
