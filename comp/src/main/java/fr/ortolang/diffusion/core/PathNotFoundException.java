@@ -39,20 +39,23 @@ package fr.ortolang.diffusion.core;
 @SuppressWarnings("serial")
 public class PathNotFoundException extends Exception {
 
+    private String path;
+
     public PathNotFoundException() {
         super();
     }
 
-    public PathNotFoundException(String message) {
+    public PathNotFoundException(String path) {
+        super("Element not found at path: " + path);
+        this.path = path;
+    }
+
+    public PathNotFoundException(String path, String message) {
         super(message);
+        this.path = path;
     }
 
-    public PathNotFoundException(Throwable cause) {
-        super(cause);
+    public String getPath() {
+        return path;
     }
-
-    public PathNotFoundException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
 }

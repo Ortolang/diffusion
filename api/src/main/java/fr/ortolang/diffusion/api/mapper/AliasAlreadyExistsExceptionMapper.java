@@ -36,20 +36,24 @@ package fr.ortolang.diffusion.api.mapper;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangErrorCodes;
 import fr.ortolang.diffusion.core.AliasAlreadyExistsException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import java.util.HashMap;
+import java.util.Map;
 
 @Provider
 public class AliasAlreadyExistsExceptionMapper implements ExceptionMapper<AliasAlreadyExistsException> {
 
-	@Override
-	public Response toResponse(AliasAlreadyExistsException ex) {
-		return Response.status(Status.CONFLICT)
-				.entity(ex.getMessage()).type("text/plain")
-				.build();
-	}
+    @Override
+    public Response toResponse(AliasAlreadyExistsException ex) {
+        Map<String, String> map = new HashMap<>();
+        map.put("code", OrtolangErrorCodes.ALIAS_ALREADY_EXISTS_EXCEPTION);
+        map.put("message", ex.getMessage());
+        return Response.status(Status.CONFLICT).entity(map).build();
+    }
 }

@@ -701,7 +701,7 @@ public class CoreServiceBean implements CoreService {
                 Workspace workspace = query.getSingleResult();
                 return registry.lookup(workspace.getObjectIdentifier());
             } catch (NoResultException e) {
-                throw new AliasNotFoundException("alias " + alias + " does not exist in the storage");
+                throw new AliasNotFoundException(alias);
             }
         } catch (RegistryServiceException | IdentifierNotRegisteredException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during resolving workspace alias: " + alias, e);
@@ -711,7 +711,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, AccessDeniedException, PathNotFoundException {
+    public String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, AccessDeniedException, PathNotFoundException, RootNotFoundException {
         LOGGER.log(Level.FINE, "resolving into workspace [" + wskey + "] and root [" + root + "] path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -738,7 +738,7 @@ public class CoreServiceBean implements CoreService {
                 }
                 SnapshotElement element = ws.findSnapshotByName(snapshot);
                 if (element == null) {
-                    throw new InvalidPathException("root [" + root + "] does not exists");
+                    throw new RootNotFoundException(root);
                 } else {
                     rroot = element.getKey();
                 }
@@ -2182,7 +2182,7 @@ public class CoreServiceBean implements CoreService {
             Collection sparent = loadCollectionAtPath(ws.getHead(), sppath, ws.getClock());
             CollectionElement selement = sparent.findElementByName(spath.part());
             if (selement == null) {
-                throw new PathNotFoundException("path [" + spath.build() + "] does not exists");
+                throw new PathNotFoundException(spath.build());
             }
             LOGGER.log(Level.FINEST, "source link element found for name " + spath.part());
 

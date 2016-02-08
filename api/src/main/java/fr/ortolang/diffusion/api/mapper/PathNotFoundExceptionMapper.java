@@ -41,15 +41,21 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import fr.ortolang.diffusion.OrtolangErrorCodes;
 import fr.ortolang.diffusion.core.PathNotFoundException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Provider
 public class PathNotFoundExceptionMapper implements ExceptionMapper<PathNotFoundException> {
 
     @Override
     public Response toResponse(PathNotFoundException ex) {
-        return Response.status(Status.NOT_FOUND)
-                .entity("Element not found at path : " + ex.getMessage()).type("text/plain")
-                .build();
+        Map<String, String> map = new HashMap<>();
+        map.put("code", OrtolangErrorCodes.PATH_NOT_FOUND_EXCEPTION);
+        map.put("path", ex.getPath());
+        map.put("message", ex.getMessage());
+        return Response.status(Status.NOT_FOUND).entity(map).build();
     }
 }

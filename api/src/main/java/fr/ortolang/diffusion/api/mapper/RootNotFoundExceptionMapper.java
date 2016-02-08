@@ -36,26 +36,26 @@ package fr.ortolang.diffusion.api.mapper;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangErrorCodes;
+import fr.ortolang.diffusion.core.AliasAlreadyExistsException;
+import fr.ortolang.diffusion.core.RootNotFoundException;
+
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
-
-import fr.ortolang.diffusion.OrtolangErrorCodes;
-import fr.ortolang.diffusion.core.PathAlreadyExistsException;
-
 import java.util.HashMap;
 import java.util.Map;
 
 @Provider
-public class PathAlreadyExistsExceptionMapper implements ExceptionMapper<PathAlreadyExistsException> {
+public class RootNotFoundExceptionMapper implements ExceptionMapper<RootNotFoundException> {
 
     @Override
-    public Response toResponse(PathAlreadyExistsException ex) {
+    public Response toResponse(RootNotFoundException ex) {
         Map<String, String> map = new HashMap<>();
-        map.put("code", OrtolangErrorCodes.PATH_ALREADY_EXISTS_EXCEPTION);
-        map.put("path", ex.getPath());
+        map.put("code", OrtolangErrorCodes.ROOT_NOT_FOUND_EXCEPTION);
+        map.put("root", ex.getRoot());
         map.put("message", ex.getMessage());
-        return Response.status(Status.CONFLICT).entity(map).build();
+        return Response.status(Status.NOT_FOUND).entity(map).build();
     }
 }

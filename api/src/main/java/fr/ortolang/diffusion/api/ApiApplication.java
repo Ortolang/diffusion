@@ -117,6 +117,7 @@ public class ApiApplication extends Application {
 		set.add(new EJBAccessExceptionMapper());
 		set.add(new PathAlreadyExistsExceptionMapper());
 		set.add(new PathNotFoundExceptionMapper());
+		set.add(new RootNotFoundExceptionMapper());
 		return set;
 	}
 }

@@ -100,7 +100,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
     String resolveWorkspaceAlias(String alias) throws CoreServiceException, AccessDeniedException, AliasNotFoundException;
 
-    String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, PathNotFoundException, AccessDeniedException;
+    String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, PathNotFoundException, AccessDeniedException, RootNotFoundException;
 
     String resolveWorkspaceMetadata(String wskey, String root, String path, String name) throws CoreServiceException, InvalidPathException, PathNotFoundException, AccessDeniedException;
 
