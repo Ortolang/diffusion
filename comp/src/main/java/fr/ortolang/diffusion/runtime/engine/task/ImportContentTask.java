@@ -245,9 +245,11 @@ public class ImportContentTask extends RuntimeEngineTask {
 				}
 			}
 			if ( owner != null && owner.length() > 0 ) {
-				getSecurityService().changeOwner(ws.getMembers(), owner);
+			    getSecurityService().changeOwner(ws.getMembers(), owner);
+			    getSecurityService().changeOwner(ws.getEventFeed(), owner);
 				getSecurityService().changeOwner(wskey, owner);
-				getMembershipService().removeMemberFromGroup(ws.getMembers(), MembershipService.SUPERUSER_IDENTIFIER);
+				getMembershipService().addMemberInGroup(ws.getMembers(), owner);
+                getMembershipService().removeMemberFromGroup(ws.getMembers(), MembershipService.SUPERUSER_IDENTIFIER);
 			}
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to create workspace", e);
