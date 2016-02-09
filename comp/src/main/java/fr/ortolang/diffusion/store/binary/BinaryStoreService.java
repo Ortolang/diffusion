@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.store.binary;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.List;
 
 import fr.ortolang.diffusion.OrtolangService;
 
@@ -202,5 +203,16 @@ public interface BinaryStoreService extends OrtolangService {
      * @throws BinaryStoreServiceException
 	 */
 	public void delete(String hash) throws BinaryStoreServiceException, DataNotFoundException;
-
+	
+	/**
+	 * System operation to browse the store content.
+	 * 
+	 * @param name
+	 *            The store volume name
+	 * @param prefix
+	 *            The hash prefix to list content
+	 * @throws BinaryStoreServiceException        
+	 */
+	public List<BinaryStoreContent> systemBrowse(String name, String prefix) throws BinaryStoreServiceException;
+	
 }

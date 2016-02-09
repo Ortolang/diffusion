@@ -563,14 +563,8 @@ public class WorkspaceResource {
         String key = core.resolveWorkspacePath(wskey, Workspace.HEAD, path);
         OrtolangObject object = browser.findObject(key);
         MetadataElement metadataElement = null;
-        if (object instanceof Collection) {
-            metadataElement = ((Collection) object).findMetadataByName(MetadataFormat.ACL);
-        }
-        if (object instanceof DataObject) {
-            metadataElement = ((DataObject) object).findMetadataByName(MetadataFormat.ACL);
-        }
-        if (object instanceof Link) {
-            metadataElement = ((Link) object).findMetadataByName(MetadataFormat.ACL);
+        if (object instanceof MetadataSource) {
+            metadataElement = ((MetadataSource) object).findMetadataByName(MetadataFormat.ACL);
         }
         if (metadataElement != null) {
             core.updateMetadataObject(wskey, path, MetadataFormat.ACL, hash, null, recursive);
@@ -643,14 +637,8 @@ public class WorkspaceResource {
 
     private String readPublicationPolicy(OrtolangObject object) throws OrtolangException, DataNotFoundException, BinaryStoreServiceException, IOException {
         MetadataElement metadataElement = null;
-        if (object instanceof Collection) {
-            metadataElement = ((Collection) object).findMetadataByName(MetadataFormat.ACL);
-        }
-        if (object instanceof DataObject) {
-            metadataElement = ((DataObject) object).findMetadataByName(MetadataFormat.ACL);
-        }
-        if (object instanceof Link) {
-            metadataElement = ((Link) object).findMetadataByName(MetadataFormat.ACL);
+        if (object instanceof MetadataSource) {
+            metadataElement = ((MetadataSource) object).findMetadataByName(MetadataFormat.ACL);
         }
         if (metadataElement != null) {
             MetadataObject metadataObject = (MetadataObject) browser.findObject(metadataElement.getKey());

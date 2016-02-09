@@ -65,6 +65,11 @@ public class IndexStoreDocumentBuilder {
 		document.add(new Field(SERVICE_FIELD, object.getService(), StringField.TYPE_STORED));
 		document.add(new Field(TYPE_FIELD, object.getType(), StringField.TYPE_STORED));
 		document.add(new Field(KEY_FIELD, object.getKey(), StringField.TYPE_STORED));
+		if ( object.getContent().getName().length() > 0 ) {
+		    document.add(new Field(NAME_FIELD, object.getContent().getName(), StringField.TYPE_STORED));
+		} else {
+		    document.add(new Field(NAME_FIELD, object.getKey(), StringField.TYPE_STORED));
+		}
 		if ( object.isHidden() ) {
 			document.add(new Field(VISIBLITY_FIELD, "hidden", StringField.TYPE_STORED));
 		} else {

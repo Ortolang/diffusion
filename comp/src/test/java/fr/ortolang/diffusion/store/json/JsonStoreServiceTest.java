@@ -206,7 +206,6 @@ public class JsonStoreServiceTest {
 		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
 		object.setService("service");
 		object.setType("type");
-		object.setName("the name");
 		object.setHidden(false);
 		object.setLocked(false);
 		object.setStatus("DRAFT");

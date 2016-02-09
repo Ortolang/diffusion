@@ -881,6 +881,8 @@ public class ReferentielServiceBean implements ReferentielService {
 
             IndexablePlainTextContent content = new IndexablePlainTextContent();
 
+            content.addContentPart(key);
+            
             return content;
         } catch (KeyNotFoundException | RegistryServiceException e) {
             throw new OrtolangException("unable to get indexable plain text content for key " + key, e);
@@ -897,15 +899,6 @@ public class ReferentielServiceBean implements ReferentielService {
             }
             IndexableJsonContent content = new IndexableJsonContent();
 
-//            if (identifier.getType().equals(ReferentielEntity.OBJECT_TYPE)) {
-//                ReferentielEntity referentielEntity = em.find(ReferentielEntity.class, identifier.getId());
-//                if (referentielEntity == null) {
-//                    throw new OrtolangException("unable to load ReferentielEntity with id [" + identifier.getId() + "] from storage");
-//                }
-//
-//                content.put("ortolang-referentiel-json", new ByteArrayInputStream(referentielEntity.getContent().getBytes()));
-//            }
-            
             if (identifier.getType().equals(OrganizationEntity.OBJECT_TYPE)) {
             	OrganizationEntity organizationEntity = em.find(OrganizationEntity.class, identifier.getId());
                 if (organizationEntity == null) {
