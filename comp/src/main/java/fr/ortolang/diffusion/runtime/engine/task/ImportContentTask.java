@@ -102,6 +102,8 @@ public class ImportContentTask extends RuntimeEngineTask {
 		
 		boolean partial = false;
 		StringBuilder report = new StringBuilder();
+		LOGGER.log(Level.FINE, "purge collection creation cache.");
+		purgeCache();
         try {
 			String line = null;
 			boolean needcommit;
