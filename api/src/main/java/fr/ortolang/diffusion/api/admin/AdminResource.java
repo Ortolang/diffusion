@@ -231,7 +231,7 @@ public class AdminResource {
     @GET
     @Path("/store/handle")
     @GZIP
-    public Response searchHandles(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("500") @QueryParam("l") int limit, @DefaultValue("*") @QueryParam("filter") String filter) throws HandleStoreServiceException {
+    public Response searchHandles(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("1000") @QueryParam("l") int limit, @QueryParam("filter") String filter) throws HandleStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/store/handle");
         List<Handle> handles = handle.searchHandles(offset, limit, filter);
         return Response.ok(handles).build();
