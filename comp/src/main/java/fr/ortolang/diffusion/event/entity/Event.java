@@ -70,7 +70,9 @@ import fr.ortolang.diffusion.OrtolangEvent;
 @SuppressWarnings("serial")
 @Table(indexes={@Index(columnList="date", name="eventDateIndex")})
 @NamedQueries({
-        @NamedQuery(name = "listAllEventsByDate", query = "SELECT e FROM Event e ORDER BY e.date DESC")
+        @NamedQuery(name = "listAllEventsByDate", query = "SELECT e FROM Event e ORDER BY e.date DESC"),
+        @NamedQuery(name = "listAllEventsByDateFromId", query = "SELECT e FROM Event e WHERE e.id > :id ORDER BY e.date DESC"),
+        @NamedQuery(name = "listAllEventsByDateFromDate", query = "SELECT e FROM Event e WHERE e.date > :date ORDER BY e.date DESC")
 })
 public class Event extends OrtolangEvent implements Serializable {
 

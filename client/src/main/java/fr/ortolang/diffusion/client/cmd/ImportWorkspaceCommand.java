@@ -106,7 +106,7 @@ public class ImportWorkspaceCommand extends Command {
 				client.login(username);
 			}
 			System.out.println("Connected as user: " + client.connectedProfile());
-			String pkey = client.createProcess("import-workspace", "Import Bag '" + cmd.getOptionValue("f").substring(cmd.getOptionValue("f").lastIndexOf("/")+1) + "'", params, files);
+			String pkey = client.createProcess("import-workspace", "Import Workspace '" + cmd.getOptionValue("f").substring(cmd.getOptionValue("f").lastIndexOf("/")+1) + "'", params, files);
 			System.out.println("Import-Workspace process created with key : " + pkey);
 			
 			client.logout();

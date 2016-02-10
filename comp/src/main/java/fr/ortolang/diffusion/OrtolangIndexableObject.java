@@ -44,7 +44,6 @@ public class OrtolangIndexableObject<T> {
 	private String service;
 	private String type;
 	private String key;
-	private String name;
 	private boolean locked;
 	private boolean hidden;
 	private String status;
@@ -67,10 +66,6 @@ public class OrtolangIndexableObject<T> {
 
 	public void setType(String type) {
 		this.type = type;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public void setContent(T content) {
@@ -111,10 +106,6 @@ public class OrtolangIndexableObject<T> {
 
 	public String getType() {
 		return type;
-	}
-
-	public String getName() {
-		return name;
 	}
 
 	public String getKey() {

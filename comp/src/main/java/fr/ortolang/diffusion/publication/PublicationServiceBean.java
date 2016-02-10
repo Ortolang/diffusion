@@ -214,7 +214,7 @@ public class PublicationServiceBean implements PublicationService {
 		throw new OrtolangException("This service does not manage any object");
 	}
 
-	@Override
+    @Override
 	public OrtolangObjectSize getSize(String key) throws OrtolangException {
 		throw new OrtolangException("This service does not manage any object");
 	}

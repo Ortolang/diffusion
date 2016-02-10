@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -157,7 +156,6 @@ public class IndexStoreServiceTest {
 		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
 		object.setService("service");
 		object.setType("type");
-		object.setName("the name");
 		object.setHidden(false);
 		object.setLocked(false);
 		object.setStatus("draft");
@@ -191,7 +189,6 @@ public class IndexStoreServiceTest {
 		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
 		object.setService("service");
 		object.setType("type");
-		object.setName("the name");
 		object.setHidden(false);
 		object.setLocked(false);
 		object.setStatus("DRAFT");
@@ -230,7 +227,6 @@ public class IndexStoreServiceTest {
 		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
 		object.setService("service");
 		object.setType("type");
-		object.setName("the name");
 		object.setHidden(false);
 		object.setLocked(false);
 		object.setStatus("DRAFT");

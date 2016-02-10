@@ -130,7 +130,7 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	@Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Handle> searchHandles(int offset, int limit, String filter) throws HandleStoreServiceException {
-        String name = filter.toUpperCase(Locale.ENGLISH) + "%";
+        String name = "%" + filter.toUpperCase(Locale.ENGLISH) + "%";
         TypedQuery<Handle> query = em.createNamedQuery("searchHandleByName", Handle.class).setFirstResult(offset).setMaxResults(limit).setParameter("name", name.getBytes()); 
         return query.getResultList();
     }

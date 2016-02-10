@@ -36,6 +36,39 @@ package fr.ortolang.diffusion.membership;
  * #L%
  */
 
+import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
+
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
@@ -44,10 +77,20 @@ import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
-import fr.ortolang.diffusion.membership.entity.*;
+import fr.ortolang.diffusion.membership.entity.Group;
+import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.membership.entity.ProfileData;
+import fr.ortolang.diffusion.membership.entity.ProfileDataType;
+import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
+import fr.ortolang.diffusion.membership.entity.ProfileStatus;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.registry.*;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyLockedException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authentication.AuthenticationService;
 import fr.ortolang.diffusion.security.authentication.TOTPHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -55,27 +98,6 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.*;
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
 
 @Local(MembershipService.class)
 @Stateless(name = MembershipService.SERVICE_NAME)
@@ -276,7 +298,7 @@ public class MembershipServiceBean implements MembershipService {
             friendsReadRules.put(friendGroupKey, Arrays.asList(new String[] { "read" }));
             authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
             authorisation.updatePolicyOwner(friendGroupKey, key);
-
+            
             notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"));
         } catch (KeyAlreadyExistsException e) {
             ctx.setRollbackOnly();
@@ -285,64 +307,6 @@ public class MembershipServiceBean implements MembershipService {
                 | UnsupportedEncodingException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MembershipServiceException("unable to create profile with key [" + key + "]", e);
-        }
-    }
-
-    @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    // TODO refactor
-    public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.FINE, "listing profiles");
-        try {
-            List<String> subjects = getConnectedIdentifierSubjects();
-            List<Profile> ProfilesList = new ArrayList<Profile>();
-            List<String> listKeys = registry.list(1, 100, OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null);
-            for (String key : listKeys) {
-                authorisation.checkPermission(key, subjects, "read");
-
-                OrtolangObjectIdentifier identifier = registry.lookup(key);
-                checkObjectType(identifier, Profile.OBJECT_TYPE);
-                Profile profile = em.find(Profile.class, identifier.getId());
-                if (profile == null) {
-                    throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
-                }
-                ProfilesList.add(profile);
-            }
-            return ProfilesList;
-
-        } catch (AuthorisationServiceException | RegistryServiceException e) {
-            throw new MembershipServiceException("unable to list the profiles", e);
-        }
-    }
-
-    @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    // TODO refactor
-    public List<Profile> searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.FINE, "searching profiles with " + data);
-        try {
-            List<Profile> ProfilesList = new ArrayList<Profile>();
-            List<String> listKeys = registry.list(1, 100, OrtolangObjectIdentifier.buildJPQLFilterPattern(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE), null);
-            for (String key : listKeys) {
-                List<String> subjects = getConnectedIdentifierSubjects();
-                authorisation.checkPermission(key, subjects, "read");
-
-                OrtolangObjectIdentifier identifier = registry.lookup(key);
-                checkObjectType(identifier, Profile.OBJECT_TYPE);
-                Profile profile = em.find(Profile.class, identifier.getId());
-                if (profile == null) {
-                    throw new MembershipServiceException("unable to find a profile for id " + identifier.getId());
-                }
-                String id = profile.getId();
-                String name = profile.getFullName();
-                if (id.matches("(?i).*" + data + ".*") || name.matches("(?i).*" + data + ".*")) {
-                    ProfilesList.add(profile);
-                }
-            }
-            return ProfilesList;
-
-        } catch (AuthorisationServiceException | RegistryServiceException e) {
-            throw new MembershipServiceException("unable to list the profiles", e);
         }
     }
 
@@ -464,10 +428,11 @@ public class MembershipServiceBean implements MembershipService {
             profile.setInfo(name, info);
             em.merge(profile);
             registry.update(key);
+            indexing.index(key);
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("name", name);
             notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "add-info"), argumentsBuilder.build());
-        } catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException | KeyLockedException e) {
+        } catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException | KeyLockedException | IndexingServiceException e) {
             throw new MembershipServiceException("unable to set profile info for profile with key [" + key + "]", e);
         }
     }
@@ -719,9 +684,11 @@ public class MembershipServiceBean implements MembershipService {
             Map<String, List<String>> rules = new HashMap<String, List<String>>();
             rules.put(key, Arrays.asList("read"));
             authorisation.setPolicyRules(key, rules);
+            
+            indexing.index(key);
 
             notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "create"));
-        } catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | KeyNotFoundException e) {
+        } catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | KeyNotFoundException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MembershipServiceException("unable to create group with key [" + key + "]", e);
         }
@@ -769,9 +736,10 @@ public class MembershipServiceBean implements MembershipService {
             em.merge(group);
 
             registry.update(key);
+            indexing.index(key);
 
             notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "update"));
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MembershipServiceException("error while trying to update the group with key [" + key + "]");
         }
@@ -808,9 +776,11 @@ public class MembershipServiceBean implements MembershipService {
                 }
             }
 
+            indexing.remove(key);
             registry.delete(key);
+            
             notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "delete"));
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MembershipServiceException("unable to delete group with key [" + key + "]", e);
         }
@@ -847,6 +817,7 @@ public class MembershipServiceBean implements MembershipService {
             registry.update(key);
             registry.update(member);
             indexing.index(member);
+            indexing.index(key);
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", member);
             notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "add-member"), argumentsBuilder.build());
@@ -891,6 +862,7 @@ public class MembershipServiceBean implements MembershipService {
             registry.update(key);
             registry.update(member);
             indexing.index(member);
+            indexing.index(key);
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", member);
             notification.throwEvent(key, caller, Group.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, "remove-member"), argumentsBuilder.build());
@@ -931,6 +903,8 @@ public class MembershipServiceBean implements MembershipService {
             registry.update(caller);
             indexing.index(caller);
 
+            indexing.index(key);
+            
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", caller);
             notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "add-member"), argumentsBuilder.build());
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | IndexingServiceException e) {
@@ -972,6 +946,7 @@ public class MembershipServiceBean implements MembershipService {
             registry.update(key);
             registry.update(caller);
             indexing.index(caller);
+            indexing.index(key);
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("member", caller);
             notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "remove-member"), argumentsBuilder.build());
@@ -1133,9 +1108,57 @@ public class MembershipServiceBean implements MembershipService {
     }
 
     @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException {
-        throw new NotIndexableContentException();
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+            IndexablePlainTextContent content = new IndexablePlainTextContent();
+            
+            if (identifier.getType().equals(Group.OBJECT_TYPE)) {
+                Group group = em.find(Group.class, identifier.getId());
+                if (group == null) {
+                    throw new OrtolangException("unable to load group with id [" + identifier.getId() + "] from storage");
+                }
+                if (group.getName() != null) {
+                    content.setName(group.getName());
+                    content.addContentPart(group.getName());
+                }
+                if (group.getDescription() != null) {
+                    content.addContentPart(group.getDescription());
+                }
+                if (group.getMembersList().length() > 0 ) {
+                    content.addContentPart(group.getMembersList());
+                }
+            }
+            
+            if (identifier.getType().equals(Profile.OBJECT_TYPE)) {
+                Profile profile = em.find(Profile.class, identifier.getId());
+                if (profile == null) {
+                    throw new OrtolangException("unable to load profile with id [" + identifier.getId() + "] from storage");
+                }
+                if (profile.getFullName() != null) {
+                    content.setName(profile.getFullName());
+                    content.addContentPart(profile.getFullName());
+                }
+                if (profile.getEmail() != null && profile.getEmail().length() > 0) {
+                    if (profile.getEmailVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
+                        content.addContentPart(profile.getEmail());
+                    }
+                }
+                for (ProfileData info : profile.getInfos().values()) {
+                    if (info.getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
+                        content.addContentPart(info.getValue());
+                    }
+                }
+            }
+
+            return content;
+        } catch (KeyNotFoundException | RegistryServiceException e) {
+            throw new OrtolangException("unable to find an object for key " + key);
+        }
     }
 
     @Override

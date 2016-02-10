@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.ftp;
  * #L%
  */
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -50,10 +51,12 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 
 import org.apache.ftpserver.ConnectionConfigFactory;
+import org.apache.ftpserver.DataConnectionConfigurationFactory;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.listener.ListenerFactory;
+import org.apache.ftpserver.ssl.SslConfigurationFactory;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
@@ -91,6 +94,8 @@ public class FtpServiceBean implements FtpService {
     private OrtolangFileSystemFactory fsFactory;
 	private OrtolangUserManager userManager;
 	private ListenerFactory lFactory;
+	private DataConnectionConfigurationFactory dcFactory;
+	private SslConfigurationFactory sslcFactory;
 	private ConnectionConfigFactory cFactory;
 	private FtpServer server;
 
@@ -99,7 +104,22 @@ public class FtpServiceBean implements FtpService {
     	FtpServerFactory serverFactory = new FtpServerFactory();
     	lFactory = new ListenerFactory();
     	lFactory.setPort(Integer.parseInt(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_PORT)));
-		serverFactory.addListener("default", lFactory.createListener());
+    	dcFactory = new DataConnectionConfigurationFactory();
+        dcFactory.setPassivePorts(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_PASSIVE_PORTS));
+        lFactory.setDataConnectionConfiguration(dcFactory.createDataConnectionConfiguration());
+        boolean sslActive = Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_SSL));
+        if ( sslActive ) {
+        	sslcFactory = new SslConfigurationFactory();
+        	sslcFactory.setKeystoreFile(new File(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SSL_KEYSTORE_FILE)));
+        	sslcFactory.setKeystorePassword(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SSL_KEYSTORE_PASSWORD));
+        	sslcFactory.setKeyAlias(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SSL_KEY_PASSWORD));
+        	sslcFactory.setKeyPassword(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SSL_KEY_ALIAS));
+        	dcFactory.setSslConfiguration(sslcFactory.createSslConfiguration());
+            dcFactory.setImplicitSsl(true);
+            lFactory.setSslConfiguration(sslcFactory.createSslConfiguration());
+            lFactory.setImplicitSsl(true);
+        }
+    	serverFactory.addListener("default", lFactory.createListener());
 		fsFactory = new OrtolangFileSystemFactory();
 		serverFactory.setFileSystem(fsFactory);
 		cFactory = new ConnectionConfigFactory();
@@ -208,7 +228,7 @@ public class FtpServiceBean implements FtpService {
     public OrtolangObject findObject(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");
     }
-
+    
     @Override
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");

@@ -51,7 +51,6 @@ import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.runtime.entity.ProcessType;
-import fr.ortolang.diffusion.runtime.entity.RemoteProcess;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface RuntimeService extends OrtolangService {
@@ -99,20 +98,6 @@ public interface RuntimeService extends OrtolangService {
     public void completeTask(String id, Map<String, Object> variables) throws RuntimeServiceException;
 
 	void pushTaskEvent(String pid, String tid, Set<IdentityLink> candidates, String assignee, RuntimeEngineEvent.Type type);
-
-	public RemoteProcess createRemoteProcess(String key, String tool, String name, String toolKey) throws RuntimeServiceException, AccessDeniedException;
-
-	public List<RemoteProcess> listRemoteProcesses(State state) throws RuntimeServiceException, AccessDeniedException;
-
-	public RemoteProcess readRemoteProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
-
-//	public void updateRemoteProcessState(String pid, State state) throws RuntimeServiceException;
-	
-	public void updateRemoteProcessState(String pid, State state, Long start, Long stop) throws RuntimeServiceException;
-
-	public void updateRemoteProcessActivity(String key, String name) throws RuntimeServiceException;
-
-	public void appendRemoteProcessLog(String key, String log) throws RuntimeServiceException;
 
     /* System */
 

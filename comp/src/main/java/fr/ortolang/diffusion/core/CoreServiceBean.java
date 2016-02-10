@@ -326,6 +326,8 @@ public class CoreServiceBean implements CoreService {
             wsrules.put(MembershipService.MODERATOR_GROUP_KEY, Arrays.asList("read", "create", "update", "delete"));
             authorisation.createPolicy(wskey, caller);
             authorisation.setPolicyRules(wskey, wsrules);
+            
+            indexing.index(wskey);
 
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "create"));
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", head).addArgument("path", "/");
@@ -607,10 +609,11 @@ public class CoreServiceBean implements CoreService {
             em.merge(workspace);
 
             registry.update(wskey);
+            indexing.index(wskey);
 
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(1).addArgument("name", name);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argsBuilder.build());
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred while updating workspace", e);
             throw new CoreServiceException("unable to update workspace with key [" + wskey + "]", e);
@@ -862,6 +865,7 @@ public class CoreServiceBean implements CoreService {
             AuthorisationPolicyTemplate defaultTemplate = authorisation.getPolicyTemplate(AuthorisationPolicyTemplate.DEFAULT);
             Map<String, String> aclParams = new HashMap<String, String>();
             aclParams.put("${workspace.members}", workspace.getMembers());
+            aclParams.put("${workspace.privileged}", workspace.getPrivileged());
             builtPublicationMap(root, map, authorisation.getPolicyRules(defaultTemplate.getTemplate()), aclParams);
             return map;
         } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException e) {
@@ -2215,8 +2219,8 @@ public class CoreServiceBean implements CoreService {
                 em.merge(slink);
                 registry.update(slink.getKey());
                 indexing.index(slink.getKey());
-
             }
+
             dparent.addElement(new CollectionElement(Link.OBJECT_TYPE, slink.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, slink.getKey()));
             em.merge(dparent);
             registry.update(dparent.getKey());
@@ -3297,6 +3301,20 @@ public class CoreServiceBean implements CoreService {
                 throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
             }
             IndexablePlainTextContent content = new IndexablePlainTextContent();
+            
+            if (identifier.getType().equals(Workspace.OBJECT_TYPE)) {
+                Workspace workspace = em.find(Workspace.class, identifier.getId());
+                if (workspace == null) {
+                    throw new OrtolangException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+                }
+                if (workspace.getAlias() != null) {
+                    content.addContentPart(workspace.getAlias());
+                }
+                if (workspace.getName() != null) {
+                    content.setName(workspace.getName());
+                    content.addContentPart(workspace.getName());
+                }
+            }
 
             if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
                 DataObject object = em.find(DataObject.class, identifier.getId());
@@ -3304,6 +3322,7 @@ public class CoreServiceBean implements CoreService {
                     throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
                 }
                 if (object.getName() != null) {
+                    content.setName(object.getName());
                     content.addContentPart(object.getName());
                 }
                 if (object.getMimeType() != null) {
@@ -3336,8 +3355,11 @@ public class CoreServiceBean implements CoreService {
                 if (collection == null) {
                     throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
                 }
-                content.addContentPart(collection.getName());
-
+                if (collection.getName() != null) {
+                    content.setName(collection.getName());
+                    content.addContentPart(collection.getName());
+                }
+                
                 for (MetadataElement mde : collection.getMetadatas()) {
                     OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
                     MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
@@ -3360,13 +3382,16 @@ public class CoreServiceBean implements CoreService {
             }
 
             if (identifier.getType().equals(Link.OBJECT_TYPE)) {
-                Link reference = em.find(Link.class, identifier.getId());
-                if (reference == null) {
+                Link link = em.find(Link.class, identifier.getId());
+                if (link == null) {
                     throw new OrtolangException("unable to load reference with id [" + identifier.getId() + "] from storage");
                 }
-                content.addContentPart(reference.getName());
-
-                for (MetadataElement mde : reference.getMetadatas()) {
+                if (link.getName() != null) {
+                    content.setName(link.getName());
+                    content.addContentPart(link.getName());
+                }
+                
+                for (MetadataElement mde : link.getMetadatas()) {
                     OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
                     MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
                     if (metadata == null) {

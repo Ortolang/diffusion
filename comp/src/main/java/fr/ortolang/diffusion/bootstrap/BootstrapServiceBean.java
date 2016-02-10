@@ -305,7 +305,7 @@ public class BootstrapServiceBean implements BootstrapService {
     public OrtolangObject findObject(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");
     }
-
+    
     @Override
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");

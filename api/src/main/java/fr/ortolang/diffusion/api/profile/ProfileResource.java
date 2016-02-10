@@ -60,6 +60,8 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import org.jboss.resteasy.annotations.GZIP;
+
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
@@ -77,8 +79,6 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authentication.TicketHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
-import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/profiles")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -94,22 +94,6 @@ public class ProfileResource {
     private AuthorisationService authorisation;
 
     public ProfileResource() {
-    }
-
-    @GET
-    @GZIP
-    public Response getProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException, AuthorisationServiceException {
-        LOGGER.log(Level.INFO, "GET /profiles");
-        GenericCollectionRepresentation<ProfileRepresentation> representation = new GenericCollectionRepresentation<ProfileRepresentation>();
-        List<Profile> results = membership.listProfiles();
-        for (Profile profile : results) {
-            ProfileRepresentation profileRepresentation = ProfileRepresentation.fromProfile(profile);
-            representation.addEntry(profileRepresentation);
-        }
-        representation.setOffset(0);
-        representation.setSize(results.size());
-        representation.setLimit(results.size());
-        return Response.ok(representation).build();
     }
 
     @GET

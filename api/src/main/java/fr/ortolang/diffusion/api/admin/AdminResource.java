@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.api.admin;
  * #L%
  */
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -56,6 +58,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+
+import org.jboss.resteasy.annotations.GZIP;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangService;
@@ -72,13 +76,18 @@ import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.binary.BinaryStoreContent;
+import fr.ortolang.diffusion.store.binary.BinaryStoreService;
+import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
+import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
+import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
+import fr.ortolang.diffusion.store.handle.entity.Handle;
 import fr.ortolang.diffusion.store.index.IndexStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
-import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -94,6 +103,8 @@ public class AdminResource {
     @EJB
     private HandleStoreService handle;
     @EJB
+    private BinaryStoreService binary;
+    @EJB
     private RegistryService registry;
     @EJB
     private RuntimeService runtime;
@@ -104,7 +115,7 @@ public class AdminResource {
     @Path("/infos/{service}")
     @GZIP
     public Response getRegistryInfos(@PathParam(value = "service") String serviceName) throws OrtolangException {
-        LOGGER.log(Level.INFO, "GET /infos/" + serviceName);
+        LOGGER.log(Level.INFO, "GET /admin/infos/" + serviceName);
         OrtolangService service = OrtolangServiceLocator.findService(serviceName);
         Map<String, String> infos = service.getServiceInfos();
         return Response.ok(infos).build();
@@ -145,7 +156,7 @@ public class AdminResource {
         registry.delete(key, true);
         return Response.ok().build();
     }
-
+    
     @GET
     @Path("/runtime/types")
     @GZIP
@@ -182,19 +193,55 @@ public class AdminResource {
     }
     
     @GET
-    @Path("/handles")
+    @Path("/store/binary")
     @GZIP
-    public Response listAllHandles(@QueryParam("o") int offset, @QueryParam("l") int limit, @QueryParam("filter") String filter) throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "GET /admin/handles");
-        List<HumanTaskRepresentation> entries = runtime.systemListTasks().stream().map(HumanTaskRepresentation::fromHumanTask).collect(Collectors.toCollection(ArrayList::new));
-        return Response.ok(entries).build();
+    public Response browseBinaryStoreRoot() throws BinaryStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/store/binary");
+        List<BinaryStoreContent> infos = binary.systemBrowse(null, null);
+        return Response.ok(infos).build();
+    }
+    
+    @GET
+    @Path("/store/binary/{name}")
+    @GZIP
+    public Response browseBinaryStoreVolume(@PathParam("name") String name) throws BinaryStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name);
+        List<BinaryStoreContent> infos = binary.systemBrowse(name, null);
+        return Response.ok(infos).build();
+    }
+    
+    @GET
+    @Path("/store/binary/{name}/{prefix}")
+    @GZIP
+    public Response browseBinaryStorePrefix(@PathParam("name") String name, @PathParam("prefix") String prefix) throws BinaryStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name + "/" + prefix);
+        List<BinaryStoreContent> infos = binary.systemBrowse(name, prefix);
+        return Response.ok(infos).build();
+    }
+    
+    @GET
+    @Path("/store/binary/{name}/{prefix}/{hash}")
+    @GZIP
+    public Response getBinaryStoreContent(@PathParam("name") String name, @PathParam("prefix") String prefix, @PathParam("hash") String hash) throws BinaryStoreServiceException, DataNotFoundException {
+        LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name + "/" + prefix + "/" + hash);
+        File content = binary.getFile(hash);
+        return Response.ok(content).build();
+    }
+    
+    @GET
+    @Path("/store/handle")
+    @GZIP
+    public Response searchHandles(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("1000") @QueryParam("l") int limit, @QueryParam("filter") String filter) throws HandleStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/store/handle");
+        List<Handle> handles = handle.searchHandles(offset, limit, filter);
+        return Response.ok(handles).build();
     }
 
     @GET
-    @Path("/json/{key}")
+    @Path("/store/json/{key}")
     @GZIP
     public Response getJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/json/" + key);
+        LOGGER.log(Level.INFO, "GET /admin/store/json/" + key);
         String document = json.systemGetDocument(key);
         return Response.ok(document).build();
     }

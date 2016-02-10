@@ -77,6 +77,7 @@ public class Workspace extends OrtolangObject {
 	private boolean changed;
 	private boolean readOnly;
 	private String members;
+	private String privileged;
 	private String eventfeed;
 	@Lob
 	@Type(type = "org.hibernate.type.TextType")
@@ -90,6 +91,7 @@ public class Workspace extends OrtolangObject {
 		changed = false;
 		readOnly = false;
 		alias = "";
+		privileged = "";
 	}
 	
 	public String getId() {
@@ -346,7 +348,15 @@ public class Workspace extends OrtolangObject {
 		this.members = members;
 	}
 	
-	public String getEventFeed() {
+	public String getPrivileged() {
+        return privileged;
+    }
+
+    public void setPrivileged(String privileged) {
+        this.privileged = privileged;
+    }
+
+    public String getEventFeed() {
         return eventfeed;
     }
 

@@ -180,7 +180,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 
             TopDocs docs = searcher.search(query, 100);
             ArrayList<OrtolangSearchResult> results = new ArrayList<OrtolangSearchResult>(docs.totalHits);
-            SimpleHTMLFormatter formatter = new SimpleHTMLFormatter("<highlighted>", "</highlighted>");
+            SimpleHTMLFormatter formatter = new SimpleHTMLFormatter("<span class='highlighted'>", "</span>");
             QueryScorer scorer = new QueryScorer(query);
             Highlighter highlighter = new Highlighter(formatter, scorer);
 
@@ -193,9 +193,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
                 String service = doc.get("SERVICE");
                 String type = doc.get("TYPE");
                 String key = doc.get("KEY");
-                String root = doc.get("ROOT");
-                String path = doc.get("PATH");
-
+                
                 OrtolangSearchResult result = new OrtolangSearchResult();
                 result.setScore(score);
                 result.setName(name);
@@ -204,8 +202,6 @@ public class IndexStoreServiceBean implements IndexStoreService {
                 result.setType(type);
                 result.setKey(key);
                 result.setExplain(higlightedText);
-                result.setRoot(root);
-                result.setPath(path);
                 results.add(result);
             }
             return results;

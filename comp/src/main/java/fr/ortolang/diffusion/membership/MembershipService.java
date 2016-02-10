@@ -91,12 +91,6 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
 	void setProfileInfo(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
-
-	List<Profile> searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
-	
-	
-	
 	void createGroup(String key, String name, String description) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException;
 
 	Group readGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
