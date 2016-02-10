@@ -62,7 +62,7 @@ public class AtmosphereListenerBean implements MessageListener {
     private static final Logger LOGGER = Logger.getLogger(AtmosphereListenerBean.class.getName());
 
     private static final String PROCESS_CHANGE_STATE_TYPE = "runtime.process.change-state";
-    private static final String PROCESS_CREATE_TYPE = "runtime.object.create";
+    private static final String PROCESS_CREATE_TYPE = "runtime.process.create";
     private static final String MEMBERSHIP_GROUP_ADD_MEMBER_TYPE = "membership.group.add-member";
     private static final String WORKSPACE_CREATE_TYPE = "core.workspace.create";
     private static final String WORKSPACE_DELETE_TYPE = "core.workspace.delete";
