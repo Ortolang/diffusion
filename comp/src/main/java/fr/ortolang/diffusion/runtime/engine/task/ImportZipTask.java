@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.runtime.engine.task;
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.core.*;
 import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
@@ -177,7 +178,7 @@ public class ImportZipTask extends RuntimeEngineTask {
                                 String current = opath.build();
                                 getCoreService().createDataObject(wskey, current, hash);
                                 report.append("[DONE] data object created at path: " + current + "\r\n");
-                            } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException e4 ) {
+                            } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException | KeyAlreadyExistsException e4 ) {
                                 partial = true;
                                 report.append("[ERROR] create object failed for path: " + opath.build() + "\r\n\t-> message: " + e4.getMessage() + "\r\n");
                             }

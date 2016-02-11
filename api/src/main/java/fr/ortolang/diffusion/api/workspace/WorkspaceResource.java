@@ -133,10 +133,7 @@ public class WorkspaceResource {
         for (String key : keys) {
             Workspace workspace = core.readWorkspace(key);
             OrtolangObjectInfos infos = browser.getInfos(key);
-            WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace);
-            workspaceRepresentation.setAuthor(infos.getAuthor());
-            workspaceRepresentation.setCreationDate(infos.getCreationDate());
-            workspaceRepresentation.setLastModificationDate(infos.getLastModificationDate());
+            WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace, infos);
             workspaceRepresentation.setOwner(security.getOwner(key));
             if (md) {
                 addMetadatasToRepresentation(workspaceRepresentation);
@@ -163,11 +160,8 @@ public class WorkspaceResource {
             workspace = core.createWorkspace(key, name, type);
         }
         URI location = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(key).build();
-        WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace);
         OrtolangObjectInfos infos = browser.getInfos(workspace.getKey());
-        workspaceRepresentation.setAuthor(infos.getAuthor());
-        workspaceRepresentation.setCreationDate(infos.getCreationDate());
-        workspaceRepresentation.setLastModificationDate(infos.getLastModificationDate());
+        WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace, infos);
         workspaceRepresentation.setOwner(security.getOwner(key));
         return Response.created(location).entity(workspaceRepresentation).build();
     }
@@ -186,11 +180,8 @@ public class WorkspaceResource {
             workspace = core.createWorkspace(key, representation.getName(), representation.getType());
         }
         URI location = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(key).build();
-        WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace);
         OrtolangObjectInfos infos = browser.getInfos(workspace.getKey());
-        workspaceRepresentation.setAuthor(infos.getAuthor());
-        workspaceRepresentation.setCreationDate(infos.getCreationDate());
-        workspaceRepresentation.setLastModificationDate(infos.getLastModificationDate());
+        WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace, infos);
         workspaceRepresentation.setOwner(security.getOwner(key));
         return Response.created(location).entity(workspaceRepresentation).build();
     }
@@ -213,11 +204,8 @@ public class WorkspaceResource {
 
         if(builder == null){
             Workspace workspace = core.readWorkspace(wskey);
-            WorkspaceRepresentation representation = WorkspaceRepresentation.fromWorkspace(workspace);
             OrtolangObjectInfos infos = browser.getInfos(wskey);
-            representation.setAuthor(infos.getAuthor());
-            representation.setCreationDate(infos.getCreationDate());
-            representation.setLastModificationDate(infos.getLastModificationDate());
+            WorkspaceRepresentation representation = WorkspaceRepresentation.fromWorkspace(workspace, infos);
             representation.setOwner(security.getOwner(wskey));
             if (md) {
                 addMetadatasToRepresentation(representation);
@@ -323,9 +311,7 @@ public class WorkspaceResource {
                     }
                 }
                 OrtolangObjectInfos infos = browser.getInfos(ekey);
-                representation.setCreation(infos.getCreationDate());
-                representation.setAuthor(infos.getAuthor());
-                representation.setModification(infos.getLastModificationDate());
+                representation.setInfos(infos);
                 representation.setPath(npath.build());
                 representation.setPathParts(npath.buildParts());
                 representation.setWorkspace(wskey);
@@ -393,13 +379,16 @@ public class WorkspaceResource {
                 String ekey = core.resolveWorkspacePath(wskey, "head", npath.build());
                 LOGGER.log(Level.FINE, "element found at path: " + npath.build());
                 OrtolangObject object = browser.findObject(ekey);
+                OrtolangObject updatedObject;
                 switch (form.getType()) {
                 case DataObject.OBJECT_TYPE:
-                    core.updateDataObject(wskey, npath.build(), form.getStreamHash());
-                    return Response.ok().build();
+                    updatedObject = core.updateDataObject(wskey, npath.build(), form.getStreamHash());
+                    break;
                 case Link.OBJECT_TYPE:
-                    core.updateLink(wskey, npath.build(), form.getTarget());
-                    return Response.ok().build();
+                    updatedObject = core.updateLink(wskey, npath.build(), form.getTarget());
+                    break;
+                case Collection.OBJECT_TYPE:
+                    throw new PathNotFoundException();
                 case MetadataObject.OBJECT_TYPE:
                     boolean mdexists = false;
                     String name = URLDecoder.decode(form.getName(), contentTransferEncoding);
@@ -411,37 +400,43 @@ public class WorkspaceResource {
                         }
                     }
                     if (mdexists) {
-                        core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
-                        return Response.ok().build();
+                        updatedObject = core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
+                        break;
                     } else {
-                        core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
+                        MetadataObject metadataObject = core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
+                        WorkspaceElementRepresentation representation = makeRepresentation(metadataObject, wskey, npath);
                         URI newly = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build())
                                 .queryParam("metadataname", name).build();
-                        return Response.created(newly).build();
+                        return Response.created(newly).entity(representation).build();
                     }
                 default:
                     return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + form.getType()).build();
                 }
+
+                WorkspaceElementRepresentation representation = makeRepresentation(updatedObject, wskey, npath);
+                return Response.ok().entity(representation).build();
             } catch (PathNotFoundException e) {
                 if (form.getType().equals(MetadataObject.OBJECT_TYPE)) {
                     LOGGER.log(Level.FINEST, "unable to create metadata, path: " + npath.build() + " does not exists");
                     return Response.status(Response.Status.BAD_REQUEST).entity("unable to create metadata, path: " + npath.build() + " does not exists").build();
                 } else {
+                    OrtolangObject createdObject;
                     switch (form.getType()) {
                     case DataObject.OBJECT_TYPE:
-                        core.createDataObject(wskey, npath.build(), form.getStreamHash());
+                        createdObject = core.createDataObject(wskey, npath.build(), form.getStreamHash());
                         break;
                     case Collection.OBJECT_TYPE:
-                        core.createCollection(wskey, npath.build());
+                        createdObject = core.createCollection(wskey, npath.build());
                         break;
                     case Link.OBJECT_TYPE:
-                        core.createLink(wskey, npath.build(), form.getTarget());
+                        createdObject = core.createLink(wskey, npath.build(), form.getTarget());
                         break;
                     default:
                         return Response.status(Response.Status.BAD_REQUEST).entity("unable to create element of type: " + form.getType()).build();
                     }
+                    WorkspaceElementRepresentation representation = makeRepresentation(createdObject, wskey, npath);
                     URI newly = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build()).build();
-                    return Response.created(newly).build();
+                    return Response.created(newly).entity(representation).build();
                 }
             }
         } catch (DataCollisionException | UnsupportedEncodingException e) {
@@ -457,50 +452,40 @@ public class WorkspaceResource {
             KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements");
         PathBuilder npath = PathBuilder.fromPath(representation.getPath());
-        try {
-            core.resolveWorkspacePath(wskey, "head", npath.build());
-            LOGGER.log(Level.FINE, "element found at path: " + npath.build());
-            switch (representation.getType()) {
-            case Collection.OBJECT_TYPE:
-                if (destination != null && destination.length() > 0) {
-                    core.moveCollection(wskey, representation.getPath(), destination);
-                }
-                break;
-            case Link.OBJECT_TYPE:
-                if (destination != null && destination.length() > 0) {
-                    core.moveLink(wskey, representation.getPath(), destination);
-                } else {
-                    core.updateDataObject(wskey, npath.build(), representation.getTarget());
-                }
-                break;
-            case DataObject.OBJECT_TYPE:
-                if (destination != null && destination.length() > 0) {
-                    core.moveDataObject(wskey, representation.getPath(), destination);
-                } else {
-                    core.updateDataObject(wskey, npath.build(), representation.getStream());
-                }
-                break;
-            case MetadataObject.OBJECT_TYPE:
-                core.updateMetadataObject(wskey, npath.build(), representation.getName(), representation.getStream(), null, false);
-                break;
-            default:
-                return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + representation.getType()).build();
+        core.resolveWorkspacePath(wskey, "head", npath.build());
+        LOGGER.log(Level.FINE, "element found at path: " + npath.build());
+        OrtolangObject updatedObject = null;
+        switch (representation.getType()) {
+        case Collection.OBJECT_TYPE:
+            if (destination != null && destination.length() > 0) {
+                updatedObject = core.moveCollection(wskey, representation.getPath(), destination);
             }
-            return Response.ok().build();
-        } catch (PathNotFoundException e) {
-            switch (representation.getType()) {
-            case Collection.OBJECT_TYPE:
-                core.createCollection(wskey, npath.build());
-                break;
-            case Link.OBJECT_TYPE:
-                core.createLink(wskey, npath.build(), representation.getTarget());
-                break;
-            default:
-                return Response.status(Response.Status.BAD_REQUEST).entity("unable to create element of type: " + representation.getType()).build();
+            break;
+        case Link.OBJECT_TYPE:
+            if (destination != null && destination.length() > 0) {
+                updatedObject = core.moveLink(wskey, representation.getPath(), destination);
+            } else {
+                updatedObject = core.updateLink(wskey, npath.build(), representation.getTarget());
             }
-            URI newly = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build()).build();
-            return Response.created(newly).build();
+            break;
+        case DataObject.OBJECT_TYPE:
+            if (destination != null && destination.length() > 0) {
+                updatedObject = core.moveDataObject(wskey, representation.getPath(), destination);
+            } else {
+                updatedObject = core.updateDataObject(wskey, npath.build(), representation.getStream());
+            }
+            break;
+        case MetadataObject.OBJECT_TYPE:
+            updatedObject = core.updateMetadataObject(wskey, npath.build(), representation.getName(), representation.getStream(), null, false);
+            break;
+        default:
+            return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + representation.getType()).build();
         }
+        if (updatedObject != null) {
+            WorkspaceElementRepresentation updatedRepresentation = makeRepresentation(updatedObject, wskey, npath);
+            return Response.ok().entity(updatedRepresentation).build();
+        }
+        return Response.ok().build();
     }
 
     @DELETE
@@ -640,6 +625,18 @@ public class WorkspaceResource {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/owner");
         core.changeWorkspaceOwner(wskey, newowner);
         return Response.ok().build();
+    }
+
+    private WorkspaceElementRepresentation makeRepresentation(OrtolangObject object, String wskey, PathBuilder path) throws KeyNotFoundException, AccessDeniedException, BrowserServiceException {
+        WorkspaceElementRepresentation representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
+        representation.setWorkspace(wskey);
+        representation.setPath(path.build());
+        representation.setPathParts(path.buildParts());
+        if (object.getObjectKey() != null) {
+            OrtolangObjectInfos infos = browser.getInfos(object.getObjectKey());
+            representation.setInfos(infos);
+        }
+        return representation;
     }
 
     private void addMetadatasToRepresentation(WorkspaceRepresentation representation) throws CoreServiceException, AccessDeniedException, KeyNotFoundException {

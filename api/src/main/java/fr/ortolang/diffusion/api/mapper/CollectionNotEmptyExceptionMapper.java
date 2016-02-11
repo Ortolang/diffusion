@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.api.mapper;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangErrorCodes;
 import fr.ortolang.diffusion.core.CollectionNotEmptyException;
 
 import javax.ws.rs.core.Response;
@@ -53,6 +54,7 @@ public class CollectionNotEmptyExceptionMapper implements ExceptionMapper<Collec
         Map<String, String> map = new HashMap<>();
         map.put("path", ex.getPath());
         map.put("message", ex.getMessage());
+        map.put("code", OrtolangErrorCodes.COLLECTION_NOT_EMPTY_EXCEPTION);
         return Response.status(Status.FORBIDDEN)
                 .entity(map)
                 .build();

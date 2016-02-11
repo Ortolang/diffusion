@@ -52,6 +52,7 @@ import java.util.logging.Logger;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import org.apache.ftpserver.ftplet.FtpException;
 import org.apache.ftpserver.ftplet.FtpFile;
 import org.apache.ftpserver.ftplet.User;
@@ -297,7 +298,7 @@ public class OrtolangCoreFile implements FtpFile {
                 }
                 try {
                     fsview.getCoreService().createCollection(wskey, path.build());
-                } catch (AccessDeniedException | KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException e) {
+                } catch (AccessDeniedException | KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException | KeyAlreadyExistsException e) {
                     return false;
                 }
                 if (lc != null) {
@@ -429,7 +430,7 @@ public class OrtolangCoreFile implements FtpFile {
                             } else {
                                 fsview.getCoreService().createDataObject(wskey, path.build(), hash);
                             }
-                        } catch (AccessDeniedException | KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException | BinaryStoreServiceException | DataCollisionException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException e) {
+                        } catch (AccessDeniedException | KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException | BinaryStoreServiceException | DataCollisionException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException | KeyAlreadyExistsException e) {
                             throw new IOException("error during propagating files data to underlying object", e);
                         }
                         if (lc != null) {
