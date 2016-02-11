@@ -43,6 +43,7 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
@@ -210,7 +211,7 @@ public class WorkspaceRepresentation {
         this.metadatas = metadata;
     }
 
-    public static WorkspaceRepresentation fromWorkspace(Workspace workspace) {
+    public static WorkspaceRepresentation fromWorkspace(Workspace workspace, OrtolangObjectInfos infos) {
         WorkspaceRepresentation representation = new WorkspaceRepresentation();
         representation.setKey(workspace.getKey());
         representation.setAlias(workspace.getAlias());
@@ -224,6 +225,9 @@ public class WorkspaceRepresentation {
         representation.setReadOnly(workspace.isReadOnly());
         representation.setSnapshots(workspace.getSnapshots());
         representation.setTags(workspace.getTags());
+        representation.setAuthor(infos.getAuthor());
+        representation.setCreationDate(infos.getCreationDate());
+        representation.setLastModificationDate(infos.getLastModificationDate());
         return representation;
     }
 }

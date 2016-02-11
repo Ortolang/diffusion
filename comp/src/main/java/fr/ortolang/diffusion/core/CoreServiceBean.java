@@ -495,7 +495,7 @@ public class CoreServiceBean implements CoreService {
                     updateMetadataObject(wskey, "/", MetadataFormat.WORKSPACE, hash, null, false);
                 }
             } catch (BinaryStoreServiceException | DataCollisionException | CoreServiceException | KeyNotFoundException | InvalidPathException | AccessDeniedException | MetadataFormatException
-                    | PathNotFoundException e) {
+                    | PathNotFoundException | KeyAlreadyExistsException e) {
                 throw new CoreServiceException("cannot create workspace metadata for collection root : " + e.getMessage());
             }
 
@@ -714,7 +714,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, AccessDeniedException, PathNotFoundException, RootNotFoundException {
+    public String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, AccessDeniedException, PathNotFoundException {
         LOGGER.log(Level.FINE, "resolving into workspace [" + wskey + "] and root [" + root + "] path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -1099,20 +1099,22 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createCollection(String wskey, String path) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException,
-            PathAlreadyExistsException, WorkspaceReadOnlyException {
+    public Collection createCollection(String wskey, String path)
+            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException,
+            KeyAlreadyExistsException {
         String key = UUID.randomUUID().toString();
         try {
-            createCollection(wskey, key, path);
+            return createCollection(wskey, key, path);
         } catch (KeyAlreadyExistsException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.WARNING, "the generated key already exists : " + key);
+            throw e;
         }
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createCollection(String wskey, String key, String path) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException,
+    public Collection createCollection(String wskey, String key, String path) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException,
             PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "creating collection with key [" + key + "] into workspace [" + wskey + "] at path [" + path + "]");
         try {
@@ -1154,6 +1156,7 @@ public class CoreServiceBean implements CoreService {
             String id = UUID.randomUUID().toString();
             Collection collection = new Collection();
             collection.setId(id);
+            collection.setKey(key);
             collection.setName(npath.part());
             collection.setRoot(false);
             collection.setClock(ws.getClock());
@@ -1178,6 +1181,8 @@ public class CoreServiceBean implements CoreService {
 
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("path", path);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), argsBuilder.build());
+
+            return collection;
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
                 | MembershipServiceException | IndexingServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during collection creation", e);
@@ -1328,7 +1333,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void moveCollection(String wskey, String source, String destination) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
+    public Collection moveCollection(String wskey, String source, String destination) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
             PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "moving collection into workspace [" + wskey + "] from path [" + source + "] to path [" + destination + "]");
         try {
@@ -1416,8 +1421,10 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("key", scollection.getKey()).addArgument("src-path", spath.build()).addArgument("dest-path", dpath.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", scollection.getKey()).addArgument("okey", selement.getKey()).addArgument("src-path", spath.build()).addArgument("dest-path", dpath.build());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "move"), argsBuilder.build());
+
+            return scollection;
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CloneException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error while moving collection", e);
@@ -1520,20 +1527,22 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createDataObject(String workspace, String path, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException,
-            PathAlreadyExistsException, WorkspaceReadOnlyException {
+    public DataObject createDataObject(String workspace, String path, String hash)
+            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException,
+            KeyAlreadyExistsException {
         String key = UUID.randomUUID().toString();
         try {
-            createDataObject(workspace, key, path, hash);
+            return createDataObject(workspace, key, path, hash);
         } catch (KeyAlreadyExistsException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.WARNING, "the generated key already exists : " + key);
+            throw e;
         }
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createDataObject(String wskey, String key, String path, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
+    public DataObject createDataObject(String wskey, String key, String path, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
             AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "create data object with key [" + key + "] into workspace [" + wskey + "] at path [" + path + "]");
         try {
@@ -1608,6 +1617,8 @@ public class CoreServiceBean implements CoreService {
 
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", key).addArgument("path", npath.build()).addArgument("hash", object.getStream()).addArgument("mimetype", object.getMimeType());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "create"), argsBuilder.build());
+
+            return object;
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
                 | MembershipServiceException | BinaryStoreServiceException | DataNotFoundException | IndexingServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during object creation", e);
@@ -1642,7 +1653,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateDataObject(String wskey, String path, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, WorkspaceReadOnlyException {
+    public DataObject updateDataObject(String wskey, String path, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "updating object into workspace [" + wskey + "] at path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -1680,6 +1691,7 @@ public class CoreServiceBean implements CoreService {
             if (cobject == null) {
                 throw new CoreServiceException("unable to load object with id [" + cidentifier.getId() + "] from storage");
             }
+            cobject.setKey(current);
             LOGGER.log(Level.FINEST, "current object loaded");
 
             if (!hash.equals(cobject.getStream())) {
@@ -1734,10 +1746,14 @@ public class CoreServiceBean implements CoreService {
                 registry.update(ws.getKey());
                 LOGGER.log(Level.FINEST, "workspace set changed");
 
-                ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", object.getKey()).addArgument("path", npath.build()).addArgument("hash", object.getStream()).addArgument("mimetype", object.getMimeType());
+                ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("key", object.getKey()).addArgument("okey", element.getKey())
+                        .addArgument("path", npath.build()).addArgument("hash", object.getStream()).addArgument("mimetype", object.getMimeType());
                 notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "update"), argsBuilder.build());
+
+                return object;
             } else {
                 LOGGER.log(Level.FINEST, "no changes detected with current object, nothing to do");
+                return cobject;
             }
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
                 | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException e) {
@@ -1748,7 +1764,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void moveDataObject(String wskey, String source, String destination) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
+    public DataObject moveDataObject(String wskey, String source, String destination) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
             PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "moving object into workspace [" + wskey + "] from path [" + source + "] to path [" + destination + "]");
         try {
@@ -1837,8 +1853,10 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("key", sobject.getKey()).addArgument("src-path", spath.build()).addArgument("dest-path", dpath.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", sobject.getKey()).addArgument("okey", selement.getKey()).addArgument("src-path", spath.build()).addArgument("dest-path", dpath.build());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "move"), argsBuilder.build());
+
+            return sobject;
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CloneException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error while moving object", e);
@@ -1928,20 +1946,22 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createLink(String workspace, String path, String target) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException,
-            PathAlreadyExistsException, WorkspaceReadOnlyException {
+    public Link createLink(String workspace, String path, String target)
+            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException,
+            KeyAlreadyExistsException {
         String key = UUID.randomUUID().toString();
         try {
-            createLink(workspace, key, path, target);
+            return createLink(workspace, key, path, target);
         } catch (KeyAlreadyExistsException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.WARNING, "the generated key already exists : " + key);
+            throw e;
         }
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createLink(String wskey, String key, String path, String target) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
+    public Link createLink(String wskey, String key, String path, String target) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
             AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "create link with key [" + key + "] into workspace [" + wskey + "] at path [" + path + "]");
         try {
@@ -1988,6 +2008,7 @@ public class CoreServiceBean implements CoreService {
             
             Link link = new Link();
             link.setId(UUID.randomUUID().toString());
+            link.setKey(key);
             link.setName(npath.part());
             link.setClock(ws.getClock());
             link.setTarget(ntarget);
@@ -2011,6 +2032,8 @@ public class CoreServiceBean implements CoreService {
 
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("path", npath.build());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "create"), argsBuilder.build());
+
+            return link;
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
                 | MembershipServiceException | IndexingServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during link creation", e);
@@ -2045,7 +2068,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateLink(String wskey, String path, String target) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, WorkspaceReadOnlyException {
+    public Link updateLink(String wskey, String path, String target) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "updating link into workspace [" + wskey + "] at path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -2083,6 +2106,7 @@ public class CoreServiceBean implements CoreService {
             if (clink == null) {
                 throw new CoreServiceException("unable to load link with id [" + cidentifier.getId() + "] from storage");
             }
+            clink.setKey(current);
             LOGGER.log(Level.FINEST, "current link loaded");
             
             String ntarget = PathBuilder.fromPath(target).build();
@@ -2127,10 +2151,13 @@ public class CoreServiceBean implements CoreService {
                 registry.update(ws.getKey());
                 LOGGER.log(Level.FINEST, "workspace set changed");
 
-                ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", link.getKey()).addArgument("path", npath.build());
+                ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("key", link.getKey()).addArgument("okey", element.getKey()).addArgument("path", npath.build());
                 notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "update"), argsBuilder.build());
+
+                return link;
             } else {
                 LOGGER.log(Level.FINEST, "no changes detected with current link, nothing to do");
+                return clink;
             }
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException | CloneException
                 | IndexingServiceException e) {
@@ -2141,7 +2168,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void moveLink(String wskey, String source, String destination) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
+    public Link moveLink(String wskey, String source, String destination) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "moving link into workspace [" + wskey + "] from path [" + source + "] to path [" + destination + "]");
         try {
             PathBuilder spath = PathBuilder.fromPath(source);
@@ -2231,8 +2258,10 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("key", slink.getKey()).addArgument("src-path", spath.build()).addArgument("dest-path", dpath.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", slink.getKey()).addArgument("okey", selement.getKey()).addArgument("src-path", spath.build()).addArgument("dest-path", dpath.build());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "move"), argsBuilder.build());
+
+            return slink;
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CloneException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error while moving link", e);
@@ -2361,21 +2390,22 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createMetadataObject(String workspace, String path, String name, String hash, String filename, boolean purgeChildren)
-            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException {
+    public MetadataObject createMetadataObject(String workspace, String path, String name, String hash, String filename, boolean purgeChildren)
+            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException,
+            KeyAlreadyExistsException {
         String key = UUID.randomUUID().toString();
-
         try {
-            createMetadataObject(workspace, key, path, name, hash, filename, purgeChildren);
+            return createMetadataObject(workspace, key, path, name, hash, filename, purgeChildren);
         } catch (KeyAlreadyExistsException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.WARNING, "the generated key already exists : " + key);
+            throw e;
         }
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void createMetadataObject(String wskey, String key, String path, String name, String hash, String filename, boolean purgeChildren)
+    public MetadataObject createMetadataObject(String wskey, String key, String path, String name, String hash, String filename, boolean purgeChildren)
             throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException,
             WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "create metadataobject with key [" + key + "] into workspace [" + wskey + "] for path [" + path + "] with name [" + name + "]");
@@ -2555,6 +2585,8 @@ public class CoreServiceBean implements CoreService {
 
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", key).addArgument("tkey", tkey).addArgument("path", npath.build()).addArgument("name", name);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "create"), argsBuilder.build());
+
+            return meta;
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
                 | MembershipServiceException | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException | OrtolangException e) {
             ctx.setRollbackOnly();
@@ -2589,7 +2621,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren)
+    public MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren)
             throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "updating metadata content into workspace [" + wskey + "] for path [" + path + "] and name [" + name + "]");
         try {
@@ -2793,8 +2825,11 @@ public class CoreServiceBean implements CoreService {
 
                 ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", mdelement.getKey()).addArgument("tkey", tkey).addArgument("path", npath.build()).addArgument("name", name);
                 notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "update"), argsBuilder.build());
+
+                return meta;
             } else {
                 LOGGER.log(Level.FINEST, "no changes detected with current metadata object, nothing to do");
+                return cmeta;
             }
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
                 | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException | OrtolangException e) {

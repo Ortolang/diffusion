@@ -37,7 +37,9 @@ package fr.ortolang.diffusion.api.profile;
  */
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -272,8 +274,9 @@ public class ProfileResource {
         LOGGER.log(Level.INFO, "GET /profiles/" + key + "/ticket");
         Profile profile = membership.readProfile(key);
         String ticket = TicketHelper.makeTicket(profile.getId(), profile.getKey());
-        JsonObject jsonObject = Json.createObjectBuilder().add("t", ticket).build();
-        return Response.ok(jsonObject).build();
+        Map<String, String> map = new HashMap<>();
+        map.put("t", ticket);
+        return Response.ok(map).build();
     }
     
 }

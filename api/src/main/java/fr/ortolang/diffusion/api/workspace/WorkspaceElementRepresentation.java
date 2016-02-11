@@ -43,6 +43,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
@@ -279,6 +280,12 @@ public class WorkspaceElementRepresentation {
         representation.setTarget(link.getTarget());
         representation.setMetadatas(link.getMetadatas());
         return representation;
+    }
+
+    public void setInfos(OrtolangObjectInfos infos) {
+        this.setAuthor(infos.getAuthor());
+        this.setCreation(infos.getCreationDate());
+        this.setModification(infos.getLastModificationDate());
     }
 
     public static WorkspaceElementRepresentation fromOrtolangObject(OrtolangObject object) {

@@ -44,4 +44,5 @@ public final class OrtolangErrorCodes {
     public static final String INVALID_PATH_EXCEPTION = "4";
     public static final String ROOT_NOT_FOUND_EXCEPTION = "5";
     public static final String ALIAS_NOT_FOUND_EXCEPTION = "6";
+    public static final String COLLECTION_NOT_EMPTY_EXCEPTION = "7";
 }

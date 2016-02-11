@@ -51,6 +51,7 @@ import java.util.logging.Logger;
 
 import javax.transaction.Status;
 
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import org.activiti.engine.delegate.DelegateExecution;
 
 import fr.ortolang.diffusion.core.CollectionNotEmptyException;
@@ -290,7 +291,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().createDataObject(wskey, current, sha1);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | PathAlreadyExistsException e) {
+		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | PathAlreadyExistsException | KeyAlreadyExistsException e) {
 			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "] : " + e.getMessage(), e);
 		} 
 	}
@@ -337,7 +338,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().createMetadataObject(wskey, path, name, hash, null, false);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | MetadataFormatException e ) {
+		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | MetadataFormatException | KeyAlreadyExistsException e ) {
 			throw new RuntimeEngineTaskException("Error creating metadata for path [" + path + "] : " + e.getMessage(), e);
 		} 
 	}
