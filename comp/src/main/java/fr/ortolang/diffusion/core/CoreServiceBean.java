@@ -1702,7 +1702,6 @@ public class CoreServiceBean implements CoreService {
                     throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
                 }
                 object.setKey(element.getKey());
-                object.setKey(element.getKey());
                 if (hash.length() > 0) {
                     object.setSize(binarystore.size(hash));
                     object.setMimeType(binarystore.type(hash, object.getName()));
@@ -2693,6 +2692,7 @@ public class CoreServiceBean implements CoreService {
                     if (collection == null) {
                         throw new CoreServiceException("unable to load collection with id [" + tidentifier.getId() + "] from storage");
                     }
+                    collection.setKey(tkey);
                     if (collection.findMetadataByName(name) == null) {
                         throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for collection at path [" + npath.build() + "]");
                     }
@@ -2716,6 +2716,7 @@ public class CoreServiceBean implements CoreService {
                     if (object == null) {
                         throw new CoreServiceException("unable to load object with id [" + tidentifier.getId() + "] from storage");
                     }
+                    object.setKey(tkey);
                     if (object.findMetadataByName(name) == null) {
                         throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for object at path [" + npath.build() + "]");
                     }
@@ -2733,6 +2734,7 @@ public class CoreServiceBean implements CoreService {
                     if (link == null) {
                         throw new CoreServiceException("unable to load link with id [" + tidentifier.getId() + "] from storage");
                     }
+                    link.setKey(tkey);
                     if (link.findMetadataByName(name) == null) {
                         throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for link at path [" + npath.build() + "]");
                     }
@@ -2858,6 +2860,7 @@ public class CoreServiceBean implements CoreService {
                 if (collection == null) {
                     throw new CoreServiceException("unable to load collection with id [" + tidentifier.getId() + "] from storage");
                 }
+                collection.setKey(element.getKey());
                 if (collection.findMetadataByName(name) == null) {
                     throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for collection at path [" + npath.build() + "]");
                 }
@@ -2881,6 +2884,7 @@ public class CoreServiceBean implements CoreService {
                 if (object == null) {
                     throw new CoreServiceException("unable to load object with id [" + tidentifier.getId() + "] from storage");
                 }
+                object.setKey(element.getKey());
                 if (object.findMetadataByName(name) == null) {
                     throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for object at path [" + npath.build() + "]");
                 }
@@ -2900,6 +2904,7 @@ public class CoreServiceBean implements CoreService {
                 if (link == null) {
                     throw new CoreServiceException("unable to load link with id [" + tidentifier.getId() + "] from storage");
                 }
+                link.setKey(element.getKey());
                 if (link.findMetadataByName(name) == null) {
                     throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for link at path [" + npath.build() + "]");
                 }

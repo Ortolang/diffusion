@@ -91,17 +91,18 @@ public class ImportContentTask extends RuntimeEngineTask {
 		Bag bag = loadBag(bagpath);
 		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Bag file loaded from local file: " + bag.getFile()));
 		BufferedReader reader = new BufferedReader(new StringReader(execution.getVariable(IMPORT_OPERATIONS_PARAM_NAME, String.class)));
-		try {
+		StringBuilder report = new StringBuilder();
+        try {
 			if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
 				LOGGER.log(Level.FINE, "starting new user transaction.");
 				getUserTransaction().begin();
+				report.append("[BEGIN-TRAN]\r\n");
 			}
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
 		}
 		
 		boolean partial = false;
-		StringBuilder report = new StringBuilder();
 		LOGGER.log(Level.FINE, "purge collection creation cache.");
 		purgeCache();
         try {
@@ -166,10 +167,12 @@ public class ImportContentTask extends RuntimeEngineTask {
 				}
 				try {
 					if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
+					    report.append("[COMMIT-TRAN]\r\n");
 						LOGGER.log(Level.FINE, "committing active user transaction.");
 						getUserTransaction().commit();
 						tscommit = System.currentTimeMillis();
 						getUserTransaction().begin();
+						report.append("[BEGIN-TRAN]\r\n");
 					}
 				} catch (Exception e) {
 					LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
@@ -187,7 +190,9 @@ public class ImportContentTask extends RuntimeEngineTask {
 		try {
 			LOGGER.log(Level.FINE, "committing active user transaction and starting new one.");
 			getUserTransaction().commit();
+			report.append("[COMMIT-TRAN]\r\n");
 			getUserTransaction().begin();
+			report.append("[BEGIN-TRAN]\r\n");
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
 		}
