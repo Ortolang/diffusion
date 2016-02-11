@@ -41,10 +41,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJBTransactionRolledbackException;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
 import javax.transaction.SystemException;
 
 import org.activiti.engine.delegate.DelegateExecution;
@@ -97,7 +93,6 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 		try {
 			try {
 				getUserTransaction().setTransactionTimeout(2000);
-				getUserTransaction().begin();
 				LOGGER.log(Level.FINE, "Reading workspace");
 		        Workspace workspace = getCoreService().readWorkspace(wskey);
 				if ( workspace.getType().equals(WorkspaceType.SYSTEM.toString())) {
@@ -116,7 +111,6 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 					trace.append("key [").append(key).append("] deleted and removed from index");
 				}
 				trace.append("workspace with key [").append(wskey).append("] deleted");
-				getUserTransaction().commit();
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace [" + ((wsalias != null)?wsalias:wskey) + "] deleted"));
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), trace.toString(), null));
 			} catch (KeyNotFoundException | IndexingServiceException | AccessDeniedException | CoreServiceException | RegistryServiceException | KeyLockedException | WorkspaceReadOnlyException e) {
@@ -125,7 +119,7 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "unexpected error during delete workspace [" + ((wsalias != null)?wsalias:wskey) + "] task", e));
 				throw new RuntimeEngineTaskException("unexpected error during delete workspace [" + ((wsalias != null)?wsalias:wskey) + "] task", e);
 			} 
-		} catch (SystemException | SecurityException | IllegalStateException  | EJBTransactionRolledbackException | NotSupportedException | RollbackException | HeuristicMixedException | HeuristicRollbackException e) {
+		} catch (SystemException | SecurityException | IllegalStateException  | EJBTransactionRolledbackException  e) {
 		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
 			throw new RuntimeEngineTaskException("unexpected error occurred", e);
 		}
