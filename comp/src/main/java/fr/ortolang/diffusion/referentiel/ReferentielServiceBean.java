@@ -55,6 +55,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.json.Json;
+import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.persistence.EntityManager;
@@ -956,9 +957,11 @@ public class ReferentielServiceBean implements ReferentielService {
 		try {
 			JsonObject jsonObj = jsonReader.readObject();
 			fieldValue = jsonObj.getString(fieldName);
-		} catch(NullPointerException | ClassCastException e) {
+		} catch(IllegalStateException | NullPointerException | ClassCastException e) {
 			LOGGER.log(Level.WARNING, "No property '"+fieldName+"' in json object");
-		} finally {
+		} catch(JsonException e) {
+            LOGGER.log(Level.WARNING, "No property '"+fieldName+"' in json object", e);
+        } finally {
 			jsonReader.close();
 			reader.close();
 		}

@@ -54,8 +54,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.json.Json;
+import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.json.stream.JsonParsingException;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.apache.commons.io.IOUtils;
@@ -99,13 +101,13 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 								File jsonFile = filepath.toFile();
 								String content = getContent(jsonFile);
 								if(content==null) {
-									LOGGER.log(Level.FINE, "Referential entity content is empty for file " + jsonFile);
+									LOGGER.log(Level.SEVERE, "Referential entity content is empty for file " + jsonFile);
 									return FileVisitResult.CONTINUE;
 								}
 								
 								String type = extractField(content, "type");
 								if(type==null) {
-									LOGGER.log(Level.INFO, "Referential entity type unknown for file " + jsonFile);
+									LOGGER.log(Level.SEVERE, "Referential entity type unknown for file " + jsonFile);
 									return FileVisitResult.CONTINUE;
 								}
 
@@ -137,7 +139,7 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 
 					});
 			} catch (Exception e) {
-				LOGGER.log(Level.SEVERE, "  unable to import referentiel : " + referentielPathFile);
+				LOGGER.log(Level.SEVERE, "  unable to import referentiel : " + referentielPathFile, e);
 			}
 			
 		} else {
@@ -260,8 +262,10 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 		try {
 			JsonObject jsonObj = jsonReader.readObject();
 			fieldValue = jsonObj.getString(fieldName);
-		} catch(NullPointerException | ClassCastException e) {
-			LOGGER.log(Level.WARNING, "No property '"+fieldName+"' in json object");
+		} catch(IllegalStateException | NullPointerException | ClassCastException e) {
+			LOGGER.log(Level.WARNING, "No property '"+fieldName+"' in json object", e);
+		} catch(JsonException e) {
+		    LOGGER.log(Level.SEVERE, "No property '"+fieldName+"' in json object", e);
 		} finally {
 			jsonReader.close();
 			reader.close();
