@@ -49,6 +49,7 @@ import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.Local;
 import javax.ejb.Lock;
 import javax.ejb.LockType;
@@ -208,6 +209,31 @@ public class IndexStoreServiceBean implements IndexStoreService {
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "unable search in index using " + queryString, e);
             throw new IndexStoreServiceException("Can't search in index using '" + queryString + "'\n", e);
+        }
+    }
+    
+    @Override
+    @RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String systemGetDocument(String key) throws IndexStoreServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# get document for key " + key);
+        try {
+            IndexReader reader = DirectoryReader.open(directory);
+            IndexSearcher searcher = new IndexSearcher(reader);
+            QueryParser parser = new QueryParser(Version.LUCENE_46, "KEY", analyzer);
+            Query query = parser.parse(key);
+
+            TopDocs docs = searcher.search(query, 10);
+            if ( docs.scoreDocs.length > 1 ) {
+                LOGGER.log(Level.WARNING, "two entries found for the same key in index store, probable inconsistency for key: " + key);
+            }
+            if ( docs.scoreDocs.length == 0 ) {
+                throw new IndexStoreServiceException("unable to find a document for this key: " + key);
+            } 
+            return searcher.doc(docs.scoreDocs[0].doc).toString();
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "unable to get document for key " + key, e);
+            throw new IndexStoreServiceException("Can't get document from index for key '" + key + "'\n", e);
         }
     }
     

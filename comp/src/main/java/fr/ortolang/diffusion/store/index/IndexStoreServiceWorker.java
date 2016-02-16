@@ -36,9 +36,11 @@ package fr.ortolang.diffusion.store.index;
  * #L%
  */
 
+import java.util.List;
 import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -88,7 +90,15 @@ public class IndexStoreServiceWorker {
 		worker.stop();
 	}
 	
-	public void submit(String key, String action) throws IndexStoreServiceException {
+	public int getQueueSize() {
+        return queue.size();
+    }
+    
+	public List<OrtolangJob> getQueueJobs() {
+        return queue.stream().collect(Collectors.toList());
+    }
+    
+    public void submit(String key, String action) throws IndexStoreServiceException {
 		LOGGER.log(Level.FINE, "submit new job action: " + action + " for key: " + key);
 		OrtolangJob existingJob = getJob(key);
 		if ( existingJob != null ) {

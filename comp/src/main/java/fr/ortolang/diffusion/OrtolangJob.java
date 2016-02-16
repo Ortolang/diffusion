@@ -98,6 +98,13 @@ public class OrtolangJob implements Delayed {
 	public boolean containsParameter(String name) {
 		return parameters.containsKey(name);
 	}
+	
+	@Override
+	public String toString() {
+	    StringBuilder sb = new StringBuilder();
+	    sb.append("{action: ").append(action).append(", target: ").append(target).append(", timestamp: ").append(timestamp).append("}");
+	    return sb.toString();
+	}
 
 	@Override
 	public int compareTo(Delayed obj) {

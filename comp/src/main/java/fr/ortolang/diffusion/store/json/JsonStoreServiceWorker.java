@@ -51,9 +51,12 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.enterprise.concurrent.ManagedThreadFactory;
+
+import java.util.List;
 import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Singleton
 @Startup
@@ -89,7 +92,15 @@ public class JsonStoreServiceWorker {
         LOGGER.log(Level.INFO, "Stopping json store worker thread");
         worker.stop();
     }
-
+    
+    public int getQueueSize() {
+        return queue.size();
+    }
+    
+    public List<OrtolangJob> getQueueJobs() {
+        return queue.stream().collect(Collectors.toList());
+    }
+    
     public void submit(String key, String action) throws JsonStoreServiceException {
         LOGGER.log(Level.FINE, "submit new job action: " + action + " for key: " + key);
         OrtolangJob existingJob = getJob(key);

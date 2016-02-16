@@ -62,6 +62,7 @@ import javax.ws.rs.core.Response.Status;
 import org.jboss.resteasy.annotations.GZIP;
 
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangJob;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.api.runtime.HumanTaskRepresentation;
@@ -84,8 +85,11 @@ import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 import fr.ortolang.diffusion.store.handle.entity.Handle;
 import fr.ortolang.diffusion.store.index.IndexStoreService;
+import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
+import fr.ortolang.diffusion.store.index.IndexStoreServiceWorker;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
+import fr.ortolang.diffusion.store.json.JsonStoreServiceWorker;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
 
@@ -99,7 +103,11 @@ public class AdminResource {
     @EJB
     private JsonStoreService json;
     @EJB
+    private JsonStoreServiceWorker jsonWorker;
+    @EJB
     private IndexStoreService index;
+    @EJB
+    private IndexStoreServiceWorker indexWorker;
     @EJB
     private HandleStoreService handle;
     @EJB
@@ -236,9 +244,18 @@ public class AdminResource {
         List<Handle> handles = handle.searchHandles(offset, limit, filter);
         return Response.ok(handles).build();
     }
-
+    
     @GET
-    @Path("/store/json/{key}")
+    @Path("/store/json/worker")
+    @GZIP
+    public Response getJsonWorkerState() throws JsonStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/worker/json");
+        List<OrtolangJob> jobs = jsonWorker.getQueueJobs();
+        return Response.ok(jobs).build();
+    }
+    
+    @GET
+    @Path("/store/json/documents/{key}")
     @GZIP
     public Response getJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/store/json/" + key);
@@ -246,6 +263,24 @@ public class AdminResource {
         return Response.ok(document).build();
     }
 
+    @GET
+    @Path("/store/index/worker")
+    @GZIP
+    public Response getIndexWorkerState() throws IndexStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/worker/index");
+        List<OrtolangJob> jobs = indexWorker.getQueueJobs();
+        return Response.ok(jobs).build();
+    }
+
+    @GET
+    @Path("/store/index/documents/{key}")
+    @GZIP
+    public Response getIndexDocumentForKey(@PathParam(value = "key") String key) throws IndexStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/store/index/" + key);
+        String document = index.systemGetDocument(key);
+        return Response.ok(document).build();
+    }
+    
     @GET
     @Path("/subscription")
     public Response addSubscriptionFilters() throws SubscriptionServiceException {

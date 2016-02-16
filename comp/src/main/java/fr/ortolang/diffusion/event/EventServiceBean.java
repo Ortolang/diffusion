@@ -198,7 +198,8 @@ public class EventServiceBean implements EventService {
                             break;
                         }
                     }
-                    if ( cpt >= limit ) {
+                    if ( cpt >= (offset + limit) ) {
+                        endOfEvents = true;
                         break;
                     }
                 }
