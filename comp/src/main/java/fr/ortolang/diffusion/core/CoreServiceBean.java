@@ -1224,7 +1224,6 @@ public class CoreServiceBean implements CoreService {
 
             OrtolangObjectIdentifier cidentifier = registry.lookup(key);
             checkObjectType(cidentifier, Collection.OBJECT_TYPE);
-            authorisation.checkPermission(key, subjects, "read");
 
             Collection collection = em.find(Collection.class, cidentifier.getId());
             if (collection == null) {
@@ -1243,6 +1242,7 @@ public class CoreServiceBean implements CoreService {
             if (element == null) {
                 throw new PathNotFoundException(path);
             }
+            authorisation.checkPermission(element.getKey(), subjects, "read");
 
             return element.getKey();
         } catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException e) {
