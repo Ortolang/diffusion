@@ -86,7 +86,7 @@ public class EventFeedResource {
         LOGGER.log(Level.INFO, "GET /feeds/" + key);
         EventFeed feed = events.readEventFeed(key);
         List<OrtolangEvent> content;
-        if ( id == null || id.longValue() == 0 ) {
+        if ( id == null || id == 0 ) {
             content = events.browseEventFeed(key, offset, limit);
         } else {
             content = events.browseEventFeedSinceEvent(key, id);
