@@ -261,9 +261,6 @@ public class BrowserServiceBean implements BrowserService {
     public OrtolangObjectVersion getVersion(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.FINE, "getting version for key [" + key + "]");
         try {
-            List<String> subjects = membership.getConnectedIdentifierSubjects();
-            authorisation.checkPermission(key, subjects, "read");
-
             OrtolangObjectVersion version = new OrtolangObjectVersion();
             version.setAuthor(registry.getAuthor(key));
             version.setDate(registry.getLastModificationDate(key));
@@ -271,9 +268,8 @@ public class BrowserServiceBean implements BrowserService {
             version.setChildren(registry.getChildren(key));
             version.setPublicationStatus(registry.getPublicationStatus(key));
             version.setKey(key);
-
             return version;
-        } catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+        } catch (RegistryServiceException e) {
             throw new BrowserServiceException("error during getting version", e);
         }
     }

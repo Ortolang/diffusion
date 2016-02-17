@@ -200,7 +200,6 @@ public class ObjectResource {
     public Response resolve(@PathParam(value = "key") String key, @QueryParam(value = "path") String relativePath, @Context Request request) throws OrtolangException, KeyNotFoundException,
             AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
         LOGGER.log(Level.INFO, "GET /objects/" + key + "?path=" + relativePath);
-
         return get(core.resolvePathFromCollection(key, relativePath), request);
     }
 

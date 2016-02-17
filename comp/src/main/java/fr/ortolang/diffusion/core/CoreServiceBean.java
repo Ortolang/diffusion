@@ -329,8 +329,9 @@ public class CoreServiceBean implements CoreService {
             
             indexing.index(wskey);
 
-            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "create"));
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", head).addArgument("path", "/");
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(1).addArgument("ws-alias", alias);
+            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "create"), argsBuilder.build());
+            argsBuilder.addArgument("key", head).addArgument("path", "/");
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), argsBuilder.build());
 
             return workspace;
@@ -519,7 +520,7 @@ public class CoreServiceBean implements CoreService {
 
             registry.update(wskey);
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(1).addArgument("snapshot-name", name);
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("ws-alias", workspace.getAlias()).addArgument("snapshot-name", name);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "snapshot"), argsBuilder.build());
             return name;
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | CloneException e) {
@@ -572,7 +573,7 @@ public class CoreServiceBean implements CoreService {
                 registry.update(wskey);
                 indexing.index(wskey);
 
-                ArgumentsBuilder argsBuilder = new ArgumentsBuilder(1).addArgument("tag-name", tag);
+                ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("ws-alias", workspace.getAlias()).addArgument("tag-name", tag);
                 notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "tag"), argsBuilder.build());
 
             } catch (InvalidPathException e) {
@@ -611,7 +612,7 @@ public class CoreServiceBean implements CoreService {
             registry.update(wskey);
             indexing.index(wskey);
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(1).addArgument("name", name);
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("ws-alias", workspace.getAlias()).addArgument("name", name);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argsBuilder.build());
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
@@ -670,7 +671,8 @@ public class CoreServiceBean implements CoreService {
             registry.delete(wskey);
             indexing.remove(wskey);
 
-            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "delete"));
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(1).addArgument("ws-alias", workspace.getAlias());
+            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "delete"), argsBuilder.build());
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | IndexingServiceException
                 | EventServiceException e) {
             ctx.setRollbackOnly();
@@ -682,6 +684,7 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void changeWorkspaceOwner(String wskey, String newOwner) throws CoreServiceException {
+        LOGGER.log(Level.FINE, "changing workspace [" + wskey + "] owner to: " + newOwner);
         try {
             Workspace workspace = readWorkspace(wskey);
             security.changeOwner(wskey, newOwner);
@@ -940,7 +943,7 @@ public class CoreServiceBean implements CoreService {
 
             Set<OrtolangObjectPid> pids = new HashSet<OrtolangObjectPid>();
             String apiUrlBase = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL) + OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_CONTENT);
-            String marketUrlBase = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL) + "#/market/item";
+            String marketUrlBase = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL) + "market/item";
             buildHandleList(workspace.getAlias(), tag, root, pids, PathBuilder.newInstance(), apiUrlBase, marketUrlBase);
             return pids;
         } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException | InvalidPathException e) {
@@ -1179,7 +1182,7 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("path", path);
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("ws-alias", ws.getAlias()).addArgument("key", key).addArgument("path", path);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "create"), argsBuilder.build());
 
             return collection;
@@ -1421,7 +1424,7 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", scollection.getKey()).addArgument("okey", selement.getKey()).addArgument("src-path", spath.build()).addArgument("dest-path", dpath.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("ws-alias", ws.getAlias()).addArgument("key", scollection.getKey()).addArgument("okey", selement.getKey()).addArgument("src-path", spath.build()).addArgument("dest-path", dpath.build());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "move"), argsBuilder.build());
 
             return scollection;
@@ -1514,7 +1517,7 @@ public class CoreServiceBean implements CoreService {
             }
             deleteCollectionContent(leaf, ws.getClock());
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", leaf.getKey()).addArgument("path", npath.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("ws-alias", ws.getAlias()).addArgument("key", leaf.getKey()).addArgument("path", npath.build());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, "delete"), argsBuilder.build());
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
@@ -1615,7 +1618,7 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", key).addArgument("path", npath.build()).addArgument("hash", object.getStream()).addArgument("mimetype", object.getMimeType());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("ws-alias", ws.getAlias()).addArgument("key", key).addArgument("path", npath.build()).addArgument("hash", object.getStream()).addArgument("mimetype", object.getMimeType());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "create"), argsBuilder.build());
 
             return object;
@@ -1746,7 +1749,7 @@ public class CoreServiceBean implements CoreService {
                 registry.update(ws.getKey());
                 LOGGER.log(Level.FINEST, "workspace set changed");
 
-                ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("key", object.getKey()).addArgument("okey", element.getKey())
+                ArgumentsBuilder argsBuilder = new ArgumentsBuilder(6).addArgument("ws-alias", ws.getAlias()).addArgument("key", object.getKey()).addArgument("okey", element.getKey())
                         .addArgument("path", npath.build()).addArgument("hash", object.getStream()).addArgument("mimetype", object.getMimeType());
                 notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "update"), argsBuilder.build());
 
@@ -1853,7 +1856,7 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", sobject.getKey()).addArgument("okey", selement.getKey()).addArgument("src-path", spath.build()).addArgument("dest-path", dpath.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("ws-alias", ws.getAlias()).addArgument("key", sobject.getKey()).addArgument("okey", selement.getKey()).addArgument("src-path", spath.build()).addArgument("dest-path", dpath.build());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "move"), argsBuilder.build());
 
             return sobject;
@@ -1933,7 +1936,7 @@ public class CoreServiceBean implements CoreService {
                 indexing.remove(leaf.getKey());
             }
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", leaf.getKey()).addArgument("path", npath.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("ws-alias", ws.getAlias()).addArgument("key", leaf.getKey()).addArgument("path", npath.build());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, "delete"), argsBuilder.build());
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
@@ -2030,7 +2033,7 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("path", npath.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("ws-alias", ws.getAlias()).addArgument("key", key).addArgument("path", npath.build());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "create"), argsBuilder.build());
 
             return link;
@@ -2151,7 +2154,7 @@ public class CoreServiceBean implements CoreService {
                 registry.update(ws.getKey());
                 LOGGER.log(Level.FINEST, "workspace set changed");
 
-                ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("key", link.getKey()).addArgument("okey", element.getKey()).addArgument("path", npath.build());
+                ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("ws-alias", ws.getAlias()).addArgument("key", link.getKey()).addArgument("okey", element.getKey()).addArgument("path", npath.build());
                 notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "update"), argsBuilder.build());
 
                 return link;
@@ -2258,7 +2261,7 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", slink.getKey()).addArgument("okey", selement.getKey()).addArgument("src-path", spath.build()).addArgument("dest-path", dpath.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("ws-alias", ws.getAlias()).addArgument("key", slink.getKey()).addArgument("okey", selement.getKey()).addArgument("src-path", spath.build()).addArgument("dest-path", dpath.build());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "move"), argsBuilder.build());
 
             return slink;
@@ -2338,7 +2341,7 @@ public class CoreServiceBean implements CoreService {
                 indexing.remove(leaf.getKey());
             }
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", leaf.getKey()).addArgument("path", npath.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("ws-alias", ws.getAlias()).addArgument("key", leaf.getKey()).addArgument("path", npath.build());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Link.OBJECT_TYPE, "delete"), argsBuilder.build());
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
@@ -2583,7 +2586,7 @@ public class CoreServiceBean implements CoreService {
             registry.update(ws.getKey());
             LOGGER.log(Level.FINEST, "workspace set changed");
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", key).addArgument("tkey", tkey).addArgument("path", npath.build()).addArgument("name", name);
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("ws-alias", ws.getAlias()).addArgument("key", key).addArgument("tkey", tkey).addArgument("path", npath.build()).addArgument("name", name);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "create"), argsBuilder.build());
 
             return meta;
@@ -2823,7 +2826,7 @@ public class CoreServiceBean implements CoreService {
                 registry.update(ws.getKey());
                 LOGGER.log(Level.FINEST, "workspace set changed");
 
-                ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", mdelement.getKey()).addArgument("tkey", tkey).addArgument("path", npath.build()).addArgument("name", name);
+                ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("ws-alias", ws.getAlias()).addArgument("key", mdelement.getKey()).addArgument("tkey", tkey).addArgument("path", npath.build()).addArgument("name", name);
                 notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "update"), argsBuilder.build());
 
                 return meta;
@@ -2976,7 +2979,7 @@ public class CoreServiceBean implements CoreService {
             em.merge(ws);
             registry.update(ws.getKey());
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", mdelement.getKey()).addArgument("tkey", element.getKey()).addArgument("path", npath.build()).addArgument("name", name);
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("ws-alias", ws.getAlias()).addArgument("key", mdelement.getKey()).addArgument("tkey", element.getKey()).addArgument("path", npath.build()).addArgument("name", name);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, "delete"), argsBuilder.build());
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException | CloneException
                 | IndexingServiceException | OrtolangException e) {
@@ -3657,8 +3660,9 @@ public class CoreServiceBean implements CoreService {
             em.merge(workspace);
 
             registry.update(wskey);
-
-            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, readonly ? "lock" : "unlock"));
+            
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(1).addArgument("ws-alias", workspace.getAlias());
+            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, readonly ? "lock" : "unlock"), argsBuilder.build());
         } catch (KeyLockedException | RegistryServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred while setting workspace read only mode to [" + readonly + "]", e);
