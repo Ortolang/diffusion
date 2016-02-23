@@ -41,16 +41,22 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import fr.ortolang.diffusion.OrtolangErrorCodes;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Provider
 public class AccessDeniedExceptionMapper implements ExceptionMapper<AccessDeniedException> {
 
-	@Override
-	public Response toResponse(AccessDeniedException ex) {
-		return Response.status(Status.UNAUTHORIZED)
-				//.header("WWW-Authenticate", "Basic")
-				.entity("Access denied").type("text/plain")
-				.build();
-	}
+    @Override
+    public Response toResponse(AccessDeniedException ex) {
+        Map<String, String> map = new HashMap<>();
+        map.put("message", "Access denied");
+        map.put("code", OrtolangErrorCodes.ACCESS_DENIED_EXCEPTION);
+        return Response.status(Status.UNAUTHORIZED)
+                .entity(map)
+                .build();
+    }
 }

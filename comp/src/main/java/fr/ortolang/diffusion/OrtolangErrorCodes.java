@@ -45,4 +45,5 @@ public final class OrtolangErrorCodes {
     public static final String ROOT_NOT_FOUND_EXCEPTION = "5";
     public static final String ALIAS_NOT_FOUND_EXCEPTION = "6";
     public static final String COLLECTION_NOT_EMPTY_EXCEPTION = "7";
+    public static final String ACCESS_DENIED_EXCEPTION = "8";
 }
