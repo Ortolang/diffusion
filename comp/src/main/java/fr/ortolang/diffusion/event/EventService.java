@@ -73,5 +73,9 @@ public interface EventService extends OrtolangService {
     public void deleteEventFeed(String key) throws EventServiceException, AccessDeniedException, KeyNotFoundException;
     
     public void persistEvent(Event event) throws EventServiceException;
-
+    
+//    public List<OrtolangEvent> findEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long fromDateFilter, long toDateFilter, int offset, int limit) throws EventServiceException;
+//    
+//    public List<OrtolangEvent> systemFindEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long fromDateFilter, long toDateFilter, int offset, int limit) throws EventServiceException;
+    
 }

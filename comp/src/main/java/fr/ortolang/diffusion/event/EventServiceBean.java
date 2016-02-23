@@ -54,7 +54,12 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.persistence.PersistenceContext;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -153,6 +158,7 @@ public class EventServiceBean implements EventService {
     }
     
     @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<OrtolangEvent> browseEventFeed(String key, int offset, int limit) throws EventServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "browsing event feed for key [" + key + "] from event [" + offset + "] and limit [" + limit + "]");
         try {
@@ -169,16 +175,16 @@ public class EventServiceBean implements EventService {
             
             int cpt = 0;
             int ioffset = 0;
-            int ilimit = 500;
+            int ilimit = 5000;
             boolean endOfEvents = false;
             List<OrtolangEvent> oevents = new ArrayList<OrtolangEvent> ();
             while ( !endOfEvents ) {
-                List<Event> events = em.createNamedQuery("listAllEventsByDate", Event.class).setFirstResult(ioffset).setMaxResults(ilimit).getResultList();
+                List<Event> events = em.createNamedQuery("listAllEvents", Event.class).setFirstResult(ioffset).setMaxResults(ilimit).setLockMode(LockModeType.NONE).getResultList();
                 if ( events.size() < ilimit ) {
-                    LOGGER.log(Level.FINEST, "listAllEventsByDate returned only " + events.size() + " events, seem that end is reached.");
+                    LOGGER.log(Level.FINEST, "listAllEvents returned only " + events.size() + " events, seem that end is reached.");
                     endOfEvents = true;
                 } else {
-                    LOGGER.log(Level.FINEST, "listAllEventsByDate returned " + ilimit + " results, setting offset to next segment.");
+                    LOGGER.log(Level.FINEST, "listAllEvents returned " + ilimit + " results, setting offset to next segment.");
                     ioffset += ilimit;
                 }
                 for ( Event event : events ) {
@@ -212,6 +218,7 @@ public class EventServiceBean implements EventService {
     }
 
     @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<OrtolangEvent> browseEventFeedSinceDate(String key, Date from) throws EventServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "browsing event feed for key [" + key + "] since date [" + from + "]");
         try {
@@ -229,7 +236,7 @@ public class EventServiceBean implements EventService {
             boolean endOfEvents = false;
             List<OrtolangEvent> oevents = new ArrayList<OrtolangEvent> ();
             while ( !endOfEvents ) {
-                List<Event> events = em.createNamedQuery("listAllEventsByDateFromDate", Event.class).setParameter("date", from).getResultList();
+                List<Event> events = em.createNamedQuery("listAllEventsFromDate", Event.class).setParameter("date", from).setLockMode(LockModeType.NONE).getResultList();
                 for ( Event event : events ) {
                     for ( EventFeedFilter filter : feed.getFilters() ) {
                         if ( filter.match(event) ) {
@@ -254,6 +261,7 @@ public class EventServiceBean implements EventService {
     }
 
     @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<OrtolangEvent> browseEventFeedSinceEvent(String key, long id) throws EventServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "browsing event feed for key [" + key + "] since id [" + id + "]");
         try {
@@ -271,7 +279,7 @@ public class EventServiceBean implements EventService {
             boolean endOfEvents = false;
             List<OrtolangEvent> oevents = new ArrayList<OrtolangEvent> ();
             while ( !endOfEvents ) {
-                List<Event> events = em.createNamedQuery("listAllEventsByDateFromId", Event.class).setParameter("id", id).getResultList();
+                List<Event> events = em.createNamedQuery("listAllEventsFromId", Event.class).setParameter("id", id).setLockMode(LockModeType.NONE).getResultList();
                 for ( Event event : events ) {
                     for ( EventFeedFilter filter : feed.getFilters() ) {
                         if ( filter.match(event) ) {
@@ -417,6 +425,39 @@ public class EventServiceBean implements EventService {
             throw new EventServiceException("unable to persist event", e);
         }
     }
+    
+//    @Override
+//    public List<OrtolangEvent> findEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long fromDateFilter, long toDateFilter, int offset,
+//            int limit) throws EventServiceException {
+//        // TODO Auto-generated method stub
+//        return null;
+//    }
+//
+//    @Override
+//    public List<OrtolangEvent> systemFindEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long fromDateFilter, long toDateFilter,
+//            int offset, int limit) throws EventServiceException {
+//        
+//        CriteriaBuilder cb = em.getCriteriaBuilder();
+//        CriteriaQuery<Event> cq = cb.createQuery(Event.class);
+//        Root<Event> c = cq.from(Event.class);
+//        
+//        List<Predicate> predicates = new ArrayList<Predicate> ();
+//        if ( eventTypeFilter !=null && eventTypeFilter.length() > 0 ) {
+//            predicates.add(cb.like(c.get("eventType"), eventTypeFilter));
+//        }
+//        if ( fromResourceFilter !=null && fromResourceFilter.length() > 0 ) {
+//            predicates.add(cb.like(c.get("fromResource"), fromResourceFilter));
+//        }
+//        if ( resourceTypeFilter !=null && resourceTypeFilter.length() > 0 ) {
+//            predicates.add(cb.like(c.get("resourceType"), resourceTypeFilter));
+//        }
+//        if ( throwedByFilter !=null && throwedByFilter.length() > 0 ) {
+//            predicates.add(cb.like(c.get("throwedBy"), throwedByFilter));
+//        }
+//        
+//        cq.select(c).where(predicates.toArray());
+//        return null;
+//    }
 
     /* Service Methods */
 
