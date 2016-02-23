@@ -52,6 +52,7 @@ public class OrtolangCli {
 		commands.put("import-zip", ImportZipCommand.class.getName());
 		commands.put("import-profiles", ImportProfilesCommand.class.getName());
 		commands.put("import-referentiel", ImportReferentielCommand.class.getName());
+		commands.put("check-bag", CheckBagCommand.class.getName());
 	}
 	
 	public static OrtolangCli getInstance() {
