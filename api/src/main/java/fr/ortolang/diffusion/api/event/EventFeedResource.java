@@ -36,24 +36,30 @@ package fr.ortolang.diffusion.api.event;
  * #L%
  */
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
+import org.jboss.resteasy.annotations.GZIP;
+
+import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
@@ -61,7 +67,6 @@ import fr.ortolang.diffusion.event.entity.EventFeed;
 import fr.ortolang.diffusion.event.entity.EventFeedFilter;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/feeds")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -77,10 +82,17 @@ public class EventFeedResource {
     @GET
     @Path("/{key}")
     @GZIP
-    public Response getEventFeed(@PathParam(value = "key") String key, @Context Request request) throws KeyNotFoundException, AccessDeniedException, EventServiceException {
+    public Response getEventFeed(@PathParam(value = "key") String key, @QueryParam(value = "id") Long id, @QueryParam(value = "o") @DefaultValue(value = "0") int offset, @QueryParam(value = "l") @DefaultValue(value = "25") int limit, @Context Request request) throws KeyNotFoundException, AccessDeniedException, EventServiceException {
         LOGGER.log(Level.INFO, "GET /feeds/" + key);
         EventFeed feed = events.readEventFeed(key);
+        List<OrtolangEvent> content;
+        if ( id == null || id == 0 ) {
+            content = events.browseEventFeed(key, offset, limit);
+        } else {
+            content = events.browseEventFeedSinceEvent(key, id);
+        }
         EventFeedRepresentation representation = EventFeedRepresentation.fromEventFeed(feed);
+        representation.setEvents(content);
         return Response.ok(representation).build();
     }
 

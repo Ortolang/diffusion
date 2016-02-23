@@ -55,7 +55,7 @@ import org.hibernate.annotations.Type;
 @Table(name = "handles", indexes = { @Index(columnList = "handle, key") })
 @NamedQueries({ 
 	@NamedQuery(name = "findHandleByName", query = "SELECT h FROM Handle h WHERE h.handle = :name"),
-	@NamedQuery(name = "searchHandleByName", query = "SELECT h FROM Handle h WHERE h.handle LIKE :name"),
+	@NamedQuery(name = "searchHandleByName", query = "SELECT h FROM Handle h WHERE h.handle LIKE :name AND h.index = 1"),
 	@NamedQuery(name = "findHandleNameForKey", query = "SELECT DISTINCT(h.handle) FROM Handle h WHERE h.key = :key"),
 	@NamedQuery(name = "countHandles", query = "SELECT COUNT(h) FROM Handle h GROUP BY h.handle")})
 @SuppressWarnings("serial")
@@ -111,6 +111,10 @@ public class Handle implements Serializable {
 	public byte[] getHandle() {
 		return handle;
 	}
+	
+	public String getHandleString() throws UnsupportedEncodingException {
+	    return new String(handle, "UTF-8");
+	}
 
 	public void setHandle(byte[] handle) {
 		this.handle = handle;
@@ -127,14 +131,22 @@ public class Handle implements Serializable {
 	public byte[] getType() {
 		return type;
 	}
+	
+	public String getTypeString() throws UnsupportedEncodingException {
+        return new String(type, "UTF-8");
+    }
 
-	public void setType(byte[] type) {
+    public void setType(byte[] type) {
 		this.type = type;
 	}
 
 	public byte[] getData() {
 		return data;
 	}
+	
+	public String getDataString() throws UnsupportedEncodingException {
+        return new String(data, "UTF-8");
+    }
 
 	public void setData(byte[] data) {
 		this.data = data;

@@ -39,20 +39,23 @@ package fr.ortolang.diffusion.core;
 @SuppressWarnings("serial")
 public class CollectionNotEmptyException extends Exception {
 
-	public CollectionNotEmptyException() {
-		super();
-	}
+    private String path;
 
-	public CollectionNotEmptyException(String message) {
-		super(message);
-	}
+    public CollectionNotEmptyException() {
+        super();
+    }
 
-	public CollectionNotEmptyException(Throwable cause) {
-		super(cause);
-	}
+    public CollectionNotEmptyException(String path) {
+        super("collection at path: [" + path + "] is not empty");
+        this.path = path;
+    }
 
-	public CollectionNotEmptyException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public CollectionNotEmptyException(String path, String message) {
+        super(message);
+        this.path = path;
+    }
 
+    public String getPath() {
+        return path;
+    }
 }

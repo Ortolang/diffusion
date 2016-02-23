@@ -68,9 +68,13 @@ import fr.ortolang.diffusion.OrtolangEvent;
 
 @Entity
 @SuppressWarnings("serial")
-@Table(indexes={@Index(columnList="date", name="eventDateIndex")})
+@Table(indexes={@Index(columnList="date", name="eventDateIndex"), @Index(columnList="fromObject", name="eventFromIndex"), @Index(columnList="throwedBy", name="throwedByIndex")})
 @NamedQueries({
-        @NamedQuery(name = "listAllEventsByDate", query = "SELECT e FROM Event e ORDER BY e.date DESC")
+        @NamedQuery(name = "listAllEvents", query = "SELECT e FROM Event e ORDER BY e.date DESC"),
+        @NamedQuery(name = "listAllEventsFromId", query = "SELECT e FROM Event e WHERE e.id > :id ORDER BY e.date DESC"),
+        @NamedQuery(name = "listAllEventsFromDate", query = "SELECT e FROM Event e WHERE e.date > :date ORDER BY e.date DESC"),
+        @NamedQuery(name = "listAllEventsThrowedBy", query = "SELECT e FROM Event e WHERE e.throwedBy = :throwedBy ORDER BY e.date DESC"),
+        @NamedQuery(name = "listAllEventsFromObject", query = "SELECT e FROM Event e WHERE e.fromObject = :fromObject ORDER BY e.date DESC")
 })
 public class Event extends OrtolangEvent implements Serializable {
 

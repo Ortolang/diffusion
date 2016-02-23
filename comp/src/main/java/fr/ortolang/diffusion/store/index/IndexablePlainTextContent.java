@@ -38,13 +38,22 @@ package fr.ortolang.diffusion.store.index;
 
 public class IndexablePlainTextContent {
 	
+    private String name = "";
 	private StringBuilder sb;
 
     public IndexablePlainTextContent() {
         sb = new StringBuilder();
     }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
 
-     public void addContentPart(String content) {
+    public void addContentPart(String content) {
         sb.append(content + " ");
     }
 

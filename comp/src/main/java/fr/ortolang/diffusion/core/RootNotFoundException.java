@@ -4,7 +4,7 @@ package fr.ortolang.diffusion.core;
  * #%L
  * ORTOLANG
  * A online network structure for hosting language resources and tools.
- * 
+ *
  * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
  * Etienne Petitjean / ATILF UMR 7118 - CNRS
  * Jérôme Blanchard / ATILF UMR 7118 - CNRS
@@ -14,7 +14,7 @@ package fr.ortolang.diffusion.core;
  * Ulrike Fleury / ATILF UMR 7118 - CNRS
  * Frédéric Pierre / ATILF UMR 7118 - CNRS
  * Céline Moro / ATILF UMR 7118 - CNRS
- *  
+ *
  * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
  * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
  * %%
@@ -24,34 +24,37 @@ package fr.ortolang.diffusion.core;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
 
-@SuppressWarnings("serial")
-public class PathAlreadyExistsException extends Exception {
+public class RootNotFoundException extends InvalidPathException {
 
-    private String path;
+    private String root;
 
-    public PathAlreadyExistsException(String path) {
-        super("Element already exists at path : " + path);
-        this.path = path;
+    public RootNotFoundException() {
+        super();
     }
 
-    public PathAlreadyExistsException(String path, String message) {
+    public RootNotFoundException(String root) {
+        super("Root [" + root + "] not found");
+        this.root = root;
+    }
+
+    public RootNotFoundException(String root, String message) {
         super(message);
-        this.path = path;
+        this.root = root;
     }
 
-    public String getPath() {
-        return path;
+    public String getRoot() {
+        return root;
     }
 }

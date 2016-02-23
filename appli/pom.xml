@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>diffusion-application</artifactId>
@@ -9,7 +10,7 @@
 	<parent>
 		<groupId>fr.ortolang.diffusion</groupId>
 		<artifactId>ortolang-diffusion</artifactId>
-		<version>4.0.2-SNAPSHOT</version>
+		<version>4.1.3-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -27,6 +28,11 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
 			<version>${version.springframework.spring-context}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.bull.javamelody</groupId>
+			<artifactId>javamelody-core</artifactId>
+			<version>1.58.0</version>
 		</dependency>
 	</dependencies>
 
@@ -59,12 +65,12 @@
 					<archive>
 						<manifest>
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                			<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 						</manifest>
 						<manifestEntries>
-        					<Artefact-Version>${project.version}</Artefact-Version>
-      					</manifestEntries>
-    				</archive>
+							<Artefact-Version>${project.version}</Artefact-Version>
+						</manifestEntries>
+					</archive>
 				</configuration>
 			</plugin>
 			<plugin>

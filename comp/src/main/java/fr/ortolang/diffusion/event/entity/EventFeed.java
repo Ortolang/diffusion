@@ -46,7 +46,6 @@ import javax.persistence.Id;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
-import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.event.EventService;
@@ -56,8 +55,6 @@ import fr.ortolang.diffusion.event.EventService;
 public class EventFeed extends OrtolangObject {
 
     public static final String OBJECT_TYPE = "eventfeed";
-    public static final int MAX_SIZE = 100;
-    public static final int DEFAULT_SIZE = 10;
 
     @Id
     private String id;
@@ -67,16 +64,11 @@ public class EventFeed extends OrtolangObject {
     private String key;
     private String name;
     private String description;
-    private int size;
     @ElementCollection(fetch=FetchType.EAGER)
     private List<EventFeedFilter> filters;
-    @Transient
-    private List<OrtolangEvent> events;
     
     public EventFeed() {
         filters = new ArrayList<EventFeedFilter>();
-        events = new ArrayList<OrtolangEvent>();
-        size = DEFAULT_SIZE;
     }
 
     public void setId(String id) {
@@ -111,18 +103,6 @@ public class EventFeed extends OrtolangObject {
         return description;
     }
     
-    public int getSize() {
-        return size;
-    }
-
-    public void setSize(int size) {
-        if ( size >= MAX_SIZE ) {
-            this.size = MAX_SIZE;
-        } else {
-            this.size = size;
-        }
-    }
-
     public List<EventFeedFilter> getFilters() {
         return filters;
     }
@@ -139,18 +119,6 @@ public class EventFeed extends OrtolangObject {
         this.filters.remove(filter);
     }
 
-    public List<OrtolangEvent> getEvents() {
-        return events;
-    }
-
-    public void setEvents(ArrayList<OrtolangEvent> events) {
-        this.events = events;
-    }
-    
-    public void pushEvent(OrtolangEvent event) {
-        this.events.add(event);
-    }
-    
     @Override
     public OrtolangObjectIdentifier getObjectIdentifier() {
         return new OrtolangObjectIdentifier(EventService.SERVICE_NAME, EventFeed.OBJECT_TYPE, getId());

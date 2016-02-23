@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 
 public class OrtolangConfig {
 
-    private static final String CURRENT_CONFIG_VERSION = "8";
+    private static final String CURRENT_CONFIG_VERSION = "9";
     private static final Logger LOGGER = Logger.getLogger(OrtolangConfig.class.getName());
     private static OrtolangConfig config;
     private Properties props;
@@ -136,13 +136,20 @@ public class OrtolangConfig {
 
         FTP_SERVER_HOST ("ftp.server.host"),
         FTP_SERVER_PORT ("ftp.server.port"),
+        FTP_SERVER_PASSIVE_PORTS ("ftp.server.ports.pasv"),
+        FTP_SERVER_SSL ("ftp.server.ssl"),
 
         PIWIK_HOST ("piwik.host"),
         PIWIK_SITE_ID ("piwik.site.id"),
 
         ZIP_IGNORED_FILES ("zip.ignored.files"),
 
-        STATIC_SITE_VERSION ("static.site.version");
+        STATIC_SITE_VERSION ("static.site.version"),
+        
+        SSL_KEYSTORE_FILE ("ssl.keystore.file"), 
+        SSL_KEYSTORE_PASSWORD ("ssl.keystore.password"),
+        SSL_KEY_ALIAS ("ssl.key.alias"),
+        SSL_KEY_PASSWORD ("ssl.key.password");
 
         private final String key;
 

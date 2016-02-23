@@ -41,15 +41,21 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+import fr.ortolang.diffusion.OrtolangErrorCodes;
 import fr.ortolang.diffusion.core.PathAlreadyExistsException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Provider
 public class PathAlreadyExistsExceptionMapper implements ExceptionMapper<PathAlreadyExistsException> {
 
     @Override
     public Response toResponse(PathAlreadyExistsException ex) {
-        return Response.status(Status.CONFLICT)
-                .entity("Element already exists at path : " + ex.getMessage()).type("text/plain")
-                .build();
+        Map<String, String> map = new HashMap<>();
+        map.put("code", OrtolangErrorCodes.PATH_ALREADY_EXISTS_EXCEPTION);
+        map.put("path", ex.getPath());
+        map.put("message", ex.getMessage());
+        return Response.status(Status.CONFLICT).entity(map).build();
     }
 }

@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core;
+package fr.ortolang.diffusion.api.mapper;
 
 /*
  * #%L
@@ -36,22 +36,26 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
-@SuppressWarnings("serial")
-public class PathAlreadyExistsException extends Exception {
+import fr.ortolang.diffusion.OrtolangErrorCodes;
+import fr.ortolang.diffusion.core.AliasAlreadyExistsException;
+import fr.ortolang.diffusion.core.RootNotFoundException;
 
-    private String path;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
+import java.util.HashMap;
+import java.util.Map;
 
-    public PathAlreadyExistsException(String path) {
-        super("Element already exists at path : " + path);
-        this.path = path;
-    }
+@Provider
+public class RootNotFoundExceptionMapper implements ExceptionMapper<RootNotFoundException> {
 
-    public PathAlreadyExistsException(String path, String message) {
-        super(message);
-        this.path = path;
-    }
-
-    public String getPath() {
-        return path;
+    @Override
+    public Response toResponse(RootNotFoundException ex) {
+        Map<String, String> map = new HashMap<>();
+        map.put("code", OrtolangErrorCodes.ROOT_NOT_FOUND_EXCEPTION);
+        map.put("root", ex.getRoot());
+        map.put("message", ex.getMessage());
+        return Response.status(Status.NOT_FOUND).entity(map).build();
     }
 }

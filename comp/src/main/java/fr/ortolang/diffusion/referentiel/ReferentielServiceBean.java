@@ -55,6 +55,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.json.Json;
+import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.persistence.EntityManager;
@@ -881,6 +882,8 @@ public class ReferentielServiceBean implements ReferentielService {
 
             IndexablePlainTextContent content = new IndexablePlainTextContent();
 
+            content.addContentPart(key);
+            
             return content;
         } catch (KeyNotFoundException | RegistryServiceException e) {
             throw new OrtolangException("unable to get indexable plain text content for key " + key, e);
@@ -897,15 +900,6 @@ public class ReferentielServiceBean implements ReferentielService {
             }
             IndexableJsonContent content = new IndexableJsonContent();
 
-//            if (identifier.getType().equals(ReferentielEntity.OBJECT_TYPE)) {
-//                ReferentielEntity referentielEntity = em.find(ReferentielEntity.class, identifier.getId());
-//                if (referentielEntity == null) {
-//                    throw new OrtolangException("unable to load ReferentielEntity with id [" + identifier.getId() + "] from storage");
-//                }
-//
-//                content.put("ortolang-referentiel-json", new ByteArrayInputStream(referentielEntity.getContent().getBytes()));
-//            }
-            
             if (identifier.getType().equals(OrganizationEntity.OBJECT_TYPE)) {
             	OrganizationEntity organizationEntity = em.find(OrganizationEntity.class, identifier.getId());
                 if (organizationEntity == null) {
@@ -963,9 +957,11 @@ public class ReferentielServiceBean implements ReferentielService {
 		try {
 			JsonObject jsonObj = jsonReader.readObject();
 			fieldValue = jsonObj.getString(fieldName);
-		} catch(NullPointerException | ClassCastException e) {
+		} catch(IllegalStateException | NullPointerException | ClassCastException e) {
 			LOGGER.log(Level.WARNING, "No property '"+fieldName+"' in json object");
-		} finally {
+		} catch(JsonException e) {
+            LOGGER.log(Level.WARNING, "No property '"+fieldName+"' in json object", e);
+        } finally {
 			jsonReader.close();
 			reader.close();
 		}

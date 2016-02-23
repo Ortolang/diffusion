@@ -37,12 +37,14 @@ package fr.ortolang.diffusion.seo;
  */
 
 import com.orientechnologies.orient.core.record.impl.ODocument;
+
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
+
 import org.jboss.ejb3.annotation.SecurityDomain;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -60,6 +62,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;

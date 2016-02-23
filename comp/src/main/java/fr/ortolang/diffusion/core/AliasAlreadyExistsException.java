@@ -36,22 +36,24 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
+
 @SuppressWarnings("serial")
-public class PathAlreadyExistsException extends Exception {
+public class AliasAlreadyExistsException extends Exception {
 
-    private String path;
+	public AliasAlreadyExistsException(String message) {
+		super(message);
+	}
 
-    public PathAlreadyExistsException(String path) {
-        super("Element already exists at path : " + path);
-        this.path = path;
-    }
+	public AliasAlreadyExistsException(Throwable cause) {
+		super(cause);
+	}
 
-    public PathAlreadyExistsException(String path, String message) {
-        super(message);
-        this.path = path;
-    }
+	public AliasAlreadyExistsException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-    public String getPath() {
-        return path;
-    }
+	public AliasAlreadyExistsException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
+
 }

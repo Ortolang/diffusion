@@ -47,7 +47,6 @@ import javax.mail.MessagingException;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.transaction.Status;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
@@ -91,15 +90,15 @@ public class NotifyTask extends RuntimeEngineTask {
     @Override
     public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
         
-        try {
-            LOGGER.log(Level.FINE, "User Transaction Status: " + getUserTransaction().getStatus());
-            if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
-                LOGGER.log(Level.FINE, "START User Transaction");
-                getUserTransaction().begin();
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
-        }
+//        try {
+//            LOGGER.log(Level.FINE, "User Transaction Status: " + getUserTransaction().getStatus());
+//            if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
+//                LOGGER.log(Level.FINE, "START User Transaction");
+//                getUserTransaction().begin();
+//            }
+//        } catch (Exception e) {
+//            LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
+//        }
         
         try {
             String initier = execution.getVariable(Process.INITIER_VAR_NAME, String.class);
@@ -218,13 +217,13 @@ public class NotifyTask extends RuntimeEngineTask {
             throw new RuntimeEngineTaskException("unexpected error occurred", e);
         }
         
-        try {
-            LOGGER.log(Level.FINE, "COMMIT Active User Transaction.");
-            getUserTransaction().commit();
-            getUserTransaction().begin();
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
-        }
+//        try {
+//            LOGGER.log(Level.FINE, "COMMIT Active User Transaction.");
+//            getUserTransaction().commit();
+//            getUserTransaction().begin();
+//        } catch (Exception e) {
+//            LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
+//        }
     }
 
     private void notify(String senderName, String senderEmail, String receiverEmail, String subject, String message) throws MessagingException, UnsupportedEncodingException,

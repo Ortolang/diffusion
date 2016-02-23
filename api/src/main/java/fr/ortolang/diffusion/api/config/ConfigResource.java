@@ -105,6 +105,7 @@ public class ConfigResource {
         builder.append("OrtolangConfig.piwikSiteId='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID)).append("';\r\n");
         builder.append("OrtolangConfig.keycloakConfigLocation ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("/config/client/auth").append("';\r\n");
         builder.append("OrtolangConfig.staticSiteVersion ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.STATIC_SITE_VERSION)).append("';\r\n");
+        builder.append("OrtolangConfig.handlePrefix ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX)).append("';\r\n");
         return Response.ok(builder.toString()).build();
     }
 

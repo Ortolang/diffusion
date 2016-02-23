@@ -202,7 +202,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void systemInsertDocument(String type, InputStream document) throws JsonStoreServiceException {
-        LOGGER.log(Level.FINE, "Importing document type " + type);
+        LOGGER.log(Level.FINE, "#SYSTEM# insert document type " + type);
         try (ODatabaseDocumentTx db = pool.acquire()) {
             ODocument doc = new ODocument(type).fromJSON(document);
             db.save(doc);
@@ -216,7 +216,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void systemInsertDocument(String type, String document) throws JsonStoreServiceException {
-        LOGGER.log(Level.FINE, "Importing document type " + type);
+        LOGGER.log(Level.FINE, "#SYSTEM#  insert document type " + type);
         try (ODatabaseDocumentTx db = pool.acquire()) {
             ODocument doc = new ODocument(type).fromJSON(document);
             db.save(doc);
@@ -229,6 +229,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public String systemGetDocument(String key) throws JsonStoreServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM#  get document for key " + key);
         String json = getJSONByKey(key);
         if ( json != null ) {
             return json;

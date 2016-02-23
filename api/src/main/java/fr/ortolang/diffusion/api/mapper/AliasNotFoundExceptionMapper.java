@@ -36,20 +36,25 @@ package fr.ortolang.diffusion.api.mapper;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangErrorCodes;
 import fr.ortolang.diffusion.core.AliasNotFoundException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import java.util.HashMap;
+import java.util.Map;
 
 @Provider
 public class AliasNotFoundExceptionMapper implements ExceptionMapper<AliasNotFoundException> {
 
-	@Override
-	public Response toResponse(AliasNotFoundException ex) {
-		return Response.status(Status.NOT_FOUND)
-				.entity(ex.getMessage()).type("text/plain")
-				.build();
-	}
+    @Override
+    public Response toResponse(AliasNotFoundException ex) {
+        Map<String, String> map = new HashMap<>();
+        map.put("code", OrtolangErrorCodes.ALIAS_NOT_FOUND_EXCEPTION);
+        map.put("alias", ex.getAlias());
+        map.put("message", ex.getMessage());
+        return Response.status(Status.NOT_FOUND).entity(map).build();
+    }
 }

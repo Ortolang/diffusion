@@ -36,7 +36,9 @@ package fr.ortolang.diffusion.event;
  * #L%
  */
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -52,7 +54,12 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.persistence.PersistenceContext;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -144,19 +151,41 @@ public class EventServiceBean implements EventService {
                 throw new EventServiceException("unable to find an event feed for id " + identifier.getId());
             }
             feed.setKey(key);
+            return feed;
+        } catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+            throw new EventServiceException("unable to read the event feed with key [" + key + "]", e);
+        }
+    }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<OrtolangEvent> browseEventFeed(String key, int offset, int limit) throws EventServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "browsing event feed for key [" + key + "] from event [" + offset + "] and limit [" + limit + "]");
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(key, subjects, "read");
+            
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, EventFeed.OBJECT_TYPE);
+            EventFeed feed = em.find(EventFeed.class, identifier.getId());
+            if (feed == null) {
+                throw new EventServiceException("unable to find an event feed for id " + identifier.getId());
+            }
+            feed.setKey(key);
             
             int cpt = 0;
-            int offset = 0;
-            int limit = 1000;
+            int ioffset = 0;
+            int ilimit = 5000;
             boolean endOfEvents = false;
-            while ( cpt < feed.getSize() && !endOfEvents ) {
-                List<Event> events = em.createNamedQuery("listAllEventsByDate", Event.class).setFirstResult(offset).setMaxResults(limit).getResultList();
-                if ( events.size() < limit ) {
-                    LOGGER.log(Level.FINEST, "listAllEventsByDate returned only " + events.size() + " events, seem that end is reached.");
+            List<OrtolangEvent> oevents = new ArrayList<OrtolangEvent> ();
+            while ( !endOfEvents ) {
+                List<Event> events = em.createNamedQuery("listAllEvents", Event.class).setFirstResult(ioffset).setMaxResults(ilimit).setLockMode(LockModeType.NONE).getResultList();
+                if ( events.size() < ilimit ) {
+                    LOGGER.log(Level.FINEST, "listAllEvents returned only " + events.size() + " events, seem that end is reached.");
                     endOfEvents = true;
                 } else {
-                    LOGGER.log(Level.FINEST, "listAllEventsByDate returned " + limit + " results, setting offset to next segment.");
-                    offset += limit;
+                    LOGGER.log(Level.FINEST, "listAllEvents returned " + ilimit + " results, setting offset to next segment.");
+                    ioffset += ilimit;
                 }
                 for ( Event event : events ) {
                     for ( EventFeedFilter filter : feed.getFilters() ) {
@@ -165,7 +194,9 @@ public class EventServiceBean implements EventService {
                                 if ( event.getFromObject() != null && event.getFromObject().length() > 0 ) {
                                     authorisation.checkPermission(event.getFromObject(), subjects, "read");
                                 }
-                                feed.pushEvent(event);
+                                if ( cpt >= offset ) {
+                                    oevents.add(event);
+                                }
                                 cpt++;
                             } catch ( AccessDeniedException e ) {
                                 LOGGER.log(Level.FINEST, "no permission to read event with id: " + event.getId());
@@ -173,15 +204,102 @@ public class EventServiceBean implements EventService {
                             break;
                         }
                     }
-                    if ( cpt >= feed.getSize() ) {
+                    if ( cpt >= (offset + limit) ) {
+                        endOfEvents = true;
                         break;
                     }
                 }
             }
 
-            return feed;
+            return oevents;
         } catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
-            throw new EventServiceException("unable to read the event feed with key [" + key + "]", e);
+            throw new EventServiceException("unable to browse the event feed with key [" + key + "]", e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<OrtolangEvent> browseEventFeedSinceDate(String key, Date from) throws EventServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "browsing event feed for key [" + key + "] since date [" + from + "]");
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(key, subjects, "read");
+            
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, EventFeed.OBJECT_TYPE);
+            EventFeed feed = em.find(EventFeed.class, identifier.getId());
+            if (feed == null) {
+                throw new EventServiceException("unable to find an event feed for id " + identifier.getId());
+            }
+            feed.setKey(key);
+            
+            boolean endOfEvents = false;
+            List<OrtolangEvent> oevents = new ArrayList<OrtolangEvent> ();
+            while ( !endOfEvents ) {
+                List<Event> events = em.createNamedQuery("listAllEventsFromDate", Event.class).setParameter("date", from).setLockMode(LockModeType.NONE).getResultList();
+                for ( Event event : events ) {
+                    for ( EventFeedFilter filter : feed.getFilters() ) {
+                        if ( filter.match(event) ) {
+                            try {
+                                if ( event.getFromObject() != null && event.getFromObject().length() > 0 ) {
+                                    authorisation.checkPermission(event.getFromObject(), subjects, "read");
+                                }
+                                oevents.add(event);
+                            } catch ( AccessDeniedException e ) {
+                                LOGGER.log(Level.FINEST, "no permission to read event with id: " + event.getId());
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return oevents;
+        } catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+            throw new EventServiceException("unable to browse the event feed with key [" + key + "]", e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<OrtolangEvent> browseEventFeedSinceEvent(String key, long id) throws EventServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "browsing event feed for key [" + key + "] since id [" + id + "]");
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(key, subjects, "read");
+            
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, EventFeed.OBJECT_TYPE);
+            EventFeed feed = em.find(EventFeed.class, identifier.getId());
+            if (feed == null) {
+                throw new EventServiceException("unable to find an event feed for id " + identifier.getId());
+            }
+            feed.setKey(key);
+            
+            boolean endOfEvents = false;
+            List<OrtolangEvent> oevents = new ArrayList<OrtolangEvent> ();
+            while ( !endOfEvents ) {
+                List<Event> events = em.createNamedQuery("listAllEventsFromId", Event.class).setParameter("id", id).setLockMode(LockModeType.NONE).getResultList();
+                for ( Event event : events ) {
+                    for ( EventFeedFilter filter : feed.getFilters() ) {
+                        if ( filter.match(event) ) {
+                            try {
+                                if ( event.getFromObject() != null && event.getFromObject().length() > 0 ) {
+                                    authorisation.checkPermission(event.getFromObject(), subjects, "read");
+                                }
+                                oevents.add(event);
+                            } catch ( AccessDeniedException e ) {
+                                LOGGER.log(Level.FINEST, "no permission to read event with id: " + event.getId());
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return oevents;
+        } catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+            throw new EventServiceException("unable to browse the event feed with key [" + key + "]", e);
         }
     }
 
@@ -307,6 +425,39 @@ public class EventServiceBean implements EventService {
             throw new EventServiceException("unable to persist event", e);
         }
     }
+    
+//    @Override
+//    public List<OrtolangEvent> findEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long fromDateFilter, long toDateFilter, int offset,
+//            int limit) throws EventServiceException {
+//        // TODO Auto-generated method stub
+//        return null;
+//    }
+//
+//    @Override
+//    public List<OrtolangEvent> systemFindEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long fromDateFilter, long toDateFilter,
+//            int offset, int limit) throws EventServiceException {
+//        
+//        CriteriaBuilder cb = em.getCriteriaBuilder();
+//        CriteriaQuery<Event> cq = cb.createQuery(Event.class);
+//        Root<Event> c = cq.from(Event.class);
+//        
+//        List<Predicate> predicates = new ArrayList<Predicate> ();
+//        if ( eventTypeFilter !=null && eventTypeFilter.length() > 0 ) {
+//            predicates.add(cb.like(c.get("eventType"), eventTypeFilter));
+//        }
+//        if ( fromResourceFilter !=null && fromResourceFilter.length() > 0 ) {
+//            predicates.add(cb.like(c.get("fromResource"), fromResourceFilter));
+//        }
+//        if ( resourceTypeFilter !=null && resourceTypeFilter.length() > 0 ) {
+//            predicates.add(cb.like(c.get("resourceType"), resourceTypeFilter));
+//        }
+//        if ( throwedByFilter !=null && throwedByFilter.length() > 0 ) {
+//            predicates.add(cb.like(c.get("throwedBy"), throwedByFilter));
+//        }
+//        
+//        cq.select(c).where(predicates.toArray());
+//        return null;
+//    }
 
     /* Service Methods */
 

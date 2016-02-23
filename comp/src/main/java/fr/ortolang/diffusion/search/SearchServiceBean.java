@@ -133,37 +133,6 @@ public class SearchServiceBean implements SearchService {
 	}
 	
 	@Override
-	public String getServiceName() {
-		return SearchService.SERVICE_NAME;
-	}
-
-	@Override
-    public Map<String, String> getServiceInfos() {
-        //TODO provide infos about active connections, config, ports, etc...
-        return Collections.emptyMap();
-    }
-
-    @Override
-	public String[] getObjectTypeList() {
-		return OBJECT_TYPE_LIST;
-	}
-
-	@Override
-	public String[] getObjectPermissionsList(String type) throws OrtolangException {
-		return OBJECT_PERMISSIONS_LIST;
-	}
-
-	@Override
-	public OrtolangObject findObject(String key) throws OrtolangException {
-		throw new OrtolangException("This service does not manage any object");
-	}
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("This service does not manage any object");
-    }
-
-    @Override
 	public List<OrtolangSearchResult> indexSearch(String query) throws SearchServiceException {
 		LOGGER.log(Level.FINE, "Performing index search with query: " + query);
 		try {
@@ -191,5 +160,36 @@ public class SearchServiceBean implements SearchService {
 			throw new SearchServiceException("unable to perform json search", e);
 		}
 	}
+
+	@Override
+    public String getServiceName() {
+        return SearchService.SERVICE_NAME;
+    }
+
+    @Override
+    public Map<String, String> getServiceInfos() {
+        //TODO provide infos about active connections, config, ports, etc...
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
+
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
+    public OrtolangObject findObject(String key) throws OrtolangException {
+        throw new OrtolangException("This service does not manage any object");
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
+        throw new OrtolangException("This service does not manage any object");
+    }
 
 }

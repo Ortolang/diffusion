@@ -44,12 +44,14 @@ import fr.ortolang.diffusion.OrtolangService;
 
 public interface IndexStoreService extends OrtolangService {
 	
-	public static final String SERVICE_NAME = "index-store";
+	static final String SERVICE_NAME = "index-store";
 	
-	public void index(OrtolangIndexableObject<IndexablePlainTextContent> object) throws IndexStoreServiceException;
+	void index(OrtolangIndexableObject<IndexablePlainTextContent> object) throws IndexStoreServiceException;
 	
-	public void remove(String key) throws IndexStoreServiceException;
+	void remove(String key) throws IndexStoreServiceException;
 	
-	public List<OrtolangSearchResult> search(String query) throws IndexStoreServiceException;
+	List<OrtolangSearchResult> search(String query) throws IndexStoreServiceException;
+
+    String systemGetDocument(String key) throws IndexStoreServiceException;
 
 }

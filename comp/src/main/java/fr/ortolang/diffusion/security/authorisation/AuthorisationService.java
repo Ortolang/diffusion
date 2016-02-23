@@ -45,36 +45,36 @@ import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTe
 
 public interface AuthorisationService extends OrtolangService {
 	
-	public static final String SERVICE_NAME = "authorisation";
+	String SERVICE_NAME = "authorisation";
 	
-	public void createPolicyTemplate(String name, String description, String policykey) throws AuthorisationServiceException;
+	void createPolicyTemplate(String name, String description, String policykey) throws AuthorisationServiceException;
 	
-	public AuthorisationPolicyTemplate getPolicyTemplate(String name) throws AuthorisationServiceException;
+	AuthorisationPolicyTemplate getPolicyTemplate(String name) throws AuthorisationServiceException;
 	
-	public List<AuthorisationPolicyTemplate> listPolicyTemplates() throws AuthorisationServiceException;
+	List<AuthorisationPolicyTemplate> listPolicyTemplates() throws AuthorisationServiceException;
 	
-	public void createPolicy(String key, String owner) throws AuthorisationServiceException;
+	void createPolicy(String key, String owner) throws AuthorisationServiceException;
 	
-	public void clonePolicy(String key, String origin) throws AuthorisationServiceException;
+	void clonePolicy(String key, String origin) throws AuthorisationServiceException;
 	
-	public void copyPolicy(String from, String to) throws AuthorisationServiceException;
+	void copyPolicy(String from, String to) throws AuthorisationServiceException;
 	
-	public void copyPolicy(String from, Set<String> to) throws AuthorisationServiceException;
+	void copyPolicy(String from, Set<String> to) throws AuthorisationServiceException;
 	
-	public void updatePolicyOwner(String key, String owner) throws AuthorisationServiceException;
+	void updatePolicyOwner(String key, String owner) throws AuthorisationServiceException;
 	
-	public String getPolicyOwner(String key) throws AuthorisationServiceException;
+	String getPolicyOwner(String key) throws AuthorisationServiceException;
 	
-	public void setPolicyRules(String key, Map<String, List<String>> rules) throws AuthorisationServiceException;
+	void setPolicyRules(String key, Map<String, List<String>> rules) throws AuthorisationServiceException;
 	
-	public Map<String, List<String>> getPolicyRules(String key) throws AuthorisationServiceException;
+	Map<String, List<String>> getPolicyRules(String key) throws AuthorisationServiceException;
 	
-	public void checkPermission(String key, List<String> subjects, String permission) throws AuthorisationServiceException, AccessDeniedException;
+	void checkPermission(String key, List<String> subjects, String permission) throws AuthorisationServiceException, AccessDeniedException;
 	
-	public void checkOwnership(String key, List<String> subjects) throws AuthorisationServiceException, AccessDeniedException;
+	void checkOwnership(String key, List<String> subjects) throws AuthorisationServiceException, AccessDeniedException;
 	
-	public void checkAuthentified(List<String> subjects) throws AuthorisationServiceException, AccessDeniedException;
+	void checkAuthentified(List<String> subjects) throws AuthorisationServiceException, AccessDeniedException;
 	
-	public void checkSuperUser(String identifier) throws AuthorisationServiceException, AccessDeniedException;
+	void checkSuperUser(String identifier) throws AuthorisationServiceException, AccessDeniedException;
 	
 }

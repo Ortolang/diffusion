@@ -55,7 +55,6 @@ import javax.ejb.EJB;
 import javax.transaction.UserTransaction;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -83,7 +82,6 @@ import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.runtime.entity.ProcessType;
-import fr.ortolang.diffusion.runtime.entity.RemoteProcess;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 
@@ -300,7 +298,6 @@ public class RuntimeResource {
     @POST
     @Path("/tasks/{id}")
     @Consumes( MediaType.APPLICATION_JSON)
-
     public Response performTaskAction(@PathParam("id") String id, ProcessTaskActionRepresentation action) throws RuntimeServiceException {
         LOGGER.log(Level.INFO, "POST /runtime/tasks");
         switch (action.getAction()) {
@@ -318,114 +315,6 @@ public class RuntimeResource {
             return Response.status(Status.BAD_REQUEST).entity("action unavailable").build();
         }
         return Response.ok().build();
-    }
-
-
-    @GET
-    @Path("/remote-processes")
-    @GZIP
-    public Response listRemoteProcesses(@QueryParam("state") String state) throws RuntimeServiceException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "GET /runtime/remote-processes");
-        List<RemoteProcess> instances;
-        if ( state != null ) {
-            instances = runtime.listRemoteProcesses(State.valueOf(state));
-        } else {
-            instances = runtime.listRemoteProcesses(null);
-        }
-
-        GenericCollectionRepresentation<RemoteProcessRepresentation> representation = new GenericCollectionRepresentation<RemoteProcessRepresentation>();
-        for (RemoteProcess instance : instances) {
-            RemoteProcessRepresentation rep = RemoteProcessRepresentation.fromRemoteProcess(instance);
-            representation.addEntry(rep);
-        }
-        representation.setOffset(0);
-        representation.setSize(instances.size());
-        representation.setLimit(instances.size());
-        return Response.ok(representation).build();
-    }
-
-
-    @POST
-    @Path("/remote-processes")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @GZIP
-    public Response startRemoteProcess(MultipartFormDataInput input) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException, IOException, CoreServiceException, DataCollisionException {
-        LOGGER.log(Level.INFO, "POST(multipart/form-data) /runtime/remote-processes");
-        String id = UUID.randomUUID().toString();
-
-        Map<String, Object> mparams = new HashMap<String, Object> ();
-        Map<String, List<InputPart>> form = input.getFormDataMap();
-
-        String tool = null;
-        if ( !form.containsKey("tool-jobid") ) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'tool-id' is mandatory").build();
-        } else {
-            tool = form.remove("tool-jobid").get(0).getBodyAsString();
-        }
-        String toolKey = null;
-        if ( !form.containsKey("tool-key") ) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'tool-key' is mandatory").build();
-        } else {
-            toolKey = form.remove("tool-key").get(0).getBodyAsString();
-        }
-        String name = null;
-        if ( !form.containsKey("tool-name") ) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'tool-name' is mandatory").build();
-        } else {
-            name = form.remove("tool-name").get(0).getBodyAsString();
-        }
-
-        for ( Entry<String, List<InputPart>> entry : form.entrySet() ) {
-            if ( entry.getValue().size() > 0 ) {
-                StringBuilder values = new StringBuilder();
-                for ( InputPart value : entry.getValue() ) {
-                    LOGGER.log(Level.FINE, "seems this part  [" + entry.getKey() + "] is a simple text value");
-                    values.append(value.getBodyAsString()).append(",");
-                }
-                mparams.put(entry.getKey(), values.substring(0, values.length()-1));
-            }
-        }
-        try {
-            RemoteProcess remoteProcess = runtime.createRemoteProcess(id, tool, name, toolKey);
-            URI newly = ApiUriBuilder.getApiUriBuilder().path(RuntimeResource.class).path("remote-processes").path(id).build();
-            return Response.created(newly).entity(RemoteProcessRepresentation.fromRemoteProcess(remoteProcess).getKey()).build();
-        } catch(SecurityException | IllegalStateException e) {
-            throw new RuntimeServiceException(e);
-        }
-    }
-
-
-    @GET
-    @Path("/remote-processes/{key}")
-    @GZIP
-    public Response readRemoteProcesses(@PathParam("key") String key) throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "GET /runtime/remote-processes/" + key);
-        RemoteProcess remoteProcess = runtime.readRemoteProcess(key);
-        RemoteProcessRepresentation representation = RemoteProcessRepresentation.fromRemoteProcess(remoteProcess);
-        return Response.ok(representation).build();
-    }
-
-    @POST
-    @Path("/remote-processes/{pid}")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response updateRemoteProcess(@PathParam(value = "pid") String pid, @FormParam(value = "status") String state, @FormParam(value = "activity") String activity, @FormParam(value = "log") String log, @FormParam(value = "start") Long start, @FormParam(value = "stop") Long stop) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException {
-        LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /runtime/remote-processes/" + pid);
-
-        try {
-            if(activity != null) {
-                runtime.updateRemoteProcessActivity(pid, activity);
-            }
-            if(log != null) {
-                runtime.appendRemoteProcessLog(pid, log);
-            }
-            if(state != null) {
-                runtime.updateRemoteProcessState(pid, State.valueOf(state), start, stop);
-            }
-            return Response.ok().build();
-        } catch(SecurityException | IllegalStateException e) {
-            throw new RuntimeServiceException(e);
-        }
-
     }
 
 }

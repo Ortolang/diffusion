@@ -36,23 +36,39 @@ package fr.ortolang.diffusion.api.group;
  * #L%
  */
 
+import java.net.URI;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ejb.EJB;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
+import org.jboss.resteasy.annotations.GZIP;
+
 import fr.ortolang.diffusion.api.profile.ProfileCardRepresentation;
-import fr.ortolang.diffusion.api.profile.ProfileRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Group;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
-import org.jboss.resteasy.annotations.GZIP;
-
-import javax.ejb.EJB;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @resourceDescription Operations on Groups
@@ -69,68 +85,112 @@ public class GroupResource {
     private MembershipService membership;
     @EJB
     private AuthorisationService authorisation;
+    @Context
+    private UriInfo uriInfo;
 
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response createGroup(@FormParam("name") String name, @FormParam("description") String description) throws MembershipServiceException, AccessDeniedException, KeyAlreadyExistsException {
+        LOGGER.log(Level.INFO, "POST /groups");
+        String key = UUID.randomUUID().toString();
+        membership.createGroup(key, name, description);
+        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
+        return Response.created(location).build();
+    }
+    
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response createGroup(GroupRepresentation group) throws MembershipServiceException, AccessDeniedException, KeyAlreadyExistsException {
+        LOGGER.log(Level.INFO, "POST /groups");
+        String key = UUID.randomUUID().toString();
+        membership.createGroup(key, group.getName(), group.getDescription());
+        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
+        return Response.created(location).build();
+    }
+    
     @GET
     @Path("/{key}")
     @GZIP
-    public Response getGroup(@PathParam(value = "key") String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
+    public Response getGroup(@PathParam(value = "key") String key, @QueryParam("members") @DefaultValue("true") boolean members) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /groups/" + key);
         Group group = membership.readGroup(key);
         GroupRepresentation representation = GroupRepresentation.fromGroup(group);
-        for (String member : group.getMembers()) {
-            representation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(member)));
+        if ( members ) {
+            for (String member : group.getMembers()) {
+                representation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(member)));
+            }
         }
         return Response.ok(representation).build();
     }
-
-    @GET
-    @Path("/{key}/cards")
-    @GZIP
-    public Response getGroupCards(@PathParam(value = "key") String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "GET /groups/" + key + "/cards");
-        Group group = membership.readGroup(key);
-        GroupRepresentation representation = buildGroupRepresentation(group);
+    
+    @PUT
+    @Path("/{key}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateGroup(@PathParam(value = "key") String key, GroupRepresentation group, @QueryParam("members") @DefaultValue("true") boolean members) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "PUT /groups/" + key);
+        membership.updateGroup(key, group.getName(), group.getDescription());
+        Group ngroup = membership.readGroup(key);
+        GroupRepresentation representation = GroupRepresentation.fromGroup(ngroup);
+        if ( members ) {
+            for (String member : ngroup.getMembers()) {
+                representation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(member)));
+            }
+        }
         return Response.ok(representation).build();
     }
-
+    
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    @GZIP
-    public Response addMember(@PathParam(value = "key") String key, @FormParam(value = "member") String member) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
+    public Response updateGroupFromForm(@PathParam(value = "key") String key, @FormParam("name") String name, @FormParam("description") String description, @QueryParam("members") @DefaultValue("true") boolean members) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /groups/" + key);
-        Group group = membership.addMemberInGroup(key, member);
-        GroupRepresentation representation = buildGroupRepresentation(group);
-        return Response.ok(representation).build();
-    }
-
-    @PUT
-    @Path("/{key}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @GZIP
-    public Response addMemberRepresentation(@PathParam(value = "key") String key, ProfileRepresentation profileRepresentation) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "PUT /groups/" + key);
-        Group group = membership.addMemberInGroup(key, profileRepresentation.getKey());
-        GroupRepresentation representation = buildGroupRepresentation(group);
-        return Response.ok(representation).build();
-    }
-
-    @PUT
-    @Path("/{key}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @GZIP
-    public Response addMemberRepresentation(@PathParam(value = "key") String key, ProfileCardRepresentation profileCardRepresentation) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "PUT /groups/" + key);
-        Group group = membership.addMemberInGroup(key, profileCardRepresentation.getKey());
-        GroupRepresentation representation = buildGroupRepresentation(group);
-        return Response.ok(representation).build();
-    }
-
-    private GroupRepresentation buildGroupRepresentation(Group group) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
-        GroupRepresentation groupRepresentation = GroupRepresentation.fromGroup(group);
-        for (String member : group.getMembers()) {
-            groupRepresentation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(member)));
+        membership.updateGroup(key, name, description);
+        Group group = membership.readGroup(key);
+        GroupRepresentation representation = GroupRepresentation.fromGroup(group);
+        if ( members ) {
+            for (String member : group.getMembers()) {
+                representation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(member)));
+            }
         }
-        return groupRepresentation;
+        return Response.ok(representation).build();
     }
+    
+    @DELETE
+    @Path("/{key}")
+    public Response deleteGroup(@PathParam(value = "key") String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "DELETE /groups/" + key);
+        membership.deleteGroup(key);
+        return Response.noContent().build();
+    }
+
+    @PUT
+    @Path("/{key}/members/{member}")
+    public Response addMember(@PathParam(value = "key") String key, @PathParam(value = "member") String member, @QueryParam("members") @DefaultValue("true") boolean members) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "PUT /groups/" + key + "/members/" + member);
+        membership.addMemberInGroup(key, member);
+        Group group = membership.readGroup(key);
+        GroupRepresentation representation = GroupRepresentation.fromGroup(group);
+        if ( members ) {
+            for (String gmember : group.getMembers()) {
+                representation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(gmember)));
+            }
+        }
+        return Response.ok(representation).build();
+    }
+    
+    @DELETE
+    @Path("/{key}/members/{member}")
+    public Response removeMember(@PathParam(value = "key") String key, @PathParam(value = "member") String member, @QueryParam("members") @DefaultValue("true") boolean members) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "DELETE /groups/" + key + "/members/" + member);
+        membership.removeMemberFromGroup(key, member);
+        Group group = membership.readGroup(key);
+        GroupRepresentation representation = GroupRepresentation.fromGroup(group);
+        if ( members ) {
+            for (String gmember : group.getMembers()) {
+                representation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(gmember)));
+            }
+        }
+        return Response.ok(representation).build();
+    }
+
 }

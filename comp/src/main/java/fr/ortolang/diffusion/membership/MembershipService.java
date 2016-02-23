@@ -52,80 +52,74 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface MembershipService extends OrtolangService, OrtolangIndexableService {
 	
-	public static final String SERVICE_NAME = "membership";
+	String SERVICE_NAME = "membership";
 	
-	public static final String UNAUTHENTIFIED_IDENTIFIER = "anonymous";
-	public static final String SUPERUSER_IDENTIFIER = "root";
+	String UNAUTHENTIFIED_IDENTIFIER = "anonymous";
+	String SUPERUSER_IDENTIFIER = "root";
 	
-	public static final String ALL_AUTHENTIFIED_GROUP_KEY = "authentified";
-	public static final String ADMIN_GROUP_KEY = "admins";
-	public static final String MODERATOR_GROUP_KEY = "moderators";
-	public static final String ESR_GROUP_KEY = "esr";
+	String ALL_AUTHENTIFIED_GROUP_KEY = "authentified";
+	String ADMIN_GROUP_KEY = "admins";
+	String MODERATOR_GROUP_KEY = "moderators";
+	String ESR_GROUP_KEY = "esr";
 	
-	public static final String INFO_PROFILES_ALL = "profiles.all";
-	public static final String INFO_GROUPS_ALL = "groups.all";
+	String INFO_PROFILES_ALL = "profiles.all";
+	String INFO_GROUPS_ALL = "groups.all";
 
-	public String getProfileKeyForConnectedIdentifier();
+	String getProfileKeyForConnectedIdentifier();
 	
-	public String getProfileKeyForIdentifier(String identifier);
+	String getProfileKeyForIdentifier(String identifier);
 
-	public String generateConnectedIdentifierTOTP() throws MembershipServiceException, KeyNotFoundException;
+	String generateConnectedIdentifierTOTP() throws MembershipServiceException, KeyNotFoundException;
     
-	public List<String> getConnectedIdentifierSubjects() throws MembershipServiceException, KeyNotFoundException;
+	List<String> getConnectedIdentifierSubjects() throws MembershipServiceException, KeyNotFoundException;
 
-	public void createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
+	void createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
 	
-	public Profile createProfile(String givenName, String familyName, String email) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
+	Profile createProfile(String givenName, String familyName, String email) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
 
-	public Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	Profile readProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public Profile updateProfile(String key, String givenName, String familyName, String email, ProfileDataVisibility emailVisibility) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	Profile updateProfile(String key, String givenName, String familyName, String email, ProfileDataVisibility emailVisibility) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	void deleteProfile(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void addProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	void addProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void removeProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	void removeProfilePublicKey(String key, String pubkey) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public List<ProfileData> listProfileInfos(String key, String filter) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	List<ProfileData> listProfileInfos(String key, String filter) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void setProfileInfo(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	void setProfileInfo(String key, String name, String value, ProfileDataVisibility visibility, ProfileDataType type, String source) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public List<Profile> listProfiles() throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	void createGroup(String key, String name, String description) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException;
 
-	public List<Profile> searchProfile(String data) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
-	
-	
-	
-	public void createGroup(String key, String name, String description) throws MembershipServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	Group readGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public Group readGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	void updateGroup(String key, String name, String description) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void updateGroup(String key, String name, String description) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	void deleteGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void deleteGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	Group addMemberInGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public Group addMemberInGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	void removeMemberFromGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void removeMemberFromGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	void joinGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void joinGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	void leaveGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void leaveGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	List<String> listMembers(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public List<String> listMembers(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	List<String> getProfileGroups(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public List<String> getProfileGroups(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
-
-	public boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
+	boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	
-    public boolean systemValidateTOTP(String identifier, String totp) throws MembershipServiceException, KeyNotFoundException;
+    boolean systemValidateTOTP(String identifier, String totp) throws MembershipServiceException, KeyNotFoundException;
     
-    public String systemReadProfileSecret(String identifier) throws MembershipServiceException, KeyNotFoundException;
+    String systemReadProfileSecret(String identifier) throws MembershipServiceException, KeyNotFoundException;
     
-    public String systemReadProfileEmail(String identifier) throws MembershipServiceException, KeyNotFoundException;
+    String systemReadProfileEmail(String identifier) throws MembershipServiceException, KeyNotFoundException;
     
-    public ProfileData systemGetProfileInfo(String identifier, String name) throws MembershipServiceException, KeyNotFoundException; 
+    ProfileData systemGetProfileInfo(String identifier, String name) throws MembershipServiceException, KeyNotFoundException;
 
 }

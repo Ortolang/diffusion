@@ -36,20 +36,24 @@ package fr.ortolang.diffusion.api.mapper;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangErrorCodes;
 import fr.ortolang.diffusion.core.InvalidPathException;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
+import java.util.HashMap;
+import java.util.Map;
 
 @Provider
 public class InvalidPathExceptionMapper implements ExceptionMapper<InvalidPathException> {
 
-	@Override
-	public Response toResponse(InvalidPathException ex) {
-		return Response.status(Status.BAD_REQUEST)
-				.entity("Invalid path: " + ex.getMessage()).type("text/plain")
-				.build();
-	}
+    @Override
+    public Response toResponse(InvalidPathException ex) {
+        Map<String, String> map = new HashMap<>();
+        map.put("code", OrtolangErrorCodes.INVALID_PATH_EXCEPTION);
+        map.put("message", ex.getMessage());
+        return Response.status(Status.BAD_REQUEST).entity(map).build();
+    }
 }

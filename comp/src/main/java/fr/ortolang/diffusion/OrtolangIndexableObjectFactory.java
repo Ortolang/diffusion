@@ -88,7 +88,6 @@ public class OrtolangIndexableObjectFactory<T> {
             object.setAuthor(registry.getAuthor(key));
             object.setCreationDate(registry.getCreationDate(key));
             object.setLastModificationDate(registry.getLastModificationDate(key));
-            object.setName(key);
         } catch (Exception e) {
             throw new OrtolangException("unable to get json indexable content for object ", e);
         }

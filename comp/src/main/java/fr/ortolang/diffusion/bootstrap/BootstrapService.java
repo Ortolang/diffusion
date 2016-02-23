@@ -40,10 +40,10 @@ import fr.ortolang.diffusion.OrtolangService;
 
 public interface BootstrapService extends OrtolangService {
 	
-	public static final String VERSION = "3.0";
-    public static final String WORKSPACE_KEY = "system";
-    public static final String SERVICE_NAME = "bootstrap";
-    
-    public void bootstrap() throws BootstrapServiceException;
+    String VERSION = "3.0";
+    String WORKSPACE_KEY = "system";
+    String SERVICE_NAME = "bootstrap";
+
+    void bootstrap() throws BootstrapServiceException;
 
 }
