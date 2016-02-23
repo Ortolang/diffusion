@@ -66,8 +66,6 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -1160,11 +1158,11 @@ public class MembershipServiceBean implements MembershipService {
                     arrayBuilder.add(group);
                 }
                 builder.add("groups", arrayBuilder);
-                try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(builder.build().toString().getBytes())) {
-                    content.put(Profile.OBJECT_TYPE, byteArrayInputStream);
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage());
-                }
+//                try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(builder.build().toString().getBytes())) {
+                    content.put(Profile.OBJECT_TYPE, builder.build().toString());
+//                } catch (IOException e) {
+//                    LOGGER.log(Level.SEVERE, e.getMessage());
+//                }
             }
 
             if (identifier.getType().equals(Group.OBJECT_TYPE)) {
@@ -1180,11 +1178,11 @@ public class MembershipServiceBean implements MembershipService {
                     arrayBuilder.add(member);
                 }
                 builder.add("members", arrayBuilder);
-                try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(builder.build().toString().getBytes())) {
-                    content.put(Group.OBJECT_TYPE, byteArrayInputStream);
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage());
-                }
+//                try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(builder.build().toString().getBytes())) {
+                    content.put(Group.OBJECT_TYPE, builder.build().toString());
+//                } catch (IOException e) {
+//                    LOGGER.log(Level.SEVERE, e.getMessage());
+//                }
             }
             return content;
         } catch (KeyNotFoundException | RegistryServiceException e) {

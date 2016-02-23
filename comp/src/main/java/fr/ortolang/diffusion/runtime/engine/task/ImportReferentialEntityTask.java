@@ -138,7 +138,7 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 
 					});
 			} catch (Exception e) {
-				LOGGER.log(Level.SEVERE, "  unable to import referential : " + referentialPathFile);
+				LOGGER.log(Level.SEVERE, "  unable to import referential : " + referentialPathFile, e);
 			}
 			
 		} else {
@@ -174,30 +174,16 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 	
 	private void createReferentialEntity(String name, String type, String content) throws RuntimeEngineTaskException {
 		try {
-			LOGGER.log(Level.FINE, "  add referential entity "+name);
-			switch(type) {
-				case "License":
-					getReferentialService().createEntity(name, ReferentialEntityType.LICENSE, content);
-					break;
-				case "Organization":
-					getReferentialService().createEntity(name, ReferentialEntityType.ORGANIZATION, content);
-					break;
-				case "Person":
-					getReferentialService().createEntity(name, ReferentialEntityType.PERSON, content);
-					break;
-				case "StatusOfUse":
-					getReferentialService().createEntity(name, ReferentialEntityType.STATUSOFUSE, content);
-					break;
-				case "Language":
-					getReferentialService().createEntity(name, ReferentialEntityType.LANGUAGE, content);
-					break;
-				case "Role":
-					getReferentialService().createEntity(name, ReferentialEntityType.ROLE, content);
-					break;
-				default:
-					LOGGER.log(Level.WARNING, "  referential entity type unknown : "+type);
-				//TODO others ...
+			LOGGER.log(Level.FINE, "  add referential entity "+name+" with type "+type);
+
+			ReferentialEntityType entityType = getEntityType(type.toUpperCase());
+			if(entityType!=null) {
+				getReferentialService().createEntity(name, entityType, content);
+			} else {
+				LOGGER.log(Level.SEVERE, "  unable to find type of referential entity named "+name);
+				throw new RuntimeEngineTaskException("unable to create referential entity named " + name + " and type " + type);
 			}
+			
 			LOGGER.log(Level.FINE, "  referential entity created with name "+name);
 		} catch (ReferentialServiceException | KeyAlreadyExistsException | AccessDeniedException e) {
 			LOGGER.log(Level.SEVERE, "  unable to create referential entity named "+name, e);
@@ -206,29 +192,16 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 
 	private void updateReferentialEntity(String name, String type, String content) throws RuntimeEngineTaskException {
 		try {
-			LOGGER.log(Level.FINE, "  update referential entity "+name);
-			switch(type) {
-				case "License":
-					getReferentialService().updateEntity(name, ReferentialEntityType.LICENSE, content);
-					break;
-				case "Organization":
-					getReferentialService().updateEntity(name, ReferentialEntityType.ORGANIZATION, content);
-					break;
-				case "Person":
-					getReferentialService().updateEntity(name, ReferentialEntityType.PERSON, content);
-					break;
-				case "StatusOfUse":
-					getReferentialService().updateEntity(name, ReferentialEntityType.STATUSOFUSE, content);
-					break;
-				case "Language":
-					getReferentialService().updateEntity(name, ReferentialEntityType.LANGUAGE, content);
-					break;
-				case "Role":
-					getReferentialService().updateEntity(name, ReferentialEntityType.ROLE, content);
-					break;
-				default:
-					LOGGER.log(Level.WARNING, "  referential entity type unknown : "+type);	
+			LOGGER.log(Level.FINE, "  update referential entity "+name+" with type "+type);
+
+			ReferentialEntityType entityType = getEntityType(type.toUpperCase());
+			if(entityType!=null) {
+				getReferentialService().updateEntity(name, entityType, content);
+			} else {
+				LOGGER.log(Level.SEVERE, "  unable to find type of referential entity named "+name);
+				throw new RuntimeEngineTaskException("unable to create referential entity named " + name + " and type " + type);
 			}
+			
 			LOGGER.log(Level.FINE, "  referential entity updated with name "+name);
 		} catch (ReferentialServiceException | AccessDeniedException | KeyNotFoundException e) {
 			LOGGER.log(Level.SEVERE, "  unable to update referential entity named "+name, e);
@@ -264,5 +237,14 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 
 		return fieldValue;
 	}
+
+    private ReferentialEntityType getEntityType(String type) {
+    	try {
+    		return ReferentialEntityType.valueOf(type);
+    	} catch(IllegalArgumentException e) {
+    		LOGGER.log(Level.WARNING, "Asking entity type unknown : " + type);
+    		return null;
+    	}
+    }
 
 }

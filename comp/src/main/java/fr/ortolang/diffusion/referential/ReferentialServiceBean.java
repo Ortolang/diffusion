@@ -1,6 +1,5 @@
 package fr.ortolang.diffusion.referential;
 
-import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +24,8 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangIndexableObject;
+import fr.ortolang.diffusion.OrtolangIndexableObjectFactory;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectSize;
@@ -50,6 +51,8 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
+import fr.ortolang.diffusion.store.json.JsonStoreDocumentBuilder;
+import fr.ortolang.diffusion.store.json.OrtolangKeyExtractor;
 
 @Local(ReferentialService.class)
 @Stateless(name = ReferentialService.SERVICE_NAME)
@@ -337,8 +340,16 @@ public class ReferentialServiceBean implements ReferentialService {
 	                if (referentielEntity == null) {
 	                    throw new OrtolangException("unable to load ReferentialEntity with id [" + identifier.getId() + "] from storage");
 	                }
+	                
+	                String json = referentielEntity.getContent();
+	    			List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(json);
+	    			
+	    			for(String ortolangKey : ortolangKeys) {
+	    				json = replaceOrtolangKey(ortolangKey, json);
+	    			}
 	
-	                content.put("ortolang-referential-json", new ByteArrayInputStream(referentielEntity.getContent().getBytes()));
+//	                content.put("ortolang-referential-json", new ByteArrayInputStream(json.getBytes()));
+	                content.put("ortolang-referential-json", json);
 	            }
 	            
 	            return content;
@@ -347,5 +358,28 @@ public class ReferentialServiceBean implements ReferentialService {
 	        }
 	}
 
+	protected String replaceOrtolangKey(String ortolangKey, String json) throws OrtolangException {
+		String jsonContent = jsonContent(ortolangKey);
+		
+		if(jsonContent!=null) {
+			
+//			String identity = doc.getIdentity().toString();
+			json = json.replace("\""+OrtolangKeyExtractor.getMarker(ortolangKey)+"\"", jsonContent);
+		} else {
+			LOGGER.log(Level.WARNING, "cannot found ortolang key : " + ortolangKey);
+			throw new OrtolangException("cannot found ortolang key : " + ortolangKey);
+		}
+		
+		return json;
+    }
 
+	protected String jsonContent(String key) {
+        try {
+        	OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
+            return JsonStoreDocumentBuilder.buildDocument(object);
+        } catch (NotIndexableContentException | OrtolangException e) {
+            LOGGER.log(Level.FINE, "key " + key + " not indexable");
+        }
+        return null;
+	}
 }

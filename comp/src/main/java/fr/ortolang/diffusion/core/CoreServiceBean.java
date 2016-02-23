@@ -73,6 +73,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -86,6 +87,8 @@ import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangIndexableObject;
+import fr.ortolang.diffusion.OrtolangIndexableObjectFactory;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectPid;
@@ -131,6 +134,8 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
+import fr.ortolang.diffusion.store.json.JsonStoreDocumentBuilder;
+import fr.ortolang.diffusion.store.json.OrtolangKeyExtractor;
 
 @Local(CoreService.class)
 @Stateless(name = CoreService.SERVICE_NAME)
@@ -3327,10 +3332,18 @@ public class CoreServiceBean implements CoreService {
                     }
                     try {
                         if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
-                            content.put(metadata.getName(), binarystore.get(metadata.getStream()));
+
+        	                String json = getContent(binarystore.get(metadata.getStream()));
+        	    			List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(json);
+        	    			
+        	    			for(String ortolangKey : ortolangKeys) {
+        	    				json = replaceOrtolangKey(ortolangKey, json);
+        	    			}
+        	    			
+                            content.put(metadata.getName(), json);
                         }
-                    } catch (DataNotFoundException | BinaryStoreServiceException e) {
-                        LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
+                    } catch (DataNotFoundException | BinaryStoreServiceException | IOException e) {
+                        LOGGER.log(Level.WARNING, "unable to extract json text for key : " + mde.getKey(), e);
                     }
                 }
             }
@@ -3354,9 +3367,17 @@ public class CoreServiceBean implements CoreService {
                     }
                     try {
                         if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
-                            content.put(metadata.getName(), binarystore.get(metadata.getStream()));
+
+        	                String json = getContent(binarystore.get(metadata.getStream()));
+        	    			List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(json);
+        	    			
+        	    			for(String ortolangKey : ortolangKeys) {
+        	    				json = replaceOrtolangKey(ortolangKey, json);
+        	    			}
+        	    			
+                            content.put(metadata.getName(), json);
                         }
-                    } catch (DataNotFoundException | BinaryStoreServiceException e) {
+                    } catch (DataNotFoundException | BinaryStoreServiceException | IOException e) {
                         LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
                     }
                 }
@@ -3380,11 +3401,11 @@ public class CoreServiceBean implements CoreService {
                     arrayBuilder.add(objectBuilder);
                 }
                 builder.add("tags", arrayBuilder);
-                try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(builder.build().toString().getBytes())) {
-                    content.put(MetadataFormat.WORKSPACE, byteArrayInputStream);
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage());
-                }
+//                try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(builder.build().toString().getBytes())) {
+                    content.put(MetadataFormat.WORKSPACE, builder.build().toString());
+//                } catch (IOException e) {
+//                    LOGGER.log(Level.SEVERE, e.getMessage());
+//                }
             }
 
             return content;
@@ -3393,6 +3414,41 @@ public class CoreServiceBean implements CoreService {
         }
     }
 
+	protected String replaceOrtolangKey(String ortolangKey, String json) throws OrtolangException {
+		String jsonContent = jsonContent(ortolangKey);
+		
+		if(jsonContent!=null) {
+			json = json.replace("\""+OrtolangKeyExtractor.getMarker(ortolangKey)+"\"", jsonContent);
+		} else {
+			LOGGER.log(Level.WARNING, "cannot found ortolang key : " + ortolangKey);
+			throw new OrtolangException("cannot found ortolang key : " + ortolangKey);
+		}
+		
+		return json;
+    }
+
+	protected String jsonContent(String key) {
+        try {
+        	OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
+            return JsonStoreDocumentBuilder.buildDocument(object);
+        } catch (NotIndexableContentException | OrtolangException e) {
+            LOGGER.log(Level.FINE, "key " + key + " not indexable");
+        }
+        return null;
+	}
+
+	private String getContent(InputStream is) throws IOException {
+		String content = null;
+		try {
+			content = IOUtils.toString(is);
+		} catch (IOException e) {
+			LOGGER.log(Level.SEVERE, "  unable to get content from stream", e);
+		} finally {
+			is.close();
+		}
+		return content;
+	}
+	
     private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws CoreServiceException {
         if (!identifier.getService().equals(getServiceName())) {
             throw new CoreServiceException("object identifier " + identifier + " does not refer to service " + getServiceName());

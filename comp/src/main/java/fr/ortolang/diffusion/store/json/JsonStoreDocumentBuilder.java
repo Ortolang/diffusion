@@ -36,11 +36,16 @@ package fr.ortolang.diffusion.store.json;
  * #L%
  */
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.StringReader;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
 
 import com.orientechnologies.orient.core.record.impl.ODocument;
 
@@ -48,9 +53,9 @@ import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 
 public class JsonStoreDocumentBuilder {
-
-    private static final Logger LOGGER = Logger.getLogger(JsonStoreDocumentBuilder.class.getName());
-
+	
+	private static final Logger LOGGER = Logger.getLogger(JsonStoreDocumentBuilder.class.getName());
+			
     public static final String KEY_PROPERTY = "key";
     public static final String STATUS_PROPERTY = "status";
     public static final String META_PROPERTY = "meta";
@@ -70,21 +75,50 @@ public class JsonStoreDocumentBuilder {
         doc.field(LAST_MODIFICATION_DATE_PROPERTY, object.getLastModificationDate());
 
         if (object.getContent() != null && object.getContent().getStream() != null) {
-            for (Map.Entry<String, InputStream> entry : object.getContent().getStream().entrySet()) {
-                try {
+            for (Map.Entry<String, String> entry : object.getContent().getStream().entrySet()) {
+//                try {
                 	doc.field(META_PROPERTY + "_" + entry.getKey(), new ODocument(MetadataObject.OBJECT_TYPE).fromJSON(entry.getValue()));
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, "unable to get object json content", e);
-                } finally {
-                    try {
-                        entry.getValue().close();
-                    } catch (IOException e) {
-                        LOGGER.log(Level.SEVERE, "unable to close the stream", e);
-                    }
-                }
+//                } catch (IOException e) {
+//                    LOGGER.log(Level.SEVERE, "unable to get object json content", e);
+//                } finally {
+//                    try {
+//                        entry.getValue().close();
+//                    } catch (IOException e) {
+//                        LOGGER.log(Level.SEVERE, "unable to close the stream", e);
+//                    }
+//                }
             }
         }
 
         return doc;
+    }
+    
+
+    public static String buildDocument(OrtolangIndexableObject<IndexableJsonContent> object) {
+
+    	JsonObjectBuilder builder = Json.createObjectBuilder();
+
+    	builder.add(KEY_PROPERTY, object.getKey());
+    	builder.add(STATUS_PROPERTY, object.getStatus());
+    	builder.add(LAST_MODIFICATION_DATE_PROPERTY, object.getLastModificationDate());
+
+        if (object.getContent() != null && object.getContent().getStream() != null) {
+            for (Map.Entry<String, String> entry : object.getContent().getStream().entrySet()) {
+                
+                StringReader reader = new StringReader(entry.getValue());
+				JsonReader jsonReader = Json.createReader(reader);
+				try {
+					JsonObject jsonObj = jsonReader.readObject();
+					builder.add(META_PROPERTY + "_" + entry.getKey(), jsonObj);
+				} catch(NullPointerException | ClassCastException e) {
+					LOGGER.log(Level.WARNING, "Cannot add json object to document : " + e.getMessage(), e);
+				} finally {
+					jsonReader.close();
+					reader.close();
+				}
+            }
+        }
+
+        return builder.build().toString();
     }
 }

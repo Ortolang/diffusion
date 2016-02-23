@@ -41,8 +41,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -60,7 +61,6 @@ import org.junit.Test;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
-import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 
 public class JsonStoreServiceTest {
 
@@ -138,8 +138,17 @@ public class JsonStoreServiceTest {
 			// Changes a little bit
 			IndexableJsonContent jsonContent = object.getContent();
 			try {
-				jsonContent.put("format1", new FileInputStream("src/test/resources/json/sample2.json"));
-			} catch (FileNotFoundException e) {
+				InputStream is = new FileInputStream("src/test/resources/json/sample2.json");
+				String content = null;
+				try {
+					content = IOUtils.toString(is);
+				} catch (IOException e) {
+					LOGGER.log(Level.SEVERE, "  unable to get content from stream", e);
+				} finally {
+					is.close();
+				}
+				jsonContent.put("format1", content);
+			} catch (IOException e) {
 				e.printStackTrace();
 				fail(e.getMessage());
 			}
@@ -190,14 +199,19 @@ public class JsonStoreServiceTest {
 	}
 	
 	private OrtolangIndexableObject<IndexableJsonContent> getOrtolangIndexableObject() {
-		IndexablePlainTextContent content = new IndexablePlainTextContent();
-		content.addContentPart("tagada");
-		content.addContentPart("ceci est une petite phrase");
-		content.addContentPart("qui dure longtemps...");
 		IndexableJsonContent jsonContent = new IndexableJsonContent();
 		try {
-			jsonContent.put("format1", new FileInputStream("src/test/resources/json/sample.json"));
-		} catch (FileNotFoundException e) {
+			InputStream is = new FileInputStream("src/test/resources/json/sample.json");
+			String content = null;
+			try {
+				content = IOUtils.toString(is);
+			} catch (IOException e) {
+				LOGGER.log(Level.SEVERE, "  unable to get content from stream", e);
+			} finally {
+				is.close();
+			}
+			jsonContent.put("format1", content);
+		} catch (IOException e) {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}

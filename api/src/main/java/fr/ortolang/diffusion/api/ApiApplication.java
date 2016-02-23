@@ -51,7 +51,6 @@ import fr.ortolang.diffusion.api.filter.ContentTypeSetterPreProcessorInterceptor
 import fr.ortolang.diffusion.api.form.FormResource;
 import fr.ortolang.diffusion.api.format.MetadataFormatResource;
 import fr.ortolang.diffusion.api.group.GroupResource;
-import fr.ortolang.diffusion.api.item.ItemResource;
 import fr.ortolang.diffusion.api.mapper.AccessDeniedExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.AliasNotFoundExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.BrowserServiceExceptionMapper;
@@ -67,6 +66,7 @@ import fr.ortolang.diffusion.api.mapper.ReferentialEntityExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SearchServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SecurityServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SubscriptionServiceExceptionMapper;
+import fr.ortolang.diffusion.api.metadata.MetadataResource;
 import fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet;
 import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.profile.ProfileResource;
@@ -101,7 +101,7 @@ public class ApiApplication extends Application {
 		classes.add(ConfigResource.class);
 		classes.add(SubscriptionResource.class);
 		classes.add(StatisticsResource.class);
-		classes.add(ItemResource.class);
+		classes.add(MetadataResource.class);
 		classes.add(SearchResource.class);
 		classes.add(OAIPMHServlet.class);
 		classes.add(EventFeedResource.class);
