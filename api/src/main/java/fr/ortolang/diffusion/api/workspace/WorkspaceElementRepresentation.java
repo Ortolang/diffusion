@@ -74,6 +74,7 @@ public class WorkspaceElementRepresentation {
     private Set<CollectionElement> elements;
     private Set<MetadataElement> metadatas;
     private String publicationPolicy;
+    private boolean downloadable;
 
     public WorkspaceElementRepresentation() {
         elements = new HashSet<CollectionElement>();
@@ -229,6 +230,14 @@ public class WorkspaceElementRepresentation {
 
     public void setPublicationPolicy(String publicationPolicy) {
         this.publicationPolicy = publicationPolicy;
+    }
+
+    public boolean isDownloadable() {
+        return downloadable;
+    }
+
+    public void setDownloadable(boolean downloadable) {
+        this.downloadable = downloadable;
     }
 
     public static WorkspaceElementRepresentation fromCollection(Collection collection) {
