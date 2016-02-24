@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.api.admin;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -239,9 +240,15 @@ public class AdminResource {
     @GET
     @Path("/store/handle")
     @GZIP
-    public Response searchHandles(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("1000") @QueryParam("l") int limit, @QueryParam("filter") String filter) throws HandleStoreServiceException {
+    public Response searchHandles(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("10000") @QueryParam("l") int limit, @QueryParam("filter") String filter, @DefaultValue("name") @QueryParam("type") String type) throws HandleStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/store/handle");
-        List<Handle> handles = handle.searchHandles(offset, limit, filter);
+        List<Handle> handles = Collections.emptyList();
+        if ( type != null && type.equals("name") ) {
+            handles = handle.findHandlesByName(offset, limit, filter);
+        }
+        if ( type != null && type.equals("value") ) {
+            handles = handle.findHandlesByValue(offset, limit, filter);
+        } 
         return Response.ok(handles).build();
     }
     

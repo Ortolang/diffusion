@@ -48,14 +48,16 @@ public interface HandleStoreService extends OrtolangService {
 	
 	public static final String INFO_TOTAL_SIZE = "size.total";
 	
-	public List<Handle> searchHandles(int offset, int limit, String handleFilter) throws HandleStoreServiceException;
-	
 	public void recordHandle(String handle, String key, String url) throws HandleStoreServiceException;
 	
 	public void dropHandle(String handle) throws HandleStoreServiceException;
 	
 	public List<Handle> listHandleValues(String handle) throws HandleStoreServiceException, HandleNotFoundException;
 	
-	public List<String> findHandlesForKey(String key) throws HandleStoreServiceException;
+	public List<String> listHandlesForKey(String key) throws HandleStoreServiceException;
 	
+	public List<Handle> findHandlesByName(int offset, int limit, String handleFilter) throws HandleStoreServiceException;
+    
+    public List<Handle> findHandlesByValue(int offset, int limit, String valueFilter) throws HandleStoreServiceException;
+    
 }

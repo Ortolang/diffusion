@@ -294,7 +294,7 @@ public class BrowserServiceBean implements BrowserService {
     public List<String> listHandles(String key) throws BrowserServiceException {
         LOGGER.log(Level.FINE, "getting handles for key [" + key + "]");
         try {
-            return handle.findHandlesForKey(key);
+            return handle.listHandlesForKey(key);
         } catch (HandleStoreServiceException e) {
             throw new BrowserServiceException("unable to find handles for key " + key, e);
         }

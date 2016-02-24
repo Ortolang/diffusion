@@ -56,6 +56,7 @@ import org.hibernate.annotations.Type;
 @NamedQueries({ 
 	@NamedQuery(name = "findHandleByName", query = "SELECT h FROM Handle h WHERE h.handle = :name"),
 	@NamedQuery(name = "searchHandleByName", query = "SELECT h FROM Handle h WHERE h.handle LIKE :name AND h.index = 1"),
+	@NamedQuery(name = "searchHandleByValue", query = "SELECT h FROM Handle h WHERE h.data LIKE :value AND h.index = 1"),
 	@NamedQuery(name = "findHandleNameForKey", query = "SELECT DISTINCT(h.handle) FROM Handle h WHERE h.key = :key"),
 	@NamedQuery(name = "countHandles", query = "SELECT COUNT(h) FROM Handle h GROUP BY h.handle")})
 @SuppressWarnings("serial")

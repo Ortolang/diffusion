@@ -157,7 +157,7 @@ public class ContentResource {
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response exportGet(final @QueryParam("followsymlink") @DefaultValue("false") String followSymlink, @QueryParam("filename") @DefaultValue("download") String filename,
             @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, @Context Request request) throws UnsupportedEncodingException {
-        LOGGER.log(Level.INFO, "POST /export");
+        LOGGER.log(Level.INFO, "GET /export");
         ResponseBuilder builder = handleExport(false, filename, format, paths);
         return builder.build();
     }

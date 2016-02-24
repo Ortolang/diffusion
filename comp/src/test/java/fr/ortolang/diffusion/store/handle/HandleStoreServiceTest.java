@@ -137,9 +137,9 @@ public class HandleStoreServiceTest {
 			service.recordHandle("11403/333", "K2", "http://www.atilf.fr");
 			service.recordHandle("11403/444", "K2", "http://www.cnrs.fr");
 			service.recordHandle("11403/555", "K3", "http://www.facebook.com");
-			List<String> namesK1 = service.findHandlesForKey("K1");
-			List<String> namesK2 = service.findHandlesForKey("K2");
-			List<String> namesK3 = service.findHandlesForKey("K3");
+			List<String> namesK1 = service.listHandlesForKey("K1");
+			List<String> namesK2 = service.listHandlesForKey("K2");
+			List<String> namesK3 = service.listHandlesForKey("K3");
 			assertEquals(2, namesK1.size());
 			assertTrue(namesK1.contains("11403/111"));
 			assertTrue(namesK1.contains("11403/222"));
@@ -147,9 +147,9 @@ public class HandleStoreServiceTest {
 			assertEquals(1, namesK3.size());
 			
 			service.recordHandle("11403/444", "K3", "http://www.cnrs.fr");
-			namesK1 = service.findHandlesForKey("K1");
-			namesK2 = service.findHandlesForKey("K2");
-			namesK3 = service.findHandlesForKey("K3");
+			namesK1 = service.listHandlesForKey("K1");
+			namesK2 = service.listHandlesForKey("K2");
+			namesK3 = service.listHandlesForKey("K3");
 			assertEquals(2, namesK1.size());
 			assertEquals(1, namesK2.size());
 			assertFalse(namesK2.contains("11403/444"));

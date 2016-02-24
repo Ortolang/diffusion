@@ -75,6 +75,10 @@ import javax.persistence.TypedQuery;
 
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
+
+import org.javers.core.Javers;
+import org.javers.core.JaversBuilder;
+import org.javers.core.diff.Diff;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -1048,7 +1052,7 @@ public class CoreServiceBean implements CoreService {
             throw new CoreServiceException("unexpected error while trying to list workspace content", e);
         }
     }
-
+    
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void listContent(String key, PathBuilder path, Map<String, String> map) throws KeyNotFoundException, AccessDeniedException, CoreServiceException, OrtolangException, InvalidPathException {
         Object object = findObject(key);
@@ -1057,6 +1061,46 @@ public class CoreServiceBean implements CoreService {
             for (CollectionElement element : ((Collection) object).getElements()) {
                 listContent(element.getKey(), path.clone().path(element.getName()), map);
             }
+        }
+    }
+
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void diffWorkspaceContent(String wskey, String lsnapshot, String rsnapshot) throws CoreServiceException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "diff content of workspace [" + wskey + "] between snapshots [" + lsnapshot + "] and [" + rsnapshot + "]");
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+
+            OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+            checkObjectType(identifier, Workspace.OBJECT_TYPE);
+            authorisation.checkPermission(wskey, subjects, "read");
+
+            Workspace workspace = em.find(Workspace.class, identifier.getId());
+            if (workspace == null) {
+                throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+            }
+            if (!workspace.containsSnapshotName(lsnapshot)) {
+                throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + lsnapshot);
+            }
+            String lroot = workspace.findSnapshotByName(lsnapshot).getKey();
+            
+            if (!workspace.containsSnapshotName(rsnapshot)) {
+                throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + rsnapshot);
+            }
+            String rroot = workspace.findSnapshotByName(rsnapshot).getKey();
+            
+            Map<String, String> lcontent = new HashMap<String, String> ();
+            listContent(lroot, PathBuilder.newInstance(), lcontent);
+            
+            Map<String, String> rcontent = new HashMap<String, String> ();
+            listContent(rroot, PathBuilder.newInstance(), rcontent);
+            
+            Javers javers = JaversBuilder.javers().build();
+            Diff diff = javers.compare(lcontent, rcontent);
+            diff.prettyPrint();
+            
+        } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException | InvalidPathException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred during diff workspace content", e);
+            throw new CoreServiceException("unexpected error while trying to diff workspace content", e);
         }
     }
 
