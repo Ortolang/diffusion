@@ -342,6 +342,12 @@ public class WorkspaceResource {
                 representation.setPath(npath.build());
                 representation.setPathParts(npath.buildParts());
                 representation.setWorkspace(wskey);
+                try {
+                    security.checkPermission(ekey, "download");
+                    representation.setDownloadable(true);
+                } catch (AccessDeniedException | SecurityServiceException e) {
+                    representation.setDownloadable(false);
+                }
                 if (policy) {
                     boolean found = false;
                     while (!found) {
