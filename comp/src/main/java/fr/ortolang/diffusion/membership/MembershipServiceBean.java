@@ -1158,11 +1158,7 @@ public class MembershipServiceBean implements MembershipService {
                     arrayBuilder.add(group);
                 }
                 builder.add("groups", arrayBuilder);
-//                try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(builder.build().toString().getBytes())) {
-                    content.put(Profile.OBJECT_TYPE, builder.build().toString());
-//                } catch (IOException e) {
-//                    LOGGER.log(Level.SEVERE, e.getMessage());
-//                }
+                content.put(Profile.OBJECT_TYPE, builder.build().toString());
             }
 
             if (identifier.getType().equals(Group.OBJECT_TYPE)) {
@@ -1178,11 +1174,7 @@ public class MembershipServiceBean implements MembershipService {
                     arrayBuilder.add(member);
                 }
                 builder.add("members", arrayBuilder);
-//                try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(builder.build().toString().getBytes())) {
-                    content.put(Group.OBJECT_TYPE, builder.build().toString());
-//                } catch (IOException e) {
-//                    LOGGER.log(Level.SEVERE, e.getMessage());
-//                }
+                content.put(Group.OBJECT_TYPE, builder.build().toString());
             }
             return content;
         } catch (KeyNotFoundException | RegistryServiceException e) {

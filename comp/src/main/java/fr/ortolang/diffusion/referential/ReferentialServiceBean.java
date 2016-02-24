@@ -24,8 +24,6 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangIndexableObject;
-import fr.ortolang.diffusion.OrtolangIndexableObjectFactory;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectSize;
@@ -51,7 +49,6 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
-import fr.ortolang.diffusion.store.json.JsonStoreDocumentBuilder;
 import fr.ortolang.diffusion.store.json.OrtolangKeyExtractor;
 
 @Local(ReferentialService.class)
@@ -236,9 +233,7 @@ public class ReferentialServiceBean implements ReferentialService {
     		registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
 
     		em.persist(refEntity);
-    		
     		indexing.index(key);
-
     		authorisation.createPolicy(key, caller);
 
     		notification.throwEvent(key, caller, ReferentialEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentialService.SERVICE_NAME, ReferentialEntity.OBJECT_TYPE, "create"));
@@ -293,9 +288,7 @@ public class ReferentialServiceBean implements ReferentialService {
             refEntity.setContent(content);
 
             registry.update(key);
-
             em.merge(refEntity);
-            
             indexing.index(key);
 
             notification.throwEvent(key, caller, ReferentialEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentialService.SERVICE_NAME, ReferentialEntity.OBJECT_TYPE, "update"));
@@ -340,46 +333,16 @@ public class ReferentialServiceBean implements ReferentialService {
 	                if (referentielEntity == null) {
 	                    throw new OrtolangException("unable to load ReferentialEntity with id [" + identifier.getId() + "] from storage");
 	                }
-	                
 	                String json = referentielEntity.getContent();
 	    			List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(json);
-	    			
 	    			for(String ortolangKey : ortolangKeys) {
-	    				json = replaceOrtolangKey(ortolangKey, json);
+	    				json = OrtolangKeyExtractor.replaceOrtolangKey(ortolangKey, json);
 	    			}
-	
-//	                content.put("ortolang-referential-json", new ByteArrayInputStream(json.getBytes()));
 	                content.put("ortolang-referential-json", json);
 	            }
-	            
 	            return content;
 	        } catch (RegistryServiceException | KeyNotFoundException e) {
 	            throw new OrtolangException("unable to find an object for key " + key);
 	        }
-	}
-
-	protected String replaceOrtolangKey(String ortolangKey, String json) throws OrtolangException {
-		String jsonContent = jsonContent(ortolangKey);
-		
-		if(jsonContent!=null) {
-			
-//			String identity = doc.getIdentity().toString();
-			json = json.replace("\""+OrtolangKeyExtractor.getMarker(ortolangKey)+"\"", jsonContent);
-		} else {
-			LOGGER.log(Level.WARNING, "cannot found ortolang key : " + ortolangKey);
-			throw new OrtolangException("cannot found ortolang key : " + ortolangKey);
-		}
-		
-		return json;
-    }
-
-	protected String jsonContent(String key) {
-        try {
-        	OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
-            return JsonStoreDocumentBuilder.buildDocument(object);
-        } catch (NotIndexableContentException | OrtolangException e) {
-            LOGGER.log(Level.FINE, "key " + key + " not indexable");
-        }
-        return null;
 	}
 }

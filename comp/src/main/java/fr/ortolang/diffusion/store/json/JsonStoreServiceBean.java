@@ -68,7 +68,6 @@ import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.core.entity.MetadataObject;
 
 @Startup
 @Local(JsonStoreService.class)
