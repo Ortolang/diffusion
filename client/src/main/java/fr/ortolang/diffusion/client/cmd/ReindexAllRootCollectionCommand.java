@@ -65,21 +65,29 @@ public class ReindexAllRootCollectionCommand extends Command {
 				client.login(username);
 			}
 			System.out.println("Connected as user: " + client.connectedProfile());
-//			String pkey = client.createProcess("index-workspace", "Index workspace '" + cmd.getOptionValue("k") + "'", params, files);
-//			System.out.println("Import-Workspace process created with key : " + pkey);
+			System.out.println("Looking for root collection ...");
 			
 			// Looking for root collection
 			List<String> rootCollectionKeys = new ArrayList<String>();
-			JsonObject listOfObjects = client.listObjects("core", "collection", "PUBLISHED", 0, 25);
 			
+			int offset = 0;
+			int limit = 100;
+			JsonObject listOfObjects = client.listObjects("core", "collection", "PUBLISHED", offset, limit);
 			JsonArray keys = listOfObjects.getJsonArray("entries");
-			for(JsonString objectKey : keys.getValuesAs(JsonString.class)) {
-				JsonObject objectRepresentation = client.getObject(objectKey.getString());
-				JsonObject objectProperty = objectRepresentation.getJsonObject("object");
-				boolean isRoot = objectProperty.getBoolean("root");
-				if(isRoot) {
-					rootCollectionKeys.add(objectKey.getString());
+			
+			while(!keys.isEmpty()) {
+				for(JsonString objectKey : keys.getValuesAs(JsonString.class)) {
+					System.out.println("object key : "+objectKey.getString());
+					JsonObject objectRepresentation = client.getObject(objectKey.getString());
+					JsonObject objectProperty = objectRepresentation.getJsonObject("object");
+					boolean isRoot = objectProperty.getBoolean("root");
+					if(isRoot) {
+						rootCollectionKeys.add(objectKey.getString());
+					}
 				}
+				offset += limit;
+				listOfObjects = client.listObjects("core", "collection", "PUBLISHED", offset, limit);
+				keys = listOfObjects.getJsonArray("entries");
 			}
 			
 			System.out.println("Reindex keys : "+rootCollectionKeys);
