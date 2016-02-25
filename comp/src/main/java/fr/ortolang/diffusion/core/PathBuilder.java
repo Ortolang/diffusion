@@ -151,9 +151,17 @@ public class PathBuilder {
 		return checkFiliation(normalize(path), builder.toString());
 	}
 	
+	public boolean isChild(PathBuilder path) throws InvalidPathException {
+        return checkFiliation(path.build(), builder.toString());
+    }
+	
 	public boolean isParent(String path) throws InvalidPathException {
 		return checkFiliation(builder.toString(), normalize(path));
 	}
+	
+	public boolean isParent(PathBuilder path) throws InvalidPathException {
+        return checkFiliation(builder.toString(), path.build());
+    }
 	
 	private String normalize(String path) throws InvalidPathException {
         String[] paths = path.split(PATH_SEPARATOR);
