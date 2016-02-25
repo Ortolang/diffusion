@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.referentiel;
+package fr.ortolang.diffusion.api.mapper;
 
 /*
  * #%L
@@ -36,22 +36,20 @@ package fr.ortolang.diffusion.referentiel;
  * #L%
  */
 
-@SuppressWarnings("serial")
-public class ReferentielServiceException extends Exception {
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 
-	public ReferentielServiceException() {
-		super();
-	}
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
 
-	public ReferentielServiceException(String message, Throwable cause) {
-		super(message, cause);
-	}
+@Provider
+public class ReferentialEntityExceptionMapper implements ExceptionMapper<KeyNotFoundException> {
 
-	public ReferentielServiceException(String message) {
-		super(message);
-	}
-
-	public ReferentielServiceException(Throwable cause) {
-		super(cause);
+	@Override
+	public Response toResponse(KeyNotFoundException ex) {
+		return Response.status(Status.NOT_FOUND)
+				.entity("No referential entity found").type("text/plain")
+				.build();
 	}
 }

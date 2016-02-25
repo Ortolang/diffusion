@@ -75,6 +75,7 @@ import javax.persistence.TypedQuery;
 
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
+import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -133,6 +134,7 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
+import fr.ortolang.diffusion.store.json.OrtolangKeyExtractor;
 
 @Local(CoreService.class)
 @Stateless(name = CoreService.SERVICE_NAME)
@@ -3494,10 +3496,10 @@ public class CoreServiceBean implements CoreService {
                     }
                     try {
                         if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
-                            content.put(metadata.getName(), binarystore.get(metadata.getStream()));
+                            content.put(metadata.getName(), getContent(binarystore.get(metadata.getStream())));
                         }
-                    } catch (DataNotFoundException | BinaryStoreServiceException e) {
-                        LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
+                    } catch (DataNotFoundException | BinaryStoreServiceException | IOException e) {
+                        LOGGER.log(Level.WARNING, "unable to extract json text for key : " + mde.getKey(), e);
                     }
                 }
             }
@@ -3521,9 +3523,9 @@ public class CoreServiceBean implements CoreService {
                     }
                     try {
                         if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
-                            content.put(metadata.getName(), binarystore.get(metadata.getStream()));
+                            content.put(metadata.getName(), getContent(binarystore.get(metadata.getStream())));
                         }
-                    } catch (DataNotFoundException | BinaryStoreServiceException e) {
+                    } catch (DataNotFoundException | BinaryStoreServiceException | IOException e) {
                         LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
                     }
                 }
@@ -3547,11 +3549,7 @@ public class CoreServiceBean implements CoreService {
                     arrayBuilder.add(objectBuilder);
                 }
                 builder.add("tags", arrayBuilder);
-                try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(builder.build().toString().getBytes())) {
-                    content.put(MetadataFormat.WORKSPACE, byteArrayInputStream);
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage());
-                }
+                content.put(MetadataFormat.WORKSPACE, builder.build().toString());
             }
 
             return content;
@@ -3560,6 +3558,18 @@ public class CoreServiceBean implements CoreService {
         }
     }
 
+	private String getContent(InputStream is) throws IOException {
+		String content = null;
+		try {
+			content = IOUtils.toString(is);
+		} catch (IOException e) {
+			LOGGER.log(Level.SEVERE, "  unable to get content from stream", e);
+		} finally {
+			is.close();
+		}
+		return content;
+	}
+	
     private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws CoreServiceException {
         if (!identifier.getService().equals(getServiceName())) {
             throw new CoreServiceException("object identifier " + identifier + " does not refer to service " + getServiceName());

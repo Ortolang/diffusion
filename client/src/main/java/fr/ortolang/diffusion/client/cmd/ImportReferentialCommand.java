@@ -52,15 +52,15 @@ import fr.ortolang.diffusion.client.OrtolangClient;
 import fr.ortolang.diffusion.client.OrtolangClientException;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
 
-public class ImportReferentielCommand extends Command {
+public class ImportReferentialCommand extends Command {
 
 	private Options options = new Options();
 
-	public ImportReferentielCommand() {
+	public ImportReferentialCommand() {
 		options.addOption("h", "help", false, "show help.");
 		options.addOption("U", "username", true, "username for login");
 		options.addOption("P", "password", true, "password for login");
-		options.addOption("f", "file", true, "directory which contains all referentiel entities to import");
+		options.addOption("f", "file", true, "directory which contains all referential entities to import");
 	}
 
 	@Override
@@ -90,7 +90,7 @@ public class ImportReferentielCommand extends Command {
 			}
 			
 			if ( cmd.hasOption("f") ) {
-				params.put("referentielpath", cmd.getOptionValue("f"));
+				params.put("referentialpath", cmd.getOptionValue("f"));
 			} else {
 				help();
 			}
@@ -101,8 +101,8 @@ public class ImportReferentielCommand extends Command {
 				client.login(username);
 			}
 			System.out.println("Connected as user: " + client.connectedProfile());
-			String pkey = client.createProcess("import-referentiel", "Import Referentiel", params, files);
-			System.out.println("Import-Referentiel process created with key : " + pkey);
+			String pkey = client.createProcess("import-referential", "Import Referential", params, files);
+			System.out.println("Import-Referential process created with key : " + pkey);
 			
 			client.logout();
 			client.close();
@@ -118,7 +118,7 @@ public class ImportReferentielCommand extends Command {
 
 	private void help() {
 		HelpFormatter formater = new HelpFormatter();
-		formater.printHelp("Import Referentiel", options);
+		formater.printHelp("Import Referential", options);
 		System.exit(0);
 	}
 

@@ -41,6 +41,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangIndexableObject;
+import fr.ortolang.diffusion.OrtolangIndexableObjectFactory;
+import fr.ortolang.diffusion.indexing.NotIndexableContentException;
+
 public class OrtolangKeyExtractor {
 
 	public static final Pattern ORTOLANG_KEY_MATCHER = Pattern.compile("\\$\\{([\\w\\d:\\-_]*)\\}");
@@ -57,4 +62,23 @@ public class OrtolangKeyExtractor {
 		}
 		return ortolangKeys;
 	}
+	
+
+	public static String replaceOrtolangKey(String ortolangKey, String json) throws OrtolangException, NotIndexableContentException {
+		String jsonContent = jsonContent(ortolangKey);
+		
+		if(jsonContent!=null) {
+			json = json.replace("\""+OrtolangKeyExtractor.getMarker(ortolangKey)+"\"", jsonContent);
+		} else {
+			throw new OrtolangException("cannot found ortolang key : " + ortolangKey);
+		}
+		
+		return json;
+    }
+
+	public static String jsonContent(String key) throws NotIndexableContentException, OrtolangException {
+    	OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
+        return JsonStoreDocumentBuilder.buildDocument(object);
+	}
+
 }

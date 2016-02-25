@@ -56,7 +56,7 @@ import fr.ortolang.diffusion.api.mapper.*;
 import fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet;
 import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.profile.ProfileResource;
-import fr.ortolang.diffusion.api.referentiel.ReferentielEntityResource;
+import fr.ortolang.diffusion.api.referential.ReferentialEntityResource;
 import fr.ortolang.diffusion.api.rendering.RenderingResource;
 import fr.ortolang.diffusion.api.runtime.RuntimeResource;
 import fr.ortolang.diffusion.api.search.SearchResource;
@@ -79,7 +79,7 @@ public class ApiApplication extends Application {
         classes.add(RuntimeResource.class);
         classes.add(FormResource.class);
         classes.add(MetadataFormatResource.class);
-        classes.add(ReferentielEntityResource.class);
+        classes.add(ReferentialEntityResource.class);
         classes.add(AdminResource.class);
         classes.add(AuthResource.class);
         classes.add(ContentResource.class);

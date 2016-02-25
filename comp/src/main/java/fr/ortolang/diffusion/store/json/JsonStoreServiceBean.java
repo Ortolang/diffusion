@@ -161,17 +161,17 @@ public class JsonStoreServiceBean implements JsonStoreService {
 		LOGGER.log(Level.FINE, "Indexing object with key: " + object.getKey());
 		try (ODatabaseDocumentTx db = pool.acquire()) {
 			ODocument oldDoc = getDocumentByKey(object.getKey());
-			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object, oldDoc);
-
-			String json = doc.toJSON();
-
-			List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(json);
+//			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object, oldDoc);
 			
-			for(String ortolangKey : ortolangKeys) {
-				json = replaceOrtolangKey(ortolangKey, json);
+			ODocument doc;
+			if(oldDoc!=null) {
+				doc = oldDoc;
+			} else {
+				doc = new ODocument(object.getType());
 			}
 
-			doc = new ODocument(doc.getClassName()).fromJSON(json);
+			String json = JsonStoreDocumentBuilder.buildDocument(object);
+			doc.fromJSON(json);
 			
 			db.save(doc);
 			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
