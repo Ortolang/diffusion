@@ -334,10 +334,6 @@ public class ReferentialServiceBean implements ReferentialService {
 	                    throw new OrtolangException("unable to load ReferentialEntity with id [" + identifier.getId() + "] from storage");
 	                }
 	                String json = referentielEntity.getContent();
-	    			List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(json);
-	    			for(String ortolangKey : ortolangKeys) {
-	    				json = OrtolangKeyExtractor.replaceOrtolangKey(ortolangKey, json);
-	    			}
 	                content.put("ortolang-referential-json", json);
 	            }
 	            return content;

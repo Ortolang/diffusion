@@ -3329,13 +3329,7 @@ public class CoreServiceBean implements CoreService {
                     }
                     try {
                         if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
-        	                String json = getContent(binarystore.get(metadata.getStream()));
-        	    			List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(json);
-        	    			
-        	    			for(String ortolangKey : ortolangKeys) {
-        	    				json = OrtolangKeyExtractor.replaceOrtolangKey(ortolangKey, json);
-        	    			}
-                            content.put(metadata.getName(), json);
+                            content.put(metadata.getName(), getContent(binarystore.get(metadata.getStream())));
                         }
                     } catch (DataNotFoundException | BinaryStoreServiceException | IOException e) {
                         LOGGER.log(Level.WARNING, "unable to extract json text for key : " + mde.getKey(), e);
@@ -3362,13 +3356,7 @@ public class CoreServiceBean implements CoreService {
                     }
                     try {
                         if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
-        	                String json = getContent(binarystore.get(metadata.getStream()));
-        	    			List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(json);
-        	    			
-        	    			for(String ortolangKey : ortolangKeys) {
-        	    				json = OrtolangKeyExtractor.replaceOrtolangKey(ortolangKey, json);
-        	    			}
-                            content.put(metadata.getName(), json);
+                            content.put(metadata.getName(), getContent(binarystore.get(metadata.getStream())));
                         }
                     } catch (DataNotFoundException | BinaryStoreServiceException | IOException e) {
                         LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);

@@ -1,6 +1,8 @@
 package fr.ortolang.diffusion.referential.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
@@ -30,6 +32,7 @@ public class ReferentialEntity extends OrtolangObject {
 	@Transient
 	private String key;
 
+	@Enumerated(EnumType.STRING)
 	private ReferentialEntityType type;
 	@Lob
 	@Type(type = "org.hibernate.type.TextType")
