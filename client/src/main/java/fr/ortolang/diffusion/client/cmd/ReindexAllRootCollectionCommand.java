@@ -77,7 +77,6 @@ public class ReindexAllRootCollectionCommand extends Command {
 			
 			while(!keys.isEmpty()) {
 				for(JsonString objectKey : keys.getValuesAs(JsonString.class)) {
-					System.out.println("object key : "+objectKey.getString());
 					JsonObject objectRepresentation = client.getObject(objectKey.getString());
 					JsonObject objectProperty = objectRepresentation.getJsonObject("object");
 					boolean isRoot = objectProperty.getBoolean("root");
