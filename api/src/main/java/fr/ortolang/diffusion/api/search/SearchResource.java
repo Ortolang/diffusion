@@ -105,7 +105,7 @@ public class SearchResource {
     @GET
     @Path("/collections")
     @GZIP
-    public Response listCollections(@Context HttpServletRequest request) {
+    public Response findCollections(@Context HttpServletRequest request) {
     	
     	String fields = null;
     	String content = null;
@@ -173,7 +173,7 @@ public class SearchResource {
     @GET
     @Path("/profiles")
     @GZIP
-    public Response listProfiles(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
+    public Response findProfiles(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
     	LOGGER.log(Level.INFO, "GET /metadata/profiles?content=" + content + "&fields=" + fields);
 
     	// Build the query
@@ -211,7 +211,7 @@ public class SearchResource {
     @GET
     @Path("/collections/{key}")
     @GZIP
-    public Response getCollections(@PathParam(value = "key") String key) {
+    public Response getCollection(@PathParam(value = "key") String key) {
     	LOGGER.log(Level.INFO, "GET /metdata/collections/" + key);
     	//TODO check if alias is null or empty
     	// Build the query
@@ -234,7 +234,7 @@ public class SearchResource {
     @GET
     @Path("/workspaces/{alias}")
     @GZIP
-    public Response getWorkspaces(@PathParam(value = "alias") String alias) {
+    public Response getWorkspace(@PathParam(value = "alias") String alias) {
     	LOGGER.log(Level.INFO, "GET /metdata/workspaces/" + alias);
     	//TODO check if alias is null or empty
     	// Build the query
