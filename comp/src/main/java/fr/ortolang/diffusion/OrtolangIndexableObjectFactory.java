@@ -88,7 +88,9 @@ public class OrtolangIndexableObjectFactory<T> {
             	String json = entry.getValue();
             	List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(json);
     			for(String ortolangKey : ortolangKeys) {
-    				String jsonContent = JsonStoreDocumentBuilder.buildDocument(buildJsonIndexableObject(ortolangKey, keys));
+    				List<String> newKeys = new ArrayList<String>(keys);
+    				
+    				String jsonContent = JsonStoreDocumentBuilder.buildDocument(buildJsonIndexableObject(ortolangKey, newKeys));
     				
     				if(jsonContent!=null) {
     					json = json.replace("\""+OrtolangKeyExtractor.getMarker(ortolangKey)+"\"", jsonContent);
