@@ -74,7 +74,8 @@ public class WorkspaceElementRepresentation {
     private Set<CollectionElement> elements;
     private Set<MetadataElement> metadatas;
     private String publicationPolicy;
-    private boolean downloadable;
+    /** Downloadable by anonymous */
+    private boolean unrestrictedDownload;
 
     public WorkspaceElementRepresentation() {
         elements = new HashSet<CollectionElement>();
@@ -232,12 +233,12 @@ public class WorkspaceElementRepresentation {
         this.publicationPolicy = publicationPolicy;
     }
 
-    public boolean isDownloadable() {
-        return downloadable;
+    public boolean isUnrestrictedDownload() {
+        return unrestrictedDownload;
     }
 
-    public void setDownloadable(boolean downloadable) {
-        this.downloadable = downloadable;
+    public void setUnrestrictedDownload(boolean unrestrictedDownload) {
+        this.unrestrictedDownload = unrestrictedDownload;
     }
 
     public static WorkspaceElementRepresentation fromCollection(Collection collection) {

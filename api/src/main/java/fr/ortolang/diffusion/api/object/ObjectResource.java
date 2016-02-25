@@ -37,6 +37,7 @@ package fr.ortolang.diffusion.api.object;
  */
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -222,4 +223,19 @@ public class ObjectResource {
         return Response.ok().build();
     }
 
+    @GET
+    @Path("/{key}/authorized")
+    @GZIP
+    public Response isAuthorized(@PathParam(value = "key") String key, @DefaultValue(value = "download") @QueryParam(value = "permission") String permission, @Context Request request) throws OrtolangException, KeyNotFoundException,
+            InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
+        LOGGER.log(Level.INFO, "GET /objects/" + key + "/authorized");
+        Map<String, Boolean> map = new HashMap<>(1);
+        try {
+            security.checkPermission(key, permission);
+            map.put(permission, true);
+        } catch (AccessDeniedException e) {
+            map.put(permission, false);
+        }
+        return Response.ok(map).build();
+    }
 }

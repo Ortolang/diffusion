@@ -316,10 +316,10 @@ public class WorkspaceResource {
                 representation.setPathParts(npath.buildParts());
                 representation.setWorkspace(wskey);
                 try {
-                    security.checkPermission(ekey, "download");
-                    representation.setDownloadable(true);
+                    security.checkAnonymousPermission(ekey, "download");
+                    representation.setUnrestrictedDownload(true);
                 } catch (AccessDeniedException | SecurityServiceException e) {
-                    representation.setDownloadable(false);
+                    representation.setUnrestrictedDownload(false);
                 }
                 if (policy) {
                     boolean found = false;
@@ -561,6 +561,52 @@ public class WorkspaceResource {
         LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/snapshots");
         core.snapshotWorkspace(wskey);
         return Response.ok().build();
+    }
+
+    @GET
+    @Path("/{wskey}/elements/publication")
+    public Response getPublicationPolicy(@PathParam(value = "wskey") String wskey, @QueryParam("path") String path)
+            throws CoreServiceException, AccessDeniedException, InvalidPathException, PathNotFoundException, KeyNotFoundException, OrtolangException, IOException, DataNotFoundException,
+            BinaryStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/elements/publication");
+        if (path == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
+        }
+        String key = core.resolveWorkspacePath(wskey, Workspace.HEAD, path);
+        Collection parent = core.readCollection(key);
+        OrtolangObject object = parent;
+        PathBuilder npath = PathBuilder.fromPath(path);
+        boolean isRoot = npath.isRoot();
+        boolean found = false;
+        String parentPublicationPolicy = null;
+        Map<String, Object> map = new HashMap<>();
+        ArrayList<WorkspaceElementRepresentation> elements = new ArrayList<>();
+        while (!found) {
+            parentPublicationPolicy = readPublicationPolicy(object);
+            if (parentPublicationPolicy != null) {
+                found = true;
+            } else if (npath.isRoot()) {
+                found = true;
+                parentPublicationPolicy = AuthorisationPolicyTemplate.FORALL;
+            } else {
+                npath = npath.parent();
+                object = browser.findObject(core.resolveWorkspacePath(wskey, Workspace.HEAD, npath.build()));
+            }
+        }
+        WorkspaceElementRepresentation parentRepresentation = WorkspaceElementRepresentation.fromCollection(parent);
+        parentRepresentation.setPublicationPolicy(parentPublicationPolicy);
+        parentRepresentation.setPath(path);
+        map.put("parent", parentRepresentation);
+        for (CollectionElement child : parent.getElements()) {
+            object = browser.findObject(child.getKey());
+            String publicationPolicy = readPublicationPolicy(object);
+            WorkspaceElementRepresentation representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
+            representation.setPublicationPolicy(publicationPolicy == null ? parentPublicationPolicy : publicationPolicy);
+            representation.setPath(path + (isRoot ? "" : PathBuilder.PATH_SEPARATOR) + child.getName());
+            elements.add(representation);
+        }
+        map.put("elements", elements);
+        return Response.ok().entity(map).build();
     }
 
     @PUT

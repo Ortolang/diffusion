@@ -48,6 +48,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.HttpHeaders;
 
 public class CORSFilter implements Filter {
 	
@@ -82,7 +83,7 @@ public class CORSFilter implements Filter {
         }
         if (hrequest.getMethod().equals(OPTIONS_METHOD)) {
             ((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ALLOW_METHODS, "DELETE, PUT, HEAD, OPTIONS, TRACE, GET, POST");
-            ((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ALLOW_HEADERS, AUTHORIZATION_PROPERTY + ", " + CONTENT_TYPE_PROPERTY + ", " + CONTENT_TRANSFER_ENCODING + ", Range");
+            ((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ALLOW_HEADERS, AUTHORIZATION_PROPERTY + ", " + CONTENT_TYPE_PROPERTY + ", " + CONTENT_TRANSFER_ENCODING + ", Range, " + HttpHeaders.CACHE_CONTROL);
             ((HttpServletResponse)response).setHeader("Access-Control-Expose-Headers", "Accept-Ranges, Content-Encoding, Content-Length, Content-Range");
         }
         chain.doFilter(request, response);
