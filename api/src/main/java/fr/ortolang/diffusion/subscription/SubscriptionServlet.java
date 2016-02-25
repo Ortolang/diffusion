@@ -104,28 +104,6 @@ public final class SubscriptionServlet {
         return eventMessage.fromEvent(event);
     }
 
-    @Message(decoders = {FilterRepresentationDecoder.class})
-    @DeliverTo(DeliverTo.DELIVER_TO.RESOURCE)
-    public FilterRepresentation onFilterMessage(FilterRepresentation filterRepresentation) {
-        switch (filterRepresentation.getAction()) {
-            case ADD:
-                if (filterRepresentation.getFilter().isConform()) {
-                    try {
-                        subscription.addFilter(username, filterRepresentation.getFilter());
-                    } catch (SubscriptionServiceException e) {
-                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
-                    }
-                } else {
-                    LOGGER.log(Level.SEVERE, "User " + username + " tried to register a non-conform filter: " + filterRepresentation.getFilter());
-                }
-                break;
-            case REMOVE:
-                subscription.removeFilter(username, filterRepresentation.getFilter());
-                break;
-        }
-        return filterRepresentation;
-    }
-
     private SubscriptionService getSubscription() {
         if (subscription == null) {
             try {
