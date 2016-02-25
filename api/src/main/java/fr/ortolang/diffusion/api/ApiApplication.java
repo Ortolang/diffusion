@@ -47,6 +47,7 @@ import fr.ortolang.diffusion.api.auth.AuthResource;
 import fr.ortolang.diffusion.api.config.ConfigResource;
 import fr.ortolang.diffusion.api.content.ContentResource;
 import fr.ortolang.diffusion.api.event.EventFeedResource;
+import fr.ortolang.diffusion.api.filter.CacheFilter;
 import fr.ortolang.diffusion.api.filter.ContentTypeSetterPreProcessorInterceptor;
 import fr.ortolang.diffusion.api.form.FormResource;
 import fr.ortolang.diffusion.api.format.MetadataFormatResource;
@@ -67,57 +68,58 @@ import fr.ortolang.diffusion.subscription.SubscriptionResource;
 
 @ApplicationPath("/*")
 public class ApiApplication extends Application {
-	
-	private HashSet<Class<?>> classes = new HashSet<Class<?>>();
 
-	public ApiApplication() {
-		classes.add(ObjectResource.class);
-		classes.add(WorkspaceResource.class);
-		classes.add(ProfileResource.class);
-		classes.add(GroupResource.class);
-		classes.add(RuntimeResource.class);
-		classes.add(FormResource.class);
-		classes.add(MetadataFormatResource.class);
-		classes.add(ReferentielEntityResource.class);
-		classes.add(AdminResource.class);
-		classes.add(AuthResource.class);
-		classes.add(ContentResource.class);
-		classes.add(ThumbnailResource.class);
-		classes.add(ConfigResource.class);
-		classes.add(SubscriptionResource.class);
-		classes.add(StatisticsResource.class);
-		classes.add(SearchResource.class);
-		classes.add(OAIPMHServlet.class);
-		classes.add(EventFeedResource.class);
-		classes.add(SeoResource.class);
-		classes.add(RenderingResource.class);
-	}
+    private HashSet<Class<?>> classes = new HashSet<Class<?>>();
 
-	@Override
-	public Set<Class<?>> getClasses() {
-		return classes;
-	}
+    public ApiApplication() {
+        classes.add(ObjectResource.class);
+        classes.add(WorkspaceResource.class);
+        classes.add(ProfileResource.class);
+        classes.add(GroupResource.class);
+        classes.add(RuntimeResource.class);
+        classes.add(FormResource.class);
+        classes.add(MetadataFormatResource.class);
+        classes.add(ReferentielEntityResource.class);
+        classes.add(AdminResource.class);
+        classes.add(AuthResource.class);
+        classes.add(ContentResource.class);
+        classes.add(ThumbnailResource.class);
+        classes.add(ConfigResource.class);
+        classes.add(SubscriptionResource.class);
+        classes.add(StatisticsResource.class);
+        classes.add(SearchResource.class);
+        classes.add(OAIPMHServlet.class);
+        classes.add(EventFeedResource.class);
+        classes.add(SeoResource.class);
+        classes.add(RenderingResource.class);
+    }
 
-	@Override
-	public Set<Object> getSingletons() {
-		HashSet<Object> set = new HashSet<Object>();
-		set.add(new ContentTypeSetterPreProcessorInterceptor());
-		set.add(new AccessDeniedExceptionMapper());
-		set.add(new BrowserServiceExceptionMapper());
-		set.add(new KeyAlreadyExistsExceptionMapper());
-		set.add(new KeyNotFoundExceptionMapper());
-		set.add(new AliasNotFoundExceptionMapper());
-		set.add(new AliasAlreadyExistsExceptionMapper());
-		set.add(new InvalidPathExceptionMapper());
-		set.add(new PropertyNotFoundExceptionMapper());
-		set.add(new SearchServiceExceptionMapper());
-		set.add(new SecurityServiceExceptionMapper());
-		set.add(new CollectionNotEmptyExceptionMapper());
-		set.add(new SubscriptionServiceExceptionMapper());
-		set.add(new EJBAccessExceptionMapper());
-		set.add(new PathAlreadyExistsExceptionMapper());
-		set.add(new PathNotFoundExceptionMapper());
-		set.add(new RootNotFoundExceptionMapper());
-		return set;
-	}
+    @Override
+    public Set<Class<?>> getClasses() {
+        return classes;
+    }
+
+    @Override
+    public Set<Object> getSingletons() {
+        HashSet<Object> set = new HashSet<Object>();
+        set.add(new ContentTypeSetterPreProcessorInterceptor());
+        set.add(new CacheFilter());
+        set.add(new AccessDeniedExceptionMapper());
+        set.add(new BrowserServiceExceptionMapper());
+        set.add(new KeyAlreadyExistsExceptionMapper());
+        set.add(new KeyNotFoundExceptionMapper());
+        set.add(new AliasNotFoundExceptionMapper());
+        set.add(new AliasAlreadyExistsExceptionMapper());
+        set.add(new InvalidPathExceptionMapper());
+        set.add(new PropertyNotFoundExceptionMapper());
+        set.add(new SearchServiceExceptionMapper());
+        set.add(new SecurityServiceExceptionMapper());
+        set.add(new CollectionNotEmptyExceptionMapper());
+        set.add(new SubscriptionServiceExceptionMapper());
+        set.add(new EJBAccessExceptionMapper());
+        set.add(new PathAlreadyExistsExceptionMapper());
+        set.add(new PathNotFoundExceptionMapper());
+        set.add(new RootNotFoundExceptionMapper());
+        return set;
+    }
 }

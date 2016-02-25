@@ -74,6 +74,8 @@ public class WorkspaceElementRepresentation {
     private Set<CollectionElement> elements;
     private Set<MetadataElement> metadatas;
     private String publicationPolicy;
+    /** Downloadable by anonymous */
+    private boolean unrestrictedDownload;
 
     public WorkspaceElementRepresentation() {
         elements = new HashSet<CollectionElement>();
@@ -229,6 +231,14 @@ public class WorkspaceElementRepresentation {
 
     public void setPublicationPolicy(String publicationPolicy) {
         this.publicationPolicy = publicationPolicy;
+    }
+
+    public boolean isUnrestrictedDownload() {
+        return unrestrictedDownload;
+    }
+
+    public void setUnrestrictedDownload(boolean unrestrictedDownload) {
+        this.unrestrictedDownload = unrestrictedDownload;
     }
 
     public static WorkspaceElementRepresentation fromCollection(Collection collection) {
