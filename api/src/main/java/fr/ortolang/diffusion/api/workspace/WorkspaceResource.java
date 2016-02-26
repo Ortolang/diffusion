@@ -79,6 +79,7 @@ import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -111,6 +112,7 @@ import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.event.EventService;
+import fr.ortolang.diffusion.event.EventServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
@@ -662,6 +664,20 @@ public class WorkspaceResource {
             core.createMetadataObject(wskey, path, MetadataFormat.ACL, hash, null, recursive);
         }
         return Response.ok().build();
+    }
+    
+    @GET
+    @Path("/{wskey}/events")
+    @GZIP
+    public Response listWorkspaceEvents(@PathParam(value = "wskey") String wskey, @QueryParam(value = "o") @DefaultValue(value = "0") int offset, @QueryParam(value = "l") @DefaultValue(value = "25") int limit, @Context Request request)
+            throws EventServiceException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/events");
+        GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>(); 
+        List<OrtolangEvent> events = event.findEvents(null, wskey, null, null, offset, limit);
+        representation.setEntries(events);
+        representation.setOffset(offset);
+        representation.setLimit(limit);
+        return Response.ok(representation).build();
     }
 
     @GET
