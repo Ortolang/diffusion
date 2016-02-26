@@ -82,7 +82,7 @@ public class EventFeedResource {
     @GET
     @Path("/{key}")
     @GZIP
-    public Response getEventFeed(@PathParam(value = "key") String key, @QueryParam(value = "id") Long id, @QueryParam(value = "o") @DefaultValue(value = "0") int offset, @QueryParam(value = "l") @DefaultValue(value = "25") int limit, @Context Request request) throws KeyNotFoundException, AccessDeniedException, EventServiceException {
+    public Response getEventFeed(@PathParam(value = "key") String key, @QueryParam(value = "id") Long id, @QueryParam(value = "o") @DefaultValue(value = "0") int offset, @QueryParam(value = "l") @DefaultValue(value = "5") int limit, @Context Request request) throws KeyNotFoundException, AccessDeniedException, EventServiceException {
         LOGGER.log(Level.INFO, "GET /feeds/" + key);
         EventFeed feed = events.readEventFeed(key);
         List<OrtolangEvent> content;

@@ -79,219 +79,231 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 @PermitAll
 public class SecurityServiceBean implements SecurityService {
 
-	private static final Logger LOGGER = Logger.getLogger(SecurityServiceBean.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(SecurityServiceBean.class.getName());
 
-	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
+
     @Resource
-	private SessionContext ctx;
-	@EJB
-	private MembershipService membership;
-	@EJB
-	private AuthorisationService authorisation;
-	@EJB
-	private RegistryService registry;
-	@EJB
-	private NotificationService notification;
-	
-	public SecurityServiceBean() {
-	}
+    private SessionContext ctx;
+    @EJB
+    private MembershipService membership;
+    @EJB
+    private AuthorisationService authorisation;
+    @EJB
+    private RegistryService registry;
+    @EJB
+    private NotificationService notification;
 
-	public SessionContext getSessionContext() {
-		return ctx;
-	}
+    public SecurityServiceBean() {
+    }
 
-	public void setSessionContext(SessionContext ctx) {
-		this.ctx = ctx;
-	}
+    public SessionContext getSessionContext() {
+        return ctx;
+    }
 
-	public MembershipService getMembershipService() {
-		return membership;
-	}
+    public void setSessionContext(SessionContext ctx) {
+        this.ctx = ctx;
+    }
 
-	public void setMembershipService(MembershipService membership) {
-		this.membership = membership;
-	}
+    public MembershipService getMembershipService() {
+        return membership;
+    }
 
-	public AuthorisationService getAuthorisationService() {
-		return authorisation;
-	}
+    public void setMembershipService(MembershipService membership) {
+        this.membership = membership;
+    }
 
-	public void setAuthorisationService(AuthorisationService authorisation) {
-		this.authorisation = authorisation;
-	}
+    public AuthorisationService getAuthorisationService() {
+        return authorisation;
+    }
 
-	public RegistryService getRegistryService() {
-		return registry;
-	}
+    public void setAuthorisationService(AuthorisationService authorisation) {
+        this.authorisation = authorisation;
+    }
 
-	public void setRegistryService(RegistryService registry) {
-		this.registry = registry;
-	}
-	
-	public NotificationService getNotificationService() {
-		return notification;
-	}
+    public RegistryService getRegistryService() {
+        return registry;
+    }
 
-	public void setNotificationService(NotificationService notification) {
-		this.notification = notification;
-	}
+    public void setRegistryService(RegistryService registry) {
+        this.registry = registry;
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void changeOwner(String key, String newowner) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "changing owner to subject [" + newowner + "] on key [" + key + "]");
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			authorisation.checkOwnership(key, subjects);
-			if ( registry.isLocked(key) ) {
-				throw new SecurityServiceException("key [" + key + "] is locked and cannot be modified.");
-			}
-			OrtolangObjectIdentifier keyid = registry.lookup(key);
-			OrtolangObjectIdentifier identifier = registry.lookup(newowner);
-			if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
-				throw new SecurityServiceException("new owner must be an object managed by " + MembershipService.SERVICE_NAME);
-			}
-			authorisation.updatePolicyOwner(key, newowner);
-			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("owner", newowner);
-			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "change-owner"), argumentsBuilder.build());
-			LOGGER.log(Level.INFO, "owner changed to [" + newowner + "] for key [" + key + "]");
-		} catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
-			ctx.setRollbackOnly();
-			throw new SecurityServiceException(e);
-		}
-	}
+    public NotificationService getNotificationService() {
+        return notification;
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public String getOwner(String key) throws SecurityServiceException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "getting owner for key [" + key + "]");
-		try {
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			authorisation.checkPermission(key, subjects, "read");
-			return authorisation.getPolicyOwner(key);
-		} catch (MembershipServiceException | KeyNotFoundException | AuthorisationServiceException e) {
-			throw new SecurityServiceException(e);
-		}
-	}
+    public void setNotificationService(NotificationService notification) {
+        this.notification = notification;
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public Map<String, List<String>> listRules(String key) throws SecurityServiceException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "listing rules for key [" + key + "]");
-		try {
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			authorisation.checkPermission(key, subjects, "read");
-			return authorisation.getPolicyRules(key);
-		} catch (MembershipServiceException | KeyNotFoundException | AuthorisationServiceException e) {
-			throw new SecurityServiceException(e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void setRules(String key, Map<String, List<String>> rules) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "setting rules for key [" + key + "]");
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			authorisation.checkOwnership(key, subjects);
-			if ( registry.isLocked(key) ) {
-				throw new SecurityServiceException("key [" + key + "] is locked and cannot be modified.");
-			}
-			
-			OrtolangObjectIdentifier keyid = registry.lookup(key);
-			for ( String subject : rules.keySet() ) {
-				OrtolangObjectIdentifier identifier = registry.lookup(subject);
-				if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
-					throw new SecurityServiceException("rule subject must be an object managed by " + MembershipService.SERVICE_NAME);
-				}
-			}
-			authorisation.setPolicyRules(key, rules);
-			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-all-rules"));
-		} catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
-			ctx.setRollbackOnly();
-			throw new SecurityServiceException(e);
-		}
-		throw new SecurityServiceException("not implemented");
-	}
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void changeOwner(String key, String newowner) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "changing owner to subject [" + newowner + "] on key [" + key + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkOwnership(key, subjects);
+            if ( registry.isLocked(key) ) {
+                throw new SecurityServiceException("key [" + key + "] is locked and cannot be modified.");
+            }
+            OrtolangObjectIdentifier keyid = registry.lookup(key);
+            OrtolangObjectIdentifier identifier = registry.lookup(newowner);
+            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+                throw new SecurityServiceException("new owner must be an object managed by " + MembershipService.SERVICE_NAME);
+            }
+            authorisation.updatePolicyOwner(key, newowner);
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("owner", newowner);
+            notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "change-owner"), argumentsBuilder.build());
+            LOGGER.log(Level.INFO, "owner changed to [" + newowner + "] for key [" + key + "]");
+        } catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
+            ctx.setRollbackOnly();
+            throw new SecurityServiceException(e);
+        }
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void setRule(String key, String subject, List<String> permissions) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "setting rule for key [" + key + "] and subject [" + subject + "]");
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			authorisation.checkOwnership(key, subjects);
-			if ( registry.isLocked(key) ) {
-				throw new SecurityServiceException("key [" + key + "] is locked and cannot be modified.");
-			}
-			
-			OrtolangObjectIdentifier keyid = registry.lookup(key);
-			OrtolangObjectIdentifier identifier = registry.lookup(subject);
-			if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
-				throw new SecurityServiceException("rule subject must be an object managed by " + MembershipService.SERVICE_NAME);
-			}
-			Map<String, List<String>> rules = authorisation.getPolicyRules(key);
-			if ( permissions == null || permissions.size() == 0 ) {
-				rules.remove(subject);
-			} else {
-				rules.put(subject, permissions);
-			}
-			authorisation.setPolicyRules(key, rules);
-			ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("subject", subject).addArgument("permissions", Arrays.deepToString(permissions.toArray()));
-			notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-rule"), argumentsBuilder.build());
-		} catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
-			ctx.setRollbackOnly();
-			throw new SecurityServiceException(e);
-		}
-		throw new SecurityServiceException("not implemented");
-	}
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String getOwner(String key) throws SecurityServiceException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "getting owner for key [" + key + "]");
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(key, subjects, "read");
+            return authorisation.getPolicyOwner(key);
+        } catch (MembershipServiceException | KeyNotFoundException | AuthorisationServiceException e) {
+            throw new SecurityServiceException(e);
+        }
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> listAvailablePermissions(String key) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "listing availables permissions for key [" + key + "]");
-		try {
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			authorisation.checkPermission(key, subjects, "read");
-			
-			OrtolangObjectIdentifier keyid = registry.lookup(key);
-			OrtolangService service = OrtolangServiceLocator.findService(keyid.getService());
-			String[] permissions = service.getObjectPermissionsList(keyid.getType());
-			return Arrays.asList(permissions);
-		} catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | OrtolangException e) {
-			throw new SecurityServiceException(e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void checkPermission(String key, String permission) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "checking permission [" + permission + "] on key [" + key + "] for connected user");
-		try {
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			authorisation.checkPermission(key, subjects, permission);
-		} catch (MembershipServiceException | AuthorisationServiceException e) {
-			throw new SecurityServiceException(e);
-		}
-	}
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public Map<String, List<String>> listRules(String key) throws SecurityServiceException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "listing rules for key [" + key + "]");
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(key, subjects, "read");
+            return authorisation.getPolicyRules(key);
+        } catch (MembershipServiceException | KeyNotFoundException | AuthorisationServiceException e) {
+            throw new SecurityServiceException(e);
+        }
+    }
 
-	@Override
-	public String getServiceName() {
-		return SecurityService.SERVICE_NAME;
-	}
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void setRules(String key, Map<String, List<String>> rules) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "setting rules for key [" + key + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkOwnership(key, subjects);
+            if ( registry.isLocked(key) ) {
+                throw new SecurityServiceException("key [" + key + "] is locked and cannot be modified.");
+            }
 
-	@Override
+            OrtolangObjectIdentifier keyid = registry.lookup(key);
+            for ( String subject : rules.keySet() ) {
+                OrtolangObjectIdentifier identifier = registry.lookup(subject);
+                if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+                    throw new SecurityServiceException("rule subject must be an object managed by " + MembershipService.SERVICE_NAME);
+                }
+            }
+            authorisation.setPolicyRules(key, rules);
+            notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-all-rules"));
+        } catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
+            ctx.setRollbackOnly();
+            throw new SecurityServiceException(e);
+        }
+        throw new SecurityServiceException("not implemented");
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void setRule(String key, String subject, List<String> permissions) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "setting rule for key [" + key + "] and subject [" + subject + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkOwnership(key, subjects);
+            if ( registry.isLocked(key) ) {
+                throw new SecurityServiceException("key [" + key + "] is locked and cannot be modified.");
+            }
+
+            OrtolangObjectIdentifier keyid = registry.lookup(key);
+            OrtolangObjectIdentifier identifier = registry.lookup(subject);
+            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+                throw new SecurityServiceException("rule subject must be an object managed by " + MembershipService.SERVICE_NAME);
+            }
+            Map<String, List<String>> rules = authorisation.getPolicyRules(key);
+            if ( permissions == null || permissions.size() == 0 ) {
+                rules.remove(subject);
+            } else {
+                rules.put(subject, permissions);
+            }
+            authorisation.setPolicyRules(key, rules);
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("subject", subject).addArgument("permissions", Arrays.deepToString(permissions.toArray()));
+            notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-rule"), argumentsBuilder.build());
+        } catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
+            ctx.setRollbackOnly();
+            throw new SecurityServiceException(e);
+        }
+        throw new SecurityServiceException("not implemented");
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<String> listAvailablePermissions(String key) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "listing availables permissions for key [" + key + "]");
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(key, subjects, "read");
+
+            OrtolangObjectIdentifier keyid = registry.lookup(key);
+            OrtolangService service = OrtolangServiceLocator.findService(keyid.getService());
+            String[] permissions = service.getObjectPermissionsList(keyid.getType());
+            return Arrays.asList(permissions);
+        } catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | OrtolangException e) {
+            throw new SecurityServiceException(e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void checkPermission(String key, String permission) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "checking permission [" + permission + "] on key [" + key + "] for connected user");
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(key, subjects, permission);
+        } catch (MembershipServiceException | AuthorisationServiceException e) {
+            throw new SecurityServiceException(e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void checkAnonymousPermission(String key, String permission) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "checking permission [" + permission + "] on key [" + key + "] for  anonymous");
+        try {
+            List<String> subjects = Collections.emptyList();
+            authorisation.checkPermission(key, subjects, permission);
+        } catch (AuthorisationServiceException e) {
+            throw new SecurityServiceException(e);
+        }
+    }
+
+    @Override
+    public String getServiceName() {
+        return SecurityService.SERVICE_NAME;
+    }
+
+    @Override
     public Map<String, String> getServiceInfos() {
         //TODO provide infos about active connections, config, ports, etc...
         return Collections.emptyMap();
     }
 
-	@Override
+    @Override
     public String[] getObjectTypeList() {
         return OBJECT_TYPE_LIST;
     }
@@ -302,9 +314,9 @@ public class SecurityServiceBean implements SecurityService {
     }
 
     @Override
-	public OrtolangObject findObject(String key) throws OrtolangException {
-		throw new OrtolangException("this service does not manage any object");
-	}
+    public OrtolangObject findObject(String key) throws OrtolangException {
+        throw new OrtolangException("this service does not manage any object");
+    }
 
     @Override
     public OrtolangObjectSize getSize(String key) throws OrtolangException {

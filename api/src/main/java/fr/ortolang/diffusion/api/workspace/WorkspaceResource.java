@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -101,6 +102,7 @@ import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.core.PathNotFoundException;
 import fr.ortolang.diffusion.core.WorkspaceReadOnlyException;
 import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
@@ -108,6 +110,7 @@ import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
@@ -140,6 +143,8 @@ public class WorkspaceResource {
     private BinaryStoreService binary;
     @EJB
     private MembershipService membership;
+    @EJB
+    private EventService event;
     @EJB
     private RuntimeService runtime;
     @EJB
@@ -343,10 +348,10 @@ public class WorkspaceResource {
                 representation.setPathParts(npath.buildParts());
                 representation.setWorkspace(wskey);
                 try {
-                    security.checkPermission(ekey, "download");
-                    representation.setDownloadable(true);
+                    security.checkAnonymousPermission(ekey, "download");
+                    representation.setUnrestrictedDownload(true);
                 } catch (AccessDeniedException | SecurityServiceException e) {
-                    representation.setDownloadable(false);
+                    representation.setUnrestrictedDownload(false);
                 }
                 if (policy) {
                     boolean found = false;
@@ -589,7 +594,53 @@ public class WorkspaceResource {
         core.snapshotWorkspace(wskey);
         return Response.ok().build();
     }
-    
+
+    @GET
+    @Path("/{wskey}/elements/publication")
+    public Response getPublicationPolicy(@PathParam(value = "wskey") String wskey, @QueryParam("path") String path)
+            throws CoreServiceException, AccessDeniedException, InvalidPathException, PathNotFoundException, KeyNotFoundException, OrtolangException, IOException, DataNotFoundException,
+            BinaryStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/elements/publication");
+        if (path == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
+        }
+        String key = core.resolveWorkspacePath(wskey, Workspace.HEAD, path);
+        Collection parent = core.readCollection(key);
+        OrtolangObject object = parent;
+        PathBuilder npath = PathBuilder.fromPath(path);
+        boolean isRoot = npath.isRoot();
+        boolean found = false;
+        String parentPublicationPolicy = null;
+        Map<String, Object> map = new HashMap<>();
+        ArrayList<WorkspaceElementRepresentation> elements = new ArrayList<>();
+        while (!found) {
+            parentPublicationPolicy = readPublicationPolicy(object);
+            if (parentPublicationPolicy != null) {
+                found = true;
+            } else if (npath.isRoot()) {
+                found = true;
+                parentPublicationPolicy = AuthorisationPolicyTemplate.FORALL;
+            } else {
+                npath = npath.parent();
+                object = browser.findObject(core.resolveWorkspacePath(wskey, Workspace.HEAD, npath.build()));
+            }
+        }
+        WorkspaceElementRepresentation parentRepresentation = WorkspaceElementRepresentation.fromCollection(parent);
+        parentRepresentation.setPublicationPolicy(parentPublicationPolicy);
+        parentRepresentation.setPath(path);
+        map.put("parent", parentRepresentation);
+        for (CollectionElement child : parent.getElements()) {
+            object = browser.findObject(child.getKey());
+            String publicationPolicy = readPublicationPolicy(object);
+            WorkspaceElementRepresentation representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
+            representation.setPublicationPolicy(publicationPolicy == null ? parentPublicationPolicy : publicationPolicy);
+            representation.setPath(path + (isRoot ? "" : PathBuilder.PATH_SEPARATOR) + child.getName());
+            elements.add(representation);
+        }
+        map.put("elements", elements);
+        return Response.ok().entity(map).build();
+    }
+
     @PUT
     @Path("/{wskey}/elements/publication")
     public Response setPublicationPolicy(@PathParam(value = "wskey") String wskey, @QueryParam("path") String path, @QueryParam("recursive") @DefaultValue("true") boolean recursive, PublicationPolicy publicationPolicy)

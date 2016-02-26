@@ -57,7 +57,6 @@ import javax.json.Json;
 import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
-import javax.json.stream.JsonParsingException;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.apache.commons.io.IOUtils;
