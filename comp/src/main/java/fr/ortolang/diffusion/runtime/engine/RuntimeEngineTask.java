@@ -54,7 +54,7 @@ import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.publication.PublicationService;
-import fr.ortolang.diffusion.referentiel.ReferentielService;
+import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.security.SecurityService;
@@ -94,6 +94,8 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 
     public static final String REFERENTIEL_PATH_PARAM_NAME = "referentielpath";
     public static final String REFERENTIEL_TYPE_PARAM_NAME = "referentieltype";
+
+    public static final String REFERENTIAL_PATH_PARAM_NAME = "referentialpath";
     
     public static final String PUBLICATION_REJECT_REASON = "rejectreason";
     
@@ -119,7 +121,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     protected PublicationService publication;
     protected NotificationService notification;
     protected IndexingService indexing;
-    protected ReferentielService referentiel;
+    protected ReferentialService referential;
     
     public Session getMailSession() throws RuntimeEngineTaskException {
         try {
@@ -253,12 +255,12 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
         }
     }
 
-    public ReferentielService getReferentielService() throws RuntimeEngineTaskException {
+    public ReferentialService getReferentialService() throws RuntimeEngineTaskException {
         try {
-            if (referentiel == null) {
-                referentiel = (ReferentielService) OrtolangServiceLocator.findService(ReferentielService.SERVICE_NAME);
+            if (referential == null) {
+                referential = (ReferentialService) OrtolangServiceLocator.findService(ReferentialService.SERVICE_NAME);
             }
-            return referentiel;
+            return referential;
         } catch (Exception e) {
             throw new RuntimeEngineTaskException(e);
         }

@@ -98,6 +98,25 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.*;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
 
 @Local(MembershipService.class)
 @Stateless(name = MembershipService.SERVICE_NAME)
@@ -1187,11 +1206,7 @@ public class MembershipServiceBean implements MembershipService {
                     arrayBuilder.add(group);
                 }
                 builder.add("groups", arrayBuilder);
-                try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(builder.build().toString().getBytes())) {
-                    content.put(Profile.OBJECT_TYPE, byteArrayInputStream);
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage());
-                }
+                content.put(Profile.OBJECT_TYPE, builder.build().toString());
             }
 
             if (identifier.getType().equals(Group.OBJECT_TYPE)) {
@@ -1207,11 +1222,7 @@ public class MembershipServiceBean implements MembershipService {
                     arrayBuilder.add(member);
                 }
                 builder.add("members", arrayBuilder);
-                try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(builder.build().toString().getBytes())) {
-                    content.put(Group.OBJECT_TYPE, byteArrayInputStream);
-                } catch (IOException e) {
-                    LOGGER.log(Level.SEVERE, e.getMessage());
-                }
+                content.put(Group.OBJECT_TYPE, builder.build().toString());
             }
             return content;
         } catch (KeyNotFoundException | RegistryServiceException e) {

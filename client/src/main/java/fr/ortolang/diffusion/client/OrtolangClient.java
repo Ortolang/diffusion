@@ -56,6 +56,7 @@ import javax.json.JsonObject;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.GenericEntity;
@@ -149,6 +150,23 @@ public class OrtolangClient {
 			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
 		}
 	}
+
+	public synchronized JsonObject listObjects(String service, String type, String status, int offset, int limit) throws OrtolangClientException, OrtolangClientAccountException {
+		updateAuthorization();
+		WebTarget target = base.path("/objects");
+		Builder request = target.queryParam("service", service).queryParam("type", type).queryParam("status", status)
+				.queryParam("offset", offset).queryParam("limit", limit).request();
+		Response response = injectAuthHeader(request).accept(MediaType.APPLICATION_JSON_TYPE).get();
+		if (response.getStatus() == Status.OK.getStatusCode()) {
+			String object = response.readEntity(String.class);
+			JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
+			response.close();
+			return jsonObject;
+		} else {
+			response.close();
+			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+		}
+	}
 	
 	public synchronized boolean isObjectExists(String key) throws OrtolangClientException, OrtolangClientAccountException {
 		updateAuthorization();
@@ -179,6 +197,17 @@ public class OrtolangClient {
 			response.close();
 			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
 		}
+	}
+
+	public synchronized void reindex(String key) throws OrtolangClientException, OrtolangClientAccountException {
+		updateAuthorization();
+		WebTarget target = base.path("/objects").path(key).path("/index");
+		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity("", "text/plain"));
+		if (response.getStatus() != Status.OK.getStatusCode()) {
+			response.close();
+			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+		}
+		response.close();
 	}
 	
 	public synchronized Path downloadObject(String key) throws OrtolangClientException, OrtolangClientAccountException {

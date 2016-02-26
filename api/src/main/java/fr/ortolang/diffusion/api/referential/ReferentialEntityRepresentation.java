@@ -1,10 +1,10 @@
-package fr.ortolang.diffusion.subscription;
+package fr.ortolang.diffusion.api.referential;
 
 /*
  * #%L
  * ORTOLANG
  * A online network structure for hosting language resources and tools.
- * *
+ * 
  * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
  * Etienne Petitjean / ATILF UMR 7118 - CNRS
  * Jérôme Blanchard / ATILF UMR 7118 - CNRS
@@ -14,7 +14,7 @@ package fr.ortolang.diffusion.subscription;
  * Ulrike Fleury / ATILF UMR 7118 - CNRS
  * Frédéric Pierre / ATILF UMR 7118 - CNRS
  * Céline Moro / ATILF UMR 7118 - CNRS
- * *
+ *  
  * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
  * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
  * %%
@@ -36,21 +36,62 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.atmosphere.config.managed.Decoder;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import java.io.IOException;
+import fr.ortolang.diffusion.referential.entity.ReferentialEntity;
+import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
 
-public class FilterRepresentationDecoder implements Decoder<String, FilterRepresentation> {
+@XmlRootElement(name = "group")
+public class ReferentialEntityRepresentation {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    @XmlAttribute(name = "key")
+    private String key;
 
-    @Override
-    public FilterRepresentation decode(String s) {
-        try{
-            return mapper.readValue(s, FilterRepresentation.class);
-        } catch(IOException e){
-            throw new RuntimeException(e);
-        }
-    }
+    private String id;
+	private ReferentialEntityType type;
+	private String content;
+
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	public ReferentialEntityType getType() {
+		return type;
+	}
+
+	public void setType(ReferentialEntityType type) {
+		this.type = type;
+	}
+
+	public static ReferentialEntityRepresentation fromReferentialEntity(ReferentialEntity entity) {
+		ReferentialEntityRepresentation representation = new ReferentialEntityRepresentation();
+		representation.setId(entity.getId());
+		representation.setKey(entity.getKey());
+		representation.setContent(entity.getContent());
+		representation.setType(entity.getType());
+		
+		return representation;
+	}
+
 }

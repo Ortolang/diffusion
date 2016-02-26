@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
-  <process id="import-referentiel" name="Import Referentiel Process" isExecutable="true" activiti:candidateStarterUsers="root">
+  <process id="import-referential" name="Import Referential Process" isExecutable="true" activiti:candidateStarterUsers="root">
     <startEvent id="startevent1" name="Start"></startEvent>
-    <serviceTask id="importreferentiel" name="Import Referentiel" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportReferentielTask"></serviceTask>
+    <serviceTask id="importreferential" name="Import Referential entity" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportReferentialEntityTask"></serviceTask>
     <endEvent id="endevent1" name="End"></endEvent>
-    <sequenceFlow id="flow2" sourceRef="importreferentiel" targetRef="endevent1"></sequenceFlow>
-    <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="importreferentiel"></sequenceFlow>
+    <sequenceFlow id="flow2" sourceRef="importreferential" targetRef="endevent1"></sequenceFlow>
+    <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="importreferential"></sequenceFlow>
   </process>
-  <bpmndi:BPMNDiagram id="BPMNDiagram_import-referentiel">
-    <bpmndi:BPMNPlane bpmnElement="import-referentiel" id="BPMNPlane_import-referentiel">
+  <bpmndi:BPMNDiagram id="BPMNDiagram_import-referential">
+    <bpmndi:BPMNPlane bpmnElement="import-referential" id="BPMNPlane_import-referential">
       <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
         <omgdc:Bounds height="35.0" width="35.0" x="110.0" y="120.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="importreferentiel" id="BPMNShape_importreferentiel">
+      <bpmndi:BPMNShape bpmnElement="importreferential" id="BPMNShape_importreferential">
         <omgdc:Bounds height="55.0" width="105.0" x="210.0" y="110.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">

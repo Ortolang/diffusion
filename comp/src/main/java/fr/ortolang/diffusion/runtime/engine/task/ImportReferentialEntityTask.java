@@ -61,7 +61,8 @@ import javax.json.JsonReader;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.apache.commons.io.IOUtils;
 
-import fr.ortolang.diffusion.referentiel.ReferentielServiceException;
+import fr.ortolang.diffusion.referential.ReferentialServiceException;
+import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
@@ -69,22 +70,22 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
-public class ImportReferentielTask extends RuntimeEngineTask {
+public class ImportReferentialEntityTask extends RuntimeEngineTask {
 	
-	private static final Logger LOGGER = Logger.getLogger(ImportReferentielTask.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(ImportReferentialEntityTask.class.getName());
 
-	public static final String NAME = "Import Referentiel";
+	public static final String NAME = "Import Referential entity";
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
 		checkParameters(execution);
-		String referentielPathParam = execution.getVariable(REFERENTIEL_PATH_PARAM_NAME, String.class);
+		String referentialPathParam = execution.getVariable(REFERENTIAL_PATH_PARAM_NAME, String.class);
 		
-		File referentielPathFile = new File(referentielPathParam);
-		if(referentielPathFile.exists()) {
+		File referentialPathFile = new File(referentialPathParam);
+		if(referentialPathFile.exists()) {
 			
 			final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:*.{json}");
-			final Path referentialPath = Paths.get(referentielPathParam);
+			final Path referentialPath = Paths.get(referentialPathParam);
 			try {
 				Files.walkFileTree(referentialPath, new FileVisitor<Path>() {
 						@Override
@@ -138,14 +139,14 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 
 					});
 			} catch (Exception e) {
-				LOGGER.log(Level.SEVERE, "  unable to import referentiel : " + referentielPathFile, e);
+				LOGGER.log(Level.SEVERE, "  unable to import referential : " + referentialPathFile, e);
 			}
 			
 		} else {
-			LOGGER.log(Level.SEVERE, "Referential folder doesn't exists : " + referentielPathFile);
+			LOGGER.log(Level.SEVERE, "Referential folder doesn't exists : " + referentialPathFile);
 		}
 		
-		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import Referentiel entities done"));
+		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import Referential entities done"));
 		execution.setVariable("greettime", new Date());
 	}
 
@@ -155,35 +156,18 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 	}
 
 	private void checkParameters(DelegateExecution execution) throws RuntimeEngineTaskException {
-		if (!execution.hasVariable(REFERENTIEL_PATH_PARAM_NAME)) {
-			throw new RuntimeEngineTaskException("execution variable " + REFERENTIEL_PATH_PARAM_NAME + " is not set");
+		if (!execution.hasVariable(REFERENTIAL_PATH_PARAM_NAME)) {
+			throw new RuntimeEngineTaskException("execution variable " + REFERENTIAL_PATH_PARAM_NAME + " is not set");
 		}
 	}
 	
 	private boolean exists(String name, String type) throws RuntimeEngineTaskException {
 		boolean exist = false; 
 		try {
-			switch(type) {
-				case "License":
-					getReferentielService().readLicenseEntity(name);
-					break;
-				case "Organization":
-					getReferentielService().readOrganizationEntity(name);
-					break;
-				case "Person":
-					getReferentielService().readPersonEntity(name);
-					break;
-				case "StatusOfUse":
-					getReferentielService().readStatusOfUseEntity(name);
-					break;
-				case "Term":
-					getReferentielService().readTermEntity(name);
-					break;
-			}
-			
-			LOGGER.log(Level.FINE, "  referentiel entity already exists for key: " + name);
+			getReferentialService().readEntity(name);
+			LOGGER.log(Level.FINE, "  referential entity already exists for key: " + name);
 			exist = true;
-		} catch (ReferentielServiceException | KeyNotFoundException e) {
+		} catch (ReferentialServiceException | KeyNotFoundException e) {
 			//
 		}
 		return exist;
@@ -191,52 +175,36 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 	
 	private void createReferentialEntity(String name, String type, String content) throws RuntimeEngineTaskException {
 		try {
-			LOGGER.log(Level.FINE, "  add referential entity "+name);
-			switch(type) {
-				case "License":
-					getReferentielService().createLicenseEntity(name, content);
-					break;
-				case "Organization":
-					getReferentielService().createOrganizationEntity(name, content);
-					break;
-				case "Person":
-					getReferentielService().createPersonEntity(name, content);
-					break;
-				case "StatusOfUse":
-					getReferentielService().createStatusOfUseEntity(name, content);
-					break;
-				case "Term":
-					getReferentielService().createTermEntity(name, content);
-					break;
+			LOGGER.log(Level.FINE, "  add referential entity "+name+" with type "+type);
+
+			ReferentialEntityType entityType = getEntityType(type.toUpperCase());
+			if(entityType!=null) {
+				getReferentialService().createEntity(name, entityType, content);
+			} else {
+				LOGGER.log(Level.SEVERE, "  unable to find type of referential entity named "+name);
+				throw new RuntimeEngineTaskException("unable to create referential entity named " + name + " and type " + type);
 			}
+			
 			LOGGER.log(Level.FINE, "  referential entity created with name "+name);
-		} catch (ReferentielServiceException | KeyAlreadyExistsException | AccessDeniedException e) {
+		} catch (ReferentialServiceException | KeyAlreadyExistsException | AccessDeniedException e) {
 			LOGGER.log(Level.SEVERE, "  unable to create referential entity named "+name, e);
 		}
 	}
 
 	private void updateReferentialEntity(String name, String type, String content) throws RuntimeEngineTaskException {
 		try {
-			LOGGER.log(Level.FINE, "  update referential entity "+name);
-			switch(type) {
-				case "License":
-					getReferentielService().updateLicenseEntity(name, content);
-					break;
-				case "Organization":
-					getReferentielService().updateOrganizationEntity(name, content);
-					break;
-				case "Person":
-					getReferentielService().updatePersonEntity(name, content);
-					break;
-				case "StatusOfUse":
-					getReferentielService().updateStatusOfUseEntity(name, content);
-					break;
-				case "Term":
-					getReferentielService().updateTermEntity(name, content);
-					break;
+			LOGGER.log(Level.FINE, "  update referential entity "+name+" with type "+type);
+
+			ReferentialEntityType entityType = getEntityType(type.toUpperCase());
+			if(entityType!=null) {
+				getReferentialService().updateEntity(name, entityType, content);
+			} else {
+				LOGGER.log(Level.SEVERE, "  unable to find type of referential entity named "+name);
+				throw new RuntimeEngineTaskException("unable to create referential entity named " + name + " and type " + type);
 			}
+			
 			LOGGER.log(Level.FINE, "  referential entity updated with name "+name);
-		} catch (ReferentielServiceException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (ReferentialServiceException | AccessDeniedException | KeyNotFoundException e) {
 			LOGGER.log(Level.SEVERE, "  unable to update referential entity named "+name, e);
 		}
 	}
@@ -272,5 +240,14 @@ public class ImportReferentielTask extends RuntimeEngineTask {
 
 		return fieldValue;
 	}
+
+    private ReferentialEntityType getEntityType(String type) {
+    	try {
+    		return ReferentialEntityType.valueOf(type);
+    	} catch(IllegalArgumentException e) {
+    		LOGGER.log(Level.WARNING, "Asking entity type unknown : " + type);
+    		return null;
+    	}
+    }
 
 }
