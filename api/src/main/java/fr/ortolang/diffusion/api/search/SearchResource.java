@@ -118,6 +118,8 @@ public class SearchResource {
     			content = parameter.getValue()[0];
     		} else if(parameter.getKey().equals("group")) {
     			group = parameter.getValue()[0];
+    		} else if(parameter.getKey().equals("scope")) {
+    			// Ignore scope param
     		} else {
     			if(parameter.getKey().endsWith("[]")) {
     				List<String> paramArr = new ArrayList<String>();
