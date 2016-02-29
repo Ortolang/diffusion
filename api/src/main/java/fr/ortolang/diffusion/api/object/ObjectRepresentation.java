@@ -36,15 +36,10 @@ package fr.ortolang.diffusion.api.object;
  * #L%
  */
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectVersion;
 
 @XmlRootElement(name = "object")
 public class ObjectRepresentation {
@@ -60,18 +55,10 @@ public class ObjectRepresentation {
 	private String author;
 	private String creationDate;
 	private String lastModificationDate;
-	private Map<String, String> properties;
 	private String owner;
-	private Map<String, List<String>> permissions;
-	private List<OrtolangObjectVersion> history;
-	private List<String> handles;
 	private OrtolangObject object;
 
 	public ObjectRepresentation() {
-		properties = Collections.emptyMap();
-		permissions = Collections.emptyMap();
-		history = Collections.emptyList();
-		handles = Collections.emptyList();
 	}
 
 	public String getKey() {
@@ -122,14 +109,6 @@ public class ObjectRepresentation {
 		this.lock = lock;
 	}
 
-	public Map<String, String> getProperties() {
-		return properties;
-	}
-
-	public void setProperties(Map<String, String> properties) {
-		this.properties = properties;
-	}
-
 	public String getOwner() {
 		return owner;
 	}
@@ -144,14 +123,6 @@ public class ObjectRepresentation {
 
 	public void setVisibility(String visibility) {
 		this.visibility = visibility;
-	}
-
-	public Map<String, List<String>> getPermissions() {
-		return permissions;
-	}
-
-	public void setPermissions(Map<String, List<String>> permissions) {
-		this.permissions = permissions;
 	}
 
 	public OrtolangObject getObject() {
@@ -186,20 +157,4 @@ public class ObjectRepresentation {
 		this.lastModificationDate = lastModificationDate;
 	}
 
-	public List<OrtolangObjectVersion> getHistory() {
-		return history;
-	}
-
-	public void setHistory(List<OrtolangObjectVersion> history) {
-		this.history = history;
-	}
-
-    public List<String> getHandles() {
-        return handles;
-    }
-
-    public void setHandles(List<String> handles) {
-        this.handles = handles;
-    }
-	
 }

@@ -44,6 +44,8 @@ public class OrtolangObjectInfos implements Serializable {
 	private String author;
 	private long creationDate;
 	private long lastModificationDate;
+	private String parent;
+	private String children;
 	
 	public OrtolangObjectInfos() {
 	}
@@ -53,6 +55,14 @@ public class OrtolangObjectInfos implements Serializable {
 		this.creationDate = creationDate;
 		this.lastModificationDate = lastModificationDate;
 	}
+	
+	public OrtolangObjectInfos(String author, long creationDate, long lastModificationDate, String parent, String children) {
+        this.author = author;
+        this.creationDate = creationDate;
+        this.lastModificationDate = lastModificationDate;
+        this.parent = parent;
+        this.children = children;
+    }
 
 	public String getAuthor() {
 		return author;
@@ -77,13 +87,31 @@ public class OrtolangObjectInfos implements Serializable {
 	public void setLastModificationDate(long lastModificationDate) {
 		this.lastModificationDate = lastModificationDate;
 	}
+	
+	public String getParent() {
+        return parent;
+    }
 
-	@Override
+    public void setParent(String parent) {
+        this.parent = parent;
+    }
+
+    public String getChildren() {
+        return children;
+    }
+
+    public void setChildren(String children) {
+        this.children = children;
+    }
+
+    @Override
 	public String toString() {
 		return "OrtolangObjectInfos{" +
 				"author='" + author + '\'' +
 				", creationDate=" + creationDate +
 				", lastModificationDate=" + lastModificationDate +
+				", parent=" + parent +
+				", children=" + children +
 				'}';
 	}
 }
