@@ -4053,20 +4053,22 @@ public class CoreServiceBean implements CoreService {
     private void purgeChildrenMetadata(Collection collection, String wskey, String path, String name) throws OrtolangException, AccessDeniedException, KeyNotFoundException, InvalidPathException,
             PathNotFoundException, WorkspaceReadOnlyException, CoreServiceException, RegistryServiceException {
         MetadataElement metadataElement;
+        OrtolangObjectIdentifier identifier;
         for (CollectionElement collectionElement : collection.getElements()) {
             metadataElement = null;
+            identifier = registry.lookup(collectionElement.getKey());
             switch (collectionElement.getType()) {
             case Collection.OBJECT_TYPE:
-                Collection subCollection = readCollection(collectionElement.getKey());
+                Collection subCollection = em.find(Collection.class, identifier.getId());
                 metadataElement = subCollection.findMetadataByName(name);
                 purgeChildrenMetadata(subCollection, wskey, path + "/" + subCollection.getName(), name);
                 break;
             case DataObject.OBJECT_TYPE:
-                DataObject dataObject = readDataObject(collectionElement.getKey());
+                DataObject dataObject = em.find(DataObject.class, identifier.getId());
                 metadataElement = dataObject.findMetadataByName(name);
                 break;
             case Link.OBJECT_TYPE:
-                Link link = readLink(collectionElement.getKey());
+                Link link = em.find(Link.class, identifier.getId());
                 metadataElement = link.findMetadataByName(name);
                 break;
             }
