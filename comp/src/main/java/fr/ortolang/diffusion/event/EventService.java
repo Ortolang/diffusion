@@ -74,9 +74,9 @@ public interface EventService extends OrtolangService {
     
     public void persistEvent(Event event) throws EventServiceException;
     
-    public List<OrtolangEvent> findEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, int offset, int limit) throws EventServiceException;
+    public List<OrtolangEvent> findEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long afterTimestamp, int offset, int limit) throws EventServiceException;
     
-    public List<? extends OrtolangEvent> systemFindEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, int offset, int limit) throws EventServiceException;
+    public List<? extends OrtolangEvent> systemFindEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long afterTimestamp, int offset, int limit) throws EventServiceException;
     
     public Long systemCountEvents() throws EventServiceException;
     

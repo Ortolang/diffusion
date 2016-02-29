@@ -670,10 +670,11 @@ public class WorkspaceResource {
     @Path("/{wskey}/events")
     @GZIP
     public Response listWorkspaceEvents(@PathParam(value = "wskey") String wskey, @QueryParam(value = "o") @DefaultValue(value = "0") int offset, @QueryParam(value = "l") @DefaultValue(value = "25") int limit, @Context Request request)
-            throws EventServiceException {
+ throws EventServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/events");
+        long wscreation = browser.getInfos(wskey).getCreationDate();
         GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>(); 
-        List<OrtolangEvent> events = event.findEvents(null, wskey, null, null, offset, limit);
+        List<OrtolangEvent> events = event.findEvents(null, wskey, null, null, wscreation, offset, limit);
         representation.setEntries(events);
         representation.setOffset(offset);
         representation.setLimit(limit);

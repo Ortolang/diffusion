@@ -425,8 +425,9 @@ public class EventServiceBean implements EventService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public List<OrtolangEvent> findEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, int offset, int limit) throws EventServiceException {
-        LOGGER.log(Level.FINE, "##SYSTEM## finding events");
+    public List<OrtolangEvent> findEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long after, int offset, int limit)
+            throws EventServiceException {
+        LOGGER.log(Level.FINE, "finding events");
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
 
@@ -436,7 +437,7 @@ public class EventServiceBean implements EventService {
             boolean endOfEvents = false;
             List<OrtolangEvent> oevents = new ArrayList<OrtolangEvent>();
             while (!endOfEvents) {
-                List<? extends OrtolangEvent> events = systemFindEvents(eventTypeFilter, fromResourceFilter, resourceTypeFilter, throwedByFilter, ioffset, ilimit);
+                List<? extends OrtolangEvent> events = systemFindEvents(eventTypeFilter, fromResourceFilter, resourceTypeFilter, throwedByFilter, after, ioffset, ilimit);
                 if (events.size() < ilimit) {
                     LOGGER.log(Level.FINEST, "systemFindEvents returned only " + events.size() + " events, seem that end is reached.");
                     endOfEvents = true;
@@ -471,7 +472,7 @@ public class EventServiceBean implements EventService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public List<? extends OrtolangEvent> systemFindEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, int offset, int limit)
+    public List<? extends OrtolangEvent> systemFindEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long after, int offset, int limit)
             throws EventServiceException {
         LOGGER.log(Level.FINE, "##SYSTEM## finding events");
         String eventTypeFilterRE = "%";
@@ -490,9 +491,17 @@ public class EventServiceBean implements EventService {
         if (throwedByFilter != null && throwedByFilter.length() > 0) {
             throwedByFilterRE += throwedByFilter + "%";
         }
-        List<Event> events = em.createNamedQuery("findEvents", Event.class).setParameter("eventTypeFilter", eventTypeFilterRE).setParameter("fromResourceFilter", fromResourceFilterRE)
-                .setParameter("resourceTypeFilter", resourceTypeFilterRE).setParameter("throwedByFilter", throwedByFilterRE).setFirstResult(offset).setMaxResults(limit).setLockMode(LockModeType.NONE)
-                .getResultList();
+        List<Event> events;
+        if (after > 0) {
+            events = em.createNamedQuery("findEventsAfterDate", Event.class).setParameter("eventTypeFilter", eventTypeFilterRE).setParameter("fromObjectFilter", fromResourceFilterRE)
+                    .setParameter("objectTypeFilter", resourceTypeFilterRE).setParameter("throwedByFilter", throwedByFilterRE).setParameter("after", new Date(after)).setFirstResult(offset)
+                    .setMaxResults(limit).setLockMode(LockModeType.NONE).getResultList();
+
+        } else {
+            events = em.createNamedQuery("findEvents", Event.class).setParameter("eventTypeFilter", eventTypeFilterRE).setParameter("fromObjectFilter", fromResourceFilterRE)
+                    .setParameter("objectTypeFilter", resourceTypeFilterRE).setParameter("throwedByFilter", throwedByFilterRE).setFirstResult(offset).setMaxResults(limit)
+                    .setLockMode(LockModeType.NONE).getResultList();
+        }
         return events;
     }
 

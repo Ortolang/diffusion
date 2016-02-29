@@ -77,6 +77,8 @@ import fr.ortolang.diffusion.OrtolangEvent;
         @NamedQuery(name = "listAllEventsThrowedBy", query = "SELECT e FROM Event e WHERE e.throwedBy = :throwedBy ORDER BY e.date DESC"),
         @NamedQuery(name = "listAllEventsFromObject", query = "SELECT e FROM Event e WHERE e.fromObject = :fromObject ORDER BY e.date DESC"),
         @NamedQuery(name = "findEvents", query = "SELECT e FROM Event e WHERE e.fromObject LIKE :fromObjectFilter AND e.throwedBy LIKE :throwedByFilter AND e.type LIKE :eventTypeFilter AND e.objectType LIKE :objectTypeFilter ORDER BY e.date DESC"),
+        @NamedQuery(name = "findEventsAfterDate", query = "SELECT e FROM Event e WHERE e.fromObject LIKE :fromObjectFilter AND e.throwedBy LIKE :throwedByFilter AND e.type LIKE :eventTypeFilter AND e.objectType LIKE :objectTypeFilter AND e.date > :after ORDER BY e.date DESC"),
+        @NamedQuery(name = "findEventsAfterId", query = "SELECT e FROM Event e WHERE e.fromObject LIKE :fromObjectFilter AND e.throwedBy LIKE :throwedByFilter AND e.type LIKE :eventTypeFilter AND e.objectType LIKE :objectTypeFilter AND e.id > :after ORDER BY e.date DESC")
         })
 public class Event extends OrtolangEvent implements Serializable {
 
