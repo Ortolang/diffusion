@@ -110,6 +110,7 @@ public class SearchResource {
     	String fields = null;
     	String content = null;
     	String group = null;
+    	String limit = null;
 		HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
     	for(Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
     		if(parameter.getKey().equals("fields")) {
@@ -118,6 +119,8 @@ public class SearchResource {
     			content = parameter.getValue()[0];
     		} else if(parameter.getKey().equals("group")) {
     			group = parameter.getValue()[0];
+    		} else if(parameter.getKey().equals("limit")) {
+    			limit = parameter.getValue()[0];
     		} else if(parameter.getKey().equals("scope")) {
     			// Ignore scope param
     		} else {
@@ -152,9 +155,9 @@ public class SearchResource {
 			}
 		}
     	if(content!=null) {
-    		query = findByContent("Collection", content, fieldsProjection, fieldsMap, group);
+    		query = findByContent("Collection", content, fieldsProjection, fieldsMap, group, limit);
     	} else {
-    		query = findItemsByFields(fieldsProjection, fieldsMap, group);
+    		query = findItemsByFields(fieldsProjection, fieldsMap, group, limit);
     	}
     	
     	// Execute the query
@@ -193,7 +196,7 @@ public class SearchResource {
 		}
     	
     	HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
-    	String query = findByContent("Profile", content, fieldsProjection, fieldsMap, null);
+    	String query = findByContent("Profile", content, fieldsProjection, fieldsMap, null, null);
     	
     	// Execute the query
     	List<String> results;
@@ -256,7 +259,7 @@ public class SearchResource {
     }
     
     
-	private String findItemsByFields(HashMap<String, String> fieldsProjection, Map<String,Object> fieldsValue, String group) {
+	private String findItemsByFields(HashMap<String, String> fieldsProjection, Map<String,Object> fieldsValue, String group, String limit) {
     	StringBuilder queryBuilder = new StringBuilder();
     	
     	queryBuilder.append("SELECT ");
@@ -273,10 +276,14 @@ public class SearchResource {
     		queryBuilder.append(" GROUP BY ").append("`meta_ortolang-item-json.").append(group).append("`");
     	}
     	
+    	if(limit!=null) {
+    		queryBuilder.append(" LIMIT ").append(limit);
+    	}
+    	
     	return queryBuilder.toString();
     }
 
-    private String findByContent(String cls, String content, HashMap<String, String> fieldsProjection, Map<String,Object> fieldsValue, String group) {
+    private String findByContent(String cls, String content, HashMap<String, String> fieldsProjection, Map<String,Object> fieldsValue, String group, String limit) {
     	StringBuilder queryBuilder = new StringBuilder();
     	// SELECT FROM Collection LET $temp = (   SELECT FROM (     TRAVERSE * FROM $current WHILE $depth <= 7   )   WHERE any().toLowerCase().indexOf('dede') > -1 ) WHERE $temp.size() > 0
     	queryBuilder.append("SELECT ");
@@ -302,6 +309,10 @@ public class SearchResource {
     	
     	if(group!=null) {
     		queryBuilder.append(" GROUP BY ").append("`meta_ortolang-item-json.").append(group).append("`");
+    	}
+
+    	if(limit!=null) {
+    		queryBuilder.append(" LIMIT ").append(limit);
     	}
     	
 //    	if(type!=null) {
@@ -338,7 +349,11 @@ public class SearchResource {
 			else
 				whereStr.append(" WHERE ");
     		if(field.getValue() instanceof String) {
-    			whereStr.append("`").append(field.getKey()).append("` = '").append(field.getValue()).append("'");
+    			if(field.getValue().equals("")) {
+    				whereStr.append("`").append(field.getKey()).append("` IS NOT NULL");
+    			} else {
+    				whereStr.append("`").append(field.getKey()).append("` = '").append(field.getValue()).append("'");
+    			}
     		} else if(field.getValue() instanceof List && ((List) field.getValue()).size()>0) {
     			whereStr.append("`").append(field.getKey()).append("` IN [")
     				.append(arrayValues((List<String>) field.getValue())).append("]");
