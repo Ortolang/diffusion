@@ -685,7 +685,7 @@ public class RuntimeServiceBean implements RuntimeService {
             }
 
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-        } catch (RuntimeServiceException | RegistryServiceException | KeyNotFoundException | AccessDeniedException e) {
+        } catch (RuntimeServiceException | RegistryServiceException | KeyNotFoundException e) {
             throw new OrtolangException("unable to find an object for key " + key);
         }
     }

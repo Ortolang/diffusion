@@ -566,7 +566,7 @@ public class EventServiceBean implements EventService {
             }
 
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-        } catch (RegistryServiceException | KeyNotFoundException | AccessDeniedException | EventServiceException e) {
+        } catch (RegistryServiceException | KeyNotFoundException | EventServiceException e) {
             throw new OrtolangException("unable to find an object for key " + key);
         }
     }
