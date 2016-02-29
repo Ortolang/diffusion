@@ -3212,21 +3212,26 @@ public class CoreServiceBean implements CoreService {
 
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             String hash;
-            if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
+            switch (identifier.getType()) {
+            case DataObject.OBJECT_TYPE: {
                 authorisation.checkPermission(key, subjects, "download");
                 DataObject object = em.find(DataObject.class, identifier.getId());
                 if (object == null) {
                     throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
                 }
                 hash = object.getStream();
-            } else if (identifier.getType().equals(MetadataObject.OBJECT_TYPE)) {
+                break;
+            }
+            case MetadataObject.OBJECT_TYPE: {
                 authorisation.checkPermission(key, subjects, "read");
                 MetadataObject object = em.find(MetadataObject.class, identifier.getId());
                 if (object == null) {
                     throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
                 }
                 hash = object.getStream();
-            } else {
+                break;
+            }
+            default:
                 throw new CoreServiceException("unable to find downloadable content for key [" + key + "]");
             }
             if (hash != null && hash.length() > 0) {
@@ -3310,7 +3315,7 @@ public class CoreServiceBean implements CoreService {
             }
 
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-        } catch (CoreServiceException | RegistryServiceException | KeyNotFoundException | AccessDeniedException e) {
+        } catch (CoreServiceException | RegistryServiceException | KeyNotFoundException e) {
             throw new OrtolangException("unable to find an object for key " + key);
         }
     }

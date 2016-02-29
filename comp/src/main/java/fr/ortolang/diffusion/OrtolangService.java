@@ -49,16 +49,16 @@ import java.util.Map;
  */
 public interface OrtolangService {
 
-	public abstract String getServiceName();
+	String getServiceName();
 	
-	public abstract Map<String, String> getServiceInfos();
+	Map<String, String> getServiceInfos();
 
-	public abstract String[] getObjectTypeList();
+	String[] getObjectTypeList();
 	
-	public abstract String[] getObjectPermissionsList(String type) throws OrtolangException;
+	String[] getObjectPermissionsList(String type) throws OrtolangException;
 	
-	public abstract OrtolangObject findObject(String key) throws OrtolangException;
+	OrtolangObject findObject(String key) throws OrtolangException;
 
-	public abstract OrtolangObjectSize getSize(String key) throws OrtolangException;
+	OrtolangObjectSize getSize(String key) throws OrtolangException;
 	
 }

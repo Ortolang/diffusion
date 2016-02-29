@@ -36,8 +36,10 @@ package fr.ortolang.diffusion.security.authorisation;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangException;
+
 @SuppressWarnings("serial")
-public class AccessDeniedException extends Exception {
+public class AccessDeniedException extends OrtolangException {
 
 	public AccessDeniedException(String message) {
 		super(message);
