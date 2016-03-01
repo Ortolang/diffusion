@@ -74,7 +74,7 @@ public class ImageResizer {
     static {
         jpegParams = new JPEGImageWriteParam(null);
         jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-        jpegParams.setCompressionQuality(0.8F);
+        jpegParams.setCompressionQuality(0.85F);
     }
 
     public ImageResizer(int thumbWidth, int thumbHeight) {
@@ -174,15 +174,16 @@ public class ImageResizer {
             Graphics2D graphics2D = tmpImage.createGraphics();
             graphics2D.setBackground(Color.WHITE);
             graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            graphics2D.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
             graphics2D.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
             graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             graphics2D.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
             ImageResizerObserver observer = new ImageResizerObserver(Thread.currentThread());
-            boolean scalingComplete = graphics2D.drawImage(outputImage, 0, 0, currentWidth, currentHeight, observer);
+            boolean scalingComplete = graphics2D.drawImage(outputImage, 0, 0, currentWidth, currentHeight, Color.WHITE, observer);
             graphics2D.dispose();
             if (!scalingComplete) {
                 while (!observer.ready) {
-                    LOGGER.log(Level.FINE, "waiting for image to be completelly drawned");
+                    LOGGER.log(Level.FINE, "waiting for image to be completely drawn");
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
