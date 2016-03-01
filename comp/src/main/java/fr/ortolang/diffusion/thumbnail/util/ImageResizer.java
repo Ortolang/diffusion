@@ -55,6 +55,8 @@ public class ImageResizer {
 
     private static final Logger LOGGER = Logger.getLogger(ImageResizer.class.getName());
 
+    private static final String JPG = "jpg";
+
     BufferedImage inputImage;
     private boolean isProcessed = false;
     BufferedImage outputImage;
@@ -102,16 +104,16 @@ public class ImageResizer {
     }
 
     public void writeOutput(File output) throws IOException {
-        writeOutput(output, "jpg");
+        writeOutput(output, JPG);
     }
 
     public void writeOutput(File output, String format) throws IOException {
         if (!isProcessed) {
             process();
         }
-        if (format.equals("jpg")) {
+        if (format.equals(JPG)) {
             ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(output);
-            ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
+            ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName(JPG).next();
             jpgWriter.setOutput(imageOutputStream);
             jpgWriter.write(null, new IIOImage(outputImage, null, null), jpegParams);
             imageOutputStream.close();
@@ -139,8 +141,6 @@ public class ImageResizer {
 
     private void paint() {
         LOGGER.log(Level.FINE, "starting to paint image");
-        int type = inputImage.getTransparency() == Transparency.OPAQUE ?
-                BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
         int currentWidth = inputImage.getWidth();
         int currentHeight = inputImage.getHeight();
         boolean reduction = true;
@@ -170,7 +170,7 @@ public class ImageResizer {
                 currentHeight = scaledHeight;
             }
 
-            BufferedImage tmpImage = new BufferedImage(currentWidth, currentHeight, type);
+            BufferedImage tmpImage = new BufferedImage(currentWidth, currentHeight, BufferedImage.TYPE_INT_RGB);
             Graphics2D graphics2D = tmpImage.createGraphics();
             graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             graphics2D.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
