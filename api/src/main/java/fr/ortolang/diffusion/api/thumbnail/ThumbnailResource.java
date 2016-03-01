@@ -69,6 +69,7 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.api.auth.AuthResource;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
+import fr.ortolang.diffusion.core.*;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -76,14 +77,16 @@ import fr.ortolang.diffusion.thumbnail.Thumbnail;
 import fr.ortolang.diffusion.thumbnail.ThumbnailService;
 import fr.ortolang.diffusion.thumbnail.ThumbnailServiceException;
 
-@Path("/thumb")
+@Path("/thumbs")
 public class ThumbnailResource {
-    
+
     private static final Logger LOGGER = Logger.getLogger(ThumbnailResource.class.getName());
-    
+
     private static final String DEFAULT_THUMBNAIL_IMAGE = "empty.png";
     private static final String DEFAULT_THUMBNAIL_MIMETYPE = "image/png";
-    
+
+    @EJB
+    private CoreService core;
     @EJB
     private BrowserService browser;
     @EJB
@@ -104,14 +107,26 @@ public class ThumbnailResource {
         }
         return defaultThumb;
     }
-    
-    @GET
-    @Path("/{key}")
-    @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-    public Response getThumbnail(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size, @QueryParam("l") @DefaultValue("true") boolean login,
-            @Context SecurityContext security, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, OrtolangException, ThumbnailServiceException {
-        LOGGER.log(Level.INFO, "GET /thumb/" + key);
 
+    @GET @Path("/{key}") @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD }) public Response getThumbnailFromKey(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size,
+            @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security, @Context Request request)
+            throws BrowserServiceException, KeyNotFoundException, OrtolangException, ThumbnailServiceException {
+        LOGGER.log(Level.INFO, "GET /thumb/" + key);
+        return getThumbnail(key, size, login, security, request);
+    }
+
+    @GET @Path("/{alias}/{root}/{path:.*}") public Response getThumbnailFromPath(@PathParam("alias") final String alias, @PathParam("root") final String root, @PathParam("path") final String path,
+            @QueryParam("size") @DefaultValue("300") int size, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security, @Context Request request)
+            throws CoreServiceException, AliasNotFoundException, OrtolangException, InvalidPathException, PathNotFoundException, KeyNotFoundException, ThumbnailServiceException,
+            BrowserServiceException {
+        LOGGER.log(Level.INFO, "GET /thumb/" + alias + "/" + root + "/" + path);
+        String wskey = core.resolveWorkspaceAlias(alias);
+        String key = core.resolveWorkspacePath(wskey, root, path);
+        return getThumbnail(key, size, login, security, request);
+    }
+
+    private Response getThumbnail(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size, @QueryParam("l") @DefaultValue("true") boolean login,
+            @Context SecurityContext security, @Context Request request) throws BrowserServiceException, KeyNotFoundException {
         try {
             OrtolangObjectState state = browser.getState(key);
             CacheControl cc = new CacheControl();
@@ -146,10 +161,9 @@ public class ThumbnailResource {
             if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, "/thumb/" + key, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo.getBaseUri()
-                            .getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, "/thumb/" + key).build()).cookie(rcookie)
-                            .build();
+                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, "/thumb/" + key, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT),
+                            uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
+                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, "/thumb/" + key).build()).cookie(rcookie).build();
                 } else {
                     LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
                     return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
