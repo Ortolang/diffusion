@@ -172,6 +172,7 @@ public class ImageResizer {
 
             BufferedImage tmpImage = new BufferedImage(currentWidth, currentHeight, BufferedImage.TYPE_INT_RGB);
             Graphics2D graphics2D = tmpImage.createGraphics();
+            graphics2D.setBackground(Color.WHITE);
             graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             graphics2D.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
             graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
