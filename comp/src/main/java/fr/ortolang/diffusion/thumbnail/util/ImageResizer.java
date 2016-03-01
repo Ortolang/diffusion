@@ -124,7 +124,7 @@ public class ImageResizer {
     }
 
     private void process() {
-        if (imageWidth == thumbWidth && imageHeight == thumbHeight) {
+        if (inputImage.getType() == BufferedImage.TYPE_INT_RGB && imageWidth == thumbWidth && imageHeight == thumbHeight) {
             outputImage = inputImage;
         } else {
             calcDimensions();
