@@ -36,17 +36,13 @@ package fr.ortolang.diffusion.api.oaipmh.format;
  * #L%
  */
 
-import java.io.StringReader;
-
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
-import javax.json.JsonReader;
 import javax.json.JsonString;
 
 public class OLAC extends OAI_DC {
@@ -80,28 +76,25 @@ public class OLAC extends OAI_DC {
     	fields.add(XMLElement.createDcElement(name, value).withAttribute("xsi:type", xsitype).withAttribute("olac:code", olaccode).withAttribute("xml:lang", lang));
     }
 
-    public static OLAC valueOf(JsonObject doc) {
+    public static OLAC valueOf(JsonObject doc, JsonObject workspaceDoc) {
     	OLAC olac = new OLAC();
 
         // Identifier
-        //TODO Mettre le handle
-
-        // Différence avec OAI_DC ?
-        // TODO : Contributor OLAC avec xsi:type + olac:code
-        // Subject olac:code
-        // TODO Language olac:code + code ISO
-        
-        // Plus
-        // dcterms provenance ? ORTOLANG ?
+        JsonObject workspace = doc.getJsonObject("meta_ortolang-workspace-json");
+        String snapshotName = workspace.getString("snapshotName");
+        JsonObject workspaceMeta = workspaceDoc.getJsonObject("meta_ortolang-workspace-json");
+        JsonArray tags = workspaceMeta.getJsonArray("tags");
+        if(tags!=null) {
+        	for(JsonObject tag : tags.getValuesAs(JsonObject.class)) {
+        		if(tag.getString("snapshot").equals(snapshotName)) {
+        			olac.addDctermsField("identifier", "dcterms:URI", identifier(workspace.getString("wsalias"),  tag.getString("name")));
+        		}
+        	}
+        }
 
         try {
-    		JsonString metaString = doc.getJsonString("meta_ortolang-item-json");
+        	JsonObject meta = doc.getJsonObject("meta_ortolang-item-json");
         	
-        	StringReader reader = new StringReader(metaString.getString());
-            JsonReader jsonReader = Json.createReader(reader);
-            JsonObject meta = jsonReader.readObject();
-
-            try {
 	            JsonArray multilingualTitles = meta.getJsonArray("title");
 	            for(JsonObject multilingualTitle : multilingualTitles.getValuesAs(JsonObject.class)) {
 	            	olac.addDcMultilingualField("title", multilingualTitle.getString("lang"), multilingualTitle.getString("value"));
@@ -109,20 +102,33 @@ public class OLAC extends OAI_DC {
 
 	            JsonArray multilingualDescriptions = meta.getJsonArray("description");
 	            for(JsonObject multilingualTitle : multilingualDescriptions.getValuesAs(JsonObject.class)) {
-	            	String nohtml = multilingualTitle.getString("value").toString().replaceAll("\\<.*?>","").replaceAll("\\&nbsp;"," ").replaceAll("\\&","");
-	            	olac.addDcMultilingualField("description", multilingualTitle.getString("lang"), nohtml);
+	            	olac.addDcMultilingualField("description", multilingualTitle.getString("lang"), removeHTMLTag(multilingualTitle.getString("value")));
 	            }
 
 	            JsonArray corporaLanguages = meta.getJsonArray("corporaLanguages");
 	            if(corporaLanguages!=null) {
 	                for(JsonObject corporaLanguage : corporaLanguages.getValuesAs(JsonObject.class)) {
-	                	JsonObject metaLanguage = corporaLanguage.getJsonObject("meta_ortolang-referentiel-json");
+	                	JsonObject metaLanguage = corporaLanguage.getJsonObject("meta_ortolang-referential-json");
 	                	JsonArray multilingualLabels = metaLanguage.getJsonArray("labels");
 	                	
 	                	for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 //	                		olac.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
 //	                		olac.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
 		                	olac.addOlacField("language", "olac:language", metaLanguage.getString("id"), label.getString("lang"), label.getString("value"));
+	                	}
+	                }
+	            }
+
+	            JsonArray studyLanguages = meta.getJsonArray("studyLanguages");
+	            if(studyLanguages!=null) {
+	                for(JsonObject studyLanguage : studyLanguages.getValuesAs(JsonObject.class)) {
+	                	JsonObject metaLanguage = studyLanguage.getJsonObject("meta_ortolang-referential-json");
+	                	JsonArray multilingualLabels = metaLanguage.getJsonArray("labels");
+	                	
+	                	for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+//	                		olac.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
+//	                		olac.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
+		                	olac.addOlacField("subject", "olac:language", metaLanguage.getString("id"), label.getString("lang"), label.getString("value"));
 	                	}
 	                }
 	            }
@@ -134,38 +140,48 @@ public class OLAC extends OAI_DC {
 	                }
 	            }
 	
-//	            JsonArray contributors = doc.getJsonArray("contributors");
-//	            for(JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
-//	                JsonArray roles = contributor.getJsonArray("role");
-//	                for(JsonString role : roles.getValuesAs(JsonString.class)) {
-//	                    if(role.getString().equals("producer")) {
-//	                        JsonObject entityContributor = contributor.getJsonObject("entity");
-//	                        String fullname = entityContributor.getString("fullname");
-//	                        olac.addDcField("publisher", fullname);
-//	                    } else {
-//	                    	olac.addOlacField("contributor", "olac:role", role.getString(), contributor(contributor));
-//	                    }
-//	                    
-//	                    if(role.getString().equals("author")) {
-//	                    	olac.addDcField("creator", creator(contributor));
-//	                    }
-//	                }
-//	            }
+	            JsonArray contributors = meta.getJsonArray("contributors");
+	            if(contributors!=null) {
+		            for(JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
+		                JsonArray roles = contributor.getJsonArray("roles");
+		                for(JsonObject role : roles.getValuesAs(JsonObject.class)) {
+		                	JsonObject metaRole = role.getJsonObject("meta_ortolang-referential-json");
+	    					String roleId = metaRole.getString("id");
+		                    
+		                    olac.addOlacField("contributor", "olac:role", roleId, person(contributor));
+		                    
+		                    if(roleId.equals("author")) {
+		                    	olac.addDcField("creator", person(contributor));
+		                    }
+		                }
+		            }
+	            }
 
 	            JsonArray producers = meta.getJsonArray("producers");
 	            if(producers!=null) {
 	            	for(JsonObject producer : producers.getValuesAs(JsonObject.class)) {
-		            	JsonObject metaOrganization = producer.getJsonObject("meta_ortolang-referentiel-json");
+		            	JsonObject metaOrganization = producer.getJsonObject("meta_ortolang-referential-json");
 		            	
 		            	if(metaOrganization.containsKey("fullname")) {
 		            		olac.addDcField("publisher", metaOrganization.getString("fullname"));
 		            	}
 		            }
 	            }
+
+	            JsonArray sponsors = meta.getJsonArray("sponsors");
+	            if(sponsors!=null) {
+	            	for(JsonObject sponsor : sponsors.getValuesAs(JsonObject.class)) {
+		            	JsonObject metaOrganization = sponsor.getJsonObject("meta_ortolang-referential-json");
+		            	
+		            	if(metaOrganization.containsKey("fullname")) {
+		            		olac.addOlacField("contributor", "olac:role", "sponsor", metaOrganization.getString("fullname"));
+		            	}
+		            }
+	            }
 	            
 	            JsonObject statusOfUse = meta.getJsonObject("statusOfUse");
 	            if(statusOfUse!=null) {
-	            	JsonObject metaStatusOfUse = statusOfUse.getJsonObject("meta_ortolang-referentiel-json");
+	            	JsonObject metaStatusOfUse = statusOfUse.getJsonObject("meta_ortolang-referential-json");
 	            	String idStatusOfUse = metaStatusOfUse.getString("id");
 	            	olac.addDcField("rights", idStatusOfUse);
 	                
@@ -177,13 +193,13 @@ public class OLAC extends OAI_DC {
 	            JsonArray conditionsOfUse = meta.getJsonArray("conditionsOfUse");
 	            if(conditionsOfUse!=null) {
 	            	for(JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
-                		olac.addDcMultilingualField("rights", label.getString("lang"), label.getString("value"));
+                		olac.addDcMultilingualField("rights", label.getString("lang"), removeHTMLTag(label.getString("value")));
                 	}
 	            }
 	            
 	            JsonObject license = meta.getJsonObject("license");
 	            if(license!=null) {
-	            	JsonObject metaLicense = license.getJsonObject("meta_ortolang-referentiel-json");
+	            	JsonObject metaLicense = license.getJsonObject("meta_ortolang-referential-json");
 	            	if(metaLicense!=null) {
 	            		olac.addDctermsMultilingualField("license", "fr", metaLicense.getString("label"));
 	            	}
@@ -223,21 +239,11 @@ public class OLAC extends OAI_DC {
 	                    olac.addDcField("date", publicationDate.getString());
 	                }
 	            }
-//	            if(publicationDate!=null) {
-	                //TODO get created date if publicationDate not set
-//	                olac.addDctermsField("created", "dcterms:W3CDTF", publicationDate.getString());
-//	            }
 	            JsonNumber lastModificationDate = doc.getJsonNumber("lastModificationDate");
 	            Long longTimestamp = Long.valueOf(lastModificationDate.longValue());
 	            Date datestamp = new Date(longTimestamp);
 	            olac.addDctermsField("modified", "dcterms:W3CDTF", w3cdtf.format(datestamp));
             
-            } catch(NullPointerException | ClassCastException | NumberFormatException e) {
-                LOGGER.log(Level.WARNING, "Cannot parse JSON property from meta_ortolang-item-json", e);
-            } finally {
-                jsonReader.close();
-                reader.close();
-            }
         } catch(NullPointerException | ClassCastException | NumberFormatException e) {
             LOGGER.log(Level.WARNING, "Cannot parse JSON property", e);
         }

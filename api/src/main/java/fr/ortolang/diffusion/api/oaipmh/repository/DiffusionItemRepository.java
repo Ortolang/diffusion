@@ -88,7 +88,6 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		this.search = search;
 	}
 
-
 	@Override
     public List<String> getListMetadataFormats(String identifier) throws IdDoesNotExistException, NoMetadataFormatsException, OAIException {
 
@@ -98,14 +97,12 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		String key = identifier.replaceFirst(DiffusionItemRepository.PREFIX_IDENTIFIER, "");
 		List<String> metadataFormat = new ArrayList<String>();
 		
-		String query = "SELECT meta_ortolang-workspace-json.wsalias as wsalias FROM Collection WHERE status='published' AND meta_ortolang-workspace-json.wsalias='"+key+"'";
+		String query = "SELECT FROM Collection WHERE status='published' AND key='"+key+"'";
 		try {
 			List<String> docs = search.jsonSearch(query);
-			
 			if(!docs.isEmpty()) {
 				metadataFormat.add("oai_dc");
 			}
-			
 		} catch (SearchServiceException e) {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
@@ -275,7 +272,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 	 */
 	protected String buildQuery(String metadataPrefix, Date from, Date until, String key) {
 
-		StringBuilder query = new StringBuilder("SELECT lastModificationDate, meta_ortolang-workspace-json.*, meta_ortolang-item-json.toJSON('fetchPlan:*:-1') FROM Collection WHERE status='published' AND meta_ortolang-workspace-json.wsalias IS NOT null AND meta_ortolang-item-json.title IS NOT null");
+		StringBuilder query = new StringBuilder("SELECT FROM Collection WHERE status='published' AND `meta_ortolang-workspace-json.wsalias` IS NOT null AND `meta_ortolang-item-json.title` IS NOT null");
 		
 		if(from!=null) {
 		    query.append(" AND lastModificationDate>=").append(from.getTime());
@@ -286,7 +283,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 		}
 		
 		if(key!=null) {
-		    query.append(" AND meta_ortolang-workspace-json.wsalias='").append(key).append("'");
+		    query.append(" AND key='").append(key).append("'");
 		}
 		
 		return query.toString();
@@ -313,7 +310,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 				JsonObject jsonObj = jsonReader.readObject();
 				
 				try {
-					String key = jsonObj.getString("meta_ortolang-workspace-jsonwsalias");
+					String key = jsonObj.getString("key");
 					JsonNumber lastModificationDate = jsonObj.getJsonNumber("lastModificationDate");
 					Long longTimestamp = Long.valueOf(lastModificationDate.longValue());
 					Date datestamp = new Date(longTimestamp);
@@ -525,22 +522,25 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
     protected DiffusionItem diffusionItem(String doc, String metadataPrefix) throws IOException {
         DiffusionItem item = null;
 
-        //TODO get handle (or another persistent identifier)
         StringReader reader = new StringReader(doc);
         JsonReader jsonReader = Json.createReader(reader);
         JsonObject jsonDoc = jsonReader.readObject();
         
         try {
-            String key = jsonDoc.getString("meta_ortolang-workspace-jsonwsalias");
+        	String key = jsonDoc.getString("key");
+        	JsonObject content = jsonDoc.getJsonObject("meta_ortolang-workspace-json");
+            String wsalias = content.getString("wsalias");
             JsonNumber lastModificationDate = jsonDoc.getJsonNumber("lastModificationDate");
             Long longTimestamp = Long.valueOf(lastModificationDate.longValue());
             Date datestamp = new Date(longTimestamp);
             
+            JsonObject workspaceDoc = searchWorkspace(wsalias);
+            
             InputStream metadata = null;
             if(metadataPrefix.equals("oai_dc")) {
-                metadata = transformToOAI_DC(jsonDoc);
+                metadata = transformToOAI_DC(jsonDoc, workspaceDoc);
             } else if(metadataPrefix.equals("olac")) {
-            	metadata = transformToOLAC(jsonDoc);
+            	metadata = transformToOLAC(jsonDoc, workspaceDoc);
             }
             
             if(metadata!=null) {
@@ -560,6 +560,31 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
         return item;
     }
 
+    protected JsonObject searchWorkspace(String wsalias) {
+    	try {
+    		List<String> workspace = search.jsonSearch("SELECT FROM Workspace WHERE `meta_ortolang-workspace-json.wsalias` = '"+wsalias+"'");
+    		if(workspace.size()>0) {
+
+    			StringReader reader = new StringReader(workspace.get(0));
+                JsonReader jsonReader = Json.createReader(reader);
+    			try {
+	                
+	                JsonObject jsonDoc = jsonReader.readObject();
+                    jsonReader.close();
+                    
+        			return jsonDoc;
+    			} catch(Exception e) {
+    				LOGGER.log(Level.WARNING, "Cannot read json object representation for the workspace "+wsalias, e);
+    			} finally {
+                    reader.close();
+    			}
+    		}
+	    } catch (SearchServiceException e) {
+	        LOGGER.log(Level.WARNING, "Unable to get workspace with wsalias : "+wsalias, e);
+	    }
+    	return null;
+    }
+    
     /**
      * Converts JSON document (String representation) to XML OAI_DC
      * @param document
@@ -570,8 +595,8 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
      * @throws DataNotFoundException
      * @throws IOException
      */
-    protected InputStream transformToOAI_DC(JsonObject jsonDoc) {
-        OAI_DC oai_dc = OAI_DC.valueOf(jsonDoc);
+    protected InputStream transformToOAI_DC(JsonObject jsonDoc, JsonObject workspaceDoc) {
+        OAI_DC oai_dc = OAI_DC.valueOf(jsonDoc, workspaceDoc);
         return new ByteArrayInputStream(oai_dc.toString().getBytes(StandardCharsets.UTF_8));
     }
 
@@ -585,8 +610,8 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
      * @throws DataNotFoundException
      * @throws IOException
      */
-    protected InputStream transformToOLAC(JsonObject jsonDoc) {
-        OLAC olac = OLAC.valueOf(jsonDoc);
+    protected InputStream transformToOLAC(JsonObject jsonDoc, JsonObject workspaceDoc) {
+        OLAC olac = OLAC.valueOf(jsonDoc, workspaceDoc);
         return new ByteArrayInputStream(olac.toString().getBytes(StandardCharsets.UTF_8));
     }
 }
