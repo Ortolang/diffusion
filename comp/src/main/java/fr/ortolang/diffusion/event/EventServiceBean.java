@@ -507,7 +507,38 @@ public class EventServiceBean implements EventService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
-    public Long systemCountEvents() throws EventServiceException {
+    public long systemCountEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long after) throws EventServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# counting events");
+        String eventTypeFilterRE = "%";
+        if (eventTypeFilter != null && eventTypeFilter.length() > 0) {
+            eventTypeFilterRE += eventTypeFilter + "%";
+        }
+        String fromResourceFilterRE = "%";
+        if (fromResourceFilter != null && fromResourceFilter.length() > 0) {
+            fromResourceFilterRE += fromResourceFilter + "%";
+        }
+        String resourceTypeFilterRE = "%";
+        if (resourceTypeFilter != null && resourceTypeFilter.length() > 0) {
+            resourceTypeFilterRE += resourceTypeFilter + "%";
+        }
+        String throwedByFilterRE = "%";
+        if (throwedByFilter != null && throwedByFilter.length() > 0) {
+            throwedByFilterRE += throwedByFilter + "%";
+        }
+        TypedQuery<Long> query;
+        if (after > 0) {
+            query = em.createNamedQuery("countEventsAfterDate", Long.class).setParameter("eventTypeFilter", eventTypeFilterRE).setParameter("fromObjectFilter", fromResourceFilterRE)
+                    .setParameter("objectTypeFilter", resourceTypeFilterRE).setParameter("throwedByFilter", throwedByFilterRE).setParameter("after", new Date(after));
+
+        } else {
+            query = em.createNamedQuery("countEvents", Long.class).setParameter("eventTypeFilter", eventTypeFilterRE).setParameter("fromObjectFilter", fromResourceFilterRE)
+                    .setParameter("objectTypeFilter", resourceTypeFilterRE).setParameter("throwedByFilter", throwedByFilterRE);
+        }
+        return query.getSingleResult().longValue();
+    }
+    
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    public long systemCountAllEvents() throws EventServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting all events");
         TypedQuery<Long> query = em.createNamedQuery("countAllEvents", Long.class);
         return query.getSingleResult().longValue();
@@ -530,7 +561,7 @@ public class EventServiceBean implements EventService {
             LOGGER.log(Level.INFO, "unable to collect info: " + INFO_FEEDS_ALL, e);
         }
         try {
-            infos.put(INFO_EVENTS_ALL, Long.toString(systemCountEvents()));
+            infos.put(INFO_EVENTS_ALL, Long.toString(systemCountAllEvents()));
         } catch (Exception e) {
             LOGGER.log(Level.INFO, "unable to collect info: " + INFO_EVENTS_ALL, e);
         }

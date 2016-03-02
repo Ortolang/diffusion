@@ -15,7 +15,7 @@ import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.annotations.GZIP;
 
-import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
+import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.referential.ReferentialServiceException;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntity;

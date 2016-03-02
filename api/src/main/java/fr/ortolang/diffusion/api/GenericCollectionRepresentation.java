@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.api.object;
+package fr.ortolang.diffusion.api;
 
 /*
  * #%L
