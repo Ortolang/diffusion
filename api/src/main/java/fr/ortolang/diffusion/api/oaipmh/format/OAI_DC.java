@@ -36,8 +36,6 @@ package fr.ortolang.diffusion.api.oaipmh.format;
  * #L%
  */
 
-import java.io.StringReader;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,13 +43,11 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
-import javax.json.JsonReader;
 import javax.json.JsonString;
 
-import static org.apache.commons.lang.StringEscapeUtils.escapeHtml;
+import fr.ortolang.diffusion.OrtolangConfig;
 
 public class OAI_DC {
 
@@ -107,135 +103,134 @@ public class OAI_DC {
         return buffer.toString();
     }
     
-    public static OAI_DC valueOf(JsonObject doc) {
+    public static OAI_DC valueOf(JsonObject doc, JsonObject workspaceDoc) {
         OAI_DC oai_dc = new OAI_DC();
 
-        // Identifier
-        //TODO Mettre le handle
-        //TODO Pictogramme ? Pas exploiter par Isidore
-        //TODO ARK
-        try {
-        	JsonString metaString = doc.getJsonString("meta_ortolang-item-json");
-        	
-        	StringReader reader = new StringReader(metaString.getString());
-            JsonReader jsonReader = Json.createReader(reader);
-            JsonObject meta = jsonReader.readObject();
+        JsonObject workspace = doc.getJsonObject("meta_ortolang-workspace-json");
+        String snapshotName = workspace.getString("snapshotName");
+        JsonObject workspaceMeta = workspaceDoc.getJsonObject("meta_ortolang-workspace-json");
+        JsonArray tags = workspaceMeta.getJsonArray("tags");
+        if(tags!=null) {
+        	for(JsonObject tag : tags.getValuesAs(JsonObject.class)) {
+        		if(tag.getString("snapshot").equals(snapshotName)) {
+        			oai_dc.addDcField("identifier", identifier(workspace.getString("wsalias"), tag.getString("name")));
+        		}
+        	}
+        }
+        
+    	JsonObject meta = doc.getJsonObject("meta_ortolang-item-json");
 
-            try {
-	            JsonArray multilingualTitles = meta.getJsonArray("title");
-	            for(JsonObject multilingualTitle : multilingualTitles.getValuesAs(JsonObject.class)) {
-	                oai_dc.addDcMultilingualField("title", multilingualTitle.getString("lang"), multilingualTitle.getString("value"));
-	            }
-	            
-	            JsonArray multilingualDescriptions = meta.getJsonArray("description");
-	            for(JsonObject multilingualTitle : multilingualDescriptions.getValuesAs(JsonObject.class)) {
-	            	String nohtml = multilingualTitle.getString("value").toString().replaceAll("\\<.*?>","").replaceAll("\\&nbsp;"," ").replaceAll("\\&","");
-	                oai_dc.addDcMultilingualField("description", multilingualTitle.getString("lang"), nohtml);
-	            }
-	            
-	            JsonArray corporaLanguages = meta.getJsonArray("corporaLanguages");
-	            if(corporaLanguages!=null) {
-	                for(JsonObject corporaLanguage : corporaLanguages.getValuesAs(JsonObject.class)) {
-	                	JsonObject metaLanguage = corporaLanguage.getJsonObject("meta_ortolang-referentiel-json");
-	                	JsonArray multilingualLabels = metaLanguage.getJsonArray("labels");
-	                	
-	                	for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-	                		oai_dc.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
-		                	oai_dc.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
-	                	}
-	                	oai_dc.addDcField("language", metaLanguage.getString("id"));
-	                }
-	            }
-	            
-	            JsonArray multilingualKeywords = meta.getJsonArray("keywords");
-	            if(multilingualKeywords!=null) {
-	                for(JsonObject multilingualKeyword : multilingualKeywords.getValuesAs(JsonObject.class)) {
-	                	oai_dc.addDcMultilingualField("subject", multilingualKeyword.getString("lang"), multilingualKeyword.getString("value"));
-	                }
-	            }
-	            
-	            JsonArray producers = meta.getJsonArray("producers");
-	            if(producers!=null) {
-	            	for(JsonObject producer : producers.getValuesAs(JsonObject.class)) {
-		            	JsonObject metaOrganization = producer.getJsonObject("meta_ortolang-referentiel-json");
-		            	
-		            	if(metaOrganization.containsKey("fullname")) {
-		            		oai_dc.addDcField("publisher", metaOrganization.getString("fullname"));
-		            	}
-		            }
-	            }
-	            
-//	            JsonArray contributors = meta.getJsonArray("contributors");
-//	            if(contributors!=null) {
-//	            	for(JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
-//		                JsonArray roles = contributor.getJsonArray("roles");
-//		                for(JsonString role : roles.getValuesAs(JsonString.class)) {
-//		                    oai_dc.addDcField("contributor", contributor(contributor, role.getString()));
-//		                    
-//		                    if(role.getString().equals("author")) {
-//		                        oai_dc.addDcField("creator", creator(contributor));
-//		                    }
-//		                }
-//		            }
-//	            }
-	
-	            JsonObject statusOfUse = meta.getJsonObject("statusOfUse");
-	            if(statusOfUse!=null) {
-	            	JsonObject metaStatusOfUse = statusOfUse.getJsonObject("meta_ortolang-referentiel-json");
-	            	String idStatusOfUse = metaStatusOfUse.getString("id");
-	                oai_dc.addDcField("rights", idStatusOfUse);
-	                
-	                JsonArray multilingualLabels = metaStatusOfUse.getJsonArray("labels");
-                	for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-                		oai_dc.addDcMultilingualField("rights", label.getString("lang"), label.getString("value"));
-                	}
-	            }
-	            JsonArray conditionsOfUse = meta.getJsonArray("conditionsOfUse");
-	            if(conditionsOfUse!=null) {
-	            	for(JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
-                		oai_dc.addDcMultilingualField("rights", label.getString("lang"), label.getString("value"));
-                	}
-	            }
-	            
-	            JsonObject license = meta.getJsonObject("license");
-	            if(license!=null) {
-	            	JsonObject metaLicense = license.getJsonObject("meta_ortolang-referentiel-json");
-	            	if(metaLicense!=null) {
-	            		oai_dc.addDcMultilingualField("rights", "fr", metaLicense.getString("label"));
-	            	}
-	            }
-	
-	            JsonArray linguisticSubjects = meta.getJsonArray("linguisticSubjects");
-	            if(linguisticSubjects!=null) {
-	                for(JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
-	                    oai_dc.addDcField("subject", "linguistic field: "+linguisticSubject.getString());
-	                }
-	            }
-	            JsonString linguisticDataType = meta.getJsonString("linguisticDataType");
-	            if(linguisticDataType!=null) {
-	                oai_dc.addDcField("type", "linguistic-type: "+linguisticDataType.getString());
-	            }
-	            JsonArray discourseTypes = meta.getJsonArray("discourseTypes");
-	            if(discourseTypes!=null) {
-	                for(JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
-	                    oai_dc.addDcField("type", "discourse-type: "+discourseType.getString());
-	                }
-	            }
-	            JsonString creationDate = meta.getJsonString("originDate");
-	            if(creationDate!=null) {
-	                oai_dc.addDcField("date", creationDate.getString());
-	            } else {
-	                JsonString publicationDate = meta.getJsonString("publicationDate");
-	                if(publicationDate!=null) {
-	                    oai_dc.addDcField("date", publicationDate.getString());
-	                }
-	            }
-            } catch(NullPointerException | ClassCastException | NumberFormatException e) {
-                LOGGER.log(Level.WARNING, "Cannot parse JSON property from meta_ortolang-item-json", e);
-            } finally {
-                jsonReader.close();
-                reader.close();
-            }
+    	try {
+    		JsonArray multilingualTitles = meta.getJsonArray("title");
+    		for(JsonObject multilingualTitle : multilingualTitles.getValuesAs(JsonObject.class)) {
+    			oai_dc.addDcMultilingualField("title", multilingualTitle.getString("lang"), removeHTMLTag(multilingualTitle.getString("value")));
+    		}
+
+    		JsonArray multilingualDescriptions = meta.getJsonArray("description");
+    		for(JsonObject multilingualTitle : multilingualDescriptions.getValuesAs(JsonObject.class)) {
+    			oai_dc.addDcMultilingualField("description", multilingualTitle.getString("lang"), removeHTMLTag(multilingualTitle.getString("value")));
+    		}
+
+    		JsonArray corporaLanguages = meta.getJsonArray("corporaLanguages");
+    		if(corporaLanguages!=null) {
+    			for(JsonObject corporaLanguage : corporaLanguages.getValuesAs(JsonObject.class)) {
+    				JsonObject metaLanguage = corporaLanguage.getJsonObject("meta_ortolang-referential-json");
+    				JsonArray multilingualLabels = metaLanguage.getJsonArray("labels");
+
+    				for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+    					oai_dc.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
+    					oai_dc.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
+    				}
+    				oai_dc.addDcField("language", metaLanguage.getString("id"));
+    			}
+    		}
+
+    		JsonArray multilingualKeywords = meta.getJsonArray("keywords");
+    		if(multilingualKeywords!=null) {
+    			for(JsonObject multilingualKeyword : multilingualKeywords.getValuesAs(JsonObject.class)) {
+    				oai_dc.addDcMultilingualField("subject", multilingualKeyword.getString("lang"), multilingualKeyword.getString("value"));
+    			}
+    		}
+
+    		JsonArray producers = meta.getJsonArray("producers");
+    		if(producers!=null) {
+    			for(JsonObject producer : producers.getValuesAs(JsonObject.class)) {
+    				JsonObject metaOrganization = producer.getJsonObject("meta_ortolang-referential-json");
+
+    				if(metaOrganization.containsKey("fullname")) {
+    					oai_dc.addDcField("publisher", metaOrganization.getString("fullname"));
+    				}
+    			}
+    		}
+
+    		JsonArray contributors = meta.getJsonArray("contributors");
+    		if(contributors!=null) {
+    			for(JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
+    				JsonArray roles = contributor.getJsonArray("roles");
+    				for(JsonObject role : roles.getValuesAs(JsonObject.class)) {
+    					JsonObject metaRole = role.getJsonObject("meta_ortolang-referential-json");
+    					String roleId = metaRole.getString("id");
+    					oai_dc.addDcField("contributor", person(contributor)+" ("+roleId+")");
+
+    					if(roleId.equals("author")) {
+    						oai_dc.addDcField("creator", person(contributor));
+    					}
+    				}
+    			}
+    		}
+
+    		JsonObject statusOfUse = meta.getJsonObject("statusOfUse");
+    		if(statusOfUse!=null) {
+    			JsonObject metaStatusOfUse = statusOfUse.getJsonObject("meta_ortolang-referential-json");
+    			String idStatusOfUse = metaStatusOfUse.getString("id");
+    			oai_dc.addDcField("rights", idStatusOfUse);
+
+    			JsonArray multilingualLabels = metaStatusOfUse.getJsonArray("labels");
+    			for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+    				oai_dc.addDcMultilingualField("rights", label.getString("lang"), label.getString("value"));
+    			}
+    		}
+    		JsonArray conditionsOfUse = meta.getJsonArray("conditionsOfUse");
+    		if(conditionsOfUse!=null) {
+    			for(JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
+    				oai_dc.addDcMultilingualField("rights", label.getString("lang"), removeHTMLTag(label.getString("value")));
+    			}
+    		}
+
+    		JsonObject license = meta.getJsonObject("license");
+    		if(license!=null) {
+    			JsonObject metaLicense = license.getJsonObject("meta_ortolang-referential-json");
+    			if(metaLicense!=null) {
+    				oai_dc.addDcMultilingualField("rights", "fr", metaLicense.getString("label"));
+    			}
+    		}
+
+    		JsonArray linguisticSubjects = meta.getJsonArray("linguisticSubjects");
+    		if(linguisticSubjects!=null) {
+    			for(JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
+    				oai_dc.addDcField("subject", "linguistic field: "+linguisticSubject.getString());
+    			}
+    		}
+    		JsonString linguisticDataType = meta.getJsonString("linguisticDataType");
+    		if(linguisticDataType!=null) {
+    			oai_dc.addDcField("type", "linguistic-type: "+linguisticDataType.getString());
+    		}
+    		JsonArray discourseTypes = meta.getJsonArray("discourseTypes");
+    		if(discourseTypes!=null) {
+    			for(JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
+    				oai_dc.addDcField("type", "discourse-type: "+discourseType.getString());
+    			}
+    		}
+    		JsonString creationDate = meta.getJsonString("originDate");
+    		if(creationDate!=null) {
+    			oai_dc.addDcField("date", creationDate.getString());
+    		} else {
+    			JsonString publicationDate = meta.getJsonString("publicationDate");
+    			if(publicationDate!=null) {
+    				oai_dc.addDcField("date", publicationDate.getString());
+    			}
+    		}
+
         } catch(NullPointerException | ClassCastException | NumberFormatException e) {
             LOGGER.log(Level.WARNING, "Cannot parse JSON property", e);
         }
@@ -243,35 +238,45 @@ public class OAI_DC {
         return oai_dc;
     }
 
-    protected static String contributor(JsonObject contributor) {
-    	return contributor(contributor, null);
+    public static String identifier(String wsalias, String snapshotName) {
+    	return "http://hdl.handle.net/"+OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + "/" + snapshotName;
     }
     
-    protected static String contributor(JsonObject contributor, String role) {
+    protected static String person(JsonObject contributor) {
         JsonObject entityContributor = contributor.getJsonObject("entity");
-        JsonString lastname = entityContributor.getJsonString("lastname");
-        JsonString midname = entityContributor.getJsonString("midname");
-        JsonString firstname = entityContributor.getJsonString("firstname");
-        JsonString title = entityContributor.getJsonString("title");
-        JsonObject entityOrganization = entityContributor.getJsonObject("organization");
-        JsonString acronym = null;
-        if(entityOrganization!=null) {
-            acronym = entityOrganization.getJsonString("acronym"); 
+        JsonObject entityMetaContributor = entityContributor.getJsonObject("meta_ortolang-referential-json");
+        if(entityMetaContributor!=null) {
+	        JsonString lastname = entityMetaContributor.getJsonString("lastname");
+	        JsonString midname = entityMetaContributor.getJsonString("midname");
+	        JsonString firstname = entityMetaContributor.getJsonString("firstname");
+	        JsonString title = entityMetaContributor.getJsonString("title");
+	        JsonString acronym = null;
+	        
+	        if(entityMetaContributor.containsKey("organization")) {
+	            JsonObject entityOrganization = entityMetaContributor.getJsonObject("organization");
+	        	JsonObject entityMetaOrganization = entityOrganization.getJsonObject("meta_ortolang-referential-json");
+	        
+	            acronym = entityMetaOrganization.getJsonString("acronym"); 
+	        }
+	        return (lastname!=null?lastname.getString():"")+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
+        } else {
+        	JsonString lastname = entityContributor.getJsonString("lastname");
+	        JsonString midname = entityContributor.getJsonString("midname");
+	        JsonString firstname = entityContributor.getJsonString("firstname");
+	        JsonString title = entityContributor.getJsonString("title");
+	        JsonString acronym = null;
+	        
+	        if(entityContributor.containsKey("organization")) {
+	            JsonObject entityOrganization = entityContributor.getJsonObject("organization");
+	        	JsonObject entityMetaOrganization = entityOrganization.getJsonObject("meta_ortolang-referential-json");
+	        
+	            acronym = entityMetaOrganization.getJsonString("acronym"); 
+	        }
+	        return (lastname!=null?lastname.getString():"")+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
         }
-        return lastname.getString()+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"")+(role!=null?" ("+role+")":"");
     }
 
-    protected static String creator(JsonObject contributor) {
-        JsonObject entityContributor = contributor.getJsonObject("entity");
-        JsonString lastname = entityContributor.getJsonString("lastname");
-        JsonString midname = entityContributor.getJsonString("midname");
-        JsonString firstname = entityContributor.getJsonString("firstname");
-        JsonString title = entityContributor.getJsonString("title");
-        JsonObject entityOrganization = entityContributor.getJsonObject("organization");
-        JsonString acronym = null;
-        if(entityOrganization!=null) {
-            acronym = entityOrganization.getJsonString("acronym"); 
-        }
-        return lastname.getString()+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
+    protected static String removeHTMLTag(String str) {
+    	return str.replaceAll("\\<.*?>","").replaceAll("\\&nbsp;"," ").replaceAll("\\&","");
     }
 }

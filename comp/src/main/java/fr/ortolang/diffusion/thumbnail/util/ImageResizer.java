@@ -36,8 +36,7 @@ package fr.ortolang.diffusion.thumbnail.util;
  * #L%
  */
 
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -45,96 +44,152 @@ import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
+import javax.imageio.stream.ImageOutputStream;
 
 public class ImageResizer {
 
-	private static final Logger LOGGER = Logger.getLogger(ImageResizer.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ImageResizer.class.getName());
 
-	BufferedImage inputImage;
-	private boolean isProcessed = false;
-	BufferedImage outputImage;
+    private static final String JPG = "jpg";
 
-	private int imageWidth;
-	private int imageHeight;
-	private int thumbWidth;
-	private int thumbHeight;
-	private double resizeRatio = 1.0;
+    BufferedImage inputImage;
+    private boolean isProcessed = false;
+    BufferedImage outputImage;
 
-	private int scaledWidth;
-	private int scaledHeight;
-	
-	public ImageResizer(int thumbWidth, int thumbHeight) {
-		this.thumbWidth = thumbWidth;
-		this.thumbHeight = thumbHeight;
-	}
+    private int imageWidth;
+    private int imageHeight;
+    private int thumbWidth;
+    private int thumbHeight;
 
-	public void setInputImage(File input) throws Exception {
-		BufferedImage image = ImageIO.read(input);
-		setInputImage(image);
-	}
+    private int scaledWidth;
+    private int scaledHeight;
 
-	public void setInputImage(InputStream input) throws Exception {
-		BufferedImage image = ImageIO.read(input);
-		setInputImage(image);
-	}
+    private static JPEGImageWriteParam jpegParams;
 
-	public void setInputImage(BufferedImage input) throws Exception {
-		if (input == null) {
-			throw new Exception("The image reader could not open the file.");
-		}
+    static {
+        jpegParams = new JPEGImageWriteParam(null);
+        jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        jpegParams.setCompressionQuality(0.85F);
+    }
 
-		this.inputImage = input;
-		isProcessed = false;
-		imageWidth = inputImage.getWidth(null);
-		imageHeight = inputImage.getHeight(null);
-	}
+    public ImageResizer(int thumbWidth, int thumbHeight) {
+        this.thumbWidth = thumbWidth;
+        this.thumbHeight = thumbHeight;
+    }
 
-	public void writeOutput(File output) throws IOException {
-		writeOutput(output, "jpg");
-	}
+    public void setInputImage(File input) throws Exception {
+        BufferedImage image = ImageIO.read(input);
+        setInputImage(image);
+    }
 
-	public void writeOutput(File output, String format) throws IOException {
-		if (!isProcessed) {
-			process();
-		}
-		ImageIO.write(outputImage, format, output);
-	}
+    public void setInputImage(InputStream input) throws Exception {
+        BufferedImage image = ImageIO.read(input);
+        setInputImage(image);
+    }
 
-	private void process() {
-		if (imageWidth == thumbWidth && imageHeight == thumbHeight) {
-			outputImage = inputImage;
-		} else {
-			calcDimensions();
-			paint();
-		}
-		isProcessed = true;
-	}
+    public void setInputImage(BufferedImage input) throws Exception {
+        if (input == null) {
+            throw new Exception("The image reader could not open the file.");
+        }
 
-	private void calcDimensions() {
-		resizeRatio = Math.min(((double) thumbWidth) / imageWidth, ((double) thumbHeight) / imageHeight);
-		scaledWidth = (int) Math.round(imageWidth * resizeRatio);
-		scaledHeight = (int) Math.round(imageHeight * resizeRatio);
-	}
+        this.inputImage = input;
+        isProcessed = false;
+        imageWidth = inputImage.getWidth(null);
+        imageHeight = inputImage.getHeight(null);
+    }
 
-	private void paint() {
-		LOGGER.log(Level.FINE, "starting to paint image");
-		outputImage = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_RGB);
-		Graphics2D graphics2D = outputImage.createGraphics();
-		graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+    public void writeOutput(File output) throws IOException {
+        writeOutput(output, JPG);
+    }
 
-		ImageResizerObserver observer = new ImageResizerObserver(Thread.currentThread());
-		boolean scalingComplete = graphics2D.drawImage(inputImage, 0, 0, scaledWidth, scaledHeight, observer);
-		if (!scalingComplete && observer != null) {
-			while (!observer.ready) {
-				LOGGER.log(Level.FINE, "waiting for image to be completelly drawned");
-				try {
-					Thread.sleep(400);
-				} catch (InterruptedException e) {
-				}
-			}
-		}
-		graphics2D.dispose();
-		LOGGER.log(Level.FINE, "image painted");
-	}
+    public void writeOutput(File output, String format) throws IOException {
+        if (!isProcessed) {
+            process();
+        }
+        if (format.equals(JPG)) {
+            ImageOutputStream imageOutputStream = ImageIO.createImageOutputStream(output);
+            ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName(JPG).next();
+            jpgWriter.setOutput(imageOutputStream);
+            jpgWriter.write(null, new IIOImage(outputImage, null, null), jpegParams);
+            imageOutputStream.close();
+            jpgWriter.dispose();
+        } else {
+            ImageIO.write(outputImage, format, output);
+        }
+    }
+
+    private void process() {
+        if (inputImage.getType() == BufferedImage.TYPE_INT_RGB && imageWidth == thumbWidth && imageHeight == thumbHeight) {
+            outputImage = inputImage;
+        } else {
+            calcDimensions();
+            paint();
+        }
+        isProcessed = true;
+    }
+
+    private void calcDimensions() {
+        double resizeRatio = Math.min(((double) thumbWidth) / imageWidth, ((double) thumbHeight) / imageHeight);
+        scaledWidth = (int) Math.round(imageWidth * resizeRatio);
+        scaledHeight = (int) Math.round(imageHeight * resizeRatio);
+    }
+
+    private void paint() {
+        LOGGER.log(Level.FINE, "starting to paint image");
+        int currentWidth = inputImage.getWidth();
+        int currentHeight = inputImage.getHeight();
+        boolean reduction = true;
+        if (scaledWidth >= currentWidth && scaledHeight >= currentHeight) {
+            reduction = false;
+        }
+        outputImage = inputImage;
+        int passes = 0;
+        long start = System.currentTimeMillis();
+        do {
+            passes ++;
+            if (reduction) {
+                if (currentWidth > scaledWidth) {
+                    currentWidth /= 1.2;
+                    if (currentWidth < scaledWidth) {
+                        currentWidth = scaledWidth;
+                    }
+                }
+                if (currentHeight > scaledHeight) {
+                    currentHeight /= 1.2;
+                    if (currentHeight < scaledHeight) {
+                        currentHeight = scaledHeight;
+                    }
+                }
+            }
+
+            BufferedImage tmpImage = new BufferedImage(currentWidth, currentHeight, BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics2D = tmpImage.createGraphics();
+            graphics2D.setBackground(Color.WHITE);
+            graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            graphics2D.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
+            graphics2D.setRenderingHint(RenderingHints.KEY_COLOR_RENDERING, RenderingHints.VALUE_COLOR_RENDER_QUALITY);
+            graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            graphics2D.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            ImageResizerObserver observer = new ImageResizerObserver(Thread.currentThread());
+            boolean scalingComplete = graphics2D.drawImage(outputImage, 0, 0, currentWidth, currentHeight, Color.WHITE, observer);
+            graphics2D.dispose();
+            if (!scalingComplete) {
+                while (!observer.ready) {
+                    LOGGER.log(Level.FINE, "waiting for image to be completely drawn");
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                    }
+                }
+            }
+            outputImage = tmpImage;
+        } while (reduction && ((currentWidth != scaledWidth) || (currentHeight != scaledHeight)));
+        long time = System.currentTimeMillis() - start;
+        LOGGER.log(Level.FINE, "image painted (" + passes + " passes in " + time + "ms)");
+    }
 }

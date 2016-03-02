@@ -221,8 +221,7 @@ public class ThumbnailServiceBean implements ThumbnailService {
     }
     
     private long getStoreSize() throws IOException {
-        long size = Files.walk(base).mapToLong(this::size).sum();
-        return size;
+	    return Files.walk(base).mapToLong(this::size).sum();
     }
     
     private long size(Path p) {
