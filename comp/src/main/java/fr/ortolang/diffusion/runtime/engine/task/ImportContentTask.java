@@ -358,9 +358,11 @@ public class ImportContentTask extends RuntimeEngineTask {
 
 	private void deleteMetadata(String path, String name) throws RuntimeEngineTaskException {
 		try {
-			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
-			getCoreService().deleteMetadataObject(wskey, path, name, false);
-		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException e) {
+		    getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
+		    getCoreService().deleteMetadataObject(wskey, path, name, false);
+		} catch (PathNotFoundException e) {
+		    LOGGER.log(Level.WARNING, "metadata target does not exists, maybe deleted previously ??", e);
+		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException e) {
 			throw new RuntimeEngineTaskException("Error deleting metadata for path [" + path + "] : " + e.getMessage(), e);
 		} 
 	}
