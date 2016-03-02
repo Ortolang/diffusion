@@ -111,7 +111,7 @@ public class ThumbnailResource {
     @GET @Path("/{key}") @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD }) public Response getThumbnailFromKey(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size,
             @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security, @Context Request request)
             throws BrowserServiceException, KeyNotFoundException, OrtolangException, ThumbnailServiceException {
-        LOGGER.log(Level.INFO, "GET /thumb/" + key);
+        LOGGER.log(Level.INFO, "GET /thumbs/" + key);
         return getThumbnail(key, size, login, security, request);
     }
 
@@ -119,7 +119,7 @@ public class ThumbnailResource {
             @QueryParam("size") @DefaultValue("300") int size, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security, @Context Request request)
             throws CoreServiceException, AliasNotFoundException, OrtolangException, InvalidPathException, PathNotFoundException, KeyNotFoundException, ThumbnailServiceException,
             BrowserServiceException {
-        LOGGER.log(Level.INFO, "GET /thumb/" + alias + "/" + root + "/" + path);
+        LOGGER.log(Level.INFO, "GET /thumbs/" + alias + "/" + root + "/" + path);
         String wskey = core.resolveWorkspaceAlias(alias);
         String key = core.resolveWorkspacePath(wskey, root, path);
         return getThumbnail(key, size, login, security, request);
@@ -161,9 +161,9 @@ public class ThumbnailResource {
             if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, "/thumb/" + key, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT),
+                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, "/thumbs/" + key, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT),
                             uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, "/thumb/" + key).build()).cookie(rcookie).build();
+                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, "/thumbs/" + key).build()).cookie(rcookie).build();
                 } else {
                     LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
                     return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();

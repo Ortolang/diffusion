@@ -165,9 +165,6 @@ public class ImageResizer {
                         currentHeight = scaledHeight;
                     }
                 }
-            } else {
-                currentWidth = scaledWidth;
-                currentHeight = scaledHeight;
             }
 
             BufferedImage tmpImage = new BufferedImage(currentWidth, currentHeight, BufferedImage.TYPE_INT_RGB);
@@ -191,7 +188,7 @@ public class ImageResizer {
                 }
             }
             outputImage = tmpImage;
-        } while (currentWidth != scaledWidth || currentHeight != scaledHeight);
+        } while (reduction && ((currentWidth != scaledWidth) || (currentHeight != scaledHeight)));
         long time = System.currentTimeMillis() - start;
         LOGGER.log(Level.FINE, "image painted (" + passes + " passes in " + time + "ms)");
     }
