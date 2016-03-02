@@ -84,13 +84,11 @@ public class OrtolangHomeFile implements FtpFile {
                             LOGGER.log(Level.SEVERE, "error while building base file view for alias " + alias + " and user " + user.getName(), e);
                         }
                     }
-                } catch (OrtolangException | CoreServiceException | KeyNotFoundException | AccessDeniedException e) {
+                } catch (OrtolangException | CoreServiceException | KeyNotFoundException e) {
                     LOGGER.log(Level.SEVERE, "error while trying to list workspaces for user " + user.getName(), e);
                     throw new FtpException("error while trying to list workspaces for user " + user.getName(), e);
                 }
-                if ( lc != null ) {
-                    lc.logout();
-                }
+                lc.logout();
             } catch ( LoginException e ) {
                 LOGGER.log(Level.SEVERE, "unable to login with user: " + user.getName(), e);
                 throw new FtpException("unable to login with user: " + user.getName(), e);

@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.core;
 
 public class RootNotFoundException extends InvalidPathException {
 
+    private static final long serialVersionUID = 1L;
     private String root;
 
     public RootNotFoundException() {

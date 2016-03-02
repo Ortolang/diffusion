@@ -60,6 +60,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 
+import org.jboss.resteasy.annotations.GZIP;
+
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectInfos;
@@ -81,7 +83,6 @@ import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
-import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/objects")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -157,12 +158,8 @@ public class ObjectResource {
         if (builder == null) {
             OrtolangObject object = browser.findObject(key);
             OrtolangObjectInfos infos = browser.getInfos(key);
-            List<OrtolangObjectProperty> properties = browser.listProperties(key);
-            List<OrtolangObjectVersion> versions = browser.getHistory(key);
-            List<String> handles = browser.listHandles(key);
             String owner = security.getOwner(key);
-            Map<String, List<String>> permissions = security.listRules(key);
-
+            
             ObjectRepresentation representation = new ObjectRepresentation();
             representation.setKey(key);
             representation.setService(object.getObjectIdentifier().getService());
@@ -176,21 +173,108 @@ public class ObjectResource {
                 representation.setVisibility("visible");
             }
             representation.setOwner(owner);
-            representation.setPermissions(permissions);
             representation.setObject(object);
             representation.setAuthor(infos.getAuthor());
             representation.setCreationDate(infos.getCreationDate() + "");
             representation.setLastModificationDate(infos.getLastModificationDate() + "");
-            for (OrtolangObjectProperty property : properties) {
-                representation.getProperties().put(property.getName(), property.getValue());
-            }
-            representation.setHistory(versions);
-            representation.setHandles(handles);
-
+            
             builder = Response.ok(representation);
             builder.lastModified(lmd);
         }
 
+        builder.cacheControl(cc);
+        return builder.build();
+    }
+    
+    @GET
+    @Path("/{key}/history")
+    @GZIP
+    public Response history(@PathParam(value = "key") String key, @Context Request request) throws OrtolangException, KeyNotFoundException,
+            AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
+        LOGGER.log(Level.INFO, "GET /objects/" + key + "/hisotry");
+        OrtolangObjectState state = browser.getState(key);
+        CacheControl cc = new CacheControl();
+        cc.setPrivate(true);
+        if (state.isLocked()) {
+            cc.setMaxAge(691200);
+            cc.setMustRevalidate(false);
+        } else {
+            cc.setMaxAge(0);
+            cc.setMustRevalidate(true);
+        }
+        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        ResponseBuilder builder = null;
+        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+            builder = request.evaluatePreconditions(lmd);
+        }
+
+        if (builder == null) {
+            List<OrtolangObjectVersion> versions = browser.getHistory(key);
+            builder = Response.ok(versions);
+            builder.lastModified(lmd);
+        }
+        builder.cacheControl(cc);
+        return builder.build();
+    }
+    
+    @GET
+    @Path("/{key}/properties")
+    @GZIP
+    public Response properties(@PathParam(value = "key") String key, @Context Request request) throws OrtolangException, KeyNotFoundException,
+            AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
+        LOGGER.log(Level.INFO, "GET /objects/" + key + "/hisotry");
+        OrtolangObjectState state = browser.getState(key);
+        CacheControl cc = new CacheControl();
+        cc.setPrivate(true);
+        if (state.isLocked()) {
+            cc.setMaxAge(691200);
+            cc.setMustRevalidate(false);
+        } else {
+            cc.setMaxAge(0);
+            cc.setMustRevalidate(true);
+        }
+        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        ResponseBuilder builder = null;
+        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+            builder = request.evaluatePreconditions(lmd);
+        }
+
+        if (builder == null) {
+            List<OrtolangObjectProperty> properties = browser.listProperties(key);
+            builder = Response.ok(properties);
+            builder.lastModified(lmd);
+        }
+        builder.cacheControl(cc);
+        return builder.build();
+    }
+    
+    @GET
+    @Path("/{key}/permissions")
+    @GZIP
+    public Response permissions(@PathParam(value = "key") String key, @Context Request request) throws OrtolangException, KeyNotFoundException,
+            AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
+        LOGGER.log(Level.INFO, "GET /objects/" + key + "/hisotry");
+        OrtolangObjectState state = browser.getState(key);
+        CacheControl cc = new CacheControl();
+        cc.setPrivate(true);
+        if (state.isLocked()) {
+            cc.setMaxAge(691200);
+            cc.setMustRevalidate(false);
+        } else {
+            cc.setMaxAge(0);
+            cc.setMustRevalidate(true);
+        }
+        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        ResponseBuilder builder = null;
+        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+            builder = request.evaluatePreconditions(lmd);
+        }
+
+        if (builder == null) {
+            Map<String, List<String>> permissions = security.listRules(key);
+            builder = Response.ok(permissions);
+            builder.lastModified(lmd);
+        }
         builder.cacheControl(cc);
         return builder.build();
     }

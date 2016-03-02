@@ -62,7 +62,6 @@ public class WorkspaceRepresentation {
     private long creationDate;
     private long lastModificationDate;
     private String members;
-    private String eventFeed;
     private String head;
     private boolean changed;
     private boolean readOnly;
@@ -155,14 +154,6 @@ public class WorkspaceRepresentation {
         this.members = members;
     }
 
-    public String getEventFeed() {
-        return eventFeed;
-    }
-
-    public void setEventFeed(String eventFeed) {
-        this.eventFeed = eventFeed;
-    }
-
     public String getHead() {
         return head;
     }
@@ -220,7 +211,6 @@ public class WorkspaceRepresentation {
         representation.setClock(workspace.getClock());
         representation.setHead(workspace.getHead());
         representation.setMembers(workspace.getMembers());
-        representation.setEventFeed(workspace.getEventFeed());
         representation.setChanged(workspace.hasChanged());
         representation.setReadOnly(workspace.isReadOnly());
         representation.setSnapshots(workspace.getSnapshots());

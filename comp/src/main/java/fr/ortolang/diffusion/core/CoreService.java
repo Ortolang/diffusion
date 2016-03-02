@@ -105,7 +105,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     String resolveWorkspaceMetadata(String wskey, String root, String path, String name) throws CoreServiceException, InvalidPathException, PathNotFoundException, AccessDeniedException;
 
     String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
-
+    
     void changeWorkspaceOwner(String wskey, String newOwner) throws CoreServiceException;
 
     void moveElements(String wskey, List<String> sources, String destination)

@@ -129,9 +129,17 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	
 	@Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<Handle> searchHandles(int offset, int limit, String filter) throws HandleStoreServiceException {
+    public List<Handle> findHandlesByName(int offset, int limit, String filter) throws HandleStoreServiceException {
         String name = "%" + filter.toUpperCase(Locale.ENGLISH) + "%";
-        TypedQuery<Handle> query = em.createNamedQuery("searchHandleByName", Handle.class).setFirstResult(offset).setMaxResults(limit).setParameter("name", name.getBytes()); 
+        TypedQuery<Handle> query = em.createNamedQuery("searchHandleByName", Handle.class).setFirstResult(offset).setMaxResults(limit).setParameter("name", name.getBytes());
+        return query.getResultList();
+    }
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Handle> findHandlesByValue(int offset, int limit, String filter) throws HandleStoreServiceException {
+        String value = "%" + filter + "%";
+        TypedQuery<Handle> query = em.createNamedQuery("searchHandleByValue", Handle.class).setFirstResult(offset).setMaxResults(limit).setParameter("value", value.getBytes()); 
         return query.getResultList();
     }
 	
@@ -150,7 +158,7 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> findHandlesForKey(String key) throws HandleStoreServiceException {
+	public List<String> listHandlesForKey(String key) throws HandleStoreServiceException {
 		List<String> names = new ArrayList<String> ();
 		TypedQuery<byte[]> query = em.createNamedQuery("findHandleNameForKey", byte[].class).setParameter("key", key);
 		List<byte[]> bnames = query.getResultList(); 

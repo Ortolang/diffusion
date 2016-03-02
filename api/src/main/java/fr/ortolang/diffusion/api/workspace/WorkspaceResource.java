@@ -41,7 +41,13 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,37 +73,63 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.ortolang.diffusion.*;
-import fr.ortolang.diffusion.core.*;
-import fr.ortolang.diffusion.core.entity.*;
-import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
-import fr.ortolang.diffusion.store.binary.BinaryStoreService;
-import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
-import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectInfos;
+import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.filter.CORSFilter;
 import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
+import fr.ortolang.diffusion.core.AliasAlreadyExistsException;
+import fr.ortolang.diffusion.core.AliasNotFoundException;
+import fr.ortolang.diffusion.core.CollectionNotEmptyException;
+import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.InvalidPathException;
+import fr.ortolang.diffusion.core.MetadataFormatException;
+import fr.ortolang.diffusion.core.PathAlreadyExistsException;
+import fr.ortolang.diffusion.core.PathBuilder;
+import fr.ortolang.diffusion.core.PathNotFoundException;
+import fr.ortolang.diffusion.core.WorkspaceReadOnlyException;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.CollectionElement;
+import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.Link;
+import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
+import fr.ortolang.diffusion.core.entity.MetadataSource;
+import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.event.EventService;
+import fr.ortolang.diffusion.event.EventServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
+import fr.ortolang.diffusion.store.binary.BinaryStoreService;
+import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
+import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 @Path("/workspaces")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -113,6 +145,8 @@ public class WorkspaceResource {
     private BinaryStoreService binary;
     @EJB
     private MembershipService membership;
+    @EJB
+    private EventService event;
     @EJB
     private RuntimeService runtime;
     @EJB
@@ -631,6 +665,21 @@ public class WorkspaceResource {
         }
         return Response.ok().build();
     }
+    
+    @GET
+    @Path("/{wskey}/events")
+    @GZIP
+    public Response listWorkspaceEvents(@PathParam(value = "wskey") String wskey, @QueryParam(value = "o") @DefaultValue(value = "0") int offset, @QueryParam(value = "l") @DefaultValue(value = "25") int limit, @Context Request request)
+ throws EventServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/events");
+        long wscreation = browser.getInfos(wskey).getCreationDate();
+        GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>(); 
+        List<OrtolangEvent> events = event.findEvents(null, wskey, null, null, wscreation, offset, limit);
+        representation.setEntries(events);
+        representation.setOffset(offset);
+        representation.setLimit(limit);
+        return Response.ok(representation).build();
+    }
 
     @GET
     @Path("/alias/{alias}/ftp")
@@ -716,19 +765,9 @@ public class WorkspaceResource {
 
         private String template;
 
-        public PublicationPolicy() {
-        }
-
-        public PublicationPolicy(String template) {
-            this.template = template;
-        }
-
         public String getTemplate() {
             return template;
         }
 
-        public void setTemplate(String template) {
-            this.template = template;
-        }
     }
 }

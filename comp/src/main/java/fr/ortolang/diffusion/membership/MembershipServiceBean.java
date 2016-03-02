@@ -1089,7 +1089,7 @@ public class MembershipServiceBean implements MembershipService {
             }
 
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-        } catch (MembershipServiceException | RegistryServiceException | KeyNotFoundException | AccessDeniedException e) {
+        } catch (MembershipServiceException | RegistryServiceException | KeyNotFoundException e) {
             throw new OrtolangException("unable to find an object for key " + key);
         }
     }

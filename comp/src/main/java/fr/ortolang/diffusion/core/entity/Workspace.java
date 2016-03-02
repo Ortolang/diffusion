@@ -78,7 +78,6 @@ public class Workspace extends OrtolangObject {
 	private boolean readOnly;
 	private String members;
 	private String privileged;
-	private String eventfeed;
 	@Lob
 	@Type(type = "org.hibernate.type.TextType")
 	private String snapshotsContent = "";
@@ -354,14 +353,6 @@ public class Workspace extends OrtolangObject {
 
     public void setPrivileged(String privileged) {
         this.privileged = privileged;
-    }
-
-    public String getEventFeed() {
-        return eventfeed;
-    }
-
-    public void setEventFeed(String eventfeed) {
-        this.eventfeed = eventfeed;
     }
 
     @Override

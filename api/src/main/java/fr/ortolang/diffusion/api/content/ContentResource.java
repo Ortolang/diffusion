@@ -157,7 +157,7 @@ public class ContentResource {
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response exportGet(final @QueryParam("followsymlink") @DefaultValue("false") String followSymlink, @QueryParam("filename") @DefaultValue("download") String filename,
             @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, @Context Request request) throws UnsupportedEncodingException {
-        LOGGER.log(Level.INFO, "POST /export");
+        LOGGER.log(Level.INFO, "GET /export");
         ResponseBuilder builder = handleExport(false, filename, format, paths);
         return builder.build();
     }
@@ -170,35 +170,30 @@ public class ContentResource {
             builder = Response.ok();
             builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(filename, "utf-8") + ".zip");
             builder.type("application/zip");
-            StreamingOutput stream = new StreamingOutput() {
-                public void write(OutputStream output) throws IOException, WebApplicationException {
-                    try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(output)) {
-                        for (String path : paths) {
-                            try {
-                                String key = resolveContentPath(path);
-                                ArchiveEntryFactory factory = new ArchiveEntryFactory() {
-                                    @Override
-                                    public ArchiveEntry createArchiveEntry(String name, long time, long size) {
-                                        ZipArchiveEntry entry = new ZipArchiveEntry(name);
-                                        if (time != -1) {
-                                            entry.setTime(time);
-                                        }
-                                        if (size != -1) {
-                                            entry.setSize(size);
-                                        }
-                                        return entry;
-                                    }
-                                };
-                                exportToArchive(key, out, factory, PathBuilder.fromPath(path), false);
-                            } catch (BrowserServiceException | CoreServiceException | AliasNotFoundException | KeyNotFoundException | OrtolangException e) {
-                                LOGGER.log(Level.INFO, "unable to export path to zip", e);
-                            } catch (AccessDeniedException e) {
-                                LOGGER.log(Level.FINEST, "access denied during export to zip", e);
-                            } catch (InvalidPathException e) {
-                                LOGGER.log(Level.FINEST, "invalid path during export to zip", e);
-                            } catch (PathNotFoundException e) {
-                                LOGGER.log(Level.FINEST, "path not found during export to zip", e);
-                            }
+            StreamingOutput stream = output -> {
+                try (ZipArchiveOutputStream out = new ZipArchiveOutputStream(output)) {
+                    for (String path : paths) {
+                        try {
+                            String key = resolveContentPath(path);
+                            ArchiveEntryFactory factory = (name, time, size) -> {
+                                ZipArchiveEntry entry = new ZipArchiveEntry(name);
+                                if (time != -1) {
+                                    entry.setTime(time);
+                                }
+                                if (size != -1) {
+                                    entry.setSize(size);
+                                }
+                                return entry;
+                            };
+                            exportToArchive(key, out, factory, PathBuilder.fromPath(path), false);
+                        }  catch (AccessDeniedException e) {
+                            LOGGER.log(Level.FINEST, "access denied during export to zip", e);
+                        } catch (BrowserServiceException | CoreServiceException | AliasNotFoundException | KeyNotFoundException | OrtolangException e) {
+                            LOGGER.log(Level.INFO, "unable to export path to zip", e);
+                        } catch (InvalidPathException e) {
+                            LOGGER.log(Level.FINEST, "invalid path during export to zip", e);
+                        } catch (PathNotFoundException e) {
+                            LOGGER.log(Level.FINEST, "path not found during export to zip", e);
                         }
                     }
                 }
@@ -211,35 +206,28 @@ public class ContentResource {
             builder = Response.ok();
             builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(filename, "utf-8") + ".tar.gz");
             builder.type("application/x-gzip");
-            StreamingOutput stream = new StreamingOutput() {
-                public void write(OutputStream output) throws IOException, WebApplicationException {
-                    try (GzipCompressorOutputStream gout = new GzipCompressorOutputStream(output); TarArchiveOutputStream out = new TarArchiveOutputStream(gout)) {
-                        for (String path : paths) {
-                            try {
-                                String key = resolveContentPath(path);
-                                ArchiveEntryFactory factory = new ArchiveEntryFactory() {
-                                    @Override
-                                    public ArchiveEntry createArchiveEntry(String name, long time, long size) {
-                                        TarArchiveEntry entry = new TarArchiveEntry(name);
-                                        if (time != -1) {
-                                            entry.setModTime(time);
-                                        }
-                                        if (size != -1) {
-                                            entry.setSize(size);
-                                        }
-                                        return entry;
-                                    }
-                                };
-                                exportToArchive(key, out, factory, PathBuilder.fromPath(path), false);
-                            } catch (BrowserServiceException | CoreServiceException | AliasNotFoundException | KeyNotFoundException | OrtolangException e) {
-                                LOGGER.log(Level.INFO, "unable to export path to tar", e);
-                            } catch (AccessDeniedException e) {
-                                LOGGER.log(Level.FINEST, "access denied during export to tar", e);
-                            } catch (InvalidPathException e) {
-                                LOGGER.log(Level.FINEST, "invalid path during export to tar", e);
-                            } catch (PathNotFoundException e) {
-                                LOGGER.log(Level.FINEST, "path not found during export to tar", e);
-                            }
+            StreamingOutput stream = output -> {
+                try (GzipCompressorOutputStream gout = new GzipCompressorOutputStream(output); TarArchiveOutputStream out = new TarArchiveOutputStream(gout)) {
+                    for (String path : paths) {
+                        try {
+                            String key = resolveContentPath(path);
+                            ArchiveEntryFactory factory = (name, time, size) -> {
+                                TarArchiveEntry entry = new TarArchiveEntry(name);
+                                if (time != -1) {
+                                    entry.setModTime(time);
+                                }
+                                if (size != -1) {
+                                    entry.setSize(size);
+                                }
+                                return entry;
+                            };
+                            exportToArchive(key, out, factory, PathBuilder.fromPath(path), false);
+                        } catch (BrowserServiceException | CoreServiceException | AliasNotFoundException | KeyNotFoundException | OrtolangException e) {
+                            LOGGER.log(Level.INFO, "unable to export path to tar", e);
+                        } catch (InvalidPathException e) {
+                            LOGGER.log(Level.FINEST, "invalid path during export to tar", e);
+                        } catch (PathNotFoundException e) {
+                            LOGGER.log(Level.FINEST, "path not found during export to tar", e);
                         }
                     }
                 }
@@ -271,15 +259,20 @@ public class ContentResource {
 
     // TODO in case of following symlink, add cyclic detection
     private void exportToArchive(String key, ArchiveOutputStream aos, ArchiveEntryFactory factory, PathBuilder path, boolean followsymlink) throws OrtolangException, KeyNotFoundException,
-            AccessDeniedException, IOException, BrowserServiceException {
-        OrtolangObject object = browser.findObject(key);
+            IOException, BrowserServiceException {
+        OrtolangObject object;
+        try {
+             object = browser.findObject(key);
+        } catch (AccessDeniedException e) {
+            return;
+        }
         OrtolangObjectInfos infos = browser.getInfos(key);
         String type = object.getObjectIdentifier().getType();
 
         switch (type) {
         case Collection.OBJECT_TYPE:
             Set<CollectionElement> elements = ((Collection) object).getElements();
-            ArchiveEntry centry = factory.createArchiveEntry(path.build() + "/", infos.getLastModificationDate(), 0l);
+            ArchiveEntry centry = factory.createArchiveEntry(path.build() + "/", infos.getLastModificationDate(), 0L);
             aos.putArchiveEntry(centry);
             aos.closeArchiveEntry();
             for (CollectionElement element : elements) {
@@ -292,19 +285,20 @@ public class ContentResource {
             }
             break;
         case DataObject.OBJECT_TYPE:
-            try {
+            try (InputStream input = core.download(object.getObjectKey())) {
                 DataObject dataObject = (DataObject) object;
                 ArchiveEntry oentry = factory.createArchiveEntry(path.build(), infos.getLastModificationDate(), dataObject.getSize());
                 aos.putArchiveEntry(oentry);
-                InputStream input = core.download(object.getObjectKey());
                 try {
                     IOUtils.copy(input, aos);
                 } finally {
                     IOUtils.closeQuietly(input);
                 }
                 aos.closeArchiveEntry();
-            } catch (CoreServiceException | DataNotFoundException e1) {
-                LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e1);
+            } catch (AccessDeniedException e) {
+                return;
+            } catch (CoreServiceException | DataNotFoundException e) {
+                LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e);
             }
             break;
         case Link.OBJECT_TYPE:
@@ -320,7 +314,7 @@ public class ContentResource {
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response key(@PathParam("key") String key, @QueryParam("fd") boolean download, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order,
             @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext ctx, @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException,
-            AccessDeniedException, InvalidPathException, OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException,
+            InvalidPathException, OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException,
             UnsupportedEncodingException, SecurityServiceException {
         LOGGER.log(Level.INFO, "GET /content/key/" + key);
         try {

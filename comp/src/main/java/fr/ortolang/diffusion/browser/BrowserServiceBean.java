@@ -250,7 +250,9 @@ public class BrowserServiceBean implements BrowserService {
             String author = registry.getAuthor(key);
             long creationDate = registry.getCreationDate(key);
             long lastModificationDate = registry.getLastModificationDate(key);
-            return new OrtolangObjectInfos(author, creationDate, lastModificationDate);
+            String parent = registry.getParent(key);
+            String children = registry.getParent(key);
+            return new OrtolangObjectInfos(author, creationDate, lastModificationDate, parent, children);
         } catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
             throw new BrowserServiceException("error during getting infos", e);
         }
@@ -294,7 +296,7 @@ public class BrowserServiceBean implements BrowserService {
     public List<String> listHandles(String key) throws BrowserServiceException {
         LOGGER.log(Level.FINE, "getting handles for key [" + key + "]");
         try {
-            return handle.findHandlesForKey(key);
+            return handle.listHandlesForKey(key);
         } catch (HandleStoreServiceException e) {
             throw new BrowserServiceException("unable to find handles for key " + key, e);
         }

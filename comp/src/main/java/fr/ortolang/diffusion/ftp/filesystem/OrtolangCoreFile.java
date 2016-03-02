@@ -131,11 +131,11 @@ public class OrtolangCoreFile implements FtpFile {
                 if (object instanceof DataObject) {
                     size = ((DataObject) object).getSize();
                 }
+            } catch (AccessDeniedException e) {
+                throw new FtpException("access is denied to this core object", e);
             } catch (OrtolangException | CoreServiceException | KeyNotFoundException | SecurityServiceException | RegistryServiceException e) {
                 LOGGER.log(Level.SEVERE, "unexpected error while trying to load core object", e);
                 throw new FtpException("unexpected error while trying to load core object", e);
-            } catch (AccessDeniedException e) {
-                throw new FtpException("access is denied to this core object", e);
             } catch (AliasNotFoundException e) {
                 throw new FtpException("alias not found in workspaces", e);
             } catch (InvalidPathException e) {
@@ -223,7 +223,7 @@ public class OrtolangCoreFile implements FtpFile {
                 }
                 try {
                     fsview.getSecurityService().checkPermission(key, "download");
-                } catch (AccessDeniedException | SecurityServiceException | KeyNotFoundException | OrtolangException e) {
+                } catch (SecurityServiceException | KeyNotFoundException | OrtolangException e) {
                     return false;
                 }
                 if (lc != null) {
@@ -247,7 +247,7 @@ public class OrtolangCoreFile implements FtpFile {
                 }
                 try {
                     fsview.getSecurityService().checkPermission(key, "delete");
-                } catch (AccessDeniedException | SecurityServiceException | KeyNotFoundException | OrtolangException e) {
+                } catch (SecurityServiceException | KeyNotFoundException | OrtolangException e) {
                     return false;
                 }
                 if (lc != null) {
@@ -298,7 +298,7 @@ public class OrtolangCoreFile implements FtpFile {
                 }
                 try {
                     fsview.getCoreService().createCollection(wskey, path.build());
-                } catch (AccessDeniedException | KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException | KeyAlreadyExistsException e) {
+                } catch (KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException | KeyAlreadyExistsException e) {
                     return false;
                 }
                 if (lc != null) {
@@ -332,7 +332,7 @@ public class OrtolangCoreFile implements FtpFile {
                     } else {
                         fsview.getCoreService().moveDataObject(wskey, path.build(), dest.relativize(2).build());
                     }
-                } catch (AccessDeniedException | KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException e) {
+                } catch (KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException e) {
                     return false;
                 }
                 if (lc != null) {
@@ -366,7 +366,7 @@ public class OrtolangCoreFile implements FtpFile {
                     key = null;
                     object = null;
                     return true;
-                } catch (InvalidPathException | AccessDeniedException | OrtolangException | CoreServiceException | KeyNotFoundException | CollectionNotEmptyException | PathNotFoundException | WorkspaceReadOnlyException e) {
+                } catch (InvalidPathException | OrtolangException | CoreServiceException | KeyNotFoundException | CollectionNotEmptyException | PathNotFoundException | WorkspaceReadOnlyException e) {
                     LOGGER.log(Level.SEVERE, "unable to delete object", e);
                 }
                 if (lc != null) {
@@ -430,7 +430,7 @@ public class OrtolangCoreFile implements FtpFile {
                             } else {
                                 fsview.getCoreService().createDataObject(wskey, path.build(), hash);
                             }
-                        } catch (AccessDeniedException | KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException | BinaryStoreServiceException | DataCollisionException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException | KeyAlreadyExistsException e) {
+                        } catch (KeyNotFoundException | OrtolangException | CoreServiceException | InvalidPathException | BinaryStoreServiceException | DataCollisionException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException | KeyAlreadyExistsException e) {
                             throw new IOException("error during propagating files data to underlying object", e);
                         }
                         if (lc != null) {

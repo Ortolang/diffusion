@@ -494,6 +494,20 @@ public class CoreServiceTest {
                 //
             }
             core.deleteCollection(wsk, "/a/c/g", true);
+            
+            //Wrong moves
+            try {
+                core.moveCollection(wsk, "/a/c", "/a/c");
+                fail("move into the same path should raise an exception");
+            } catch ( InvalidPathException e ) {
+                //
+            }
+            try {
+                core.moveCollection(wsk, "/a", "/a/e");
+                fail("move into a children path should raise an exception");
+            } catch ( InvalidPathException e ) {
+                //
+            }
 
             // Bulk move
             core.snapshotWorkspace(wsk);
