@@ -123,7 +123,7 @@ public class OAI_DC {
     	try {
     		JsonArray multilingualTitles = meta.getJsonArray("title");
     		for(JsonObject multilingualTitle : multilingualTitles.getValuesAs(JsonObject.class)) {
-    			oai_dc.addDcMultilingualField("title", multilingualTitle.getString("lang"), multilingualTitle.getString("value"));
+    			oai_dc.addDcMultilingualField("title", multilingualTitle.getString("lang"), removeHTMLTag(multilingualTitle.getString("value")));
     		}
 
     		JsonArray multilingualDescriptions = meta.getJsonArray("description");
@@ -258,7 +258,7 @@ public class OAI_DC {
 	        
 	            acronym = entityMetaOrganization.getJsonString("acronym"); 
 	        }
-	        return lastname.getString()+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
+	        return (lastname!=null?lastname.getString():"")+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
         } else {
         	JsonString lastname = entityContributor.getJsonString("lastname");
 	        JsonString midname = entityContributor.getJsonString("midname");
@@ -272,7 +272,7 @@ public class OAI_DC {
 	        
 	            acronym = entityMetaOrganization.getJsonString("acronym"); 
 	        }
-	        return lastname.getString()+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
+	        return (lastname!=null?lastname.getString():"")+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
         }
     }
 

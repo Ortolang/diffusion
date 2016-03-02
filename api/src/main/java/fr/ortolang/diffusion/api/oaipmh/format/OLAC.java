@@ -97,7 +97,7 @@ public class OLAC extends OAI_DC {
         	
 	            JsonArray multilingualTitles = meta.getJsonArray("title");
 	            for(JsonObject multilingualTitle : multilingualTitles.getValuesAs(JsonObject.class)) {
-	            	olac.addDcMultilingualField("title", multilingualTitle.getString("lang"), multilingualTitle.getString("value"));
+	            	olac.addDcMultilingualField("title", multilingualTitle.getString("lang"), removeHTMLTag(multilingualTitle.getString("value")));
 	            }
 
 	            JsonArray multilingualDescriptions = meta.getJsonArray("description");
