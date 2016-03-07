@@ -37,6 +37,7 @@ public class ReferentialEntity extends OrtolangObject {
 	@Lob
 	@Type(type = "org.hibernate.type.TextType")
 	private String content;
+	private Long boost;
 
 	public String getId() {
 		return id;
@@ -75,6 +76,14 @@ public class ReferentialEntity extends OrtolangObject {
 	}
 	public void setContent(String content) {
 		this.content = content;
+	}
+
+	public Long getBoost() {
+		return boost;
+	}
+
+	public void setBoost(Long boost) {
+		this.boost = boost;
 	}
 
 	@Override

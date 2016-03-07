@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.store.index;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 
@@ -55,7 +56,9 @@ public class IndexStoreDocumentBuilder {
 	public static final String LOCK_FIELD = "LOCK";
 	public static final String STATUS_FIELD = "STATUS";
 	public static final String CONTENT_FIELD = "CONTENT";
+	public static final String CONTENT_PROPERTY_FIELD_PREFIX = "CONTENT.PROPERTY.";
 	public static final String PROPERTY_FIELD_PREFIX = "PROPERTY.";
+	public static final String BOOST_FIELD = "BOOST";
 	public static final String CONTEXT_ROOT_FIELD = "ROOT";
 	public static final String CONTEXT_PATH_FIELD = "PATH";
 	
@@ -66,7 +69,7 @@ public class IndexStoreDocumentBuilder {
 		document.add(new Field(TYPE_FIELD, object.getType(), StringField.TYPE_STORED));
 		document.add(new Field(KEY_FIELD, object.getKey(), StringField.TYPE_STORED));
 		if ( object.getContent().getName().length() > 0 ) {
-		    document.add(new Field(NAME_FIELD, object.getContent().getName(), StringField.TYPE_STORED));
+		    document.add(new Field(NAME_FIELD, object.getContent().getName(), TextField.TYPE_STORED));
 		} else {
 		    document.add(new Field(NAME_FIELD, object.getKey(), StringField.TYPE_STORED));
 		}
@@ -85,6 +88,10 @@ public class IndexStoreDocumentBuilder {
 		}
 		document.add(new Field(STATUS_FIELD, object.getStatus().toLowerCase(), StringField.TYPE_STORED));
 		document.add(new Field(CONTENT_FIELD, object.getContent().toString(), TextField.TYPE_STORED));
+		document.add(new NumericDocValuesField(BOOST_FIELD, object.getContent().getBoost()));
+		for ( IndexablePlainTextContentProperty property : object.getContent().getProperties() ) {
+			document.add(new Field(CONTENT_PROPERTY_FIELD_PREFIX + property.getName().toUpperCase(), property.getValue().toLowerCase(), TextField.TYPE_STORED));
+		}
 		return document;
 	}
 

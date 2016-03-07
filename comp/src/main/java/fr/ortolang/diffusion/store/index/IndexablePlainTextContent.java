@@ -1,5 +1,8 @@
 package fr.ortolang.diffusion.store.index;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /*
  * #%L
  * ORTOLANG
@@ -40,9 +43,13 @@ public class IndexablePlainTextContent {
 	
     private String name = "";
 	private StringBuilder sb;
+	private List<IndexablePlainTextContentProperty> properties;
+	private long boost;
 
     public IndexablePlainTextContent() {
         sb = new StringBuilder();
+        properties = new ArrayList<IndexablePlainTextContentProperty>();
+        boost = 1L;
     }
     
     public String getName() {
@@ -56,10 +63,25 @@ public class IndexablePlainTextContent {
     public void addContentPart(String content) {
         sb.append(content + " ");
     }
+    
+    public List<IndexablePlainTextContentProperty> getProperties() {
+    	return properties;
+    }
+    
+    public void addProperties(IndexablePlainTextContentProperty property) {
+    	properties.add(property);
+    }
 
-    @Override
+    public long getBoost() {
+		return boost;
+	}
+
+	public void setBoost(long boost) {
+		this.boost = boost;
+	}
+
+	@Override
     public String toString() {
         return sb.toString();
     }
-
 }

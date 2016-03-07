@@ -37,6 +37,7 @@ package fr.ortolang.diffusion;
  */
 
 import java.io.Serializable;
+import java.util.Map;
 
 @SuppressWarnings("serial")
 public class OrtolangSearchResult implements Serializable {
@@ -50,6 +51,7 @@ public class OrtolangSearchResult implements Serializable {
 	private OrtolangObjectIdentifier identifier;
 	private String root;
 	private String path;
+	private Map<String, String> properties;
 
 	public OrtolangSearchResult() {
 	}
@@ -129,6 +131,14 @@ public class OrtolangSearchResult implements Serializable {
 	public void setPath(String path) {
 		this.path = path;
 	}
+
+    public Map<String, String> getProperties() {
+    	return properties;
+    }
+    
+    public void setProperties(Map<String, String> properties) {
+    	this.properties = properties;
+    }
 
 	@Override
 	public String toString() {
