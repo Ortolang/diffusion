@@ -60,7 +60,7 @@ import javax.ws.rs.core.UriInfo;
 import org.jboss.resteasy.annotations.GZIP;
 
 import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
+import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
 import fr.ortolang.diffusion.event.entity.EventFeed;

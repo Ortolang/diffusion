@@ -74,7 +74,7 @@ public class ImageResizer {
     static {
         jpegParams = new JPEGImageWriteParam(null);
         jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-        jpegParams.setCompressionQuality(0.85F);
+        jpegParams.setCompressionQuality(0.95F);
     }
 
     public ImageResizer(int thumbWidth, int thumbHeight) {

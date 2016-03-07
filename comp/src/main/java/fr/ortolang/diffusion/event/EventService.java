@@ -78,6 +78,6 @@ public interface EventService extends OrtolangService {
     
     public List<? extends OrtolangEvent> systemFindEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long afterTimestamp, int offset, int limit) throws EventServiceException;
     
-    public Long systemCountEvents() throws EventServiceException;
+    public long systemCountEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long afterTimestamp) throws EventServiceException;
     
 }

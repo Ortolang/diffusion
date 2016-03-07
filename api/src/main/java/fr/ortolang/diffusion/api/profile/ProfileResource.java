@@ -67,7 +67,7 @@ import org.jboss.resteasy.annotations.GZIP;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
-import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
+import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -117,7 +117,7 @@ public class ProfileResource {
     @GET
     @Path("/totp")
     @GZIP
-    public Response getProfileTotp() throws AccessDeniedException, OrtolangException, KeyNotFoundException, MembershipServiceException {
+    public Response getProfileTotp() throws OrtolangException, KeyNotFoundException, MembershipServiceException {
         LOGGER.log(Level.INFO, "GET /profiles/totp");
         String totp = membership.generateConnectedIdentifierTOTP();
         JsonObject jsonObject = Json.createObjectBuilder().add("totp", totp).build();

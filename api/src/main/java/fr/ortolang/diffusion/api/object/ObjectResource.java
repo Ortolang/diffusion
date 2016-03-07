@@ -60,6 +60,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 
+import fr.ortolang.diffusion.api.ApiHelper;
 import org.jboss.resteasy.annotations.GZIP;
 
 import fr.ortolang.diffusion.OrtolangException;
@@ -70,6 +71,7 @@ import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.OrtolangObjectVersion;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
+import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
@@ -142,13 +144,7 @@ public class ObjectResource {
         OrtolangObjectState state = browser.getState(key);
         CacheControl cc = new CacheControl();
         cc.setPrivate(true);
-        if (state.isLocked()) {
-            cc.setMaxAge(691200);
-            cc.setMustRevalidate(false);
-        } else {
-            cc.setMaxAge(0);
-            cc.setMustRevalidate(true);
-        }
+        ApiHelper.setCacheControlFromState(state, cc);
         Date lmd = new Date(state.getLastModification() / 1000 * 1000);
         ResponseBuilder builder = null;
         if (System.currentTimeMillis() - state.getLastModification() > 1000) {
@@ -190,18 +186,12 @@ public class ObjectResource {
     @Path("/{key}/history")
     @GZIP
     public Response history(@PathParam(value = "key") String key, @Context Request request) throws OrtolangException, KeyNotFoundException,
-            AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
-        LOGGER.log(Level.INFO, "GET /objects/" + key + "/hisotry");
+            InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
+        LOGGER.log(Level.INFO, "GET /objects/" + key + "/history");
         OrtolangObjectState state = browser.getState(key);
         CacheControl cc = new CacheControl();
         cc.setPrivate(true);
-        if (state.isLocked()) {
-            cc.setMaxAge(691200);
-            cc.setMustRevalidate(false);
-        } else {
-            cc.setMaxAge(0);
-            cc.setMustRevalidate(true);
-        }
+        ApiHelper.setCacheControlFromState(state, cc);
         Date lmd = new Date(state.getLastModification() / 1000 * 1000);
         ResponseBuilder builder = null;
         if (System.currentTimeMillis() - state.getLastModification() > 1000) {
@@ -221,18 +211,12 @@ public class ObjectResource {
     @Path("/{key}/properties")
     @GZIP
     public Response properties(@PathParam(value = "key") String key, @Context Request request) throws OrtolangException, KeyNotFoundException,
-            AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
-        LOGGER.log(Level.INFO, "GET /objects/" + key + "/hisotry");
+            InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
+        LOGGER.log(Level.INFO, "GET /objects/" + key + "/properties");
         OrtolangObjectState state = browser.getState(key);
         CacheControl cc = new CacheControl();
         cc.setPrivate(true);
-        if (state.isLocked()) {
-            cc.setMaxAge(691200);
-            cc.setMustRevalidate(false);
-        } else {
-            cc.setMaxAge(0);
-            cc.setMustRevalidate(true);
-        }
+        ApiHelper.setCacheControlFromState(state, cc);
         Date lmd = new Date(state.getLastModification() / 1000 * 1000);
         ResponseBuilder builder = null;
         if (System.currentTimeMillis() - state.getLastModification() > 1000) {
@@ -252,18 +236,12 @@ public class ObjectResource {
     @Path("/{key}/permissions")
     @GZIP
     public Response permissions(@PathParam(value = "key") String key, @Context Request request) throws OrtolangException, KeyNotFoundException,
-            AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
-        LOGGER.log(Level.INFO, "GET /objects/" + key + "/hisotry");
+            InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
+        LOGGER.log(Level.INFO, "GET /objects/" + key + "/permissions");
         OrtolangObjectState state = browser.getState(key);
         CacheControl cc = new CacheControl();
         cc.setPrivate(true);
-        if (state.isLocked()) {
-            cc.setMaxAge(691200);
-            cc.setMustRevalidate(false);
-        } else {
-            cc.setMaxAge(0);
-            cc.setMustRevalidate(true);
-        }
+        ApiHelper.setCacheControlFromState(state, cc);
         Date lmd = new Date(state.getLastModification() / 1000 * 1000);
         ResponseBuilder builder = null;
         if (System.currentTimeMillis() - state.getLastModification() > 1000) {
@@ -283,7 +261,7 @@ public class ObjectResource {
     @Path("/{key}/element")
     @GZIP
     public Response resolve(@PathParam(value = "key") String key, @QueryParam(value = "path") String relativePath, @Context Request request) throws OrtolangException, KeyNotFoundException,
-            AccessDeniedException, InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
+            InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
         LOGGER.log(Level.INFO, "GET /objects/" + key + "?path=" + relativePath);
         return get(core.resolvePathFromCollection(key, relativePath), request);
     }

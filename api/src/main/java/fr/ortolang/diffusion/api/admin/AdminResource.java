@@ -59,16 +59,22 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
 
 import org.jboss.resteasy.annotations.GZIP;
 
+import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangJob;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.api.ApiUriBuilder;
+import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.runtime.HumanTaskRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessTypeRepresentation;
+import fr.ortolang.diffusion.event.EventService;
+import fr.ortolang.diffusion.event.EventServiceException;
 import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -117,6 +123,8 @@ public class AdminResource {
     private RegistryService registry;
     @EJB
     private RuntimeService runtime;
+    @EJB
+    private EventService event;
     @EJB
     private SubscriptionService subscription;
 
@@ -235,6 +243,30 @@ public class AdminResource {
         LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name + "/" + prefix + "/" + hash);
         File content = binary.getFile(hash);
         return Response.ok(content).build();
+    }
+    
+    @GET
+    @Path("/store/events")
+    @GZIP
+    @SuppressWarnings("unchecked")
+    public Response searchEvents(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("2000") @QueryParam("l") int limit, @QueryParam("ofrom") String ofrom, @QueryParam("otype") String otype,
+            @QueryParam("etype") String etype, @QueryParam("throwed") String throwed, @DefaultValue("0") @QueryParam("after") long after) throws EventServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/store/events");
+        long nbresults = event.systemCountEvents(etype, ofrom, otype, throwed, after);
+        List<OrtolangEvent> events = (List<OrtolangEvent>) event.systemFindEvents(etype, ofrom, otype, throwed, after, offset, limit);
+        
+        UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
+        GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>();
+        representation.setEntries(events);
+        representation.setOffset((offset <= 0) ? 1 : offset);
+        representation.setSize(nbresults);
+        representation.setLimit(events.size());
+//        representation.setFirst(objects.clone().queryParam("o", 0).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
+//        representation.setPrevious(objects.clone().queryParam("o", Math.max(0, (offset - limit))).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
+//        representation.setSelf(objects.clone().queryParam("o", offset).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
+//        representation.setNext(objects.clone().queryParam("o", (nbresults > (offset + limit)) ? (offset + limit) : offset).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
+//        representation.setLast(objects.clone().queryParam("o", ((nbresults - 1) / limit) * limit).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
+        return Response.ok(representation).build();
     }
     
     @GET

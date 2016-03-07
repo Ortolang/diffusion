@@ -71,7 +71,7 @@ import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import fr.ortolang.diffusion.api.ApiUriBuilder;
-import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
+import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;

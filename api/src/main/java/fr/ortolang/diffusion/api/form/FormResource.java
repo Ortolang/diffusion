@@ -47,12 +47,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
+import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.form.FormService;
 import fr.ortolang.diffusion.form.FormServiceException;
 import fr.ortolang.diffusion.form.entity.Form;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+
 import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/forms")

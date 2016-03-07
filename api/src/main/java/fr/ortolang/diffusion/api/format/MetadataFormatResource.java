@@ -55,13 +55,14 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.io.IOUtils;
 
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.api.object.GenericCollectionRepresentation;
+import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+
 import org.jboss.resteasy.annotations.GZIP;
 
 /**
