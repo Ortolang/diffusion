@@ -304,6 +304,9 @@ public class RuntimeResource {
         case "claim":
             runtime.claimTask(id);
             break;
+        case "unclaim":
+            runtime.unclaimTask(id);
+            break;
         case "complete":
             Map<String, Object> params = new HashMap<String, Object>();
             for (ProcessVariableRepresentation variable : action.getVariables()) {
