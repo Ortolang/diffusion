@@ -252,7 +252,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public HumanTask getTask(String id) throws RuntimeEngineException {
 		try {
-			Task task = engine.getTaskService().createTaskQuery().taskId(id).singleResult();
+			Task task = engine.getTaskService().createTaskQuery().taskId(id).includeProcessVariables().includeTaskLocalVariables().singleResult();
 			String form = engine.getFormService().getTaskFormKey(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
 			return toHumanTask(task, form);
 		} catch (ActivitiException e) {
@@ -266,7 +266,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
         try {
             List<HumanTask> tasks = new ArrayList<HumanTask>();
 
-            List<Task> utasks = engine.getTaskService().createTaskQuery().list();
+            List<Task> utasks = engine.getTaskService().createTaskQuery().includeProcessVariables().includeTaskLocalVariables().list();
             for (Task task : utasks) {
                 String form = engine.getFormService().getTaskFormKey(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
                 tasks.add(toHumanTask(task, form));
@@ -296,7 +296,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		try {
 			List<HumanTask> ctasks = new ArrayList<HumanTask>();
 
-			List<Task> cutasks = engine.getTaskService().createTaskQuery().taskCandidateUser(user).list();
+			List<Task> cutasks = engine.getTaskService().createTaskQuery().taskCandidateUser(user).includeProcessVariables().includeTaskLocalVariables().list();
 			for (Task task : cutasks) {
 				String form = engine.getFormService().getTaskFormKey(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
 				ctasks.add(toHumanTask(task, form));
@@ -331,7 +331,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	public List<HumanTask> listAssignedTasks(String user) throws RuntimeEngineException {
 		try {
 			List<HumanTask> atasks = new ArrayList<HumanTask>();
-			List<Task> autasks = engine.getTaskService().createTaskQuery().taskAssignee(user).list();
+			List<Task> autasks = engine.getTaskService().createTaskQuery().taskAssignee(user).includeProcessVariables().includeTaskLocalVariables().list();
 			for (Task task : autasks) {
 				String form = engine.getFormService().getTaskFormKey(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
 				atasks.add(toHumanTask(task, form));
