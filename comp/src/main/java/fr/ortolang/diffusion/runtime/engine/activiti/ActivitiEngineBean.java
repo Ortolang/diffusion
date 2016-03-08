@@ -451,6 +451,8 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 		instance.setDueDate(task.getDueDate());
 		instance.setPriority(task.getPriority());
 		instance.setForm(form);
+		instance.setProcessVariables(task.getProcessVariables());
+		instance.setTaskVariables(task.getTaskLocalVariables());
 		return instance;
 	}
 
