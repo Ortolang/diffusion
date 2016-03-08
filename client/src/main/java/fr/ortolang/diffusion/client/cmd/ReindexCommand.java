@@ -1,11 +1,8 @@
 package fr.ortolang.diffusion.client.cmd;
 
 import java.io.Console;
-import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.json.JsonArray;
 import javax.json.JsonObject;
@@ -22,14 +19,16 @@ import fr.ortolang.diffusion.client.OrtolangClient;
 import fr.ortolang.diffusion.client.OrtolangClientException;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
 
-public class ReindexAllRootCollectionCommand extends Command {
+public class ReindexCommand extends Command {
 
 	private Options options = new Options();
 
-	public ReindexAllRootCollectionCommand() {
+	public ReindexCommand() {
 		options.addOption("h", "help", false, "show help.");
 		options.addOption("U", "username", true, "username for login");
 		options.addOption("P", "password", true, "password for login");
+		options.addOption("s", "service", true, "service of the object to index");
+		options.addOption("t", "type", true, "type of the object to index");
 		options.addOption("F", "fake", false, "fake mode");
 	}
 
@@ -56,49 +55,48 @@ public class ReindexAllRootCollectionCommand extends Command {
 					}
 				}
 			}
-
+			
+			String type = cmd.getOptionValue("t");
+			String service = cmd.getOptionValue("s");
 			boolean fakeMode = cmd.hasOption("F");
 			
-			OrtolangClient client = OrtolangClient.getInstance();
-			if ( username.length() > 0 ) {
-				client.getAccountManager().setCredentials(username, password);
-				client.login(username);
-			}
-			System.out.println("Connected as user: " + client.connectedProfile());
-			System.out.println("Looking for root collection ...");
-			
-			// Looking for root collection
-			List<String> rootCollectionKeys = new ArrayList<String>();
-			
-			int offset = 0;
-			int limit = 100;
-			JsonObject listOfObjects = client.listObjects("core", "collection", "PUBLISHED", offset, limit);
-			JsonArray keys = listOfObjects.getJsonArray("entries");
-			
-			while(!keys.isEmpty()) {
-				for(JsonString objectKey : keys.getValuesAs(JsonString.class)) {
-					JsonObject objectRepresentation = client.getObject(objectKey.getString());
-					JsonObject objectProperty = objectRepresentation.getJsonObject("object");
-					boolean isRoot = objectProperty.getBoolean("root");
-					if(isRoot) {
-						rootCollectionKeys.add(objectKey.getString());
+			if(type != null && service != null) {
+				
+				OrtolangClient client = OrtolangClient.getInstance();
+				if ( username.length() > 0 ) {
+					client.getAccountManager().setCredentials(username, password);
+					client.login(username);
+				}
+				System.out.println("Connected as user: " + client.connectedProfile());
+				System.out.println("Retrieving for published objects from service "+service+" and with type "+type+" ...");
+				
+				List<String> objectKeys = new ArrayList<String>();
+				
+				int offset = 0;
+				int limit = 100;
+				JsonObject listOfObjects = client.listObjects(service, type, "PUBLISHED", offset, limit);
+				JsonArray keys = listOfObjects.getJsonArray("entries");
+				
+				while(!keys.isEmpty()) {
+					for(JsonString objectKey : keys.getValuesAs(JsonString.class)) {
+						objectKeys.add(objectKey.getString());
 					}
+					offset += limit;
+					listOfObjects = client.listObjects(service, type, "PUBLISHED", offset, limit);
+					keys = listOfObjects.getJsonArray("entries");
 				}
-				offset += limit;
-				listOfObjects = client.listObjects("core", "collection", "PUBLISHED", offset, limit);
-				keys = listOfObjects.getJsonArray("entries");
-			}
-			
-			System.out.println("Reindex keys : "+rootCollectionKeys);
-			if(!fakeMode) {
-				for(String key : rootCollectionKeys) {
-					client.reindex(key);
+				System.out.println("Reindex keys ("+objectKeys.size()+") : "+objectKeys);
+				if(!fakeMode) {
+					for(String key : objectKeys) {
+						client.reindex(key);
+					}
+					System.out.println("All keys reindexed.");
 				}
+				client.logout();
+				client.close();
+			} else {
+				help();
 			}
-			
-			client.logout();
-			client.close();
-			
 		} catch (ParseException e) {
 			System.out.println("Failed to parse comand line properties " +  e.getMessage());
 			help();
@@ -110,7 +108,7 @@ public class ReindexAllRootCollectionCommand extends Command {
 
 	private void help() {
 		HelpFormatter formater = new HelpFormatter();
-		formater.printHelp("Index all root collection", options);
+		formater.printHelp("Reindex", options);
 		System.exit(0);
 	}
 

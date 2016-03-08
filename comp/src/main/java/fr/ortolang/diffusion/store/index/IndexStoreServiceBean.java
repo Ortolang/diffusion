@@ -65,7 +65,11 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queries.CustomScoreQuery;
+import org.apache.lucene.queries.function.FunctionQuery;
+import org.apache.lucene.queries.function.valuesource.LongFieldSource;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -176,10 +180,13 @@ public class IndexStoreServiceBean implements IndexStoreService {
         try {
             IndexReader reader = DirectoryReader.open(directory);
             IndexSearcher searcher = new IndexSearcher(reader);
-            QueryParser parser = new QueryParser(Version.LUCENE_46, "CONTENT", analyzer);
+            QueryParser parser = new QueryParser(Version.LUCENE_46, IndexStoreDocumentBuilder.CONTENT_FIELD, analyzer);
             Query query = parser.parse(queryString);
+            
+            FunctionQuery boostQuery = new FunctionQuery(new LongFieldSource(IndexStoreDocumentBuilder.BOOST_FIELD));
+            Query q = new CustomScoreQuery(query, boostQuery);
 
-            TopDocs docs = searcher.search(query, 100);
+            TopDocs docs = searcher.search(q, 100);
             ArrayList<OrtolangSearchResult> results = new ArrayList<OrtolangSearchResult>(docs.totalHits);
             SimpleHTMLFormatter formatter = new SimpleHTMLFormatter("<span class='highlighted'>", "</span>");
             QueryScorer scorer = new QueryScorer(query);
@@ -188,13 +195,18 @@ public class IndexStoreServiceBean implements IndexStoreService {
             for (int i = 0; i < docs.scoreDocs.length; i++) {
                 Document doc = searcher.doc(docs.scoreDocs[i].doc);
                 float score = docs.scoreDocs[i].score;
-                String identifier = doc.get("IDENTIFIER");
-                String higlightedText = highlighter.getBestFragment(analyzer, "CONTENT", doc.get("CONTENT"));
-                String name = doc.get("NAME");
-                String service = doc.get("SERVICE");
-                String type = doc.get("TYPE");
-                String key = doc.get("KEY");
-                
+                String identifier = doc.get(IndexStoreDocumentBuilder.IDENTIFIER_FIELD);
+                String higlightedText = highlighter.getBestFragment(analyzer, IndexStoreDocumentBuilder.CONTENT_FIELD, doc.get(IndexStoreDocumentBuilder.CONTENT_FIELD));
+                String name = doc.get(IndexStoreDocumentBuilder.NAME_FIELD);
+                String service = doc.get(IndexStoreDocumentBuilder.SERVICE_FIELD);
+                String type = doc.get(IndexStoreDocumentBuilder.TYPE_FIELD);
+                String key = doc.get(IndexStoreDocumentBuilder.KEY_FIELD);
+                Map<String, String> properties = new HashMap<String,String>();
+                for(IndexableField field : doc.getFields()) {
+                	if(field.name().startsWith(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX)) {
+                		properties.put(field.name(), field.stringValue());
+                	}
+                }
                 OrtolangSearchResult result = new OrtolangSearchResult();
                 result.setScore(score);
                 result.setName(name);
@@ -203,6 +215,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
                 result.setType(type);
                 result.setKey(key);
                 result.setExplain(higlightedText);
+                result.setProperties(properties);
                 results.add(result);
             }
             return results;

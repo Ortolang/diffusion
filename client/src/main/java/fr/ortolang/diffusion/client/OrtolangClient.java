@@ -193,6 +193,9 @@ public class OrtolangClient {
 			JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
 			response.close();
 			return jsonObject;
+		} else if (response.getStatus() == Status.NOT_FOUND.getStatusCode()) {
+			response.close();
+			return null;
 		} else {
 			response.close();
 			throw new OrtolangClientException("unexpected response code: " + response.getStatus());

@@ -74,6 +74,7 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
+import fr.ortolang.diffusion.api.ApiHelper;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -321,13 +322,7 @@ public class ContentResource {
             OrtolangObjectState state = browser.getState(key);
             CacheControl cc = new CacheControl();
             cc.setPrivate(true);
-            if (state.isLocked()) {
-                cc.setMaxAge(691200);
-                cc.setMustRevalidate(false);
-            } else {
-                cc.setMaxAge(0);
-                cc.setMustRevalidate(true);
-            }
+            ApiHelper.setCacheControlFromState(state, cc);
             Date lmd = new Date(state.getLastModification() / 1000 * 1000);
             ResponseBuilder builder = null;
             if (System.currentTimeMillis() - state.getLastModification() > 1000) {
@@ -493,13 +488,7 @@ public class ContentResource {
             OrtolangObjectState state = browser.getState(wskey);
             CacheControl cc = new CacheControl();
             cc.setPrivate(true);
-            if (state.isLocked()) {
-                cc.setMaxAge(691200);
-                cc.setMustRevalidate(false);
-            } else {
-                cc.setMaxAge(0);
-                cc.setMustRevalidate(true);
-            }
+            ApiHelper.setCacheControlFromState(state, cc);
             Date lmd = new Date(state.getLastModification() / 1000 * 1000);
             ResponseBuilder builder = null;
             if (System.currentTimeMillis() - state.getLastModification() > 1000) {
