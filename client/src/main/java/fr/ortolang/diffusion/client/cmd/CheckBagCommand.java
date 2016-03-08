@@ -9,7 +9,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.json.JsonObject;
 
@@ -19,12 +23,15 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.IOUtils;
 
 import fr.ortolang.diffusion.client.OrtolangClient;
 import fr.ortolang.diffusion.client.OrtolangClientException;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
 
 public class CheckBagCommand extends Command {
+
+    public static final Pattern ORTOLANG_KEY_MATCHER = Pattern.compile("\\$\\{([\\w\\d:\\-_]*)\\}");
 
     private Options options = new Options();
     private StringBuilder errors = new StringBuilder();
@@ -145,6 +152,8 @@ public class CheckBagCommand extends Command {
                                 errors.append("-> unable to fix: ").append(e.getMessage()).append("\r\n");
                             }
                         }
+                    } else if ( file.endsWith("ortolang-item-json") ) {
+                        checkOrtolangItemJson(file);
                     }
                     return FileVisitResult.CONTINUE;
                 }
@@ -165,7 +174,7 @@ public class CheckBagCommand extends Command {
         }
     }
 
-    private void checkWorkspaceProperties(Path workspaceFilePath) throws IOException, OrtolangClientException, OrtolangClientAccountException {
+    private void checkWorkspaceProperties(Path workspaceFilePath) throws IOException, OrtolangClientException {
         Properties props = new Properties();
         InputStream in = Files.newInputStream(workspaceFilePath);
         props.load(in);
@@ -182,15 +191,46 @@ public class CheckBagCommand extends Command {
         }
     }
     
-    private void checkObject(String key, String subject) throws OrtolangClientAccountException {
+    private void checkOrtolangItemJson(Path filepath) {
+        String jsonContent = getContent(filepath);
+        if(jsonContent!=null) {
+            List<String> keys = extractOrtolangKeys(jsonContent);
+            
+            System.out.println("Looking for keys in registry : "+keys);
+            keys.parallelStream().forEach((key) -> checkObject(key, "referential") );
+        }
+    }
+    
+    private void checkObject(String key, String subject) {
 		try {
 			JsonObject object = client.getObject(key);
 			if(object==null) {
 				errors.append("-> ").append(subject).append(" ").append(key).append(" doesn't exist\r\n");
 			}
-		} catch (OrtolangClientException e) {
-			System.out.println("client execption : "+e.getMessage());
+		} catch (OrtolangClientException | OrtolangClientAccountException e) {
+			errors.append("-> unable to find ").append(key).append(" : ").append(e.getMessage()).append("\r\n");
 		}
+    }
+
+    private String getContent(Path filepath) {
+        String content = null;
+        try ( InputStream is = Files.newInputStream(filepath) ) {
+            content = IOUtils.toString(is);
+        } catch (IOException e) {
+            System.out.println("  unable to get content of file : "+filepath+" : "+e.getMessage());
+        }
+        return content;
+    }
+
+    public static List<String> extractOrtolangKeys(String json) {
+        Matcher okMatcher = CheckBagCommand.ORTOLANG_KEY_MATCHER.matcher(json);
+        List<String> ortolangKeys = new ArrayList<String>();
+        while(okMatcher.find()) {
+            if(!ortolangKeys.contains(okMatcher.group(1))) {
+                ortolangKeys.add(okMatcher.group(1));
+            }
+        }
+        return ortolangKeys;
     }
     
     private void help() {

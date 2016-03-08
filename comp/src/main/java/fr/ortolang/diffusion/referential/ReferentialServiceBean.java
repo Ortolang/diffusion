@@ -177,7 +177,7 @@ public class ReferentialServiceBean implements ReferentialService {
             }
 
             if (identifier.getType().equals(ReferentialEntity.OBJECT_TYPE)) {
-        		return readEntity(key);
+        		return readEntity(key.replaceFirst(SERVICE_NAME + ":", ""));
             }
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
         } catch (ReferentialServiceException | RegistryServiceException | KeyNotFoundException e) {

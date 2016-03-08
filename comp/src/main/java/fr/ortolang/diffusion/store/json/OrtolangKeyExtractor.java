@@ -58,7 +58,9 @@ public class OrtolangKeyExtractor {
 		Matcher okMatcher = OrtolangKeyExtractor.ORTOLANG_KEY_MATCHER.matcher(json);
 		List<String> ortolangKeys = new ArrayList<String>();
 		while(okMatcher.find()) {
-			ortolangKeys.add(okMatcher.group(1));
+		    if(!ortolangKeys.contains(okMatcher.group(1))) {
+		        ortolangKeys.add(okMatcher.group(1));
+		    }
 		}
 		return ortolangKeys;
 	}
