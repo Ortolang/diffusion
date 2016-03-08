@@ -101,7 +101,7 @@ public class ImportReferentialCommand extends Command {
 				client.login(username);
 			}
 			System.out.println("Connected as user: " + client.connectedProfile());
-			String pkey = client.createProcess("import-referential", "Import Referential", params, files);
+			String pkey = client.createProcess("import-referential", "Import Referential '" + cmd.getOptionValue("f").substring(cmd.getOptionValue("f").lastIndexOf("/")+1) + "'", params, files);
 			System.out.println("Import-Referential process created with key : " + pkey);
 			
 			client.logout();

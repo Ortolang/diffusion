@@ -49,7 +49,6 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -76,10 +75,14 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 
 	public static final String NAME = "Import Referential entity";
 
+    private StringBuilder report = new StringBuilder();
+    private boolean partial = false;
+    
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
 		checkParameters(execution);
 		String referentialPathParam = execution.getVariable(REFERENTIAL_PATH_PARAM_NAME, String.class);
+		report = new StringBuilder();
 		
 		File referentialPathFile = new File(referentialPathParam);
 		if(referentialPathFile.exists()) {
@@ -87,7 +90,7 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 			final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:*.{json}");
 			final Path referentialPath = Paths.get(referentialPathParam);
 			try {
-				Files.walkFileTree(referentialPath, new FileVisitor<Path>() {
+                    Files.walkFileTree(referentialPath, new FileVisitor<Path>() {
 						@Override
 						public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
 							return FileVisitResult.CONTINUE;
@@ -101,13 +104,17 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 								File jsonFile = filepath.toFile();
 								String content = getContent(jsonFile);
 								if(content==null) {
-									LOGGER.log(Level.SEVERE, "Referential entity content is empty for file " + jsonFile);
+//									LOGGER.log(Level.SEVERE, "Referential entity content is empty for file " + jsonFile);
+                                    report.append(" - referential entity content is empty for file ").append(jsonFile).append("\r\n");
+									partial = true;
 									return FileVisitResult.CONTINUE;
 								}
 								
 								String type = extractField(content, "type");
 								if(type==null) {
-									LOGGER.log(Level.SEVERE, "Referential entity type unknown for file " + jsonFile);
+//									LOGGER.log(Level.SEVERE, "Referential entity type unknown for file " + jsonFile);
+								    report.append(" - referential entity type unknown for file ").append(jsonFile).append("\r\n");
+									partial = true;
 									return FileVisitResult.CONTINUE;
 								}
 
@@ -117,11 +124,16 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 									
 									if(!exist) {
 										createReferentialEntity(name, type, content);
+                                        report.append(" + referential entity created : ").append(name).append("\r\n");
 									} else {
 										updateReferentialEntity(name, type, content);
+                                        report.append(" + referential entity updated : ").append(name).append("\r\n");
 									}
 								} catch(RuntimeEngineTaskException e) {
-									LOGGER.log(Level.SEVERE, "  unable to import referential entity ("+type+") named "+name, e);
+//									LOGGER.log(Level.SEVERE, "  unable to import referential entity ("+type+") named "+name, e);
+									report.append(" - unable to import referential entity '").append(name).append("' : ").append(e.getMessage()).append("\r\n");
+									partial = true;
+									return FileVisitResult.CONTINUE;
 								}
 							}
 							return FileVisitResult.CONTINUE;
@@ -139,22 +151,30 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 
 					});
 			} catch (Exception e) {
-				LOGGER.log(Level.SEVERE, "  unable to import referential : " + referentialPathFile, e);
+//				LOGGER.log(Level.SEVERE, "  unable to import referential : " + referentialPathFile, e);
+	            report.append("Enable to import referential ").append(referentialPathFile).append(" caused by : ").append(e.getMessage()).append("\r\n");
+                partial = true;
 			}
 			
 		} else {
-			LOGGER.log(Level.SEVERE, "Referential folder doesn't exists : " + referentialPathFile);
+//			LOGGER.log(Level.SEVERE, "Referential folder doesn't exists : " + referentialPathFile);
+		    report.append("Referential folder doesn't exists at ").append(referentialPathFile).append("\r\n");
+            partial = true;
 		}
-		
-		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Import Referential entities done"));
-		execution.setVariable("greettime", new Date());
+
+        if ( partial ) {
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some entities has not been imported (see trace for detail)"));
+        } else {
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All entities imported succesfully"));
+        }
+        throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "Report: \r\n" + report.toString(), null));
 	}
 
 	@Override
 	public String getTaskName() {
 		return NAME;
 	}
-
+	
 	private void checkParameters(DelegateExecution execution) throws RuntimeEngineTaskException {
 		if (!execution.hasVariable(REFERENTIAL_PATH_PARAM_NAME)) {
 			throw new RuntimeEngineTaskException("execution variable " + REFERENTIAL_PATH_PARAM_NAME + " is not set");
@@ -175,37 +195,29 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 	
 	private void createReferentialEntity(String name, String type, String content) throws RuntimeEngineTaskException {
 		try {
-			LOGGER.log(Level.FINE, "  add referential entity "+name+" with type "+type);
-
 			ReferentialEntityType entityType = getEntityType(type.toUpperCase());
 			if(entityType!=null) {
 				getReferentialService().createEntity(name, entityType, content);
 			} else {
-				LOGGER.log(Level.SEVERE, "  unable to find type of referential entity named "+name);
-				throw new RuntimeEngineTaskException("unable to create referential entity named " + name + " and type " + type);
+				throw new RuntimeEngineTaskException("type '"+type+"' unknown");
 			}
-			
-			LOGGER.log(Level.FINE, "  referential entity created with name "+name);
 		} catch (ReferentialServiceException | KeyAlreadyExistsException | AccessDeniedException e) {
-			LOGGER.log(Level.SEVERE, "  unable to create referential entity named "+name, e);
+//			LOGGER.log(Level.SEVERE, "  unable to create referential entity named "+name, e);
+            throw new RuntimeEngineTaskException(e.getMessage());
 		}
 	}
 
 	private void updateReferentialEntity(String name, String type, String content) throws RuntimeEngineTaskException {
 		try {
-			LOGGER.log(Level.FINE, "  update referential entity "+name+" with type "+type);
-
 			ReferentialEntityType entityType = getEntityType(type.toUpperCase());
 			if(entityType!=null) {
 				getReferentialService().updateEntity(name, entityType, content);
 			} else {
-				LOGGER.log(Level.SEVERE, "  unable to find type of referential entity named "+name);
-				throw new RuntimeEngineTaskException("unable to create referential entity named " + name + " and type " + type);
+				throw new RuntimeEngineTaskException("type '"+type+"' unknown");
 			}
-			
-			LOGGER.log(Level.FINE, "  referential entity updated with name "+name);
 		} catch (ReferentialServiceException | AccessDeniedException | KeyNotFoundException e) {
-			LOGGER.log(Level.SEVERE, "  unable to update referential entity named "+name, e);
+//			LOGGER.log(Level.SEVERE, "  unable to update referential entity named "+name, e);
+			throw new RuntimeEngineTaskException(e.getMessage());
 		}
 	}
 	
@@ -214,8 +226,6 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 		InputStream is = new FileInputStream(file);
 		try {
 			content = IOUtils.toString(is);
-		} catch (IOException e) {
-			LOGGER.log(Level.SEVERE, "  unable to get content of file : "+file, e);
 		} finally {
 			is.close();
 		}
@@ -232,7 +242,7 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 		} catch(IllegalStateException | NullPointerException | ClassCastException e) {
 			LOGGER.log(Level.WARNING, "No property '"+fieldName+"' in json object", e);
 		} catch(JsonException e) {
-		    LOGGER.log(Level.SEVERE, "No property '"+fieldName+"' in json object", e);
+		    LOGGER.log(Level.WARNING, "No property '"+fieldName+"' in json object", e);
 		} finally {
 			jsonReader.close();
 			reader.close();
