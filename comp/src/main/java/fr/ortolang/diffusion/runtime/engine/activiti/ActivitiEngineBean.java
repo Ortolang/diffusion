@@ -302,7 +302,7 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 				ctasks.add(toHumanTask(task, form));
 			}
 			if ( groups != null && groups.size() > 0 ) {
-				List<Task> cgtasks = engine.getTaskService().createTaskQuery().taskCandidateGroupIn(groups).list();
+				List<Task> cgtasks = engine.getTaskService().createTaskQuery().taskCandidateGroupIn(groups).includeProcessVariables().includeTaskLocalVariables().list();
 				for (Task task : cgtasks) {
 					String form = engine.getFormService().getTaskFormKey(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
 					ctasks.add(toHumanTask(task, form));
