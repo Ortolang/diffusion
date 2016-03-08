@@ -37,6 +37,7 @@ package fr.ortolang.diffusion.runtime.entity;
  */
 
 import java.util.Date;
+import java.util.Map;
 
 public class HumanTask {
 
@@ -51,6 +52,8 @@ public class HumanTask {
 	private Date dueDate;
 	private int priority;
 	private String form;
+	private Map<String, Object> processVariables;
+	private Map<String, Object> taskVariables;
 
 	public HumanTask() {
 	}
@@ -126,5 +129,21 @@ public class HumanTask {
 	public void setForm(String form) {
 		this.form = form;
 	}
+	
+	public Map<String, Object> getProcessVariables() {
+        return processVariables;
+    }
+
+    public void setProcessVariables(Map<String, Object> processVariables) {
+        this.processVariables = processVariables;
+    }
+
+    public Map<String, Object> getTaskVariables() {
+        return taskVariables;
+    }
+
+    public void setTaskVariables(Map<String, Object> taskVariables) {
+        this.taskVariables = taskVariables;
+    }
 
 }
