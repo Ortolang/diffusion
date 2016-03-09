@@ -25,6 +25,9 @@ public class ReferentialEntity extends OrtolangObject {
 
 	public static final String OBJECT_TYPE = "entity";
 
+	public static final String LANGUAGE_CONTENT_TEXT = "TEXT";
+    public static final String LANGUAGE_CONTENT_TYPE = "TYPE";
+	
 	@Id
 	private String id;
 	@Version

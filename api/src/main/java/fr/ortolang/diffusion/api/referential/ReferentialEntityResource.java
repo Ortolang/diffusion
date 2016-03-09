@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -36,16 +37,21 @@ public class ReferentialEntityResource {
 
     @GET
     @GZIP
-    public Response list(@QueryParam(value = "type") String type) throws ReferentialServiceException {
-        LOGGER.log(Level.INFO, "GET /referentialentities?type=" + type);
+    public Response list(@QueryParam(value = "type") String type, @QueryParam(value = "term") String term,@DefaultValue(value= "FR") @QueryParam(value = "lang") String lang) throws ReferentialServiceException {
+        LOGGER.log(Level.INFO, "GET /referentialentities?type=" + type + "&term=" + term + "&lang=" + lang);
 
         GenericCollectionRepresentation<ReferentialEntityRepresentation> representation = new GenericCollectionRepresentation<ReferentialEntityRepresentation> ();
-        
         if(type!=null) {
 	        ReferentialEntityType entityType = getEntityType(type);
 	        
 	    	if(entityType != null) {
-	        	List<ReferentialEntity> refs = referential.listEntities(entityType);
+	    	    
+	    	    List<ReferentialEntity> refs = null;
+	    	    if(term!=null) {
+	    	        refs = referential.findEntitiesByTerm(entityType, term, lang);
+	    	    } else {
+	    	        refs = referential.listEntities(entityType);
+	    	    }
 	            
 	            for(ReferentialEntity ref : refs) {
 	                representation.addEntry(ReferentialEntityRepresentation.fromReferentialEntity(ref));
@@ -53,6 +59,8 @@ public class ReferentialEntityResource {
 	            representation.setOffset(0);
 	            representation.setSize(refs.size());
 	            representation.setLimit(refs.size());
+	        } else {
+	            throw new ReferentialServiceException("type unknown");
 	        }
         }
         return Response.ok(representation).build();
