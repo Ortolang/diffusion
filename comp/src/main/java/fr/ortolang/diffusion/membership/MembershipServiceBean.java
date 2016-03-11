@@ -38,8 +38,6 @@ package fr.ortolang.diffusion.membership;
 
 import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -98,25 +96,6 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.*;
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
 
 @Local(MembershipService.class)
 @Stateless(name = MembershipService.SERVICE_NAME)
