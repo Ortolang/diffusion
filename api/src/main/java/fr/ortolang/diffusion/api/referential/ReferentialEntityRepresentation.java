@@ -49,7 +49,7 @@ public class ReferentialEntityRepresentation {
     private String key;
 
     private String id;
-	private ReferentialEntityType type;
+	private String type;
 	private String content;
 
 	public String getKey() {
@@ -76,11 +76,11 @@ public class ReferentialEntityRepresentation {
 		this.content = content;
 	}
 
-	public ReferentialEntityType getType() {
+	public String getType() {
 		return type;
 	}
 
-	public void setType(ReferentialEntityType type) {
+	public void setType(String type) {
 		this.type = type;
 	}
 
@@ -89,7 +89,7 @@ public class ReferentialEntityRepresentation {
 		representation.setId(entity.getId());
 		representation.setKey(entity.getKey());
 		representation.setContent(entity.getContent());
-		representation.setType(entity.getType());
+		representation.setType(entity.getType().toString());
 		
 		return representation;
 	}

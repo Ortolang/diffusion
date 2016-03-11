@@ -33,6 +33,7 @@ import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
@@ -52,6 +53,9 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import fr.ortolang.diffusion.store.index.IndexStoreDocumentBuilder;
+import fr.ortolang.diffusion.store.index.IndexStoreService;
+import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContentProperty;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
@@ -77,6 +81,8 @@ public class ReferentialServiceBean implements ReferentialService {
     private AuthorisationService authorisation;
     @EJB
     private IndexingService indexing;
+    @EJB
+    private IndexStoreService indexStore;
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
     @Resource
@@ -123,6 +129,14 @@ public class ReferentialServiceBean implements ReferentialService {
 
     public void setIndexing(IndexingService indexing) {
         this.indexing = indexing;
+    }
+
+    public IndexStoreService getIndexStore() {
+        return indexStore;
+    }
+
+    public void setIndexStore(IndexStoreService indexStore) {
+        this.indexStore = indexStore;
     }
 
     public EntityManager getEm() {
@@ -274,6 +288,7 @@ public class ReferentialServiceBean implements ReferentialService {
 	}
 
 	@Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void updateEntity(String name, ReferentialEntityType type, String content) 
 			throws ReferentialServiceException, KeyNotFoundException,
 			AccessDeniedException {
@@ -290,7 +305,9 @@ public class ReferentialServiceBean implements ReferentialService {
             if (refEntity == null) {
                 throw new ReferentialServiceException("unable to find a ReferentialEntity for id " + identifier.getId());
             }
-            refEntity.setKey(key);
+            if (type == null) {
+                throw new ReferentialServiceException("unable to find the ReferentialEntityType");
+            }
             refEntity.setType(type);
             refEntity.setContent(content);
 
@@ -305,6 +322,25 @@ public class ReferentialServiceBean implements ReferentialService {
         }
 	}
 
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<ReferentialEntity> findEntitiesByTerm(ReferentialEntityType type, String term, String lang) throws ReferentialServiceException {
+        String query = new StringBuilder().append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX).append(ReferentialEntity.LANGUAGE_CONTENT_TEXT)
+                .append(lang.toUpperCase()).append(":").append(term).append("* ")
+                .append("AND ").append(IndexStoreDocumentBuilder.SERVICE_FIELD).append(":").append(ReferentialService.SERVICE_NAME).append(" ")
+                .append("AND ").append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX)
+                .append(ReferentialEntity.LANGUAGE_CONTENT_TYPE).append(":").append(type.toString().toLowerCase()).toString();
+        
+        List<ReferentialEntity> entities = new ArrayList<ReferentialEntity>();
+        try {
+            for ( OrtolangSearchResult result : indexStore.search(query) ) {
+                entities.add(readEntity(result.getKey().replaceFirst(SERVICE_NAME + ":", "")));
+            }
+        } catch (IndexStoreServiceException | KeyNotFoundException e) {
+            throw new ReferentialServiceException("error while looking for a ReferentialEntity with term [" + term + "]");
+        }
+        return entities;
+    }
     
     private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws ReferentialServiceException {
         if (!identifier.getService().equals(getServiceName())) {
@@ -334,7 +370,7 @@ public class ReferentialServiceBean implements ReferentialService {
 					throw new OrtolangException("unable to load ReferentialEntity with id [" + identifier.getId() + "] from storage");
 				}
 				content.setName(key.replaceFirst(SERVICE_NAME + ":", ""));
-				content.addProperties(new IndexablePlainTextContentProperty("type", referentielEntity.getType().toString()));
+				content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.LANGUAGE_CONTENT_TYPE, referentielEntity.getType().toString()));
 				
 				if(referentielEntity.getContent()!=null && referentielEntity.getType().equals(ReferentialEntityType.LANGUAGE)) {
 					StringReader reader = new StringReader(referentielEntity.getContent());
@@ -347,7 +383,7 @@ public class ReferentialServiceBean implements ReferentialService {
 						if(jsonObj.containsKey("labels")) {
 							for(JsonObject lang : jsonObj.getJsonArray("labels").getValuesAs(JsonObject.class)) {
 								content.addContentPart(lang.getString("value"));
-								content.addProperties(new IndexablePlainTextContentProperty("text"+lang.getString("lang"), lang.getString("value")));
+								content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.LANGUAGE_CONTENT_TEXT+lang.getString("lang"), lang.getString("value")));
 							}
 						}
 					} catch(IllegalStateException | NullPointerException | ClassCastException e) {
