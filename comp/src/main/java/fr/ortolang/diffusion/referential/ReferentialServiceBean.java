@@ -236,6 +236,7 @@ public class ReferentialServiceBean implements ReferentialService {
     		refEntity.setBoost(1L);
 
     		registry.register(key, refEntity.getObjectIdentifier(), caller);
+    		//TODO remove that
     		registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
 
     		em.persist(refEntity);
