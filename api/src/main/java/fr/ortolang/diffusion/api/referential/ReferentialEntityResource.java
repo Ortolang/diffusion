@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -22,6 +23,7 @@ import fr.ortolang.diffusion.referential.ReferentialServiceException;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntity;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 /**
  * @resourceDescription Operations on Referentiels
@@ -76,6 +78,28 @@ public class ReferentialEntityResource {
         ReferentialEntityRepresentation representation = ReferentialEntityRepresentation.fromReferentialEntity(entity);
         
         return Response.ok(representation).build();
+    }
+
+    @GET
+    @Path("/entitytypes")
+    @GZIP
+    public Response listEntityTypes() {
+        LOGGER.log(Level.INFO, "GET /referentialentities/entitytypes");
+        return Response.ok(ReferentialEntityType.values()).build();
+    }
+
+    @PUT
+    @Path("/{name}")
+    public Response update(@PathParam(value = "name") String name, ReferentialEntityRepresentation entity) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException {
+    	LOGGER.log(Level.INFO, "PUT /referentialentities/" + name);
+
+    	ReferentialEntityType entityType = getEntityType(entity.getType());
+    	if(entityType!=null) {
+    		referential.updateEntity(name, entityType, entity.getContent());
+    	} else {
+    		return Response.status(Response.Status.BAD_REQUEST).entity("representation does not contains a valid type").build();
+    	}
+    	return Response.ok().build();
     }
     
     private ReferentialEntityType getEntityType(String type) {

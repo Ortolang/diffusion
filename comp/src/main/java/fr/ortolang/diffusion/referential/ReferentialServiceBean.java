@@ -304,7 +304,9 @@ public class ReferentialServiceBean implements ReferentialService {
             if (refEntity == null) {
                 throw new ReferentialServiceException("unable to find a ReferentialEntity for id " + identifier.getId());
             }
-            refEntity.setKey(key);
+            if (type == null) {
+                throw new ReferentialServiceException("unable to find the ReferentialEntityType");
+            }
             refEntity.setType(type);
             refEntity.setContent(content);
 
