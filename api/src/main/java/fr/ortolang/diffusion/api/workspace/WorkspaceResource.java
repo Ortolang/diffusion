@@ -669,7 +669,7 @@ public class WorkspaceResource {
     @GET
     @Path("/{wskey}/events")
     @GZIP
-    public Response listWorkspaceEvents(@PathParam(value = "wskey") String wskey, @QueryParam(value = "o") @DefaultValue(value = "0") int offset, @QueryParam(value = "l") @DefaultValue(value = "25") int limit, @Context Request request)
+    public Response listWorkspaceEvents(@PathParam(value = "wskey") String wskey, @QueryParam(value = "offset") @DefaultValue(value = "0") int offset, @QueryParam(value = "limit") @DefaultValue(value = "25") int limit, @Context Request request)
  throws EventServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/events");
         long wscreation = browser.getInfos(wskey).getCreationDate();
@@ -678,6 +678,7 @@ public class WorkspaceResource {
         representation.setEntries(events);
         representation.setOffset(offset);
         representation.setLimit(limit);
+        representation.setSize(events.size());
         return Response.ok(representation).build();
     }
 
