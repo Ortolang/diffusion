@@ -257,11 +257,14 @@ public class CoreServiceBean implements CoreService {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkAuthentified(subjects);
-
+            
             String members = UUID.randomUUID().toString();
             membership.createGroup(members, name + "'s Members", "Members of a workspace have all permissions on workspace content");
             membership.addMemberInGroup(members, caller);
-
+            Map<String, List<String>> membersrules = authorisation.getPolicyRules(members);
+            membersrules.put(MembershipService.MODERATOR_GROUP_KEY, Arrays.asList("read", "update"));
+            authorisation.setPolicyRules(members, membersrules);
+            
             String head = UUID.randomUUID().toString();
             Collection collection = new Collection();
             collection.setId(UUID.randomUUID().toString());
