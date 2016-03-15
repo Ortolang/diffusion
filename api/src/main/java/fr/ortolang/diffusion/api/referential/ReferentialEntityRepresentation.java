@@ -40,7 +40,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import fr.ortolang.diffusion.referential.entity.ReferentialEntity;
-import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
 
 @XmlRootElement(name = "group")
 public class ReferentialEntityRepresentation {
@@ -51,6 +50,7 @@ public class ReferentialEntityRepresentation {
     private String id;
 	private String type;
 	private String content;
+	private Long boost;
 
 	public String getKey() {
 		return key;
@@ -84,12 +84,21 @@ public class ReferentialEntityRepresentation {
 		this.type = type;
 	}
 
+	public Long getBoost() {
+		return boost;
+	}
+
+	public void setBoost(Long boost) {
+		this.boost = boost;
+	}
+
 	public static ReferentialEntityRepresentation fromReferentialEntity(ReferentialEntity entity) {
 		ReferentialEntityRepresentation representation = new ReferentialEntityRepresentation();
 		representation.setId(entity.getId());
 		representation.setKey(entity.getKey());
 		representation.setContent(entity.getContent());
 		representation.setType(entity.getType().toString());
+		representation.setBoost(entity.getBoost());
 		
 		return representation;
 	}

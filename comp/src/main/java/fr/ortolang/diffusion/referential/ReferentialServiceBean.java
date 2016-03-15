@@ -291,6 +291,14 @@ public class ReferentialServiceBean implements ReferentialService {
 	public void updateEntity(String name, ReferentialEntityType type, String content) 
 			throws ReferentialServiceException, KeyNotFoundException,
 			AccessDeniedException {
+		updateEntity(name, type, content);
+	}
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public void updateEntity(String name, ReferentialEntityType type, String content, Long boost) 
+			throws ReferentialServiceException, KeyNotFoundException,
+			AccessDeniedException {
 		LOGGER.log(Level.FINE, "updating ReferentialEntity for name [" + name + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -309,6 +317,8 @@ public class ReferentialServiceBean implements ReferentialService {
             }
             refEntity.setType(type);
             refEntity.setContent(content);
+            if(boost!=null)
+            	refEntity.setBoost(boost);
 
             registry.update(key);
             em.merge(refEntity);

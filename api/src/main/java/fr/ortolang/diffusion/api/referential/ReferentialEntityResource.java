@@ -95,7 +95,7 @@ public class ReferentialEntityResource {
 
     	ReferentialEntityType entityType = getEntityType(entity.getType());
     	if(entityType!=null) {
-    		referential.updateEntity(name, entityType, entity.getContent());
+    		referential.updateEntity(name, entityType, entity.getContent(), entity.getBoost());
     	} else {
     		return Response.status(Response.Status.BAD_REQUEST).entity("representation does not contains a valid type").build();
     	}
