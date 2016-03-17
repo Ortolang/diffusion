@@ -292,7 +292,7 @@ public class ReferentialServiceBean implements ReferentialService {
 	public void updateEntity(String name, ReferentialEntityType type, String content) 
 			throws ReferentialServiceException, KeyNotFoundException,
 			AccessDeniedException {
-		updateEntity(name, type, content);
+		updateEntity(name, type, content, 1L);
 	}
 	
 	@Override
