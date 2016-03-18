@@ -83,6 +83,8 @@ import java.util.logging.Logger;
         String content = null;
         String group = null;
         String limit = null;
+        String orderProp = null;
+        String orderDir = null;
         HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
         for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
             if (parameter.getKey().equals("fields")) {
@@ -93,6 +95,10 @@ import java.util.logging.Logger;
                 group = parameter.getValue()[0];
             } else if (parameter.getKey().equals("limit")) {
                 limit = parameter.getValue()[0];
+            } else if (parameter.getKey().equals("orderProp")) {
+                orderProp = parameter.getValue()[0];
+            } else if (parameter.getKey().equals("orderDir")) {
+                orderDir = parameter.getValue()[0];
             } else if (parameter.getKey().equals("scope")) {
                 // Ignore scope param
             } else {
@@ -127,9 +133,9 @@ import java.util.logging.Logger;
             }
         }
         if (content != null) {
-            query = findByContent("Collection", content, fieldsProjection, fieldsMap, group, limit);
+            query = findByContent("Collection", content, fieldsProjection, fieldsMap, group, limit, orderProp, orderDir);
         } else {
-            query = findItemsByFields(fieldsProjection, fieldsMap, group, limit);
+            query = findItemsByFields(fieldsProjection, fieldsMap, group, limit, orderProp, orderDir);
         }
 
         // Execute the query
@@ -165,7 +171,7 @@ import java.util.logging.Logger;
         }
 
         HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
-        String query = findByContent("Profile", content, fieldsProjection, fieldsMap, null, null);
+        String query = findByContent("Profile", content, fieldsProjection, fieldsMap, null, null, null, null);
 
         // Execute the query
         List<String> results;
@@ -220,7 +226,7 @@ import java.util.logging.Logger;
         return Response.status(404).build();
     }
 
-    private String findItemsByFields(HashMap<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit) {
+    private String findItemsByFields(HashMap<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
         StringBuilder queryBuilder = new StringBuilder();
 
         queryBuilder.append("SELECT ");
@@ -237,6 +243,13 @@ import java.util.logging.Logger;
             queryBuilder.append(" GROUP BY ").append("`meta_ortolang-item-json.").append(group).append("`");
         }
 
+        if (orderProp != null) {
+            queryBuilder.append(" ORDER BY ").append("`meta_ortolang-item-json.").append(orderProp).append("`");
+            if(orderDir!=null) {
+                queryBuilder.append(" ").append(orderDir);
+            }
+        }
+
         if (limit != null) {
             queryBuilder.append(" LIMIT ").append(limit);
         }
@@ -244,7 +257,7 @@ import java.util.logging.Logger;
         return queryBuilder.toString();
     }
 
-    private String findByContent(String cls, String content, HashMap<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit) {
+    private String findByContent(String cls, String content, HashMap<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
         StringBuilder queryBuilder = new StringBuilder();
         // SELECT FROM Collection LET $temp = (   SELECT FROM (     TRAVERSE * FROM $current WHILE $depth <= 7   )   WHERE any().toLowerCase().indexOf('dede') > -1 ) WHERE $temp.size() > 0
         queryBuilder.append("SELECT ");
@@ -270,6 +283,13 @@ import java.util.logging.Logger;
 
         if (group != null) {
             queryBuilder.append(" GROUP BY ").append("`meta_ortolang-item-json.").append(group).append("`");
+        }
+
+        if (orderProp != null) {
+            queryBuilder.append(" ORDER BY ").append("`meta_ortolang-item-json.").append(orderProp).append("`");
+            if(orderDir!=null) {
+                queryBuilder.append(" ").append(orderDir);
+            }
         }
 
         if (limit != null) {
