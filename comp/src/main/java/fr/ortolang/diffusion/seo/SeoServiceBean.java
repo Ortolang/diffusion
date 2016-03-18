@@ -37,23 +37,27 @@ package fr.ortolang.diffusion.seo;
  */
 
 import com.orientechnologies.orient.core.record.impl.ODocument;
-
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
-
 import org.jboss.ejb3.annotation.SecurityDomain;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.security.PermitAll;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -62,7 +66,6 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
@@ -88,6 +91,10 @@ public class SeoServiceBean implements SeoService {
 
     private static final String SITEMAP_NS_URI = "http://www.sitemaps.org/schemas/sitemap/0.9";
 
+    private static final String ORTOLANG_USER_AGENT = "ortolangbot";
+
+    private Client client;
+
     private Map<String, String> marketTypes;
 
     public SeoServiceBean() {
@@ -99,11 +106,26 @@ public class SeoServiceBean implements SeoService {
         }
     }
 
+    @PostConstruct
+    public void init() {
+        client = ClientBuilder.newClient();
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        if (client != null) {
+            client.close();
+        }
+    }
+
     @Override
     public String generateSiteMap() throws JsonStoreServiceException, ParserConfigurationException, TransformerException, SeoServiceException {
         LOGGER.log(Level.INFO, "Start generating Site Map");
         Document document = generateSiteMapDocument();
+        return generateSiteMap(document);
+    }
 
+    private String generateSiteMap(Document document) throws JsonStoreServiceException, ParserConfigurationException, TransformerException, SeoServiceException {
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
         DOMSource source = new DOMSource(document);
@@ -112,6 +134,24 @@ public class SeoServiceBean implements SeoService {
 
         transformer.transform(source, result);
         return writer.toString();
+    }
+
+    @Override
+    public String prerenderSiteMap() throws SeoServiceException, ParserConfigurationException, JsonStoreServiceException, TransformerException {
+        LOGGER.log(Level.INFO, "Start prerendering Site Map");
+        Document document = generateSiteMapDocument();
+        NodeList nodes = document.getElementsByTagNameNS(SITEMAP_NS_URI, "loc");
+        for (int i = 0; i < nodes.getLength(); i++) {
+            String url = nodes.item(i).getTextContent();
+            Response response = client.target(url).request().header("User-Agent", ORTOLANG_USER_AGENT).get();
+            response.close();
+            if (response.getStatusInfo().getStatusCode() != 200) {
+                LOGGER.log(Level.SEVERE, "Response not ok: " + response.getStatusInfo().getStatusCode() + " " + response.getStatusInfo().getReasonPhrase());
+                throw new SeoServiceException("An unexpected issue occurred while prerendering the site map: " + response.getStatusInfo().getStatusCode() + " " + response.getStatusInfo().getReasonPhrase());
+            }
+        }
+        LOGGER.log(Level.INFO, "Site Map prerendering done");
+        return generateSiteMap(document);
     }
 
     private Document generateSiteMapDocument() throws ParserConfigurationException, SeoServiceException, JsonStoreServiceException {

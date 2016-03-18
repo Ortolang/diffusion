@@ -49,4 +49,6 @@ public interface SeoService extends OrtolangService {
     String INFO_SITEMAP_ENTRIES_ALL = "sitemap.entries.all";
 
     String generateSiteMap() throws JsonStoreServiceException, ParserConfigurationException, TransformerException, SeoServiceException;
+
+    String prerenderSiteMap() throws SeoServiceException, ParserConfigurationException, JsonStoreServiceException, TransformerException;
 }

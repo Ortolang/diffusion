@@ -66,10 +66,20 @@ public class SeoResource {
     @Produces("application/xml")
     @Path("/sitemap")
     @GZIP
-    public Response getEventFeed()
+    public Response getSiteMap()
             throws KeyNotFoundException, AccessDeniedException, EventServiceException, JsonStoreServiceException, TransformerException, ParserConfigurationException, SeoServiceException {
-        LOGGER.log(Level.INFO, "GET /sitemap/");
+        LOGGER.log(Level.INFO, "GET /seo/sitemap/");
         String siteMap = seo.generateSiteMap();
+        return Response.ok(siteMap).build();
+    }
+
+    @GET
+    @Produces("application/xml")
+    @Path("/sitemap/prerender")
+    @GZIP
+    public Response prerenderSiteMap() throws ParserConfigurationException, JsonStoreServiceException, TransformerException, SeoServiceException {
+        LOGGER.log(Level.INFO, "GET /seo/sitemap/prerender");
+        String siteMap = seo.prerenderSiteMap();
         return Response.ok(siteMap).build();
     }
 }
