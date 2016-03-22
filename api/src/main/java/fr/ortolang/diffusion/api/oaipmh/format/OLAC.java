@@ -81,17 +81,18 @@ public class OLAC extends OAI_DC {
 
         // Identifier
         JsonObject workspace = doc.getJsonObject("meta_ortolang-workspace-json");
-        String snapshotName = workspace.getString("snapshotName");
-        JsonObject workspaceMeta = workspaceDoc.getJsonObject("meta_ortolang-workspace-json");
-        JsonArray tags = workspaceMeta.getJsonArray("tags");
-        if(tags!=null) {
-        	for(JsonObject tag : tags.getValuesAs(JsonObject.class)) {
-        		if(tag.getString("snapshot").equals(snapshotName)) {
-        			olac.addDctermsField("identifier", "dcterms:URI", identifier(workspace.getString("wsalias"),  tag.getString("name")));
-        		}
-        	}
-        }
-
+//        String snapshotName = workspace.getString("snapshotName");
+//        JsonObject workspaceMeta = workspaceDoc.getJsonObject("meta_ortolang-workspace-json");
+//        JsonArray tags = workspaceMeta.getJsonArray("tags");
+//        if(tags!=null) {
+//        	for(JsonObject tag : tags.getValuesAs(JsonObject.class)) {
+//        		if(tag.getString("snapshot").equals(snapshotName)) {
+//        			olac.addDctermsField("identifier", "dcterms:URI", identifier(workspace.getString("wsalias"),  tag.getString("name")));
+//        		}
+//        	}
+//        }
+        olac.addDctermsField("identifier", "dcterms:URI", identifier(workspace.getString("wsalias")));
+        
         try {
         	JsonObject meta = doc.getJsonObject("meta_ortolang-item-json");
         	

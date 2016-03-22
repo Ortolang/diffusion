@@ -107,16 +107,17 @@ public class OAI_DC {
         OAI_DC oai_dc = new OAI_DC();
 
         JsonObject workspace = doc.getJsonObject("meta_ortolang-workspace-json");
-        String snapshotName = workspace.getString("snapshotName");
-        JsonObject workspaceMeta = workspaceDoc.getJsonObject("meta_ortolang-workspace-json");
-        JsonArray tags = workspaceMeta.getJsonArray("tags");
-        if(tags!=null) {
-        	for(JsonObject tag : tags.getValuesAs(JsonObject.class)) {
-        		if(tag.getString("snapshot").equals(snapshotName)) {
-        			oai_dc.addDcField("identifier", identifier(workspace.getString("wsalias"), tag.getString("name")));
-        		}
-        	}
-        }
+//        String snapshotName = workspace.getString("snapshotName");
+//        JsonObject workspaceMeta = workspaceDoc.getJsonObject("meta_ortolang-workspace-json");
+//        JsonArray tags = workspaceMeta.getJsonArray("tags");
+//        if(tags!=null) {
+//        	for(JsonObject tag : tags.getValuesAs(JsonObject.class)) {
+//        		if(tag.getString("snapshot").equals(snapshotName)) {
+//        			oai_dc.addDcField("identifier", identifier(workspace.getString("wsalias"), tag.getString("name")));
+//        		}
+//        	}
+//        }
+        oai_dc.addDcField("identifier", identifier(workspace.getString("wsalias")));
         
     	JsonObject meta = doc.getJsonObject("meta_ortolang-item-json");
 
@@ -238,8 +239,13 @@ public class OAI_DC {
         return oai_dc;
     }
 
+    public static String identifier(String wsalias) {
+        return identifier(wsalias, null);
+    }
+    
     public static String identifier(String wsalias, String snapshotName) {
-    	return "http://hdl.handle.net/"+OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + "/" + snapshotName;
+    	return "http://hdl.handle.net/"+OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) 
+    	        + "/" + wsalias + ((snapshotName!=null) ? "/" + snapshotName : "");
     }
     
     protected static String person(JsonObject contributor) {

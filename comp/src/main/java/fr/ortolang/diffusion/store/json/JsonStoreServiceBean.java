@@ -137,7 +137,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
                 jsonResults.add(doc.toJSON());
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "query failed in json store : " + e.getMessage());
+            LOGGER.log(Level.WARNING, "query failed in json store : " + e.getMessage());
             throw new JsonStoreServiceException(e.getMessage());
         }
         return jsonResults;
@@ -149,7 +149,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
         try (ODatabaseDocumentTx db = pool.acquire()) {
             return db.query(new OSQLSynchQuery<ODocument>(query));
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "query failed in json store : " + e.getMessage());
+            LOGGER.log(Level.WARNING, "query failed in json store : " + e.getMessage());
             throw new JsonStoreServiceException(e.getMessage());
         }
     }

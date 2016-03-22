@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.search;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -150,16 +151,230 @@ public class SearchServiceBean implements SearchService {
 			throw new SearchServiceException("unable to perform index search", e);
 		}
 	}
-	
+
+    @Override
+	public List<String> findCollections(HashMap<String, String> fieldsProjection, String content, String group, String limit, String orderProp, String orderDir, HashMap<String, Object> fieldsMap) throws SearchServiceException {
+        LOGGER.log(Level.FINE, "find collections");
+        String query;
+        if (content != null) {
+            query = findByContent("Collection", content, fieldsProjection, fieldsMap, group, limit, orderProp, orderDir);
+        } else {
+            query = findItemsByFields(fieldsProjection, fieldsMap, group, limit, orderProp, orderDir);
+        }
+
+        // Execute the query
+        List<String> results;
+        if (query != null && query.length() > 0) {
+            LOGGER.log(Level.FINE, "Performing json search with query : "+query);
+            try {
+                results = jsonStore.search(query);
+            } catch (JsonStoreServiceException e) {
+                results = Collections.emptyList();
+                LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
+            }
+        } else {
+            results = Collections.emptyList();
+        }
+        return results;
+	}
+
+    @Override
+    public List<String> findProfiles(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException {
+        LOGGER.log(Level.FINE, "Gets profile with content : " + content);
+        HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
+        String query = findByContent("Profile", content, fieldsProjection, fieldsMap, null, null, null, null);
+
+        // Execute the query
+        List<String> results;
+        if (query != null && query.length() > 0) {
+            try {
+                results = jsonStore.search(query);
+            } catch (JsonStoreServiceException e) {
+                results = Collections.emptyList();
+                LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
+            }
+        } else {
+            results = Collections.emptyList();
+        }
+        return results;
+    }
+
+    @Override
+    public String getCollection(String key) throws SearchServiceException {
+        LOGGER.log(Level.FINE, "Gets collection with key : " + key);
+        String result = null;
+        if(key!=null) {
+            // Build the query
+            String query = "SELECT * FROM collection WHERE status='published' AND key = '" + key + "'";
+            // Execute the query
+            try {
+                List<String> results = jsonStore.search(query);
+                if (results.size() == 1) {
+                    result = results.get(0);
+                }
+            } catch (JsonStoreServiceException e) {
+                LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public String getWorkspace(String wsalias) throws SearchServiceException {
+        LOGGER.log(Level.FINE, "Gets workspace with alias : " + wsalias);
+        String result = null;
+        if(wsalias!=null) {
+            // Build the query
+            String query = "SELECT * FROM workspace WHERE `meta_ortolang-workspace-json.wsalias` = '" + wsalias + "'";
+            // Execute the query
+            try {
+                List<String> results = jsonStore.search(query);
+                if (results.size() == 1) {
+                    result = results.get(0);
+                }
+            } catch (JsonStoreServiceException e) {
+                LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
+            }
+        }
+        return result;
+    }
+    
 	@Override
 	public List<String> jsonSearch(String query) throws SearchServiceException {
-		LOGGER.log(Level.FINE, "Performing semantic search with query: " + query);
+		LOGGER.log(Level.FINE, "Performing json search with query: " + query);
 		try {
 			return jsonStore.search(query);
 		} catch ( JsonStoreServiceException e ) {
 			throw new SearchServiceException("unable to perform json search", e);
 		}
 	}
+
+    private String findByContent(String cls, String content, HashMap<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
+        StringBuilder queryBuilder = new StringBuilder();
+        // SELECT FROM Collection LET $temp = (   SELECT FROM (     TRAVERSE * FROM $current WHILE $depth <= 7   )   WHERE any().toLowerCase().indexOf('dede') > -1 ) WHERE $temp.size() > 0
+        queryBuilder.append("SELECT ");
+
+        queryBuilder.append(selectClause(fieldsProjection));
+        if (group != null) {
+            queryBuilder.append(", count(*)");
+        }
+
+        queryBuilder.append(" FROM ").append(cls).append(" LET $temp = ( SELECT FROM ( TRAVERSE * FROM $current WHILE $depth <= 21 ) ");
+
+        StringBuilder whereClause = whereClause(fieldsValue);
+        queryBuilder.append(whereClause);
+
+        if (content != null) {
+            if (whereClause.length() == 0) {
+                queryBuilder.append(" WHERE ");
+            } else {
+                queryBuilder.append(" AND ");
+            }
+            queryBuilder.append("any().toLowerCase().indexOf('").append(content).append("') > -1 ");
+        }
+
+        if (group != null) {
+            queryBuilder.append(" GROUP BY ").append("`meta_ortolang-item-json.").append(group).append("`");
+        }
+
+        if (orderProp != null) {
+            queryBuilder.append(" ORDER BY ").append("`meta_ortolang-item-json.").append(orderProp).append("`");
+            if(orderDir!=null) {
+                queryBuilder.append(" ").append(orderDir);
+            }
+        }
+
+        if (limit != null) {
+            queryBuilder.append(" LIMIT ").append(limit);
+        }
+
+        //      if(type!=null) {
+        //          queryBuilder.append("AND `meta_ortolang-item-json.type` = '").append(type).append("'");
+        //      }
+        queryBuilder.append(" ) WHERE $temp.size() > 0");
+
+        return queryBuilder.toString();
+    }
+
+    private String findItemsByFields(HashMap<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
+        StringBuilder queryBuilder = new StringBuilder();
+
+        queryBuilder.append("SELECT ");
+
+        queryBuilder.append(selectClause(fieldsProjection));
+        if (group != null) {
+            queryBuilder.append(", count(*)");
+        }
+
+        queryBuilder.append(" FROM collection");
+        queryBuilder.append(whereClause(fieldsValue));
+        
+        if (group != null) {
+            queryBuilder.append(" GROUP BY ").append("`meta_ortolang-item-json.").append(group).append("`");
+        }
+
+        if (orderProp != null) {
+            queryBuilder.append(" ORDER BY ").append("`meta_ortolang-item-json.").append(orderProp).append("`");
+            if(orderDir!=null) {
+                queryBuilder.append(" ").append(orderDir);
+            }
+        }
+
+        if (limit != null) {
+            queryBuilder.append(" LIMIT ").append(limit);
+        }
+
+        return queryBuilder.toString();
+    }
+
+    private StringBuilder selectClause(HashMap<String, String> fieldsProjection) {
+        StringBuilder selectStr = new StringBuilder();
+        if (fieldsProjection.isEmpty()) {
+            selectStr.append("*");
+        } else {
+            for (Map.Entry<String, String> fieldProjectionEntry : fieldsProjection.entrySet()) {
+                if (selectStr.length() > 0)
+                    selectStr.append(",");
+                selectStr.append("`").append(fieldProjectionEntry.getKey()).append("`");
+                if (!fieldProjectionEntry.getKey().equals(fieldProjectionEntry.getValue())) {
+                    selectStr.append(" AS ").append(fieldProjectionEntry.getValue()).append(" ");
+                }
+            }
+        }
+        return selectStr;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" }) private StringBuilder whereClause(Map<String, Object> fields) {
+        StringBuilder whereStr = new StringBuilder();
+        for (Map.Entry<String, Object> field : fields.entrySet()) {
+            if (whereStr.length() > 0)
+                whereStr.append(" AND ");
+            else
+                whereStr.append(" WHERE ");
+            if (field.getValue() instanceof String) {
+                if (field.getValue().equals("")) {
+                    whereStr.append("`").append(field.getKey()).append("` IS NOT NULL");
+                } else {
+                    whereStr.append("`").append(field.getKey()).append("` = '").append(field.getValue()).append("'");
+                }
+            } else if (field.getValue() instanceof List && ((List) field.getValue()).size() > 0) {
+                whereStr.append("`").append(field.getKey()).append("` IN [").append(arrayValues((List<String>) field.getValue())).append("]");
+            } else if (field.getValue() instanceof Long) {
+                whereStr.append("`").append(field.getKey().substring(0, field.getKey().length()-2)).append("` ").append(field.getKey().substring(field.getKey().length()-2)).append(" '").append(field.getValue()).append("'");
+            }
+        }
+        return whereStr;
+    }
+
+    private StringBuilder arrayValues(List<String> values) {
+        StringBuilder valuesStr = new StringBuilder();
+        for (String value : values) {
+            if (valuesStr.length() > 0)
+                valuesStr.append(",");
+            valuesStr.append("'").append(value).append("'");
+        }
+        return valuesStr;
+    }
 
 	@Override
     public String getServiceName() {

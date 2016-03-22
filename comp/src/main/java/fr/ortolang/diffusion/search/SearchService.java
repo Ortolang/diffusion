@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.search;
  * #L%
  */
 
+import java.util.HashMap;
 import java.util.List;
 
 import fr.ortolang.diffusion.OrtolangSearchResult;
@@ -48,5 +49,13 @@ public interface SearchService extends OrtolangService {
 	public List<OrtolangSearchResult> indexSearch(String query) throws SearchServiceException;
 	
 	public List<String> jsonSearch(String query) throws SearchServiceException;
+
+    public List<String> findCollections(HashMap<String, String> fieldsProjection, String content, String group, String limit, String orderProp, String orderDir, HashMap<String, Object> fieldsMap) throws SearchServiceException;
+    
+	public List<String> findProfiles(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException;
+	
+	public String getCollection(String key) throws SearchServiceException;
+	
+	public String getWorkspace(String wsalias) throws SearchServiceException;
 	
 }
