@@ -2020,10 +2020,9 @@ public class CoreServiceBean implements CoreService {
             authorisation.checkAuthentified(subjects);
             LOGGER.log(Level.FINEST, "user [" + caller + "] is authentified");
 
-            // TODO check that target is of type DataObjetc or Collection (maybe link)
             authorisation.checkPermission(target, subjects, "read");
             LOGGER.log(Level.FINEST, "user [" + caller + "] has 'read' permissions on the target");
-
+            
             OrtolangObjectIdentifier wsidentifier = registry.lookup(wskey);
             checkObjectType(wsidentifier, Workspace.OBJECT_TYPE);
             LOGGER.log(Level.FINEST, "workspace with key [" + wskey + "] exists");
@@ -2745,7 +2744,7 @@ public class CoreServiceBean implements CoreService {
             if (cmeta == null) {
                 throw new CoreServiceException("unable to load metadata with id [" + cidentifier.getId() + "] from storage");
             }
-            if (!cmeta.equals(hash)) {
+            if (!cmeta.getStream().equals(hash)) {
                 String tkey = ws.getHead();
                 Collection parent = null;
                 CollectionElement element = null;
@@ -2766,9 +2765,10 @@ public class CoreServiceBean implements CoreService {
                 }
 
                 MetadataElement mdelement = null;
+                Collection collection = null;
                 switch (tidentifier.getType()) {
                 case Collection.OBJECT_TYPE:
-                    Collection collection = em.find(Collection.class, tidentifier.getId());
+                    collection = em.find(Collection.class, tidentifier.getId());
                     if (collection == null) {
                         throw new CoreServiceException("unable to load collection with id [" + tidentifier.getId() + "] from storage");
                     }
@@ -2786,10 +2786,6 @@ public class CoreServiceBean implements CoreService {
                         collection = clone;
                     }
                     mdelement = collection.findMetadataByName(name);
-                    if (purgeChildren) {
-                        LOGGER.log(Level.FINE, "Purging children metadata");
-                        purgeChildrenMetadata(collection, wskey, path, name);
-                    }
                     break;
                 case DataObject.OBJECT_TYPE:
                     DataObject object = em.find(DataObject.class, tidentifier.getId());
@@ -2865,7 +2861,12 @@ public class CoreServiceBean implements CoreService {
                 registry.update(mdelement.getKey());
                 registry.update(tkey);
                 indexing.index(tkey);
-
+                
+                if (collection != null && purgeChildren) {
+                    LOGGER.log(Level.FINE, "Purging children metadata");
+                    purgeChildrenMetadata(collection, wskey, path, name);
+                }
+                
                 ws.setChanged(true);
                 em.merge(ws);
                 registry.update(ws.getKey());
@@ -2916,23 +2917,72 @@ public class CoreServiceBean implements CoreService {
             ws.setKey(wskey);
             LOGGER.log(Level.FINEST, "workspace loaded");
 
-            authorisation.checkPermission(ws.getHead(), subjects, "create");
+            authorisation.checkPermission(ws.getHead(), subjects, "delete");
             LOGGER.log(Level.FINEST, "user [" + caller + "] has 'create' permission on the head collection of this workspace");
 
-            Collection parent = loadCollectionAtPath(ws.getHead(), ppath, ws.getClock());
-            LOGGER.log(Level.FINEST, "parent collection loaded for path " + ppath.build());
-
-            CollectionElement element;
-            if (npath.isRoot()) {
-                element = new CollectionElement(Collection.OBJECT_TYPE, parent.getName(), -1, 0, Collection.MIME_TYPE, parent.getKey());
-            } else {
+            String current = resolveWorkspacePath(wskey, Workspace.HEAD, npath.build());
+            OrtolangObjectIdentifier ctidentifier = registry.lookup(current);
+            if (!ctidentifier.getType().equals(Link.OBJECT_TYPE) && !ctidentifier.getType().equals(Collection.OBJECT_TYPE) && !ctidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
+                throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
+            }
+            MetadataElement cmdelement = null;
+            switch (ctidentifier.getType()) {
+            case Collection.OBJECT_TYPE:
+                Collection collection = em.find(Collection.class, ctidentifier.getId());
+                if (collection == null) {
+                    throw new CoreServiceException("unable to load collection with id [" + ctidentifier.getId() + "] from storage");
+                }
+                if (collection.findMetadataByName(name) == null) {
+                    throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for collection at path [" + npath.build() + "]");
+                }
+                cmdelement = collection.findMetadataByName(name);
+                break;
+            case DataObject.OBJECT_TYPE:
+                DataObject object = em.find(DataObject.class, ctidentifier.getId());
+                if (object == null) {
+                    throw new CoreServiceException("unable to load object with id [" + ctidentifier.getId() + "] from storage");
+                }
+                if (object.findMetadataByName(name) == null) {
+                    throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for object at path [" + npath.build() + "]");
+                }
+                cmdelement = object.findMetadataByName(name);
+                break;
+            case Link.OBJECT_TYPE:
+                Link link = em.find(Link.class, ctidentifier.getId());
+                if (link == null) {
+                    throw new CoreServiceException("unable to load link with id [" + ctidentifier.getId() + "] from storage");
+                }
+                if (link.findMetadataByName(name) == null) {
+                    throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for link at path [" + npath.build() + "]");
+                }
+                cmdelement = link.findMetadataByName(name);
+                break;
+            }
+            if (cmdelement == null) {
+                throw new CoreServiceException("unable to find current metadata target into workspace [" + wskey + "] for path [" + npath.build() + "] and name [" + name + "]");
+            }
+            OrtolangObjectIdentifier cidentifier = registry.lookup(cmdelement.getKey());
+            checkObjectType(cidentifier, MetadataObject.OBJECT_TYPE);
+            MetadataObject cmeta = em.find(MetadataObject.class, cidentifier.getId());
+            if (cmeta == null) {
+                throw new CoreServiceException("unable to load metadata with id [" + cidentifier.getId() + "] from storage");
+            }
+            
+            String tkey = ws.getHead();
+            Collection parent = null;
+            CollectionElement element = null;
+            if (!npath.isRoot()) {
+                parent = loadCollectionAtPath(ws.getHead(), ppath, ws.getClock());
+                LOGGER.log(Level.FINEST, "parent collection loaded for path " + ppath.build());
                 element = parent.findElementByName(npath.part());
+                if (element == null) {
+                    throw new PathNotFoundException(npath.build());
+                }
+                LOGGER.log(Level.FINEST, "collection element found for name " + npath.part());
+                tkey = element.getKey();
             }
-            if (element == null) {
-                throw new PathNotFoundException(npath.build());
-            }
-            LOGGER.log(Level.FINEST, "collection element found for name " + npath.part());
-            OrtolangObjectIdentifier tidentifier = registry.lookup(element.getKey());
+
+            OrtolangObjectIdentifier tidentifier = registry.lookup(tkey);
             if (!tidentifier.getType().equals(Link.OBJECT_TYPE) && !tidentifier.getType().equals(Collection.OBJECT_TYPE) && !tidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
                 throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
             }
@@ -2944,37 +2994,39 @@ public class CoreServiceBean implements CoreService {
                 if (collection == null) {
                     throw new CoreServiceException("unable to load collection with id [" + tidentifier.getId() + "] from storage");
                 }
-                collection.setKey(element.getKey());
+                collection.setKey(tkey);
                 if (collection.findMetadataByName(name) == null) {
                     throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for collection at path [" + npath.build() + "]");
                 }
-                collection.setKey(element.getKey());
                 if (collection.getClock() < ws.getClock()) {
                     Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
-                    parent.removeElement(element);
-                    parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, clone.getKey()));
+                    tkey = clone.getKey();
+                    if (parent != null) {
+                        parent.removeElement(element);
+                        parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, clone.getKey()));
+                    }
                     collection = clone;
                 }
                 mdelement = collection.findMetadataByName(name);
-                collection.removeMetadata(mdelement);
-                em.merge(collection);
                 if (recursive) {
-                    LOGGER.log(Level.FINE, "Purging children metadata");
+                    LOGGER.log(Level.FINE, "Removing children metadata");
                     purgeChildrenMetadata(collection, wskey, path, name);
                 }
+                collection.removeMetadata(mdelement);
+                em.merge(collection);
                 break;
             case DataObject.OBJECT_TYPE:
                 DataObject object = em.find(DataObject.class, tidentifier.getId());
                 if (object == null) {
                     throw new CoreServiceException("unable to load object with id [" + tidentifier.getId() + "] from storage");
                 }
-                object.setKey(element.getKey());
+                object.setKey(tkey);
                 if (object.findMetadataByName(name) == null) {
                     throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for object at path [" + npath.build() + "]");
                 }
-                object.setKey(element.getKey());
                 if (object.getClock() < ws.getClock()) {
                     DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
+                    tkey = clone.getKey();
                     parent.removeElement(element);
                     parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey()));
                     object = clone;
@@ -2988,13 +3040,13 @@ public class CoreServiceBean implements CoreService {
                 if (link == null) {
                     throw new CoreServiceException("unable to load link with id [" + tidentifier.getId() + "] from storage");
                 }
-                link.setKey(element.getKey());
+                link.setKey(tkey);
                 if (link.findMetadataByName(name) == null) {
                     throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for link at path [" + npath.build() + "]");
                 }
-                link.setKey(element.getKey());
                 if (link.getClock() < ws.getClock()) {
                     Link clone = cloneLink(ws.getHead(), link, ws.getClock());
+                    tkey = clone.getKey();
                     parent.removeElement(element);
                     parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, clone.getKey()));
                     link = clone;
@@ -3004,26 +3056,20 @@ public class CoreServiceBean implements CoreService {
                 em.merge(link);
                 break;
             }
-
+            
             if (mdelement == null) {
                 throw new CoreServiceException("unable to find metadata object into workspace [" + wskey + "] for path [" + npath.build() + "] and name [" + name + "]");
             }
-            OrtolangObjectIdentifier identifier = registry.lookup(mdelement.getKey());
-            checkObjectType(identifier, MetadataObject.OBJECT_TYPE);
-            MetadataObject meta = em.find(MetadataObject.class, identifier.getId());
-            if (meta == null) {
-                throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
-            }
-            meta.setKey(mdelement.getKey());
-
+            
             registry.delete(mdelement.getKey());
             indexing.remove(mdelement.getKey());
-            registry.update(element.getKey());
-            indexing.index(element.getKey());
+            registry.update(tkey);
+            indexing.index(tkey);
 
             ws.setChanged(true);
             em.merge(ws);
             registry.update(ws.getKey());
+            LOGGER.log(Level.FINEST, "workspace set changed");
 
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("ws-alias", ws.getAlias()).addArgument("key", mdelement.getKey()).addArgument("tkey", element.getKey())
                     .addArgument("path", npath.build()).addArgument("name", name);
@@ -3031,8 +3077,8 @@ public class CoreServiceBean implements CoreService {
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException | CloneException
                 | IndexingServiceException | OrtolangException e) {
             ctx.setRollbackOnly();
-            LOGGER.log(Level.SEVERE, "unexpected error occurred during metadata creation", e);
-            throw new CoreServiceException("unable to create metadata into workspace [" + wskey + "] for path [" + path + "]", e);
+            LOGGER.log(Level.SEVERE, "unexpected error occurred during metadata deletion", e);
+            throw new CoreServiceException("unable to delete metadata into workspace [" + wskey + "] for path [" + path + "]", e);
         }
     }
 
@@ -4060,6 +4106,7 @@ public class CoreServiceBean implements CoreService {
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     private void purgeChildrenMetadata(Collection collection, String wskey, String path, String name) throws OrtolangException, AccessDeniedException, KeyNotFoundException, InvalidPathException,
             PathNotFoundException, WorkspaceReadOnlyException, CoreServiceException, RegistryServiceException {
+        LOGGER.log(Level.FINE, "purging children metadata for path: " + path + " and name: " + name);
         MetadataElement metadataElement;
         OrtolangObjectIdentifier identifier;
         for (CollectionElement collectionElement : collection.getElements()) {
@@ -4069,6 +4116,7 @@ public class CoreServiceBean implements CoreService {
             case Collection.OBJECT_TYPE:
                 Collection subCollection = em.find(Collection.class, identifier.getId());
                 metadataElement = subCollection.findMetadataByName(name);
+                LOGGER.log(Level.FINE, "path is a collection, calling recursively purgeChildrenMetadata()");
                 purgeChildrenMetadata(subCollection, wskey, path + "/" + subCollection.getName(), name);
                 break;
             case DataObject.OBJECT_TYPE:
@@ -4081,6 +4129,7 @@ public class CoreServiceBean implements CoreService {
                 break;
             }
             if (metadataElement != null) {
+                LOGGER.log(Level.FINE, "metadata to purge: " + metadataElement.getKey());
                 deleteMetadataObject(wskey, path + "/" + collectionElement.getName(), name, false);
             }
         }

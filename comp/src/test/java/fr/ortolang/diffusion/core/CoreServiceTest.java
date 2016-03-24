@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +50,7 @@ import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
 import fr.ortolang.diffusion.registry.RegistryServiceException;
+
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -79,7 +81,6 @@ import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
-
 import static org.junit.Assert.*;
 
 @RunWith(Arquillian.class)
@@ -645,6 +646,78 @@ public class CoreServiceTest {
 
             assertEquals(expectedSize, col.getElements().size());
 
+        } finally {
+            loginContext.logout();
+        }
+    }
+    
+    @Test
+    public void testCRUDMetadata()
+            throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, InvalidPathException,
+            CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException, RegistryServiceException, MetadataFormatException {
+        LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+        loginContext.login();
+        try {
+            LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+            try {
+                membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+            } catch (ProfileAlreadyExistsException e) {
+                LOGGER.log(Level.INFO, "Profile user1 already exists !!");
+            }
+            
+            String sha1 = core.put(new ByteArrayInputStream("dadaduc1".getBytes()));
+            String sha11 = core.put(new ByteArrayInputStream("dadaduc11".getBytes()));
+            String sha2 = core.put(new ByteArrayInputStream("dadaduc2".getBytes()));
+            String sha3 = core.put(new ByteArrayInputStream("dadaduc3".getBytes()));
+            
+            core.createMetadataFormat("acl", "ACL", null, null, false, false);
+
+            String wsk = UUID.randomUUID().toString();
+            core.createWorkspace(wsk, "WorkspaceCollection", "test");
+
+            core.createCollection(wsk, "/a");
+            core.createCollection(wsk, "/a/b");
+            core.createCollection(wsk, "/a/c");
+            core.createCollection(wsk, "/a/d");
+            core.createMetadataObject(wsk, "/a", "acl", sha1, "acl.json", false);
+            core.createMetadataObject(wsk, "/a/b", "acl", sha2, "acl.json", false);
+            core.createMetadataObject(wsk, "/a/c", "acl", sha3, "acl.json", false);
+            LOGGER.log(Level.INFO, "Workspace created with 3 collections and 3 metadata");
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
+
+            String akey = core.resolveWorkspaceMetadata(wsk, "head", "/a", "acl");
+            MetadataObject md1 = core.readMetadataObject(akey);
+            assertEquals("acl", md1.getName());
+            assertEquals(sha1, md1.getStream());
+            
+            String abkey = core.resolveWorkspaceMetadata(wsk, "head", "/a/b", "acl");
+            MetadataObject md2 = core.readMetadataObject(abkey);
+            assertEquals("acl", md2.getName());
+            assertEquals(sha2, md2.getStream());
+            
+            String ackey = core.resolveWorkspaceMetadata(wsk, "head", "/a/c", "acl");
+            MetadataObject md3 = core.readMetadataObject(ackey);
+            assertEquals("acl", md3.getName());
+            assertEquals(sha3, md3.getStream());
+            
+            core.snapshotWorkspace(wsk);
+            LOGGER.log(Level.INFO, "Workspace snapshoted");
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
+
+            core.updateMetadataObject(wsk, "/a", "acl", sha11, "acl.json", true);
+            
+            try {
+                String ackey2 = core.resolveWorkspaceMetadata(wsk, "head", "/a/c", "acl");
+                registry.lookup(ackey2);
+                LOGGER.log(Level.INFO, "/a/c metadata ACL [" + ackey2 + "] lookup OK.");
+            } catch (Exception e) {
+                LOGGER.log(Level.INFO, "/a/c metadata ACL lookup FAILED: " + e.getMessage());
+            }
+            
+            LOGGER.log(Level.INFO, "Metadata /a[acl] updated");
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
+
+            
         } finally {
             loginContext.logout();
         }
