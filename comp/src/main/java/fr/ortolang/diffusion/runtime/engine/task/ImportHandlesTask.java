@@ -90,7 +90,7 @@ public class ImportHandlesTask extends RuntimeEngineTask {
                 for (JsonHandle handle : handles) {
                     needcommit = false;
                     try {
-                        getHandleStore().recordHandle(handle.handle, "", handle.url);
+                        getHandleStore().recordHandle(handle.handle, handle.key, handle.url);
                     } catch (HandleStoreServiceException e) {
                         partial = true;
                         report.append("unable to import handle [" + handle.handle + "] : " + e.getMessage() + "\r\n");
@@ -139,6 +139,7 @@ public class ImportHandlesTask extends RuntimeEngineTask {
 
     static class JsonHandle {
         public String handle = "";
+        public String key = "";
         public String url = "";
 
         public JsonHandle() {
