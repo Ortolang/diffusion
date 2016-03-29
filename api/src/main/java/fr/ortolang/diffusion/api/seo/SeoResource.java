@@ -44,6 +44,7 @@ import fr.ortolang.diffusion.seo.SeoServiceException;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import org.jboss.resteasy.annotations.GZIP;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -76,6 +77,7 @@ public class SeoResource {
     @GET
     @Produces("application/xml")
     @Path("/sitemap/prerender")
+    @RolesAllowed("admin")
     @GZIP
     public Response prerenderSiteMap() throws ParserConfigurationException, JsonStoreServiceException, TransformerException, SeoServiceException {
         LOGGER.log(Level.INFO, "GET /seo/sitemap/prerender");
