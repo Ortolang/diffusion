@@ -56,6 +56,8 @@ public class OrtolangConfig {
     private OrtolangConfig() throws Exception {
         if ( System.getenv("ORTOLANG_HOME") != null ) {
             home = Paths.get(System.getenv("ORTOLANG_HOME"));
+        } else if ( System.getProperty("ortolang.home") != null ) {
+            home = Paths.get(System.getProperty("ortolang.home"));
         } else {
             home = Paths.get(System.getProperty("user.home"), ".ortolang");
         }
