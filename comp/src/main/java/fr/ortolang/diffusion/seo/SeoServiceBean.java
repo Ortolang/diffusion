@@ -137,6 +137,7 @@ public class SeoServiceBean implements SeoService {
     }
 
     @Override
+//    @Schedule(hour = "5")
     public String prerenderSiteMap() throws SeoServiceException, ParserConfigurationException, JsonStoreServiceException, TransformerException {
         LOGGER.log(Level.INFO, "Start prerendering Site Map");
         Document document = generateSiteMapDocument();
@@ -292,7 +293,6 @@ public class SeoServiceBean implements SeoService {
     private enum MarketSection {
 
         INDEX("", "1.0", null, null),
-        HOME("market/home", "0.9", null, null),
         CORPORA("market/corpora", "0.9", "Corpus", "corpora"),
         LEXICONS("market/lexicons", "0.9", "Lexique", "lexicons"),
         TOOLS("market/tools", "0.9", "Outil", "tools"),
