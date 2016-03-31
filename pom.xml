@@ -19,7 +19,6 @@
 		<connection>scm:git:git@forge.ortolang.fr:ortolang-diffusion.git</connection>
 		<developerConnection>scm:git:git@forge.ortolang.fr:ortolang-diffusion.git</developerConnection>
 		<url>http://git.ortolang.fr/ortolang-diffusion.git/</url>
-		<tag>ortolang-diffusion-3.1.5</tag>
 	</scm>
 
 	<modules>
