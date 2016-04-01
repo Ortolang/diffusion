@@ -155,16 +155,22 @@ public class SeoServiceBean implements SeoService {
         Document document = generateSiteMapDocument();
         NodeList nodes = document.getElementsByTagNameNS(SITEMAP_NS_URI, "loc");
         Runnable command = () -> {
+            int errors = 0;
             for (int i = 0; i < nodes.getLength(); i++) {
                 String url = nodes.item(i).getTextContent();
                 LOGGER.log(Level.FINE, "Prerendering url: " + url);
                 Response response = client.target(url).request().header("User-Agent", ORTOLANG_USER_AGENT).get();
                 response.close();
                 if (response.getStatusInfo().getStatusCode() != 200 && response.getStatusInfo().getStatusCode() != 304) {
-                    LOGGER.log(Level.SEVERE, "An unexpected issue occurred while prerendering the site map. Response not ok: " + response.getStatusInfo().getStatusCode() + " " + response.getStatusInfo().getReasonPhrase());
+                    LOGGER.log(Level.SEVERE, "An unexpected issue occurred while prerendering the url " + url + " : " + response.getStatusInfo().getStatusCode() + " " + response.getStatusInfo().getReasonPhrase());
+                    errors++;
                 }
             }
-            LOGGER.log(Level.INFO, "Site Map prerendering done");
+            if (errors > 0) {
+                LOGGER.log(Level.SEVERE, "Site Map prerendering done with " + errors  + " errors.");
+            } else {
+                LOGGER.log(Level.INFO, "Site Map prerendering done");
+            }
         };
         executor.execute(command);
         return generateSiteMap(document);
