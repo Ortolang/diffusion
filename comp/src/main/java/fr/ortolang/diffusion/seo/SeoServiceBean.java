@@ -36,22 +36,23 @@ package fr.ortolang.diffusion.seo;
  * #L%
  */
 
-import com.orientechnologies.orient.core.record.impl.ODocument;
-import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.store.json.JsonStoreService;
-import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
-import org.jboss.ejb3.annotation.SecurityDomain;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
-import javax.ejb.*;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.Schedule;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
@@ -63,14 +64,20 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import com.orientechnologies.orient.core.record.impl.ODocument;
+
+import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.store.json.JsonStoreService;
+import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 
 @Startup
 @Local(SeoService.class)
@@ -94,7 +101,8 @@ public class SeoServiceBean implements SeoService {
 
     private Client client;
 
-    private ExecutorService executorService;
+    @Resource
+    private ManagedExecutorService executor;
 
     private boolean prerenderingActivated;
 
@@ -114,16 +122,12 @@ public class SeoServiceBean implements SeoService {
     @PostConstruct
     public void init() {
         client = ClientBuilder.newClient();
-        executorService = Executors.newSingleThreadExecutor();
     }
 
     @PreDestroy
     public void shutdown() {
         if (client != null) {
             client.close();
-        }
-        if (executorService != null) {
-            executorService.shutdown();
         }
     }
 
@@ -162,7 +166,7 @@ public class SeoServiceBean implements SeoService {
             }
             LOGGER.log(Level.INFO, "Site Map prerendering done");
         };
-        executorService.execute(command);
+        executor.execute(command);
         return generateSiteMap(document);
     }
 
