@@ -26,7 +26,7 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 /**
- * @resourceDescription Operations on Referentiels
+ * @resourceDescription Operations on Referentials
  */
 @Path("/referentialentities")
 @Produces({ MediaType.APPLICATION_JSON })

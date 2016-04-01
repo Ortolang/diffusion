@@ -51,10 +51,7 @@ import org.w3c.dom.NodeList;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.security.PermitAll;
-import javax.ejb.EJB;
-import javax.ejb.Local;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
+import javax.ejb.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
@@ -70,6 +67,8 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -95,6 +94,10 @@ public class SeoServiceBean implements SeoService {
 
     private Client client;
 
+    private ExecutorService executorService;
+
+    private boolean prerenderingActivated;
+
     private Map<String, String> marketTypes;
 
     public SeoServiceBean() {
@@ -104,17 +107,23 @@ public class SeoServiceBean implements SeoService {
                 marketTypes.put(marketSection.mdValue, marketSection.marketType);
             }
         }
+        String prerenderingConfig = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PRERENDERING_ACTIVATED);
+        prerenderingActivated = prerenderingConfig != null ? Boolean.valueOf(prerenderingConfig) : false;
     }
 
     @PostConstruct
     public void init() {
         client = ClientBuilder.newClient();
+        executorService = Executors.newSingleThreadExecutor();
     }
 
     @PreDestroy
     public void shutdown() {
         if (client != null) {
             client.close();
+        }
+        if (executorService != null) {
+            executorService.shutdown();
         }
     }
 
@@ -137,21 +146,23 @@ public class SeoServiceBean implements SeoService {
     }
 
     @Override
-//    @Schedule(hour = "5")
     public String prerenderSiteMap() throws SeoServiceException, ParserConfigurationException, JsonStoreServiceException, TransformerException {
         LOGGER.log(Level.INFO, "Start prerendering Site Map");
         Document document = generateSiteMapDocument();
         NodeList nodes = document.getElementsByTagNameNS(SITEMAP_NS_URI, "loc");
-        for (int i = 0; i < nodes.getLength(); i++) {
-            String url = nodes.item(i).getTextContent();
-            Response response = client.target(url).request().header("User-Agent", ORTOLANG_USER_AGENT).get();
-            response.close();
-            if (response.getStatusInfo().getStatusCode() != 200) {
-                LOGGER.log(Level.SEVERE, "Response not ok: " + response.getStatusInfo().getStatusCode() + " " + response.getStatusInfo().getReasonPhrase());
-                throw new SeoServiceException("An unexpected issue occurred while prerendering the site map: " + response.getStatusInfo().getStatusCode() + " " + response.getStatusInfo().getReasonPhrase());
+        Runnable command = () -> {
+            for (int i = 0; i < nodes.getLength(); i++) {
+                String url = nodes.item(i).getTextContent();
+                LOGGER.log(Level.FINE, "Prerendering url: " + url);
+                Response response = client.target(url).request().header("User-Agent", ORTOLANG_USER_AGENT).get();
+                response.close();
+                if (response.getStatusInfo().getStatusCode() != 200 && response.getStatusInfo().getStatusCode() != 304) {
+                    LOGGER.log(Level.SEVERE, "An unexpected issue occurred while prerendering the site map. Response not ok: " + response.getStatusInfo().getStatusCode() + " " + response.getStatusInfo().getReasonPhrase());
+                }
             }
-        }
-        LOGGER.log(Level.INFO, "Site Map prerendering done");
+            LOGGER.log(Level.INFO, "Site Map prerendering done");
+        };
+        executorService.execute(command);
         return generateSiteMap(document);
     }
 
@@ -171,6 +182,13 @@ public class SeoServiceBean implements SeoService {
         doc.appendChild(urlset);
 
         return doc;
+    }
+
+    @Schedule(hour = "5")
+    private void schedulePrerendering() throws ParserConfigurationException, JsonStoreServiceException, TransformerException, SeoServiceException {
+        if (prerenderingActivated) {
+            prerenderSiteMap();
+        }
     }
 
     private void generateMarketSectionEntries(Element urlset, Document doc, String marketServerUrl) throws SeoServiceException {
