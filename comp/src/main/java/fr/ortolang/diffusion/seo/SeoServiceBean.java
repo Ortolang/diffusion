@@ -205,7 +205,7 @@ public class SeoServiceBean implements SeoService {
     }
 
     private void generateWorkspacesEntries(Element urlset, Document doc, String marketServerUrl) throws JsonStoreServiceException, SeoServiceException {
-        List<ODocument> workspaces = json.systemSearch("SELECT key, lastModificationDate as lastModificationDate, meta_ortolang-item-json.type as type, meta_ortolang-workspace-json.wsalias as alias, meta_ortolang-workspace-json.snapshotName as snapshotName FROM collection WHERE status = 'published' AND meta_ortolang-item-json.type IS NOT null AND meta_ortolang-workspace-json.wsalias IS NOT null");
+        List<ODocument> workspaces = json.systemSearch("SELECT key, lastModificationDate as lastModificationDate, `meta_ortolang-item-json.type` as type, `meta_ortolang-workspace-json.wsalias` as alias, `meta_ortolang-workspace-json.snapshotName` as snapshotName FROM collection WHERE status = 'published' AND `meta_ortolang-item-json.type` IS NOT null AND `meta_ortolang-workspace-json.wsalias` IS NOT null");
 
         Map<String, ODocument> workspacesLatest = new HashMap<>();
         // Find latest version of each published resource
