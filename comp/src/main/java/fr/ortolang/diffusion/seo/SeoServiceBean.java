@@ -165,6 +165,11 @@ public class SeoServiceBean implements SeoService {
                     LOGGER.log(Level.SEVERE, "An unexpected issue occurred while prerendering the url " + url + " : " + response.getStatusInfo().getStatusCode() + " " + response.getStatusInfo().getReasonPhrase());
                     errors++;
                 }
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                }
             }
             if (errors > 0) {
                 LOGGER.log(Level.SEVERE, "Site Map prerendering done with " + errors  + " errors.");
