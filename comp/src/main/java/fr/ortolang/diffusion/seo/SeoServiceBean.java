@@ -36,25 +36,23 @@ package fr.ortolang.diffusion.seo;
  * #L%
  */
 
-import com.orientechnologies.orient.core.record.impl.ODocument;
-import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.store.json.JsonStoreService;
-import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
-import org.jboss.ejb3.annotation.SecurityDomain;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.ejb.EJB;
 import javax.ejb.Local;
+import javax.ejb.Schedule;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
@@ -66,12 +64,20 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import com.orientechnologies.orient.core.record.impl.ODocument;
+
+import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.store.json.JsonStoreService;
+import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 
 @Startup
 @Local(SeoService.class)
@@ -95,6 +101,11 @@ public class SeoServiceBean implements SeoService {
 
     private Client client;
 
+    @Resource
+    private ManagedExecutorService executor;
+
+    private boolean prerenderingActivated;
+
     private Map<String, String> marketTypes;
 
     public SeoServiceBean() {
@@ -104,6 +115,8 @@ public class SeoServiceBean implements SeoService {
                 marketTypes.put(marketSection.mdValue, marketSection.marketType);
             }
         }
+        String prerenderingConfig = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PRERENDERING_ACTIVATED);
+        prerenderingActivated = prerenderingConfig != null ? Boolean.valueOf(prerenderingConfig) : false;
     }
 
     @PostConstruct
@@ -141,16 +154,30 @@ public class SeoServiceBean implements SeoService {
         LOGGER.log(Level.INFO, "Start prerendering Site Map");
         Document document = generateSiteMapDocument();
         NodeList nodes = document.getElementsByTagNameNS(SITEMAP_NS_URI, "loc");
-        for (int i = 0; i < nodes.getLength(); i++) {
-            String url = nodes.item(i).getTextContent();
-            Response response = client.target(url).request().header("User-Agent", ORTOLANG_USER_AGENT).get();
-            response.close();
-            if (response.getStatusInfo().getStatusCode() != 200) {
-                LOGGER.log(Level.SEVERE, "Response not ok: " + response.getStatusInfo().getStatusCode() + " " + response.getStatusInfo().getReasonPhrase());
-                throw new SeoServiceException("An unexpected issue occurred while prerendering the site map: " + response.getStatusInfo().getStatusCode() + " " + response.getStatusInfo().getReasonPhrase());
+        Runnable command = () -> {
+            int errors = 0;
+            for (int i = 0; i < nodes.getLength(); i++) {
+                String url = nodes.item(i).getTextContent();
+                LOGGER.log(Level.FINE, "Prerendering url: " + url);
+                Response response = client.target(url).request().header("User-Agent", ORTOLANG_USER_AGENT).get();
+                response.close();
+                if (response.getStatusInfo().getStatusCode() != 200 && response.getStatusInfo().getStatusCode() != 304) {
+                    LOGGER.log(Level.SEVERE, "An unexpected issue occurred while prerendering the url " + url + " : " + response.getStatusInfo().getStatusCode() + " " + response.getStatusInfo().getReasonPhrase());
+                    errors++;
+                }
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                }
             }
-        }
-        LOGGER.log(Level.INFO, "Site Map prerendering done");
+            if (errors > 0) {
+                LOGGER.log(Level.SEVERE, "Site Map prerendering done with " + errors  + " errors.");
+            } else {
+                LOGGER.log(Level.INFO, "Site Map prerendering done");
+            }
+        };
+        executor.execute(command);
         return generateSiteMap(document);
     }
 
@@ -172,6 +199,13 @@ public class SeoServiceBean implements SeoService {
         return doc;
     }
 
+    @Schedule(hour = "5")
+    private void schedulePrerendering() throws ParserConfigurationException, JsonStoreServiceException, TransformerException, SeoServiceException {
+        if (prerenderingActivated) {
+            prerenderSiteMap();
+        }
+    }
+
     private void generateMarketSectionEntries(Element urlset, Document doc, String marketServerUrl) throws SeoServiceException {
         String loc;
         for (MarketSection marketSection : MarketSection.values()) {
@@ -182,7 +216,7 @@ public class SeoServiceBean implements SeoService {
     }
 
     private void generateWorkspacesEntries(Element urlset, Document doc, String marketServerUrl) throws JsonStoreServiceException, SeoServiceException {
-        List<ODocument> workspaces = json.systemSearch("SELECT key, lastModificationDate as lastModificationDate, meta_ortolang-item-json.type as type, meta_ortolang-workspace-json.wsalias as alias, meta_ortolang-workspace-json.snapshotName as snapshotName FROM collection WHERE status = 'published' AND meta_ortolang-item-json.type IS NOT null AND meta_ortolang-workspace-json.wsalias IS NOT null");
+        List<ODocument> workspaces = json.systemSearch("SELECT key, lastModificationDate as lastModificationDate, `meta_ortolang-item-json.type` as type, `meta_ortolang-workspace-json.wsalias` as alias, `meta_ortolang-workspace-json.snapshotName` as snapshotName FROM collection WHERE status = 'published' AND `meta_ortolang-item-json.type` IS NOT null AND `meta_ortolang-workspace-json.wsalias` IS NOT null");
 
         Map<String, ODocument> workspacesLatest = new HashMap<>();
         // Find latest version of each published resource
@@ -292,7 +326,6 @@ public class SeoServiceBean implements SeoService {
     private enum MarketSection {
 
         INDEX("", "1.0", null, null),
-        HOME("market/home", "0.9", null, null),
         CORPORA("market/corpora", "0.9", "Corpus", "corpora"),
         LEXICONS("market/lexicons", "0.9", "Lexique", "lexicons"),
         TOOLS("market/tools", "0.9", "Outil", "tools"),

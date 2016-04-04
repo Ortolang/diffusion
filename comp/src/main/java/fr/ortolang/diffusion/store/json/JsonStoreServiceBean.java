@@ -248,7 +248,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {
         Map<String, String> infos = new HashMap<String, String> ();
-        infos.put(INFO_POOL_SIZE_MAX, Integer.toString(pool.getMaxSize()));
+        infos.put(INFO_MAX_PARTITION_SIZE, Integer.toString(pool.getMaxPartitonSize()));
         infos.put(INFO_AVAIL_CONNECTIONS, Integer.toString(pool.getAvailableConnections()));
         infos.put(INFO_INSTANCES_CREATED, Integer.toString(pool.getCreatedInstances()));
         try {

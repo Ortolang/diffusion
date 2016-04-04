@@ -45,31 +45,31 @@ import fr.ortolang.diffusion.OrtolangService;
 
 public interface JsonStoreService extends OrtolangService {
 
-	public static final String SERVICE_NAME = "json-store";
+	String SERVICE_NAME = "json-store";
 	
-	public static final String INFO_PATH = "path";
-    public static final String INFO_SIZE = "size";
-    public static final String INFO_FILES = "files";
-    public static final String INFO_POOL_SIZE_MAX = "pool.maxsize";
-    public static final String INFO_AVAIL_CONNECTIONS = "connections.avail";
-    public static final String INFO_INSTANCES_CREATED = "instances.created";
-    public static final String INFO_DB_NAME = "db.name";
-    public static final String INFO_DB_SIZE = "db.size";
-    public static final String INFO_DB_STATUS = "db.status";
+	String INFO_PATH = "path";
+    String INFO_SIZE = "size";
+    String INFO_FILES = "files";
+    String INFO_MAX_PARTITION_SIZE = "pool.maxpartitionsize";
+    String INFO_AVAIL_CONNECTIONS = "connections.avail";
+    String INFO_INSTANCES_CREATED = "instances.created";
+    String INFO_DB_NAME = "db.name";
+    String INFO_DB_SIZE = "db.size";
+    String INFO_DB_STATUS = "db.status";
        
 	
-	public void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException;
+	void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException;
 	
-	public void remove(String key) throws JsonStoreServiceException;
+	void remove(String key) throws JsonStoreServiceException;
 	
-	public List<String> search(String query) throws JsonStoreServiceException;
+	List<String> search(String query) throws JsonStoreServiceException;
 
-    public List<ODocument> systemSearch(String query) throws JsonStoreServiceException;
+    List<ODocument> systemSearch(String query) throws JsonStoreServiceException;
 
-    public void systemInsertDocument(String type, InputStream document) throws JsonStoreServiceException;
+    void systemInsertDocument(String type, InputStream document) throws JsonStoreServiceException;
     
-    public void systemInsertDocument(String type, String document) throws JsonStoreServiceException;
+    void systemInsertDocument(String type, String document) throws JsonStoreServiceException;
     
-    public String systemGetDocument(String key) throws JsonStoreServiceException;
+    String systemGetDocument(String key) throws JsonStoreServiceException;
     
 }

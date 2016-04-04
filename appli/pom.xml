@@ -31,7 +31,7 @@
 		<dependency>
 			<groupId>net.bull.javamelody</groupId>
 			<artifactId>javamelody-core</artifactId>
-			<version>1.58.0</version>
+			<version>${version.javamelody}</version>
 		</dependency>
 	</dependencies>
 
