@@ -45,7 +45,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -70,11 +69,14 @@ import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
+import fr.ortolang.diffusion.api.Secured;
 import fr.ortolang.diffusion.api.runtime.HumanTaskRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessTypeRepresentation;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
+import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -102,7 +104,7 @@ import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
 
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
-@RolesAllowed("admin")
+@Secured
 public class AdminResource {
 
     private static final Logger LOGGER = Logger.getLogger(AdminResource.class.getName());
@@ -127,6 +129,8 @@ public class AdminResource {
     private EventService event;
     @EJB
     private SubscriptionService subscription;
+    @EJB
+    private MembershipService membership;;
 
     @GET
     @Path("/infos/{service}")
@@ -141,9 +145,9 @@ public class AdminResource {
     @GET
     @Path("/registry/entries")
     @GZIP
-    public Response listEntries(@QueryParam("filter") String filter) throws RegistryServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/registry/entries?filter=" + filter);
-        List<RegistryEntry> entries = registry.systemListEntries(filter);
+    public Response listEntries(@QueryParam("kfilter") String kfilter, @QueryParam("ifilter") String ifilter) throws RegistryServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/registry/entries?kfilter=" + kfilter + "&ifilter=" + ifilter);
+        List<RegistryEntry> entries = registry.systemListEntries(kfilter, ifilter);
         return Response.ok(entries).build();
     }
     
@@ -171,6 +175,14 @@ public class AdminResource {
     public Response deleteEntry(@PathParam("key") String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
         LOGGER.log(Level.INFO, "DELETE /admin/registry/entries/" + key);
         registry.delete(key, true);
+        return Response.ok().build();
+    }
+    
+    @DELETE
+    @Path("/membership/profiles/{key}")
+    public Response deleteProfile(@PathParam("key") String key) throws KeyNotFoundException, AccessDeniedException, MembershipServiceException {
+        LOGGER.log(Level.INFO, "DELETE /admin/membership/profiles/" + key);
+        membership.deleteProfile(key);
         return Response.ok().build();
     }
     
@@ -327,5 +339,11 @@ public class AdminResource {
         subscription.addAdminFilters();
         return Response.ok().build();
     }
+    
+//    @PUT
+//    @Path("/core/workspace")
+//    public Response updateWorkspace() throws CoreServiceException {
+//        
+//    }
 
 }

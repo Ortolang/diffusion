@@ -85,7 +85,8 @@ public class ThumbnailResource {
 
     private static final String DEFAULT_THUMBNAIL_IMAGE = "empty.png";
     private static final String DEFAULT_THUMBNAIL_MIMETYPE = "image/png";
-
+    private static File defaultThumb = null;
+    
     @EJB
     private CoreService core;
     @EJB
@@ -94,7 +95,7 @@ public class ThumbnailResource {
     private ThumbnailService thumbnails;
     @Context
     private UriInfo uriInfo;
-    private File defaultThumb = null;
+    
 
     private File getDefaultThumb() {
         if (defaultThumb == null) {

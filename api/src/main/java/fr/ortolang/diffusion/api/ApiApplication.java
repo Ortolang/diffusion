@@ -120,6 +120,7 @@ public class ApiApplication extends Application {
         set.add(new PathAlreadyExistsExceptionMapper());
         set.add(new PathNotFoundExceptionMapper());
         set.add(new RootNotFoundExceptionMapper());
+        set.add(new AuthorizationRequestFilter());
         return set;
     }
 }

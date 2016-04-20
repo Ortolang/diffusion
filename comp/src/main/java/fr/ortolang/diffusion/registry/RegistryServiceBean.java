@@ -551,12 +551,15 @@ public class RegistryServiceBean implements RegistryService {
 	@Override
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<RegistryEntry> systemListEntries(String keyFilter) throws RegistryServiceException {
-            LOGGER.log(Level.FINE, "#SYSTEM# list entries for key filter [" + keyFilter + "]");
+    public List<RegistryEntry> systemListEntries(String keyFilter, String identifierFilter) throws RegistryServiceException {
+            LOGGER.log(Level.FINE, "#SYSTEM# list entries for key filter [" + keyFilter + "] and identifierFilter [" + identifierFilter + "]");
             if ( keyFilter == null ) {
                     keyFilter = "";
             }
-            TypedQuery<RegistryEntry> query = em.createNamedQuery("findEntryByKey", RegistryEntry.class).setParameter("keyFilter", keyFilter + "%");
+            if ( identifierFilter == null ) {
+                identifierFilter = "";
+            }
+            TypedQuery<RegistryEntry> query = em.createNamedQuery("findEntryByKeyAndIdentifier", RegistryEntry.class).setParameter("keyFilter", keyFilter + "%").setParameter("identifierFilter", identifierFilter + "%");
             return query.getResultList();
     }
 	

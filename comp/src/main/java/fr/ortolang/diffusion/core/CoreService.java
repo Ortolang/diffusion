@@ -209,5 +209,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     Set<String> systemListWorkspaceKeys(String wskey) throws CoreServiceException, KeyNotFoundException;
     
     void systemSetWorkspaceReadOnly(String wskey, boolean readonly) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;
+    
+    void systemUpdateWorkspace(String wskey, String alias, boolean changed, String head, String members, String privileged, boolean readOnly, String type) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;
 
 }

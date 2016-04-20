@@ -3776,6 +3776,39 @@ public class CoreServiceBean implements CoreService {
             throw new CoreServiceException("unable to set workspace with key [" + wskey + "] read only mode to  [" + readonly + "]", e);
         }
     }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void systemUpdateWorkspace(String wskey, String alias, boolean changed, String head, String members, String privileged, boolean readOnly, String type) throws CoreServiceException, KeyNotFoundException, NotificationServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# updating workspace [" + wskey + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+            checkObjectType(identifier, Workspace.OBJECT_TYPE);
+
+            Workspace workspace = em.find(Workspace.class, identifier.getId());
+            if (workspace == null) {
+                throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+            }
+            workspace.setAlias(alias);
+            workspace.setChanged(changed);
+            workspace.setHead(head);
+            workspace.setMembers(members);
+            workspace.setPrivileged(privileged);
+            workspace.setReadOnly(readOnly);
+            workspace.setType(type);
+            em.merge(workspace);
+
+            registry.update(wskey);
+
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(1).addArgument("ws-alias", workspace.getAlias());
+            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argsBuilder.build());
+        } catch (KeyLockedException | RegistryServiceException e) {
+            ctx.setRollbackOnly();
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while setting workspace alias to [" + alias + "]", e);
+            throw new CoreServiceException("unable to set workspace with key [" + wskey + "] alias to  [" + alias + "]", e);
+        }
+    }
 
     /* ### Internal operations ### */
 
