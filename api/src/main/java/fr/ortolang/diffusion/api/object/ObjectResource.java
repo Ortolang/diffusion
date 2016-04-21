@@ -61,6 +61,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 
 import fr.ortolang.diffusion.api.ApiHelper;
+import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 import org.jboss.resteasy.annotations.GZIP;
 
 import fr.ortolang.diffusion.OrtolangException;
@@ -251,6 +252,32 @@ public class ObjectResource {
         if (builder == null) {
             Map<String, List<String>> permissions = security.listRules(key);
             builder = Response.ok(permissions);
+            builder.lastModified(lmd);
+        }
+        builder.cacheControl(cc);
+        return builder.build();
+    }
+
+    @GET
+    @Path("/{key}/pids")
+    @GZIP
+    public Response pids(@PathParam(value = "key") String key, @Context Request request)
+            throws OrtolangException, KeyNotFoundException, BrowserServiceException,
+            HandleStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /objects/" + key + "/pids");
+        OrtolangObjectState state = browser.getState(key);
+        CacheControl cc = new CacheControl();
+        cc.setPrivate(true);
+        ApiHelper.setCacheControlFromState(state, cc);
+        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        ResponseBuilder builder = null;
+        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+            builder = request.evaluatePreconditions(lmd);
+        }
+
+        if (builder == null) {
+            List<String> handles = handleStore.listHandlesForKey(key);
+            builder = Response.ok(handles);
             builder.lastModified(lmd);
         }
         builder.cacheControl(cc);
