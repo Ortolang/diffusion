@@ -679,6 +679,7 @@ public class CoreServiceBean implements CoreService {
     public void changeWorkspaceOwner(String wskey, String newOwner) throws CoreServiceException {
         LOGGER.log(Level.FINE, "changing workspace [" + wskey + "] owner to: " + newOwner);
         try {
+            //TODO Maybe check that newOwner is a member of the workspace, if not add it.
             Workspace workspace = readWorkspace(wskey);
             security.changeOwner(wskey, newOwner);
             security.changeOwner(workspace.getMembers(), newOwner);
