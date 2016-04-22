@@ -23,7 +23,7 @@
 			<artifactId>flyway-core</artifactId>
 			<version>${version.flyway}</version>
 			<type>jar</type>
-			<scope>provided</scope>
+			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
