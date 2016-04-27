@@ -2504,7 +2504,17 @@ public class CoreServiceBean implements CoreService {
             MetadataObject meta = new MetadataObject();
             meta.setId(UUID.randomUUID().toString());
             meta.setName(name);
+
+            MetadataFormat format = getMetadataFormat(name);
+            if (format == null) {
+                LOGGER.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
+                throw new CoreServiceException("unknown metadata format for name: " + name);
+            }
+            
             if (hash != null && hash.length() > 0) {
+                if (format.isValidationNeeded()) {
+                    validateMetadata(hash, format);
+                }
                 meta.setSize(binarystore.size(hash));
                 if (filename != null) {
                     meta.setContentType(binarystore.type(hash, filename));
@@ -2518,14 +2528,6 @@ public class CoreServiceBean implements CoreService {
                 meta.setStream("");
             }
 
-            MetadataFormat format = getMetadataFormat(name);
-            if (format == null) {
-                LOGGER.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
-                throw new CoreServiceException("unknown metadata format for name: " + name);
-            }
-            if (format.isValidationNeeded()) {
-                validateMetadata(meta, format);
-            }
             meta.setFormat(format.getId());
             meta.setTarget(tkey);
             meta.setKey(key);
@@ -2838,21 +2840,21 @@ public class CoreServiceBean implements CoreService {
                 meta.setKey(mdelement.getKey());
 
                 if (hash != null && hash.length() > 0) {
-                    meta.setSize(binarystore.size(hash));
                     if (filename != null) {
                         meta.setContentType(binarystore.type(hash, filename));
                     } else {
                         meta.setContentType(binarystore.type(hash));
                     }
-                    meta.setStream(hash);
                     MetadataFormat format = findMetadataFormatById(meta.getFormat());
                     if (format == null) {
                         LOGGER.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
                         throw new CoreServiceException("unknown metadata format for name: " + name);
                     }
                     if (format.isValidationNeeded()) {
-                        validateMetadata(meta, format);
+                        validateMetadata(hash, format);
                     }
+                    meta.setSize(binarystore.size(hash));
+                    meta.setStream(hash);
                     meta.setTarget(tkey);
                 } else {
                     throw new CoreServiceException("unable to update a metadata with an empty content (hash is null)");
@@ -3213,11 +3215,11 @@ public class CoreServiceBean implements CoreService {
         return format;
     }
 
-    private void validateMetadata(MetadataObject metadata, MetadataFormat format) throws CoreServiceException, MetadataFormatException {
+    private void validateMetadata(String metadata, MetadataFormat format) throws MetadataFormatException {
         try {
             if (format.getSchema() != null && format.getSchema().length() > 0) {
                 JsonNode jsonSchema = JsonLoader.fromReader(new InputStreamReader(binarystore.get(format.getSchema())));
-                JsonNode jsonFile = JsonLoader.fromReader(new InputStreamReader(binarystore.get(metadata.getStream())));
+                JsonNode jsonFile = JsonLoader.fromReader(new InputStreamReader(binarystore.get(metadata)));
                 JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
                 JsonSchema schema = factory.getJsonSchema(jsonSchema);
 
@@ -3226,15 +3228,15 @@ public class CoreServiceBean implements CoreService {
 
                 if (!report.isSuccess()) {
                     LOGGER.log(Level.WARNING, "error during validating metadata format " + format.getName() + ": " + report.toString());
-                    throw new MetadataFormatException("invalid metadata format");
+                    throw new MetadataFormatException(report.toString());
                 }
             } else {
-                LOGGER.log(Level.SEVERE, "unexpected error occurred during validating metadata [" + metadata + "] with metadata format [" + format + "] : schema not found");
-                throw new CoreServiceException("unable to validate metadata [" + metadata + "] with metadata format [" + format + "] : schema not found");
+                LOGGER.log(Level.SEVERE, "unexpected error occurred during validating metadata with metadata format [" + format + "] : schema not found");
+                throw new MetadataFormatException("unable to validate metadata with metadata format [" + format + "] : schema not found");
             }
         } catch (IOException | ProcessingException | DataNotFoundException | BinaryStoreServiceException e) {
-            LOGGER.log(Level.SEVERE, "unexpected error occurred during validating metadata [" + metadata + "] with metadata format [" + format + "] : schema not found");
-            throw new CoreServiceException("unable to validate metadata [" + metadata + "] with metadata format [" + format + "] : schema not found");
+            LOGGER.log(Level.SEVERE, "unexpected error occurred during validating metadata with metadata format [" + format + "] : "+e.getMessage());
+            throw new MetadataFormatException("unable to validate metadata with metadata format [" + format + "] : "+e.getMessage());
         }
     }
 

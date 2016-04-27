@@ -121,6 +121,7 @@ public class ApiApplication extends Application {
         set.add(new PathNotFoundExceptionMapper());
         set.add(new RootNotFoundExceptionMapper());
         set.add(new AuthorizationRequestFilter());
+        set.add(new MetadataFormatExceptionMapper());
         return set;
     }
 }
