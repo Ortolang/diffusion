@@ -440,14 +440,18 @@ public class WorkspaceResource {
                         }
                     }
                     if (mdexists) {
-                        updatedObject = core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
+                        updatedObject = core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false, form.getFormat().equals("") ? null : form.getFormat());
                         break;
                     } else {
-                        MetadataObject metadataObject = core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
-                        WorkspaceElementRepresentation representation = makeRepresentation(metadataObject, wskey, npath);
-                        URI newly = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build())
-                                .queryParam("metadataname", name).build();
-                        return Response.created(newly).entity(representation).build();
+                    	try {
+	                        MetadataObject metadataObject = core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
+	                        WorkspaceElementRepresentation representation = makeRepresentation(metadataObject, wskey, npath);
+	                        URI newly = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build())
+	                                .queryParam("metadataname", name).build();
+	                        return Response.created(newly).entity(representation).build();
+                    	} catch(MetadataFormatException mfe) {
+                    		return Response.status(Response.Status.BAD_REQUEST).entity("{\"errorMessage\":\""+mfe.getMessage()+"\"}").build();
+                    	}
                     }
                 default:
                     return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + form.getType()).build();
@@ -516,7 +520,7 @@ public class WorkspaceResource {
             }
             break;
         case MetadataObject.OBJECT_TYPE:
-            updatedObject = core.updateMetadataObject(wskey, npath.build(), representation.getName(), representation.getStream(), null, false);
+            updatedObject = core.updateMetadataObject(wskey, npath.build(), representation.getName(), representation.getStream(), null, false, representation.getFormat());
             break;
         default:
             return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + representation.getType()).build();
