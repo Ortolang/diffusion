@@ -65,7 +65,7 @@
 		<version.hdlnet>7.3.1</version.hdlnet>
 		<version.bagit>4.9.0</version.bagit>
 		<version.hibernate-core>4.3.5.Final</version.hibernate-core>
-		<version.activiti-engine>5.17.0</version.activiti-engine>
+		<version.activiti-engine>5.20.0</version.activiti-engine>
 		<version.json-schema-validator>2.2.6</version.json-schema-validator>
 		<version.javacv>1.1</version.javacv>
 		<version.guava>18.0</version.guava>
