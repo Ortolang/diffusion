@@ -2668,10 +2668,16 @@ public class CoreServiceBean implements CoreService {
             throw new CoreServiceException("unable to read metadata with key [" + key + "]", e);
         }
     }
-
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException, KeyNotFoundException,
+            InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException {
+    	return updateMetadataObject(wskey, path, name, hash, filename, purgeChildren, null);
+    }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren, String format) throws CoreServiceException, KeyNotFoundException,
             InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "updating metadata content into workspace [" + wskey + "] for path [" + path + "] and name [" + name + "]");
         try {
@@ -2845,13 +2851,17 @@ public class CoreServiceBean implements CoreService {
                     } else {
                         meta.setContentType(binarystore.type(hash));
                     }
-                    MetadataFormat format = findMetadataFormatById(meta.getFormat());
-                    if (format == null) {
+
+                    if (format!=null) {
+                    	meta.setFormat(format);
+                    }
+                    MetadataFormat metadataFormat = findMetadataFormatById(meta.getFormat());
+                    if (metadataFormat == null) {
                         LOGGER.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
                         throw new CoreServiceException("unknown metadata format for name: " + name);
                     }
-                    if (format.isValidationNeeded()) {
-                        validateMetadata(hash, format);
+                    if (metadataFormat.isValidationNeeded()) {
+                        validateMetadata(hash, metadataFormat);
                     }
                     meta.setSize(binarystore.size(hash));
                     meta.setStream(hash);
@@ -3581,52 +3591,27 @@ public class CoreServiceBean implements CoreService {
                 if (collection == null) {
                     throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
                 }
-
-                for (MetadataElement mde : collection.getMetadatas()) {
-                    OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-                    MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
-                    if (metadata == null) {
-                        throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
-                    }
-                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
-                    if (format == null) {
-                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
-                        break;
-                    }
-                    try {
-                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
-                            content.put(metadata.getName(), getContent(binarystore.get(metadata.getStream())));
-                        }
-                    } catch (DataNotFoundException | BinaryStoreServiceException | IOException e) {
-                        LOGGER.log(Level.WARNING, "unable to extract json text for key : " + mde.getKey(), e);
-                    }
-                }
-            }
-
-            if (identifier.getType().equals(DataObject.OBJECT_TYPE) && publicationStatus.equals(OrtolangObjectState.Status.PUBLISHED.value())) {
-                DataObject object = em.find(DataObject.class, identifier.getId());
-                if (object == null) {
-                    throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
-                }
-
-                for (MetadataElement mde : object.getMetadatas()) {
-                    OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-                    MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
-                    if (metadata == null) {
-                        throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
-                    }
-                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
-                    if (format == null) {
-                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
-                        break;
-                    }
-                    try {
-                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
-                            content.put(metadata.getName(), getContent(binarystore.get(metadata.getStream())));
-                        }
-                    } catch (DataNotFoundException | BinaryStoreServiceException | IOException e) {
-                        LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
-                    }
+                
+                if (collection.isRoot()) {
+	                for (MetadataElement mde : collection.getMetadatas()) {
+	                    OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
+	                    MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
+	                    if (metadata == null) {
+	                        throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
+	                    }
+	                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
+	                    if (format == null) {
+	                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
+	                        break;
+	                    }
+	                    try {
+	                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
+	                            content.put(metadata.getName(), getContent(binarystore.get(metadata.getStream())));
+	                        }
+	                    } catch (DataNotFoundException | BinaryStoreServiceException | IOException e) {
+	                        LOGGER.log(Level.WARNING, "unable to extract json text for key : " + mde.getKey(), e);
+	                    }
+	                }
                 }
             }
 
@@ -3635,20 +3620,22 @@ public class CoreServiceBean implements CoreService {
                 if (workspace == null) {
                     throw new OrtolangException("unable to load workspace with id [" + identifier.getId() + "] from storage");
                 }
-                JsonObjectBuilder builder = Json.createObjectBuilder();
-                builder.add("wskey", key);
-                builder.add("wsalias", workspace.getAlias());
-                JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
-                JsonObjectBuilder objectBuilder;
-                for (TagElement tagElement : workspace.getTags()) {
-                    objectBuilder = Json.createObjectBuilder();
-                    objectBuilder.add("name", tagElement.getName());
-                    objectBuilder.add("snapshot", tagElement.getSnapshot());
-                    objectBuilder.add("key", workspace.findSnapshotByName(tagElement.getSnapshot()).getKey());
-                    arrayBuilder.add(objectBuilder);
+                if(workspace.hasSnapshot()) {
+	                JsonObjectBuilder builder = Json.createObjectBuilder();
+	                builder.add("wskey", key);
+	                builder.add("wsalias", workspace.getAlias());
+	                JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+	                JsonObjectBuilder objectBuilder;
+	                for (TagElement tagElement : workspace.getTags()) {
+	                    objectBuilder = Json.createObjectBuilder();
+	                    objectBuilder.add("name", tagElement.getName());
+	                    objectBuilder.add("snapshot", tagElement.getSnapshot());
+	                    objectBuilder.add("key", workspace.findSnapshotByName(tagElement.getSnapshot()).getKey());
+	                    arrayBuilder.add(objectBuilder);
+	                }
+	                builder.add("tags", arrayBuilder);
+	                content.put(MetadataFormat.WORKSPACE, builder.build().toString());
                 }
-                builder.add("tags", arrayBuilder);
-                content.put(MetadataFormat.WORKSPACE, builder.build().toString());
             }
 
             return content;

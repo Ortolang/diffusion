@@ -183,6 +183,10 @@ public class Workspace extends OrtolangObject {
 		return snapshots;
 	}
 	
+	public boolean hasSnapshot() {
+		return snapshotsContent != null && snapshotsContent.length() > 0;
+	}
+	
 	public void setSnapshots(Set<SnapshotElement> snapshots) {
 		StringBuilder newsnapshots = new StringBuilder();
 		for ( SnapshotElement snapshot : snapshots ) {

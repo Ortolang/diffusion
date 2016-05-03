@@ -252,7 +252,7 @@ public class BootstrapServiceBean implements BootstrapService {
             runtime.importProcessTypes();
             
             LOGGER.log(Level.FINE, "import metadataformat schemas");
-            InputStream schema13InputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.13.json");
+            InputStream schema13InputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.14-with-termino.json");
             String schema13Hash = core.put(schema13InputStream);
             core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schema13Hash, "ortolang-item-form", true, true);
 
