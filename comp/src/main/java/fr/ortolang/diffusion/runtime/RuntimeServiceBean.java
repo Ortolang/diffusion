@@ -459,6 +459,32 @@ public class RuntimeServiceBean implements RuntimeService {
             throw new RuntimeServiceException("unable to update process state", e);
         }
     }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void updateProcessStatus(String pid, String status, String explanation) throws RuntimeServiceException {
+        LOGGER.log(Level.INFO, "Updating status of process with pid: " + pid);
+        try {
+            Process process = em.find(Process.class, pid);
+            if (process == null) {
+                throw new RuntimeServiceException("unable to find a process with id: " + pid);
+            }
+            process.setStatus(status);
+            process.setExplanation(explanation);
+            process.appendLog(new Date() + "  PROCESS STATUS CHANGED TO " + status);
+            em.merge(process);
+            
+            String key = registry.lookup(process.getObjectIdentifier());
+            registry.update(key);
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("status", status).addArgument("explanation", explanation);
+            notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "change-status"),
+                    argumentsBuilder.build());
+        } catch (Exception e) {
+            ctx.setRollbackOnly();
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while updating process status", e);
+            throw new RuntimeServiceException("unable to update process status", e);
+        }
+    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)

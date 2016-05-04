@@ -49,7 +49,7 @@ public class RuntimeEngineEvent implements Serializable {
     public static final String MESSAGE_PROPERTY_NAME = "event_object";
 
     public enum Type {
-        PROCESS_START, PROCESS_ABORT, PROCESS_COMPLETE, PROCESS_ACTIVITY_STARTED, PROCESS_ACTIVITY_PROGRESS, PROCESS_ACTIVITY_COMPLETED, PROCESS_ACTIVITY_ERROR, PROCESS_LOG, PROCESS_TRACE, TASK_CREATED, TASK_ASSIGNED, TASK_COMPLETED
+        PROCESS_START, PROCESS_ABORT, PROCESS_COMPLETE, PROCESS_ACTIVITY_STARTED, PROCESS_ACTIVITY_PROGRESS, PROCESS_ACTIVITY_COMPLETED, PROCESS_ACTIVITY_ERROR, PROCESS_LOG, PROCESS_TRACE, TASK_CREATED, TASK_ASSIGNED, TASK_COMPLETED, PROCESS_UPDATE_STATUS
     }
 
     private long timestamp;
@@ -59,6 +59,8 @@ public class RuntimeEngineEvent implements Serializable {
     private String activityName;
     private int activityProgress;
     private String message;
+    private String status;
+    private String explanation;
     private String trace;
     private Set<IdentityLink> candidates;
     private String assignee;
@@ -124,6 +126,22 @@ public class RuntimeEngineEvent implements Serializable {
 
     public String getTrace() {
         return trace;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getExplanation() {
+        return explanation;
+    }
+
+    public void setExplanation(String explanation) {
+        this.explanation = explanation;
     }
 
     public void setTrace(String trace) {
@@ -193,6 +211,16 @@ public class RuntimeEngineEvent implements Serializable {
         } else {
             event.setTrace("");
         }
+        return event;
+    }
+    
+    public static RuntimeEngineEvent createUpdateProcessStatusEvent(String pid, String status, String explanation) {
+        RuntimeEngineEvent event = new RuntimeEngineEvent();
+        event.setTimestamp(System.currentTimeMillis());
+        event.setType(Type.PROCESS_UPDATE_STATUS);
+        event.setPid(pid);
+        event.setStatus(status);
+        event.setExplanation(explanation);
         return event;
     }
 

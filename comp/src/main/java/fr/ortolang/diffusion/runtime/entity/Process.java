@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.runtime.entity;
  * #L%
  */
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Index;
@@ -83,6 +84,9 @@ public class Process extends OrtolangObject {
 	private String initier;
 	private String workspace;
 	private State state;
+	private String status;
+	@Column(length=8000)
+	private String explanation;
 	private int progress;
 	private String activity;
 	private long start;
@@ -93,6 +97,8 @@ public class Process extends OrtolangObject {
 
 	public Process() {
 		log = "";
+		status = "";
+		explanation = "";
 		progress = 0;
 	}
 
@@ -156,7 +162,23 @@ public class Process extends OrtolangObject {
 		return log;
 	}
 
-	public void setLog(String log) {
+	public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getExplanation() {
+        return explanation;
+    }
+
+    public void setExplanation(String explanation) {
+        this.explanation = explanation;
+    }
+
+    public void setLog(String log) {
 		this.log = log;
 	}
 
