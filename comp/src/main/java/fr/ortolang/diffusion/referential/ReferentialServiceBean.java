@@ -341,11 +341,11 @@ public class ReferentialServiceBean implements ReferentialService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<ReferentialEntity> findEntitiesByTerm(ReferentialEntityType type, String term, String lang) throws ReferentialServiceException {
-        String query = new StringBuilder().append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX).append(ReferentialEntity.LANGUAGE_CONTENT_TEXT)
+        String query = new StringBuilder().append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX).append(ReferentialEntity.CONTENT_TEXT)
                 .append(lang.toUpperCase()).append(":").append(term).append("* ")
                 .append("AND ").append(IndexStoreDocumentBuilder.SERVICE_FIELD).append(":").append(ReferentialService.SERVICE_NAME).append(" ")
                 .append("AND ").append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX)
-                .append(ReferentialEntity.LANGUAGE_CONTENT_TYPE).append(":").append(type.toString().toLowerCase()).toString();
+                .append(ReferentialEntity.CONTENT_TYPE).append(":").append(type.toString().toLowerCase()).toString();
         
         List<ReferentialEntity> entities = new ArrayList<ReferentialEntity>();
         try {
@@ -386,7 +386,7 @@ public class ReferentialServiceBean implements ReferentialService {
 					throw new OrtolangException("unable to load ReferentialEntity with id [" + identifier.getId() + "] from storage");
 				}
 				content.setName(key.replaceFirst(SERVICE_NAME + ":", ""));
-				content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.LANGUAGE_CONTENT_TYPE, referentielEntity.getType().toString()));
+				content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TYPE, referentielEntity.getType().toString()));
 				
 				if(referentielEntity.getType().equals(ReferentialEntityType.LANGUAGE)) {
 					StringReader reader = new StringReader(referentielEntity.getContent());
@@ -399,7 +399,7 @@ public class ReferentialServiceBean implements ReferentialService {
 						if(jsonObj.containsKey("labels")) {
 							for(JsonObject lang : jsonObj.getJsonArray("labels").getValuesAs(JsonObject.class)) {
 								content.addContentPart(lang.getString("value"));
-								content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.LANGUAGE_CONTENT_TEXT+lang.getString("lang"), lang.getString("value")));
+								content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT+lang.getString("lang"), lang.getString("value")));
 							}
 						}
 					} catch(IllegalStateException | NullPointerException | ClassCastException e) {
@@ -419,9 +419,25 @@ public class ReferentialServiceBean implements ReferentialService {
 						content.setBoost(referentielEntity.getBoost());
 						content.addContentPart(jsonObj.getString("id"));
 						content.addContentPart(jsonObj.getString("fullname"));
-						if(jsonObj.containsKey("fullname")) {
-							content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.LANGUAGE_CONTENT_TEXT+"FR", jsonObj.getString("fullname")));
-						}
+						content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT+"FR", jsonObj.getString("fullname")));
+					} catch(IllegalStateException | NullPointerException | ClassCastException e) {
+						LOGGER.log(Level.WARNING, "No property requested in json object", e);
+					} catch(JsonException e) {
+					    LOGGER.log(Level.SEVERE, "No property requested in json object", e);
+					} finally {
+						jsonReader.close();
+						reader.close();
+					}
+				} else if(referentielEntity.getType().equals(ReferentialEntityType.ORGANIZATION)) {
+					StringReader reader = new StringReader(referentielEntity.getContent());
+					JsonReader jsonReader = Json.createReader(reader);
+					try {
+						JsonObject jsonObj = jsonReader.readObject();
+						
+						content.setBoost(referentielEntity.getBoost());
+						content.addContentPart(jsonObj.getString("id"));
+						content.addContentPart(jsonObj.getString("fullname"));
+						content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT+"FR", jsonObj.getString("fullname")));
 					} catch(IllegalStateException | NullPointerException | ClassCastException e) {
 						LOGGER.log(Level.WARNING, "No property requested in json object", e);
 					} catch(JsonException e) {
