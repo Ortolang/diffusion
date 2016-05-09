@@ -693,7 +693,7 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public String resolveWorkspaceAlias(String alias) throws CoreServiceException, AccessDeniedException, AliasNotFoundException {
-        LOGGER.log(Level.FINE, "finding workspace for alias:" + alias);
+        LOGGER.log(Level.FINE, "finding workspace for alias: " + alias);
         try {
             TypedQuery<Workspace> query = em.createNamedQuery("findWorkspaceByAlias", Workspace.class).setParameter("alias", alias);
             try {
