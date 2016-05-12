@@ -23,6 +23,8 @@ public interface ReferentialService extends OrtolangService, OrtolangIndexableSe
 	public void updateEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public void updateEntity(String name, ReferentialEntityType type, String content, Long boost) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
+	
+	public void deleteEntity(String name) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
 
 	public List<ReferentialEntity> findEntitiesByTerm(ReferentialEntityType type, String term, String lang) throws ReferentialServiceException;
 }
