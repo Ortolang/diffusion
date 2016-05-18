@@ -48,7 +48,7 @@ import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 
 public class OrtolangKeyExtractor {
 
-	public static final Pattern ORTOLANG_KEY_MATCHER = Pattern.compile("\\$\\{([\\w\\d:\\-_]*)\\}");
+	public static final Pattern ORTOLANG_KEY_MATCHER = Pattern.compile("\\$\\{([\\w\\d:\\.\\-_]*)\\}");
 
 	public static String getMarker(String ortolangKey) {
 		return "${"+ortolangKey+"}";
