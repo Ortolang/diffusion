@@ -332,6 +332,36 @@ public class ReferentialServiceBean implements ReferentialService {
         }
 	}
 
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void deleteEntity(String name) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "deleting ReferentialEntity for name [" + name + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            String key = SERVICE_NAME + ":" + name;
+            authorisation.checkPermission(key, subjects, "delete");
+
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, ReferentialEntity.OBJECT_TYPE);
+            ReferentialEntity refEntity = em.find(ReferentialEntity.class, identifier.getId());
+            if (refEntity == null) {
+                throw new ReferentialServiceException("unable to find a ReferentialEntity for id " + identifier.getId());
+            }
+//            profile.setStatus(ProfileStatus.DELETED);
+//            em.merge(refEntity);
+            em.remove(refEntity);
+
+            registry.update(key);
+            indexing.remove(key);
+
+            notification.throwEvent(key, caller, ReferentialEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentialService.SERVICE_NAME, ReferentialEntity.OBJECT_TYPE, "delete"));
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
+            ctx.setRollbackOnly();
+            throw new ReferentialServiceException("unable to delete object with name [" + name + "]", e);
+        }
+    }
+
 	/**
 	 * Finds entities by looking into the index-store.
 	 * @param type the type of the entities

@@ -71,6 +71,8 @@ public interface RuntimeService extends OrtolangService {
 	
 	public void updateProcessState(String pid, State state) throws RuntimeServiceException;
 	
+	public void updateProcessStatus(String pid, String status, String explanation) throws RuntimeServiceException;
+	
 	public void appendProcessLog(String pid, String log) throws RuntimeServiceException;
 	
 	public void appendProcessTrace(String pid, String trace) throws RuntimeServiceException;

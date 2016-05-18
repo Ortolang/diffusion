@@ -270,7 +270,7 @@ public class SearchServiceBean implements SearchService {
             } else {
                 queryBuilder.append(" AND ");
             }
-            queryBuilder.append("any().toLowerCase().indexOf('").append(content).append("') > -1 ");
+            queryBuilder.append("any().toLowerCase().indexOf('").append(content.toLowerCase()).append("') > -1 ");
         }
 
         if (group != null) {

@@ -80,6 +80,9 @@ public class RuntimeEngineListener {
                 case PROCESS_TRACE:
                     getRuntimeService().appendProcessTrace(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage() + "\r\n" + event.getTrace());
                     break;
+                case PROCESS_UPDATE_STATUS:
+                    getRuntimeService().updateProcessStatus(event.getPid(), event.getStatus(), event.getExplanation());
+                    break;
                 case PROCESS_ACTIVITY_STARTED:
                     getRuntimeService().updateProcessActivity(event.getPid(), "[STARTED] " + event.getActivityName(), 0);
                     getRuntimeService().appendProcessLog(event.getPid(), new Date(event.getTimestamp())  + "  " + event.getMessage());

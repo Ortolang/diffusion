@@ -89,17 +89,6 @@ public class NotifyTask extends RuntimeEngineTask {
 
     @Override
     public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-        
-//        try {
-//            LOGGER.log(Level.FINE, "User Transaction Status: " + getUserTransaction().getStatus());
-//            if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
-//                LOGGER.log(Level.FINE, "START User Transaction");
-//                getUserTransaction().begin();
-//            }
-//        } catch (Exception e) {
-//            LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
-//        }
-        
         try {
             String initier = execution.getVariable(Process.INITIER_VAR_NAME, String.class);
             String lang = "fr";
