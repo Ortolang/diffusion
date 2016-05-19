@@ -348,11 +348,10 @@ public class ReferentialServiceBean implements ReferentialService {
             if (refEntity == null) {
                 throw new ReferentialServiceException("unable to find a ReferentialEntity for id " + identifier.getId());
             }
-//            profile.setStatus(ProfileStatus.DELETED);
-//            em.merge(refEntity);
+
             em.remove(refEntity);
 
-            registry.update(key);
+            registry.delete(key);
             indexing.remove(key);
 
             notification.throwEvent(key, caller, ReferentialEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentialService.SERVICE_NAME, ReferentialEntity.OBJECT_TYPE, "delete"));
