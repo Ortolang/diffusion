@@ -1160,7 +1160,7 @@ public class MembershipServiceBean implements MembershipService {
     }
 
     @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -1180,11 +1180,24 @@ public class MembershipServiceBean implements MembershipService {
                 builder.add("key", key);
                 builder.add("fullname", profile.getFullName());
                 builder.add("email", profile.getEmail());
+                if (profile.getEmail() != null && profile.getEmail().length() > 0) {
+                    if (profile.getEmailVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
+                    	builder.add("emailhash", profile.getEmailHash());
+                    }
+                }
                 JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
                 for (String group : profile.getGroups()) {
                     arrayBuilder.add(group);
                 }
                 builder.add("groups", arrayBuilder);
+                JsonObjectBuilder infoBuilder = Json.createObjectBuilder();
+                Map<String, ProfileData> infos = profile.getInfos();
+                for(Map.Entry<String, ProfileData> info : infos.entrySet()) {
+                	if(info.getValue().getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
+                		infoBuilder.add(info.getKey(), info.getValue().getValue());
+                	}
+                }
+                builder.add("infos", infoBuilder);
                 content.put(Profile.OBJECT_TYPE, builder.build().toString());
             }
 

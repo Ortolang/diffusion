@@ -238,6 +238,26 @@ public class SearchServiceBean implements SearchService {
         }
         return result;
     }
+
+    @Override
+    public String getEntity(String id) throws SearchServiceException {
+        LOGGER.log(Level.FINE, "Gets entity with id : " + id);
+        String result = null;
+        if(id!=null) {
+            // Build the query
+            String query = "SELECT * FROM entity WHERE `meta_ortolang-referential-json.id` = '" + id + "'";
+            // Execute the query
+            try {
+                List<String> results = jsonStore.search(query);
+                if (results.size() == 1) {
+                    result = results.get(0);
+                }
+            } catch (JsonStoreServiceException e) {
+                LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
+            }
+        }
+        return result;
+    }
     
 	@Override
 	public List<String> jsonSearch(String query) throws SearchServiceException {
@@ -270,7 +290,7 @@ public class SearchServiceBean implements SearchService {
             } else {
                 queryBuilder.append(" AND ");
             }
-            queryBuilder.append("any().toLowerCase().indexOf('").append(content).append("') > -1 ");
+            queryBuilder.append("any().toLowerCase().indexOf('").append(content.toLowerCase()).append("') > -1 ");
         }
 
         if (group != null) {

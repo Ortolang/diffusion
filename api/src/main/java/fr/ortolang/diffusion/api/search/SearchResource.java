@@ -186,4 +186,18 @@ import java.util.logging.Logger;
         }
         return Response.status(404).build();
     }
+
+    @GET @Path("/entities/{id}") @GZIP public Response getEntity(@PathParam(value = "id") String id) {
+        LOGGER.log(Level.INFO, "GET /search/entities/" + id);
+        try {
+            String result = search.getEntity(id);
+            if (result != null) {
+                return Response.ok(result).build();
+            }
+        } catch (SearchServiceException e) {
+            LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
+        }
+        return Response.status(404).build();
+    }
+
 }

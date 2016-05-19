@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -100,6 +101,17 @@ public class ReferentialEntityResource {
     		return Response.status(Response.Status.BAD_REQUEST).entity("representation does not contains a valid type").build();
     	}
     	return Response.ok().build();
+    }
+
+    @DELETE
+    @Path("/{name}")
+    public Response delete(@PathParam(value = "name") String name) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "DELETE /referentialentities/" + name);
+        if (name == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'name' is mandatory").build();
+        }
+        referential.deleteEntity(name);
+        return Response.noContent().build();
     }
     
     private ReferentialEntityType getEntityType(String type) {
