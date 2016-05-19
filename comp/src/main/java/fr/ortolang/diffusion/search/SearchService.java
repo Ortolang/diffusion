@@ -58,4 +58,6 @@ public interface SearchService extends OrtolangService {
 	
 	public String getWorkspace(String wsalias) throws SearchServiceException;
 	
+	public String getEntity(String id) throws SearchServiceException;
+	
 }
