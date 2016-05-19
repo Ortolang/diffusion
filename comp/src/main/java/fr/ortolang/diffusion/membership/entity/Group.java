@@ -36,6 +36,8 @@ package fr.ortolang.diffusion.membership.entity;
  * #L%
  */
 
+import java.util.Arrays;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -117,7 +119,7 @@ public class Group extends OrtolangObject {
 	}
 
 	public boolean isMember(String member) {
-        return membersList.contains(member);
+        return Arrays.asList(membersList.split(",")).contains(member);
     }
 
 	public void addMember(String member) {

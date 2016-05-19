@@ -68,7 +68,6 @@ import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.event.entity.EventFeed;
 import fr.ortolang.diffusion.event.entity.EventFeedFilter;
-import fr.ortolang.diffusion.form.FormService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -303,7 +302,7 @@ public class EventServiceBean implements EventService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void updateEventFeed(String key, String name, String description) throws EventServiceException, AccessDeniedException, KeyNotFoundException {
-        LOGGER.log(Level.FINE, "creating event feed for key [" + key + "] and name [" + name + "]");
+        LOGGER.log(Level.FINE, "updating event feed for key [" + key + "] and name [" + name + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -340,7 +339,7 @@ public class EventServiceBean implements EventService {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             checkObjectType(identifier, EventFeed.OBJECT_TYPE);
             registry.delete(key);
-            notification.throwEvent(key, caller, EventFeed.OBJECT_TYPE, OrtolangEvent.buildEventType(FormService.SERVICE_NAME, EventFeed.OBJECT_TYPE, "delete"));
+            notification.throwEvent(key, caller, EventFeed.OBJECT_TYPE, OrtolangEvent.buildEventType(EventService.SERVICE_NAME, EventFeed.OBJECT_TYPE, "delete"));
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
             ctx.setRollbackOnly();
             throw new EventServiceException("unable to delete event feed with key [" + key + "]", e);

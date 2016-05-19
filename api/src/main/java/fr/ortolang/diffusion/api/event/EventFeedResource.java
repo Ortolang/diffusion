@@ -69,6 +69,7 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 @Path("/feeds")
+//TODO refactory /feeds to /events to be coherent with message feeds
 @Produces({ MediaType.APPLICATION_JSON })
 public class EventFeedResource {
 
