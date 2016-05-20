@@ -558,6 +558,8 @@ public class CoreServiceBean implements CoreService {
                 TagElement tagElement = workspace.findTagByName(tag);
                 if (tagElement != null) {
                     workspace.removeTag(tagElement);
+                    String oldRoot = workspace.findSnapshotByName(tagElement.getSnapshot()).getKey();
+                    indexing.remove(oldRoot);
                 }
                 if (!workspace.containsSnapshotName(snapshot)) {
                     throw new CoreServiceException("the snapshot with name '" + snapshot + "' does not exists in this workspace");
