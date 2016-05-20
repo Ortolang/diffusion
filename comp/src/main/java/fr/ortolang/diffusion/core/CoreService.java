@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -53,8 +54,12 @@ import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import org.apache.tika.exception.TikaException;
+import org.codehaus.jettison.json.JSONException;
+import org.xml.sax.SAXException;
 
 public interface CoreService extends OrtolangService, OrtolangBinaryService, OrtolangIndexableService {
 
@@ -205,6 +210,10 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     InputStream download(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException;
 
     String put(InputStream data) throws CoreServiceException, DataCollisionException;
+
+    void extractMetadata(String wskey, String path)
+            throws CoreServiceException, OrtolangException, InvalidPathException, PathNotFoundException, KeyNotFoundException, IOException, DataCollisionException, JSONException,
+            KeyAlreadyExistsException, MetadataFormatException, BinaryStoreServiceException, SAXException, TikaException, DataNotFoundException, WorkspaceReadOnlyException;
 	
 	/*System*/
 

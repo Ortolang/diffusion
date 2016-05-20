@@ -36,10 +36,7 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -74,6 +71,11 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.javers.core.Javers;
 import org.javers.core.JaversBuilder;
 import org.javers.core.diff.Diff;
@@ -135,6 +137,7 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
+import org.xml.sax.SAXException;
 
 @Local(CoreService.class)
 @Stateless(name = CoreService.SERVICE_NAME)
@@ -558,6 +561,8 @@ public class CoreServiceBean implements CoreService {
                 TagElement tagElement = workspace.findTagByName(tag);
                 if (tagElement != null) {
                     workspace.removeTag(tagElement);
+                    String oldRoot = workspace.findSnapshotByName(tagElement.getSnapshot()).getKey();
+                    indexing.remove(oldRoot);
                 }
                 if (!workspace.containsSnapshotName(snapshot)) {
                     throw new CoreServiceException("the snapshot with name '" + snapshot + "' does not exists in this workspace");
@@ -1649,6 +1654,12 @@ public class CoreServiceBean implements CoreService {
 
             LOGGER.log(Level.FINEST, "object [" + key + "] added to parent [" + parent.getKey() + "]");
 
+            try {
+                extractMetadata(hash, wskey, path);
+            } catch (TikaException | SAXException | JSONException | MetadataFormatException e) {
+                LOGGER.log(Level.SEVERE, "Unexpected error occurred while parsing stream with Tika", e);
+            }
+
             ws.setChanged(true);
             em.merge(ws);
             registry.update(ws.getKey());
@@ -1660,7 +1671,7 @@ public class CoreServiceBean implements CoreService {
 
             return object;
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException
-                | MembershipServiceException | BinaryStoreServiceException | DataNotFoundException | IndexingServiceException e) {
+                | MembershipServiceException | BinaryStoreServiceException | DataNotFoundException | IndexingServiceException | IOException | DataCollisionException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during object creation", e);
             ctx.setRollbackOnly();
             throw new CoreServiceException("unable to create object into workspace [" + wskey + "] at path [" + path + "]", e);
@@ -1782,6 +1793,12 @@ public class CoreServiceBean implements CoreService {
                 indexing.index(object.getKey());
                 LOGGER.log(Level.FINEST, "object updated");
 
+                try {
+                    extractMetadata(hash, wskey, path);
+                } catch (TikaException | SAXException | JSONException | MetadataFormatException e) {
+                    LOGGER.log(Level.FINEST, "Unexpected error occurred while parsing stream with Tika", e);
+                }
+
                 ws.setChanged(true);
                 em.merge(ws);
                 registry.update(ws.getKey());
@@ -1797,7 +1814,7 @@ public class CoreServiceBean implements CoreService {
                 return cobject;
             }
         } catch (KeyLockedException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | AuthorisationServiceException | MembershipServiceException
-                | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException e) {
+                | BinaryStoreServiceException | DataNotFoundException | CloneException | IndexingServiceException | DataCollisionException | KeyAlreadyExistsException | IOException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while reading object", e);
             throw new CoreServiceException("unable to read object into workspace [" + wskey + "] at path [" + path + "]", e);
         }
@@ -4154,6 +4171,96 @@ public class CoreServiceBean implements CoreService {
             if (metadataElement != null) {
                 LOGGER.log(Level.FINE, "metadata to purge: " + metadataElement.getKey());
                 deleteMetadataObject(wskey, path + "/" + collectionElement.getName(), name, false);
+            }
+        }
+    }
+
+    @Override
+    public void extractMetadata(String wskey, String path)
+            throws CoreServiceException, OrtolangException, InvalidPathException, PathNotFoundException, KeyNotFoundException, IOException, DataCollisionException, JSONException,
+            KeyAlreadyExistsException, MetadataFormatException, BinaryStoreServiceException, SAXException, TikaException, DataNotFoundException, WorkspaceReadOnlyException {
+        String key = resolveWorkspacePath(wskey, Workspace.HEAD, path);
+        OrtolangObject object = findObject(key);
+        if (object instanceof DataObject) {
+            extractMetadata(((DataObject) object).getStream(), wskey, path);
+        } else if (object instanceof Collection) {
+            extractMetadata((Collection) object, wskey, path);
+        }
+    }
+
+    private void extractMetadata(Collection collection, String wskey, String path)
+            throws CoreServiceException, AccessDeniedException, KeyNotFoundException, IOException, DataCollisionException, WorkspaceReadOnlyException, JSONException, KeyAlreadyExistsException,
+            PathNotFoundException, MetadataFormatException, BinaryStoreServiceException, SAXException, TikaException, DataNotFoundException, InvalidPathException {
+        for (CollectionElement collectionElement : collection.getElements()) {
+            if (collectionElement.getType().equals(DataObject.OBJECT_TYPE)) {
+                DataObject dataObject = readDataObject(collectionElement.getKey());
+                extractMetadata(dataObject.getStream(), wskey, path + "/" + collectionElement.getName());
+            } else if (collectionElement.getType().equals(Collection.OBJECT_TYPE)) {
+                extractMetadata(readCollection(collection.getKey()), wskey, path + "/" + collectionElement.getName());
+            }
+        }
+    }
+
+    private void extractMetadata(String hash, String wskey, String path)
+            throws DataNotFoundException, BinaryStoreServiceException, IOException, TikaException, SAXException, JSONException, DataCollisionException, MetadataFormatException,
+            KeyAlreadyExistsException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, WorkspaceReadOnlyException, CoreServiceException {
+        LOGGER.log(Level.FINEST, "Extracting metadata for data object at path: " + path + " in workspace: " + wskey);
+        Metadata metadata = binarystore.parse(hash);
+        String contentType = metadata.get("Content-Type");
+        String metadataName = null;
+        if (contentType.contains("audio/")) {
+            metadataName = MetadataFormat.AUDIO;
+        } else if (contentType.contains("image/")) {
+            metadataName = MetadataFormat.IMAGE;
+        } else if (contentType.contains("video/")) {
+            metadataName = MetadataFormat.VIDEO;
+        } else if (contentType.equals("application/xml")) {
+            if (metadata.get("XML-Type") != null) {
+                metadataName = MetadataFormat.XML;
+            }
+        } else if (contentType.equals("application/pdf")) {
+            metadataName = MetadataFormat.PDF;
+        } else if (contentType.contains("text/")) {
+            metadataName = MetadataFormat.TEXT;
+        } else {
+            String[] parsers = metadata.getValues("X-Parsed-By");
+            for (String parser : parsers) {
+                if (parser.contains("org.apache.tika.parser.microsoft") || parser.contains("org.apache.tika.parser.odf")) {
+                    metadataName = MetadataFormat.OFFICE;
+                    break;
+                }
+            }
+        }
+
+        if (metadataName != null) {
+            JSONObject metadataJson = new JSONObject();
+            for (String name : metadata.names()) {
+                if (metadata.isMultiValued(name)) {
+                    String[] values = metadata.getValues(name);
+                    JSONArray jsonValues = new JSONArray();
+                    for (String value : values) {
+                        jsonValues.put(value);
+                    }
+                    metadataJson.put(name, jsonValues);
+                } else {
+                    if (name.equals("ortolang:json")) {
+                        String tmp = metadataJson.toString();
+                        String ortolangJson = metadata.get("ortolang:json");
+                        tmp = tmp.substring(0, tmp.lastIndexOf("}"));
+                        tmp += ortolangJson.replaceFirst("\\{", ",");
+                        metadataJson = new JSONObject(tmp);
+                    } else {
+                        metadataJson.put(name, metadata.get(name));
+                    }
+                }
+            }
+            String metadataHash = binarystore.put(new ByteArrayInputStream(metadataJson.toString().getBytes()));
+            String objectKey = resolveWorkspacePath(wskey, Workspace.HEAD, path);
+            DataObject dataObject = readDataObject(objectKey);
+            if (dataObject.findMetadataByName("metadataName") == null) {
+                createMetadataObject(wskey, path, metadataName, metadataHash, metadataName + ".json", false);
+            } else {
+                updateMetadataObject(wskey, path, metadataName, metadataHash, metadataName + ".json", false);
             }
         }
     }
