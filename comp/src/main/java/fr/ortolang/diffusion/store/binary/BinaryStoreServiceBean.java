@@ -64,7 +64,12 @@ import javax.ejb.TransactionAttributeType;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.tika.Tika;
+import org.apache.tika.exception.TikaException;
 import org.apache.tika.io.TikaInputStream;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.parser.Parser;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
@@ -75,6 +80,9 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreContent.Type;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStream;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStreamFactory;
 import fr.ortolang.diffusion.store.binary.hash.SHA1FilterInputStreamFactory;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * Local FileSystem based implementation of the BinaryStoreService.<br>
@@ -108,6 +116,9 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
     private Path working;
     private Path collide;
 
+    private ContentHandler handler;
+    private Parser parser;
+
     public BinaryStoreServiceBean() {
     }
 
@@ -125,6 +136,8 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "unable to initialize binary store", e);
         }
+        this.handler = new DefaultHandler();
+        this.parser = new AutoDetectParser();
     }
 
     public HashedFilterInputStreamFactory getHashedFilterInputStreamFactory() {
@@ -414,7 +427,17 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
             }    
         }
     }
-    
+
+    @Override
+    public Metadata parse(String hash) throws BinaryStoreServiceException, DataNotFoundException, TikaException, SAXException, IOException {
+        try (InputStream inputStream = get(hash)) {
+            Metadata metadata = new Metadata();
+            ParseContext parseContext = new ParseContext();
+            parser.parse(inputStream, handler, metadata, parseContext);
+            return metadata;
+        }
+    }
+
     private BinaryStoreContent pathToContent(Path path) {
         BinaryStoreContent content = new BinaryStoreContent();
         content.setPath(base.relativize(path).toString());

@@ -275,6 +275,34 @@ public class BootstrapServiceBean implements BootstrapService {
             InputStream schemaTemplateInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-template-schema.json");
             String schemaTemplateHash = core.put(schemaTemplateInputStream);
             core.createMetadataFormat(MetadataFormat.TEMPLATE, "Schema for ORTOLANG collection template", schemaTemplateHash, "", false, false);
+
+            InputStream schemaAudioInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-audio.json");
+            String schemaAudioHash = core.put(schemaAudioInputStream);
+            core.createMetadataFormat(MetadataFormat.AUDIO, "Schema for ORTOLANG audio metadata", schemaAudioHash, "", false, false);
+
+            InputStream schemaVideoInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-video.json");
+            String schemaVideoHash = core.put(schemaVideoInputStream);
+            core.createMetadataFormat(MetadataFormat.VIDEO, "Schema for ORTOLANG video metadata", schemaVideoHash, "", false, false);
+
+            InputStream schemaImageInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-image.json");
+            String schemaImageHash = core.put(schemaImageInputStream);
+            core.createMetadataFormat(MetadataFormat.IMAGE, "Schema for ORTOLANG image metadata", schemaImageHash, "", false, false);
+
+            InputStream schemaXMLInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-xml.json");
+            String schemaXmlHash = core.put(schemaXMLInputStream);
+            core.createMetadataFormat(MetadataFormat.XML, "Schema for ORTOLANG XML metadata", schemaXmlHash, "", false, false);
+
+            InputStream schemaPDFInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-pdf.json");
+            String schemaPDFHash = core.put(schemaPDFInputStream);
+            core.createMetadataFormat(MetadataFormat.PDF, "Schema for ORTOLANG PDF metadata", schemaPDFHash, "", false, false);
+
+            InputStream schemaTextInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-text.json");
+            String schemaTextHash = core.put(schemaTextInputStream);
+            core.createMetadataFormat(MetadataFormat.TEXT, "Schema for ORTOLANG text metadata", schemaTextHash, "", false, false);
+
+            InputStream schemaOfficeInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-office.json");
+            String schemaOfficeHash = core.put(schemaOfficeInputStream);
+            core.createMetadataFormat(MetadataFormat.OFFICE, "Schema for ORTOLANG Office metadata", schemaOfficeHash, "", false, false);
         } catch (RuntimeServiceException | CoreServiceException | DataCollisionException e1) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while importing process types and metadataformat schemas", e1);
         }
