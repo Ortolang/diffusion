@@ -211,7 +211,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
     String put(InputStream data) throws CoreServiceException, DataCollisionException;
 
-    void extractMetadata(String wskey, String path)
+    void extractMetadata(String wskey, String path, String mimeType)
             throws CoreServiceException, OrtolangException, InvalidPathException, PathNotFoundException, KeyNotFoundException, IOException, DataCollisionException, JSONException,
             KeyAlreadyExistsException, MetadataFormatException, BinaryStoreServiceException, SAXException, TikaException, DataNotFoundException, WorkspaceReadOnlyException;
 	

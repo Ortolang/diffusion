@@ -70,6 +70,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import fr.ortolang.diffusion.parser.OrtolangXMLParser;
 import org.apache.commons.io.IOUtils;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
@@ -1655,7 +1656,7 @@ public class CoreServiceBean implements CoreService {
             LOGGER.log(Level.FINEST, "object [" + key + "] added to parent [" + parent.getKey() + "]");
 
             try {
-                extractMetadata(hash, wskey, path);
+                extractMetadata(hash, wskey, path, object.getMimeType());
             } catch (TikaException | SAXException | JSONException | MetadataFormatException e) {
                 LOGGER.log(Level.SEVERE, "Unexpected error occurred while parsing stream with Tika", e);
             }
@@ -1794,7 +1795,7 @@ public class CoreServiceBean implements CoreService {
                 LOGGER.log(Level.FINEST, "object updated");
 
                 try {
-                    extractMetadata(hash, wskey, path);
+                    extractMetadata(hash, wskey, path, object.getMimeType());
                 } catch (TikaException | SAXException | JSONException | MetadataFormatException e) {
                     LOGGER.log(Level.FINEST, "Unexpected error occurred while parsing stream with Tika", e);
                 }
@@ -4176,13 +4177,13 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    public void extractMetadata(String wskey, String path)
+    public void extractMetadata(String wskey, String path, String mimeType)
             throws CoreServiceException, OrtolangException, InvalidPathException, PathNotFoundException, KeyNotFoundException, IOException, DataCollisionException, JSONException,
             KeyAlreadyExistsException, MetadataFormatException, BinaryStoreServiceException, SAXException, TikaException, DataNotFoundException, WorkspaceReadOnlyException {
         String key = resolveWorkspacePath(wskey, Workspace.HEAD, path);
         OrtolangObject object = findObject(key);
         if (object instanceof DataObject) {
-            extractMetadata(((DataObject) object).getStream(), wskey, path);
+            extractMetadata(((DataObject) object).getStream(), wskey, path, ((DataObject) object).getMimeType());
         } else if (object instanceof Collection) {
             extractMetadata((Collection) object, wskey, path);
         }
@@ -4194,28 +4195,32 @@ public class CoreServiceBean implements CoreService {
         for (CollectionElement collectionElement : collection.getElements()) {
             if (collectionElement.getType().equals(DataObject.OBJECT_TYPE)) {
                 DataObject dataObject = readDataObject(collectionElement.getKey());
-                extractMetadata(dataObject.getStream(), wskey, path + "/" + collectionElement.getName());
+                extractMetadata(dataObject.getStream(), wskey, path + "/" + collectionElement.getName(), dataObject.getMimeType());
             } else if (collectionElement.getType().equals(Collection.OBJECT_TYPE)) {
                 extractMetadata(readCollection(collection.getKey()), wskey, path + "/" + collectionElement.getName());
             }
         }
     }
 
-    private void extractMetadata(String hash, String wskey, String path)
+    private void extractMetadata(String hash, String wskey, String path, String mimeType)
             throws DataNotFoundException, BinaryStoreServiceException, IOException, TikaException, SAXException, JSONException, DataCollisionException, MetadataFormatException,
             KeyAlreadyExistsException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, WorkspaceReadOnlyException, CoreServiceException {
         LOGGER.log(Level.FINEST, "Extracting metadata for data object at path: " + path + " in workspace: " + wskey);
+        // Do not parse xml files that are too large (greater than 50 MB)
+        if (mimeType.equals("application/xml") && binarystore.size(hash) > 50000000) {
+            return;
+        }
         Metadata metadata = binarystore.parse(hash);
         String contentType = metadata.get("Content-Type");
         String metadataName = null;
-        if (contentType.contains("audio/")) {
+        if (mimeType.startsWith("audio/") || contentType.startsWith("audio/")) {
             metadataName = MetadataFormat.AUDIO;
-        } else if (contentType.contains("image/")) {
+        } else if (mimeType.startsWith("image/") || contentType.startsWith("image/")) {
             metadataName = MetadataFormat.IMAGE;
-        } else if (contentType.contains("video/")) {
+        } else if (mimeType.startsWith("video/") || contentType.startsWith("video/")) {
             metadataName = MetadataFormat.VIDEO;
-        } else if (contentType.equals("application/xml")) {
-            if (metadata.get("XML-Type") != null) {
+        } else if (mimeType.equals("application/xml") || contentType.equals("application/xml") || mimeType.endsWith("+xml")  || contentType.endsWith("+xml")) {
+            if (metadata.get(OrtolangXMLParser.xmlTypeKey) != null) {
                 metadataName = MetadataFormat.XML;
             }
         } else if (contentType.equals("application/pdf")) {
