@@ -53,25 +53,15 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.*;
 import java.util.Collections;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TeiParser extends XMLParser {
+public class TransParser extends XMLParser {
 
-    private static final Logger LOGGER = Logger.getLogger(TeiParser.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(TransParser.class.getName());
 
     private static final Set<MediaType> SUPPORTED_TYPES = Collections.singleton(MediaType.application("xml"));
-
-    private static String xslStylesheetString;
-
-    static {
-        InputStream xslStylesheetStream = TeiParser.class.getClassLoader().getResourceAsStream("xsl/tei2OrtolangMD.xsl");
-        try (Scanner s = new Scanner(xslStylesheetStream)) {
-            xslStylesheetString = s.useDelimiter("\\A").hasNext() ? s.next() : "";
-        }
-    }
 
     @Override
     public Set<MediaType> getSupportedTypes(ParseContext context) {
@@ -81,16 +71,18 @@ public class TeiParser extends XMLParser {
     @Override
     public void parse(InputStream stream, ContentHandler handler, Metadata metadata, ParseContext context) throws IOException, SAXException, TikaException {
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
+         InputStream xslStylesheetStream = getClass().getClassLoader().getResourceAsStream("xsl/trans2OrtolangMD.xsl");
         try {
-            StringReader stringReader = new StringReader(xslStylesheetString);
-            Transformer transformer = transformerFactory.newTransformer(new StreamSource(stringReader));
-            try (OutputStream outputStream = new ByteArrayOutputStream()) {
-                transformer.transform(new DOMSource(context.get(Document.class)), new StreamResult(outputStream));
-                metadata.add("ortolang:json", outputStream.toString());
-                metadata.add(OrtolangXMLParser.xmlTypeKey, OrtolangXMLParser.XMLType.TEI.name());
-            }
+            Transformer transformer = transformerFactory.newTransformer(new StreamSource(xslStylesheetStream));
+            OutputStream outputStream = new ByteArrayOutputStream();
+            Document document = context.get(Document.class);
+            transformer.transform(new DOMSource(document), new StreamResult(outputStream));
+            metadata.add("ortolang:json", outputStream.toString());
+            metadata.add(OrtolangXMLParser.xmlTypeKey, "Trans");
+            outputStream.close();
         } catch (TransformerException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
+        xslStylesheetStream.close();
     }
 }

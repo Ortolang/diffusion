@@ -62,6 +62,7 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
+import fr.ortolang.diffusion.parser.OrtolangXMLParser;
 import org.apache.commons.io.IOUtils;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
@@ -117,7 +118,8 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
     private Path collide;
 
     private ContentHandler handler;
-    private Parser parser;
+    private Parser autoDetectParser;
+    private Parser ortolangParser;
 
     public BinaryStoreServiceBean() {
     }
@@ -137,7 +139,8 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
             LOGGER.log(Level.SEVERE, "unable to initialize binary store", e);
         }
         this.handler = new DefaultHandler();
-        this.parser = new AutoDetectParser();
+        this.autoDetectParser = new AutoDetectParser();
+        this.ortolangParser = new OrtolangXMLParser();
     }
 
     public HashedFilterInputStreamFactory getHashedFilterInputStreamFactory() {
@@ -433,7 +436,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
         try (InputStream inputStream = get(hash)) {
             Metadata metadata = new Metadata();
             ParseContext parseContext = new ParseContext();
-            parser.parse(inputStream, handler, metadata, parseContext);
+            autoDetectParser.parse(inputStream, handler, metadata, parseContext);
             return metadata;
         }
     }
