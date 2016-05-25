@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.search;
  * #L%
  */
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,6 +51,10 @@ import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
+import javax.json.Json;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -177,6 +182,28 @@ public class SearchServiceBean implements SearchService {
         }
         return results;
 	}
+
+    @Override
+    public int countCollections(HashMap<String, Object> fieldsMap) throws SearchServiceException {
+        LOGGER.log(Level.FINE, "count collections");
+        String query = countItemsWithFields(fieldsMap);
+
+        // Execute the query
+        int count = 0;
+        if (query != null && query.length() > 0) {
+            LOGGER.log(Level.FINE, "Performing json search with query : "+query);
+            try {
+                List<String> results = jsonStore.search(query);
+                if (results.size()>0) {
+                    count = extractCount(results.get(0));
+                }
+                LOGGER.log(Level.INFO, "Count : "+count);
+            } catch (JsonStoreServiceException | NumberFormatException e) {
+                LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
+            }
+        }
+        return count;
+    }
 
     @Override
     public List<String> findProfiles(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException {
@@ -347,6 +374,15 @@ public class SearchServiceBean implements SearchService {
         return queryBuilder.toString();
     }
 
+    private String countItemsWithFields(Map<String, Object> fieldsValue) {
+        StringBuilder queryBuilder = new StringBuilder();
+
+        queryBuilder.append("SELECT count(*) FROM collection");
+        queryBuilder.append(whereClause(fieldsValue));
+        
+        return queryBuilder.toString();
+    }
+
     private StringBuilder selectClause(HashMap<String, String> fieldsProjection) {
         StringBuilder selectStr = new StringBuilder();
         if (fieldsProjection.isEmpty()) {
@@ -394,6 +430,26 @@ public class SearchServiceBean implements SearchService {
             valuesStr.append("'").append(value).append("'");
         }
         return valuesStr;
+    }
+
+    private int extractCount(String jsonContent) {
+        int fieldValue = 0;
+        StringReader reader = new StringReader(jsonContent);
+        JsonReader jsonReader = Json.createReader(reader);
+        try {
+            JsonObject jsonObj = jsonReader.readObject();
+            fieldValue = jsonObj.getInt("count");
+            
+        } catch(IllegalStateException | NullPointerException | ClassCastException e) {
+            LOGGER.log(Level.WARNING, "No property 'count' in json object", e);
+        } catch(JsonException e) {
+            LOGGER.log(Level.WARNING, "No property 'count' in json object", e);
+        } finally {
+            jsonReader.close();
+            reader.close();
+        }
+
+        return fieldValue;
     }
 
 	@Override
