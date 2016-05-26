@@ -144,7 +144,10 @@ public class SearchServiceBean implements SearchService {
 		try {
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
 			List<OrtolangSearchResult> checkedResults = new ArrayList<OrtolangSearchResult>();
-			for ( OrtolangSearchResult result : indexStore.search(query) ) {
+			long timestamp = System.currentTimeMillis();
+			List<OrtolangSearchResult> results = indexStore.search(query);
+			LOGGER.log(Level.FINE, "Performed index search in : " + (System.currentTimeMillis()-timestamp));
+			for ( OrtolangSearchResult result : results ) {
 				try {
 					authorisation.checkPermission(result.getKey(), subjects, "read");
 					checkedResults.add(result);
@@ -171,8 +174,10 @@ public class SearchServiceBean implements SearchService {
         List<String> results;
         if (query != null && query.length() > 0) {
             LOGGER.log(Level.FINE, "Performing json search with query : "+query);
+            long timestamp1 = System.currentTimeMillis();
             try {
                 results = jsonStore.search(query);
+                LOGGER.log(Level.FINE, "Performed json search in : "+(System.currentTimeMillis()-timestamp1));
             } catch (JsonStoreServiceException e) {
                 results = Collections.emptyList();
                 LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
@@ -197,7 +202,7 @@ public class SearchServiceBean implements SearchService {
                 if (results.size()>0) {
                     count = extractCount(results.get(0));
                 }
-                LOGGER.log(Level.INFO, "Count : "+count);
+                LOGGER.log(Level.FINE, "Count : "+count);
             } catch (JsonStoreServiceException | NumberFormatException e) {
                 LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
             }
