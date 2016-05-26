@@ -93,12 +93,14 @@ public class MembershipServiceTest {
         jar.addPackage("fr.ortolang.diffusion");
         // jar.addPackage("fr.ortolang.diffusion.bootstrap");
         jar.addPackage("fr.ortolang.diffusion.browser");
+        jar.addPackage("fr.ortolang.diffusion.core");
         jar.addPackage("fr.ortolang.diffusion.event");
         jar.addPackage("fr.ortolang.diffusion.event.entity");
         jar.addPackage("fr.ortolang.diffusion.extraction");
-        jar.addPackage("fr.ortolang.diffusion.extraction.entity");
         jar.addPackage("fr.ortolang.diffusion.extraction.parser");
         jar.addPackage("fr.ortolang.diffusion.indexing");
+        jar.addPackage("fr.ortolang.diffusion.jobs");
+        jar.addPackage("fr.ortolang.diffusion.jobs.entity");
         jar.addPackage("fr.ortolang.diffusion.membership");
         jar.addPackage("fr.ortolang.diffusion.membership.entity");
         jar.addPackage("fr.ortolang.diffusion.notification");
