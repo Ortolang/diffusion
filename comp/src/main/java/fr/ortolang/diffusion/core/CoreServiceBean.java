@@ -71,8 +71,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
-import fr.ortolang.diffusion.extraction.ExtractionService;
-import fr.ortolang.diffusion.extraction.ExtractionServiceException;
 import org.apache.commons.io.IOUtils;
 import org.javers.core.Javers;
 import org.javers.core.JaversBuilder;
@@ -109,6 +107,8 @@ import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.event.EventService;
+import fr.ortolang.diffusion.extraction.ExtractionService;
+import fr.ortolang.diffusion.extraction.ExtractionServiceException;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;

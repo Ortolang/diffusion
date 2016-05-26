@@ -105,6 +105,7 @@ public class CoreServiceTest {
         jar.addPackage("fr.ortolang.diffusion.core.entity");
         jar.addPackage("fr.ortolang.diffusion.event");
         jar.addPackage("fr.ortolang.diffusion.event.entity");
+        jar.addPackage("fr.ortolang.diffusion.extraction");
         jar.addPackage("fr.ortolang.diffusion.indexing");
         jar.addPackage("fr.ortolang.diffusion.membership");
         jar.addPackage("fr.ortolang.diffusion.membership.entity");
