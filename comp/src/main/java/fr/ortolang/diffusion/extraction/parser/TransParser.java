@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.parser;
+package fr.ortolang.diffusion.extraction.parser;
 
 /*
  * #%L

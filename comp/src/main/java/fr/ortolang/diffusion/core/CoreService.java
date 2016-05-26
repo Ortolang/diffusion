@@ -36,7 +36,6 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +48,9 @@ import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.extraction.ExtractionServiceException;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
@@ -57,9 +58,6 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
-import org.apache.tika.exception.TikaException;
-import org.codehaus.jettison.json.JSONException;
-import org.xml.sax.SAXException;
 
 public interface CoreService extends OrtolangService, OrtolangBinaryService, OrtolangIndexableService {
 
@@ -212,8 +210,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     String put(InputStream data) throws CoreServiceException, DataCollisionException;
 
     void extractMetadata(String wskey, String path, String mimeType)
-            throws CoreServiceException, OrtolangException, InvalidPathException, PathNotFoundException, KeyNotFoundException, IOException, DataCollisionException, JSONException,
-            KeyAlreadyExistsException, MetadataFormatException, BinaryStoreServiceException, SAXException, TikaException, DataNotFoundException, WorkspaceReadOnlyException;
+            throws CoreServiceException, OrtolangException, InvalidPathException, PathNotFoundException, ExtractionServiceException, KeyNotFoundException;
 	
 	/*System*/
 
@@ -222,5 +219,9 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     void systemSetWorkspaceReadOnly(String wskey, boolean readonly) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;
     
     void systemUpdateWorkspace(String wskey, String alias, boolean changed, String head, String members, String privileged, boolean readOnly, String type) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;
+
+    void systemCreateMetadata(String key, String name, String hash, String filename)
+            throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
+            IdentifierAlreadyRegisteredException, RegistryServiceException;
 
 }

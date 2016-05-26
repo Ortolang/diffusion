@@ -63,4 +63,4 @@ org.apache.tika.parser.jdbc.SQLite3Parser
 org.apache.tika.parser.isatab.ISArchiveParser
 org.apache.tika.parser.external.CompositeExternalParser
 
-fr.ortolang.diffusion.parser.OrtolangXMLParser
+fr.ortolang.diffusion.extraction.parser.OrtolangXMLParser
