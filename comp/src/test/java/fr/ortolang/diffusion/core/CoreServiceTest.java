@@ -105,7 +105,11 @@ public class CoreServiceTest {
         jar.addPackage("fr.ortolang.diffusion.core.entity");
         jar.addPackage("fr.ortolang.diffusion.event");
         jar.addPackage("fr.ortolang.diffusion.event.entity");
+        jar.addPackage("fr.ortolang.diffusion.extraction");
+        jar.addPackage("fr.ortolang.diffusion.extraction.parser");
         jar.addPackage("fr.ortolang.diffusion.indexing");
+        jar.addPackage("fr.ortolang.diffusion.jobs");
+        jar.addPackage("fr.ortolang.diffusion.jobs.entity");
         jar.addPackage("fr.ortolang.diffusion.membership");
         jar.addPackage("fr.ortolang.diffusion.membership.entity");
         jar.addPackage("fr.ortolang.diffusion.notification");
@@ -127,6 +131,8 @@ public class CoreServiceTest {
         jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
         jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
         jar.addAsResource("config.properties");
+        jar.addAsResource("xsl/tei2OrtolangMD.xsl");
+        jar.addAsResource("xsl/trans2OrtolangMD.xsl");
         jar.addAsResource("schema/ortolang-item-schema.json");
         jar.addAsResource("schema/ortolang-workspace-schema.json");
         jar.addAsResource("json/meta.json");
@@ -147,6 +153,7 @@ public class CoreServiceTest {
         ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core:1.8").withTransitivity().asFile());
         ear.addAsLibraries(pom.resolve("org.apache.tika:tika-parsers:1.8").withTransitivity().asFile());
         ear.addAsLibraries(pom.resolve("com.github.fge:json-schema-validator:2.2.6").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.codehaus.jettison:jettison:1.3.3").withTransitivity().asFile());
         LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 
         return ear;

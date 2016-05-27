@@ -60,11 +60,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 
+import fr.ortolang.diffusion.jobs.entity.Job;
 import org.jboss.resteasy.annotations.GZIP;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangJob;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
@@ -301,7 +301,7 @@ public class AdminResource {
     @GZIP
     public Response getJsonWorkerState() throws JsonStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/worker/json");
-        List<OrtolangJob> jobs = jsonWorker.getQueueJobs();
+        List<Job> jobs = jsonWorker.getQueueJobs();
         return Response.ok(jobs).build();
     }
     
@@ -319,7 +319,7 @@ public class AdminResource {
     @GZIP
     public Response getIndexWorkerState() throws IndexStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/worker/index");
-        List<OrtolangJob> jobs = indexWorker.getQueueJobs();
+        List<Job> jobs = indexWorker.getQueueJobs();
         return Response.ok(jobs).build();
     }
 

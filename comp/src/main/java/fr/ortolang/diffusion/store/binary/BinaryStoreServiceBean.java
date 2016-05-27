@@ -62,7 +62,7 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
-import fr.ortolang.diffusion.parser.OrtolangXMLParser;
+import fr.ortolang.diffusion.extraction.parser.OrtolangXMLParser;
 import org.apache.commons.io.IOUtils;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;

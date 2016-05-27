@@ -458,7 +458,7 @@ public class MessageServiceBean implements MessageService {
 
             indexing.index(key);
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(4).addArgument("key", key).addArgument("title", title).addArgument("body", body);
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("key", key).addArgument("threadname", thread.getName()).addArgument("title", title).addArgument("body", body);
             if (parent != null && parent.length() > 0) {
                 argsBuilder.addArgument("parent", parent);
             }
@@ -689,7 +689,7 @@ public class MessageServiceBean implements MessageService {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
 
-            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+            if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
                 throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
             }
 

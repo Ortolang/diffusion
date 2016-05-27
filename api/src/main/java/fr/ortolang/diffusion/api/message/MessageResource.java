@@ -6,12 +6,12 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
@@ -41,8 +41,11 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 import com.google.common.io.Files;
 
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
+import fr.ortolang.diffusion.browser.BrowserService;
+import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.message.MessageService;
 import fr.ortolang.diffusion.message.MessageServiceException;
 import fr.ortolang.diffusion.message.entity.Message;
@@ -60,6 +63,8 @@ public class MessageResource {
 
     private static final Logger LOGGER = Logger.getLogger(MessageResource.class.getName());
 
+    @EJB
+    private BrowserService browser;
     @EJB
     private MessageService service;
     @Context
@@ -88,13 +93,16 @@ public class MessageResource {
 
     @GET
     @GZIP
-    public Response listThreads(@PathParam(value = "wskey") String wskey, @QueryParam(value = "o") @DefaultValue(value = "0") int offset,
-            @QueryParam(value = "l") @DefaultValue(value = "10") int limit, @Context Request request) throws KeyNotFoundException, AccessDeniedException, MessageServiceException {
+    public Response listThreads(@QueryParam(value = "wskey") String wskey, @QueryParam(value = "o") @DefaultValue(value = "0") int offset,
+            @QueryParam(value = "l") @DefaultValue(value = "10") int limit, @Context Request request) throws KeyNotFoundException, AccessDeniedException, MessageServiceException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /threads?wskey=" + wskey);
         List<String> wsfeeds = service.findThreadsForWorkspace(wskey);
-        GenericCollectionRepresentation<Thread> representation = new GenericCollectionRepresentation<Thread>();
+        GenericCollectionRepresentation<ThreadRepresentation> representation = new GenericCollectionRepresentation<ThreadRepresentation>();
         for (int i = offset; i < limit; i++) {
-            representation.addEntry(service.readThread(wsfeeds.get(i)));
+            if (i < wsfeeds.size()) {
+                OrtolangObjectInfos infos = browser.getInfos(wsfeeds.get(i));
+                representation.addEntry(ThreadRepresentation.fromThreadAndInfos(service.readThread(wsfeeds.get(i)), infos));
+            }
         }
         UriBuilder messages = ApiUriBuilder.getApiUriBuilder().path(MessageResource.class);
         representation.setOffset((offset < 0) ? 0 : offset);
@@ -111,11 +119,11 @@ public class MessageResource {
     @GET
     @Path("/{key}")
     @GZIP
-    public Response getThread(@PathParam(value = "key") String key, @QueryParam(value = "o") @DefaultValue(value = "0") int offset, @QueryParam(value = "l") @DefaultValue(value = "10") int limit,
-            @Context Request request) throws KeyNotFoundException, AccessDeniedException, MessageServiceException {
+    public Response getThread(@PathParam(value = "key") String key, @Context Request request) throws KeyNotFoundException, AccessDeniedException, MessageServiceException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /threads/" + key);
-        Thread feed = service.readThread(key);
-        ThreadRepresentation representation = ThreadRepresentation.fromThread(feed);
+        Thread thread = service.readThread(key);
+        OrtolangObjectInfos infos = browser.getInfos(key);
+        ThreadRepresentation representation = ThreadRepresentation.fromThreadAndInfos(thread, infos);
         return Response.ok(representation).build();
     }
 
@@ -142,7 +150,7 @@ public class MessageResource {
     @Path("/{key}/messages")
     @GZIP
     public Response browseThread(@PathParam(value = "key") String key, @QueryParam(value = "fromdate") Date from, @QueryParam(value = "o") @DefaultValue(value = "0") int offset,
-            @QueryParam(value = "l") @DefaultValue(value = "10") int limit, @Context Request request) throws KeyNotFoundException, MessageServiceException, OrtolangException {
+            @QueryParam(value = "l") @DefaultValue(value = "10") int limit, @Context Request request) throws KeyNotFoundException, MessageServiceException, OrtolangException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /threads/" + key + "/messages");
         GenericCollectionRepresentation<MessageRepresentation> representation = new GenericCollectionRepresentation<MessageRepresentation>();
         UriBuilder content = ApiUriBuilder.getApiUriBuilder().path(MessageResource.class).path(key).path("messages");
@@ -165,7 +173,11 @@ public class MessageResource {
             representation.setLimit(msgs.size());
 
         }
-        List<MessageRepresentation> msgsrep = msgs.stream().map(MessageRepresentation::fromMessage).collect(Collectors.toList());
+        List<MessageRepresentation> msgsrep = new ArrayList<MessageRepresentation> ();
+        for (Message message : msgs) {
+            OrtolangObjectInfos infos = browser.getInfos(message.getKey());
+            msgsrep.add(MessageRepresentation.fromMessageAndInfos(message, infos));
+        }
         representation.setEntries(msgsrep);
         return Response.ok(representation).build();
     }
@@ -185,16 +197,18 @@ public class MessageResource {
     @GET
     @Path("/{key}/messages/{mkey}")
     @GZIP
-    public Response readMessage(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey) throws AccessDeniedException, MessageServiceException, KeyNotFoundException {
+    public Response readMessage(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey) throws AccessDeniedException, MessageServiceException, KeyNotFoundException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /threads/" + key + "/messages/" + mkey);
         Message msg = service.readMessage(mkey);
-        return Response.ok(MessageRepresentation.fromMessage(msg)).build();
+        OrtolangObjectInfos infos = browser.getInfos(msg.getKey());
+        return Response.ok(MessageRepresentation.fromMessageAndInfos(msg, infos)).build();
     }
 
     @PUT
     @Path("/{key}/messages/{mkey}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response updateMessage(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey, @FormParam("title") String title, @FormParam("body") String body) throws AccessDeniedException, MessageServiceException, KeyNotFoundException {
+    public Response updateMessage(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey, @FormParam("title") String title, @FormParam("body") String body)
+            throws AccessDeniedException, MessageServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /threads/" + key + "/messages/" + mkey);
         service.updateMessage(mkey, title, body);
         Message msg = service.readMessage(mkey);
@@ -253,7 +267,8 @@ public class MessageResource {
 
     @DELETE
     @Path("/{key}/messages/{mkey}/attachments/{name}")
-    public Response deleteAttachment(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey, @PathParam(value = "name") String name) throws AccessDeniedException, MessageServiceException, KeyNotFoundException {
+    public Response deleteAttachment(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey, @PathParam(value = "name") String name) throws AccessDeniedException,
+            MessageServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "DELETE /threads/" + key + "/messages/" + mkey + "/attachments/" + name);
         service.removeMessageAttachment(mkey, name);
         return Response.ok().build();
