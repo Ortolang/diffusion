@@ -37,6 +37,7 @@ package fr.ortolang.diffusion.api.search;
  */
 
 import fr.ortolang.diffusion.OrtolangSearchResult;
+import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.search.SearchServiceException;
 
@@ -120,20 +121,36 @@ import java.util.logging.Logger;
                 if (fieldPart.length > 1) {
                     fieldsProjection.put("meta_ortolang-item-json." + fieldPart[0], fieldPart[1]);
                 } else {
-                    fieldsProjection.put("meta_ortolang-item-json." + field, field);
+                	String[] fieldNamePart = field.split("\\.");
+                	if (fieldNamePart.length > 1) {
+                		fieldsProjection.put("meta_ortolang-"+fieldNamePart[0]+"-json." + fieldNamePart[1], fieldNamePart[1]);
+                	} else {
+                		fieldsProjection.put(field, field);
+                	}
                 }
 
             }
         }
         // Execute the query
         List<String> results;
+        long count = 0;
         try {
             results = search.findCollections(fieldsProjection, content, group, limit, orderProp, orderDir, fieldsMap);
+            // If group by then the count is not usefull (faster)
+            if (group == null) {
+            	count = search.countCollections(fieldsMap);
+            }
         } catch (SearchServiceException e) {
             results = Collections.emptyList();
             LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
         }
-        return Response.ok(results).build();
+
+        GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String>();
+        for (String key : results) {
+            representation.addEntry(key);
+        }
+        representation.setSize(count);
+        return Response.ok(representation).build();
     }
 
     @GET @Path("/profiles") @GZIP public Response findProfiles(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {

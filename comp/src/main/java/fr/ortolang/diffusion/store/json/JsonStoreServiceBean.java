@@ -310,20 +310,6 @@ public class JsonStoreServiceBean implements JsonStoreService {
         return null;
     }
 
-	protected String replaceOrtolangKey(String ortolangKey, String json) throws JsonStoreServiceException {
-		ODocument doc = getDocumentByKey(ortolangKey);
-		
-		if(doc!=null) {
-			String identity = doc.getIdentity().toString();
-			json = json.replace(OrtolangKeyExtractor.getMarker(ortolangKey), identity);
-		} else {
-			LOGGER.log(Level.WARNING, "cannot found ortolang key : " + ortolangKey);
-			throw new JsonStoreServiceException("cannot found ortolang key : " + ortolangKey);
-		}
-		
-		return json;
-    }
-
 	private long getStoreSize() throws IOException {
 		return Files.walk(base).mapToLong(this::size).sum();
     }

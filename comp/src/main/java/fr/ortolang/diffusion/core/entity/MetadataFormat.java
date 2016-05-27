@@ -55,8 +55,17 @@ public class MetadataFormat {
     public static final String ITEM = "ortolang-item-json";
     public static final String WORKSPACE = "ortolang-workspace-json";
     public static final String PID = "ortolang-pid-json";
-    public static final String THUMB = "thumbnail";
+    public static final String THUMB = "ortolang-thumb";
     public static final String TEMPLATE = "ortolang-template-json";
+    // System metadata
+    // Metadata extraction
+    public static final String AUDIO = "system-x-audio-json";
+    public static final String VIDEO = "system-x-video-json";
+    public static final String IMAGE = "system-x-image-json";
+    public static final String XML = "system-x-xml-json";
+    public static final String PDF = "system-x-pdf-json";
+    public static final String TEXT = "system-x-text-json";
+    public static final String OFFICE = "system-x-office-json";
 
 
     @Id

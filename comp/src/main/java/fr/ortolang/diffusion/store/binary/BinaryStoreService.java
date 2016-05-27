@@ -37,10 +37,14 @@ package fr.ortolang.diffusion.store.binary;
  */
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
 import fr.ortolang.diffusion.OrtolangService;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
+import org.xml.sax.SAXException;
 
 /**
  * <p>
@@ -60,159 +64,167 @@ import fr.ortolang.diffusion.OrtolangService;
  * <li>provide the fastest store and retrieve operations</li>
  * <li>handle billions of objects</li>
  * </ul>
- * 
+ *
  * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
 public interface BinaryStoreService extends OrtolangService {
-	
-	public static final String SERVICE_NAME = "binary-store";
-	
-	public static final String INFO_PATH = "path";
-	public static final String INFO_SIZE = "size";
-	public static final String INFO_FILES = "files";
 
-	/**
-	 * Check that this hash exists in the store.
-	 * 
-	 * @param hash
-	 *            The hash of the data
-	 * @return true or false
-	 * @throws BinaryStoreServiceException
-	 *             if the hash does not exists in the storage
-	 */
-	public boolean contains(String hash) throws BinaryStoreServiceException;
-	
-	/**
-	 * Retrieve the data associated with this identifier.
-	 * 
-	 * @param hash
-	 *            The hash of the data
-	 * @return an InputStream of the data
-	 * @throws DataNotFoundException
-	 *             if the hash does not exists in the storage
-	 * @throws BinaryStoreServiceException
-	 */
-	public InputStream get(String hash) throws BinaryStoreServiceException, DataNotFoundException;
-	
-	/**
-	 * Retrieve the file object of the data associated with this identifier.
-	 * 
-	 * @param hash
-	 *            The hash of the data
-	 * @return the File object
-	 * @throws DataNotFoundException
-	 *             if the hash does not exists in the storage*
-	 * @throws BinaryStoreServiceException
-	 */
-	public File getFile(String hash) throws BinaryStoreServiceException, DataNotFoundException;
-	
-	/**
-	 * Retrieve the data size associated with this identifier.
-	 * 
-	 * @param hash
-	 *            The hash of the data
-	 * @return a long representing the size
-	 * @throws DataNotFoundException
-	 *             if the hash does not exists in the storage
-	 * @throws BinaryStoreServiceException
-	 */
-	public long size(String hash) throws BinaryStoreServiceException, DataNotFoundException;
-	
-	/**
-	 * Retrieve the data mime type associated with this identifier.
-	 * 
-	 * @param hash
-	 *            The hash of the data
-	 * @return a String representing the mime type
-	 * @throws DataNotFoundException
-	 *             if the hash does not exists in the storage
-     * @throws BinaryStoreServiceException
-	 */
-	public String type(String hash) throws BinaryStoreServiceException, DataNotFoundException;
-	
-	/**
-	 * Retrieve the data mime type associated with this identifier and a filename for better resolution.
-	 * 
-	 * @param hash
-	 *            The hash of the data
-	 * @param filename
-	 *            The filename corresponding to that hash
-	 * @return a String representing the mime type
-	 * @throws DataNotFoundException
-	 *             if the hash does not exists in the storage
-     * @throws BinaryStoreServiceException
-	 */
-	public String type(String hash, String filename) throws BinaryStoreServiceException, DataNotFoundException;
-	
-	/**
-	 * Extract the plain text part of the data associated with this identifier.
-	 * 
-	 * @param hash
-	 *            The hash of the data
-	 * @return a String representing the plain text extraction
-	 * @throws DataNotFoundException
-	 *             if the hash does not exists in the storage
-     * @throws BinaryStoreServiceException
-	 */
-	public String extract(String hash) throws BinaryStoreServiceException, DataNotFoundException;
+    String SERVICE_NAME = "binary-store";
 
-	/**
-	 * Insert some data in the storage.<br>
-	 * The storage will generate a hash for this data and insert it using this hash as identifier in the storage.<br>
-	 * If the data already exists this method does nothing
-	 * 
-	 * @param data
-	 *            The data to store
-	 * @return a String representation of the generated hash
-	 * @throws DataCollisionException
-	 *             if the hash already exists in the storage but for a different data
-     * @throws BinaryStoreServiceException
-	 */
-	public String put(InputStream data) throws BinaryStoreServiceException, DataCollisionException;
-	
-	/**
-	 * Check that the data is not corrupted, meaning that the data has not changed since it has been stored.
-	 * 
-	 * @param hash
-	 *            The hash of the object to verify
-	 * @throws DataNotFoundException
-	 *             if the hash does not exists in the storage
-	 * @throws DataCorruptedException
-	 *             if the data has been corrupted
-     * @throws BinaryStoreServiceException
-	 */
-	public void check(String hash) throws BinaryStoreServiceException, DataNotFoundException, DataCorruptedException;
+    String INFO_PATH = "path";
+    String INFO_SIZE = "size";
+    String INFO_FILES = "files";
 
-	/**
-	 * Generate a hash for this data. This operation MUST generate the same hash for the
-	 * same data along time and instances.
-	 * 
-	 * @param data
-	 *            The data on which to generate a hash
-	 * @return a String representation of the generated hash
+    /**
+     * Check that this hash exists in the store.
+     *
+     * @param hash
+     *            The hash of the data
+     * @return true or false
      * @throws BinaryStoreServiceException
-	 */
-	public String generate(InputStream data) throws BinaryStoreServiceException;
+     *             if the hash does not exists in the storage
+     */
+    boolean contains(String hash) throws BinaryStoreServiceException;
 
-	/**
-	 * Remove data from the storage.
-	 * 
-	 * @param hash
-	 *            The hash of the data to remove
+    /**
+     * Retrieve the data associated with this identifier.
+     *
+     * @param hash
+     *            The hash of the data
+     * @return an InputStream of the data
+     * @throws DataNotFoundException
+     *             if the hash does not exists in the storage
      * @throws BinaryStoreServiceException
-	 */
-	public void delete(String hash) throws BinaryStoreServiceException, DataNotFoundException;
-	
-	/**
-	 * System operation to browse the store content.
-	 * 
-	 * @param name
-	 *            The store volume name
-	 * @param prefix
-	 *            The hash prefix to list content
-	 * @throws BinaryStoreServiceException        
-	 */
-	public List<BinaryStoreContent> systemBrowse(String name, String prefix) throws BinaryStoreServiceException;
-	
+     */
+    InputStream get(String hash) throws BinaryStoreServiceException, DataNotFoundException;
+
+    /**
+     * Retrieve the file object of the data associated with this identifier.
+     *
+     * @param hash
+     *            The hash of the data
+     * @return the File object
+     * @throws DataNotFoundException
+     *             if the hash does not exists in the storage*
+     * @throws BinaryStoreServiceException
+     */
+    File getFile(String hash) throws BinaryStoreServiceException, DataNotFoundException;
+
+    /**
+     * Retrieve the data size associated with this identifier.
+     *
+     * @param hash
+     *            The hash of the data
+     * @return a long representing the size
+     * @throws DataNotFoundException
+     *             if the hash does not exists in the storage
+     * @throws BinaryStoreServiceException
+     */
+    long size(String hash) throws BinaryStoreServiceException, DataNotFoundException;
+
+    /**
+     * Retrieve the data mime type associated with this identifier.
+     *
+     * @param hash
+     *            The hash of the data
+     * @return a String representing the mime type
+     * @throws DataNotFoundException
+     *             if the hash does not exists in the storage
+     * @throws BinaryStoreServiceException
+     */
+    String type(String hash) throws BinaryStoreServiceException, DataNotFoundException;
+
+    /**
+     * Retrieve the data mime type associated with this identifier and a filename for better resolution.
+     *
+     * @param hash
+     *            The hash of the data
+     * @param filename
+     *            The filename corresponding to that hash
+     * @return a String representing the mime type
+     * @throws DataNotFoundException
+     *             if the hash does not exists in the storage
+     * @throws BinaryStoreServiceException
+     */
+    String type(String hash, String filename) throws BinaryStoreServiceException, DataNotFoundException;
+
+    /**
+     * Extract the plain text part of the data associated with this identifier.
+     *
+     * @param hash
+     *            The hash of the data
+     * @return a String representing the plain text extraction
+     * @throws DataNotFoundException
+     *             if the hash does not exists in the storage
+     * @throws BinaryStoreServiceException
+     */
+    String extract(String hash) throws BinaryStoreServiceException, DataNotFoundException;
+
+    /**
+     * Insert some data in the storage.<br>
+     * The storage will generate a hash for this data and insert it using this hash as identifier in the storage.<br>
+     * If the data already exists this method does nothing
+     *
+     * @param data
+     *            The data to store
+     * @return a String representation of the generated hash
+     * @throws DataCollisionException
+     *             if the hash already exists in the storage but for a different data
+     * @throws BinaryStoreServiceException
+     */
+    String put(InputStream data) throws BinaryStoreServiceException, DataCollisionException;
+
+    /**
+     * Check that the data is not corrupted, meaning that the data has not changed since it has been stored.
+     *
+     * @param hash
+     *            The hash of the object to verify
+     * @throws DataNotFoundException
+     *             if the hash does not exists in the storage
+     * @throws DataCorruptedException
+     *             if the data has been corrupted
+     * @throws BinaryStoreServiceException
+     */
+    void check(String hash) throws BinaryStoreServiceException, DataNotFoundException, DataCorruptedException;
+
+    /**
+     * Generate a hash for this data. This operation MUST generate the same hash for the
+     * same data along time and instances.
+     *
+     * @param data
+     *            The data on which to generate a hash
+     * @return a String representation of the generated hash
+     * @throws BinaryStoreServiceException
+     */
+    String generate(InputStream data) throws BinaryStoreServiceException;
+
+    /**
+     * Remove data from the storage.
+     *
+     * @param hash
+     *            The hash of the data to remove
+     * @throws BinaryStoreServiceException
+     */
+    void delete(String hash) throws BinaryStoreServiceException, DataNotFoundException;
+
+    /**
+     * System operation to browse the store content.
+     *
+     * @param name
+     *            The store volume name
+     * @param prefix
+     *            The hash prefix to list content
+     * @throws BinaryStoreServiceException
+     */
+    List<BinaryStoreContent> systemBrowse(String name, String prefix) throws BinaryStoreServiceException;
+
+    /**
+     * Parse data from the storage to extract metadata.
+     *
+     * @param hash
+     *            The hash of the data to remove
+     * @throws BinaryStoreServiceException
+     */
+    Metadata parse(String hash) throws BinaryStoreServiceException, DataNotFoundException, TikaException, SAXException, IOException;
 }

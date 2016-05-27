@@ -36,10 +36,7 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -56,6 +53,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -109,6 +107,8 @@ import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.event.EventService;
+import fr.ortolang.diffusion.extraction.ExtractionService;
+import fr.ortolang.diffusion.extraction.ExtractionServiceException;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
@@ -165,6 +165,8 @@ public class CoreServiceBean implements CoreService {
     private IndexingService indexing;
     @EJB
     private NotificationService notification;
+    @EJB
+    private ExtractionService extraction;
     @EJB
     private SecurityService security;
     @PersistenceContext(unitName = "ortolangPU")
@@ -558,6 +560,8 @@ public class CoreServiceBean implements CoreService {
                 TagElement tagElement = workspace.findTagByName(tag);
                 if (tagElement != null) {
                     workspace.removeTag(tagElement);
+                    String oldRoot = workspace.findSnapshotByName(tagElement.getSnapshot()).getKey();
+                    indexing.remove(oldRoot);
                 }
                 if (!workspace.containsSnapshotName(snapshot)) {
                     throw new CoreServiceException("the snapshot with name '" + snapshot + "' does not exists in this workspace");
@@ -1649,6 +1653,12 @@ public class CoreServiceBean implements CoreService {
 
             LOGGER.log(Level.FINEST, "object [" + key + "] added to parent [" + parent.getKey() + "]");
 
+            try {
+                extraction.extract(object.getKey());
+            } catch (ExtractionServiceException e) {
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            }
+
             ws.setChanged(true);
             em.merge(ws);
             registry.update(ws.getKey());
@@ -1781,6 +1791,12 @@ public class CoreServiceBean implements CoreService {
                 registry.update(object.getKey());
                 indexing.index(object.getKey());
                 LOGGER.log(Level.FINEST, "object updated");
+
+                try {
+                    extraction.extract(object.getKey());
+                } catch (ExtractionServiceException e) {
+                    LOGGER.log(Level.SEVERE, e.getMessage(), e);
+                }
 
                 ws.setChanged(true);
                 em.merge(ws);
@@ -3139,6 +3155,75 @@ public class CoreServiceBean implements CoreService {
         }
     }
 
+    @Override
+    @RolesAllowed("system")
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void systemCreateMetadata(String key, String name, String hash, String filename)
+            throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
+            IdentifierAlreadyRegisteredException, RegistryServiceException {
+        if (!name.startsWith("system-")) {
+            throw new CoreServiceException("only system metadata can be added this way.");
+        }
+        OrtolangObjectIdentifier identifier = registry.lookup(key);
+        if (!identifier.getService().equals(SERVICE_NAME)) {
+            throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
+        }
+        OrtolangObject object;
+        switch (identifier.getType()) {
+        case DataObject.OBJECT_TYPE:
+            object = em.find(DataObject.class, identifier.getId());
+            break;
+        case Link.OBJECT_TYPE:
+            object = em.find(Link.class, identifier.getId());
+            break;
+        case Collection.OBJECT_TYPE:
+            object = em.find(Collection.class, identifier.getId());
+            break;
+        default:
+            throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
+        }
+        MetadataElement metadataElement = ((MetadataSource) object).findMetadataByName(name);
+        if (metadataElement != null) {
+            ((MetadataSource) object).removeMetadata(metadataElement);
+        }
+        MetadataObject meta = new MetadataObject();
+        meta.setId(UUID.randomUUID().toString());
+        meta.setName(name);
+
+        MetadataFormat format = getMetadataFormat(name);
+        if (format == null) {
+            LOGGER.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
+            throw new CoreServiceException("unknown metadata format for name: " + name);
+        }
+
+        if (hash != null && hash.length() > 0) {
+            if (format.isValidationNeeded()) {
+                validateMetadata(hash, format);
+            }
+            meta.setSize(binarystore.size(hash));
+            if (filename != null) {
+                meta.setContentType(binarystore.type(hash, filename));
+            } else {
+                meta.setContentType(binarystore.type(hash));
+            }
+            meta.setStream(hash);
+        } else {
+            meta.setSize(0);
+            meta.setContentType("application/octet-stream");
+            meta.setStream("");
+        }
+
+        meta.setFormat(format.getId());
+        meta.setTarget(key);
+        meta.setKey(UUID.randomUUID().toString());
+        em.persist(meta);
+
+        registry.register(meta.getKey(), meta.getObjectIdentifier(), "system");
+
+        ((MetadataSource) object).addMetadata(new MetadataElement(name, meta.getKey()));
+        em.merge(object);
+    }
+
     /* MetadataFormat */
 
     @Override
@@ -4154,6 +4239,28 @@ public class CoreServiceBean implements CoreService {
             if (metadataElement != null) {
                 LOGGER.log(Level.FINE, "metadata to purge: " + metadataElement.getKey());
                 deleteMetadataObject(wskey, path + "/" + collectionElement.getName(), name, false);
+            }
+        }
+    }
+
+    @Override
+    public void extractMetadata(String wskey, String path, String mimeType)
+            throws CoreServiceException, OrtolangException, InvalidPathException, PathNotFoundException, ExtractionServiceException, KeyNotFoundException {
+        String key = resolveWorkspacePath(wskey, Workspace.HEAD, path);
+        OrtolangObject object = findObject(key);
+        if (object instanceof DataObject) {
+            extraction.extract(key);
+        } else if (object instanceof Collection) {
+            extractMetadata((Collection) object, wskey, path);
+        }
+    }
+
+    private void extractMetadata(Collection collection, String wskey, String path) throws ExtractionServiceException, CoreServiceException, AccessDeniedException, KeyNotFoundException {
+        for (CollectionElement collectionElement : collection.getElements()) {
+            if (collectionElement.getType().equals(DataObject.OBJECT_TYPE)) {
+                extraction.extract(collectionElement.getKey());
+            } else if (collectionElement.getType().equals(Collection.OBJECT_TYPE)) {
+                extractMetadata(readCollection(collection.getKey()), wskey, path + "/" + collectionElement.getName());
             }
         }
     }
