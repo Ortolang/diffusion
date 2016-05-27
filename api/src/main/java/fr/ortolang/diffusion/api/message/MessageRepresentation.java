@@ -2,14 +2,16 @@ package fr.ortolang.diffusion.api.message;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.message.entity.Message;
+import fr.ortolang.diffusion.message.entity.MessageAttachment;
 
 @XmlRootElement(name = "message")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -22,10 +24,11 @@ public class MessageRepresentation {
     private Date date;
     private String thread;
     private String parent;
-    private List<String> attachments;
+    private String author;
+    private Set<MessageAttachment> attachments;
 
     public MessageRepresentation() {
-        attachments = Collections.emptyList();
+        attachments = Collections.emptySet();
     }
 
     public String getKey() {
@@ -76,18 +79,37 @@ public class MessageRepresentation {
         this.parent = parent;
     }
 
-    public List<String> getAttachments() {
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public Set<MessageAttachment> getAttachments() {
         return attachments;
     }
 
-    public void setAttachments(List<String> attachments) {
+    public void setAttachments(Set<MessageAttachment> attachments) {
         this.attachments = attachments;
     }
 
     public static MessageRepresentation fromMessage(Message message) {
         MessageRepresentation representation = new MessageRepresentation();
         representation.setKey(message.getKey());
-        //TODO
+        representation.setThread(message.getThread());
+        representation.setTitle(message.getTitle());
+        representation.setBody(message.getBody());
+        representation.setDate(message.getDate());
+        representation.setParent(message.getParent());
+        representation.setAttachments(message.getAttachments());
+        return representation;
+    }
+    
+    public static MessageRepresentation fromMessageAndInfos(Message message, OrtolangObjectInfos infos) {
+        MessageRepresentation representation = fromMessage(message);
+        representation.setAuthor(infos.getAuthor());
         return representation;
     }
 

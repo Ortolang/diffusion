@@ -52,7 +52,24 @@ import fr.ortolang.diffusion.api.filter.ContentTypeSetterPreProcessorInterceptor
 import fr.ortolang.diffusion.api.form.FormResource;
 import fr.ortolang.diffusion.api.format.MetadataFormatResource;
 import fr.ortolang.diffusion.api.group.GroupResource;
-import fr.ortolang.diffusion.api.mapper.*;
+import fr.ortolang.diffusion.api.mapper.AccessDeniedExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.AliasAlreadyExistsExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.AliasNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.BrowserServiceExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.CollectionNotEmptyExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.EJBAccessExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.InvalidPathExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.KeyAlreadyExistsExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.KeyNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.MetadataFormatExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.PathAlreadyExistsExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.PathNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.PropertyNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.RootNotFoundExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.SearchServiceExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.SecurityServiceExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.SubscriptionServiceExceptionMapper;
+import fr.ortolang.diffusion.api.message.MessageResource;
 import fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet;
 import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.profile.ProfileResource;
@@ -92,6 +109,7 @@ public class ApiApplication extends Application {
         classes.add(EventFeedResource.class);
         classes.add(SeoResource.class);
         classes.add(RenderingResource.class);
+        classes.add(MessageResource.class);
     }
 
     @Override
