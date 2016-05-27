@@ -66,8 +66,6 @@ public class ExtractionServiceBean implements ExtractionService {
 
     @Resource(mappedName = "java:jboss/exported/jms/topic/extraction")
     private Topic extractionQueue;
-    @Resource
-    private SessionContext sessionCtx;
     @Inject
     private JMSContext context;
 

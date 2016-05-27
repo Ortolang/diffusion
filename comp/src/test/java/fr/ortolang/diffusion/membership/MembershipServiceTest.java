@@ -107,6 +107,7 @@ public class MembershipServiceTest {
         jar.addPackage("fr.ortolang.diffusion.notification");
         jar.addPackage("fr.ortolang.diffusion.registry");
         jar.addPackage("fr.ortolang.diffusion.registry.entity");
+        jar.addPackage("fr.ortolang.diffusion.security");
         jar.addPackage("fr.ortolang.diffusion.security.authentication");
         jar.addPackage("fr.ortolang.diffusion.security.authorisation");
         jar.addPackage("fr.ortolang.diffusion.security.authorisation.entity");
@@ -122,6 +123,8 @@ public class MembershipServiceTest {
         jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
         jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
         jar.addAsResource("config.properties");
+        jar.addAsResource("xsl/tei2OrtolangMD.xsl");
+        jar.addAsResource("xsl/trans2OrtolangMD.xsl");
         jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
         LOGGER.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
 
@@ -138,6 +141,8 @@ public class MembershipServiceTest {
         ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-queryparser:4.6.0").withTransitivity().asFile());
         ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core:1.8").withTransitivity().asFile());
         ear.addAsLibraries(pom.resolve("org.apache.tika:tika-parsers:1.8").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("com.github.fge:json-schema-validator:2.2.6").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.codehaus.jettison:jettison:1.3.3").withTransitivity().asFile());
         LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 
         return ear;

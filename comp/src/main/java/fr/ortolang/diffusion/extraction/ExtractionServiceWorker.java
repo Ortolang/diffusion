@@ -72,6 +72,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TransactionRequiredException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
@@ -226,12 +227,8 @@ public class ExtractionServiceWorker {
                                 JSONObject metadataJson = new JSONObject();
                                 for (String name : metadata.names()) {
                                     if (metadata.isMultiValued(name)) {
-                                        String[] values = metadata.getValues(name);
-                                        JSONArray jsonValues = new JSONArray();
-                                        for (String value : values) {
-                                            jsonValues.put(value);
-                                        }
-                                        metadataJson.put(name, jsonValues);
+                                        JSONArray jsonArray = new JSONArray(Arrays.asList(metadata.getValues(name)));
+                                        metadataJson.put(name, jsonArray);
                                     } else {
                                         if (name.equals("ortolang:json")) {
                                             String tmp = metadataJson.toString();
@@ -249,7 +246,7 @@ public class ExtractionServiceWorker {
                             }
                             jobService.remove(job.getId());
                         }
-                    } catch (OrtolangException | MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | SAXException | CoreServiceException | IdentifierAlreadyRegisteredException | JSONException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException e) {
+                    } catch (OrtolangException | MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | SAXException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException e) {
                         LOGGER.log(Level.WARNING, "unable to extract metadata for data object with key " + key, e);
                         if (e instanceof KeyNotFoundException) {
                             LOGGER.log(Level.WARNING, "Key not found: removing extraction job");
