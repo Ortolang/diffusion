@@ -366,7 +366,13 @@ public class SearchServiceBean implements SearchService {
         }
 
         if (orderProp != null) {
-            queryBuilder.append(" ORDER BY ").append("`meta_ortolang-item-json.").append(orderProp).append("`");
+        	String[] orderPropPart = orderProp.split("\\.");
+        	if (orderPropPart.length > 1) {
+        		queryBuilder.append(" ORDER BY ").append("`meta_ortolang-").append(orderPropPart[0]).append("-json.").append(orderPropPart[1]).append("`");
+        	} else {
+        		queryBuilder.append(" ORDER BY ").append("`").append(orderProp).append("`");
+        	}
+            
             if(orderDir!=null) {
                 queryBuilder.append(" ").append(orderDir);
             }
