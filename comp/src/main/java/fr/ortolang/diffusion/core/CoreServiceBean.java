@@ -3160,7 +3160,7 @@ public class CoreServiceBean implements CoreService {
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void systemCreateMetadata(String key, String name, String hash, String filename)
             throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
-            IdentifierAlreadyRegisteredException, RegistryServiceException {
+            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
         if (!name.startsWith("system-")) {
             throw new CoreServiceException("only system metadata can be added this way.");
         }
@@ -3219,6 +3219,9 @@ public class CoreServiceBean implements CoreService {
         em.persist(meta);
 
         registry.register(meta.getKey(), meta.getObjectIdentifier(), "system");
+
+        indexing.index(key);
+        authorisation.clonePolicy(meta.getKey(), key);
 
         ((MetadataSource) object).addMetadata(new MetadataElement(name, meta.getKey()));
         em.merge(object);
