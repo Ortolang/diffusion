@@ -56,11 +56,7 @@
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.cxf</groupId>
-                    <artifactId>cxf-rt-transports-http</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.cxf</groupId>
-                    <artifactId>cxf-rt-frontend-jaxrs</artifactId>
+                    <artifactId>cxf-rt-rs-client</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
