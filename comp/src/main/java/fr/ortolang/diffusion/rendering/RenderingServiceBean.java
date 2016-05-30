@@ -75,7 +75,6 @@ import fr.ortolang.diffusion.core.entity.MetadataElement;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.rendering.engine.MarkdownRenderEngine;
 import fr.ortolang.diffusion.rendering.engine.TEIRenderEngine;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
@@ -130,8 +129,6 @@ public class RenderingServiceBean implements RenderingService {
             LOGGER.log(Level.SEVERE, "unable to initialize views store", e);
         }
         LOGGER.log(Level.INFO, "Registering engines: ");
-        RenderEngine md = new MarkdownRenderEngine();
-        engines.put(md.getId(), md);
         RenderEngine xml = new TEIRenderEngine();
         engines.put(xml.getId(), xml);
         LOGGER.log(Level.INFO, engines.size() + " engines registered.");
@@ -197,12 +194,6 @@ public class RenderingServiceBean implements RenderingService {
                         Map<String, Object> data = new HashMap<String, Object>();
                         // TODO populate data using collection and collection metadata.
                         processed = process(key, template, data);
-                    }
-                    if (processed) {
-                        boolean rendered = render(key, getPath(key, "ftl"), engines.get(MarkdownRenderEngine.ID));
-                        if (rendered) {
-                            return getPath(key, MarkdownRenderEngine.ID).toFile();
-                        }
                     }
                 } else if (object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE)) {
                     LOGGER.log(Level.FINEST, "key is a dataobject, serching render engine");

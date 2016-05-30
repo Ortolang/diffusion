@@ -160,7 +160,9 @@ public class OrtolangClientAccountManager {
 			account.setIdToken(object.getString("id_token"));
 			account.setAccessToken(object.getString("access_token"));
 			account.setRefreshToken(object.getString("refresh_token"));
-			account.setSessionState(object.getString("session-state"));
+			if (object.containsKey("session-state")) {
+				account.setSessionState(object.getString("session-state"));
+			}
 			account.setExpires(System.currentTimeMillis() + ((object.getInt("expires_in") - 5) * 1000));
 			accounts.put(user, account);
 			LOGGER.log(Level.FINE, "AccessToken stored for user: " + user);

@@ -38,7 +38,7 @@
 		<version.wildfly.maven.plugin>1.1.0.Alpha5</version.wildfly.maven.plugin>
 		<version.wildfly>9.0.1.Final</version.wildfly>
 		<slf4j.version>1.6.4</slf4j.version>
-		<version.apache.tika>1.8</version.apache.tika>
+		<version.apache.tika>1.13</version.apache.tika>
 		<version.apache.velocity>1.7</version.apache.velocity>
 		<version.apache.velocity-tools>2.0</version.apache.velocity-tools>
 		<version.javax.javaee>7.0</version.javax.javaee>
@@ -75,7 +75,6 @@
 		<version.flyway.plugin>3.1</version.flyway.plugin>
 		<version.activation>1.1.1</version.activation>
 		<version.freemarker>2.3.22</version.freemarker>
-		<version.pegdown>1.1.0</version.pegdown>
 		<version.sigar>1.6.4</version.sigar>
 		<additionalparam>-Xdoclint:none</additionalparam>
 		<maven.javadoc.failOnError>false</maven.javadoc.failOnError>

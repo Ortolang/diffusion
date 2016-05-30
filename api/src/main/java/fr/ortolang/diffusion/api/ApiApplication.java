@@ -74,7 +74,6 @@ import fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet;
 import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.profile.ProfileResource;
 import fr.ortolang.diffusion.api.referential.ReferentialEntityResource;
-import fr.ortolang.diffusion.api.rendering.RenderingResource;
 import fr.ortolang.diffusion.api.runtime.RuntimeResource;
 import fr.ortolang.diffusion.api.search.SearchResource;
 import fr.ortolang.diffusion.api.seo.SeoResource;
@@ -108,7 +107,6 @@ public class ApiApplication extends Application {
         classes.add(OAIPMHServlet.class);
         classes.add(EventFeedResource.class);
         classes.add(SeoResource.class);
-        classes.add(RenderingResource.class);
         classes.add(MessageResource.class);
     }
 
