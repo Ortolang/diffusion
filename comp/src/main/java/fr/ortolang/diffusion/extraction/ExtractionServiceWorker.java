@@ -45,9 +45,11 @@ import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.extraction.parser.OrtolangXMLParser;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.jobs.JobService;
 import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.registry.*;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
@@ -246,7 +248,7 @@ public class ExtractionServiceWorker {
                             }
                             jobService.remove(job.getId());
                         }
-                    } catch (OrtolangException | MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | SAXException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException e) {
+                    } catch (OrtolangException | MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | SAXException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException | IndexingServiceException | AuthorisationServiceException e) {
                         LOGGER.log(Level.WARNING, "unable to extract metadata for data object with key " + key, e);
                         if (e instanceof KeyNotFoundException) {
                             LOGGER.log(Level.WARNING, "Key not found: removing extraction job");
