@@ -27,7 +27,7 @@ import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.keycloak.util.JsonSerialization;
-import org.keycloak.util.KeycloakUriBuilder;
+import org.keycloak.common.util.KeycloakUriBuilder;
 
 public class KeycloakAdminClient {
 	
@@ -35,8 +35,8 @@ public class KeycloakAdminClient {
 	private static final String USERNAME = "root";
 	private static final String PASSWORD = "tagada54";
 	private static final String REALM = "ortolang";
-	private static final String CLIENT_ID = "migrate-users";
-	private static final String BASE_URL = "http://localhost:8080";
+	private static final String CLIENT_ID = "import";
+	private static final String BASE_URL = "https://localhost:8443";
 	
 
 	static class TypedList extends ArrayList<RoleRepresentation> {
@@ -201,6 +201,122 @@ public class KeycloakAdminClient {
 					return JsonSerialization.readValue(is, UserRepresentation.class);
 				} finally {
 					is.close();
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} finally {
+			client.getConnectionManager().shutdown();
+		}
+	}
+
+	public static UserRepresentation[] getUsers(AccessTokenResponse res) throws Failure {
+		HttpClient client = new HttpClientBuilder().disableTrustManager().build();
+		try {
+			try {
+				HttpGet get = new HttpGet(BASE_URL + "/auth/admin/realms/" + REALM + "/users/");
+				get.addHeader("Authorization", "Bearer " + res.getToken());
+				get.addHeader("Content-type", "application/json");
+				HttpResponse response = client.execute(get);
+				if (response.getStatusLine().getStatusCode() != 200) {
+					throw new Failure(response.getStatusLine().getStatusCode());
+				}
+				HttpEntity entity = response.getEntity();
+				InputStream is = entity.getContent();
+				try {
+					return JsonSerialization.readValue(is, UserRepresentation[].class);
+				} finally {
+					is.close();
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} finally {
+			client.getConnectionManager().shutdown();
+		}
+	}
+
+	public static void updateUser(AccessTokenResponse res, UserRepresentation userRepresentation) throws Failure {
+		HttpClient client = new HttpClientBuilder().disableTrustManager().build();
+		try {
+			try {
+				HttpPut put = new HttpPut(BASE_URL + "/auth/admin/realms/" + REALM + "/users/" + userRepresentation.getId());
+				put.addHeader("Authorization", "Bearer " + res.getToken());
+				put.addHeader("Content-type", "application/json");
+				put.setEntity(new StringEntity(JsonSerialization.writeValueAsString(userRepresentation), "UTF-8"));
+				HttpResponse response = client.execute(put);
+				if (response.getStatusLine().getStatusCode() != 204) {
+					throw new Failure(response.getStatusLine().getStatusCode());
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} finally {
+			client.getConnectionManager().shutdown();
+		}
+	}
+
+	public static RoleRepresentation[] getUserRoleMapping(AccessTokenResponse res, UserRepresentation userRepresentation) throws Failure {
+		HttpClient client = new HttpClientBuilder().disableTrustManager().build();
+		try {
+			try {
+				HttpGet get = new HttpGet(BASE_URL + "/auth/admin/realms/" + REALM + "/users/" + userRepresentation.getId() + "/role-mappings/realm");
+				get.addHeader("Authorization", "Bearer " + res.getToken());
+				HttpResponse response = client.execute(get);
+				if (response.getStatusLine().getStatusCode() != 200) {
+					throw new Failure(response.getStatusLine().getStatusCode());
+				}
+				HttpEntity entity = response.getEntity();
+				InputStream is = entity.getContent();
+				try {
+					return JsonSerialization.readValue(is, RoleRepresentation[].class);
+				} finally {
+					is.close();
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} finally {
+			client.getConnectionManager().shutdown();
+		}
+	}
+
+	public static RoleRepresentation[] getRealmRoleMapping(AccessTokenResponse res, UserRepresentation userRepresentation) throws Failure {
+		HttpClient client = new HttpClientBuilder().disableTrustManager().build();
+		try {
+			try {
+				HttpGet get = new HttpGet(BASE_URL + "/auth/admin/realms/" + REALM + "/users/" + userRepresentation.getId() + "/role-mappings/realm/available");
+				get.addHeader("Authorization", "Bearer " + res.getToken());
+				HttpResponse response = client.execute(get);
+				if (response.getStatusLine().getStatusCode() != 200) {
+					throw new Failure(response.getStatusLine().getStatusCode());
+				}
+				HttpEntity entity = response.getEntity();
+				InputStream is = entity.getContent();
+				try {
+					return JsonSerialization.readValue(is, RoleRepresentation[].class);
+				} finally {
+					is.close();
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} finally {
+			client.getConnectionManager().shutdown();
+		}
+	}
+
+	public static void addUserRoleMappings(AccessTokenResponse res, UserRepresentation userRepresentation, RoleRepresentation[] roleRepresentations) throws Failure {
+		HttpClient client = new HttpClientBuilder().disableTrustManager().build();
+		try {
+			try {
+				HttpPost post = new HttpPost(BASE_URL + "/auth/admin/realms/" + REALM + "/users/" + userRepresentation.getId() + "/role-mappings/realm");
+				post.addHeader("Authorization", "Bearer " + res.getToken());
+				post.addHeader("Content-type", "application/json");
+				post.setEntity(new StringEntity(JsonSerialization.writeValueAsString(roleRepresentations), "UTF-8"));
+				HttpResponse response = client.execute(post);
+				if (response.getStatusLine().getStatusCode() != 204) {
+					throw new Failure(response.getStatusLine().getStatusCode());
 				}
 			} catch (IOException e) {
 				throw new RuntimeException(e);
