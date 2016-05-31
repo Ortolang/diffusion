@@ -139,13 +139,16 @@ public class ContentResource {
     private SecurityService security;
     @Context
     private UriInfo uriInfo;
+    @Context
+    private SecurityContext ctx;
 
     @POST
     @Path("/export")
     @Consumes({ MediaType.APPLICATION_FORM_URLENCODED })
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response exportPost(final @FormParam("followsymlink") @DefaultValue("false") String followSymlink, @FormParam("filename") @DefaultValue("download") String filename,
-            @FormParam("format") @DefaultValue("zip") String format, final @FormParam("path") List<String> paths, @Context Request request) throws UnsupportedEncodingException {
+            @FormParam("format") @DefaultValue("zip") String format, final @FormParam("path") List<String> paths, final @FormParam("noguest") @DefaultValue("false") boolean noguest,
+            @Context Request request) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "POST /export");
         ResponseBuilder builder = handleExport(false, filename, format, paths);
         return builder.build();
@@ -155,8 +158,13 @@ public class ContentResource {
     @Path("/export")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response exportGet(final @QueryParam("followsymlink") @DefaultValue("false") String followSymlink, @QueryParam("filename") @DefaultValue("download") String filename,
-            @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, @Context Request request) throws UnsupportedEncodingException {
+            @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, final @QueryParam("noguest") @DefaultValue("false") boolean noguest,
+            @Context Request request) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "GET /export");
+//        if ( noguest && ctx.getUserPrincipal() == null ) {
+//            LOGGER.log(Level.INFO, "user should be authentified but user principal is null, redirecting to auth servlet...");
+//            
+//        }
         ResponseBuilder builder = handleExport(false, filename, format, paths);
         return builder.build();
     }
@@ -185,7 +193,7 @@ public class ContentResource {
                                 return entry;
                             };
                             exportToArchive(key, out, factory, PathBuilder.fromPath(path), false);
-                        }  catch (AccessDeniedException e) {
+                        } catch (AccessDeniedException e) {
                             LOGGER.log(Level.FINEST, "access denied during export to zip", e);
                         } catch (BrowserServiceException | CoreServiceException | AliasNotFoundException | KeyNotFoundException | OrtolangException e) {
                             LOGGER.log(Level.INFO, "unable to export path to zip", e);
@@ -258,10 +266,10 @@ public class ContentResource {
 
     // TODO in case of following symlink, add cyclic detection
     private void exportToArchive(String key, ArchiveOutputStream aos, ArchiveEntryFactory factory, PathBuilder path, boolean followsymlink) throws OrtolangException, KeyNotFoundException,
-            IOException, BrowserServiceException {
+            BrowserServiceException {
         OrtolangObject object;
         try {
-             object = browser.findObject(key);
+            object = browser.findObject(key);
         } catch (AccessDeniedException e) {
             return;
         }
@@ -270,17 +278,21 @@ public class ContentResource {
 
         switch (type) {
         case Collection.OBJECT_TYPE:
-            Set<CollectionElement> elements = ((Collection) object).getElements();
-            ArchiveEntry centry = factory.createArchiveEntry(path.build() + "/", infos.getLastModificationDate(), 0L);
-            aos.putArchiveEntry(centry);
-            aos.closeArchiveEntry();
-            for (CollectionElement element : elements) {
-                try {
-                    PathBuilder pelement = path.clone().path(element.getName());
-                    exportToArchive(element.getKey(), aos, factory, pelement, followsymlink);
-                } catch (InvalidPathException e) {
-                    LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e);
+            try {
+                Set<CollectionElement> elements = ((Collection) object).getElements();
+                ArchiveEntry centry = factory.createArchiveEntry(path.build() + "/", infos.getLastModificationDate(), 0L);
+                aos.putArchiveEntry(centry);
+                aos.closeArchiveEntry();
+                for (CollectionElement element : elements) {
+                    try {
+                        PathBuilder pelement = path.clone().path(element.getName());
+                        exportToArchive(element.getKey(), aos, factory, pelement, followsymlink);
+                    } catch (InvalidPathException e) {
+                        LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e);
+                    }
                 }
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "IOException during exportToArchive: " + e.getMessage());
             }
             break;
         case DataObject.OBJECT_TYPE:
@@ -288,12 +300,10 @@ public class ContentResource {
                 DataObject dataObject = (DataObject) object;
                 ArchiveEntry oentry = factory.createArchiveEntry(path.build(), infos.getLastModificationDate(), dataObject.getSize());
                 aos.putArchiveEntry(oentry);
-                try {
-                    IOUtils.copy(input, aos);
-                } finally {
-                    IOUtils.closeQuietly(input);
-                }
+                IOUtils.copy(input, aos);
                 aos.closeArchiveEntry();
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "IOException during exportToArchive: " + e.getMessage());
             } catch (AccessDeniedException e) {
                 return;
             } catch (CoreServiceException | DataNotFoundException e) {
@@ -313,8 +323,8 @@ public class ContentResource {
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response key(@PathParam("key") String key, @QueryParam("fd") boolean download, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order,
             @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext ctx, @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException,
-            InvalidPathException, OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException,
-            UnsupportedEncodingException, SecurityServiceException {
+            InvalidPathException, OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException,
+            SecurityServiceException {
         LOGGER.log(Level.INFO, "GET /content/key/" + key);
         try {
             OrtolangObjectState state = browser.getState(key);
@@ -352,7 +362,6 @@ public class ContentResource {
                     }
                     builder.lastModified(lmd);
                 } else if (object instanceof Collection) {
-                    // TODO make this to use template engine
                     ContentRepresentation representation = new ContentRepresentation();
                     representation.setContext(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT));
                     representation.setBase("/content/key");

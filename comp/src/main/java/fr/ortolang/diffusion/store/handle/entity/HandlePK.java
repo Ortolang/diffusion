@@ -42,8 +42,8 @@ import java.util.Arrays;
 @SuppressWarnings("serial")
 public class HandlePK implements Serializable {
 	
-	private byte[] handle;
-	private int index;
+	byte[] handle;
+	int index;
 	
 	public HandlePK() {
 	}

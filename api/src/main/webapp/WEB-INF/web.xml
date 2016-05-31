@@ -76,7 +76,7 @@
 
 	<security-constraint>
 		<web-resource-collection>
-			<web-resource-name>api</web-resource-name>
+			<web-resource-name>Authentication</web-resource-name>
 			<url-pattern>/auth</url-pattern>
 			<http-method>DELETE</http-method>
 			<http-method>PUT</http-method>
@@ -101,4 +101,8 @@
 	<security-role>
 		<role-name>user</role-name>
 	</security-role>
+	
+	<session-config>
+		<session-timeout>2</session-timeout>
+	</session-config>
 </web-app>
