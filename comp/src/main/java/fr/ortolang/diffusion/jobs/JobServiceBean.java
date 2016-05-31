@@ -68,7 +68,6 @@ public class JobServiceBean implements JobService {
     private EntityManager em;
 
     public JobServiceBean() {
-        LOGGER.log(Level.INFO, "Instantiating Job Service");
     }
 
     @Override

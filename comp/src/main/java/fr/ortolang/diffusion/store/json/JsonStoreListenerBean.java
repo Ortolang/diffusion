@@ -52,29 +52,29 @@ import javax.jms.MessageListener;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 @MessageDriven(name = "JsonStoreListener", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
-		@ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
-		@ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
+        @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @SecurityDomain("ortolang")
 public class JsonStoreListenerBean implements MessageListener {
 
-	private static final Logger LOGGER = Logger.getLogger(JsonStoreListenerBean.class.getName());
-	
-	@EJB
-	private JsonStoreServiceWorker worker;
-	
-	@Override
-	@PermitAll
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void onMessage(Message message) {
-		try {
-			LOGGER.log(Level.FINEST, "indexation message received");
-			String action = message.getStringProperty("action");
-			String key = message.getStringProperty("key");
-			LOGGER.log(Level.FINEST, "submitting action to json indexation service worker");
-			worker.submit(key, action);
-		} catch (JMSException | JsonStoreServiceException e) {
-			LOGGER.log(Level.WARNING, "unable to handle indexation message", e);
-		}
-	}
-	
+    private static final Logger LOGGER = Logger.getLogger(JsonStoreListenerBean.class.getName());
+
+    @EJB
+    private JsonStoreServiceWorker worker;
+
+    @Override
+    @PermitAll
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void onMessage(Message message) {
+        try {
+            LOGGER.log(Level.FINEST, "indexation message received");
+            String action = message.getStringProperty("action");
+            String key = message.getStringProperty("key");
+            LOGGER.log(Level.FINEST, "submitting action to json indexation service worker");
+            worker.submit(key, action);
+        } catch (JMSException | JsonStoreServiceException e) {
+            LOGGER.log(Level.WARNING, "unable to handle indexation message", e);
+        }
+    }
+
 }

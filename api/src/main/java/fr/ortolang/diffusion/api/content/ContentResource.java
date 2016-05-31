@@ -36,74 +36,15 @@ package fr.ortolang.diffusion.api.content;
  * #L%
  */
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.ejb.EJB;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.NewCookie;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.StreamingOutput;
-import javax.ws.rs.core.UriInfo;
-
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.ArchiveOutputStream;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
-import org.apache.commons.io.IOUtils;
-
-import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectInfos;
-import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.api.ApiHelper;
 import fr.ortolang.diffusion.api.auth.AuthResource;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
-import fr.ortolang.diffusion.core.AliasNotFoundException;
-import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.core.InvalidPathException;
-import fr.ortolang.diffusion.core.PathBuilder;
-import fr.ortolang.diffusion.core.PathNotFoundException;
+import fr.ortolang.diffusion.core.*;
 import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.CollectionElement;
-import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.*;
 import fr.ortolang.diffusion.core.entity.Link;
-import fr.ortolang.diffusion.core.entity.MetadataObject;
-import fr.ortolang.diffusion.core.entity.SnapshotElement;
-import fr.ortolang.diffusion.core.entity.TagElement;
-import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.rendering.RenderingService;
@@ -116,6 +57,32 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.template.TemplateEngine;
 import fr.ortolang.diffusion.template.TemplateEngineException;
 import fr.ortolang.diffusion.thumbnail.ThumbnailService;
+
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveOutputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
+import org.apache.commons.io.IOUtils;
+import org.jboss.resteasy.specimpl.ResteasyUriBuilder;
+
+import javax.ejb.EJB;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Path("/content")
 @Produces({ MediaType.TEXT_HTML })
@@ -139,32 +106,60 @@ public class ContentResource {
     private SecurityService security;
     @Context
     private UriInfo uriInfo;
-    @Context
-    private SecurityContext ctx;
+    
+    private static Map<String, Map<String, Object>> exportations;
+
+    static  {
+        exportations = new HashMap<>();
+    }
+
+    @GET
+    @Path("/exportations/{id}")
+    @SuppressWarnings("unchecked")
+    public Response resumeExportation(@PathParam("id") String id, @Context Request request, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
+        Map<String, Object> params = exportations.get(id);
+        Response response = export(false, (String) params.get("followsymlink"), (String) params.get("filename"), (String) params.get("format"), (List<String>) params.get("path"), request,
+                securityContext);
+        exportations.remove(id);
+        return response;
+    }
+
 
     @POST
     @Path("/export")
     @Consumes({ MediaType.APPLICATION_FORM_URLENCODED })
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-    public Response exportPost(final @FormParam("followsymlink") @DefaultValue("false") String followSymlink, @FormParam("filename") @DefaultValue("download") String filename,
-            @FormParam("format") @DefaultValue("zip") String format, final @FormParam("path") List<String> paths, final @FormParam("noguest") @DefaultValue("false") boolean noguest,
-            @Context Request request) throws UnsupportedEncodingException {
+    public Response exportPost(final @QueryParam("scope") @DefaultValue("") String scope, final @FormParam("followsymlink") @DefaultValue("false") String followSymlink, @FormParam("filename") @DefaultValue("download") String filename,
+            @FormParam("format") @DefaultValue("zip") String format, final @FormParam("path") List<String> paths, @Context Request request, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "POST /export");
-        ResponseBuilder builder = handleExport(false, filename, format, paths);
-        return builder.build();
+        return export(!scope.isEmpty(), followSymlink, filename, format, paths, request, securityContext);
     }
 
     @GET
     @Path("/export")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-    public Response exportGet(final @QueryParam("followsymlink") @DefaultValue("false") String followSymlink, @QueryParam("filename") @DefaultValue("download") String filename,
-            @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, final @QueryParam("noguest") @DefaultValue("false") boolean noguest,
-            @Context Request request) throws UnsupportedEncodingException {
+    public Response exportGet(final @QueryParam("scope") @DefaultValue("") String scope, final @QueryParam("followsymlink") @DefaultValue("false") String followSymlink, @QueryParam("filename") @DefaultValue("download") String filename,
+            @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, @Context Request request, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "GET /export");
-//        if ( noguest && ctx.getUserPrincipal() == null ) {
-//            LOGGER.log(Level.INFO, "user should be authentified but user principal is null, redirecting to auth servlet...");
-//            
-//        }
+        return export(!scope.isEmpty(), followSymlink, filename, format, paths, request, securityContext);
+    }
+
+    private Response export(boolean connected, String followSymlink, String filename, String format, List<String> paths, Request request, SecurityContext securityContext) throws UnsupportedEncodingException {
+        if (connected && securityContext.getUserPrincipal() == null) {
+            LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
+            Map<String, Object> params = new HashMap<>();
+            params.put("followSymlink", followSymlink);
+            params.put("filename", filename);
+            params.put("format", format);
+            params.put("path", paths);
+            String id = UUID.randomUUID().toString();
+            exportations.put(id ,params);
+            NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, "/content/exportations/" + id, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT),
+                    uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
+            UriBuilder builder = new ResteasyUriBuilder();
+            builder.path(ContentResource.class).queryParam("followsymlink", followSymlink).queryParam("filename", filename).queryParam("format", format).queryParam("path", paths);
+            return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, "/content/exportations/" + id).build()).cookie(rcookie).build();
+        }
         ResponseBuilder builder = handleExport(false, filename, format, paths);
         return builder.build();
     }
@@ -322,9 +317,9 @@ public class ContentResource {
     @Path("/key/{key}")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response key(@PathParam("key") String key, @QueryParam("fd") boolean download, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order,
-            @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext ctx, @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException,
-            InvalidPathException, OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException,
-            SecurityServiceException {
+            @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext securityContext, @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException,
+            InvalidPathException, OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException,
+            UnsupportedEncodingException, SecurityServiceException {
         LOGGER.log(Level.INFO, "GET /content/key/" + key);
         try {
             OrtolangObjectState state = browser.getState(key);
@@ -416,7 +411,7 @@ public class ContentResource {
             builder.cacheControl(cc);
             return builder.build();
         } catch (AccessDeniedException e) {
-            if (ctx.getUserPrincipal() == null || ctx.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+            if (securityContext.getUserPrincipal() == null || securityContext.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
                     NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, "/content/key/" + key, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT),
@@ -436,7 +431,7 @@ public class ContentResource {
 
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public Response workspaces(@QueryParam("O") @DefaultValue("A") String asc, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security) throws TemplateEngineException,
+    public Response workspaces(@QueryParam("O") @DefaultValue("A") String asc, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext securityContext) throws TemplateEngineException,
             CoreServiceException {
         LOGGER.log(Level.INFO, "GET /content");
         try {
@@ -460,7 +455,7 @@ public class ContentResource {
             representation.setElements(elements);
             return Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation)).build();
         } catch (AccessDeniedException e) {
-            if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+            if (securityContext.getUserPrincipal() == null || securityContext.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
                     NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, "/content", OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo
@@ -481,7 +476,7 @@ public class ContentResource {
     @Path("/{alias}")
     @Produces(MediaType.TEXT_HTML)
     public Response workspace(@PathParam("alias") String alias, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("l") @DefaultValue("true") boolean login,
-            @Context SecurityContext security, @Context Request request) throws TemplateEngineException, CoreServiceException, AliasNotFoundException, KeyNotFoundException, BrowserServiceException {
+            @Context SecurityContext securityContext, @Context Request request) throws TemplateEngineException, CoreServiceException, AliasNotFoundException, KeyNotFoundException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /content/" + alias);
         ContentRepresentation representation = new ContentRepresentation();
         representation.setContext(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT));
@@ -529,7 +524,7 @@ public class ContentResource {
             builder.cacheControl(cc);
             return builder.build();
         } catch (AccessDeniedException e) {
-            if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+            if (securityContext.getUserPrincipal() == null || securityContext.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
                     NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getBase() + representation.getPath(), OrtolangConfig.getInstance().getProperty(
@@ -554,7 +549,7 @@ public class ContentResource {
     @Path("/{alias}/{root}")
     @Produces(MediaType.TEXT_HTML)
     public Response snapshot(@PathParam("alias") String alias, @PathParam("root") final String root, @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order,
-            @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security, @Context Request request) throws TemplateEngineException, CoreServiceException,
+            @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext securityContext, @Context Request request) throws TemplateEngineException, CoreServiceException,
             AccessDeniedException, AliasNotFoundException, KeyNotFoundException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /content/" + alias + "/" + root);
         ContentRepresentation representation = new ContentRepresentation();
@@ -651,7 +646,7 @@ public class ContentResource {
             builder.cacheControl(cc);
             return builder.build();
         } catch (AccessDeniedException e) {
-            if (security.getUserPrincipal() == null || security.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+            if (securityContext.getUserPrincipal() == null || securityContext.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
                     NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getBase() + representation.getPath(), OrtolangConfig.getInstance().getProperty(
@@ -676,7 +671,7 @@ public class ContentResource {
     @Path("/{alias}/{root}/{path: .*}")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response path(@PathParam("alias") String alias, @PathParam("root") final String root, @PathParam("path") String path, @QueryParam("fd") boolean download,
-            @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext ctx,
+            @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext securityContext,
             @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, AliasNotFoundException, InvalidPathException,
             OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException, SecurityServiceException,
             PathNotFoundException {
@@ -784,7 +779,7 @@ public class ContentResource {
             builder.cacheControl(cc);
             return builder.build();
         } catch (AccessDeniedException e) {
-            if (ctx.getUserPrincipal() == null || ctx.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+            if (securityContext.getUserPrincipal() == null || securityContext.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 if (login) {
                     LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
                     NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getBase() + representation.getPath(), OrtolangConfig.getInstance().getProperty(
