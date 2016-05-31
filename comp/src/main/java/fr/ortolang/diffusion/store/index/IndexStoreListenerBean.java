@@ -52,29 +52,29 @@ import javax.jms.MessageListener;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 @MessageDriven(name = "IndexStoreListener", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
-		@ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
-		@ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
+        @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
+        @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @SecurityDomain("ortolang")
 public class IndexStoreListenerBean implements MessageListener {
 
-	private static final Logger LOGGER = Logger.getLogger(IndexStoreListenerBean.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(IndexStoreListenerBean.class.getName());
 
-	@EJB
-	private IndexStoreServiceWorker worker;
-	
-	@Override
-	@PermitAll
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void onMessage(Message message) {
-		try {
-			LOGGER.log(Level.FINE, "indexation message received");
-			String action = message.getStringProperty("action");
-			String key = message.getStringProperty("key");
-			LOGGER.log(Level.FINE, "submitting action to plain text indexation service worker");
-			worker.submit(key, action);
-		} catch (JMSException | IndexStoreServiceException e) {
-			LOGGER.log(Level.WARNING, "unable to handle indexation message", e);
-		}
-	}
+    @EJB
+    private IndexStoreServiceWorker worker;
+
+    @Override
+    @PermitAll
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void onMessage(Message message) {
+        try {
+            LOGGER.log(Level.FINE, "indexation message received");
+            String action = message.getStringProperty("action");
+            String key = message.getStringProperty("key");
+            LOGGER.log(Level.FINE, "submitting action to plain text indexation service worker");
+            worker.submit(key, action);
+        } catch (JMSException | IndexStoreServiceException e) {
+            LOGGER.log(Level.WARNING, "unable to handle indexation message", e);
+        }
+    }
 
 }

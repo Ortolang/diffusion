@@ -94,6 +94,8 @@ public class ExtractionServiceWorker {
 
     private static final String JOB_ACTION = "extract";
 
+    private static final int DELAY = 3000;
+
     @EJB
     private CoreService core;
 
@@ -157,7 +159,7 @@ public class ExtractionServiceWorker {
 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void submit(String key) {
-        Job job = jobService.create(JOB_TYPE, JOB_ACTION, key, System.currentTimeMillis());
+        Job job = jobService.create(JOB_TYPE, JOB_ACTION, key, System.currentTimeMillis() + DELAY);
         queue.put(job);
     }
 
