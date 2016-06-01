@@ -1,1 +1,1 @@
-[ORTOLANG] Publication of workspace '${wsalias}' validated
+[ORTOLANG] Publication of workspace '${wsalias}' approved

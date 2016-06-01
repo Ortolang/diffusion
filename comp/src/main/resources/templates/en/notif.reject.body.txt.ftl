@@ -1,11 +1,14 @@
-Hi, 
+Hi,
 
-Your publication request for workspace '${wsalias}' has been refused by moderators giving this explanation : 
+Your publication request for the workspace '${wsalias}' has been refused by the moderators:
 
 "
 ${reason}
 "
 
-Please, take those advices into consideration before renewing your request.
+Please update your workspace before renewing your request.
 
-Thanks for your attention, sincerely, ORTOLANG Team.
+If you need any further information, please do not hesitate to contact us.
+
+Sincerely,
+The ORTOLANG Team.

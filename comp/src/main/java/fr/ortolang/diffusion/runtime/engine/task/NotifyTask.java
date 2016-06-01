@@ -37,6 +37,11 @@ package fr.ortolang.diffusion.runtime.engine.task;
  */
 
 import java.io.UnsupportedEncodingException;
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -48,6 +53,8 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.template.MessageResolverMethod;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
 
@@ -74,6 +81,10 @@ public class NotifyTask extends RuntimeEngineTask {
     public static final String ACTION_REJECT = "reject";
     public static final String ACTION_ACCEPT = "accept";
     public static final String ACTION_REMIND = "remind";
+
+    private static final String SENDER_NAME = "ORTOLANG";
+    private static final String SENDER_EMAIL = "noreply@ortolang.fr";
+
     private Expression action;
 
     public NotifyTask() {
@@ -91,7 +102,21 @@ public class NotifyTask extends RuntimeEngineTask {
     public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
         try {
             String initier = execution.getVariable(Process.INITIER_VAR_NAME, String.class);
-            String lang = "fr";
+            String wsalias = (String) execution.getVariable("wsalias");
+            String marketUrl = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL);
+            ProfileData userLanguage = getMembershipService().systemGetProfileInfo(initier, "language");
+            String language;
+            if ( userLanguage != null ) {
+                language = userLanguage.getValue();
+            } else {
+                language = "fr";
+            }
+            Locale locale = new Locale(language);
+            Map<String, Object> model = new HashMap<>(execution.getVariables());
+            model.put("msg", new MessageResolverMethod(locale));
+            model.put("titleArgs", null);
+            model.put("bodyArgs", null);
+            model.put("marketUrl", marketUrl);
             switch ((String) action.getValue(execution)) {
             case ACTION_SUBMIT:
                 LOGGER.log(Level.FINE, "Notifying initier and moderators for new publication submission");
@@ -100,13 +125,13 @@ public class NotifyTask extends RuntimeEngineTask {
                     if (initierEmail == null || initierEmail.length() == 0) {
                         throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier [" + initier + "], no email provided in profile"));
                     } else {
-                        ProfileData language = getMembershipService().systemGetProfileInfo(initier, "language");
-                        if ( language != null ) {
-                            lang = language.getValue();
-                        }
-                        String subject = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.submit.subject", execution.getVariables());
-                        String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.submit.body.initier.txt", execution.getVariables());
-                        notify("ORTOLANG Service", "noreply@ortolang.fr", initierEmail, subject, message);
+                        model.put("userType", "user");
+                        model.put("title", "submit.title.initier");
+                        model.put("body", "submit.body.initier");
+                        model.put("bodyArgs", wsalias);
+                        String subject = getMessage("submit.subject", locale, wsalias);
+                        String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
+                        notify(SENDER_NAME, SENDER_EMAIL, initierEmail, subject, message);
                     }
                 } catch (MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier: " + e.getMessage()));
@@ -120,13 +145,22 @@ public class NotifyTask extends RuntimeEngineTask {
                             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify moderator [" + moderator
                                     + "], no email provided in profile"));
                         } else {
-                            ProfileData language = getMembershipService().systemGetProfileInfo(moderator, "language");
-                            if ( language != null ) {
-                                lang = language.getValue();
+                            ProfileData moderatorLanguage = getMembershipService().systemGetProfileInfo(moderator, "language");
+                            String mLanguage;
+                            if ( moderatorLanguage != null ) {
+                                mLanguage = moderatorLanguage.getValue();
+                            } else {
+                                mLanguage = "fr";
                             }
-                            String subject = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.submit.subject", execution.getVariables());
-                            String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.submit.body.moderator.txt", execution.getVariables());
-                            notify("ORTOLANG Service", "noreply@ortolang.fr", moderatorEmail, subject, message);
+                            Locale moderatorLocale = new Locale(mLanguage);
+                            model.put("msg", new MessageResolverMethod(moderatorLocale));
+                            model.put("userType", "moderator");
+                            model.put("title", "submit.title.moderator");
+                            model.put("body", "submit.body.moderator");
+                            model.put("bodyArgs", new String[] {wsalias, marketUrl});
+                            String subject = getMessage("submit.subject", moderatorLocale, wsalias);
+                            String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
+                            notify(SENDER_NAME, SENDER_EMAIL, moderatorEmail, subject, message);
                         }
                     }
                 } catch (AccessDeniedException | MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
@@ -141,13 +175,13 @@ public class NotifyTask extends RuntimeEngineTask {
                     if (initierEmail == null || initierEmail.length() == 0) {
                         throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier [" + initier + "], no email provided in profile"));
                     } else {
-                        ProfileData language = getMembershipService().systemGetProfileInfo(initier, "language");
-                        if ( language != null ) {
-                            lang = language.getValue();
-                        }
-                        String subject = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.accept.subject", execution.getVariables());
-                        String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.accept.body.txt", execution.getVariables());
-                        notify("ORTOLANG Service", "noreply@ortolang.fr", initierEmail, subject, message);
+                        model.put("userType", "user");
+                        model.put("title", "accept.title");
+                        model.put("body", "accept.body");
+                        model.put("bodyArgs", wsalias);
+                        String subject = getMessage("accept.subject", locale, wsalias);
+                        String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
+                        notify(SENDER_NAME, SENDER_EMAIL, initierEmail, subject, message);
                     }
                 } catch (MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier: " + e.getMessage()));
@@ -161,13 +195,13 @@ public class NotifyTask extends RuntimeEngineTask {
                     if (initierEmail == null || initierEmail.length() == 0) {
                         throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier [" + initier + "], no email provided in profile"));
                     } else {
-                        ProfileData language = getMembershipService().systemGetProfileInfo(initier, "language");
-                        if ( language != null ) {
-                            lang = language.getValue();
-                        }
-                        String subject = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.reject.subject", execution.getVariables());
-                        String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.reject.body.txt", execution.getVariables());
-                        notify("ORTOLANG Service", "noreply@ortolang.fr", initierEmail, subject, message);
+                        model.put("userType", "user");
+                        model.put("title", "reject.title");
+                        model.put("body", "reject.body");
+                        model.put("bodyArgs", new Object[] {wsalias, model.get("reason")});
+                        String subject = getMessage("reject.subject", locale, wsalias);
+                        String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
+                        notify(SENDER_NAME, SENDER_EMAIL, initierEmail, subject, message);
                     }
                 } catch (MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier: " + e.getMessage()));
@@ -184,13 +218,13 @@ public class NotifyTask extends RuntimeEngineTask {
                             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify moderator [" + moderator
                                     + "], no email provided in profile"));
                         } else {
-                            ProfileData language = getMembershipService().systemGetProfileInfo(moderator, "language");
-                            if ( language != null ) {
-                                lang = language.getValue();
-                            }
-                            String subject = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.remind.subject", execution.getVariables());
-                            String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process(lang + "/notif.remind.body.txt", execution.getVariables());
-                            notify("ORTOLANG Service", "noreply@ortolang.fr", moderatorEmail, subject, message);
+                            model.put("userType", "moderator");
+                            model.put("title", "remind.title");
+                            model.put("body", "remind.body");
+                            model.put("bodyArgs", wsalias);
+                            String subject = getMessage("remind.subject", locale, wsalias);
+                            String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
+                            notify(SENDER_NAME, SENDER_EMAIL, moderatorEmail, subject, message);
                         }
                     }
                 } catch (AccessDeniedException | MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
@@ -201,12 +235,12 @@ public class NotifyTask extends RuntimeEngineTask {
             default:
                 LOGGER.log(Level.FINE, "Unable to understand this action: " + (String) action.getValue(execution));
             }
-        } catch (SecurityException | IllegalStateException | EJBTransactionRolledbackException e) {
+        } catch (SecurityException | IllegalStateException | MembershipServiceException | KeyNotFoundException | EJBTransactionRolledbackException e) {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
             throw new RuntimeEngineTaskException("unexpected error occurred", e);
         }
-        
-//        try {
+
+        //        try {
 //            LOGGER.log(Level.FINE, "COMMIT Active User Transaction.");
 //            getUserTransaction().commit();
 //            getUserTransaction().begin();
@@ -221,8 +255,12 @@ public class NotifyTask extends RuntimeEngineTask {
         msg.setSubject(subject);
         msg.setRecipient(RecipientType.TO, new InternetAddress(receiverEmail));
         msg.setFrom(new InternetAddress(senderEmail, senderName));
-        msg.setContent(message, "text/plain; charset=\"UTF-8\"");
+        msg.setContent(message, "text/html; charset=\"UTF-8\"");
         Transport.send(msg);
+    }
+
+    private String getMessage(String key, Locale locale, Object ... arguments) {
+        return MessageFormat.format(ResourceBundle.getBundle("notification", locale).getString(key), arguments);
     }
 
     @Override

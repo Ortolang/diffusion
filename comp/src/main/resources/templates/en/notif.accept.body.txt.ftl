@@ -1,7 +1,10 @@
-Hi, 
+Hi,
 
-Your publication request for workspace '${wsalias}' has been validated by moderators.
+Your publication request for the workspace '${wsalias}' has been approved by the moderators.
 
-Your workspace content is now visible online. 
+Your workspace content is now visible online.
 
-Thanks for your contribution, sincerely, ORTOLANG Team.
+Thanks for your contribution,
+
+Sincerely,
+The ORTOLANG Team.

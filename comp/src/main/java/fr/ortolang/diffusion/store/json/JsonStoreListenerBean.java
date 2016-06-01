@@ -64,7 +64,6 @@ public class JsonStoreListenerBean implements MessageListener {
 
     @Override
     @PermitAll
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void onMessage(Message message) {
         try {
             LOGGER.log(Level.FINEST, "indexation message received");
