@@ -1,1 +1,0 @@
-[ORTOLANG] Publication of workspace '${wsalias}' approved
