@@ -241,6 +241,9 @@ public class ExtractionServiceWorker {
                                             tmp += ortolangJson.replaceFirst("\\{", ",");
                                             metadataJson = new JSONObject(tmp);
                                         } else {
+                                            if (name.equals("File Name") && metadata.get(name).startsWith("apache-tika")) {
+                                                continue;
+                                            }
                                             metadataJson.put(name, metadata.get(name));
                                         }
                                     }
