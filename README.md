@@ -1,7 +1,7 @@
 # Outils et Ressources pour un Traitement Optimisé de la LANGue
-## (Open Resources and TOols for LANGuage | English version available at [www.ortolang.fr](https://www.ortolang.fr/information/presentation))
+### (Open Resources and TOols for LANGuage | [English version](https://github.com/Ortolang/diffusion/blob/master/README_EN.md))
 
-ORTOLANG est un équipement d’excellence validé dans le cadre des investissements d’avenir. Son but est de proposer une infrastructure en réseau offrant un réservoir de données (corpus, lexiques, dictionnaires, etc.) et d’outils sur la langue et son traitement clairement disponibles et documentés qui :
+ORTOLANG est un équipement d’excellence validé dans le cadre des [investissements d’avenir](http://investissement-avenir.gouvernement.fr/). Son but est de proposer une infrastructure en réseau offrant un réservoir de données (corpus, lexiques, dictionnaires, etc.) et d’outils sur la langue et son traitement clairement disponibles et documentés qui :
 
 * permette, au travers d’une véritable mutualisation, à la recherche sur l’analyse, la modélisation et le traitement automatique de notre langue de se hisser au meilleur niveau international;
 * facilite l’usage et le transfert des ressources et outils mis en place au sein des laboratoires publics vers les partenaires industriels, en particulier vers les PME qui souvent ne peuvent pas se permettre de développer de telles ressources et outils de traitement de la langue compte tenu de leurs coûts de réalisation;
@@ -57,3 +57,7 @@ Au-delà de la réunion de ces partenaires réunissant des compétences discipli
 * études diachroniques ([ATILF](http://www.atilf.fr/), [LLL](http://www.lll.cnrs.fr/)),
 * sociolinguistique ([LLL](http://www.lll.cnrs.fr/), [MoDyCo](http://www.modyco.fr/)),
 * traitement Automatique des Langues ([LORIA](http://www.loria.fr/), [LPL](http://www.lpl-aix.fr/), [ATILF](http://www.atilf.fr/)).
+
+___
+
+**Plus d'information sur [www.ortolang.fr](https://www.ortolang.fr/information/presentation)**
