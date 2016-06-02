@@ -133,13 +133,13 @@ import java.util.logging.Logger;
         }
         // Execute the query
         List<String> results;
-        long count = 0;
+//        long count = 0;
         try {
             results = search.findCollections(fieldsProjection, content, group, limit, orderProp, orderDir, fieldsMap);
             // If group by then the count is not usefull (faster)
-            if (group == null) {
-            	count = search.countCollections(fieldsMap);
-            }
+//            if (group == null) {
+//            	count = search.countCollections(fieldsMap);
+//            }
         } catch (SearchServiceException e) {
             results = Collections.emptyList();
             LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
@@ -149,7 +149,7 @@ import java.util.logging.Logger;
         for (String key : results) {
             representation.addEntry(key);
         }
-        representation.setSize(count);
+//        representation.setSize(count);
         return Response.ok(representation).build();
     }
 
