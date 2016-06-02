@@ -362,7 +362,12 @@ public class SearchServiceBean implements SearchService {
         queryBuilder.append(whereClause(fieldsValue));
         
         if (group != null) {
-            queryBuilder.append(" GROUP BY ").append("`meta_ortolang-item-json.").append(group).append("`");
+            String[] groupPart = group.split("\\.");
+            if (groupPart.length > 1) {
+                queryBuilder.append(" GROUP BY ").append("`meta_").append(groupPart[0]).append(".").append(groupPart[1]).append("`");
+            } else {
+                queryBuilder.append(" GROUP BY `").append(group).append("`");
+            }
         }
 
         if (orderProp != null) {
