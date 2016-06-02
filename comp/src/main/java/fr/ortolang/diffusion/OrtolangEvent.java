@@ -54,124 +54,126 @@ import java.util.logging.Logger;
 
 public abstract class OrtolangEvent {
 
-	private static final Logger LOGGER = Logger.getLogger(OrtolangEvent.class.getName());
-	
-	public static final String DATE = "eventdate";
-	public static final String TYPE = "eventtype";
-	public static final String FROM_OBJECT = "fromobject";
-	public static final String THROWED_BY = "throwedby";
-	public static final String OBJECT_TYPE = "objecttype";
-	public static final String ARGUMENTS = "arguments";
-	
-	private static HashMap<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> ();
-	
-	public static SimpleDateFormat getEventDateFormatter() {
-		String key = Thread.currentThread().getId() + "";
-		if ( sdf.get(key) == null ) {
-			sdf.put(key, new SimpleDateFormat(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.DATE_FORMAT_PATTERN)));
-		}
-		return sdf.get(key);
-	}
-	
-	public abstract Date getDate();
-	
-	public abstract void setDate(Date date);
-	
-	public String getFormattedDate() {
-		return getEventDateFormatter().format(getDate());
-	}
-	
-	public void setFormattedDate(String date) throws OrtolangException {
-		try {
-			this.setDate(getEventDateFormatter().parse(date));
-		} catch ( ParseException e ) {
-			throw new OrtolangException("unable to parse date", e);
-		}
-	}
-	
-	public abstract String getType();
-	
-	public abstract void setType(String type);
-	
-	public abstract String getFromObject();
-	
-	public abstract void setFromObject(String from);
-	
-	public abstract String getObjectType();
-	
-	public abstract void setObjectType(String resource);
-	
-	public abstract String getThrowedBy();
-	
-	public abstract void setThrowedBy(String throwedby);
-	
-	public abstract Map<String, String> getArguments();
-	
-	public abstract void setArguments(Map<String, String> arguments);
-	
-	@SuppressWarnings("unchecked")
-	public void fromJMSMessage(Message message) throws OrtolangException {
-		try {
-			setFormattedDate(message.getStringProperty(OrtolangEvent.DATE));
-			setThrowedBy(message.getStringProperty(OrtolangEvent.THROWED_BY));
-			setFromObject(message.getStringProperty(OrtolangEvent.FROM_OBJECT));
-	        setObjectType(message.getStringProperty(OrtolangEvent.OBJECT_TYPE));
-			setType(message.getStringProperty(OrtolangEvent.TYPE));
-			String serializedArgs = message.getStringProperty(OrtolangEvent.ARGUMENTS);
-			if (serializedArgs != null) {
-				ByteArrayInputStream bais = new ByteArrayInputStream(Base64.decodeBase64(serializedArgs));
-				try {
-					ObjectInputStream ois = new ObjectInputStream(bais);
-					Map<String, String> args = (Map<String, String>) ois.readObject();
-					setArguments(args);
-				} catch (IOException | ClassNotFoundException e) {
-					LOGGER.log(Level.SEVERE, "Unable to deserialize arguments", e);
-				}
-			}
-		} catch ( JMSException e ) {
-			throw new OrtolangException("unable to build event from jms message", e);
-		}
-	}
-	
-	public static String buildEventType(String serviceName, String resourceName, String eventName) {
-		StringBuilder event = new StringBuilder();
-    	if ( serviceName != null && serviceName.length() > 0 ) {
-    		event.append(serviceName).append(".");
-    	}
-    	if ( resourceName != null && resourceName.length() > 0 ) {
-    		event.append(resourceName).append(".");
-    	}
-    	event.append(eventName);
-    	return event.toString();
+    private static final Logger LOGGER = Logger.getLogger(OrtolangEvent.class.getName());
+
+    public static final String DATE = "eventdate";
+    public static final String TYPE = "eventtype";
+    public static final String FROM_OBJECT = "fromobject";
+    public static final String THROWED_BY = "throwedby";
+    public static final String OBJECT_TYPE = "objecttype";
+    public static final String ARGUMENTS = "arguments";
+
+    private static HashMap<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> ();
+
+    public static SimpleDateFormat getEventDateFormatter() {
+        String key = Thread.currentThread().getId() + "";
+        if ( sdf.get(key) == null ) {
+            sdf.put(key, new SimpleDateFormat(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.DATE_FORMAT_PATTERN)));
+        }
+        return sdf.get(key);
     }
 
-	public static class ArgumentsBuilder {
+    public abstract Date getDate();
 
-		private Map<String, String> args;
+    public abstract void setDate(Date date);
 
-		public ArgumentsBuilder(int initialCapacity) {
-			args = new HashMap<>(initialCapacity);
-		}
+    public String getFormattedDate() {
+        return getEventDateFormatter().format(getDate());
+    }
 
-		public ArgumentsBuilder(String key, String value) {
-			this(1);
-			addArgument(key, value);
-		}
+    public void setFormattedDate(String date) throws OrtolangException {
+        try {
+            if (date != null) {
+                this.setDate(getEventDateFormatter().parse(date));
+            }
+        } catch ( ParseException e ) {
+            throw new OrtolangException("unable to parse date", e);
+        }
+    }
 
-		public ArgumentsBuilder(Map<String, String> args) {
-			this.args = args;
-		}
+    public abstract String getType();
 
-		public ArgumentsBuilder addArgument(String key, String value) {
-		    if ( value == null ) {
-		        value = "";
-		    }
-			args.put(key, value);
-			return this;
-		}
+    public abstract void setType(String type);
 
-		public Map<String, String> build() {
-			return args;
-		}
-	}
+    public abstract String getFromObject();
+
+    public abstract void setFromObject(String from);
+
+    public abstract String getObjectType();
+
+    public abstract void setObjectType(String resource);
+
+    public abstract String getThrowedBy();
+
+    public abstract void setThrowedBy(String throwedby);
+
+    public abstract Map<String, String> getArguments();
+
+    public abstract void setArguments(Map<String, String> arguments);
+
+    @SuppressWarnings("unchecked")
+    public void fromJMSMessage(Message message) throws OrtolangException {
+        try {
+            setFormattedDate(message.getStringProperty(OrtolangEvent.DATE));
+            setThrowedBy(message.getStringProperty(OrtolangEvent.THROWED_BY));
+            setFromObject(message.getStringProperty(OrtolangEvent.FROM_OBJECT));
+            setObjectType(message.getStringProperty(OrtolangEvent.OBJECT_TYPE));
+            setType(message.getStringProperty(OrtolangEvent.TYPE));
+            String serializedArgs = message.getStringProperty(OrtolangEvent.ARGUMENTS);
+            if (serializedArgs != null) {
+                ByteArrayInputStream bais = new ByteArrayInputStream(Base64.decodeBase64(serializedArgs));
+                try {
+                    ObjectInputStream ois = new ObjectInputStream(bais);
+                    Map<String, String> args = (Map<String, String>) ois.readObject();
+                    setArguments(args);
+                } catch (IOException | ClassNotFoundException e) {
+                    LOGGER.log(Level.SEVERE, "Unable to deserialize arguments", e);
+                }
+            }
+        } catch ( JMSException e ) {
+            throw new OrtolangException("unable to build event from jms message", e);
+        }
+    }
+
+    public static String buildEventType(String serviceName, String resourceName, String eventName) {
+        StringBuilder event = new StringBuilder();
+        if ( serviceName != null && serviceName.length() > 0 ) {
+            event.append(serviceName).append(".");
+        }
+        if ( resourceName != null && resourceName.length() > 0 ) {
+            event.append(resourceName).append(".");
+        }
+        event.append(eventName);
+        return event.toString();
+    }
+
+    public static class ArgumentsBuilder {
+
+        private Map<String, String> args;
+
+        public ArgumentsBuilder(int initialCapacity) {
+            args = new HashMap<>(initialCapacity);
+        }
+
+        public ArgumentsBuilder(String key, String value) {
+            this(1);
+            addArgument(key, value);
+        }
+
+        public ArgumentsBuilder(Map<String, String> args) {
+            this.args = args;
+        }
+
+        public ArgumentsBuilder addArgument(String key, String value) {
+            if ( value == null ) {
+                value = "";
+            }
+            args.put(key, value);
+            return this;
+        }
+
+        public Map<String, String> build() {
+            return args;
+        }
+    }
 }

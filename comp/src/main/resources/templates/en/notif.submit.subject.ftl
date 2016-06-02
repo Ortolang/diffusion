@@ -1,1 +1,0 @@
-[ORTOLANG] Publication request submitted for workspace '${wsalias}'

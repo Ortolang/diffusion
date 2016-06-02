@@ -64,7 +64,6 @@ public class IndexStoreListenerBean implements MessageListener {
 
     @Override
     @PermitAll
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void onMessage(Message message) {
         try {
             LOGGER.log(Level.FINE, "indexation message received");

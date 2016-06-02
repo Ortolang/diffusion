@@ -1,1 +1,0 @@
-[ORTOLANG] Reminder : a publication request for workspace '${wsalias}' is waiting

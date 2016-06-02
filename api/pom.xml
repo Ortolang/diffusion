@@ -9,7 +9,7 @@
 	<parent>
 		<groupId>fr.ortolang.diffusion</groupId>
 		<artifactId>ortolang-diffusion</artifactId>
-		<version>4.5.0-SNAPSHOT</version>
+		<version>4.6.0-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -143,7 +143,22 @@
 						</tag>
 					</tags>
 				</configuration>
-
+			</plugin>
+			<plugin>
+				<groupId>com.sebastian-daschner</groupId>
+				<artifactId>jaxrs-analyzer-maven-plugin</artifactId>
+				<version>0.9</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>analyze-jaxrs</goal>
+						</goals>
+						<configuration>
+							<backend>swagger</backend>
+							<deployedDomain>repositroy.ortolang.fr/api</deployedDomain>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 		<pluginManagement>
@@ -170,6 +185,25 @@
 										</versionRange>
 										<goals>
 											<goal>javadoc</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											com.sebastian-daschner
+										</groupId>
+										<artifactId>
+											jaxrs-analyzer-maven-plugin
+										</artifactId>
+										<versionRange>
+											[0.9,)
+										</versionRange>
+										<goals>
+											<goal>analyze-jaxrs</goal>
 										</goals>
 									</pluginExecutionFilter>
 									<action>
