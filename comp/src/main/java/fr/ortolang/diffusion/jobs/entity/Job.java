@@ -45,9 +45,9 @@ import java.util.concurrent.TimeUnit;
 @Entity
 @NamedQueries({
         @NamedQuery(name = "countAllJobs", query = "SELECT count(j) FROM Job j"),
-        @NamedQuery(name = "listAllJobs", query = "SELECT j FROM Job j ORDER BY j.id DESC"),
+        @NamedQuery(name = "listAllJobs", query = "SELECT j FROM Job j ORDER BY j.id"),
         @NamedQuery(name = "countJobsOfType", query = "SELECT count(j) FROM Job j WHERE :type = j.type"),
-        @NamedQuery(name = "listJobsOfType", query = "SELECT j FROM Job j WHERE :type = j.type ORDER BY j.id DESC")
+        @NamedQuery(name = "listJobsOfType", query = "SELECT j FROM Job j WHERE :type = j.type ORDER BY j.id")
 })
 public class Job implements Serializable, Delayed {
 
@@ -133,7 +133,6 @@ public class Job implements Serializable, Delayed {
                 ", action='" + action + '\'' +
                 ", target='" + target + '\'' +
                 ", timestamp=" + timestamp +
-                ", parameters=" + parameters +
                 "} " + super.toString();
     }
 

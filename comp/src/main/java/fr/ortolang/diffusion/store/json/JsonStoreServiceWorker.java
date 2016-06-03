@@ -67,7 +67,7 @@ public class JsonStoreServiceWorker {
 
     private static final long DEFAULT_INDEXATION_DELAY = 15000;
 
-    private static final String JOB_TYPE = "indexing";
+    private static final String JOB_TYPE = "json-indexing";
 
     @EJB
     private JsonStoreService store;
@@ -181,7 +181,7 @@ public class JsonStoreServiceWorker {
                     } catch (JsonStoreServiceException | OrtolangException e) {
                         LOGGER.log(Level.WARNING, "unable to perform job action " + job.getAction() + " for key " + job.getTarget(), e);
                         if (e.getCause() instanceof KeyNotFoundException) {
-                            LOGGER.log(Level.WARNING, "Key not found: removing indexing job");
+                            LOGGER.log(Level.WARNING, "Key not found: removing indexing job " + job.getId());
                             jobService.remove(job.getId());
                         }
                     }
