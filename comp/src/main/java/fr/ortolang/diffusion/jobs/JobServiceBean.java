@@ -95,6 +95,7 @@ public class JobServiceBean implements JobService {
     public void remove(Long id) {
         Job job = em.find(Job.class, id);
         if (job != null) {
+            LOGGER.log(Level.FINE, "Removing job " + id + " of type '" + job.getType() + "' (target: " + job.getTarget() + ')');
             em.remove(job);
         }
     }

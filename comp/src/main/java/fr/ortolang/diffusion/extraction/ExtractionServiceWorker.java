@@ -256,7 +256,7 @@ public class ExtractionServiceWorker {
                     } catch (OrtolangException | MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | SAXException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException | IndexingServiceException | AuthorisationServiceException e) {
                         LOGGER.log(Level.WARNING, "unable to extract metadata for data object with key " + key, e);
                         if (e instanceof KeyNotFoundException) {
-                            LOGGER.log(Level.WARNING, "Key not found: removing extraction job");
+                            LOGGER.log(Level.WARNING, "Key not found: removing extraction job " + job.getId());
                             jobService.remove(job.getId());
                         }
                     }
