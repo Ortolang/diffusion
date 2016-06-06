@@ -46,6 +46,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -117,6 +118,7 @@ import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
 @Secured
+@RolesAllowed("admin")
 public class AdminResource {
 
     private static final Logger LOGGER = Logger.getLogger(AdminResource.class.getName());

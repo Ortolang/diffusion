@@ -3156,7 +3156,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    @RolesAllowed("system")
+    @RolesAllowed({"system", "admin"})
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void systemCreateMetadata(String key, String name, String hash, String filename)
             throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
