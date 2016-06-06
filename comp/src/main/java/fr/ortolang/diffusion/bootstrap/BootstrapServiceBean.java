@@ -276,6 +276,10 @@ public class BootstrapServiceBean implements BootstrapService {
             String schemaTemplateHash = core.put(schemaTemplateInputStream);
             core.createMetadataFormat(MetadataFormat.TEMPLATE, "Schema for ORTOLANG collection template", schemaTemplateHash, "", false, false);
 
+            InputStream schemaTrustRankInputStream = getClass().getClassLoader().getResourceAsStream("schema/system-trustrank-schema.json");
+            String schemaTrustRankHash = core.put(schemaTrustRankInputStream);
+            core.createMetadataFormat(MetadataFormat.TRUSTRANK, "Schema for applying a trusted notation on item", schemaTrustRankHash, "", true, true);
+
             InputStream schemaAudioInputStream = getClass().getClassLoader().getResourceAsStream("schema/system-x-audio.json");
             String schemaAudioHash = core.put(schemaAudioInputStream);
             core.createMetadataFormat(MetadataFormat.AUDIO, "Schema for ORTOLANG audio metadata", schemaAudioHash, "", false, false);

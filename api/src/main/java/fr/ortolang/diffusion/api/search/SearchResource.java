@@ -119,11 +119,16 @@ import java.util.logging.Logger;
             for (String field : fields.split(",")) {
                 String[] fieldPart = field.split(":");
                 if (fieldPart.length > 1) {
-                    fieldsProjection.put("meta_ortolang-item-json." + fieldPart[0], fieldPart[1]);
+                	String[] fieldNamePart = fieldPart[0].split("\\.");
+                	if (fieldNamePart.length > 1) {
+                		fieldsProjection.put("meta_"+fieldNamePart[0]+"." + fieldNamePart[1], fieldPart[1]);
+                	} else {
+                		
+                	}
                 } else {
                 	String[] fieldNamePart = field.split("\\.");
                 	if (fieldNamePart.length > 1) {
-                		fieldsProjection.put("meta_ortolang-"+fieldNamePart[0]+"-json." + fieldNamePart[1], fieldNamePart[1]);
+                		fieldsProjection.put("meta_"+fieldNamePart[0]+"." + fieldNamePart[1], fieldNamePart[1]);
                 	} else {
                 		fieldsProjection.put(field, field);
                 	}

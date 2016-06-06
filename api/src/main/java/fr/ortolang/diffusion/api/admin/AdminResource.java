@@ -37,6 +37,7 @@ package fr.ortolang.diffusion.api.admin;
  */
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -50,6 +51,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -62,6 +64,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import fr.ortolang.diffusion.jobs.entity.Job;
 import org.jboss.resteasy.annotations.GZIP;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
@@ -70,13 +73,20 @@ import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.Secured;
+import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.runtime.HumanTaskRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessTypeRepresentation;
+import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -86,9 +96,11 @@ import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreContent;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
+import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
@@ -124,13 +136,15 @@ public class AdminResource {
     @EJB
     private RegistryService registry;
     @EJB
+    private CoreService core;
+    @EJB
     private RuntimeService runtime;
     @EJB
     private EventService event;
     @EJB
     private SubscriptionService subscription;
     @EJB
-    private MembershipService membership;;
+    private MembershipService membership;
 
     @GET
     @Path("/infos/{service}")
@@ -176,6 +190,34 @@ public class AdminResource {
         LOGGER.log(Level.INFO, "DELETE /admin/registry/entries/" + key);
         registry.delete(key, true);
         return Response.ok().build();
+    }
+    
+
+    @POST
+    @Path("/core/metadata")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @GZIP
+    public Response createMetadata(@MultipartForm MetadataObjectFormRepresentation form) throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
+    	LOGGER.log(Level.INFO, "POST /admin/core/metadata");	
+    	try {
+	    	if (form.getKey() == null) {
+	            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
+	        }
+	    	if (form.getName() == null) {
+	            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'name' is mandatory").build();
+	        }
+	        if (form.getStream() != null) {
+	            form.setStreamHash(core.put(form.getStream()));
+	        }
+	
+	    	core.systemCreateMetadata(form.getKey(), form.getName(), form.getStreamHash(), form.getFilename());
+	    	//TODO return with the metadata key
+	    	URI location = ApiUriBuilder.getApiUriBuilder().path(ObjectResource.class).path(form.getKey()).build();
+	    	return Response.created(location).build();
+	    } catch (DataCollisionException e) {
+	        LOGGER.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
+	        return Response.serverError().entity(e.getMessage()).build();
+	    }
     }
     
     @DELETE

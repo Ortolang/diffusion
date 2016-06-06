@@ -58,6 +58,7 @@ public class MetadataFormat {
     public static final String THUMB = "ortolang-thumb";
     public static final String TEMPLATE = "ortolang-template-json";
     // System metadata
+    public static final String TRUSTRANK = "system-trustrank-json";
     // Metadata extraction
     public static final String AUDIO = "system-x-audio-json";
     public static final String VIDEO = "system-x-video-json";
