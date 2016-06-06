@@ -46,7 +46,7 @@ import java.util.logging.Logger;
 
 public class OrtolangConfig {
 
-    private static final String CURRENT_CONFIG_VERSION = "10";
+    private static final String CURRENT_CONFIG_VERSION = "11";
     private static final Logger LOGGER = Logger.getLogger(OrtolangConfig.class.getName());
     private static OrtolangConfig config;
     private Properties props;
@@ -153,7 +153,9 @@ public class OrtolangConfig {
         SSL_KEY_ALIAS ("ssl.key.alias"),
         SSL_KEY_PASSWORD ("ssl.key.password"),
 
-        PRERENDERING_ACTIVATED("prerendering.activated");
+        PRERENDERING_ACTIVATED("prerendering.activated"),
+
+        CACHE_VERSION ("cache.version");
 
 
         private final String key;
