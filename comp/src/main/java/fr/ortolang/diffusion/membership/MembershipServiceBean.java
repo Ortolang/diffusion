@@ -1178,11 +1178,13 @@ public class MembershipServiceBean implements MembershipService {
                 }
                 JsonObjectBuilder builder = Json.createObjectBuilder();
                 builder.add("key", key);
+                builder.add("givenName", profile.getGivenName());
+                builder.add("familyName", profile.getFamilyName());
                 builder.add("fullname", profile.getFullName());
-                builder.add("email", profile.getEmail());
+                builder.add("emailHash", profile.getEmailHash());
                 if (profile.getEmail() != null && profile.getEmail().length() > 0) {
                     if (profile.getEmailVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
-                    	builder.add("emailhash", profile.getEmailHash());
+                        builder.add("email", profile.getEmail());
                     }
                 }
                 JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
