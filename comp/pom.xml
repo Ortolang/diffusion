@@ -194,6 +194,21 @@
 
     <build>
         <finalName>${project.artifactId}</finalName>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <excludes>
+                    <exclude>**/arquillian.xml</exclude>
+                </excludes>
+            </testResource>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <includes>
+                    <include>**/arquillian.xml</include>
+                </includes>
+                <filtering>true</filtering>
+            </testResource>
+        </testResources>
         <plugins>
             <plugin>
                 <artifactId>maven-ejb-plugin</artifactId>
@@ -206,6 +221,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${version.surefire.plugin}</version>
                 <configuration>
+                    <systemPropertyVariables>
+                        <ortolang.home>${ortolang.home}</ortolang.home>
+                    </systemPropertyVariables>
                     <includes>
                         <include>**/DiffusionTestSuite.java</include>
                     </includes>

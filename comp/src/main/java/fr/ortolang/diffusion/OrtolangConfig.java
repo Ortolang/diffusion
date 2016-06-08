@@ -54,34 +54,34 @@ public class OrtolangConfig {
     private Path orientdbConfig;
 
     private OrtolangConfig() throws Exception {
-        if ( System.getenv("ORTOLANG_HOME") != null ) {
-            home = Paths.get(System.getenv("ORTOLANG_HOME"));
-        } else if ( System.getProperty("ortolang.home") != null ) {
+        if (System.getProperty("ortolang.home") != null && System.getProperty("ortolang.home").length() > 0) {
             home = Paths.get(System.getProperty("ortolang.home"));
+        } else if (System.getenv("ORTOLANG_HOME") != null && System.getenv("ORTOLANG_HOME").length() > 0) {
+            home = Paths.get(System.getenv("ORTOLANG_HOME"));
         } else {
             home = Paths.get(System.getProperty("user.home"), ".ortolang");
         }
-        if ( !Files.exists(home) ) {
+        if (!Files.exists(home)) {
             Files.createDirectories(home);
         }
         LOGGER.log(Level.INFO, "ORTOLANG_HOME set to : " + home);
 
         props = new Properties();
         Path configFilePath = Paths.get(home.toString(), "config.properties");
-        if ( !Files.exists(configFilePath) ) {
+        if (!Files.exists(configFilePath)) {
             Files.copy(OrtolangConfig.class.getClassLoader().getResourceAsStream("config.properties"), configFilePath);
         }
-        try (InputStream in = Files.newInputStream(configFilePath) ) {
+        try (InputStream in = Files.newInputStream(configFilePath)) {
             props.load(in);
             String fileVersion = this.getProperty(Property.CONFIG_VERSION);
-            if ( !fileVersion.equals(CURRENT_CONFIG_VERSION) ) {
+            if (!fileVersion.equals(CURRENT_CONFIG_VERSION)) {
                 LOGGER.log(Level.SEVERE, "Configuration File Version mismatch with Current Config Version: " + fileVersion + " != " + CURRENT_CONFIG_VERSION + "  --> UPDATE CONFIGURATION FILE");
                 throw new Exception("Version mismatch between config file version: " + fileVersion + " and current config version: " + CURRENT_CONFIG_VERSION + " !! Please update your config file");
             }
         }
         orientdbConfig = Paths.get(home.toString(), "orientdb-config.xml");
         Path orientdbConfigFilePath = Paths.get(home.toString(), "orientdb-config.xml");
-        if ( !Files.exists(orientdbConfigFilePath) ) {
+        if (!Files.exists(orientdbConfigFilePath)) {
             Files.copy(OrtolangConfig.class.getClassLoader().getResourceAsStream("orientdb-config.xml"), orientdbConfigFilePath);
         }
     }
@@ -112,49 +112,48 @@ public class OrtolangConfig {
 
     public enum Property {
 
-        CONFIG_VERSION ("config.version"),
-        HANDLE_PREFIX ("handle.prefix"),
-        DATE_FORMAT_PATTERN ("date.format.pattern"),
+        CONFIG_VERSION("config.version"),
+        HANDLE_PREFIX("handle.prefix"),
+        DATE_FORMAT_PATTERN("date.format.pattern"),
 
-        API_URL_SSL ("api.url.ssl"),
-        API_URL_NOSSL ("api.url.nossl"),
-        API_CONTEXT ("api.context"),
-        API_PATH_OBJECTS ("api.path.objects"),
-        API_PATH_CONTENT ("api.path.content"),
-        API_PATH_SUB ("api.path.sub"),
-        API_PATH_OAI ("api.path.oai"),
-        API_PATH_SEO ("api.path.seo"),
+        API_URL_SSL("api.url.ssl"),
+        API_URL_NOSSL("api.url.nossl"),
+        API_CONTEXT("api.context"),
+        API_PATH_OBJECTS("api.path.objects"),
+        API_PATH_CONTENT("api.path.content"),
+        API_PATH_SUB("api.path.sub"),
+        API_PATH_OAI("api.path.oai"),
+        API_PATH_SEO("api.path.seo"),
 
-        AUTH_SERVER_URL ("auth.server.url"),
-        AUTH_CLIENT_PUBKEY ("auth.pubkey"),
-        AUTH_REALM ("auth.realm"),
-        AUTH_CLIENT ("auth.client"),
+        AUTH_SERVER_URL("auth.server.url"),
+        AUTH_CLIENT_PUBKEY("auth.pubkey"),
+        AUTH_REALM("auth.realm"),
+        AUTH_CLIENT("auth.client"),
 
-        MARKET_SERVER_URL ("market.server.url"),
+        MARKET_SERVER_URL("market.server.url"),
 
-        RUNTIME_DEFINITIONS ("runtime.definitions"),
+        RUNTIME_DEFINITIONS("runtime.definitions"),
 
-        THUMBNAIL_GENERATORS ("thumbnail.generators"),
+        THUMBNAIL_GENERATORS("thumbnail.generators"),
 
-        FTP_SERVER_HOST ("ftp.server.host"),
-        FTP_SERVER_PORT ("ftp.server.port"),
-        FTP_SERVER_PASSIVE_PORTS ("ftp.server.ports.pasv"),
-        FTP_SERVER_SSL ("ftp.server.ssl"),
+        FTP_SERVER_HOST("ftp.server.host"),
+        FTP_SERVER_PORT("ftp.server.port"),
+        FTP_SERVER_PASSIVE_PORTS("ftp.server.ports.pasv"),
+        FTP_SERVER_SSL("ftp.server.ssl"),
 
-        PIWIK_HOST ("piwik.host"),
-        PIWIK_SITE_ID ("piwik.site.id"),
+        PIWIK_HOST("piwik.host"),
+        PIWIK_SITE_ID("piwik.site.id"),
 
-        ZIP_IGNORED_FILES ("zip.ignored.files"),
+        ZIP_IGNORED_FILES("zip.ignored.files"),
 
-        STATIC_SITE_VERSION ("static.site.version"),
-        
-        SSL_KEYSTORE_FILE ("ssl.keystore.file"), 
-        SSL_KEYSTORE_PASSWORD ("ssl.keystore.password"),
-        SSL_KEY_ALIAS ("ssl.key.alias"),
-        SSL_KEY_PASSWORD ("ssl.key.password"),
+        STATIC_SITE_VERSION("static.site.version"),
+
+        SSL_KEYSTORE_FILE("ssl.keystore.file"),
+        SSL_KEYSTORE_PASSWORD("ssl.keystore.password"),
+        SSL_KEY_ALIAS("ssl.key.alias"),
+        SSL_KEY_PASSWORD("ssl.key.password"),
 
         PRERENDERING_ACTIVATED("prerendering.activated");
-
 
         private final String key;
 
