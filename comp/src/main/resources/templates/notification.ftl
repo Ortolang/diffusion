@@ -182,7 +182,7 @@
                             <a href="${marketUrl}" target="_blank" style="color: #111111; font-weight: 700;">${msg("home")}</a> -
                             <#if userType == "moderator"><a href="${marketUrl}profiles/tasks" target="_blank" style="color: #111111; font-weight: 700;">${msg("tasks")}</a> -</#if>
                             <a href="${marketUrl}workspaces" target="_blank" style="color: #111111; font-weight: 700;">${msg("workspaces")}</a> -
-                            <a href="${marketUrl}profile/information" target="_blank" style="color: #111111; font-weight: 700;">${msg("profile")}</a> -
+                            <a href="${marketUrl}profiles/me/edition" target="_blank" style="color: #111111; font-weight: 700;">${msg("profile")}</a> -
                             <a href="${marketUrl}information/presentation" target="_blank" style="color: #111111; font-weight: 700;">${msg("information")}</a>
                         </p>
                     </td>
