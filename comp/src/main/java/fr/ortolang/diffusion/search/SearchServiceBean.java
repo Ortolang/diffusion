@@ -234,21 +234,14 @@ public class SearchServiceBean implements SearchService {
     @Override
     public String getCollection(String key) throws SearchServiceException {
         LOGGER.log(Level.FINE, "Gets collection with key : " + key);
-        String result = null;
         if(key!=null) {
-            // Build the query
-            String query = "SELECT * FROM collection WHERE status='published' AND key = '" + key + "'";
-            // Execute the query
             try {
-                List<String> results = jsonStore.search(query);
-                if (results.size() == 1) {
-                    result = results.get(0);
-                }
+            	return jsonStore.getDocument(key);
             } catch (JsonStoreServiceException e) {
                 LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
             }
         }
-        return result;
+        return null;
     }
 
     @Override
@@ -373,7 +366,7 @@ public class SearchServiceBean implements SearchService {
         if (orderProp != null) {
         	String[] orderPropPart = orderProp.split("\\.");
         	if (orderPropPart.length > 1) {
-        		queryBuilder.append(" ORDER BY ").append("`meta_ortolang-").append(orderPropPart[0]).append("-json.").append(orderPropPart[1]).append("`");
+        		queryBuilder.append(" ORDER BY ").append("`meta_").append(orderPropPart[0]).append(".").append(orderPropPart[1]).append("`");
         	} else {
         		queryBuilder.append(" ORDER BY ").append("`").append(orderProp).append("`");
         	}

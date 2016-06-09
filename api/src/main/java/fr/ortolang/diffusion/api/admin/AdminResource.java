@@ -358,6 +358,24 @@ public class AdminResource {
         return Response.ok(document).build();
     }
 
+    @DELETE
+    @Path("/store/json/documents/{key}")
+    @GZIP
+    public Response deleteJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
+        LOGGER.log(Level.INFO, "DELETE /admin/store/json/" + key);
+        json.remove(key);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("/store/json/search")
+    @GZIP
+    public Response searchInJsonStore(@QueryParam(value = "query") String query) throws JsonStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/store/json/search?query=" + query);
+        List<String> documents = json.search(query);
+        return Response.ok(documents).build();
+    }
+
     @GET
     @Path("/store/index/worker")
     @GZIP

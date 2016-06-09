@@ -145,6 +145,12 @@ public class JsonStoreServiceBean implements JsonStoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String getDocument(String key) throws JsonStoreServiceException {
+        return getJSONByKey(key);
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<ODocument> systemSearch(String query) throws JsonStoreServiceException {
         try (ODatabaseDocumentTx db = pool.acquire()) {
             return db.query(new OSQLSynchQuery<ODocument>(query));
