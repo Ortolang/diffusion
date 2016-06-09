@@ -132,17 +132,17 @@ public class MembershipServiceTest {
 
         EnterpriseArchive ear = ShrinkWrap.create(EnterpriseArchive.class, "diffusion-server-ear.ear");
         ear.addAsModule(jar);
-        ear.addAsLibraries(pom.resolve("commons-io:commons-io:2.4").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("com.healthmarketscience.rmiio:rmiio:2.0.4").withTransitivity().asFile());
         ear.addAsLibraries(pom.resolve("org.wildfly:wildfly-ejb-client-bom:pom:9.0.1.Final").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-core:4.6.0").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-highlighter:4.6.0").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-analyzers-common:4.6.0").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-queryparser:4.6.0").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core:1.8").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-parsers:1.8").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("com.github.fge:json-schema-validator:2.2.6").withTransitivity().asFile());
         ear.addAsLibraries(pom.resolve("org.codehaus.jettison:jettison:1.3.3").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("com.healthmarketscience.rmiio:rmiio:2.0.4").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("commons-io:commons-io").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-core").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-highlighter").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-analyzers-common").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-queryparser").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-parsers").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("com.github.fge:json-schema-validator").withTransitivity().asFile());
         LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 
         return ear;

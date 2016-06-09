@@ -111,7 +111,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
     private IndexWriter writer;
 
     public IndexStoreServiceBean() {
-        LOGGER.log(Level.INFO, "Instanciating service");
+        LOGGER.log(Level.INFO, "Instantiating service");
         this.base = Paths.get(OrtolangConfig.getInstance().getHomePath().toString(), DEFAULT_INDEX_HOME);
     }
 
@@ -119,10 +119,10 @@ public class IndexStoreServiceBean implements IndexStoreService {
     public void init() {
         LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
         try {
-            analyzer = new FrenchAnalyzer(Version.LUCENE_46);
-            directory = FSDirectory.open(base.toFile());
+            analyzer = new FrenchAnalyzer();
+            directory = FSDirectory.open(base);
             LOGGER.log(Level.FINEST, "directory implementation: " + directory.getClass());
-            config = new IndexWriterConfig(Version.LUCENE_46, analyzer);
+            config = new IndexWriterConfig(analyzer);
             writer = new IndexWriter(directory, config);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "unable to configure lucene index writer", e);
@@ -180,7 +180,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
         try {
             IndexReader reader = DirectoryReader.open(directory);
             IndexSearcher searcher = new IndexSearcher(reader);
-            QueryParser parser = new QueryParser(Version.LUCENE_46, IndexStoreDocumentBuilder.CONTENT_FIELD, analyzer);
+            QueryParser parser = new QueryParser(IndexStoreDocumentBuilder.CONTENT_FIELD, analyzer);
             Query query = parser.parse(queryString);
             
             FunctionQuery boostQuery = new FunctionQuery(new LongFieldSource(IndexStoreDocumentBuilder.BOOST_FIELD));
@@ -233,7 +233,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
         try {
             IndexReader reader = DirectoryReader.open(directory);
             IndexSearcher searcher = new IndexSearcher(reader);
-            QueryParser parser = new QueryParser(Version.LUCENE_46, "KEY", analyzer);
+            QueryParser parser = new QueryParser("KEY", analyzer);
             Query query = parser.parse(key);
 
             TopDocs docs = searcher.search(query, 10);
@@ -272,7 +272,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
             infos.put("index.directory.nbfiles", Integer.toString(nbfiles));
             infos.put("index.directory.filessize", Long.toString(totalsize));
         } catch ( IOException e ) {
-            LOGGER.log(Level.WARNING, "unable to gatter infos from index directory", e);
+            LOGGER.log(Level.WARNING, "unable to gather infos from index directory", e);
         }
         try {
             IndexReader reader = DirectoryReader.open(directory);

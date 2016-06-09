@@ -141,7 +141,7 @@ public class JsonStoreServiceTest {
 				InputStream is = new FileInputStream("src/test/resources/json/sample2.json");
 				String content = null;
 				try {
-					content = IOUtils.toString(is);
+					content = IOUtils.toString(is, "UTF-8");
 				} catch (IOException e) {
 					LOGGER.log(Level.SEVERE, "  unable to get content from stream", e);
 				} finally {
@@ -204,7 +204,7 @@ public class JsonStoreServiceTest {
 			InputStream is = new FileInputStream("src/test/resources/json/sample.json");
 			String content = null;
 			try {
-				content = IOUtils.toString(is);
+				content = IOUtils.toString(is, "UTF-8");
 			} catch (IOException e) {
 				LOGGER.log(Level.SEVERE, "  unable to get content from stream", e);
 			} finally {

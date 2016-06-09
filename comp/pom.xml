@@ -171,7 +171,7 @@
         <dependency>
             <groupId>net.sf.saxon</groupId>
             <artifactId>Saxon-HE</artifactId>
-            <version>9.6.0-7</version>
+            <version>${version.saxon}</version>
         </dependency>
         <dependency>
             <groupId>com.sleepycat</groupId>
@@ -182,13 +182,13 @@
         <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.json</artifactId>
-            <version>1.0.3</version>
+            <version>${version.json-glassfish}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.javers</groupId>
             <artifactId>javers-core</artifactId>
-            <version>1.4.11</version>
+            <version>${version.javers}</version>
         </dependency>
     </dependencies>
 
