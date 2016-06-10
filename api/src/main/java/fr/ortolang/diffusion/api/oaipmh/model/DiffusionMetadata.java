@@ -60,7 +60,7 @@ public class DiffusionMetadata extends Metadata {
 	public DiffusionMetadata(InputStream value) throws IOException {
 		super((XOAIMetadata) null);
 		
-		this.input = IOUtils.toString(value);
+		this.input = IOUtils.toString(value, "UTF-8");
 	}
 
 	@Override

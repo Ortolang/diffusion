@@ -225,7 +225,7 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 		String content = null;
 		InputStream is = new FileInputStream(file);
 		try {
-			content = IOUtils.toString(is);
+			content = IOUtils.toString(is, "UTF-8");
 		} finally {
 			is.close();
 		}

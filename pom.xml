@@ -12,7 +12,7 @@
     <parent>
         <groupId>fr.ortolang</groupId>
         <artifactId>ortolang</artifactId>
-        <version>7</version>
+        <version>8-SNAPSHOT</version>
     </parent>
 
     <scm>
@@ -46,36 +46,38 @@
         <version.keycloak>1.7.0.Final</version.keycloak>
         <version.shrinkwrap>1.2.2</version.shrinkwrap>
         <version.shrinkwrap-resolver>2.1.1</version.shrinkwrap-resolver>
-        <version.arquillian>1.1.8.Final</version.arquillian>
-        <version.fasterxml.jackson>2.6.4</version.fasterxml.jackson>
-        <version.commons-io>2.4</version.commons-io>
-        <version.springframework.spring-context>4.0.9.RELEASE</version.springframework.spring-context>
+        <version.arquillian>1.1.11.Final</version.arquillian>
+        <version.fasterxml.jackson>2.7.4</version.fasterxml.jackson>
+        <version.commons-io>2.5</version.commons-io>
+        <version.springframework.spring-context>4.2.6.RELEASE</version.springframework.spring-context>
         <version.lyncode.xoai>4.1.0</version.lyncode.xoai>
         <version.json>20141113</version.json>
         <version.thetransactioncompany.cors-filter>2.5</version.thetransactioncompany.cors-filter>
         <version.json-glassfish>1.0.4</version.json-glassfish>
-        <version.base64>2.3.8</version.base64>
-        <version.commons-cli>1.2</version.commons-cli>
+        <version.base64>2.3.9</version.base64>
+        <version.commons-cli>1.3.1</version.commons-cli>
         <version.javamelody>1.59.0</version.javamelody>
-        <version.atmopshere>2.4.3</version.atmopshere>
-        <version.apache.lucene>4.6.0</version.apache.lucene>
+        <version.atmopshere>2.4.4</version.atmopshere>
+        <version.apache.lucene>6.0.1</version.apache.lucene>
         <version.openrdf.sesame>2.8.3</version.openrdf.sesame>
-        <version.orientechnologies.orientdb>2.1.16</version.orientechnologies.orientdb>
-        <version.common-compress>1.10</version.common-compress>
+        <version.orientechnologies.orientdb>2.2.0</version.orientechnologies.orientdb>
+        <version.common-compress>1.11</version.common-compress>
         <version.hdlnet>7.3.1</version.hdlnet>
         <version.bagit>4.9.0</version.bagit>
         <version.hibernate-core>4.3.5.Final</version.hibernate-core>
         <version.activiti-engine>5.20.0</version.activiti-engine>
         <version.json-schema-validator>2.2.6</version.json-schema-validator>
-        <version.javacv>1.1</version.javacv>
-        <version.guava>18.0</version.guava>
+        <version.javacv>1.2</version.javacv>
+        <version.guava>19.0</version.guava>
         <version.ftpserver-core>1.0.6</version.ftpserver-core>
         <version.je>5.0.73</version.je>
         <version.hibernate4.plugin>1.1.0</version.hibernate4.plugin>
         <version.flyway.plugin>3.1</version.flyway.plugin>
         <version.activation>1.1.1</version.activation>
-        <version.freemarker>2.3.22</version.freemarker>
+        <version.freemarker>2.3.24-incubating</version.freemarker>
         <version.sigar>1.6.4</version.sigar>
+        <version.saxon>9.7.0-5</version.saxon>
+        <version.javers>1.6.7</version.javers>
         <additionalparam>-Xdoclint:none</additionalparam>
         <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
     </properties>

@@ -217,23 +217,23 @@ public class BootstrapServiceBean implements BootstrapService {
                 LOGGER.log(Level.FINE, "import forms");
                 LOGGER.log(Level.FINE, "import form : test-process-start-form");
                 InputStream is = getClass().getClassLoader().getResourceAsStream("forms/test-process-start-form.json");
-                String jsonDefinition = IOUtils.toString(is);
+                String jsonDefinition = IOUtils.toString(is, "UTF-8");
                 form.createForm("test-process-start-form", "Test Process Start Form", jsonDefinition);
                 LOGGER.log(Level.FINE, "import form : test-process-confirm-form");
                 InputStream is2 = getClass().getClassLoader().getResourceAsStream("forms/test-process-confirm-form.json");
-                String jsonDefinition2 = IOUtils.toString(is2);
+                String jsonDefinition2 = IOUtils.toString(is2, "UTF-8");
                 form.createForm("test-process-confirm-form", "Test Process Confirm Form", jsonDefinition2);
                 LOGGER.log(Level.FINE, "import form : import-zip-form");
                 InputStream is3 = getClass().getClassLoader().getResourceAsStream("forms/import-zip-process-start-form.json");
-                String jsonDefinition3 = IOUtils.toString(is3);
+                String jsonDefinition3 = IOUtils.toString(is3, "UTF-8");
                 form.createForm("import-zip-process-start-form", "Import Zip Process Start Form", jsonDefinition3);
                 LOGGER.log(Level.FINE, "import form : review-snapshot-form");
                 InputStream is4 = getClass().getClassLoader().getResourceAsStream("forms/review-snapshot-form.json");
-                String jsonDefinition4 = IOUtils.toString(is4);
+                String jsonDefinition4 = IOUtils.toString(is4, "UTF-8");
                 form.createForm("review-snapshot-form", "Review Snapshot Form", jsonDefinition4);
                 LOGGER.log(Level.FINE, "import form : test-process-confirm-form");
                 InputStream is5 = getClass().getClassLoader().getResourceAsStream("forms/ortolang-item-form.json");
-                String jsonDefinition5 = IOUtils.toString(is5);
+                String jsonDefinition5 = IOUtils.toString(is5, "UTF-8");
                 form.createForm("ortolang-item-form", "Schema Form for an ORTOLANG item", jsonDefinition5);
 
                 LOGGER.log(Level.INFO, "bootstrap done.");

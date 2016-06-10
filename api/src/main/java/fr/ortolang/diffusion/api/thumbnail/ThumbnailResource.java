@@ -110,14 +110,18 @@ public class ThumbnailResource {
         return defaultThumb;
     }
 
-    @GET @Path("/{key}") @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD }) public Response getThumbnailFromKey(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size,
-            @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security, @Context Request request)
-            throws BrowserServiceException, KeyNotFoundException, OrtolangException, ThumbnailServiceException {
+    @GET
+    @Path("/{key}")
+    @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
+    public Response getThumbnailFromKey(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size, @QueryParam("l") @DefaultValue("true") boolean login,
+            @Context SecurityContext security, @Context Request request) throws BrowserServiceException, KeyNotFoundException, OrtolangException, ThumbnailServiceException {
         LOGGER.log(Level.INFO, "GET /thumbs/" + key);
         return getThumbnail(key, size, login, security, request);
     }
 
-    @GET @Path("/{alias}/{root}/{path:.*}") public Response getThumbnailFromPath(@PathParam("alias") final String alias, @PathParam("root") final String root, @PathParam("path") final String path,
+    @GET
+    @Path("/{alias}/{root}/{path:.*}")
+    public Response getThumbnailFromPath(@PathParam("alias") final String alias, @PathParam("root") final String root, @PathParam("path") final String path,
             @QueryParam("size") @DefaultValue("300") int size, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security, @Context Request request)
             throws CoreServiceException, AliasNotFoundException, OrtolangException, InvalidPathException, PathNotFoundException, KeyNotFoundException, ThumbnailServiceException,
             BrowserServiceException {

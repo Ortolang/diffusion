@@ -3735,7 +3735,7 @@ public class CoreServiceBean implements CoreService {
 	private String getContent(InputStream is) throws IOException {
 		String content = null;
 		try {
-			content = IOUtils.toString(is);
+			content = IOUtils.toString(is, "UTF-8");
 		} catch (IOException e) {
 			LOGGER.log(Level.SEVERE, "  unable to get content from stream", e);
 		} finally {
