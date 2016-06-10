@@ -211,6 +211,19 @@ public class SearchServiceBean implements SearchService {
     }
 
     @Override
+    public String getCollection(String key) throws SearchServiceException {
+        LOGGER.log(Level.FINE, "Gets collection with key : " + key);
+        if(key!=null) {
+            try {
+            	return jsonStore.getDocument(key, "Collection");
+            } catch (JsonStoreServiceException e) {
+                LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
+            }
+        }
+        return null;
+    }
+
+    @Override
     public List<String> findProfiles(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException {
         LOGGER.log(Level.FINE, "Gets profile with content : " + content);
         HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
@@ -232,16 +245,37 @@ public class SearchServiceBean implements SearchService {
     }
 
     @Override
-    public String getCollection(String key) throws SearchServiceException {
-        LOGGER.log(Level.FINE, "Gets collection with key : " + key);
+    public String getProfile(String key) throws SearchServiceException {
+        LOGGER.log(Level.FINE, "Gets profile with key : " + key);
         if(key!=null) {
             try {
-            	return jsonStore.getDocument(key);
+            	return jsonStore.getDocument(key, "Profile");
             } catch (JsonStoreServiceException e) {
                 LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
             }
         }
         return null;
+    }
+
+    @Override
+    public List<String> findWorkspaces(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException {
+        LOGGER.log(Level.FINE, "Finds workspaces with content : " + content);
+        HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
+        String query = findByContent("Workspace", content, fieldsProjection, fieldsMap, null, null, null, null);
+
+        // Execute the query
+        List<String> results;
+        if (query != null && query.length() > 0) {
+            try {
+                results = jsonStore.search(query);
+            } catch (JsonStoreServiceException e) {
+                results = Collections.emptyList();
+                LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
+            }
+        } else {
+            results = Collections.emptyList();
+        }
+        return results;
     }
 
     @Override
@@ -262,6 +296,27 @@ public class SearchServiceBean implements SearchService {
             }
         }
         return result;
+    }
+
+    @Override
+    public List<String> findEntities(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException {
+        LOGGER.log(Level.FINE, "Finds entities with content : " + content);
+        HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
+        String query = findByContent("Entity", content, fieldsProjection, fieldsMap, null, null, null, null);
+
+        // Execute the query
+        List<String> results;
+        if (query != null && query.length() > 0) {
+            try {
+                results = jsonStore.search(query);
+            } catch (JsonStoreServiceException e) {
+                results = Collections.emptyList();
+                LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
+            }
+        } else {
+            results = Collections.emptyList();
+        }
+        return results;
     }
 
     @Override

@@ -51,15 +51,20 @@ public interface SearchService extends OrtolangService {
 	public List<String> jsonSearch(String query) throws SearchServiceException;
 
     public List<String> findCollections(HashMap<String, String> fieldsProjection, String content, String group, String limit, String orderProp, String orderDir, HashMap<String, Object> fieldsMap) throws SearchServiceException;
-    
+
+    int countCollections(HashMap<String, Object> fieldsMap) throws SearchServiceException;
+
+	public String getCollection(String key) throws SearchServiceException;
+	
 	public List<String> findProfiles(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException;
 	
-	public String getCollection(String key) throws SearchServiceException;
+	public String getProfile(String key) throws SearchServiceException;
+	
+	public List<String> findWorkspaces(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException;
 	
 	public String getWorkspace(String wsalias) throws SearchServiceException;
 	
-	public String getEntity(String id) throws SearchServiceException;
-
-    int countCollections(HashMap<String, Object> fieldsMap) throws SearchServiceException;
+	public List<String> findEntities(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException;
 	
+	public String getEntity(String id) throws SearchServiceException;
 }

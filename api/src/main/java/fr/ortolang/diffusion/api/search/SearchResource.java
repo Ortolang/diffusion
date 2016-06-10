@@ -138,44 +138,8 @@ import java.util.logging.Logger;
         }
         // Execute the query
         List<String> results;
-//        long count = 0;
         try {
             results = search.findCollections(fieldsProjection, content, group, limit, orderProp, orderDir, fieldsMap);
-            // If group by then the count is not usefull (faster)
-//            if (group == null) {
-//            	count = search.countCollections(fieldsMap);
-//            }
-        } catch (SearchServiceException e) {
-            results = Collections.emptyList();
-            LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
-        }
-
-        GenericCollectionRepresentation<String> representation = new GenericCollectionRepresentation<String>();
-        for (String key : results) {
-            representation.addEntry(key);
-        }
-//        representation.setSize(count);
-        return Response.ok(representation).build();
-    }
-
-    @GET @Path("/profiles") @GZIP public Response findProfiles(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
-        LOGGER.log(Level.INFO, "GET /search/profiles?content=" + content + "&fields=" + fields);
-        // Sets projections
-        HashMap<String, String> fieldsProjection = new HashMap<String, String>();
-        if (fields != null) {
-            for (String field : fields.split(",")) {
-                String[] fieldPart = field.split(":");
-                if (fieldPart.length > 1) {
-                    fieldsProjection.put("meta_ortolang-item-json." + fieldPart[0], fieldPart[1]);
-                } else {
-                    fieldsProjection.put("meta_ortolang-item-json." + field, field);
-                }
-            }
-        }
-        // Execute the query
-        List<String> results;
-        try {
-            results = search.findProfiles(content, fieldsProjection);
         } catch (SearchServiceException e) {
             results = Collections.emptyList();
             LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
@@ -196,6 +160,56 @@ import java.util.logging.Logger;
         return Response.status(404).build();
     }
 
+    @GET @Path("/profiles") @GZIP public Response findProfiles(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
+        LOGGER.log(Level.INFO, "GET /search/profiles?content=" + content + "&fields=" + fields);
+        // Sets projections
+        HashMap<String, String> fieldsProjection = new HashMap<String, String>();
+        if (fields != null) {
+            for (String field : fields.split(",")) {
+                String[] fieldPart = field.split(":");
+                if (fieldPart.length > 1) {
+                    fieldsProjection.put("meta_profile." + fieldPart[0], fieldPart[1]);
+                } else {
+                    fieldsProjection.put("meta_profile." + field, field);
+                }
+            }
+        }
+        // Execute the query
+        List<String> results;
+        try {
+            results = search.findProfiles(content, fieldsProjection);
+        } catch (SearchServiceException e) {
+            results = Collections.emptyList();
+            LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
+        }
+        return Response.ok(results).build();
+    }
+
+    @GET @Path("/workspaces") @GZIP public Response findWorkspaces(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
+        LOGGER.log(Level.INFO, "GET /search/workspaces?content=" + content + "&fields=" + fields);
+        // Sets projections
+        HashMap<String, String> fieldsProjection = new HashMap<String, String>();
+        if (fields != null) {
+            for (String field : fields.split(",")) {
+                String[] fieldPart = field.split(":");
+                if (fieldPart.length > 1) {
+                    fieldsProjection.put("meta_ortolang-workspace-json." + fieldPart[0], fieldPart[1]);
+                } else {
+                    fieldsProjection.put("meta_ortolang-workspace-json." + field, field);
+                }
+            }
+        }
+        // Execute the query
+        List<String> results;
+        try {
+            results = search.findWorkspaces(content, fieldsProjection);
+        } catch (SearchServiceException e) {
+            results = Collections.emptyList();
+            LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
+        }
+        return Response.ok(results).build();
+    }
+
     @GET @Path("/workspaces/{alias}") @GZIP public Response getWorkspace(@PathParam(value = "alias") String alias) {
         LOGGER.log(Level.INFO, "GET /metdata/workspaces/" + alias);
         try {
@@ -207,6 +221,31 @@ import java.util.logging.Logger;
             LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
         }
         return Response.status(404).build();
+    }
+
+    @GET @Path("/entities") @GZIP public Response findEntities(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
+        LOGGER.log(Level.INFO, "GET /search/entities?content=" + content + "&fields=" + fields);
+        // Sets projections
+        HashMap<String, String> fieldsProjection = new HashMap<String, String>();
+        if (fields != null) {
+            for (String field : fields.split(",")) {
+                String[] fieldPart = field.split(":");
+                if (fieldPart.length > 1) {
+                    fieldsProjection.put("meta_ortolang-referential-json." + fieldPart[0], fieldPart[1]);
+                } else {
+                    fieldsProjection.put("meta_ortolang-referential-json." + field, field);
+                }
+            }
+        }
+        // Execute the query
+        List<String> results;
+        try {
+            results = search.findEntities(content, fieldsProjection);
+        } catch (SearchServiceException e) {
+            results = Collections.emptyList();
+            LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
+        }
+        return Response.ok(results).build();
     }
 
     @GET @Path("/entities/{id}") @GZIP public Response getEntity(@PathParam(value = "id") String id) {

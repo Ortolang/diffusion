@@ -64,7 +64,7 @@ public interface JsonStoreService extends OrtolangService {
 	
 	List<String> search(String query) throws JsonStoreServiceException;
 
-	String getDocument(String key) throws JsonStoreServiceException;
+	String getDocument(String key, String clz) throws JsonStoreServiceException;
 	
     List<ODocument> systemSearch(String query) throws JsonStoreServiceException;
 

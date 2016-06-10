@@ -145,8 +145,12 @@ public class JsonStoreServiceBean implements JsonStoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public String getDocument(String key) throws JsonStoreServiceException {
-        return getJSONByKey(key);
+    public String getDocument(String key, String clz) throws JsonStoreServiceException {
+    	ODocument doc = getDocumentByKey(key);
+    	if(doc.getClassName().equals(clz)) {
+    		return doc.toJSON("fetchPlan:*:-1");
+    	}
+        return null;
     }
 
     @Override
