@@ -108,9 +108,19 @@ import java.util.logging.Logger;
                     for (String annotationLevel : parameter.getValue()) {
                         paramArr.add(annotationLevel);
                     }
-                    fieldsMap.put("meta_ortolang-item-json." + parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
+                    String[] fieldPart = parameter.getKey().substring(0, parameter.getKey().length() - 2).split("\\.");
+                    if (fieldPart.length > 1) {
+                        fieldsMap.put("meta_"+parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
+                    } else {
+                        fieldsMap.put("meta_ortolang-item-json." + parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
+                    }
                 } else {
-                    fieldsMap.put("meta_ortolang-item-json." + parameter.getKey(), parameter.getValue()[0]);
+                    String[] fieldPart = parameter.getKey().split("\\.");
+                    if (fieldPart.length > 1) {
+                        fieldsMap.put("meta_"+parameter.getKey(), parameter.getValue()[0]);
+                    } else {
+                        fieldsMap.put("meta_ortolang-item-json." + parameter.getKey(), parameter.getValue()[0]);
+                    }
                 }
             }
         }

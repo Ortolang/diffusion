@@ -215,7 +215,7 @@ public class SearchServiceBean implements SearchService {
         LOGGER.log(Level.FINE, "Gets collection with key : " + key);
         if(key!=null) {
             try {
-            	return jsonStore.getDocument(key, "Collection");
+            	return jsonStore.getDocument(key, "collection");
             } catch (JsonStoreServiceException e) {
                 LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
             }
@@ -249,7 +249,7 @@ public class SearchServiceBean implements SearchService {
         LOGGER.log(Level.FINE, "Gets profile with key : " + key);
         if(key!=null) {
             try {
-            	return jsonStore.getDocument(key, "Profile");
+            	return jsonStore.getDocument(key, "profile");
             } catch (JsonStoreServiceException e) {
                 LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
             }
@@ -378,7 +378,12 @@ public class SearchServiceBean implements SearchService {
         }
 
         if (orderProp != null) {
-            queryBuilder.append(" ORDER BY ").append("`meta_ortolang-item-json.").append(orderProp).append("`");
+            String[] orderPropPart = orderProp.split("\\.");
+            if (orderPropPart.length > 1) {
+                queryBuilder.append(" ORDER BY ").append("`meta_ortolang-").append(orderPropPart[0]).append("-json.").append(orderPropPart[1]).append("`");
+            } else {
+                queryBuilder.append(" ORDER BY ").append("`").append(orderProp).append("`");
+            }
             if(orderDir!=null) {
                 queryBuilder.append(" ").append(orderDir);
             }
