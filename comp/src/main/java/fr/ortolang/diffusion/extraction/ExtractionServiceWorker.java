@@ -258,6 +258,9 @@ public class ExtractionServiceWorker {
                         if (e instanceof KeyNotFoundException) {
                             LOGGER.log(Level.WARNING, "Key not found: removing extraction job " + job.getId());
                             jobService.remove(job.getId());
+                        } else if (e instanceof SAXException) {
+                            LOGGER.log(Level.WARNING, "Could not parse XML document: removing extraction job " + job.getId(), e);
+                            jobService.remove(job.getId());
                         }
                     }
 
