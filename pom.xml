@@ -47,6 +47,7 @@
         <version.shrinkwrap>1.2.2</version.shrinkwrap>
         <version.shrinkwrap-resolver>2.1.1</version.shrinkwrap-resolver>
         <version.arquillian>1.1.11.Final</version.arquillian>
+        <version.wildfly.arquillian>1.1.0.Final</version.wildfly.arquillian>
         <version.fasterxml.jackson>2.7.4</version.fasterxml.jackson>
         <version.commons-io>2.5</version.commons-io>
         <version.springframework.spring-context>4.2.6.RELEASE</version.springframework.spring-context>
@@ -133,9 +134,10 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>org.wildfly</groupId>
+                <groupId>org.wildfly.arquillian</groupId>
                 <artifactId>wildfly-arquillian-container-managed</artifactId>
-                <version>8.2.1.Final</version>
+                <version>${version.wildfly.arquillian}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

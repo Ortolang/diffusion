@@ -145,15 +145,15 @@ public class CoreServiceTest {
         ear.addAsModule(jar);
         ear.addAsLibraries(pom.resolve("org.wildfly:wildfly-ejb-client-bom:pom:9.0.1.Final").withTransitivity().asFile());
         ear.addAsLibraries(pom.resolve("org.codehaus.jettison:jettison:1.3.3").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("commons-io:commons-io").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-core").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-highlighter").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-analyzers-common").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-queryparser").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-parsers").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("com.github.fge:json-schema-validator").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("commons-io:commons-io:2.5").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-core:6.0.1").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-highlighter:6.0.1").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-analyzers-common:6.0.1").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-queryparser:6.0.1").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core:1.13").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-parsers:1.13").withoutTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("commons-codec:commons-codec:1.10").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("com.github.fge:json-schema-validator:2.2.6").withTransitivity().asFile());
         LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 
         return ear;
@@ -355,12 +355,14 @@ public class CoreServiceTest {
                 LOGGER.log(Level.INFO, "Profile user1 already exists !!");
             }
 
+            int mdFormatNbr = core.listMetadataFormat().size();
+
             InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema.json");
             String schemaHash = core.put(schemaInputStream);
             String id = core.createMetadataFormat("ortolang-item-json", "ORTOLANG Item", schemaHash, null, true, true);
 
             List<MetadataFormat> mfs = core.listMetadataFormat();
-            assertEquals(1, mfs.size());
+            assertEquals(mdFormatNbr + 1, mfs.size());
 
             MetadataFormat mf = core.getMetadataFormat("ortolang-item-json");
             assertEquals("ortolang-item-json", mf.getName());
