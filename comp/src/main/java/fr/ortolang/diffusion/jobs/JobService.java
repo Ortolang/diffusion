@@ -48,7 +48,7 @@ public interface JobService extends OrtolangService {
 
     String INFO_SIZE = "size";
 
-    Job read(String id);
+    Job read(Long id);
 
     Job create(String type, String action, String target, long timestamp);
 
@@ -63,4 +63,8 @@ public interface JobService extends OrtolangService {
     List<Job> getJobsOfType(String type);
 
     void remove(Long id);
+
+    void update(Job job);
+
+    void updateFailingJob(Job job, Exception e);
 }

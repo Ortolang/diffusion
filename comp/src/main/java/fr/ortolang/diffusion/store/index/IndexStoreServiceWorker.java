@@ -176,10 +176,7 @@ public class IndexStoreServiceWorker {
                         jobService.remove(job.getId());
                     } catch ( IndexStoreServiceException | OrtolangException e ) {
                         LOGGER.log(Level.WARNING, "unable to perform job action " + job.getAction() + " for target " + job.getTarget(), e);
-                        if (e.getCause() instanceof KeyNotFoundException) {
-                            LOGGER.log(Level.WARNING, "Key not found: removing indexing job " + job.getId());
-                            jobService.remove(job.getId());
-                        }
+                        jobService.updateFailingJob(job, e);
                     }
                 } catch ( InterruptedException e ) {
                     LOGGER.log(Level.SEVERE, "interrupted while trying to take next job", e);

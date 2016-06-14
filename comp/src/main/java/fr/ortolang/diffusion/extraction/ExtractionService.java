@@ -42,5 +42,9 @@ public interface ExtractionService extends OrtolangService {
 
     String SERVICE_NAME = "extraction";
 
+    String JOB_TYPE = "extraction";
+
+    String EXTRACT_ACTION = "extract";
+
     void extract(String key) throws ExtractionServiceException;
 }

@@ -151,6 +151,10 @@ public abstract class OrtolangEvent {
 
         private Map<String, String> args;
 
+        public ArgumentsBuilder() {
+            args = new HashMap<>();
+        }
+
         public ArgumentsBuilder(int initialCapacity) {
             args = new HashMap<>(initialCapacity);
         }

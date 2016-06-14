@@ -36,37 +36,6 @@ package fr.ortolang.diffusion.api.admin;
  * #L%
  */
 
-import java.io.File;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
-
-import fr.ortolang.diffusion.jobs.entity.Job;
-import org.jboss.resteasy.annotations.GZIP;
-import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
-
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangService;
@@ -84,25 +53,18 @@ import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
+import fr.ortolang.diffusion.jobs.JobService;
+import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
-import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
-import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
-import fr.ortolang.diffusion.registry.KeyLockedException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryService;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.registry.*;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-import fr.ortolang.diffusion.store.binary.BinaryStoreContent;
-import fr.ortolang.diffusion.store.binary.BinaryStoreService;
-import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
-import fr.ortolang.diffusion.store.binary.DataCollisionException;
-import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import fr.ortolang.diffusion.store.binary.*;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 import fr.ortolang.diffusion.store.handle.entity.Handle;
@@ -114,6 +76,22 @@ import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceWorker;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
+import org.jboss.resteasy.annotations.GZIP;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
+
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.UriBuilder;
+import java.io.File;
+import java.net.URI;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -147,6 +125,8 @@ public class AdminResource {
     private SubscriptionService subscription;
     @EJB
     private MembershipService membership;
+    @EJB
+    private JobService jobService;
 
     @GET
     @Path("/infos/{service}")
@@ -401,11 +381,43 @@ public class AdminResource {
         subscription.addAdminFilters();
         return Response.ok().build();
     }
-    
-//    @PUT
-//    @Path("/core/workspace")
-//    public Response updateWorkspace() throws CoreServiceException {
-//        
-//    }
+
+    @GET
+    @Path("/jobs")
+    public Response getJobs(@QueryParam("type") String type) {
+        List<Job> jobs;
+        if (type != null) {
+            jobs = jobService.getJobsOfType(type);
+        } else {
+            jobs = jobService.getJobs();
+        }
+        return Response.ok().entity(jobs).build();
+    }
+
+    @GET
+    @Path("/jobs/{id}")
+    public Response getJob(@PathParam(value = "id") Long id) {
+        Job job = jobService.read(id);
+        return Response.ok().entity(job).build();
+    }
+
+    @DELETE
+    @Path("/jobs/{id}")
+    public Response removeJob(@PathParam(value = "id") Long id) {
+        jobService.remove(id);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("/jobs/count")
+    public Response countJobs(@QueryParam("type") String type) throws CoreServiceException {
+        Map<String, Long> map = new HashMap<>(1);
+        if (type != null) {
+            map.put("count", jobService.countJobsOfType(type));
+        } else {
+            map.put("count", jobService.countJobs());
+        }
+        return Response.ok().entity(map).build();
+    }
 
 }

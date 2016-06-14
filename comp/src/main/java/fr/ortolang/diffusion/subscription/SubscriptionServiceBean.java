@@ -185,6 +185,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
             addFilter(username, new Filter("runtime\\.process\\..*", null, null));
             addFilter(username, new Filter("runtime\\.task\\..*", null, null));
             addFilter(username, new Filter("runtime\\.remote\\..*", null, null));
+            addFilter(username, new Filter("job\\.job\\..*", null, null));
         }
     }
 

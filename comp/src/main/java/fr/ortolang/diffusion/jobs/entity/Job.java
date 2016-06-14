@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.jobs.entity;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -51,6 +52,12 @@ import java.util.concurrent.TimeUnit;
 })
 public class Job implements Serializable, Delayed {
 
+    public static final String OBJECT_TYPE = "job";
+
+    public static final String FAILING_TIMES_KEY = "failingTimes";
+
+    public static final String FAILING_EXPLANATION_KEY = "failingExplanation";
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
@@ -58,11 +65,12 @@ public class Job implements Serializable, Delayed {
     private String action;
     private String target;
     private long timestamp;
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private Map<String, String> parameters;
 
 
     public Job() {
+        parameters = new HashMap<>();
     }
 
     public Job(String type, String action, String target, long timestamp, Map<String, String> args) {
@@ -117,12 +125,16 @@ public class Job implements Serializable, Delayed {
         this.parameters = parameters;
     }
 
-    public Object getParameter(String name) {
+    public String getParameter(String name) {
         return parameters.get(name);
     }
 
     public boolean containsParameter(String name) {
         return parameters.containsKey(name);
+    }
+
+    public String setParameter(String name, String value) {
+        return parameters.put(name, value);
     }
 
     @Override

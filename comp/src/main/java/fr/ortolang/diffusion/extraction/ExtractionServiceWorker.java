@@ -90,10 +90,6 @@ public class ExtractionServiceWorker {
 
     private static final Logger LOGGER = Logger.getLogger(ExtractionServiceWorker.class.getName());
 
-    private static final String JOB_TYPE = "extraction";
-
-    private static final String JOB_ACTION = "extract";
-
     private static final int DELAY = 3000;
 
     @EJB
@@ -127,7 +123,7 @@ public class ExtractionServiceWorker {
     public void init() {
         startThread();
         // Restore unprocessed jobs in queue
-        List<Job> extractionJobs = jobService.getJobsOfType(JOB_TYPE);
+        List<Job> extractionJobs = jobService.getJobsOfType(ExtractionService.JOB_TYPE);
         queue.addAll(extractionJobs);
     }
 
@@ -159,7 +155,7 @@ public class ExtractionServiceWorker {
 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void submit(String key) {
-        Job job = jobService.create(JOB_TYPE, JOB_ACTION, key, System.currentTimeMillis() + DELAY);
+        Job job = jobService.create(ExtractionService.JOB_TYPE, ExtractionService.EXTRACT_ACTION, key, System.currentTimeMillis() + DELAY);
         queue.put(job);
     }
 
@@ -179,18 +175,14 @@ public class ExtractionServiceWorker {
                     LOGGER.log(Level.FINE, "treating action: " + job.getAction() + " for target: " + job.getTarget());
                     String key = job.getTarget();
                     try {
-                        OrtolangObjectIdentifier identifier;
-                        try {
-                             identifier = registry.lookup(key);
-                        } catch (KeyNotFoundException e) {
-
-                            continue;
-                        }
-                        if (!identifier.getService().equals(core.getServiceName()) || !identifier.getType().equals(DataObject.OBJECT_TYPE)) {
-                            throw new CoreServiceException("target can only be DataObject.");
-                        }
-                        OrtolangObject object = em.find(DataObject.class, identifier.getId());
-                        if (object != null) {
+                        switch (job.getAction()) {
+                        case ExtractionService.EXTRACT_ACTION: {
+                            OrtolangObjectIdentifier identifier;
+                            identifier = registry.lookup(key);
+                            if (!identifier.getService().equals(core.getServiceName()) || !identifier.getType().equals(DataObject.OBJECT_TYPE)) {
+                                throw new CoreServiceException("target can only be DataObject.");
+                            }
+                            OrtolangObject object = em.find(DataObject.class, identifier.getId());
                             DataObject dataObject = (DataObject) object;
                             String mimeType = dataObject.getMimeType();
                             String hash = dataObject.getStream();
@@ -209,7 +201,7 @@ public class ExtractionServiceWorker {
                                 metadataName = MetadataFormat.IMAGE;
                             } else if (mimeType.startsWith("video/") || contentType.startsWith("video/")) {
                                 metadataName = MetadataFormat.VIDEO;
-                            } else if (mimeType.equals("application/xml") || contentType.equals("application/xml") || mimeType.endsWith("+xml")  || contentType.endsWith("+xml")) {
+                            } else if (mimeType.equals("application/xml") || contentType.equals("application/xml") || mimeType.endsWith("+xml") || contentType.endsWith("+xml")) {
                                 if (metadata.get(OrtolangXMLParser.xmlTypeKey) != null) {
                                     metadataName = MetadataFormat.XML;
                                 }
@@ -226,7 +218,6 @@ public class ExtractionServiceWorker {
                                     }
                                 }
                             }
-
                             if (metadataName != null) {
                                 JSONObject metadataJson = new JSONObject();
                                 for (String name : metadata.names()) {
@@ -251,16 +242,19 @@ public class ExtractionServiceWorker {
                                 String metadataHash = binarystore.put(new ByteArrayInputStream(metadataJson.toString().getBytes()));
                                 core.systemCreateMetadata(key, metadataName, metadataHash, metadataName + ".json");
                             }
-                            jobService.remove(job.getId());
+                            break;
                         }
+                        default:
+                            LOGGER.log(Level.WARNING, "unknown job action: " + job.getAction());
+                        }
+                        jobService.remove(job.getId());
                     } catch (OrtolangException | MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | SAXException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException | IndexingServiceException | AuthorisationServiceException e) {
                         LOGGER.log(Level.WARNING, "unable to extract metadata for data object with key " + key, e);
-                        if (e instanceof KeyNotFoundException) {
-                            LOGGER.log(Level.WARNING, "Key not found: removing extraction job " + job.getId());
-                            jobService.remove(job.getId());
-                        } else if (e instanceof SAXException) {
+                        if (e instanceof SAXException) {
                             LOGGER.log(Level.WARNING, "Could not parse XML document: removing extraction job " + job.getId(), e);
                             jobService.remove(job.getId());
+                        } else {
+                            jobService.updateFailingJob(job, e);
                         }
                     }
 

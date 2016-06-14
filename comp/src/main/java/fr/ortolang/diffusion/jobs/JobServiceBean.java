@@ -36,12 +36,17 @@ package fr.ortolang.diffusion.jobs;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.jobs.entity.Job;
+import fr.ortolang.diffusion.notification.NotificationService;
+import fr.ortolang.diffusion.notification.NotificationServiceException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.ejb.*;
 import javax.persistence.EntityManager;
@@ -66,13 +71,17 @@ public class JobServiceBean implements JobService {
 
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
+    @EJB
+    private NotificationService notification;
+    @Resource
+    private SessionContext ctx;
 
     public JobServiceBean() {
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public Job read(String id) {
+    public Job read(Long id) {
         return em.find(Job.class, id);
     }
 
@@ -85,8 +94,15 @@ public class JobServiceBean implements JobService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Job create(String type, String action, String target, long timestamp, Map<String, String> args) {
+        LOGGER.log(Level.FINE, "Creating job of type '" + type + "' (target: " + target + ')');
         Job job = new Job(type, action, target, timestamp, args);
         em.persist(job);
+        OrtolangEvent.ArgumentsBuilder argumentsBuilder = new OrtolangEvent.ArgumentsBuilder().addArgument("target", target).addArgument("type", type);
+        try {
+            notification.throwEvent(String.valueOf(job.getId()), "system", Job.OBJECT_TYPE, OrtolangEvent.buildEventType(JobService.SERVICE_NAME, Job.OBJECT_TYPE, "created"), argumentsBuilder.build());
+        } catch (NotificationServiceException e) {
+            LOGGER.log(Level.WARNING, "Unable to notify of a new job creation: " + e.getMessage());
+        }
         return job;
     }
 
@@ -97,7 +113,40 @@ public class JobServiceBean implements JobService {
         if (job != null) {
             LOGGER.log(Level.FINE, "Removing job " + id + " of type '" + job.getType() + "' (target: " + job.getTarget() + ')');
             em.remove(job);
+            try {
+                notification.throwEvent(String.valueOf(job.getId()), "system", Job.OBJECT_TYPE, OrtolangEvent.buildEventType(JobService.SERVICE_NAME, Job.OBJECT_TYPE, "removed"));
+            } catch (NotificationServiceException e) {
+                LOGGER.log(Level.WARNING, "Unable to notify of a job being removed: " + e.getMessage());
+            }
         }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void update(Job job) {
+        em.merge(job);
+        try {
+            notification.throwEvent(String.valueOf(job.getId()), "system", Job.OBJECT_TYPE, OrtolangEvent.buildEventType(JobService.SERVICE_NAME, Job.OBJECT_TYPE, "updated"));
+        } catch (NotificationServiceException e) {
+            LOGGER.log(Level.WARNING, "Unable to notify of a job being updated: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void updateFailingJob(Job job, Exception e) {
+        if (e instanceof KeyNotFoundException) {
+            LOGGER.log(Level.WARNING, "Key not found: removing job of type " + job.getType() + " (action: " + job.getAction() + ", target: " + job.getTarget() + ")");
+            remove(job.getId());
+            return;
+        }
+        String times = null;
+        if (job.containsParameter(Job.FAILING_TIMES_KEY)) {
+            String parameter = job.getParameter(Job.FAILING_TIMES_KEY);
+            times = String.valueOf(Integer.valueOf(parameter) + 1);
+        }
+        job.setParameter(Job.FAILING_TIMES_KEY, times != null ? times : "1");
+        job.setParameter(Job.FAILING_EXPLANATION_KEY, e.toString());
+        update(job);
     }
 
     @Override
@@ -106,6 +155,7 @@ public class JobServiceBean implements JobService {
     }
 
     @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public List<Job> getJobs() {
         return em.createNamedQuery("listAllJobs", Job.class).getResultList();
     }
@@ -116,6 +166,7 @@ public class JobServiceBean implements JobService {
     }
 
     @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public List<Job> getJobsOfType(String type) {
         return em.createNamedQuery("listJobsOfType", Job.class).setParameter("type", type).getResultList();
     }
