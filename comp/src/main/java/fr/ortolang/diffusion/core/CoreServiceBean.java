@@ -71,6 +71,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.IOUtils;
 import org.javers.core.Javers;
 import org.javers.core.JaversBuilder;
@@ -3114,6 +3115,54 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String readPublicationPolicy(String key) throws KeyNotFoundException, RegistryServiceException, DataNotFoundException, BinaryStoreServiceException, IOException, CoreServiceException {
+        OrtolangObjectIdentifier identifier = registry.lookup(key);
+        OrtolangObject object;
+        switch (identifier.getType()) {
+        case Collection.OBJECT_TYPE:
+            object = em.find(Collection.class, identifier.getId());
+            break;
+        case DataObject.OBJECT_TYPE:
+            object = em.find(DataObject.class, identifier.getId());
+            break;
+        case Link.OBJECT_TYPE:
+            object = em.find(Link.class, identifier.getId());
+            break;
+        default:
+            throw new CoreServiceException("Cannot read publication policy of an object of type: " + identifier.getType());
+        }
+        MetadataElement metadataElement = null;
+        if (object instanceof MetadataSource) {
+            metadataElement = ((MetadataSource) object).findMetadataByName(MetadataFormat.ACL);
+        }
+        if (metadataElement != null) {
+            OrtolangObjectIdentifier mdIdentifier = registry.lookup(metadataElement.getKey());
+            MetadataObject metadataObject = em.find(MetadataObject.class, mdIdentifier.getId());
+            ObjectMapper mapper = new ObjectMapper();
+            PublicationPolicy publicationPolicy = mapper.readValue(binarystore.getFile(metadataObject.getStream()), PublicationPolicy.class);
+            return publicationPolicy.getTemplate();
+        }
+        return null;
+    }
+
+    @Override
+    public String readPublicationPolicy(String wskey, String root, String path)
+            throws KeyNotFoundException, RegistryServiceException, DataNotFoundException, BinaryStoreServiceException, IOException, CoreServiceException, AccessDeniedException, InvalidPathException,
+            PathNotFoundException {
+        String key = resolveWorkspacePath(wskey, root, path);
+        String publicationPolicy = readPublicationPolicy(key);
+        if (publicationPolicy == null) {
+            PathBuilder pathBuilder = PathBuilder.fromPath(path);
+            if (pathBuilder.isRoot()) {
+                return AuthorisationPolicyTemplate.FORALL;
+            }
+            return readPublicationPolicy(wskey, root, pathBuilder.parent().build());
+        }
+        return publicationPolicy;
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<String> findMetadataObjectsForTarget(String target) throws CoreServiceException, AccessDeniedException {
         LOGGER.log(Level.FINE, "finding metadata for target [" + target + "]");
         try {
@@ -4272,6 +4321,16 @@ public class CoreServiceBean implements CoreService {
                 extractMetadata(readCollection(collection.getKey()), wskey, path + "/" + collectionElement.getName());
             }
         }
+    }
+
+    private static class PublicationPolicy {
+
+        private String template;
+
+        public String getTemplate() {
+            return template;
+        }
+
     }
 
 }

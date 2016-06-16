@@ -376,6 +376,7 @@ public class AdminResource {
     
     @GET
     @Path("/subscription")
+    @GZIP
     public Response addSubscriptionFilters() throws SubscriptionServiceException {
         LOGGER.log(Level.INFO, "GET /subscription");
         subscription.addAdminFilters();
@@ -384,6 +385,7 @@ public class AdminResource {
 
     @GET
     @Path("/jobs")
+    @GZIP
     public Response getJobs(@QueryParam("type") String type) {
         List<Job> jobs;
         if (type != null) {
@@ -396,6 +398,7 @@ public class AdminResource {
 
     @GET
     @Path("/jobs/{id}")
+    @GZIP
     public Response getJob(@PathParam(value = "id") Long id) {
         Job job = jobService.read(id);
         return Response.ok().entity(job).build();

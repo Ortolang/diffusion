@@ -288,8 +288,8 @@ public class WorkspaceResource {
     @GZIP
     public Response getWorkspaceElement(@PathParam(value = "wskey") String wskey, @QueryParam(value = "root") String root, @QueryParam(value = "path") String path,
             @QueryParam(value = "metadata") String metadata, @QueryParam(value = "policy") @DefaultValue("false") boolean policy, @Context Request request)
-            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, OrtolangException, BrowserServiceException, PropertyNotFoundException,
-            PathNotFoundException, DataNotFoundException, BinaryStoreServiceException, IOException {
+            throws CoreServiceException, KeyNotFoundException, InvalidPathException, OrtolangException, BrowserServiceException, PropertyNotFoundException,
+            PathNotFoundException, DataNotFoundException, BinaryStoreServiceException, IOException, RegistryServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/elements?root=" + root + "&path=" + path + "&metadata=" + metadata);
         if (path == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
@@ -356,21 +356,20 @@ public class WorkspaceResource {
                 } catch (AccessDeniedException | SecurityServiceException e) {
                     representation.setUnrestrictedDownload(false);
                 }
+
                 if (policy) {
-                    boolean found = false;
-                    while (!found) {
-                        String publicationPolicy = readPublicationPolicy(object);
-                        if (publicationPolicy != null) {
-                            found = true;
-                            representation.setPublicationPolicy(publicationPolicy);
-                        } else if (npath.isRoot()) {
-                            found = true;
-                            representation.setPublicationPolicy(AuthorisationPolicyTemplate.FORALL);
-                        } else {
-                            npath = npath.parent();
-                            object = browser.findObject(core.resolveWorkspacePath(wskey, root, npath.build()));
+                    String publicationPolicy = core.readPublicationPolicy(wskey, root, path);
+                    representation.setPublicationPolicy(publicationPolicy);
+                    if (object instanceof Collection) {
+                        HashMap<String, String> publicationPolicies = new HashMap<>();
+                        String childPublicationPolicy;
+                        for (CollectionElement collectionElement : ((Collection) object).getElements()) {
+                            childPublicationPolicy = core.readPublicationPolicy(collectionElement.getKey());
+                            publicationPolicies.put(collectionElement.getKey(), childPublicationPolicy == null ? publicationPolicy : childPublicationPolicy);
                         }
+                        representation.setPublicationPolicies(publicationPolicies);
                     }
+
                 }
                 builder = Response.ok(representation);
                 builder.lastModified(lmd);
@@ -605,43 +604,29 @@ public class WorkspaceResource {
     @GET
     @Path("/{wskey}/elements/publication")
     public Response getPublicationPolicy(@PathParam(value = "wskey") String wskey, @QueryParam("path") String path)
-            throws CoreServiceException, AccessDeniedException, InvalidPathException, PathNotFoundException, KeyNotFoundException, OrtolangException, IOException, DataNotFoundException,
-            BinaryStoreServiceException {
+            throws CoreServiceException, InvalidPathException, PathNotFoundException, KeyNotFoundException, OrtolangException, IOException, DataNotFoundException,
+            BinaryStoreServiceException, RegistryServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/elements/publication");
         if (path == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
         }
         String key = core.resolveWorkspacePath(wskey, Workspace.HEAD, path);
         Collection parent = core.readCollection(key);
-        OrtolangObject object = parent;
+        OrtolangObject object;
         PathBuilder npath = PathBuilder.fromPath(path);
-        boolean isRoot = npath.isRoot();
-        boolean found = false;
-        String parentPublicationPolicy = null;
         Map<String, Object> map = new HashMap<>();
         ArrayList<WorkspaceElementRepresentation> elements = new ArrayList<>();
-        while (!found) {
-            parentPublicationPolicy = readPublicationPolicy(object);
-            if (parentPublicationPolicy != null) {
-                found = true;
-            } else if (npath.isRoot()) {
-                found = true;
-                parentPublicationPolicy = AuthorisationPolicyTemplate.FORALL;
-            } else {
-                npath = npath.parent();
-                object = browser.findObject(core.resolveWorkspacePath(wskey, Workspace.HEAD, npath.build()));
-            }
-        }
+        String parentPublicationPolicy = core.readPublicationPolicy(wskey, Workspace.HEAD, path);
         WorkspaceElementRepresentation parentRepresentation = WorkspaceElementRepresentation.fromCollection(parent);
         parentRepresentation.setPublicationPolicy(parentPublicationPolicy);
         parentRepresentation.setPath(path);
         map.put("parent", parentRepresentation);
         for (CollectionElement child : parent.getElements()) {
+            String publicationPolicy = core.readPublicationPolicy(child.getKey());
             object = browser.findObject(child.getKey());
-            String publicationPolicy = readPublicationPolicy(object);
             WorkspaceElementRepresentation representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
             representation.setPublicationPolicy(publicationPolicy == null ? parentPublicationPolicy : publicationPolicy);
-            representation.setPath(path + (isRoot ? "" : PathBuilder.PATH_SEPARATOR) + child.getName());
+            representation.setPath(path + (npath.isRoot() ? "" : PathBuilder.PATH_SEPARATOR) + child.getName());
             elements.add(representation);
         }
         map.put("elements", elements);
@@ -651,7 +636,7 @@ public class WorkspaceResource {
     @PUT
     @Path("/{wskey}/elements/publication")
     public Response setPublicationPolicy(@PathParam(value = "wskey") String wskey, @QueryParam("path") String path, @QueryParam("recursive") @DefaultValue("true") boolean recursive, PublicationPolicy publicationPolicy)
-            throws BrowserServiceException, AccessDeniedException, PathNotFoundException, KeyAlreadyExistsException, CoreServiceException, KeyNotFoundException, MetadataFormatException,
+            throws BrowserServiceException, PathNotFoundException, KeyAlreadyExistsException, CoreServiceException, KeyNotFoundException, MetadataFormatException,
             WorkspaceReadOnlyException, PathAlreadyExistsException, InvalidPathException, OrtolangException, DataCollisionException, BinaryStoreServiceException, IOException {
         LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements/publication");
         JsonObject jsonObject = Json.createObjectBuilder().add("template", publicationPolicy.getTemplate()).build();
@@ -751,20 +736,6 @@ public class WorkspaceResource {
             }
             representation.setMetadatas(metadatas);
         }
-    }
-
-    private String readPublicationPolicy(OrtolangObject object) throws OrtolangException, DataNotFoundException, BinaryStoreServiceException, IOException {
-        MetadataElement metadataElement = null;
-        if (object instanceof MetadataSource) {
-            metadataElement = ((MetadataSource) object).findMetadataByName(MetadataFormat.ACL);
-        }
-        if (metadataElement != null) {
-            MetadataObject metadataObject = (MetadataObject) browser.findObject(metadataElement.getKey());
-            ObjectMapper mapper = new ObjectMapper();
-            PublicationPolicy publicationPolicy = mapper.readValue(binary.getFile(metadataObject.getStream()), PublicationPolicy.class);
-            return publicationPolicy.getTemplate();
-        }
-        return null;
     }
 
     private static class PublicationPolicy {

@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -192,6 +193,12 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren, String format) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
 
     void deleteMetadataObject(String wskey, String path, String name, boolean recursive) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException;
+
+    String readPublicationPolicy(String key) throws KeyNotFoundException, RegistryServiceException, DataNotFoundException, BinaryStoreServiceException, IOException, CoreServiceException;
+
+    String readPublicationPolicy(String wskey, String root, String path)
+            throws KeyNotFoundException, RegistryServiceException, DataNotFoundException, BinaryStoreServiceException, IOException, CoreServiceException, AccessDeniedException, InvalidPathException,
+            PathNotFoundException;
 
 	/*MetadataFormat*/
 

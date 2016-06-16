@@ -66,7 +66,9 @@ import java.util.logging.Logger;
     public SearchResource() {
     }
 
-    @GET @Path("/index") public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
+    @GET
+    @Path("/index")
+    public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
         LOGGER.log(Level.INFO, "GET /search/index?query=" + query);
         List<OrtolangSearchResult> results;
         if (query != null && query.length() > 0) {
@@ -77,7 +79,10 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
 
-    @GET @Path("/collections") @GZIP public Response findCollections(@Context HttpServletRequest request) {
+    @GET
+    @Path("/collections")
+    @GZIP
+    public Response findCollections(@Context HttpServletRequest request) {
         LOGGER.log(Level.INFO, "GET /search/collections");
         String fields = null;
         String content = null;
@@ -109,14 +114,14 @@ import java.util.logging.Logger;
                     }
                     String[] fieldPart = parameter.getKey().substring(0, parameter.getKey().length() - 2).split("\\.");
                     if (fieldPart.length > 1) {
-                        fieldsMap.put("meta_"+parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
+                        fieldsMap.put("meta_" + parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
                     } else {
                         fieldsMap.put("meta_ortolang-item-json." + parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
                     }
                 } else {
                     String[] fieldPart = parameter.getKey().split("\\.");
                     if (fieldPart.length > 1) {
-                        fieldsMap.put("meta_"+parameter.getKey(), parameter.getValue()[0]);
+                        fieldsMap.put("meta_" + parameter.getKey(), parameter.getValue()[0]);
                     } else {
                         fieldsMap.put("meta_ortolang-item-json." + parameter.getKey(), parameter.getValue()[0]);
                     }
@@ -154,7 +159,10 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
 
-    @GET @Path("/collections/{key}") @GZIP public Response getCollection(@PathParam(value = "key") String key) {
+    @GET
+    @Path("/collections/{key}")
+    @GZIP
+    public Response getCollection(@PathParam(value = "key") String key) {
         LOGGER.log(Level.INFO, "GET /search/collections/" + key);
         try {
             String result = search.getCollection(key);
@@ -167,8 +175,11 @@ import java.util.logging.Logger;
         return Response.status(404).build();
     }
 
-    @GET @Path("/profiles") @GZIP public Response findProfiles(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
-        LOGGER.log(Level.INFO, "GET /search/profiles?content=" + content + "&fields=" + fields);
+    @GET
+    @Path("/profiles")
+    @GZIP
+    public Response findProfiles(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
+        LOGGER.log(Level.INFO, "GET /search/profiles?content=" + content + (fields != null ? "&fields=" + fields : ""));
         // Sets projections
         HashMap<String, String> fieldsProjection = new HashMap<String, String>();
         if (fields != null) {
@@ -192,7 +203,25 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
 
-    @GET @Path("/workspaces") @GZIP public Response findWorkspaces(@Context HttpServletRequest request) {
+    @GET
+    @Path("/profiles/{key}")
+    @GZIP
+    public Response getProfile(@PathParam(value = "key") String key) {
+        LOGGER.log(Level.INFO, "GET /search/profiles/" + key);
+        String profile;
+        try {
+            profile = search.getProfile(key);
+        } catch (SearchServiceException e) {
+            profile = "";
+            LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
+        }
+        return Response.ok(profile).build();
+    }
+
+    @GET
+    @Path("/workspaces")
+    @GZIP
+    public Response findWorkspaces(@Context HttpServletRequest request) {
         LOGGER.log(Level.INFO, "GET /search/workspaces");
         String fields = null;
         String content = null;
@@ -270,7 +299,10 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
 
-    @GET @Path("/workspaces/{alias}") @GZIP public Response getWorkspace(@PathParam(value = "alias") String alias) {
+    @GET
+    @Path("/workspaces/{alias}")
+    @GZIP
+    public Response getWorkspace(@PathParam(value = "alias") String alias) {
         LOGGER.log(Level.INFO, "GET /metdata/workspaces/" + alias);
         try {
             String result = search.getWorkspace(alias);
@@ -283,7 +315,10 @@ import java.util.logging.Logger;
         return Response.status(404).build();
     }
 
-    @GET @Path("/count/workspaces") @GZIP public Response countWorkspaces(@Context HttpServletRequest request) {
+    @GET
+    @Path("/count/workspaces")
+    @GZIP
+    public Response countWorkspaces(@Context HttpServletRequest request) {
         LOGGER.log(Level.INFO, "GET /search/count/workspaces");
         String fields = null;
         String content = null;
@@ -353,7 +388,10 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
 
-    @GET @Path("/entities/{id}") @GZIP public Response getEntity(@PathParam(value = "id") String id) {
+    @GET
+    @Path("/entities/{id}")
+    @GZIP
+    public Response getEntity(@PathParam(value = "id") String id) {
         LOGGER.log(Level.INFO, "GET /search/entities/" + id);
         try {
             String result = search.getEntity(id);

@@ -36,20 +36,15 @@ package fr.ortolang.diffusion.api.workspace;
  * #L%
  */
 
-import java.util.HashSet;
-import java.util.Set;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectInfos;
+import fr.ortolang.diffusion.core.entity.*;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectInfos;
-import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.CollectionElement;
-import fr.ortolang.diffusion.core.entity.DataObject;
-import fr.ortolang.diffusion.core.entity.Link;
-import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.core.entity.MetadataObject;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @XmlRootElement(name = "workspace-element")
 public class WorkspaceElementRepresentation {
@@ -74,11 +69,12 @@ public class WorkspaceElementRepresentation {
     private Set<CollectionElement> elements;
     private Set<MetadataElement> metadatas;
     private String publicationPolicy;
+    private Map<String, String> publicationPolicies;
     /** Downloadable by anonymous */
     private boolean unrestrictedDownload;
 
     public WorkspaceElementRepresentation() {
-        elements = new HashSet<CollectionElement>();
+        elements = new HashSet<>();
     }
 
     public String getKey() {
@@ -231,6 +227,14 @@ public class WorkspaceElementRepresentation {
 
     public void setPublicationPolicy(String publicationPolicy) {
         this.publicationPolicy = publicationPolicy;
+    }
+
+    public Map<String, String> getPublicationPolicies() {
+        return publicationPolicies;
+    }
+
+    public void setPublicationPolicies(Map<String, String> publicationPolicies) {
+        this.publicationPolicies = publicationPolicies;
     }
 
     public boolean isUnrestrictedDownload() {
