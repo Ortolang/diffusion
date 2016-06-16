@@ -167,7 +167,7 @@ public class SearchServiceBean implements SearchService {
         if (content != null) {
             query = findByContent("Collection", content, fieldsProjection, fieldsMap, group, limit, orderProp, orderDir);
         } else {
-            query = findItemsByFields(fieldsProjection, fieldsMap, group, limit, orderProp, orderDir);
+            query = findItemsByFields("Collection", fieldsProjection, fieldsMap, group, limit, orderProp, orderDir);
         }
 
         // Execute the query
@@ -191,7 +191,7 @@ public class SearchServiceBean implements SearchService {
     @Override
     public int countCollections(HashMap<String, Object> fieldsMap) throws SearchServiceException {
         LOGGER.log(Level.FINE, "count collections");
-        String query = countItemsWithFields(fieldsMap);
+        String query = countItemsWithFields("Collection", fieldsMap);
 
         // Execute the query
         int count = 0;
@@ -258,16 +258,22 @@ public class SearchServiceBean implements SearchService {
     }
 
     @Override
-    public List<String> findWorkspaces(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException {
-        LOGGER.log(Level.FINE, "Finds workspaces with content : " + content);
-        HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
-        String query = findByContent("Workspace", content, fieldsProjection, fieldsMap, null, null, null, null);
-
+    public List<String> findWorkspaces(String content, HashMap<String, String> fieldsProjection, String group, String limit, String orderProp, String orderDir, HashMap<String, Object> fieldsMap) throws SearchServiceException {
+        LOGGER.log(Level.FINE, "Finds workspaces");
+        String query;
+        if (content != null) {
+            query = findByContent("Workspace", content, fieldsProjection, fieldsMap, group, limit, orderProp, orderDir);
+        } else {
+            query = findItemsByFields("Workspace", fieldsProjection, fieldsMap, group, limit, orderProp, orderDir);
+        }
         // Execute the query
         List<String> results;
         if (query != null && query.length() > 0) {
             try {
+                LOGGER.log(Level.FINE, "Performing json search with query : "+query);
+                long timestamp1 = System.currentTimeMillis();
                 results = jsonStore.search(query);
+                LOGGER.log(Level.FINE, "Performed json search in : "+(System.currentTimeMillis()-timestamp1));
             } catch (JsonStoreServiceException e) {
                 results = Collections.emptyList();
                 LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
@@ -296,6 +302,28 @@ public class SearchServiceBean implements SearchService {
             }
         }
         return result;
+    }
+
+    @Override
+    public int countWorkspaces(HashMap<String, Object> fieldsMap) throws SearchServiceException {
+        LOGGER.log(Level.FINE, "count workspace");
+        String query = countItemsWithFields("workspace", fieldsMap);
+
+        // Execute the query
+        int count = 0;
+        if (query != null && query.length() > 0) {
+            LOGGER.log(Level.FINE, "Performing json search with query : "+query);
+            try {
+                List<String> results = jsonStore.search(query);
+                if (results.size()>0) {
+                    count = extractCount(results.get(0));
+                }
+                LOGGER.log(Level.FINE, "Count : "+count);
+            } catch (JsonStoreServiceException | NumberFormatException e) {
+                LOGGER.log(Level.FINEST, e.getMessage(), e.fillInStackTrace());
+            }
+        }
+        return count;
     }
 
     @Override
@@ -374,13 +402,17 @@ public class SearchServiceBean implements SearchService {
         }
 
         if (group != null) {
-            queryBuilder.append(" GROUP BY ").append("`meta_ortolang-item-json.").append(group).append("`");
+            if (group.contains(".")) {
+                queryBuilder.append(" GROUP BY ").append("`meta_").append(group).append("`");
+            } else {
+                queryBuilder.append(" GROUP BY `").append(group).append("`");
+            }
         }
 
         if (orderProp != null) {
-            String[] orderPropPart = orderProp.split("\\.");
-            if (orderPropPart.length > 1) {
-                queryBuilder.append(" ORDER BY ").append("`meta_ortolang-").append(orderPropPart[0]).append("-json.").append(orderPropPart[1]).append("`");
+//            String[] orderPropPart = orderProp.split("\\.");
+            if (orderProp.contains(".")) {
+                queryBuilder.append(" ORDER BY ").append("`meta_").append(orderProp).append("`");
             } else {
                 queryBuilder.append(" ORDER BY ").append("`").append(orderProp).append("`");
             }
@@ -401,7 +433,7 @@ public class SearchServiceBean implements SearchService {
         return queryBuilder.toString();
     }
 
-    private String findItemsByFields(HashMap<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
+    private String findItemsByFields(String cls, HashMap<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
         StringBuilder queryBuilder = new StringBuilder();
 
         queryBuilder.append("SELECT ");
@@ -411,22 +443,19 @@ public class SearchServiceBean implements SearchService {
             queryBuilder.append(", count(*)");
         }
 
-        queryBuilder.append(" FROM collection");
-        queryBuilder.append(whereClause(fieldsValue));
+        queryBuilder.append(" FROM ").append(cls).append(whereClause(fieldsValue));
         
         if (group != null) {
-            String[] groupPart = group.split("\\.");
-            if (groupPart.length > 1) {
-                queryBuilder.append(" GROUP BY ").append("`meta_").append(groupPart[0]).append(".").append(groupPart[1]).append("`");
+            if (group.contains(".")) {
+                queryBuilder.append(" GROUP BY ").append("`meta_").append(group).append("`");
             } else {
                 queryBuilder.append(" GROUP BY `").append(group).append("`");
             }
         }
 
         if (orderProp != null) {
-        	String[] orderPropPart = orderProp.split("\\.");
-        	if (orderPropPart.length > 1) {
-        		queryBuilder.append(" ORDER BY ").append("`meta_").append(orderPropPart[0]).append(".").append(orderPropPart[1]).append("`");
+        	if (orderProp.contains(".")) {
+        		queryBuilder.append(" ORDER BY ").append("`meta_").append(orderProp).append("`");
         	} else {
         		queryBuilder.append(" ORDER BY ").append("`").append(orderProp).append("`");
         	}
@@ -443,10 +472,10 @@ public class SearchServiceBean implements SearchService {
         return queryBuilder.toString();
     }
 
-    private String countItemsWithFields(Map<String, Object> fieldsValue) {
+    private String countItemsWithFields(String cls, Map<String, Object> fieldsValue) {
         StringBuilder queryBuilder = new StringBuilder();
 
-        queryBuilder.append("SELECT count(*) FROM collection");
+        queryBuilder.append("SELECT count(*) FROM ").append(cls);
         queryBuilder.append(whereClause(fieldsValue));
         
         return queryBuilder.toString();
@@ -461,7 +490,7 @@ public class SearchServiceBean implements SearchService {
                 if (selectStr.length() > 0)
                     selectStr.append(",");
                 selectStr.append("`").append(fieldProjectionEntry.getKey()).append("`");
-                if (!fieldProjectionEntry.getKey().equals(fieldProjectionEntry.getValue())) {
+                if (fieldProjectionEntry.getValue()!=null) {
                     selectStr.append(" AS ").append(fieldProjectionEntry.getValue()).append(" ");
                 }
             }

@@ -37,7 +37,6 @@ package fr.ortolang.diffusion.api.search;
  */
 
 import fr.ortolang.diffusion.OrtolangSearchResult;
-import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.search.SearchServiceException;
 
@@ -132,15 +131,13 @@ import java.util.logging.Logger;
                 	String[] fieldNamePart = fieldPart[0].split("\\.");
                 	if (fieldNamePart.length > 1) {
                 		fieldsProjection.put("meta_"+fieldNamePart[0]+"." + fieldNamePart[1], fieldPart[1]);
-                	} else {
-                		
                 	}
                 } else {
                 	String[] fieldNamePart = field.split("\\.");
                 	if (fieldNamePart.length > 1) {
-                		fieldsProjection.put("meta_"+fieldNamePart[0]+"." + fieldNamePart[1], fieldNamePart[1]);
+                		fieldsProjection.put("meta_"+fieldNamePart[0]+"." + fieldNamePart[1], null);
                 	} else {
-                		fieldsProjection.put(field, field);
+                		fieldsProjection.put(field, null);
                 	}
                 }
 
@@ -180,7 +177,7 @@ import java.util.logging.Logger;
                 if (fieldPart.length > 1) {
                     fieldsProjection.put("meta_profile." + fieldPart[0], fieldPart[1]);
                 } else {
-                    fieldsProjection.put("meta_profile." + field, field);
+                    fieldsProjection.put("meta_profile." + field, null);
                 }
             }
         }
@@ -195,24 +192,77 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
 
-    @GET @Path("/workspaces") @GZIP public Response findWorkspaces(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
-        LOGGER.log(Level.INFO, "GET /search/workspaces?content=" + content + "&fields=" + fields);
-        // Sets projections
+    @GET @Path("/workspaces") @GZIP public Response findWorkspaces(@Context HttpServletRequest request) {
+        LOGGER.log(Level.INFO, "GET /search/workspaces");
+        String fields = null;
+        String content = null;
+        String group = null;
+        String limit = null;
+        String orderProp = null;
+        String orderDir = null;
+        HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
+        for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
+            if (parameter.getKey().equals("fields")) {
+                fields = parameter.getValue()[0];
+            } else if (parameter.getKey().equals("content")) {
+                content = parameter.getValue()[0];
+            } else if (parameter.getKey().equals("group")) {
+                group = parameter.getValue()[0];
+            } else if (parameter.getKey().equals("limit")) {
+                limit = parameter.getValue()[0];
+            } else if (parameter.getKey().equals("orderProp")) {
+                orderProp = parameter.getValue()[0];
+            } else if (parameter.getKey().equals("orderDir")) {
+                orderDir = parameter.getValue()[0];
+            } else if (parameter.getKey().equals("scope")) {
+                // Ignore scope param
+            } else {
+                if (parameter.getKey().endsWith("[]")) {
+                    List<String> paramArr = new ArrayList<String>();
+                    for (String annotationLevel : parameter.getValue()) {
+                        paramArr.add(annotationLevel);
+                    }
+                    String[] fieldPart = parameter.getKey().substring(0, parameter.getKey().length() - 2).split("\\.");
+                    if (fieldPart.length > 1) {
+                        fieldsMap.put("meta_"+parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
+                    } else {
+                        fieldsMap.put("meta_ortolang-workspace-json." + parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
+                    }
+                } else {
+                    String[] fieldPart = parameter.getKey().split("\\.");
+                    if (fieldPart.length > 1) {
+                        fieldsMap.put("meta_"+parameter.getKey(), parameter.getValue()[0]);
+                    } else {
+                        fieldsMap.put("meta_ortolang-workspace-json." + parameter.getKey(), parameter.getValue()[0]);
+                    }
+                }
+            }
+        }
         HashMap<String, String> fieldsProjection = new HashMap<String, String>();
         if (fields != null) {
             for (String field : fields.split(",")) {
-                String[] fieldPart = field.split(":");
-                if (fieldPart.length > 1) {
-                    fieldsProjection.put("meta_ortolang-workspace-json." + fieldPart[0], fieldPart[1]);
+                if (field.contains(":")) {
+                    String[] fieldPart = field.split(":");
+                    if (fieldPart[0].contains(".")) {
+                        fieldsProjection.put("meta_"+fieldPart[0], fieldPart[1]);
+                    } else {
+                        fieldsProjection.put(fieldPart[0], fieldPart[1]);
+                    }
                 } else {
-                    fieldsProjection.put("meta_ortolang-workspace-json." + field, field);
+                    if (field.contains(".")) {
+                        String[] fieldNamePart = field.split("\\.");
+                        fieldsProjection.put("meta_"+field, fieldNamePart[fieldNamePart.length-1]);
+                    } else {
+                        fieldsProjection.put(field, null);
+                    }
                 }
+
             }
         }
         // Execute the query
         List<String> results;
         try {
-            results = search.findWorkspaces(content, fieldsProjection);
+            results = search.findWorkspaces(content, fieldsProjection, group, limit, orderProp, orderDir, fieldsMap);
         } catch (SearchServiceException e) {
             results = Collections.emptyList();
             LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
@@ -233,6 +283,51 @@ import java.util.logging.Logger;
         return Response.status(404).build();
     }
 
+    @GET @Path("/count/workspaces") @GZIP public Response countWorkspaces(@Context HttpServletRequest request) {
+        LOGGER.log(Level.INFO, "GET /search/count/workspaces");
+        String fields = null;
+        String content = null;
+        String group = null;
+        HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
+        for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
+            if (parameter.getKey().equals("fields")) {
+                fields = parameter.getValue()[0];
+            } else if (parameter.getKey().equals("content")) {
+                content = parameter.getValue()[0];
+            } else if (parameter.getKey().equals("group")) {
+                group = parameter.getValue()[0];
+            } else if (parameter.getKey().equals("scope")) {
+                // Ignore scope param
+            } else {
+                if (parameter.getKey().endsWith("[]")) {
+                    List<String> paramArr = new ArrayList<String>();
+                    for (String annotationLevel : parameter.getValue()) {
+                        paramArr.add(annotationLevel);
+                    }
+                    String[] fieldPart = parameter.getKey().substring(0, parameter.getKey().length() - 2).split("\\.");
+                    if (fieldPart.length > 1) {
+                        fieldsMap.put("meta_"+parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
+                    } else {
+                        fieldsMap.put("meta_ortolang-workspace-json." + parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
+                    }
+                } else {
+                    String[] fieldPart = parameter.getKey().split("\\.");
+                    if (fieldPart.length > 1) {
+                        fieldsMap.put("meta_"+parameter.getKey(), parameter.getValue()[0]);
+                    } else {
+                        fieldsMap.put("meta_ortolang-workspace-json." + parameter.getKey(), parameter.getValue()[0]);
+                    }
+                }
+            }
+        }
+        try {
+            return Response.ok("{\"count\":"+search.countWorkspaces(fieldsMap)+"}").build();
+        } catch (SearchServiceException e) {
+            LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
+        }
+        return Response.status(400).build();
+    }
+
     @GET @Path("/entities") @GZIP public Response findEntities(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
         LOGGER.log(Level.INFO, "GET /search/entities?content=" + content + "&fields=" + fields);
         // Sets projections
@@ -243,7 +338,7 @@ import java.util.logging.Logger;
                 if (fieldPart.length > 1) {
                     fieldsProjection.put("meta_ortolang-referential-json." + fieldPart[0], fieldPart[1]);
                 } else {
-                    fieldsProjection.put("meta_ortolang-referential-json." + field, field);
+                    fieldsProjection.put("meta_ortolang-referential-json." + field, null);
                 }
             }
         }

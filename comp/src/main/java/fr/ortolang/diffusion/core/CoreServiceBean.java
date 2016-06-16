@@ -135,6 +135,7 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
+import fr.ortolang.diffusion.store.json.OrtolangKeyExtractor;
 
 @Local(CoreService.class)
 @Stateless(name = CoreService.SERVICE_NAME)
@@ -3709,6 +3710,7 @@ public class CoreServiceBean implements CoreService {
                     throw new OrtolangException("unable to load workspace with id [" + identifier.getId() + "] from storage");
                 }
                 if(workspace.hasSnapshot()) {
+                    String latestSnapshotName = findWorkspaceLatestPublishedSnapshot(key);
 	                JsonObjectBuilder builder = Json.createObjectBuilder();
 	                builder.add("wskey", key);
 	                builder.add("wsalias", workspace.getAlias());
@@ -3720,6 +3722,10 @@ public class CoreServiceBean implements CoreService {
 	                    objectBuilder.add("snapshot", tagElement.getSnapshot());
 	                    objectBuilder.add("key", workspace.findSnapshotByName(tagElement.getSnapshot()).getKey());
 	                    arrayBuilder.add(objectBuilder);
+	                    
+	                    if (tagElement.getSnapshot().equals(latestSnapshotName)) {
+	                        builder.add("latestSnapshot", OrtolangKeyExtractor.getMarker(workspace.findSnapshotByName(tagElement.getSnapshot()).getKey()));
+	                    }
 	                }
 	                builder.add("tags", arrayBuilder);
 	                content.put(MetadataFormat.WORKSPACE, builder.build().toString());
@@ -3727,7 +3733,7 @@ public class CoreServiceBean implements CoreService {
             }
 
             return content;
-        } catch (RegistryServiceException | KeyNotFoundException e) {
+        } catch (RegistryServiceException | KeyNotFoundException | CoreServiceException e) {
             throw new OrtolangException("unable to find an object for key " + key);
         }
     }
