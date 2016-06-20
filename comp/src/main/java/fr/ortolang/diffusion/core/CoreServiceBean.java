@@ -2570,12 +2570,12 @@ public class CoreServiceBean implements CoreService {
                 if (collection.getClock() < ws.getClock()) {
                     Collection clone = cloneCollection(ws.getHead(), collection, ws.getClock());
                     tkey = clone.getKey();
+                    meta.setTarget(tkey);
                     if (parent != null) {
                         parent.removeElement(element);
                         parent.addElement(new CollectionElement(Collection.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Collection.MIME_TYPE, clone.getKey()));
                         em.merge(parent);
                         registry.update(parent.getKey());
-
                     }
                     collection = clone;
                 }
@@ -2602,11 +2602,11 @@ public class CoreServiceBean implements CoreService {
                 if (object.getClock() < ws.getClock()) {
                     DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
                     tkey = clone.getKey();
+                    meta.setTarget(tkey);
                     parent.removeElement(element);
                     parent.addElement(new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey()));
                     em.merge(parent);
                     registry.update(parent.getKey());
-
                     object = clone;
                 }
                 object.addMetadata(new MetadataElement(name, key));
@@ -2628,17 +2628,18 @@ public class CoreServiceBean implements CoreService {
                 if (link.getClock() < ws.getClock()) {
                     Link clone = cloneLink(ws.getHead(), link, ws.getClock());
                     tkey = clone.getKey();
+                    meta.setTarget(tkey);
                     parent.removeElement(element);
                     parent.addElement(new CollectionElement(Link.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), 0, Link.MIME_TYPE, clone.getKey()));
                     em.merge(parent);
                     registry.update(parent.getKey());
-
                     link = clone;
                 }
                 link.addMetadata(new MetadataElement(name, key));
                 em.merge(link);
                 break;
             }
+            em.merge(meta);
 
             registry.update(tkey);
             indexing.index(tkey);
