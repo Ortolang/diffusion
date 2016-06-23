@@ -68,10 +68,7 @@ public class TOTPHelper {
         long currentInterval = getCurrentInterval();
         long hash1 = generateTOTP(secret, currentInterval);
         long hash2 = generateTOTP(secret, currentInterval-1);
-        if (hash1 == code || hash2 == code) {
-            return true;
-        }
-        return false;
+        return hash1 == code || hash2 == code;
     }
     
     private static int generateTOTP(String secret, long time) {
@@ -81,8 +78,7 @@ public class TOTPHelper {
         byte[] hash = hmacSha(decodedKey, msg);
         int offset = hash[hash.length - 1] & 0xf;
         int binary = ((hash[offset] & 0x7f) << 24) | ((hash[offset + 1] & 0xff) << 16) | ((hash[offset + 2] & 0xff) << 8) | (hash[offset + 3] & 0xff);
-        int otp = binary % 1000000;
-        return otp;
+        return binary % 1000000;
     }
 
     private static byte[] hmacSha(byte[] keyBytes, byte[] text) {
@@ -99,8 +95,7 @@ public class TOTPHelper {
 
     private static long getCurrentInterval() {
         //30 minutes interval
-        long interval = System.currentTimeMillis() / (1000 * 60 * 30);
-        return interval;
+        return System.currentTimeMillis() / (1000 * 60 * 30);
     }
 
 }

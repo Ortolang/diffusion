@@ -159,7 +159,7 @@ public class OrtolangConfig {
 
         private final String key;
 
-        private Property(String name) {
+        Property(String name) {
             this.key = name;
         }
 

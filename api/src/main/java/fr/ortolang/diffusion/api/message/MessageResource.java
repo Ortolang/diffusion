@@ -294,9 +294,7 @@ public class MessageResource {
         builder.header("Content-Lenght", attachment.getSize());
         builder.type(attachment.getType());
         File file = service.getMessageAttachment(mkey, name);
-        StreamingOutput stream = output -> {
-            Files.copy(file, output);
-        };
+        StreamingOutput stream = output -> Files.copy(file, output);
         builder.entity(stream);
         return builder.build();
     }

@@ -184,7 +184,7 @@ public class LoadBagContentTask extends RuntimeEngineTask {
                 if (parts.length <= 1 || parts[0].length() <= 0 || parts[1].length() <= 0) {
                     LOGGER.log(Level.INFO, "Unparsable snapshot hierarchy found: " + Arrays.deepToString(parts));
                 }
-                Integer index = -1;
+                Integer index;
                 try {
                     index = Integer.decode(parts[0]);
                     if ( snapshots.add(index) ) {

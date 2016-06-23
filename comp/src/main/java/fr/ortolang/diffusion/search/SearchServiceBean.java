@@ -538,9 +538,7 @@ public class SearchServiceBean implements SearchService {
             JsonObject jsonObj = jsonReader.readObject();
             fieldValue = jsonObj.getInt("count");
             
-        } catch(IllegalStateException | NullPointerException | ClassCastException e) {
-            LOGGER.log(Level.WARNING, "No property 'count' in json object", e);
-        } catch(JsonException e) {
+        } catch(IllegalStateException | NullPointerException | ClassCastException | JsonException e) {
             LOGGER.log(Level.WARNING, "No property 'count' in json object", e);
         } finally {
             jsonReader.close();

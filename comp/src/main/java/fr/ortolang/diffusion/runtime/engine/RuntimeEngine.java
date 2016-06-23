@@ -45,42 +45,42 @@ import fr.ortolang.diffusion.runtime.entity.ProcessType;
 
 public interface RuntimeEngine {
 	
-	public static final String SERVICE_NAME = "engine";
+	String SERVICE_NAME = "engine";
 	
-	public void deployDefinitions(String[] resources) throws RuntimeEngineException;
+	void deployDefinitions(String[] resources) throws RuntimeEngineException;
 	
-	public List<ProcessType> listProcessTypes(boolean onlyLatest) throws RuntimeEngineException;
+	List<ProcessType> listProcessTypes(boolean onlyLatest) throws RuntimeEngineException;
 	
-	public ProcessType getProcessTypeById(String id) throws RuntimeEngineException;
+	ProcessType getProcessTypeById(String id) throws RuntimeEngineException;
 	
-	public ProcessType getProcessTypeByKey(String key) throws RuntimeEngineException;
+	ProcessType getProcessTypeByKey(String key) throws RuntimeEngineException;
 	
-	public void startProcess(String type, String key, Map<String, Object> variables) throws RuntimeEngineException;
+	void startProcess(String type, String key, Map<String, Object> variables) throws RuntimeEngineException;
 	
-	public void deleteProcess(String key) throws RuntimeEngineException;
+	void deleteProcess(String key) throws RuntimeEngineException;
 	
-	public Process getProcess(String id) throws RuntimeEngineException;
+	Process getProcess(String id) throws RuntimeEngineException;
 	
-	public List<Process> findProcess(Map<String, Object> variables) throws RuntimeEngineException;
+	List<Process> findProcess(Map<String, Object> variables) throws RuntimeEngineException;
 	
-	public HumanTask getTask(String id) throws RuntimeEngineException;
+	HumanTask getTask(String id) throws RuntimeEngineException;
 	
-	public List<HumanTask> listAllTasks() throws RuntimeEngineException;
+	List<HumanTask> listAllTasks() throws RuntimeEngineException;
 	
-	public boolean isCandidate(String id, String user, List<String> groups) throws RuntimeEngineException;
+	boolean isCandidate(String id, String user, List<String> groups) throws RuntimeEngineException;
 	
-	public List<HumanTask> listCandidateTasks(String user, List<String> groups) throws RuntimeEngineException;
+	List<HumanTask> listCandidateTasks(String user, List<String> groups) throws RuntimeEngineException;
 	
-	public boolean isAssigned(String id, String user) throws RuntimeEngineException;
+	boolean isAssigned(String id, String user) throws RuntimeEngineException;
 
-	public List<HumanTask> listAssignedTasks(String user) throws RuntimeEngineException;
+	List<HumanTask> listAssignedTasks(String user) throws RuntimeEngineException;
 	
-	public void claimTask(String id, String user) throws RuntimeEngineException;
+	void claimTask(String id, String user) throws RuntimeEngineException;
 	
-	public void unclaimTask(String id) throws RuntimeEngineException;
+	void unclaimTask(String id) throws RuntimeEngineException;
 	
-	public void completeTask(String id, Map<String, Object> variables) throws RuntimeEngineException;
+	void completeTask(String id, Map<String, Object> variables) throws RuntimeEngineException;
 	
-	public void notify(RuntimeEngineEvent event) throws RuntimeEngineException;
+	void notify(RuntimeEngineEvent event) throws RuntimeEngineException;
 	
 }

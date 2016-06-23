@@ -81,22 +81,22 @@ import fr.ortolang.diffusion.thumbnail.ThumbnailService;
 @SecurityDomain("ortolang")
 @PermitAll
 public class StatisticsServiceBean implements StatisticsService {
-    
+
     private static final Logger LOGGER = Logger.getLogger(StatisticsServiceBean.class.getName());
-    
+
     private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
     private static final String SEPARATOR = ".";
     private static final Map<String, List<String>> STATS_NAMES = new HashMap<String, List<String>> ();
-    
+
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
     @Resource
     private SessionContext ctx;
-    
+
     public StatisticsServiceBean() {
     }
-    
+
     public void setEntityManager(EntityManager em) {
         this.em = em;
     }
@@ -112,7 +112,7 @@ public class StatisticsServiceBean implements StatisticsService {
     public SessionContext getSessionContext() {
         return this.ctx;
     }
-    
+
     @PostConstruct
     private void init() {
         String[] registryInfos = new String[] { RegistryService.INFO_SIZE, RegistryService.INFO_PUBLISHED, RegistryService.INFO_DELETED, RegistryService.INFO_HIDDEN };
@@ -130,7 +130,7 @@ public class StatisticsServiceBean implements StatisticsService {
         String[] thumbnailInfos = new String[] { ThumbnailService.INFO_SIZE, ThumbnailService.INFO_FILES };
         STATS_NAMES.put(ThumbnailService.SERVICE_NAME, Arrays.asList(thumbnailInfos));
     }
-    
+
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<String> list() throws StatisticsServiceException {
@@ -209,18 +209,17 @@ public class StatisticsServiceBean implements StatisticsService {
             return result;
         }
     }
-    
+
     //Service methods
-    
+
     @Override
     public String getServiceName() {
         return RegistryService.SERVICE_NAME;
     }
-    
+
     @Override
     public Map<String, String> getServiceInfos() {
-        Map<String, String>infos = new HashMap<String, String> ();
-        return infos;
+        return new HashMap<String, String> ();
     }
 
     @Override

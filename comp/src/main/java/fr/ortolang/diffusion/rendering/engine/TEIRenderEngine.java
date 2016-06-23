@@ -42,7 +42,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
@@ -60,7 +60,7 @@ import fr.ortolang.diffusion.rendering.RenderEngine;
 public class TEIRenderEngine implements RenderEngine {
 
     private static final Logger LOGGER = Logger.getLogger(TEIRenderEngine.class.getName());
-    private static final List<String> SUPPORTED_MIME_TYPES = Arrays.asList("application/xml");
+    private static final List<String> SUPPORTED_MIME_TYPES = Collections.singletonList("application/xml");
     private static final String ID = "xml";
 
     private TransformerFactory tFactory;
@@ -92,10 +92,7 @@ public class TEIRenderEngine implements RenderEngine {
 
     @Override
     public boolean canRender(String mimetype) {
-        if (SUPPORTED_MIME_TYPES.contains(mimetype)) {
-            return true;
-        }
-        return false;
+        return SUPPORTED_MIME_TYPES.contains(mimetype);
     }
 
     @Override

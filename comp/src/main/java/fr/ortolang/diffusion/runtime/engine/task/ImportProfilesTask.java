@@ -98,7 +98,7 @@ public class ImportProfilesTask extends RuntimeEngineTask {
 						getMembershipService().createProfile(profile.pro_login, profile.pro_firstname, profile.pro_lastname, profile.pro_emailt, ProfileStatus.ACTIVE);
 					} catch (ProfileAlreadyExistsException | AccessDeniedException | MembershipServiceException e) {
 						partial = true;
-						report.append("creation failed for: " + profile.pro_login + "\r\n");
+						report.append("creation failed for: ").append(profile.pro_login).append("\r\n");
 						LOGGER.log(Level.SEVERE, "  unable to create profile: " + profile.pro_login, e);
 					}
 				}
@@ -107,7 +107,7 @@ public class ImportProfilesTask extends RuntimeEngineTask {
 						getMembershipService().updateProfile(profile.pro_login, profile.pro_firstname, profile.pro_lastname, profile.pro_emailt, null);
 					} catch (KeyNotFoundException | AccessDeniedException | MembershipServiceException e) {
 						partial = true;
-						report.append("update failed for existing profile: " + profile.pro_login + "\r\n");
+						report.append("update failed for existing profile: ").append(profile.pro_login).append("\r\n");
 						LOGGER.log(Level.SEVERE, "  unable to update profile: " + profile.pro_login, e);
 					}
 				}
@@ -173,7 +173,7 @@ public class ImportProfilesTask extends RuntimeEngineTask {
 						}
 					} catch (KeyNotFoundException | AccessDeniedException | MembershipServiceException e) {
 						partial = true;
-						report.append("unable to set info for profile: " + profile.pro_login + "\r\n");
+						report.append("unable to set info for profile: ").append(profile.pro_login).append("\r\n");
 						LOGGER.log(Level.SEVERE, "  unable to set profile info for identifier: " + profile.pro_login, e);
 					}
 				}

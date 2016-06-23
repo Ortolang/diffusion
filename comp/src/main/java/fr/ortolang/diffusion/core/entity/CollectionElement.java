@@ -125,14 +125,14 @@ public class CollectionElement implements Serializable, Comparable<CollectionEle
 
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder();
-		sb.append("{Type:").append(getType());
-		sb.append(",Name:").append(getName());
-		sb.append(",Modification:").append(getModification());
-		sb.append(",Size:").append(getSize());
-		sb.append(",MimeType:").append(getMimeType());
-		sb.append(",Key:").append(getKey()).append("}");
-		return sb.toString();
+		return "CollectionElement{" +
+				"type='" + type + '\'' +
+				", name='" + name + '\'' +
+				", modification=" + modification +
+				", size=" + size +
+				", mimeType='" + mimeType + '\'' +
+				", key='" + key + '\'' +
+				'}';
 	}
 
 	@Override
@@ -193,92 +193,68 @@ public class CollectionElement implements Serializable, Comparable<CollectionEle
 		}
 	}
 
-	public static Comparator<CollectionElement> ElementNameAscComparator = new Comparator<CollectionElement>() {
-		@Override
-		public int compare(CollectionElement element1, CollectionElement element2) {
-			if (element1.getType().equals(element2.getType())) {
-				return element1.getName().compareToIgnoreCase(element2.getName());
-			} else {
-				return element1.getType().compareToIgnoreCase(element2.getType());
-			}
-		}
-	};
+	public static Comparator<CollectionElement> ElementNameAscComparator = (element1, element2) -> {
+        if (element1.getType().equals(element2.getType())) {
+            return element1.getName().compareToIgnoreCase(element2.getName());
+        } else {
+            return element1.getType().compareToIgnoreCase(element2.getType());
+        }
+    };
 
-	public static Comparator<CollectionElement> ElementNameDescComparator = new Comparator<CollectionElement>() {
-		@Override
-		public int compare(CollectionElement element1, CollectionElement element2) {
-			if (element1.getType().equals(element2.getType())) {
-				return element2.getName().compareToIgnoreCase(element1.getName());
-			} else {
-				return element1.getType().compareToIgnoreCase(element2.getType());
-			}
-		}
-	};
+	public static Comparator<CollectionElement> ElementNameDescComparator = (element1, element2) -> {
+        if (element1.getType().equals(element2.getType())) {
+            return element2.getName().compareToIgnoreCase(element1.getName());
+        } else {
+            return element1.getType().compareToIgnoreCase(element2.getType());
+        }
+    };
 
-	public static Comparator<CollectionElement> ElementSizeAscComparator = new Comparator<CollectionElement>() {
-		@Override
-		public int compare(CollectionElement element1, CollectionElement element2) {
-			if (element1.getType().equals(element2.getType())) {
-				return (int) (element1.getSize() - element2.getSize());
-			} else {
-				return element1.getType().compareToIgnoreCase(element2.getType());
-			}
-		}
-	};
+	public static Comparator<CollectionElement> ElementSizeAscComparator = (element1, element2) -> {
+        if (element1.getType().equals(element2.getType())) {
+            return (int) (element1.getSize() - element2.getSize());
+        } else {
+            return element1.getType().compareToIgnoreCase(element2.getType());
+        }
+    };
 	
-	public static Comparator<CollectionElement> ElementSizeDescComparator = new Comparator<CollectionElement>() {
-		@Override
-		public int compare(CollectionElement element1, CollectionElement element2) {
-			if (element1.getType().equals(element2.getType())) {
-				return (int) (element2.getSize() - element1.getSize());
-			} else {
-				return element1.getType().compareToIgnoreCase(element2.getType());
-			}
-		}
-	};
+	public static Comparator<CollectionElement> ElementSizeDescComparator = (element1, element2) -> {
+        if (element1.getType().equals(element2.getType())) {
+            return (int) (element2.getSize() - element1.getSize());
+        } else {
+            return element1.getType().compareToIgnoreCase(element2.getType());
+        }
+    };
 
-	public static Comparator<CollectionElement> ElementTypeAscComparator = new Comparator<CollectionElement>() {
-		@Override
-		public int compare(CollectionElement element1, CollectionElement element2) {
-			if (element1.getType().equals(element2.getType())) {
-				return element1.getMimeType().compareToIgnoreCase(element2.getMimeType());
-			} else {
-				return element1.getType().compareToIgnoreCase(element2.getType());
-			}
-		}
-	};
+	public static Comparator<CollectionElement> ElementTypeAscComparator = (element1, element2) -> {
+        if (element1.getType().equals(element2.getType())) {
+            return element1.getMimeType().compareToIgnoreCase(element2.getMimeType());
+        } else {
+            return element1.getType().compareToIgnoreCase(element2.getType());
+        }
+    };
 	
-	public static Comparator<CollectionElement> ElementTypeDescComparator = new Comparator<CollectionElement>() {
-		@Override
-		public int compare(CollectionElement element1, CollectionElement element2) {
-			if (element2.getType().equals(element1.getType())) {
-				return element2.getMimeType().compareToIgnoreCase(element1.getMimeType());
-			} else {
-				return element1.getType().compareToIgnoreCase(element2.getType());
-			}
-		}
-	};
+	public static Comparator<CollectionElement> ElementTypeDescComparator = (element1, element2) -> {
+        if (element2.getType().equals(element1.getType())) {
+            return element2.getMimeType().compareToIgnoreCase(element1.getMimeType());
+        } else {
+            return element1.getType().compareToIgnoreCase(element2.getType());
+        }
+    };
 	
-	public static Comparator<CollectionElement> ElementDateAscComparator = new Comparator<CollectionElement>() {
-		@Override
-		public int compare(CollectionElement element1, CollectionElement element2) {
-			if (element1.getType().equals(element2.getType())) {
-				return (int) (element1.getModification() - element2.getModification()); 
-			} else {
-				return element1.getType().compareToIgnoreCase(element2.getType());
-			}
-		}
-	};
+	public static Comparator<CollectionElement> ElementDateAscComparator = (element1, element2) -> {
+        if (element1.getType().equals(element2.getType())) {
+            return (int) (element1.getModification() - element2.getModification());
+        } else {
+            return element1.getType().compareToIgnoreCase(element2.getType());
+        }
+    };
 	
-	public static Comparator<CollectionElement> ElementDateDescComparator = new Comparator<CollectionElement>() {
-		@Override
-		public int compare(CollectionElement element1, CollectionElement element2) {
-			if (element1.getType().equals(element2.getType())) {
-				return (int) (element2.getModification() - element1.getModification()); 
-			} else {
-				return element1.getType().compareToIgnoreCase(element2.getType());
-			}
-		}
-	};
+	public static Comparator<CollectionElement> ElementDateDescComparator = (element1, element2) -> {
+        if (element1.getType().equals(element2.getType())) {
+            return (int) (element2.getModification() - element1.getModification());
+        } else {
+            return element1.getType().compareToIgnoreCase(element2.getType());
+        }
+    };
 
 }

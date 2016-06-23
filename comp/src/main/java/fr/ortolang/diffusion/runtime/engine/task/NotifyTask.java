@@ -233,7 +233,7 @@ public class NotifyTask extends RuntimeEngineTask {
                 }
                 break;
             default:
-                LOGGER.log(Level.FINE, "Unable to understand this action: " + (String) action.getValue(execution));
+                LOGGER.log(Level.FINE, "Unable to understand this action: " + action.getValue(execution));
             }
         } catch (SecurityException | IllegalStateException | MembershipServiceException | KeyNotFoundException | EJBTransactionRolledbackException e) {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));

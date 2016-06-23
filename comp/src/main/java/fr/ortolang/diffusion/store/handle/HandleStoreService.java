@@ -44,20 +44,20 @@ import fr.ortolang.diffusion.store.handle.entity.Handle;
 
 public interface HandleStoreService extends OrtolangService {
 	
-	public static final String SERVICE_NAME = "handle-store";
+	String SERVICE_NAME = "handle-store";
 	
-	public static final String INFO_TOTAL_SIZE = "size.total";
+	String INFO_TOTAL_SIZE = "size.total";
 	
-	public void recordHandle(String handle, String key, String url) throws HandleStoreServiceException;
+	void recordHandle(String handle, String key, String url) throws HandleStoreServiceException;
 	
-	public void dropHandle(String handle) throws HandleStoreServiceException;
+	void dropHandle(String handle) throws HandleStoreServiceException;
 	
-	public List<Handle> listHandleValues(String handle) throws HandleStoreServiceException, HandleNotFoundException;
+	List<Handle> listHandleValues(String handle) throws HandleStoreServiceException, HandleNotFoundException;
 	
-	public List<String> listHandlesForKey(String key) throws HandleStoreServiceException;
+	List<String> listHandlesForKey(String key) throws HandleStoreServiceException;
 	
-	public List<Handle> findHandlesByName(int offset, int limit, String handleFilter) throws HandleStoreServiceException;
+	List<Handle> findHandlesByName(int offset, int limit, String handleFilter) throws HandleStoreServiceException;
     
-    public List<Handle> findHandlesByValue(int offset, int limit, String valueFilter) throws HandleStoreServiceException;
+    List<Handle> findHandlesByValue(int offset, int limit, String valueFilter) throws HandleStoreServiceException;
     
 }

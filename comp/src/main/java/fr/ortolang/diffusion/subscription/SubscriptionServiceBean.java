@@ -73,7 +73,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
 
     private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
+
     @EJB
     private MembershipService membership;
     @EJB
@@ -214,19 +214,18 @@ public class SubscriptionServiceBean implements SubscriptionService {
             LOGGER.log(Level.INFO, subscriptionsToBeRemoved.size() + " subscription(s) removed from subscription registry (registry new size: " + subscriptionRegistry.size() + ")");
         }
     }
-    
+
     //Service methods
-    
+
     @Override
     public String getServiceName() {
         return SubscriptionService.SERVICE_NAME;
     }
-    
+
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {
-        Map<String, String> infos = new HashMap<String, String> ();
-        return infos;
+        return new HashMap<String, String> ();
     }
 
     @Override

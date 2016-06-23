@@ -93,7 +93,7 @@ public class ImportHandlesTask extends RuntimeEngineTask {
                         getHandleStore().recordHandle(handle.handle, handle.key, handle.url);
                     } catch (HandleStoreServiceException e) {
                         partial = true;
-                        report.append("unable to import handle [" + handle.handle + "] : " + e.getMessage() + "\r\n");
+                        report.append("unable to import handle [").append(handle.handle).append("] : ").append(e.getMessage()).append("\r\n");
                     }
                     if ( System.currentTimeMillis() - tscommit > 30000 ) {
                         LOGGER.log(Level.FINE, "current transaction exceed 30sec, need commit.");

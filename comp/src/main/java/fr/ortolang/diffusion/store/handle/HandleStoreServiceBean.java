@@ -117,7 +117,7 @@ public class HandleStoreServiceBean implements HandleStoreService {
     public void dropHandle(String handle) throws HandleStoreServiceException {
 	    String name = handle.toUpperCase(Locale.ENGLISH);
 	    LOGGER.log(Level.FINE, "dropping handle : " + handle);
-        List<Handle> handles = null;
+        List<Handle> handles;
         TypedQuery<Handle> query = em.createNamedQuery("findHandleByName", Handle.class).setParameter("name", name.getBytes()); 
         handles = query.getResultList();
         if ( handles != null && handles.size() > 0 ) {
@@ -147,7 +147,7 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<Handle> listHandleValues(String handle) throws HandleStoreServiceException, HandleNotFoundException {
 		String name = handle.toUpperCase(Locale.ENGLISH);
-		List<Handle> handles = null;
+		List<Handle> handles;
 		TypedQuery<Handle> query = em.createNamedQuery("findHandleByName", Handle.class).setParameter("name", name.getBytes()); 
 		handles = query.getResultList();
 		if ( handles == null || handles.size() == 0 ) {
@@ -175,8 +175,7 @@ public class HandleStoreServiceBean implements HandleStoreService {
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public long countHandles() throws HandleStoreServiceException {
 	    TypedQuery<Long> query = em.createNamedQuery("countHandles", Long.class);
-        Long nbhandles = query.getSingleResult(); 
-        return nbhandles;
+		return query.getSingleResult();
 	}
 	
 	//Service methods

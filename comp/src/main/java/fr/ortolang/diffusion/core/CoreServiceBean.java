@@ -320,8 +320,8 @@ public class CoreServiceBean implements CoreService {
             registry.register(wskey, workspace.getObjectIdentifier(), caller);
 
             Map<String, List<String>> wsrules = new HashMap<String, List<String>>();
-            wsrules.put(members, Arrays.asList("read"));
-            wsrules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
+            wsrules.put(members, Collections.singletonList("read"));
+            wsrules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
             wsrules.put(MembershipService.MODERATOR_GROUP_KEY, Arrays.asList("read", "create", "update", "delete"));
             authorisation.createPolicy(wskey, caller);
             authorisation.setPolicyRules(wskey, wsrules);
@@ -878,7 +878,7 @@ public class CoreServiceBean implements CoreService {
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void builtPublicationMap(String key, Map<String, Map<String, List<String>>> map, Map<String, List<String>> current, Map<String, String> params) throws KeyNotFoundException,
-            AccessDeniedException, CoreServiceException, OrtolangException {
+            CoreServiceException, OrtolangException {
         Object object = findObject(key);
         if (object instanceof MetadataSource) {
             MetadataElement mde = ((MetadataSource) object).findMetadataByName(MetadataFormat.ACL);
@@ -953,7 +953,7 @@ public class CoreServiceBean implements CoreService {
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void buildHandleList(String wsalias, String tag, String key, Set<OrtolangObjectPid> pids, PathBuilder path, String apiUrlBase, String marketUrlBase) throws CoreServiceException,
-            KeyNotFoundException, AccessDeniedException, OrtolangException, InvalidPathException {
+            KeyNotFoundException, OrtolangException, InvalidPathException {
         OrtolangObject object = findObject(key);
         LOGGER.log(Level.FINE, "Generating pid for key: " + key);
         String target = ((path.isRoot()) ? marketUrlBase : apiUrlBase) + "/" + wsalias + "/" + tag + ((path.isRoot()) ? "" : path.build());
@@ -1049,7 +1049,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    private void listContent(String key, PathBuilder path, Map<String, String> map) throws KeyNotFoundException, AccessDeniedException, CoreServiceException, OrtolangException, InvalidPathException {
+    private void listContent(String key, PathBuilder path, Map<String, String> map) throws OrtolangException, InvalidPathException {
         Object object = findObject(key);
         map.put(path.build(), key);
         if (object instanceof Collection) {
@@ -1061,7 +1061,7 @@ public class CoreServiceBean implements CoreService {
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private CollectionWrapper getWorkspaceContentTree(String key, PathBuilder path, CollectionWrapper parent)
-            throws KeyNotFoundException, CoreServiceException, OrtolangException, InvalidPathException, RegistryServiceException {
+            throws KeyNotFoundException, InvalidPathException, RegistryServiceException {
         OrtolangObjectIdentifier identifier = registry.lookup(key);
         OrtolangObjectWrapper ortolangObjectWrapper;
         switch (identifier.getType()) {
@@ -1487,8 +1487,7 @@ public class CoreServiceBean implements CoreService {
             LOGGER.log(Level.FINEST, "destination element does not exists, ok for creating it");
             if (!dpath.part().equals(spath.part())) {
                 if (scollection.getClock() < ws.getClock()) {
-                    Collection clone = cloneCollection(ws.getHead(), scollection, ws.getClock());
-                    scollection = clone;
+                    scollection = cloneCollection(ws.getHead(), scollection, ws.getClock());
                 }
                 scollection.setName(dpath.part());
                 em.merge(scollection);
@@ -1935,8 +1934,7 @@ public class CoreServiceBean implements CoreService {
             LOGGER.log(Level.FINEST, "destination element does not exists, creating it");
             if (!dpath.part().equals(spath.part())) {
                 if (sobject.getClock() < ws.getClock()) {
-                    DataObject clone = cloneDataObject(ws.getHead(), sobject, ws.getClock());
-                    sobject = clone;
+                    sobject = cloneDataObject(ws.getHead(), sobject, ws.getClock());
                 }
                 sobject.setName(dpath.part());
                 em.merge(sobject);
@@ -2344,8 +2342,7 @@ public class CoreServiceBean implements CoreService {
 
             if (!dpath.part().equals(spath.part())) {
                 if (slink.getClock() < ws.getClock()) {
-                    Link clone = cloneLink(ws.getHead(), slink, ws.getClock());
-                    slink = clone;
+                    slink = cloneLink(ws.getHead(), slink, ws.getClock());
                 }
                 slink.setName(dpath.part());
                 em.merge(slink);
@@ -3988,7 +3985,7 @@ public class CoreServiceBean implements CoreService {
     private Collection readCollectionAtPath(String root, PathBuilder path) throws PathNotFoundException, CoreServiceException, RegistryServiceException, KeyNotFoundException, InvalidPathException {
         LOGGER.log(Level.FINE, "Reading tree from root [" + root + "] to path [" + path.build() + "]");
         String[] parts = path.buildParts();
-        Collection node = null;
+        Collection node;
         PathBuilder current = PathBuilder.newInstance();
 
         OrtolangObjectIdentifier ridentifier = registry.lookup(root);
@@ -4030,8 +4027,8 @@ public class CoreServiceBean implements CoreService {
         LOGGER.log(Level.FINE, "Loading tree from root [" + root + "] to path [" + path.build() + "] with clock [" + clock + "]");
         try {
             String[] parts = path.buildParts();
-            Collection parent = null;
-            Collection leaf = null;
+            Collection parent;
+            Collection leaf;
             PathBuilder current = PathBuilder.newInstance();
 
             OrtolangObjectIdentifier ridentifier = registry.lookup(root);
@@ -4309,7 +4306,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    private void purgeChildrenMetadata(Collection collection, String wskey, String path, String name) throws OrtolangException, AccessDeniedException, KeyNotFoundException, InvalidPathException,
+    private void purgeChildrenMetadata(Collection collection, String wskey, String path, String name) throws OrtolangException, KeyNotFoundException, InvalidPathException,
             PathNotFoundException, WorkspaceReadOnlyException, CoreServiceException, RegistryServiceException {
         LOGGER.log(Level.FINE, "purging children metadata for path: " + path + " and name: " + name);
         MetadataElement metadataElement;

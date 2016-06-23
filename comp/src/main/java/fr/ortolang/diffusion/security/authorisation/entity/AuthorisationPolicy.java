@@ -148,10 +148,7 @@ public class AuthorisationPolicy {
 
 	public boolean hasPermission(String subject, String permission) throws IOException {
 		loadRules();
-		if (rules.containsKey(subject) && rules.getProperty(subject).indexOf(permission) != -1) {
-			return true;
-		}
-		return false;
+		return rules.containsKey(subject) && rules.getProperty(subject).contains(permission);
 	}
 
 	public Map<String, List<String>> getRules() throws IOException {

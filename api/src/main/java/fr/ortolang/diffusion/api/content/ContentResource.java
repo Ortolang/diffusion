@@ -47,7 +47,6 @@ import fr.ortolang.diffusion.core.entity.*;
 import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.rendering.RenderingService;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -56,7 +55,6 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.template.TemplateEngine;
 import fr.ortolang.diffusion.template.TemplateEngineException;
-import fr.ortolang.diffusion.thumbnail.ThumbnailService;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
@@ -99,14 +97,10 @@ public class ContentResource {
     @EJB
     private BinaryStoreService store;
     @EJB
-    private ThumbnailService thumbnails;
-    @EJB
-    private RenderingService viewer;
-    @EJB
     private SecurityService security;
     @Context
     private UriInfo uriInfo;
-    
+
     private static Map<String, Map<String, Object>> exportations;
 
     static  {
@@ -672,7 +666,7 @@ public class ContentResource {
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response path(@PathParam("alias") String alias, @PathParam("root") final String root, @PathParam("path") String path, @QueryParam("fd") boolean download,
             @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext securityContext,
-            @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, AliasNotFoundException, InvalidPathException,
+            @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AliasNotFoundException, InvalidPathException,
             OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException, SecurityServiceException,
             PathNotFoundException {
         LOGGER.log(Level.INFO, "GET /content/" + alias + "/" + root + "/" + path);
@@ -802,7 +796,7 @@ public class ContentResource {
 
     interface ArchiveEntryFactory {
 
-        public ArchiveEntry createArchiveEntry(String name, long modificationDate, long size);
+        ArchiveEntry createArchiveEntry(String name, long modificationDate, long size);
     }
 
 }

@@ -126,7 +126,6 @@ import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
@@ -389,7 +388,7 @@ public class WorkspaceResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @GZIP
     public Response createWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form, @Context HttpHeaders headers)
-            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
+            throws CoreServiceException, KeyNotFoundException, InvalidPathException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/elements");
         try {
             String contentTransferEncoding = "UTF-8";
@@ -494,7 +493,7 @@ public class WorkspaceResource {
     @Path("/{wskey}/elements")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateWorkspaceElement(@PathParam(value = "wskey") String wskey, WorkspaceElementRepresentation representation, @QueryParam(value = "destination") String destination) throws CoreServiceException,
-            KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
+            KeyNotFoundException, InvalidPathException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements");
         PathBuilder npath = PathBuilder.fromPath(representation.getPath());
         core.resolveWorkspacePath(wskey, "head", npath.build());

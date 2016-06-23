@@ -115,7 +115,7 @@ public class ExtractionServiceWorker {
 
     private DelayQueue<Job> queue;
 
-    private ExtractionServiceWorker() {
+    public ExtractionServiceWorker() {
         this.worker = new ExtractionWorkerThread();
         this.queue = new DelayQueue<>();
     }

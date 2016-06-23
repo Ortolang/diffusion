@@ -146,8 +146,7 @@ public class BrowserServiceBean implements BrowserService {
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkPermission(key, subjects, "read");
-            OrtolangObjectIdentifier identifier = registry.lookup(key);
-            return identifier;
+            return registry.lookup(key);
         } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
             throw new BrowserServiceException("unable to lookup identifier for key [" + key + "]", e);
         }
@@ -260,7 +259,7 @@ public class BrowserServiceBean implements BrowserService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public OrtolangObjectVersion getVersion(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+    public OrtolangObjectVersion getVersion(String key) throws BrowserServiceException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "getting version for key [" + key + "]");
         try {
             OrtolangObjectVersion version = new OrtolangObjectVersion();
@@ -304,7 +303,7 @@ public class BrowserServiceBean implements BrowserService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void index(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+    public void index(String key) throws BrowserServiceException, AccessDeniedException {
         LOGGER.log(Level.FINE, "indexing key [" + key + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();

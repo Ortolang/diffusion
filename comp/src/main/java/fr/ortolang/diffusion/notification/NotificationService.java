@@ -43,9 +43,9 @@ import fr.ortolang.diffusion.OrtolangService;
 
 public interface NotificationService extends OrtolangService {
 	
-	public static final String SERVICE_NAME = "notification";
+	String SERVICE_NAME = "notification";
     
-    public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType) throws NotificationServiceException;
+    void throwEvent(String fromObject, String throwedBy, String objectType, String eventType) throws NotificationServiceException;
 
-    public void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, Map<String, String> args) throws NotificationServiceException;
+    void throwEvent(String fromObject, String throwedBy, String objectType, String eventType, Map<String, String> args) throws NotificationServiceException;
 }

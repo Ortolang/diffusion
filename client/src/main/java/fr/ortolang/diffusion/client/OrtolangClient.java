@@ -222,7 +222,7 @@ public class OrtolangClient {
 				Path temp = Files.createTempFile("ortolang-client", ".tmp");
 				try (InputStream is = response.readEntity(InputStream.class); OutputStream os = Files.newOutputStream(temp)) {
 					byte[] buffer = new byte[1024];
-					int nbreads = 0;
+					int nbreads;
 					while ( (nbreads = is.read(buffer)) > -1 ) {
 						os.write(buffer, 0, nbreads);
 					}

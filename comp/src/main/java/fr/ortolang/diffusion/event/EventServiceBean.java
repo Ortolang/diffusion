@@ -533,14 +533,14 @@ public class EventServiceBean implements EventService {
             query = em.createNamedQuery("countEvents", Long.class).setParameter("eventTypeFilter", eventTypeFilterRE).setParameter("fromObjectFilter", fromResourceFilterRE)
                     .setParameter("objectTypeFilter", resourceTypeFilterRE).setParameter("throwedByFilter", throwedByFilterRE);
         }
-        return query.getSingleResult().longValue();
+        return query.getSingleResult();
     }
     
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public long systemCountAllEvents() throws EventServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting all events");
         TypedQuery<Long> query = em.createNamedQuery("countAllEvents", Long.class);
-        return query.getSingleResult().longValue();
+        return query.getSingleResult();
     }
 
     /* Service Methods */

@@ -79,9 +79,7 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathNotFoundException;
-import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -96,13 +94,9 @@ public class ObjectResource {
     @EJB
     private BrowserService browser;
     @EJB
-    private SearchService search;
-    @EJB
     private SecurityService security;
     @EJB
     private CoreService core;
-    @EJB
-    private MembershipService membership;
     @EJB
     private HandleStoreService handleStore;
 
@@ -138,7 +132,7 @@ public class ObjectResource {
     @GET
     @Path("/{key}")
     @GZIP
-    public Response get(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, SecurityServiceException,
+    public Response get(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, SecurityServiceException,
             OrtolangException {
         LOGGER.log(Level.INFO, "GET /objects/" + key);
 
@@ -156,7 +150,7 @@ public class ObjectResource {
             OrtolangObject object = browser.findObject(key);
             OrtolangObjectInfos infos = browser.getInfos(key);
             String owner = security.getOwner(key);
-            
+
             ObjectRepresentation representation = new ObjectRepresentation();
             representation.setKey(key);
             representation.setService(object.getObjectIdentifier().getService());
@@ -174,7 +168,7 @@ public class ObjectResource {
             representation.setAuthor(infos.getAuthor());
             representation.setCreationDate(infos.getCreationDate() + "");
             representation.setLastModificationDate(infos.getLastModificationDate() + "");
-            
+
             builder = Response.ok(representation);
             builder.lastModified(lmd);
         }
@@ -182,7 +176,7 @@ public class ObjectResource {
         builder.cacheControl(cc);
         return builder.build();
     }
-    
+
     @GET
     @Path("/{key}/history")
     @GZIP
@@ -207,7 +201,7 @@ public class ObjectResource {
         builder.cacheControl(cc);
         return builder.build();
     }
-    
+
     @GET
     @Path("/{key}/properties")
     @GZIP
@@ -232,7 +226,7 @@ public class ObjectResource {
         builder.cacheControl(cc);
         return builder.build();
     }
-    
+
     @GET
     @Path("/{key}/permissions")
     @GZIP
@@ -296,7 +290,7 @@ public class ObjectResource {
     @GET
     @Path("/{key}/size")
     @GZIP
-    public Response getObjectSize(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, OrtolangException, KeyNotFoundException,
+    public Response getObjectSize(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws OrtolangException, KeyNotFoundException,
             CoreServiceException {
         LOGGER.log(Level.INFO, "GET /objects/" + key + "/size");
         OrtolangObjectSize ortolangObjectSize = core.getSize(key);

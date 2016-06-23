@@ -154,7 +154,7 @@ public class OAIPMHServlet {
 		
 		OAIRequest oaiRequest = new OAIRequest(reqParam);
 
-		OAIPMH response = null;
+		OAIPMH response;
 		try {
 			response = dataProvider.handle(oaiRequest);
 		} catch (OAIException e1) {
@@ -189,12 +189,7 @@ public class OAIPMHServlet {
 	}
 	
 	protected String write(final XmlWritable handle) throws XMLStreamException, XmlWriteException {
-		return OAIPMHServlet.toString(new XmlWritable() {
-			@Override
-			public void write(XmlWriter writer) throws XmlWriteException {
-				writer.write(handle);
-			}
-		});
+		return OAIPMHServlet.toString(writer -> writer.write(handle));
 	}
 
 	public static String toString(XmlWritable writable) throws XMLStreamException, XmlWriteException {

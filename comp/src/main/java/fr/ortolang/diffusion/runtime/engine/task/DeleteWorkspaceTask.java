@@ -69,7 +69,7 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		String wskey = null;
+		String wskey;
 		String wsalias = null;
 		if (execution.hasVariable(WORKSPACE_ALIAS_PARAM_NAME)) {
 			wsalias = execution.getVariable(WORKSPACE_ALIAS_PARAM_NAME, String.class);

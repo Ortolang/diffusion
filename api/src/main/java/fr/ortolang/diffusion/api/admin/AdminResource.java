@@ -85,7 +85,6 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.net.URI;
 import java.util.*;
@@ -291,7 +290,7 @@ public class AdminResource {
         long nbresults = event.systemCountEvents(etype, ofrom, otype, throwed, after);
         List<OrtolangEvent> events = (List<OrtolangEvent>) event.systemFindEvents(etype, ofrom, otype, throwed, after, offset, limit);
         
-        UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
+//        UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
         GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>();
         representation.setEntries(events);
         representation.setOffset((offset <= 0) ? 1 : offset);

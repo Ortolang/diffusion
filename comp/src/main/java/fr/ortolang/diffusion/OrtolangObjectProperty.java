@@ -41,42 +41,41 @@ import java.io.Serializable;
 @SuppressWarnings("serial")
 public class OrtolangObjectProperty implements Serializable {
 
-	public static final String SYSTEM_PROPERTY_PREFIX = "system.";
-	public static final String COLLECTION_PROPERTY = "isCollection";
-		
-	private String name;
-	private String value;
+    public static final String SYSTEM_PROPERTY_PREFIX = "system.";
+    public static final String COLLECTION_PROPERTY = "isCollection";
 
-	public OrtolangObjectProperty() {
-	}
+    private String name;
+    private String value;
 
-	public OrtolangObjectProperty(String name, String value) {
-		this.name = name;
-		this.value = value;
-	}
+    public OrtolangObjectProperty() {
+    }
 
-	public String getName() {
-		return name;
-	}
+    public OrtolangObjectProperty(String name, String value) {
+        this.name = name;
+        this.value = value;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getValue() {
-		return value;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setValue(String value) {
-		this.value = value;
-	}
-	
-	@Override
-	public String toString() {
-		StringBuilder buffer = new StringBuilder();
-		buffer.append("{Name:").append(getName());
-		buffer.append(",Value:").append(getValue()).append("}");
-		return buffer.toString();
-	}
+    public String getValue() {
+        return value;
+    }
 
+    public void setValue(String value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return "OrtolangObjectProperty{" +
+                "name='" + name + '\'' +
+                ", value='" + value + '\'' +
+                '}';
+    }
 }

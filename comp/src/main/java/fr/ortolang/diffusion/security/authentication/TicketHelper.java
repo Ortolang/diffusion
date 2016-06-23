@@ -161,7 +161,7 @@ public class TicketHelper {
         private void writeObject(ObjectOutputStream oos) throws IOException {
             oos.writeUTF(username) ;
             oos.writeUTF(hash) ;
-            oos.writeLong(expiration); ;
+            oos.writeLong(expiration);
         }
 
         @Override

@@ -51,30 +51,30 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface BrowserService extends OrtolangService {
 	
-	public static final String SERVICE_NAME = "browser";
+	String SERVICE_NAME = "browser";
 	
-	public List<String> list(int limit, int offset, String service, String type, OrtolangObjectState.Status status) throws BrowserServiceException;
+	List<String> list(int limit, int offset, String service, String type, OrtolangObjectState.Status status) throws BrowserServiceException;
 	
-	public long count(String service, String type, OrtolangObjectState.Status status) throws BrowserServiceException;
+	long count(String service, String type, OrtolangObjectState.Status status) throws BrowserServiceException;
 	
-	public OrtolangObjectIdentifier lookup(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+	OrtolangObjectIdentifier lookup(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public List<OrtolangObjectProperty> listProperties(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+	List<OrtolangObjectProperty> listProperties(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public OrtolangObjectProperty getProperty(String key, String name) throws BrowserServiceException, KeyNotFoundException, PropertyNotFoundException, AccessDeniedException;
+	OrtolangObjectProperty getProperty(String key, String name) throws BrowserServiceException, KeyNotFoundException, PropertyNotFoundException, AccessDeniedException;
 	
-	public void setProperty(String key, String name, String value) throws BrowserServiceException, KeyNotFoundException, KeyLockedException, AccessDeniedException;
+	void setProperty(String key, String name, String value) throws BrowserServiceException, KeyNotFoundException, KeyLockedException, AccessDeniedException;
 	
-	public OrtolangObjectState getState(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+	OrtolangObjectState getState(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public OrtolangObjectInfos getInfos(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+	OrtolangObjectInfos getInfos(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public OrtolangObjectVersion getVersion(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+	OrtolangObjectVersion getVersion(String key) throws BrowserServiceException, KeyNotFoundException;
 	 
-	public List<OrtolangObjectVersion> getHistory(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+	List<OrtolangObjectVersion> getHistory(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public List<String> listHandles(String key) throws BrowserServiceException;
+	List<String> listHandles(String key) throws BrowserServiceException;
 	
-	public void index(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+	void index(String key) throws BrowserServiceException, AccessDeniedException;
 	
 }

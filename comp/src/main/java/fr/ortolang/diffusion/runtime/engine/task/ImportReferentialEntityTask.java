@@ -222,14 +222,9 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 	}
 	
 	private String getContent(File file) throws IOException {
-		String content = null;
-		InputStream is = new FileInputStream(file);
-		try {
-			content = IOUtils.toString(is, "UTF-8");
-		} finally {
-			is.close();
+		try (InputStream is = new FileInputStream(file)) {
+			return IOUtils.toString(is, "UTF-8");
 		}
-		return content;
 	}
 	
 	private String extractField(String jsonContent, String fieldName) {
@@ -239,10 +234,8 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
 		try {
 			JsonObject jsonObj = jsonReader.readObject();
 			fieldValue = jsonObj.getString(fieldName);
-		} catch(IllegalStateException | NullPointerException | ClassCastException e) {
+		} catch(IllegalStateException | NullPointerException | ClassCastException | JsonException e) {
 			LOGGER.log(Level.WARNING, "No property '"+fieldName+"' in json object", e);
-		} catch(JsonException e) {
-		    LOGGER.log(Level.WARNING, "No property '"+fieldName+"' in json object", e);
 		} finally {
 			jsonReader.close();
 			reader.close();

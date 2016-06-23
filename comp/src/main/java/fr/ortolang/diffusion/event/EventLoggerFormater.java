@@ -42,32 +42,27 @@ import java.util.HashMap;
 import fr.ortolang.diffusion.event.entity.Event;
 
 public class EventLoggerFormater {
-	
-	private static HashMap<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> (); 
-	private static String fieldSeparator = ",";
-	
-	private static SimpleDateFormat getEventDateFormatter() {
-		String key = Thread.currentThread().getId() + "";
-		if ( !sdf.containsKey(key) ) {
-			sdf.put(key, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSSS ZZ"));
-		}
-		return sdf.get(key);
-	}
-	
-	public static String formatEvent(Event e) {
-		StringBuilder builder = new StringBuilder();
-		builder.append("[" + getEventDateFormatter().format(e.getDate()) + "]");
-		builder.append(fieldSeparator);
-		builder.append(e.getFromObject());
-		builder.append(fieldSeparator);
-		builder.append(e.getObjectType());
-		builder.append(fieldSeparator);
-		builder.append(e.getType());
-		builder.append(fieldSeparator);
-		builder.append(e.getThrowedBy());
-		builder.append(fieldSeparator);
-		builder.append(e.getArguments());
-		return builder.toString();
-	}
+
+    private static HashMap<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> ();
+    private static String fieldSeparator = ",";
+
+    private static SimpleDateFormat getEventDateFormatter() {
+        String key = Thread.currentThread().getId() + "";
+        if ( !sdf.containsKey(key) ) {
+            sdf.put(key, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSSS ZZ"));
+        }
+        return sdf.get(key);
+    }
+
+    public static String formatEvent(Event e) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("[").append(getEventDateFormatter().format(e.getDate())).append("]")
+                .append(fieldSeparator).append(e.getFromObject())
+                .append(fieldSeparator).append(e.getObjectType())
+                .append(fieldSeparator).append(e.getType())
+                .append(fieldSeparator).append(e.getThrowedBy())
+                .append(fieldSeparator).append(e.getArguments());
+        return builder.toString();
+    }
 
 }

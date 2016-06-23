@@ -109,9 +109,7 @@ import java.util.logging.Logger;
             } else {
                 if (parameter.getKey().endsWith("[]")) {
                     List<String> paramArr = new ArrayList<String>();
-                    for (String annotationLevel : parameter.getValue()) {
-                        paramArr.add(annotationLevel);
-                    }
+                    Collections.addAll(paramArr, parameter.getValue());
                     String[] fieldPart = parameter.getKey().substring(0, parameter.getKey().length() - 2).split("\\.");
                     if (fieldPart.length > 1) {
                         fieldsMap.put("meta_" + parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
@@ -248,9 +246,7 @@ import java.util.logging.Logger;
             } else {
                 if (parameter.getKey().endsWith("[]")) {
                     List<String> paramArr = new ArrayList<String>();
-                    for (String annotationLevel : parameter.getValue()) {
-                        paramArr.add(annotationLevel);
-                    }
+                    Collections.addAll(paramArr, parameter.getValue());
                     String[] fieldPart = parameter.getKey().substring(0, parameter.getKey().length() - 2).split("\\.");
                     if (fieldPart.length > 1) {
                         fieldsMap.put("meta_"+parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
@@ -336,9 +332,7 @@ import java.util.logging.Logger;
             } else {
                 if (parameter.getKey().endsWith("[]")) {
                     List<String> paramArr = new ArrayList<String>();
-                    for (String annotationLevel : parameter.getValue()) {
-                        paramArr.add(annotationLevel);
-                    }
+                    Collections.addAll(paramArr, parameter.getValue());
                     String[] fieldPart = parameter.getKey().substring(0, parameter.getKey().length() - 2).split("\\.");
                     if (fieldPart.length > 1) {
                         fieldsMap.put("meta_"+parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);

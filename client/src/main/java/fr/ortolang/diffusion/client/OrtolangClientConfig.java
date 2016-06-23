@@ -69,7 +69,7 @@ public class OrtolangClientConfig {
         try {
             if (config == null) {
             	String clientname = null;
-            	try ( InputStream in = OrtolangClientConfig.class.getClassLoader().getResource(CONFIG_FILENAME).openStream(); )  {
+            	try ( InputStream in = OrtolangClientConfig.class.getClassLoader().getResource(CONFIG_FILENAME).openStream())  {
             		Properties clientconfig = new Properties();
             		clientconfig.load(in);
                    	clientname = clientconfig.getProperty("client.name");

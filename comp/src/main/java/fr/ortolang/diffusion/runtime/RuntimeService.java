@@ -55,57 +55,57 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface RuntimeService extends OrtolangService {
 
-	public static final String SERVICE_NAME = "runtime";
+	String SERVICE_NAME = "runtime";
 	
-	public void importProcessTypes() throws RuntimeServiceException;
+	void importProcessTypes() throws RuntimeServiceException;
 	
-	public List<ProcessType> listProcessTypes(boolean onlyLatestVersion) throws RuntimeServiceException;
+	List<ProcessType> listProcessTypes(boolean onlyLatestVersion) throws RuntimeServiceException;
 	
 	/* Process */
 	
-	public Process createProcess(String key, String type, String name, String wskey) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	Process createProcess(String key, String type, String name, String wskey) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
 
-	public void startProcess(String key, Map<String, Object> variables) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	void startProcess(String key, Map<String, Object> variables) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
-	public void abortProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
+	void abortProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void updateProcessState(String pid, State state) throws RuntimeServiceException;
+	void updateProcessState(String pid, State state) throws RuntimeServiceException;
 	
-	public void updateProcessStatus(String pid, String status, String explanation) throws RuntimeServiceException;
+	void updateProcessStatus(String pid, String status, String explanation) throws RuntimeServiceException;
 	
-	public void appendProcessLog(String pid, String log) throws RuntimeServiceException;
+	void appendProcessLog(String pid, String log) throws RuntimeServiceException;
 	
-	public void appendProcessTrace(String pid, String trace) throws RuntimeServiceException;
+	void appendProcessTrace(String pid, String trace) throws RuntimeServiceException;
 	
-	public void updateProcessActivity(String pid, String name, int progress) throws RuntimeServiceException;
+	void updateProcessActivity(String pid, String name, int progress) throws RuntimeServiceException;
 	
-	public List<Process> listCallerProcesses(State state) throws RuntimeServiceException, AccessDeniedException;
+	List<Process> listCallerProcesses(State state) throws RuntimeServiceException, AccessDeniedException;
 	
-	public List<Process> listWorkspaceProcesses(String wskey, State state) throws RuntimeServiceException, AccessDeniedException;
+	List<Process> listWorkspaceProcesses(String wskey, State state) throws RuntimeServiceException, AccessDeniedException;
 	
-	public Process readProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
+	Process readProcess(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public File readProcessTrace(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
+	File readProcessTrace(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	/* Task */
 
-	public List<HumanTask> listCandidateTasks() throws RuntimeServiceException;
+	List<HumanTask> listCandidateTasks() throws RuntimeServiceException;
 
-	public List<HumanTask> listAssignedTasks() throws RuntimeServiceException;
+	List<HumanTask> listAssignedTasks() throws RuntimeServiceException;
 	
-	public void claimTask(String id) throws RuntimeServiceException;
+	void claimTask(String id) throws RuntimeServiceException;
 
-	public void unclaimTask(String id) throws RuntimeServiceException;
+	void unclaimTask(String id) throws RuntimeServiceException;
 
-    public void completeTask(String id, Map<String, Object> variables) throws RuntimeServiceException;
+    void completeTask(String id, Map<String, Object> variables) throws RuntimeServiceException;
 
 	void pushTaskEvent(String pid, String tid, Set<IdentityLink> candidates, String assignee, RuntimeEngineEvent.Type type);
 
     /* System */
 
-	public List<Process> systemListProcesses(State state) throws RuntimeServiceException, AccessDeniedException;
+	List<Process> systemListProcesses(State state) throws RuntimeServiceException, AccessDeniedException;
 	
-	public List<HumanTask> systemListTasks() throws RuntimeServiceException;
+	List<HumanTask> systemListTasks() throws RuntimeServiceException;
     
     //public void systemKillProcess(String key) throws RuntimeServiceException, KeyAlreadyExistsException, AccessDeniedException;
 

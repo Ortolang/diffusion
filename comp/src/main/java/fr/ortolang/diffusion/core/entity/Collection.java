@@ -36,11 +36,8 @@ package fr.ortolang.diffusion.core.entity;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
-
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 

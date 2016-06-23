@@ -166,7 +166,7 @@ public class PathBuilder {
 	private String normalize(String path) throws InvalidPathException {
         String[] paths = path.split(PATH_SEPARATOR);
         String[] newPaths = new String[paths.length];
-        StringBuffer newPath = new StringBuffer();
+        StringBuilder newPath = new StringBuilder();
         int index = 0;
 
         for (int i = 0; i < paths.length; i++) {
@@ -182,7 +182,7 @@ public class PathBuilder {
             }
         }
         for (int i = 0; i < index; i++) {
-            newPath.append(PATH_SEPARATOR + newPaths[i]);
+            newPath.append(PATH_SEPARATOR).append(newPaths[i]);
         }
         //root case
         if (newPath.length() == 0) {
@@ -209,10 +209,7 @@ public class PathBuilder {
 		if ( !children.startsWith(parent) ) {
 			return false;
 		}
-		if ( children.charAt(parent.length()) != PATH_SEPARATOR_CHAR ) {
-			return false;
-		}
-		return true;
+		return children.charAt(parent.length()) == PATH_SEPARATOR_CHAR;
 	}
 
 	@Override
@@ -224,9 +221,7 @@ public class PathBuilder {
 		if (getClass() != obj.getClass())
 			return false;
 		PathBuilder other = (PathBuilder) obj;
-		if (!builder.toString().equals(other.builder.toString()))
-			return false;
-		return true;
+		return builder.toString().equals(other.builder.toString());
 	}
 	
 	@Override

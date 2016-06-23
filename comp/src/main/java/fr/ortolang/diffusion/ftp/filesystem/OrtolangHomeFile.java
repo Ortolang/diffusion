@@ -58,7 +58,6 @@ import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public class OrtolangHomeFile implements FtpFile {
 
@@ -70,7 +69,7 @@ public class OrtolangHomeFile implements FtpFile {
     public OrtolangHomeFile(OrtolangFileSystemView fsview, User user) throws FtpException {
         LOGGER.log(Level.FINE, "creating new ortolang home file");
         this.user = user;
-        List<FtpFile> content = new ArrayList<FtpFile>();
+        content = new ArrayList<FtpFile>();
         if ( !user.getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER) ) {
             try {
                 LoginContext lc = UsernamePasswordLoginContextFactory.createLoginContext(user.getName(), user.getPassword());

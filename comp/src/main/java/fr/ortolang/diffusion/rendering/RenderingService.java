@@ -47,16 +47,16 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 
 public interface RenderingService extends OrtolangService {
 
-    public static final String SERVICE_NAME = "rendering";
+    String SERVICE_NAME = "rendering";
     
-    public static final String INFO_PATH = "path";
-    public static final String INFO_SIZE = "size";
-    public static final String INFO_FILES = "files";
+    String INFO_PATH = "path";
+    String INFO_SIZE = "size";
+    String INFO_FILES = "files";
     
-    public Collection<RenderEngine> listEngines();
+    Collection<RenderEngine> listEngines();
     
-    public Collection<RenderEngine> listEnginesForType(String mimetype);
+    Collection<RenderEngine> listEnginesForType(String mimetype);
     
-    public File getView(String key, String engineid) throws RenderingServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException;
+    File getView(String key, String engineid) throws RenderingServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException;
     
 }

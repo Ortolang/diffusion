@@ -48,19 +48,19 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface ReferentialService extends OrtolangService, OrtolangIndexableService {
 
-	public static final String SERVICE_NAME = "referential";
+	String SERVICE_NAME = "referential";
 	
-	public List<ReferentialEntity> listEntities(ReferentialEntityType type) throws ReferentialServiceException;
+	List<ReferentialEntity> listEntities(ReferentialEntityType type) throws ReferentialServiceException;
 	
-	public void createEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	void createEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
-	public ReferentialEntity readEntity(String name) throws ReferentialServiceException, KeyNotFoundException;
+	ReferentialEntity readEntity(String name) throws ReferentialServiceException, KeyNotFoundException;
 	
-	public void updateEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
+	void updateEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public void updateEntity(String name, ReferentialEntityType type, String content, Long boost) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
+	void updateEntity(String name, ReferentialEntityType type, String content, Long boost) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void deleteEntity(String name) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
+	void deleteEntity(String name) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
 
-	public List<ReferentialEntity> findEntitiesByTerm(ReferentialEntityType type, String term, String lang) throws ReferentialServiceException;
+	List<ReferentialEntity> findEntitiesByTerm(ReferentialEntityType type, String term, String lang) throws ReferentialServiceException;
 }

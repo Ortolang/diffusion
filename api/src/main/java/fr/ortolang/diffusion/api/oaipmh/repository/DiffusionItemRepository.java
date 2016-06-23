@@ -259,7 +259,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 				try {
 				    String key = jsonObj.getString("wsalias");
 					JsonNumber lastModificationDate = jsonObj.getJsonNumber("lastModificationDate");
-					Long longTimestamp = Long.valueOf(lastModificationDate.longValue());
+					Long longTimestamp = lastModificationDate.longValue();
 					Date datestamp = new Date(longTimestamp);
 					DiffusionItemIdentifier itemIdentifier = new DiffusionItemIdentifier().withIdentifier(PREFIX_IDENTIFIER+key).withDatestamp(datestamp);
 					
@@ -468,7 +468,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
         	JsonObject content = jsonDoc.getJsonObject("meta_ortolang-workspace-json");
             String wsalias = content.getString("wsalias");
             JsonNumber lastModificationDate = jsonDoc.getJsonNumber("lastModificationDate");
-            Long longTimestamp = Long.valueOf(lastModificationDate.longValue());
+            Long longTimestamp = lastModificationDate.longValue();
             Date datestamp = new Date(longTimestamp);
             
             JsonObject workspaceDoc = searchWorkspace(wsalias);

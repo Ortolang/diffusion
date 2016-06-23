@@ -107,7 +107,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		LOGGER.log(Level.FINE, "purge collection creation cache.");
 		purgeCache();
         try {
-			String line = null;
+			String line;
 			boolean needcommit;
 			long tscommit = System.currentTimeMillis();
 			while ((line = reader.readLine()) != null) {
@@ -121,45 +121,45 @@ public class ImportContentTask extends RuntimeEngineTask {
 							createWorkspace(operation[1], operation[2], operation[3], operation[4], operation[5]);
 							execution.setVariable(WORKSPACE_KEY_PARAM_NAME, wskey);
 							needcommit = true;
-							report.append("[DONE] " + line + "\r\n");
+							report.append("[DONE] ").append(line).append("\r\n");
 							break;
 						case "create-object":
 							createObject(bag, operation[1], operation[2], operation[3]);
-							report.append("[DONE] " + line + "\r\n");
+							report.append("[DONE] ").append(line).append("\r\n");
 							break;
 						case "update-object":
 							updateObject(bag, operation[1], operation[2]);
-							report.append("[DONE] " + line + "\r\n");
+							report.append("[DONE] ").append(line).append("\r\n");
 							break;
 						case "delete-object":
 							deleteObject(operation[2]);
-							report.append("[DONE] " + line + "\r\n");
+							report.append("[DONE] ").append(line).append("\r\n");
 							break;
 						case "create-metadata":
 							createMetadata(bag, operation[1], operation[2], operation[3]);
-							report.append("[DONE] " + line + "\r\n");
+							report.append("[DONE] ").append(line).append("\r\n");
 							break;
 						case "update-metadata":
 							updateMetadata(bag, operation[1], operation[2], operation[3]);
-							report.append("[DONE] " + line + "\r\n");
+							report.append("[DONE] ").append(line).append("\r\n");
 							break;
 						case "delete-metadata":
 							deleteMetadata(operation[2], operation[3]);
-							report.append("[DONE] " + line + "\r\n");
+							report.append("[DONE] ").append(line).append("\r\n");
 							break;
 						case "snapshot-workspace":
 							snapshotWorkspace(operation[1]);
 							purgeCache();
 							needcommit = true;
-							report.append("[DONE] " + line + "\r\n");
+							report.append("[DONE] ").append(line).append("\r\n");
 							break;
 						default:
 							partial = true;
-							report.append("[ERROR] " + line + " \r\n\t -> Unknown operation\r\n");
+							report.append("[ERROR] ").append(line).append(" \r\n\t -> Unknown operation\r\n");
 					}
 				} catch ( Exception e ) {
 					partial = true;
-					report.append("[ERROR] " + line + " \r\n\t -> Message: " + e.getMessage() + "\r\n");
+					report.append("[ERROR] ").append(line).append(" \r\n\t -> Message: ").append(e.getMessage()).append("\r\n");
 					LOGGER.log(Level.FINE, "ImportContentTask exception raised", e);
 				}
 				if ( System.currentTimeMillis() - tscommit > 30000 ) {
@@ -185,7 +185,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			}
 		} catch (IOException e) {
 			partial = true;
-			report.append("[ERROR] unable to read script \r\n\t -> Message: " + e.getMessage() + "\r\n");
+			report.append("[ERROR] unable to read script \r\n\t -> Message: ").append(e.getMessage()).append("\r\n");
 			LOGGER.log(Level.SEVERE, "- unexpected error during reading operations script", e);
 		}
 		try {
@@ -234,8 +234,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			throw new RuntimeEngineTaskException("bag file " + bagpath + " does not exists");
 		}
 		BagFactory factory = new BagFactory();
-		Bag bag = factory.createBag(bagpath.toFile());
-		return bag;
+		return factory.createBag(bagpath.toFile());
 	}
 
 	private void purgeCache() {

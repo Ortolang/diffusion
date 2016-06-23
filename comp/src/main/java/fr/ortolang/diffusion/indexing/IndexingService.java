@@ -41,12 +41,12 @@ import fr.ortolang.diffusion.OrtolangService;
 
 public interface IndexingService extends OrtolangService {
 	
-	public static final String SERVICE_NAME = "indexing";
-	public static final String INDEX_ACTION = "index";
-	public static final String REMOVE_ACTION = "remove";
+	String SERVICE_NAME = "indexing";
+	String INDEX_ACTION = "index";
+	String REMOVE_ACTION = "remove";
     
-    public void index(String key) throws IndexingServiceException;
+    void index(String key) throws IndexingServiceException;
     
-    public void remove(String key) throws IndexingServiceException;
+    void remove(String key) throws IndexingServiceException;
 
 }

@@ -262,10 +262,7 @@ public class OrtolangCoreFile implements FtpFile {
 
     @Override
     public boolean isWritable() {
-        if (root.equals(Workspace.HEAD)) {
-            return true;
-        }
-        return false;
+        return root.equals(Workspace.HEAD);
     }
 
     @Override
@@ -410,7 +407,7 @@ public class OrtolangCoreFile implements FtpFile {
             Path upload = Files.createTempFile("ftp", ".up");
             OutputStream os = Files.newOutputStream(upload, StandardOpenOption.WRITE);
             LOGGER.log(Level.FINE, "output stream created on temporary file: " + upload);
-            BufferedOutputStream bof = new BufferedOutputStream(os) {
+            return new BufferedOutputStream(os) {
                 @Override
                 public void close() throws IOException {
                     LOGGER.log(Level.FINE, "closing outputstream, time to update dataobject !!");
@@ -442,7 +439,6 @@ public class OrtolangCoreFile implements FtpFile {
                     Files.delete(upload);
                 }
             };
-            return bof;
         } else {
             LOGGER.log(Level.FINE, "snapshot is NOT " + Workspace.HEAD + ", aborting upload");
             throw new IOException("writing is only allowed in head");
