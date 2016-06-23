@@ -1,10 +1,10 @@
-package fr.ortolang.diffusion.api.filter;
+package fr.ortolang.diffusion.api.workspace;
 
 /*
  * #%L
  * ORTOLANG
  * A online network structure for hosting language resources and tools.
- * 
+ *
  * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
  * Etienne Petitjean / ATILF UMR 7118 - CNRS
  * Jérôme Blanchard / ATILF UMR 7118 - CNRS
@@ -14,7 +14,7 @@ package fr.ortolang.diffusion.api.filter;
  * Ulrike Fleury / ATILF UMR 7118 - CNRS
  * Frédéric Pierre / ATILF UMR 7118 - CNRS
  * Céline Moro / ATILF UMR 7118 - CNRS
- *  
+ *
  * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
  * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
  * %%
@@ -24,38 +24,58 @@ package fr.ortolang.diffusion.api.filter;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
 
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.javers.common.collections.Optional;
+import org.javers.core.diff.Change;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.ext.Provider;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+public class DiffRepresentation {
 
-@SuppressWarnings("deprecation")
-@Provider
-@ServerInterceptor
-public class ContentTypeSetterPreProcessorInterceptor implements ContainerRequestFilter {
-	
-	private static final Logger LOGGER = Logger.getLogger(ContentTypeSetterPreProcessorInterceptor.class.getName());
+    private Change change;
+    private String type;
+    private Object object;
 
-	@Override
-	public void filter(ContainerRequestContext requestContext) {
-		LOGGER.log(Level.FINE, "content type setter for Input Part");
-		requestContext.getHeaders().putSingle(InputPart.DEFAULT_CHARSET_PROPERTY, "UTF-8");
-	}
+    public DiffRepresentation(Change value, String type, Object object) {
+        this.change = value;
+        this.type = type;
+        this.object = object;
+    }
 
+    public Change getChange() {
+        return change;
+    }
+
+    public void setChange(Change change) {
+        this.change = change;
+    }
+
+    public Object getObject() {
+        return object;
+    }
+
+    public void setObject(Optional<Object> object) {
+        this.object = object;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public static DiffRepresentation fromChange(Change change) {
+        return new DiffRepresentation(change, change.getClass().getSimpleName(), change.getAffectedObject().get());
+    }
 }

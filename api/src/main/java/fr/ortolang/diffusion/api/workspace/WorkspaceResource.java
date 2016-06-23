@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ejb.EJB;
 import javax.json.Json;
@@ -73,10 +74,10 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import org.javers.core.diff.Change;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangEvent;
@@ -443,15 +444,15 @@ public class WorkspaceResource {
                         updatedObject = core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false, form.getFormat().equals("") ? null : form.getFormat());
                         break;
                     } else {
-                    	try {
-	                        MetadataObject metadataObject = core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
-	                        WorkspaceElementRepresentation representation = makeRepresentation(metadataObject, wskey, npath);
-	                        URI newly = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build())
-	                                .queryParam("metadataname", name).build();
-	                        return Response.created(newly).entity(representation).build();
-                    	} catch(MetadataFormatException mfe) {
-                    		return Response.status(Response.Status.BAD_REQUEST).entity("{\"errorMessage\":\""+mfe.getMessage()+"\"}").build();
-                    	}
+                        try {
+                            MetadataObject metadataObject = core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
+                            WorkspaceElementRepresentation representation = makeRepresentation(metadataObject, wskey, npath);
+                            URI newly = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build())
+                                    .queryParam("metadataname", name).build();
+                            return Response.created(newly).entity(representation).build();
+                        } catch(MetadataFormatException mfe) {
+                            return Response.status(Response.Status.BAD_REQUEST).entity("{\"errorMessage\":\""+mfe.getMessage()+"\"}").build();
+                        }
                     }
                 default:
                     return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + form.getType()).build();
@@ -655,21 +656,32 @@ public class WorkspaceResource {
         }
         return Response.ok().build();
     }
-    
+
     @GET
     @Path("/{wskey}/events")
     @GZIP
     public Response listWorkspaceEvents(@PathParam(value = "wskey") String wskey, @QueryParam(value = "offset") @DefaultValue(value = "0") int offset, @QueryParam(value = "limit") @DefaultValue(value = "25") int limit, @Context Request request)
- throws EventServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+            throws EventServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/events");
         long wscreation = browser.getInfos(wskey).getCreationDate();
-        GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>(); 
+        GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>();
         List<OrtolangEvent> events = event.findEvents(null, wskey, null, null, wscreation, offset, limit);
         representation.setEntries(events);
         representation.setOffset(offset);
         representation.setLimit(limit);
         representation.setSize(events.size());
         return Response.ok(representation).build();
+    }
+
+    @GET
+    @Path("/{wskey}/diff")
+    @GZIP
+    public Response diffWorkspaceContent(@PathParam(value = "wskey") String wskey, @QueryParam(value = "lsnapshot") String lsnapshot, @QueryParam(value = "rsnapshot") String rsnapshot, @Context Request request)
+            throws AccessDeniedException, CoreServiceException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/diff");
+        List<Change> changes = core.diffWorkspaceContent(wskey, lsnapshot, rsnapshot);
+        List<DiffRepresentation> representations = changes.stream().map(DiffRepresentation::fromChange).collect(Collectors.toList());
+        return Response.ok(representations).build();
     }
 
     @GET

@@ -66,15 +66,15 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.ortolang.diffusion.core.wrapper.CollectionWrapper;
+import fr.ortolang.diffusion.core.wrapper.OrtolangObjectWrapper;
 import org.apache.commons.io.IOUtils;
 import org.javers.core.Javers;
 import org.javers.core.JaversBuilder;
+import org.javers.core.diff.Change;
 import org.javers.core.diff.Diff;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -1060,7 +1060,38 @@ public class CoreServiceBean implements CoreService {
     }
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public void diffWorkspaceContent(String wskey, String lsnapshot, String rsnapshot) throws CoreServiceException, AccessDeniedException {
+    private CollectionWrapper getWorkspaceContentTree(String key, PathBuilder path, CollectionWrapper parent)
+            throws KeyNotFoundException, CoreServiceException, OrtolangException, InvalidPathException, RegistryServiceException {
+        OrtolangObjectIdentifier identifier = registry.lookup(key);
+        OrtolangObjectWrapper ortolangObjectWrapper;
+        switch (identifier.getType()) {
+        case Collection.OBJECT_TYPE:
+            Collection collection = em.find(Collection.class, identifier.getId());
+            ortolangObjectWrapper = OrtolangObjectWrapper.fromOrtolangObject(collection, path.build());
+            for (CollectionElement element : collection.getElements()) {
+                getWorkspaceContentTree(element.getKey(), path.clone().path(element.getName()), (CollectionWrapper) ortolangObjectWrapper);
+            }
+            if (parent != null) {
+                parent.addChild(ortolangObjectWrapper);
+            }
+            return (CollectionWrapper) ortolangObjectWrapper;
+        case DataObject.OBJECT_TYPE:
+            DataObject dataObject = em.find(DataObject.class, identifier.getId());
+            ortolangObjectWrapper = OrtolangObjectWrapper.fromOrtolangObject(dataObject, path.build());
+            parent.addChild(ortolangObjectWrapper);
+            break;
+        case Link.OBJECT_TYPE:
+            Link link = em.find(Link.class, identifier.getId());
+            ortolangObjectWrapper = OrtolangObjectWrapper.fromOrtolangObject(link, path.build());
+            parent.addChild(ortolangObjectWrapper);
+            break;
+        }
+        return null;
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Change> diffWorkspaceContent(String wskey, String lsnapshot, String rsnapshot) throws CoreServiceException, AccessDeniedException {
         LOGGER.log(Level.FINE, "diff content of workspace [" + wskey + "] between snapshots [" + lsnapshot + "] and [" + rsnapshot + "]");
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1073,25 +1104,32 @@ public class CoreServiceBean implements CoreService {
             if (workspace == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
             }
-            if (!workspace.containsSnapshotName(lsnapshot)) {
-                throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + lsnapshot);
+            String lroot;
+            if (lsnapshot.equals(Workspace.HEAD)) {
+                lroot = workspace.getHead();
+            } else {
+                if (!workspace.containsSnapshotName(lsnapshot)) {
+                    throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + lsnapshot);
+                }
+                lroot = workspace.findSnapshotByName(lsnapshot).getKey();
             }
-            String lroot = workspace.findSnapshotByName(lsnapshot).getKey();
-
-            if (!workspace.containsSnapshotName(rsnapshot)) {
-                throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + rsnapshot);
+            String rroot;
+            if (rsnapshot.equals(Workspace.HEAD)) {
+                rroot = workspace.getHead();
+            } else {
+                if (!workspace.containsSnapshotName(rsnapshot)) {
+                    throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + rsnapshot);
+                }
+                rroot = workspace.findSnapshotByName(rsnapshot).getKey();
             }
-            String rroot = workspace.findSnapshotByName(rsnapshot).getKey();
 
-            Map<String, String> lcontent = new HashMap<String, String>();
-            listContent(lroot, PathBuilder.newInstance(), lcontent);
-
-            Map<String, String> rcontent = new HashMap<String, String>();
-            listContent(rroot, PathBuilder.newInstance(), rcontent);
+            CollectionWrapper lcontent = getWorkspaceContentTree(lroot, PathBuilder.newInstance(), null);
+            CollectionWrapper rcontent = getWorkspaceContentTree(rroot, PathBuilder.newInstance(), null);
 
             Javers javers = JaversBuilder.javers().build();
             Diff diff = javers.compare(lcontent, rcontent);
-            diff.prettyPrint();
+
+            return diff.getChanges();
 
         } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException | InvalidPathException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during diff workspace content", e);

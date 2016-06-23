@@ -61,6 +61,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import org.javers.core.diff.Change;
 
 public interface CoreService extends OrtolangService, OrtolangBinaryService, OrtolangIndexableService {
 
@@ -101,6 +102,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     Set<OrtolangObjectPid> buildWorkspacePidList(String wskey, String tag) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
     Map<String, String> listWorkspaceContent(String wskey, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+
+    List<Change> diffWorkspaceContent(String wskey, String lsnapshot, String rsnapshot) throws CoreServiceException, AccessDeniedException;
 
     List<String> listAllWorkspaceAlias() throws CoreServiceException, AccessDeniedException;
 
