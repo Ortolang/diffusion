@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -58,192 +59,48 @@ import fr.ortolang.diffusion.core.CoreService;
 
 @Entity
 @NamedQueries({
-	@NamedQuery(name="findObjectByBinaryHash", query="select o from DataObject o where :hash = o.stream")
+        @NamedQuery(name="findObjectByBinaryHash", query="select o from DataObject o where :hash = o.stream")
 })
 @SuppressWarnings("serial")
-public class DataObject extends OrtolangObject implements MetadataSource {
+public class DataObject extends MetadataSource {
 
-	public static final String OBJECT_TYPE = "object";
+    public static final String OBJECT_TYPE = "object";
 
-	@Id
-	private String id;
-	@Version
-	private long version;
-	@Transient
-	private String key;
-	private int clock;
-	private String name;
-	private long size;
-	private String mimeType;
-	private String stream;
-	@Lob
-	@Type(type = "org.hibernate.type.TextType")
-	private String metadatasContent = "";
-	
-	public DataObject() {
-		stream = "";
-	}
+    private long size;
+    private String mimeType;
+    private String stream;
 
-	public String getId() {
-		return id;
-	}
+    public DataObject() {
+        stream = "";
+    }
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    public long getSize() {
+        return size;
+    }
 
-	public String getKey() {
-		return key;
-	}
-	
-	public int getClock() {
-		return clock;
-	}
-	
-	public void setClock(int clock) {
-		this.clock = clock;
-	}
+    public void setSize(long size) {
+        this.size = size;
+    }
 
-	public void setKey(String key) {
-		this.key = key;
-	}
+    public String getMimeType() {
+        return mimeType;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getStream() {
+        return stream;
+    }
 
-	public long getSize() {
-		return size;
-	}
+    public void setStream(String stream) {
+        this.stream = stream;
+    }
 
-	public void setSize(long size) {
-		this.size = size;
-	}
-
-	public String getMimeType() {
-		return mimeType;
-	}
-
-	public void setMimeType(String mimeType) {
-		this.mimeType = mimeType;
-	}
-
-	public String getStream() {
-		return stream;
-	}
-
-	public void setStream(String stream) {
-		this.stream = stream;
-	}
-	
-	public void setMetadatasContent(String metadatasContent) {
-		this.metadatasContent = metadatasContent;
-	}
-	
-	public String getMetadatasContent() {
-		return metadatasContent;
-	}
-	
-	@Override
-	public Set<MetadataElement> getMetadatas() {
-		Set<MetadataElement> metadatas = new HashSet<MetadataElement>();
-		if ( metadatasContent != null && metadatasContent.length() > 0 ) {
-			for ( String metadata : Arrays.asList(metadatasContent.split("\n")) ) {
-				metadatas.add(MetadataElement.deserialize(metadata));
-			}
-		}
-		return metadatas;
-	}
-	
-	@Override
-	public void setMetadatas(Set<MetadataElement> metadatas) {
-		StringBuilder newmetadatas = new StringBuilder();
-		for ( MetadataElement metadata : metadatas ) {
-			if ( newmetadatas.length() > 0 ) {
-				newmetadatas.append("\n");
-			}
-			newmetadatas.append(metadata.serialize());
-		}
-		metadatasContent = newmetadatas.toString();
-	}
-	
-	@Override
-	public boolean addMetadata(MetadataElement metadata) {
-		if ( !containsMetadata(metadata) ) {
-			if ( metadatasContent.length() > 0 ) {
-				metadatasContent += "\n" + metadata.serialize();
-			} else {
-				metadatasContent = metadata.serialize();
-			}
-			return true;
-		}
-		return false;
-	}
-	
-	@Override
-	public boolean removeMetadata(MetadataElement metadata) {
-		if ( containsMetadata(metadata) ) {
-			metadatasContent = metadatasContent.replaceAll("(?m)^(" + metadata.serialize() + ")\n?", "");
-			if ( metadatasContent.endsWith("\n") ) {
-				metadatasContent = metadatasContent.substring(0, metadatasContent.length()-1);
-			}
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
-	@Override
-	public boolean containsMetadata(MetadataElement metadata) {
-		if ( metadatasContent.length() > 0 && metadatasContent.indexOf(metadata.serialize()) != -1 ) {
-			return true;
-		}
-		return false;
-	}
-	
-	@Override
-	public boolean containsMetadataName(String name) {
-		if ( metadatasContent.indexOf(name + "/") != -1 ) {
-			return true;
-		}
-		return false;
-	}
-	
-	@Override
-	public boolean containsMetadataKey(String key) {
-		if ( metadatasContent.indexOf("/" + key) != -1 ) {
-			return true;
-		}
-		return false;
-	}
-	
-	@Override
-	public MetadataElement findMetadataByName(String name) {
-		Pattern pattern = Pattern.compile("(?s).*(" + name + "/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
-		Matcher matcher = pattern.matcher(metadatasContent);
-		if ( matcher.matches() ) {
-			return MetadataElement.deserialize(matcher.group(1));
-		}
-		return null;
-	}
-
-	@Override
-	public String getObjectKey() {
-		return getKey();
-	}
-	
-	@Override
-	public String getObjectName() {
-		return getName();
-	}
-
-	@Override
-	public OrtolangObjectIdentifier getObjectIdentifier() {
-		return new OrtolangObjectIdentifier(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, id);
-	}
+    @Override
+    public OrtolangObjectIdentifier getObjectIdentifier() {
+        return new OrtolangObjectIdentifier(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, getId());
+    }
 
 }

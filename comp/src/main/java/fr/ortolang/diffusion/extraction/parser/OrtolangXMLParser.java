@@ -70,7 +70,7 @@ public class OrtolangXMLParser extends CompositeParser {
         TRANS
     }
 
-    private static List<Parser> xmlParsers = Arrays.asList(new Parser[]{
+    private static final List<Parser> xmlParsers = Arrays.asList(new Parser[]{
             new TeiParser(), new TransParser()
     });
 

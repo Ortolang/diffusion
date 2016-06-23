@@ -36,43 +36,25 @@ package fr.ortolang.diffusion.client.cmd;
  * #L%
  */
 
-import java.io.Console;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import fr.ortolang.diffusion.client.OrtolangClient;
+import fr.ortolang.diffusion.client.OrtolangClientException;
+import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
+import org.apache.commons.cli.*;
+import org.apache.commons.io.IOUtils;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.IOUtils;
-
-import fr.ortolang.diffusion.client.OrtolangClient;
-import fr.ortolang.diffusion.client.OrtolangClientException;
-import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
-
-public class CheckBagCommand extends Command {
+@SuppressWarnings("ALL") public class CheckBagCommand extends Command {
 
     public static final Pattern ORTOLANG_KEY_MATCHER = Pattern.compile("\\$\\{([\\w\\d:\\-_]*)\\}");
 
@@ -84,19 +66,17 @@ public class CheckBagCommand extends Command {
 
     public CheckBagCommand() {
         options.addOption("h", "help", false, "show help.");
-		options.addOption("U", "username", true, "username for login");
-		options.addOption("P", "password", true, "password for login");
+        options.addOption("U", "username", true, "username for login");
+        options.addOption("P", "password", true, "password for login");
         options.addOption("p", "path", true, "path of the bag root");
         options.addOption("f", "fix", false, "fix problems (WARNING may delete some files)");
     }
 
     @Override
     public void execute(String[] args) {
-        CommandLineParser parser = new BasicParser();
+        CommandLineParser parser = new DefaultParser();
         CommandLine cmd;
         String root = "";
-		String username = "";
-		String password = null;
         try {
             cmd = parser.parse(options, args);
             if (cmd.hasOption("h")) {
@@ -113,26 +93,18 @@ public class CheckBagCommand extends Command {
                 help();
             }
 
-            if (cmd.hasOption("U")) {
-				username = cmd.getOptionValue("U");
-				if (cmd.hasOption("P")) {
-					password = cmd.getOptionValue("P");
-				} else {
-					Console cons;
-					char[] passwd;
-					if ((cons = System.console()) != null && (passwd = cons.readPassword("[%s]", "Password:")) != null) {
-					    password = new String(passwd);
-					}
-				}
-			}
-			client = OrtolangClient.getInstance();
-			if ( username.length() > 0 ) {
-				client.getAccountManager().setCredentials(username, password);
-				client.login(username);
-			}
-			System.out.println("Connected as user: " + client.connectedProfile());
-			
-            if ( !Files.exists(Paths.get(root)) ) {
+            String[] credentials = getCredentials(cmd);
+            String username = credentials[0];
+            String password = credentials[1];
+
+            client = OrtolangClient.getInstance();
+            if (username.length() > 0) {
+                client.getAccountManager().setCredentials(username, password);
+                client.login(username);
+            }
+            System.out.println("Connected as user: " + client.connectedProfile());
+
+            if (!Files.exists(Paths.get(root))) {
                 errors.append("-> Le chemin de base (").append(root).append(") n'existe pas\r\n");
             } else {
                 if (!Files.exists(Paths.get(root, "data", "publication.properties"))) {
@@ -141,7 +113,7 @@ public class CheckBagCommand extends Command {
                 if (!Files.exists(Paths.get(root, "data", "workspace.properties"))) {
                     errors.append("-> workspace.properties NOT found\r\n");
                 } else {
-                	checkWorkspaceProperties(Paths.get(root, "data", "workspace.properties"));
+                    checkWorkspaceProperties(Paths.get(root, "data", "workspace.properties"));
                 }
 
                 if (Files.exists(Paths.get(root, "data", "snapshots"))) {
@@ -168,9 +140,9 @@ public class CheckBagCommand extends Command {
             System.out.println("Failed to parse command line properties: " + e.getMessage());
             help();
         } catch (OrtolangClientException | OrtolangClientAccountException e) {
-			System.out.println("Unexpected error !!");
-			e.printStackTrace();
-		}
+            System.out.println("Unexpected error !!");
+            e.printStackTrace();
+        }
     }
 
     private void checkSnapshotMetadata(Path root) {
@@ -196,7 +168,7 @@ public class CheckBagCommand extends Command {
                                 errors.append("-> unable to fix: ").append(e.getMessage()).append("\r\n");
                             }
                         }
-                    } else if ( file.endsWith("ortolang-item-json") ) {
+                    } else if (file.endsWith("ortolang-item-json")) {
                         checkOrtolangItemJson(file);
                     }
                     return FileVisitResult.CONTINUE;
@@ -217,45 +189,47 @@ public class CheckBagCommand extends Command {
             System.out.println("Unable to walk file tree: " + e.getMessage());
         }
     }
-    
+
     private void checkPermissions(Path root) {
         Path metadata = Paths.get(root.toString(), "metadata");
         Path objects = Paths.get(root.toString(), "objects");
         try {
-            checkPathPermissions(objects, metadata, -1, new HashSet<Path>());
+            checkPathPermissions(objects, metadata, -1, new HashSet<>());
         } catch (IOException e) {
             System.out.println("Unable to walk file tree: " + e.getMessage());
         }
     }
-    
+
     private void checkPathPermissions(Path node, Path nodeMD, int parentLevel, Set<Path> treatedNodes) throws IOException {
         int nodeLevel = parentLevel;
-        if ( !treatedNodes.contains(node) ) {
+        if (!treatedNodes.contains(node)) {
             if (Files.exists(nodeMD)) {
                 Path permissionMD = Paths.get(nodeMD.toString(), "ortolang-acl-json");
                 if (Files.exists(permissionMD) && !Files.isDirectory(permissionMD)) {
                     nodeLevel = parseACLLevel(permissionMD);
-                    if ( nodeLevel < parentLevel ) {
+                    if (nodeLevel < parentLevel) {
                         errors.append("-> unconsistent file acl permission for object: ").append(node).append("\r\n");
                         if (fix) {
                             Path aclParent = Paths.get(nodeMD.getParent().toString(), "ortolang-acl-json");
                             try (OutputStream os = Files.newOutputStream(aclParent)) {
                                 Template tpl = Template.findTemplateByLevel(nodeLevel);
-                                IOUtils.write(tpl.getJson(), os);
+                                IOUtils.write(tpl.getJson(), os, "UTF-8");
                                 os.flush();
-                                fixed.append("-> new acl [" + tpl.getName()  + "] set for parent of object: ").append(node).append("\r\n");
+                                //noinspection StringConcatenationInsideStringBufferAppend
+                                fixed.append("-> new acl [").append(tpl.getName()).append("] set for parent of object: ").append(node).append("\r\n");
                             }
                         }
-                        for ( String sibling : node.getParent().toFile().list() ) {
-                            if ( !sibling.equals(node.toString()) ) {
+                        for (String sibling : node.getParent().toFile().list()) {
+                            if (!sibling.equals(node.toString())) {
                                 Path aclSibling = Paths.get(sibling, "ortolang-acl-json");
-                                if ( !Files.exists(aclSibling)) {
+                                if (!Files.exists(aclSibling)) {
                                     if (fix) {
                                         try (OutputStream os = Files.newOutputStream(aclSibling)) {
                                             Template tpl = Template.findTemplateByLevel(nodeLevel);
-                                            IOUtils.write(tpl.getJson(), os);
+                                            IOUtils.write(tpl.getJson(), os, "UTF-8");
                                             os.flush();
-                                            fixed.append("-> new acl [" + tpl.getName()  + "] set for sibling of object: ").append(node).append("\r\n");
+                                            //noinspection StringConcatenationInsideStringBufferAppend
+                                            fixed.append("-> new acl [").append(tpl.getName()).append("] set for sibling of object: ").append(node).append("\r\n");
                                         }
                                     }
                                     treatedNodes.add(node);
@@ -267,9 +241,9 @@ public class CheckBagCommand extends Command {
             }
         }
         treatedNodes.add(node);
-        if ( Files.isDirectory(node) ) {
-            for ( String child : node.toFile().list() ) {
-                checkPathPermissions(Paths.get(node.toString(), child), Paths.get(nodeMD.toString(), child), ((nodeLevel < 0)?0:nodeLevel), treatedNodes);
+        if (Files.isDirectory(node)) {
+            for (String child : node.toFile().list()) {
+                checkPathPermissions(Paths.get(node.toString(), child), Paths.get(nodeMD.toString(), child), ((nodeLevel < 0) ? 0 : nodeLevel), treatedNodes);
             }
         }
     }
@@ -280,65 +254,65 @@ public class CheckBagCommand extends Command {
         return Template.findTemplateByName(name).getLevel();
     }
 
-    private void checkWorkspaceProperties(Path workspaceFilePath) throws IOException, OrtolangClientException {
+    private void checkWorkspaceProperties(Path workspaceFilePath) throws IOException {
         Properties props = new Properties();
         InputStream in = Files.newInputStream(workspaceFilePath);
         props.load(in);
         //TODO check whether workspace alias is availabled
         String owner = props.getProperty("owner");
-        if(owner!=null) {
-        	checkObject(owner, "owner");
+        if (owner != null) {
+            checkObject(owner, "owner");
         }
         String members = props.getProperty("members");
-        if(members!=null) {
-        	for(String member : members.split(",")) {
-        		checkObject(member, "member");
-        	}
+        if (members != null) {
+            for (String member : members.split(",")) {
+                checkObject(member, "member");
+            }
         }
     }
-    
+
     private void checkOrtolangItemJson(Path filepath) {
         String jsonContent = getContent(filepath);
-        if(jsonContent!=null) {
+        if (jsonContent != null) {
             List<String> keys = extractOrtolangKeys(jsonContent);
-            
-            System.out.println("Looking for keys in registry : "+keys);
-            keys.parallelStream().forEach((key) -> checkObject(key, "referential") );
+
+            System.out.println("Looking for keys in registry : " + keys);
+            keys.parallelStream().forEach((key) -> checkObject(key, "referential"));
         }
     }
-    
+
     private void checkObject(String key, String subject) {
-		try {
-			JsonObject object = client.getObject(key);
-			if(object==null) {
-				errors.append("-> ").append(subject).append(" ").append(key).append(" doesn't exist\r\n");
-			}
-		} catch (OrtolangClientException | OrtolangClientAccountException e) {
-			errors.append("-> unable to find ").append(key).append(" : ").append(e.getMessage()).append("\r\n");
-		}
+        try {
+            JsonObject object = client.getObject(key);
+            if (object == null) {
+                errors.append("-> ").append(subject).append(" ").append(key).append(" doesn't exist\r\n");
+            }
+        } catch (OrtolangClientException | OrtolangClientAccountException e) {
+            errors.append("-> unable to find ").append(key).append(" : ").append(e.getMessage()).append("\r\n");
+        }
     }
 
     private String getContent(Path filepath) {
         String content = null;
-        try ( InputStream is = Files.newInputStream(filepath) ) {
-            content = IOUtils.toString(is);
+        try (InputStream is = Files.newInputStream(filepath)) {
+            content = IOUtils.toString(is, "UTF-8");
         } catch (IOException e) {
-            System.out.println("  unable to get content of file : "+filepath+" : "+e.getMessage());
+            System.out.println("  unable to get content of file : " + filepath + " : " + e.getMessage());
         }
         return content;
     }
 
     public static List<String> extractOrtolangKeys(String json) {
         Matcher okMatcher = CheckBagCommand.ORTOLANG_KEY_MATCHER.matcher(json);
-        List<String> ortolangKeys = new ArrayList<String>();
-        while(okMatcher.find()) {
-            if(!ortolangKeys.contains(okMatcher.group(1))) {
+        List<String> ortolangKeys = new ArrayList<>();
+        while (okMatcher.find()) {
+            if (!ortolangKeys.contains(okMatcher.group(1))) {
                 ortolangKeys.add(okMatcher.group(1));
             }
         }
         return ortolangKeys;
     }
-    
+
     private void help() {
         HelpFormatter formatter = new HelpFormatter();
         formatter.printHelp("Check Bag", options);
@@ -346,8 +320,9 @@ public class CheckBagCommand extends Command {
     }
 
     public static class Template {
-        
-        static Map<String, Template> templates = new HashMap<String, Template>();
+
+        static Map<String, Template> templates = new HashMap<>();
+
         static {
             templates.put("forall", new Template(0, "forall", "{\"template\":\"forall\"}"));
             templates.put("authentified", new Template(1, "authentified", "{\"template\":\"authentified\"}"));
@@ -376,20 +351,20 @@ public class CheckBagCommand extends Command {
         public String getJson() {
             return json;
         }
-        
+
         public static Template findTemplateByName(String name) {
             return templates.get(name);
         }
-        
+
         public static Template findTemplateByLevel(int level) {
             for (Template template : templates.values()) {
-                if ( template.getLevel() == level ) {
+                if (template.getLevel() == level) {
                     return template;
                 }
             }
             return templates.get("forall");
         }
-        
+
     }
 
 }

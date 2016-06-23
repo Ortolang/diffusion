@@ -57,7 +57,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TransParser extends XMLParser {
+class TransParser extends XMLParser {
 
     private static final Logger LOGGER = Logger.getLogger(TransParser.class.getName());
 

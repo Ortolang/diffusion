@@ -60,6 +60,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -101,12 +102,13 @@ public class SeoServiceBean implements SeoService {
 
     private Client client;
 
+    @SuppressWarnings("EjbEnvironmentInspection")
     @Resource
     private ManagedExecutorService executor;
 
-    private boolean prerenderingActivated;
+    private final boolean prerenderingActivated;
 
-    private Map<String, String> marketTypes;
+    private final Map<String, String> marketTypes;
 
     public SeoServiceBean() {
         marketTypes = new HashMap<>();
@@ -138,7 +140,7 @@ public class SeoServiceBean implements SeoService {
         return generateSiteMap(document);
     }
 
-    private String generateSiteMap(Document document) throws JsonStoreServiceException, ParserConfigurationException, TransformerException, SeoServiceException {
+    private String generateSiteMap(Document document) throws TransformerException {
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
         DOMSource source = new DOMSource(document);

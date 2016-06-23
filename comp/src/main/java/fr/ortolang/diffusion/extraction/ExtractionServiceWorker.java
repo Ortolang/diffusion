@@ -107,6 +107,7 @@ public class ExtractionServiceWorker {
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
 
+    @SuppressWarnings("EjbEnvironmentInspection")
     @Resource
     private ManagedThreadFactory managedThreadFactory;
 
@@ -114,7 +115,7 @@ public class ExtractionServiceWorker {
 
     private DelayQueue<Job> queue;
 
-    public ExtractionServiceWorker() {
+    private ExtractionServiceWorker() {
         this.worker = new ExtractionWorkerThread();
         this.queue = new DelayQueue<>();
     }
