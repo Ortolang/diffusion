@@ -249,7 +249,7 @@ public class ExtractionServiceWorker {
                             LOGGER.log(Level.WARNING, "unknown job action: " + job.getAction());
                         }
                         jobService.remove(job.getId());
-                    } catch (OrtolangException | MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | SAXException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException | IndexingServiceException | AuthorisationServiceException e) {
+                    } catch (MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | SAXException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException | IndexingServiceException | AuthorisationServiceException e) {
                         LOGGER.log(Level.WARNING, "unable to extract metadata for data object with key " + key, e);
                         if (e instanceof SAXException) {
                             LOGGER.log(Level.WARNING, "Could not parse XML document: removing extraction job " + job.getId(), e);

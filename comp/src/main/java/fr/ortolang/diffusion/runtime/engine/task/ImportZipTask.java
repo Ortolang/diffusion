@@ -147,7 +147,7 @@ public class ImportZipTask extends RuntimeEngineTask {
                                     is.close();
                                     getCoreService().updateDataObject(wskey, opath.build(), hash);
                                     report.append("[DONE] object updated at path: ").append(opath.build()).append("\r\n");
-                                } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | WorkspaceReadOnlyException e4 ) {
+                                } catch ( InvalidPathException | DataCollisionException | PathNotFoundException | WorkspaceReadOnlyException e4 ) {
                                     partial = true;
                                     report.append("[ERROR] object updated failed for path: ").append(opath.build()).append("\r\n\t-> message: ").append(e4.getMessage()).append("\r\n");
                                 }

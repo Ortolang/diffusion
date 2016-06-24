@@ -166,7 +166,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
             for (String workspace : workspaces) {
                 addFilter(username, new Filter(null, workspace, null));
             }
-        } catch (KeyNotFoundException | AccessDeniedException | CoreServiceException | SubscriptionServiceException e) {
+        } catch (AccessDeniedException | CoreServiceException | SubscriptionServiceException e) {
             LOGGER.log(Level.SEVERE, "Cannot read " + username + " profile and thus cannot add filters for user groups", e);
         }
     }

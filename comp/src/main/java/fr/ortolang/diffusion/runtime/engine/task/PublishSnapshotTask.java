@@ -86,7 +86,7 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 		try {
 			LOGGER.log(Level.FINE, "building publication map...");
 			map = getCoreService().buildWorkspacePublicationMap(wskey, snapshot);
-		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException e) {
 			throw new RuntimeEngineTaskException("unexpected error while trying to built the publication map", e);
 		}
 		LOGGER.log(Level.FINE, "publication map built containing " + map.size() + " keys");

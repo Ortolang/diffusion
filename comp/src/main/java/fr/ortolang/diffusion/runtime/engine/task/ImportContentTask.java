@@ -303,7 +303,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 			getCoreService().updateDataObject(wskey, path, hash);
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException e) {
+		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException e) {
 			throw new RuntimeEngineTaskException("Error updating object for path [" + path + "] : " + e.getMessage(), e);
 		}
 	}
@@ -361,7 +361,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		    getCoreService().deleteMetadataObject(wskey, path, name, false);
 		} catch (PathNotFoundException e) {
 		    LOGGER.log(Level.WARNING, "metadata target does not exists, maybe deleted previously ??", e);
-		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException e) {
+		} catch (CoreServiceException | WorkspaceReadOnlyException | InvalidPathException e) {
 			throw new RuntimeEngineTaskException("Error deleting metadata for path [" + path + "] : " + e.getMessage(), e);
 		} 
 	}
