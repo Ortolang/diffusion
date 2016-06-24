@@ -41,10 +41,10 @@ import java.util.HashMap;
 
 import fr.ortolang.diffusion.event.entity.Event;
 
-public class EventLoggerFormater {
+public class EventLoggerFormatter {
 
     private static HashMap<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> ();
-    private static String fieldSeparator = ",";
+    private static final String fieldSeparator = ",";
 
     private static SimpleDateFormat getEventDateFormatter() {
         String key = Thread.currentThread().getId() + "";

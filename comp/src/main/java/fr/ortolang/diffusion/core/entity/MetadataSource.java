@@ -181,6 +181,7 @@ public abstract class MetadataSource extends OrtolangObject {
         return getKey();
     }
 
+    @Override
     public String getObjectName() {
         return getName();
     }

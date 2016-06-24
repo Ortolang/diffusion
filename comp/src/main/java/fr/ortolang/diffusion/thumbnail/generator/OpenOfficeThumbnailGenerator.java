@@ -50,6 +50,7 @@ import fr.ortolang.diffusion.thumbnail.util.ImageResizer;
 
 public class OpenOfficeThumbnailGenerator implements ThumbnailGenerator {
 
+    @Override
     public void generate(File input, File output, int width, int height) throws ThumbnailGeneratorException {
         try (ZipFile zipFile = new ZipFile(input)) {
             ZipEntry entry = zipFile.getEntry("Thumbnails/thumbnail.png");
@@ -71,6 +72,7 @@ public class OpenOfficeThumbnailGenerator implements ThumbnailGenerator {
         }
     }
 
+    @Override
     public List<String> getAcceptedMIMETypes() {
         return Arrays.asList("application/vnd.sun.xml.writer",
                 "application/vnd.sun.xml.writer.template",

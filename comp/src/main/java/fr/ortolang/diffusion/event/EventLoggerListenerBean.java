@@ -63,7 +63,7 @@ public class EventLoggerListenerBean implements MessageListener {
 		try {
 			Event e = new Event();
 			e.fromJMSMessage(message);
-			LOGGER.log(Level.INFO, EventLoggerFormater.formatEvent(e));
+			LOGGER.log(Level.INFO, EventLoggerFormatter.formatEvent(e));
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "unable to log event", e);
 		}

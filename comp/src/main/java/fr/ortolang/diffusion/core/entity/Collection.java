@@ -86,7 +86,7 @@ public class Collection extends MetadataSource {
 
     public boolean isEmpty() {
         if ( elements != null ) {
-            return elements.size() == 0;
+            return elements.isEmpty();
         } else {
             for ( String segment : segments ) {
                 if ( segment.length() > 0 ) {

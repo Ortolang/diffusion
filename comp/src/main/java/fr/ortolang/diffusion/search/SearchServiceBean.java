@@ -199,7 +199,7 @@ public class SearchServiceBean implements SearchService {
             LOGGER.log(Level.FINE, "Performing json search with query : "+query);
             try {
                 List<String> results = jsonStore.search(query);
-                if (results.size()>0) {
+                if (!results.isEmpty()) {
                     count = extractCount(results.get(0));
                 }
                 LOGGER.log(Level.FINE, "Count : "+count);
@@ -315,7 +315,7 @@ public class SearchServiceBean implements SearchService {
             LOGGER.log(Level.FINE, "Performing json search with query : "+query);
             try {
                 List<String> results = jsonStore.search(query);
-                if (results.size()>0) {
+                if (!results.isEmpty()) {
                     count = extractCount(results.get(0));
                 }
                 LOGGER.log(Level.FINE, "Count : "+count);
@@ -487,8 +487,9 @@ public class SearchServiceBean implements SearchService {
             selectStr.append("*");
         } else {
             for (Map.Entry<String, String> fieldProjectionEntry : fieldsProjection.entrySet()) {
-                if (selectStr.length() > 0)
+                if (selectStr.length() > 0) {
                     selectStr.append(",");
+                }
                 selectStr.append("`").append(fieldProjectionEntry.getKey()).append("`");
                 if (fieldProjectionEntry.getValue()!=null) {
                     selectStr.append(" AS ").append(fieldProjectionEntry.getValue()).append(" ");
@@ -501,17 +502,18 @@ public class SearchServiceBean implements SearchService {
     @SuppressWarnings({ "rawtypes", "unchecked" }) private StringBuilder whereClause(Map<String, Object> fields) {
         StringBuilder whereStr = new StringBuilder();
         for (Map.Entry<String, Object> field : fields.entrySet()) {
-            if (whereStr.length() > 0)
+            if (whereStr.length() > 0) {
                 whereStr.append(" AND ");
-            else
+            } else {
                 whereStr.append(" WHERE ");
+            }
             if (field.getValue() instanceof String) {
                 if (field.getValue().equals("")) {
                     whereStr.append("`").append(field.getKey()).append("` IS NOT NULL");
                 } else {
                     whereStr.append("`").append(field.getKey()).append("` = '").append(field.getValue()).append("'");
                 }
-            } else if (field.getValue() instanceof List && ((List) field.getValue()).size() > 0) {
+            } else if (field.getValue() instanceof List && !((List) field.getValue()).isEmpty()) {
                 whereStr.append("`").append(field.getKey()).append("` IN [").append(arrayValues((List<String>) field.getValue())).append("]");
             } else if (field.getValue() instanceof Long) {
                 whereStr.append("`").append(field.getKey().substring(0, field.getKey().length()-2)).append("` ").append(field.getKey().substring(field.getKey().length()-2)).append(" '").append(field.getValue()).append("'");
@@ -523,8 +525,9 @@ public class SearchServiceBean implements SearchService {
     private StringBuilder arrayValues(List<String> values) {
         StringBuilder valuesStr = new StringBuilder();
         for (String value : values) {
-            if (valuesStr.length() > 0)
+            if (valuesStr.length() > 0) {
                 valuesStr.append(",");
+            }
             valuesStr.append("'").append(value).append("'");
         }
         return valuesStr;

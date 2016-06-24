@@ -45,7 +45,8 @@ import java.util.List;
 import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
 
 public class V16__FixUpperCaseProfilesRefs implements JdbcMigration {
-    
+
+    @Override
     public void migrate(Connection connection) throws Exception {
         PreparedStatement grp_stmt = connection.prepareStatement("UPDATE \"GROUP\" SET memberslist=lower(memberslist)");
         PreparedStatement auth_stmt = connection.prepareStatement("UPDATE authorisationpolicy SET owner=lower(owner), rulescontent=lower(rulescontent)");

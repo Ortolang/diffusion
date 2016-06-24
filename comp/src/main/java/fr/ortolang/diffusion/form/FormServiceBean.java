@@ -143,7 +143,7 @@ public class FormServiceBean implements FormService {
 			}
 			return rforms;
 		} catch (RegistryServiceException e) {
-			LOGGER.log(Level.SEVERE, "unexpected error occured while listing forms", e);
+			LOGGER.log(Level.SEVERE, "unexpected error occurred while listing forms", e);
 			throw new FormServiceException("unable to list forms", e);
 		}
 	}

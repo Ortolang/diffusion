@@ -131,17 +131,17 @@ public class AuthorisationPolicy {
 
 	public void setPermissions(String subject, List<String> permissions) throws IOException {
 		loadRules();
-		if (permissions.size() > 0) {
+		if (permissions.isEmpty()) {
+			if (rules.containsKey(subject)) {
+				rules.remove(subject);
+			}
+		} else {
 			StringBuilder permissionsList = new StringBuilder();
 			for (String permission : permissions) {
 				permissionsList.append(permission);
 				permissionsList.append(",");
 			}
 			rules.setProperty(subject, permissionsList.substring(0, permissionsList.length() - 1));
-		} else {
-			if (rules.containsKey(subject)) {
-				rules.remove(subject);
-			}
 		}
 		saveRules();
 	}
@@ -169,7 +169,7 @@ public class AuthorisationPolicy {
 		loadRules();
 		rules.clear();
 		for (Entry<String, List<String>> rule: newrules.entrySet()) {
-			if (rule.getValue().size() > 0) {
+			if (!rule.getValue().isEmpty()) {
 				StringBuilder permissionsList = new StringBuilder();
 				for (String permission : rule.getValue()) {
 					permissionsList.append(permission);

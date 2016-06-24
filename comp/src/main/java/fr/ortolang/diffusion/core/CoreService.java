@@ -91,29 +91,29 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
     void deleteWorkspace(String wskey, boolean force) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
 
-    List<String> findWorkspacesForProfile(String profile) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+    List<String> findWorkspacesForProfile(String profile) throws CoreServiceException, AccessDeniedException;
 
-    List<String> findWorkspacesAliasForProfile(String profile) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+    List<String> findWorkspacesAliasForProfile(String profile) throws CoreServiceException, AccessDeniedException;
 
-    Map<String, Map<String, List<String>>> buildWorkspacePublicationMap(String wskey, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+    Map<String, Map<String, List<String>>> buildWorkspacePublicationMap(String wskey, String snapshot) throws CoreServiceException;
 
-    Set<String> buildWorkspaceReviewList(String wskey, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+    Set<String> buildWorkspaceReviewList(String wskey, String snapshot) throws CoreServiceException, AccessDeniedException;
 
-    Set<OrtolangObjectPid> buildWorkspacePidList(String wskey, String tag) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+    Set<OrtolangObjectPid> buildWorkspacePidList(String wskey, String tag) throws CoreServiceException;
 
-    Map<String, String> listWorkspaceContent(String wskey, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+    Map<String, String> listWorkspaceContent(String wskey, String snapshot) throws CoreServiceException;
 
-    List<Change> diffWorkspaceContent(String wskey, String lsnapshot, String rsnapshot) throws CoreServiceException, AccessDeniedException;
+    List<Change> diffWorkspaceContent(String wskey, String lsnapshot, String rsnapshot) throws CoreServiceException;
 
     List<String> listAllWorkspaceAlias() throws CoreServiceException, AccessDeniedException;
 
-    String resolveWorkspaceAlias(String alias) throws CoreServiceException, AccessDeniedException, AliasNotFoundException;
+    String resolveWorkspaceAlias(String alias) throws CoreServiceException, AliasNotFoundException;
 
-    String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, PathNotFoundException, AccessDeniedException;
+    String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, PathNotFoundException;
 
     String resolveWorkspaceMetadata(String wskey, String root, String path, String name) throws CoreServiceException, InvalidPathException, PathNotFoundException, AccessDeniedException;
 
-    String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+    String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException;
     
     void changeWorkspaceOwner(String wskey, String newOwner) throws CoreServiceException;
 
@@ -131,7 +131,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
             throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException,
             KeyAlreadyExistsException;
 
-    Collection createCollection(String wskey, String key, String path) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
+    Collection createCollection(String wskey, String key, String path) throws CoreServiceException, WorkspaceReadOnlyException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
 
     Collection readCollection(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
@@ -149,11 +149,11 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
             throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException,
             KeyAlreadyExistsException;
 
-    DataObject createDataObject(String wskey, String key, String path, String hash) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
+    DataObject createDataObject(String wskey, String key, String path, String hash) throws CoreServiceException, WorkspaceReadOnlyException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
 
     DataObject readDataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
-    DataObject updateDataObject(String wskey, String path, String hash) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException;
+    DataObject updateDataObject(String wskey, String path, String hash) throws CoreServiceException, WorkspaceReadOnlyException, InvalidPathException, PathNotFoundException, AccessDeniedException;
 
     DataObject moveDataObject(String wskey, String from, String to) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
 
@@ -163,9 +163,9 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
     Link createLink(String wskey, String path, String target) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
 
-    Link createLink(String wskey, String key, String path, String target) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
+    Link createLink(String wskey, String key, String path, String target) throws CoreServiceException, WorkspaceReadOnlyException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
 
-    Link updateLink(String wskey, String path, String target)  throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException;
+    Link updateLink(String wskey, String path, String target)  throws CoreServiceException, WorkspaceReadOnlyException, InvalidPathException, PathNotFoundException, AccessDeniedException;
 
     Link moveLink(String wskey, String from, String to) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
 
@@ -173,9 +173,9 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
     Link readLink(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
-    List<String> findLinksForTarget(String target) throws CoreServiceException, AccessDeniedException;
+    List<String> findLinksForTarget(String target) throws CoreServiceException;
 
-    String resolveLinkTarget(String target) throws CoreServiceException, AliasNotFoundException, InvalidPathException, KeyNotFoundException, PathNotFoundException, AccessDeniedException;
+    String resolveLinkTarget(String target) throws CoreServiceException, AliasNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException;
     
     /*MetadataObject*/
 
@@ -183,9 +183,10 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
             throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException,
             KeyAlreadyExistsException;
 
-    MetadataObject createMetadataObject(String wskey, String key, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
+    MetadataObject createMetadataObject(String wskey, String key, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException, WorkspaceReadOnlyException,
+            KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, MetadataFormatException;
 
-    List<String> findMetadataObjectsForTarget(String target) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
+    List<String> findMetadataObjectsForTarget(String target) throws CoreServiceException, AccessDeniedException;
 
     List<String> findMetadataObjectsForTargetAndName(String target, String name) throws CoreServiceException, AccessDeniedException;
 
@@ -193,9 +194,10 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
     MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
 
-    MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren, String format) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
+    MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren, String format) throws CoreServiceException, WorkspaceReadOnlyException,
+            InvalidPathException, PathNotFoundException, MetadataFormatException;
 
-    void deleteMetadataObject(String wskey, String path, String name, boolean recursive) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException;
+    void deleteMetadataObject(String wskey, String path, String name, boolean recursive) throws CoreServiceException, WorkspaceReadOnlyException, InvalidPathException, PathNotFoundException;
 
     String readPublicationPolicy(String key) throws KeyNotFoundException, RegistryServiceException, DataNotFoundException, BinaryStoreServiceException, IOException, CoreServiceException;
 
@@ -207,13 +209,13 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
     String createMetadataFormat(String name, String description, String schema, String form, boolean validationNeeded, boolean indexable) throws CoreServiceException;
 
-    MetadataFormat getMetadataFormat(String name) throws CoreServiceException;
+    MetadataFormat getMetadataFormat(String name);
 
     MetadataFormat findMetadataFormatById(String id) throws CoreServiceException;
 
     List<MetadataFormat> listMetadataFormat() throws CoreServiceException;
 
-    List<MetadataFormat> listAllMetadataFormat() throws CoreServiceException;
+    List<MetadataFormat> listAllMetadataFormat();
 	
 	/*BinaryContent*/
 
@@ -233,7 +235,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     void systemUpdateWorkspace(String wskey, String alias, boolean changed, String head, String members, String privileged, boolean readOnly, String type) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;
 
     void systemCreateMetadata(String key, String name, String hash, String filename)
-            throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
+            throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
             IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException;
 
 }

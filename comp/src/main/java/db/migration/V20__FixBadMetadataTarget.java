@@ -51,7 +51,8 @@ import fr.ortolang.diffusion.core.entity.MetadataElement;
 public class V20__FixBadMetadataTarget implements JdbcMigration {
 
     private static final Logger LOGGER = Logger.getLogger(V20__FixBadMetadataTarget.class.getName());
-    
+
+    @Override
     public void migrate(Connection connection) throws Exception {
         try {
             PreparedStatement col_stmt = connection.prepareStatement("SELECT * FROM collection;");

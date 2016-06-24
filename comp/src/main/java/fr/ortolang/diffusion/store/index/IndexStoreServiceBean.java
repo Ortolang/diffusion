@@ -106,7 +106,6 @@ public class IndexStoreServiceBean implements IndexStoreService {
     private Path base;
     private Analyzer analyzer;
     private Directory directory;
-    private IndexWriterConfig config;
     private IndexWriter writer;
 
     public IndexStoreServiceBean() {
@@ -121,7 +120,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
             analyzer = new FrenchAnalyzer();
             directory = FSDirectory.open(base);
             LOGGER.log(Level.FINEST, "directory implementation: " + directory.getClass());
-            config = new IndexWriterConfig(analyzer);
+            IndexWriterConfig config = new IndexWriterConfig(analyzer);
             writer = new IndexWriter(directory, config);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "unable to configure lucene index writer", e);

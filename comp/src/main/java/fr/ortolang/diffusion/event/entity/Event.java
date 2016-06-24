@@ -203,7 +203,7 @@ public class Event extends OrtolangEvent implements Serializable {
     }
 
     private static String serializeArgs(Map<String, String> args) throws IOException {
-        if (args == null || args.size() == 0 ) {
+        if (args == null || args.isEmpty() ) {
             return "";
         }
         Properties props = new Properties();
