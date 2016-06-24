@@ -760,7 +760,6 @@ public class CoreServiceBean implements CoreService {
             if (element == null) {
                 throw new PathNotFoundException(npath.build());
             }
-
             return element.getKey();
         } catch (KeyNotFoundException | RegistryServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during resolving path", e);
@@ -773,41 +772,10 @@ public class CoreServiceBean implements CoreService {
     public String resolveWorkspaceMetadata(String wskey, String root, String path, String name) throws CoreServiceException, InvalidPathException, AccessDeniedException, PathNotFoundException {
         LOGGER.log(Level.FINE, "resolving into workspace [" + wskey + "] and root [" + root + "] metadata with name [" + name + "] at path [" + path + "]");
         try {
-            PathBuilder npath = PathBuilder.fromPath(path);
-
             String key = resolveWorkspacePath(wskey, root, path);
-            OrtolangObjectIdentifier ctidentifier = registry.lookup(key);
-            if (!ctidentifier.getType().equals(Link.OBJECT_TYPE) && !ctidentifier.getType().equals(Collection.OBJECT_TYPE) && !ctidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
-                throw new InvalidPathException("path [" + npath.build() + "] does not exists");
-            }
-            MetadataElement cmdelement;
-            switch (ctidentifier.getType()) {
-            case Collection.OBJECT_TYPE:
-                Collection collection = em.find(Collection.class, ctidentifier.getId());
-                if (collection == null) {
-                    throw new CoreServiceException("unable to load collection with id [" + ctidentifier.getId() + "] from storage");
-                }
-                cmdelement = collection.findMetadataByName(name);
-                break;
-            case DataObject.OBJECT_TYPE:
-                DataObject object = em.find(DataObject.class, ctidentifier.getId());
-                if (object == null) {
-                    throw new CoreServiceException("unable to load object with id [" + ctidentifier.getId() + "] from storage");
-                }
-                cmdelement = object.findMetadataByName(name);
-                break;
-            case Link.OBJECT_TYPE:
-                Link link = em.find(Link.class, ctidentifier.getId());
-                if (link == null) {
-                    throw new CoreServiceException("unable to load link with id [" + ctidentifier.getId() + "] from storage");
-                }
-                cmdelement = link.findMetadataByName(name);
-                break;
-            default:
-                throw new CoreServiceException("Current metadata target should be a Metadata Source not a " + ctidentifier.getType());
-            }
+            MetadataElement cmdelement = loadMetadataElement(name, key);
             if (cmdelement == null) {
-                throw new InvalidPathException("path [" + npath.build() + "] does not exists");
+                throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for at path [" + path + "]");
             }
             return cmdelement.getKey();
         } catch (KeyNotFoundException | RegistryServiceException e) {
@@ -3003,38 +2971,9 @@ public class CoreServiceBean implements CoreService {
             LOGGER.log(Level.FINEST, "user [" + caller + "] has 'create' permission on the head collection of this workspace");
 
             String current = resolveWorkspacePath(wskey, Workspace.HEAD, npath.build());
-            OrtolangObjectIdentifier ctidentifier = registry.lookup(current);
-            if (!ctidentifier.getType().equals(Link.OBJECT_TYPE) && !ctidentifier.getType().equals(Collection.OBJECT_TYPE) && !ctidentifier.getType().equals(DataObject.OBJECT_TYPE)) {
-                throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
-            }
-            MetadataElement cmdelement;
-            switch (ctidentifier.getType()) {
-            case Collection.OBJECT_TYPE:
-                Collection collection = em.find(Collection.class, ctidentifier.getId());
-                if (collection == null) {
-                    throw new CoreServiceException("unable to load collection with id [" + ctidentifier.getId() + "] from storage");
-                }
-                cmdelement = collection.findMetadataByName(name);
-                break;
-            case DataObject.OBJECT_TYPE:
-                DataObject object = em.find(DataObject.class, ctidentifier.getId());
-                if (object == null) {
-                    throw new CoreServiceException("unable to load object with id [" + ctidentifier.getId() + "] from storage");
-                }
-                cmdelement = object.findMetadataByName(name);
-                break;
-            case Link.OBJECT_TYPE:
-                Link link = em.find(Link.class, ctidentifier.getId());
-                if (link == null) {
-                    throw new CoreServiceException("unable to load link with id [" + ctidentifier.getId() + "] from storage");
-                }
-                cmdelement = link.findMetadataByName(name);
-                break;
-            default:
-                throw new CoreServiceException("Current metadata target should be a Metadata Source not a " + ctidentifier.getType());
-            }
+            MetadataElement cmdelement = loadMetadataElement(name, current);
             if (cmdelement == null) {
-                throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for " + ctidentifier.getType() + " at path [" + npath.build() + "]");
+                throw new CoreServiceException("a metadata object with name [" + name + "] does not exists for at path [" + npath.build() + "]");
             }
             OrtolangObjectIdentifier cidentifier = registry.lookup(cmdelement.getKey());
             checkObjectType(cidentifier, MetadataObject.OBJECT_TYPE);
@@ -3139,7 +3078,7 @@ public class CoreServiceBean implements CoreService {
                 em.merge(link);
                 break;
             default:
-                throw new CoreServiceException("Current metadata target should be a Metadata Source not a " + ctidentifier.getType());
+                throw new CoreServiceException("Metadata target should be a Metadata Source not a " + tidentifier.getType());
             }
             
             if (mdelement == null) {
@@ -3164,6 +3103,32 @@ public class CoreServiceBean implements CoreService {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred during metadata deletion", e);
             throw new CoreServiceException("unable to delete metadata into workspace [" + wskey + "] for path [" + path + "]", e);
+        }
+    }
+
+    private MetadataElement loadMetadataElement(String name, String target) throws CoreServiceException, KeyNotFoundException, RegistryServiceException {
+        OrtolangObjectIdentifier targetIdentifier = registry.lookup(target);
+        switch (targetIdentifier.getType()) {
+        case Collection.OBJECT_TYPE:
+            Collection collection = em.find(Collection.class, targetIdentifier.getId());
+            if (collection == null) {
+                throw new CoreServiceException("unable to load collection with id [" + targetIdentifier.getId() + "] from storage");
+            }
+            return collection.findMetadataByName(name);
+        case DataObject.OBJECT_TYPE:
+            DataObject object = em.find(DataObject.class, targetIdentifier.getId());
+            if (object == null) {
+                throw new CoreServiceException("unable to load object with id [" + targetIdentifier.getId() + "] from storage");
+            }
+            return object.findMetadataByName(name);
+        case Link.OBJECT_TYPE:
+            Link link = em.find(Link.class, targetIdentifier.getId());
+            if (link == null) {
+                throw new CoreServiceException("unable to load link with id [" + targetIdentifier.getId() + "] from storage");
+            }
+            return link.findMetadataByName(name);
+        default:
+            throw new CoreServiceException("Metadata target should be a Metadata Source not a " + targetIdentifier.getType());
         }
     }
 
