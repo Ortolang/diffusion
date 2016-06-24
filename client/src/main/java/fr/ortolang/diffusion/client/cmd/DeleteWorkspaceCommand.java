@@ -56,7 +56,7 @@ public class DeleteWorkspaceCommand extends Command {
         options.addOption("P", "password", true, "password for login");
         options.addOption("k", "key", true, "the workspace key");
         options.addOption("a", "alias", true, "the workspace alias");
-        options.addOption("f", "force", false, "force the supression even if workspace contains published versions (must be root)");
+        options.addOption("f", "force", false, "force the suppression even if workspace contains published versions (must be root)");
     }
 
     @Override
@@ -91,7 +91,7 @@ public class DeleteWorkspaceCommand extends Command {
                 client.login(username);
             }
             System.out.println("Connected as user: " + client.connectedProfile());
-            String pkey = client.createProcess("delete-workspace", "Delete Workspace " + ((cmd.hasOption("k")?cmd.getOptionValue("k"):cmd.getOptionValue("a"))), params, Collections.<String, File> emptyMap());
+            String pkey = client.createProcess("delete-workspace", "Delete Workspace " + (cmd.hasOption("k") ? cmd.getOptionValue("k") : cmd.getOptionValue("a")), params, Collections.<String, File> emptyMap());
             System.out.println("Delete-Workspace process created with key : " + pkey);
 
             client.logout();

@@ -243,7 +243,7 @@ import java.util.regex.Pattern;
         treatedNodes.add(node);
         if (Files.isDirectory(node)) {
             for (String child : node.toFile().list()) {
-                checkPathPermissions(Paths.get(node.toString(), child), Paths.get(nodeMD.toString(), child), ((nodeLevel < 0) ? 0 : nodeLevel), treatedNodes);
+                checkPathPermissions(Paths.get(node.toString(), child), Paths.get(nodeMD.toString(), child), (nodeLevel < 0 ? 0 : nodeLevel), treatedNodes);
             }
         }
     }

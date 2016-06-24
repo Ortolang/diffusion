@@ -169,10 +169,7 @@ public abstract class OrtolangEvent {
         }
 
         public ArgumentsBuilder addArgument(String key, String value) {
-            if ( value == null ) {
-                value = "";
-            }
-            args.put(key, value);
+            args.put(key, value == null ? "" : value);
             return this;
         }
 

@@ -199,12 +199,12 @@ public class OrtolangCoreFile implements FtpFile {
 
     @Override
     public boolean isDirectory() {
-        return (doesExist() && object.getObjectIdentifier().getType().equals(Collection.OBJECT_TYPE));
+        return doesExist() && object.getObjectIdentifier().getType().equals(Collection.OBJECT_TYPE);
     }
 
     @Override
     public boolean isFile() {
-        return (doesExist() && object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE));
+        return doesExist() && object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE);
     }
 
     @Override

@@ -144,9 +144,9 @@ public class MessageResource {
         representation.setLimit(limit);
         representation.setSize(wsfeeds.size());
         representation.setFirst(messages.clone().queryParam("wskey", wskey).queryParam("o", 0).queryParam("l", limit).build());
-        representation.setPrevious(messages.clone().queryParam("wskey", wskey).queryParam("o", Math.max(0, (offset - limit))).queryParam("l", limit).build());
+        representation.setPrevious(messages.clone().queryParam("wskey", wskey).queryParam("o", Math.max(0, offset - limit)).queryParam("l", limit).build());
         representation.setSelf(messages.clone().queryParam("wskey", wskey).queryParam("o", offset).queryParam("l", limit).build());
-        representation.setNext(messages.clone().queryParam("wskey", wskey).queryParam("o", (wsfeeds.size() > (offset + limit)) ? (offset + limit) : offset).queryParam("l", limit).build());
+        representation.setNext(messages.clone().queryParam("wskey", wskey).queryParam("o", (wsfeeds.size() > offset + limit) ? (offset + limit) : offset).queryParam("l", limit).build());
         representation.setLast(messages.clone().queryParam("wskey", wskey).queryParam("o", ((wsfeeds.size() - 1) / limit) * limit).queryParam("l", limit).build());
         return Response.ok(representation).build();
     }
@@ -197,9 +197,9 @@ public class MessageResource {
             representation.setLimit(limit);
             representation.setSize(size);
             representation.setFirst(content.clone().queryParam("key", key).queryParam("o", 0).queryParam("l", limit).build());
-            representation.setPrevious(content.clone().queryParam("key", key).queryParam("o", Math.max(0, (offset - limit))).queryParam("l", limit).build());
+            representation.setPrevious(content.clone().queryParam("key", key).queryParam("o", Math.max(0, offset - limit)).queryParam("l", limit).build());
             representation.setSelf(content.clone().queryParam("key", key).queryParam("o", offset).queryParam("l", limit).build());
-            representation.setNext(content.clone().queryParam("key", key).queryParam("o", (size > (offset + limit)) ? (offset + limit) : offset).queryParam("l", limit).build());
+            representation.setNext(content.clone().queryParam("key", key).queryParam("o", size > offset + limit ? offset + limit : offset).queryParam("l", limit).build());
             representation.setLast(content.clone().queryParam("key", key).queryParam("o", ((size - 1) / limit) * limit).queryParam("l", limit).build());
         } else {
             msgs = service.browseThreadSinceDate(key, from);
@@ -269,7 +269,7 @@ public class MessageResource {
                 String name = "unknown";
                 String[] contentDisposition = part.getHeaders().getFirst("Content-Disposition").split(";");
                 for (String filename : contentDisposition) {
-                    if ((filename.trim().startsWith("filename"))) {
+                    if (filename.trim().startsWith("filename")) {
                         String[] names = filename.split("=");
                         name = names[1].trim().replaceAll("\"", "");
                     }

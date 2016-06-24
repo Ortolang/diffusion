@@ -121,9 +121,9 @@ public class ObjectResource {
         representation.setSize(nbentries);
         representation.setLimit(keys.size());
         representation.setFirst(objects.clone().queryParam("offset", 0).queryParam("limit", limit).build());
-        representation.setPrevious(objects.clone().queryParam("offset", Math.max(0, (offset - limit))).queryParam("limit", limit).build());
+        representation.setPrevious(objects.clone().queryParam("offset", Math.max(0, offset - limit)).queryParam("limit", limit).build());
         representation.setSelf(objects.clone().queryParam("offset", offset).queryParam("limit", limit).build());
-        representation.setNext(objects.clone().queryParam("offset", (nbentries > (offset + limit)) ? (offset + limit) : offset).queryParam("limit", limit).build());
+        representation.setNext(objects.clone().queryParam("offset", nbentries > offset + limit ? (offset + limit) : offset).queryParam("limit", limit).build());
         representation.setLast(objects.clone().queryParam("offset", ((nbentries - 1) / limit) * limit).queryParam("limit", limit).build());
         return Response.ok(representation).build();
     }

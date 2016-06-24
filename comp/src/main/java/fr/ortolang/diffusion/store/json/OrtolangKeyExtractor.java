@@ -71,14 +71,10 @@ public class OrtolangKeyExtractor {
 
     public static String replaceOrtolangKey(String ortolangKey, String json) throws OrtolangException, NotIndexableContentException {
         String jsonContent = jsonContent(ortolangKey);
-
-        if(jsonContent!=null) {
-            json = json.replace("\""+OrtolangKeyExtractor.getMarker(ortolangKey)+"\"", jsonContent);
-        } else {
+        if (jsonContent == null) {
             throw new OrtolangException("cannot found ortolang key : " + ortolangKey);
         }
-
-        return json;
+        return json.replace("\""+OrtolangKeyExtractor.getMarker(ortolangKey)+"\"", jsonContent);
     }
 
     public static String jsonContent(String key) throws NotIndexableContentException, OrtolangException {

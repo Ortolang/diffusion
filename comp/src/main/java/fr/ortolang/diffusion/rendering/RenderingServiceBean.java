@@ -191,7 +191,7 @@ public class RenderingServiceBean implements RenderingService {
                         processed = process(key, template, data);
                     }
                 } else if (object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE)) {
-                    LOGGER.log(Level.FINEST, "key is a dataobject, serching render engine");
+                    LOGGER.log(Level.FINEST, "key is a DataObject, searching render engine");
                     RenderEngine engine = null;
                     if (engineid.length() > 0) {
                         engine = engines.get(engineid);
