@@ -72,7 +72,7 @@ public class ClientResource {
     private static String authRealm;
     private static String appName;
     private static String callbackUrl;
-    private static Map<String, String> states = new HashMap<String, String> ();
+    private static Map<String, String> states = new HashMap<>();
     private static OrtolangClient client = OrtolangClient.getInstance();
 
     @Context
@@ -80,7 +80,7 @@ public class ClientResource {
 
     public ClientResource() throws IOException {
         LOGGER.log(Level.INFO, "Creating new ClientResource");
-        if ( !initialized ) {
+        if (!initialized) {
             authUrl = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.url");
             authRealm = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.realm");
             appName = OrtolangClientConfig.getInstance().getProperty("client.app.name");
@@ -94,39 +94,23 @@ public class ClientResource {
     public Response getAuthStatus() {
         LOGGER.log(Level.INFO, "Checking grant status for " + ctx.getUserPrincipal());
         String user;
-        if ( ctx.getUserPrincipal() != null ) {
+        if (ctx.getUserPrincipal() != null) {
             user = ctx.getUserPrincipal().getName();
         } else {
             return Response.status(Status.UNAUTHORIZED).build();
         }
-        if ( !client.getAccountManager().exists(user) ) {
+        if (!client.getAccountManager().exists(user)) {
             LOGGER.log(Level.FINE, "Generating authentication url");
-            String state = UUID.randomUUID().toString();
-            states.put(state, user);
-            StringBuilder url = new StringBuilder();
-            url.append(authUrl).append("/realms/").append(authRealm);
-            url.append("/tokens/login?client_id=").append(appName);
-            url.append("&state=").append(state);
-            url.append("&response_type=code");
-            url.append("&redirect_uri=").append(callbackUrl);
-            JsonObject jsonObject = Json.createObjectBuilder().add("url", url.toString()).build();
-            return Response.ok(jsonObject).build();
-
-        } else if( client.getAccountManager().sessionExpired(user) ){
+        } else if (client.getAccountManager().sessionExpired(user)) {
             LOGGER.log(Level.FINE, "Re-generating authentication url");
-            String state = UUID.randomUUID().toString();
-            states.put(state, user);
-            StringBuilder url = new StringBuilder();
-            url.append(authUrl).append("/realms/").append(authRealm);
-            url.append("/tokens/login?client_id=").append(appName);
-            url.append("&state=").append(state);
-            url.append("&response_type=code");
-            url.append("&redirect_uri=").append(callbackUrl);
-            JsonObject jsonObject = Json.createObjectBuilder().add("url", url.toString()).build();
-            return Response.ok(jsonObject).build();
         } else {
             return Response.ok().build();
         }
+        String state = UUID.randomUUID().toString();
+        states.put(state, user);
+        String url = authUrl + "/realms/" + authRealm + "/tokens/login?client_id=" + appName + "&state=" + state + "&response_type=code&redirect_uri=" + callbackUrl;
+        JsonObject jsonObject = Json.createObjectBuilder().add("url", url).build();
+        return Response.ok(jsonObject).build();
     }
 
     @GET
@@ -134,7 +118,7 @@ public class ClientResource {
     @Produces(MediaType.TEXT_HTML)
     public Response setAuthCode(@QueryParam("code") String code, @QueryParam("state") String state) {
         LOGGER.log(Level.INFO, "Setting grant code");
-        if ( states.containsKey(state) ) {
+        if (states.containsKey(state)) {
             try {
                 client.getAccountManager().setAuthorisationCode(states.get(state), code);
             } catch (OrtolangClientAccountException e) {
@@ -151,7 +135,7 @@ public class ClientResource {
     public Response revoke() {
         LOGGER.log(Level.INFO, "Revoking grant");
         //String user = null;
-        if ( ctx.getUserPrincipal() == null ) {
+        if (ctx.getUserPrincipal() == null) {
             return Response.status(Status.UNAUTHORIZED).build();
         }
         //user = ctx.getUserPrincipal().getName();
