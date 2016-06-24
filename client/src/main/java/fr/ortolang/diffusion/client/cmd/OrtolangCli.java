@@ -55,6 +55,7 @@ public class OrtolangCli {
 		commands.put("check-bag", CheckBagCommand.class.getName());
 		commands.put("reindex-all-root-collection", ReindexAllRootCollectionCommand.class.getName());
 		commands.put("reindex", ReindexCommand.class.getName());
+		commands.put("cp", CopyCommand.class.getName());
 	}
 	
 	public static OrtolangCli getInstance() {
