@@ -14,8 +14,7 @@ public class CopyCommandTest {
 
 	private static Logger logger = Logger.getLogger(CopyCommandTest.class.toString());
 	
-
-	@Test
+//	@Test
 	public void copy() throws IOException, OrtolangClientException, OrtolangClientAccountException {
 		CopyCommand cmd = new CopyCommand();
 		List<String> argList = new ArrayList<String>();
@@ -23,7 +22,9 @@ public class CopyCommandTest {
 		argList.add("root");
 		argList.add("-P");
 		argList.add("tagada54");
-		argList.add("/Users/cpestel/tmp/test");
+        argList.add("-w");
+        argList.add("2d804775-a7e9-40ab-beab-726ead79da27");
+		argList.add("src/test/resources/copy");
 		argList.add("/");
 		cmd.execute(argList.toArray(new String[0]));
 	}
