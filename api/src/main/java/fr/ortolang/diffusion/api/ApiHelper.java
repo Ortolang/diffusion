@@ -42,6 +42,9 @@ import javax.ws.rs.core.CacheControl;
 
 public class ApiHelper {
 
+    private ApiHelper() {
+    }
+
     public static CacheControl setCacheControlFromState(OrtolangObjectState state, CacheControl cacheControl) {
         if (state.isLocked()) {
             // 691200 = 8 days

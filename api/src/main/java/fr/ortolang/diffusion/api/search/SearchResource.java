@@ -319,15 +319,14 @@ import java.util.logging.Logger;
         String group = null;
         Map<String, Object> fieldsMap = new HashMap<String, Object>();
         for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
-            if (parameter.getKey().equals("fields")) {
+            if ("fields".equals(parameter.getKey())) {
                 fields = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("content")) {
+            } else if ("content".equals(parameter.getKey())) {
                 content = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("group")) {
+            } else if ("group".equals(parameter.getKey())) {
                 group = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("scope")) {
+            } else if (!parameter.getKey().equals("scope")) {
                 // Ignore scope param
-            } else {
                 if (parameter.getKey().endsWith("[]")) {
                     List<String> paramArr = new ArrayList<String>();
                     Collections.addAll(paramArr, parameter.getValue());

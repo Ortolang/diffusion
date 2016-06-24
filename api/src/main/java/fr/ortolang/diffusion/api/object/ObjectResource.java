@@ -44,7 +44,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -290,8 +289,7 @@ public class ObjectResource {
     @GET
     @Path("/{key}/size")
     @GZIP
-    public Response getObjectSize(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws OrtolangException, KeyNotFoundException,
-            CoreServiceException {
+    public Response getObjectSize(@PathParam(value = "key") String key) throws OrtolangException, KeyNotFoundException, CoreServiceException {
         LOGGER.log(Level.INFO, "GET /objects/" + key + "/size");
         OrtolangObjectSize ortolangObjectSize = core.getSize(key);
         return Response.ok(ortolangObjectSize).build();
@@ -300,7 +298,7 @@ public class ObjectResource {
     @POST
     @Path("/{key}/index")
     @GZIP
-    public Response reindex(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, KeyNotFoundException, BrowserServiceException {
+    public Response reindex(@PathParam(value = "key") String key) throws AccessDeniedException, KeyNotFoundException, BrowserServiceException {
         LOGGER.log(Level.INFO, "POST /objects/" + key + "/index");
         browser.index(key);
         return Response.ok().build();
@@ -309,7 +307,7 @@ public class ObjectResource {
     @GET
     @Path("/{key}/authorized")
     @GZIP
-    public Response isAuthorized(@PathParam(value = "key") String key, @DefaultValue(value = "download") @QueryParam(value = "permission") String permission, @Context Request request) throws OrtolangException, KeyNotFoundException,
+    public Response isAuthorized(@PathParam(value = "key") String key, @DefaultValue(value = "download") @QueryParam(value = "permission") String permission) throws OrtolangException, KeyNotFoundException,
             InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
         LOGGER.log(Level.INFO, "GET /objects/" + key + "/authorized");
         Map<String, Boolean> map = new HashMap<>(1);

@@ -48,39 +48,42 @@ import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 
 public class OrtolangKeyExtractor {
 
-	public static final Pattern ORTOLANG_KEY_MATCHER = Pattern.compile("\\$\\{([\\w\\d:\\.\\-_]*)\\}");
-
-	public static String getMarker(String ortolangKey) {
-		return "${"+ortolangKey+"}";
-	}
-	
-	public static List<String> extractOrtolangKeys(String json) {
-		Matcher okMatcher = OrtolangKeyExtractor.ORTOLANG_KEY_MATCHER.matcher(json);
-		List<String> ortolangKeys = new ArrayList<String>();
-		while(okMatcher.find()) {
-		    if(!ortolangKeys.contains(okMatcher.group(1))) {
-		        ortolangKeys.add(okMatcher.group(1));
-		    }
-		}
-		return ortolangKeys;
-	}
-	
-
-	public static String replaceOrtolangKey(String ortolangKey, String json) throws OrtolangException, NotIndexableContentException {
-		String jsonContent = jsonContent(ortolangKey);
-		
-		if(jsonContent!=null) {
-			json = json.replace("\""+OrtolangKeyExtractor.getMarker(ortolangKey)+"\"", jsonContent);
-		} else {
-			throw new OrtolangException("cannot found ortolang key : " + ortolangKey);
-		}
-		
-		return json;
+    private OrtolangKeyExtractor() {
     }
 
-	public static String jsonContent(String key) throws NotIndexableContentException, OrtolangException {
-    	OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
+    public static final Pattern ORTOLANG_KEY_MATCHER = Pattern.compile("\\$\\{([\\w\\d:\\.\\-_]*)\\}");
+
+    public static String getMarker(String ortolangKey) {
+        return "${"+ortolangKey+"}";
+    }
+
+    public static List<String> extractOrtolangKeys(String json) {
+        Matcher okMatcher = OrtolangKeyExtractor.ORTOLANG_KEY_MATCHER.matcher(json);
+        List<String> ortolangKeys = new ArrayList<String>();
+        while(okMatcher.find()) {
+            if(!ortolangKeys.contains(okMatcher.group(1))) {
+                ortolangKeys.add(okMatcher.group(1));
+            }
+        }
+        return ortolangKeys;
+    }
+
+
+    public static String replaceOrtolangKey(String ortolangKey, String json) throws OrtolangException, NotIndexableContentException {
+        String jsonContent = jsonContent(ortolangKey);
+
+        if(jsonContent!=null) {
+            json = json.replace("\""+OrtolangKeyExtractor.getMarker(ortolangKey)+"\"", jsonContent);
+        } else {
+            throw new OrtolangException("cannot found ortolang key : " + ortolangKey);
+        }
+
+        return json;
+    }
+
+    public static String jsonContent(String key) throws NotIndexableContentException, OrtolangException {
+        OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
         return JsonStoreDocumentBuilder.buildDocument(object);
-	}
+    }
 
 }

@@ -48,7 +48,10 @@ import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.codec.binary.Base32;
 
 public class TOTPHelper {
-    
+
+    private TOTPHelper() {
+    }
+
     private static final Random rand = new Random();
 
     public static String generateSecret() {

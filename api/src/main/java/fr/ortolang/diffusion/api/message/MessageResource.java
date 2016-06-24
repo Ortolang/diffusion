@@ -63,7 +63,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.StreamingOutput;
@@ -130,7 +129,7 @@ public class MessageResource {
     @GET
     @GZIP
     public Response listThreads(@QueryParam(value = "wskey") String wskey, @QueryParam(value = "o") @DefaultValue(value = "0") int offset,
-            @QueryParam(value = "l") @DefaultValue(value = "10") int limit, @Context Request request) throws KeyNotFoundException, AccessDeniedException, MessageServiceException, BrowserServiceException {
+            @QueryParam(value = "l") @DefaultValue(value = "10") int limit) throws KeyNotFoundException, AccessDeniedException, MessageServiceException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /threads?wskey=" + wskey);
         List<String> wsfeeds = service.findThreadsForWorkspace(wskey);
         GenericCollectionRepresentation<ThreadRepresentation> representation = new GenericCollectionRepresentation<ThreadRepresentation>();
@@ -155,7 +154,7 @@ public class MessageResource {
     @GET
     @Path("/{key}")
     @GZIP
-    public Response getThread(@PathParam(value = "key") String key, @Context Request request) throws KeyNotFoundException, AccessDeniedException, MessageServiceException, BrowserServiceException {
+    public Response getThread(@PathParam(value = "key") String key) throws KeyNotFoundException, AccessDeniedException, MessageServiceException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /threads/" + key);
         Thread thread = service.readThread(key);
         OrtolangObjectInfos infos = browser.getInfos(key);
@@ -186,7 +185,7 @@ public class MessageResource {
     @Path("/{key}/messages")
     @GZIP
     public Response browseThread(@PathParam(value = "key") String key, @QueryParam(value = "fromdate") Date from, @QueryParam(value = "o") @DefaultValue(value = "0") int offset,
-            @QueryParam(value = "l") @DefaultValue(value = "10") int limit, @Context Request request) throws KeyNotFoundException, MessageServiceException, OrtolangException, BrowserServiceException {
+            @QueryParam(value = "l") @DefaultValue(value = "10") int limit) throws KeyNotFoundException, MessageServiceException, OrtolangException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /threads/" + key + "/messages");
         GenericCollectionRepresentation<MessageRepresentation> representation = new GenericCollectionRepresentation<MessageRepresentation>();
         UriBuilder content = ApiUriBuilder.getApiUriBuilder().path(MessageResource.class).path(key).path("messages");

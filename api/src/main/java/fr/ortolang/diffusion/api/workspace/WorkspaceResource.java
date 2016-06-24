@@ -659,11 +659,11 @@ public class WorkspaceResource {
     @GET
     @Path("/{wskey}/events")
     @GZIP
-    public Response listWorkspaceEvents(@PathParam(value = "wskey") String wskey, @QueryParam(value = "offset") @DefaultValue(value = "0") int offset, @QueryParam(value = "limit") @DefaultValue(value = "25") int limit, @Context Request request)
+    public Response listWorkspaceEvents(@PathParam(value = "wskey") String wskey, @QueryParam(value = "offset") @DefaultValue(value = "0") int offset, @QueryParam(value = "limit") @DefaultValue(value = "25") int limit)
             throws EventServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/events");
         long wscreation = browser.getInfos(wskey).getCreationDate();
-        GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>();
+        GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<>();
         List<OrtolangEvent> events = event.findEvents(null, wskey, null, null, wscreation, offset, limit);
         representation.setEntries(events);
         representation.setOffset(offset);
@@ -675,7 +675,7 @@ public class WorkspaceResource {
     @GET
     @Path("/{wskey}/diff")
     @GZIP
-    public Response diffWorkspaceContent(@PathParam(value = "wskey") String wskey, @QueryParam(value = "lsnapshot") String lsnapshot, @QueryParam(value = "rsnapshot") String rsnapshot, @Context Request request)
+    public Response diffWorkspaceContent(@PathParam(value = "wskey") String wskey, @QueryParam(value = "lsnapshot") String lsnapshot, @QueryParam(value = "rsnapshot") String rsnapshot)
             throws AccessDeniedException, CoreServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/diff");
         List<Change> changes = core.diffWorkspaceContent(wskey, lsnapshot, rsnapshot);

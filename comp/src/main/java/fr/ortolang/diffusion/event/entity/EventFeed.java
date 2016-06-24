@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.event.entity;
  * #L%
  */
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 

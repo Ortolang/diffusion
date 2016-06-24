@@ -105,7 +105,7 @@ public class OAI_DC {
     }
 
     public static OAI_DC valueOf(JsonObject doc, JsonObject workspaceDoc) {
-        OAI_DC oai_dc = new OAI_DC();
+        OAI_DC oaiDc = new OAI_DC();
 
         JsonObject workspace = doc.getJsonObject("meta_ortolang-workspace-json");
         //        String snapshotName = workspace.getString("snapshotName");
@@ -114,23 +114,23 @@ public class OAI_DC {
         //        if(tags!=null) {
         //        	for(JsonObject tag : tags.getValuesAs(JsonObject.class)) {
         //        		if(tag.getString("snapshot").equals(snapshotName)) {
-        //        			oai_dc.addDcField("identifier", identifier(workspace.getString("wsalias"), tag.getString("name")));
+        //        			oaiDc.addDcField("identifier", identifier(workspace.getString("wsalias"), tag.getString("name")));
         //        		}
         //        	}
         //        }
-        oai_dc.addDcField("identifier", identifier(workspace.getString("wsalias")));
+        oaiDc.addDcField("identifier", identifier(workspace.getString("wsalias")));
 
         JsonObject meta = doc.getJsonObject("meta_ortolang-item-json");
 
         try {
             JsonArray multilingualTitles = meta.getJsonArray("title");
             for(JsonObject multilingualTitle : multilingualTitles.getValuesAs(JsonObject.class)) {
-                oai_dc.addDcMultilingualField("title", multilingualTitle.getString("lang"), removeHTMLTag(multilingualTitle.getString("value")));
+                oaiDc.addDcMultilingualField("title", multilingualTitle.getString("lang"), removeHTMLTag(multilingualTitle.getString("value")));
             }
 
             JsonArray multilingualDescriptions = meta.getJsonArray("description");
             for(JsonObject multilingualTitle : multilingualDescriptions.getValuesAs(JsonObject.class)) {
-                oai_dc.addDcMultilingualField("description", multilingualTitle.getString("lang"), removeHTMLTag(multilingualTitle.getString("value")));
+                oaiDc.addDcMultilingualField("description", multilingualTitle.getString("lang"), removeHTMLTag(multilingualTitle.getString("value")));
             }
 
             JsonArray corporaLanguages = meta.getJsonArray("corporaLanguages");
@@ -140,17 +140,17 @@ public class OAI_DC {
                     JsonArray multilingualLabels = metaLanguage.getJsonArray("labels");
 
                     for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-                        oai_dc.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
-                        oai_dc.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
+                        oaiDc.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
+                        oaiDc.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
                     }
-                    oai_dc.addDcField("language", metaLanguage.getString("id"));
+                    oaiDc.addDcField("language", metaLanguage.getString("id"));
                 }
             }
 
             JsonArray multilingualKeywords = meta.getJsonArray("keywords");
             if(multilingualKeywords!=null) {
                 for(JsonObject multilingualKeyword : multilingualKeywords.getValuesAs(JsonObject.class)) {
-                    oai_dc.addDcMultilingualField("subject", multilingualKeyword.getString("lang"), multilingualKeyword.getString("value"));
+                    oaiDc.addDcMultilingualField("subject", multilingualKeyword.getString("lang"), multilingualKeyword.getString("value"));
                 }
             }
 
@@ -160,7 +160,7 @@ public class OAI_DC {
                     JsonObject metaOrganization = producer.getJsonObject("meta_ortolang-referential-json");
 
                     if(metaOrganization.containsKey("fullname")) {
-                        oai_dc.addDcField("publisher", metaOrganization.getString("fullname"));
+                        oaiDc.addDcField("publisher", metaOrganization.getString("fullname"));
                     }
                 }
             }
@@ -172,10 +172,10 @@ public class OAI_DC {
                     for(JsonObject role : roles.getValuesAs(JsonObject.class)) {
                         JsonObject metaRole = role.getJsonObject("meta_ortolang-referential-json");
                         String roleId = metaRole.getString("id");
-                        oai_dc.addDcField("contributor", person(contributor)+" ("+roleId+")");
+                        oaiDc.addDcField("contributor", person(contributor)+" ("+roleId+")");
 
                         if("author".equals(roleId)) {
-                            oai_dc.addDcField("creator", person(contributor));
+                            oaiDc.addDcField("creator", person(contributor));
                         }
                     }
                 }
@@ -185,17 +185,17 @@ public class OAI_DC {
             if(statusOfUse!=null) {
                 JsonObject metaStatusOfUse = statusOfUse.getJsonObject("meta_ortolang-referential-json");
                 String idStatusOfUse = metaStatusOfUse.getString("id");
-                oai_dc.addDcField("rights", idStatusOfUse);
+                oaiDc.addDcField("rights", idStatusOfUse);
 
                 JsonArray multilingualLabels = metaStatusOfUse.getJsonArray("labels");
                 for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-                    oai_dc.addDcMultilingualField("rights", label.getString("lang"), label.getString("value"));
+                    oaiDc.addDcMultilingualField("rights", label.getString("lang"), label.getString("value"));
                 }
             }
             JsonArray conditionsOfUse = meta.getJsonArray("conditionsOfUse");
             if(conditionsOfUse!=null) {
                 for(JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
-                    oai_dc.addDcMultilingualField("rights", label.getString("lang"), removeHTMLTag(label.getString("value")));
+                    oaiDc.addDcMultilingualField("rights", label.getString("lang"), removeHTMLTag(label.getString("value")));
                 }
             }
 
@@ -203,33 +203,33 @@ public class OAI_DC {
             if(license!=null) {
                 JsonObject metaLicense = license.getJsonObject("meta_ortolang-referential-json");
                 if(metaLicense!=null) {
-                    oai_dc.addDcMultilingualField("rights", "fr", metaLicense.getString("label"));
+                    oaiDc.addDcMultilingualField("rights", "fr", metaLicense.getString("label"));
                 }
             }
 
             JsonArray linguisticSubjects = meta.getJsonArray("linguisticSubjects");
             if(linguisticSubjects!=null) {
                 for(JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
-                    oai_dc.addDcField("subject", "linguistic field: "+linguisticSubject.getString());
+                    oaiDc.addDcField("subject", "linguistic field: "+linguisticSubject.getString());
                 }
             }
             JsonString linguisticDataType = meta.getJsonString("linguisticDataType");
             if(linguisticDataType!=null) {
-                oai_dc.addDcField("type", "linguistic-type: "+linguisticDataType.getString());
+                oaiDc.addDcField("type", "linguistic-type: "+linguisticDataType.getString());
             }
             JsonArray discourseTypes = meta.getJsonArray("discourseTypes");
             if(discourseTypes!=null) {
                 for(JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
-                    oai_dc.addDcField("type", "discourse-type: "+discourseType.getString());
+                    oaiDc.addDcField("type", "discourse-type: "+discourseType.getString());
                 }
             }
             JsonString creationDate = meta.getJsonString("originDate");
             if(creationDate!=null) {
-                oai_dc.addDcField("date", creationDate.getString());
+                oaiDc.addDcField("date", creationDate.getString());
             } else {
                 JsonString publicationDate = meta.getJsonString("publicationDate");
                 if(publicationDate!=null) {
-                    oai_dc.addDcField("date", publicationDate.getString());
+                    oaiDc.addDcField("date", publicationDate.getString());
                 }
             }
 
@@ -237,7 +237,7 @@ public class OAI_DC {
             LOGGER.log(Level.WARNING, "Cannot parse JSON property", e);
         }
 
-        return oai_dc;
+        return oaiDc;
     }
 
     public static String identifier(String wsalias) {

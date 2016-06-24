@@ -52,6 +52,9 @@ import java.util.logging.Logger;
 
 public class TicketHelper {
 
+    private TicketHelper() {
+    }
+
     private static final Logger LOGGER = Logger.getLogger(TicketHelper.class.getName());
 
     private static final String ALGORITHM = "AES";

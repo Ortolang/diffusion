@@ -148,7 +148,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 							report.append("[DONE] ").append(line).append("\r\n");
 							break;
 						case "snapshot-workspace":
-							snapshotWorkspace(operation[1]);
+							snapshotWorkspace();
 							purgeCache();
 							needcommit = true;
 							report.append("[DONE] ").append(line).append("\r\n");
@@ -366,7 +366,7 @@ public class ImportContentTask extends RuntimeEngineTask {
 		} 
 	}
 
-	private void snapshotWorkspace(String name) throws RuntimeEngineTaskException {
+	private void snapshotWorkspace() throws RuntimeEngineTaskException {
 		try {
 			getCoreService().snapshotWorkspace(wskey);
 		} catch ( CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {

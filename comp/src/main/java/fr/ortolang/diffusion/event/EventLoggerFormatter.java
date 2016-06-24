@@ -44,6 +44,9 @@ import fr.ortolang.diffusion.event.entity.Event;
 
 public class EventLoggerFormatter {
 
+    private EventLoggerFormatter() {
+    }
+
     private static Map<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> ();
     private static final String fieldSeparator = ",";
 

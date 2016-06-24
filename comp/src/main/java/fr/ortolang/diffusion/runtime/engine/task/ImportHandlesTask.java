@@ -137,7 +137,7 @@ public class ImportHandlesTask extends RuntimeEngineTask {
         }
     }
 
-    static class JsonHandle {
+    private static class JsonHandle {
         public String handle = "";
         public String key = "";
         public String url = "";

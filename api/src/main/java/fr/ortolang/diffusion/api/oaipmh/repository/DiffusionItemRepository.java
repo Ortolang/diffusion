@@ -513,8 +513,8 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
      * @throws IOException
      */
     protected InputStream transformToOAI_DC(JsonObject jsonDoc, JsonObject workspaceDoc) {
-        OAI_DC oai_dc = OAI_DC.valueOf(jsonDoc, workspaceDoc);
-        return new ByteArrayInputStream(oai_dc.toString().getBytes(StandardCharsets.UTF_8));
+        OAI_DC oaiDc = OAI_DC.valueOf(jsonDoc, workspaceDoc);
+        return new ByteArrayInputStream(oaiDc.toString().getBytes(StandardCharsets.UTF_8));
     }
 
     /**

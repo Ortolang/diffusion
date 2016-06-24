@@ -110,9 +110,9 @@ public class ContentResource {
     @GET
     @Path("/exportations/{id}")
     @SuppressWarnings("unchecked")
-    public Response resumeExportation(@PathParam("id") String id, @Context Request request, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
+    public Response resumeExportation(@PathParam("id") String id, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         Map<String, Object> params = exportations.get(id);
-        Response response = export(false, (String) params.get("followsymlink"), (String) params.get("filename"), (String) params.get("format"), (List<String>) params.get("path"), request,
+        Response response = export(false, (String) params.get("followsymlink"), (String) params.get("filename"), (String) params.get("format"), (List<String>) params.get("path"),
                 securityContext);
         exportations.remove(id);
         return response;
@@ -124,21 +124,21 @@ public class ContentResource {
     @Consumes({ MediaType.APPLICATION_FORM_URLENCODED })
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response exportPost(final @QueryParam("scope") @DefaultValue("") String scope, final @FormParam("followsymlink") @DefaultValue("false") String followSymlink, @FormParam("filename") @DefaultValue("download") String filename,
-            @FormParam("format") @DefaultValue("zip") String format, final @FormParam("path") List<String> paths, @Context Request request, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
+            @FormParam("format") @DefaultValue("zip") String format, final @FormParam("path") List<String> paths, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "POST /export");
-        return export(!scope.isEmpty(), followSymlink, filename, format, paths, request, securityContext);
+        return export(!scope.isEmpty(), followSymlink, filename, format, paths, securityContext);
     }
 
     @GET
     @Path("/export")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response exportGet(final @QueryParam("scope") @DefaultValue("") String scope, final @QueryParam("followsymlink") @DefaultValue("false") String followSymlink, @QueryParam("filename") @DefaultValue("download") String filename,
-            @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, @Context Request request, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
+            @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "GET /export");
-        return export(!scope.isEmpty(), followSymlink, filename, format, paths, request, securityContext);
+        return export(!scope.isEmpty(), followSymlink, filename, format, paths, securityContext);
     }
 
-    private Response export(boolean connected, String followSymlink, String filename, String format, List<String> paths, Request request, SecurityContext securityContext) throws UnsupportedEncodingException {
+    private Response export(boolean connected, String followSymlink, String filename, String format, List<String> paths, SecurityContext securityContext) throws UnsupportedEncodingException {
         if (connected && securityContext.getUserPrincipal() == null) {
             LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
             Map<String, Object> params = new HashMap<>();

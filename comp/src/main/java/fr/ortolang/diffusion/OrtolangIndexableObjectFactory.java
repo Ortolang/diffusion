@@ -51,6 +51,9 @@ import fr.ortolang.diffusion.store.json.OrtolangKeyExtractor;
 
 public class OrtolangIndexableObjectFactory<T> {
 
+    private OrtolangIndexableObjectFactory() {
+    }
+
     public static OrtolangIndexableObject<IndexablePlainTextContent> buildPlainTextIndexableObject(String key) throws OrtolangException, NotIndexableContentException {
         try {
             RegistryService registry = (RegistryService)OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
