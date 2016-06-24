@@ -36,7 +36,6 @@ package fr.ortolang.diffusion.extraction;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;

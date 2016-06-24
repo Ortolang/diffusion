@@ -56,7 +56,6 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathBuilder;
 import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 
 public class OrtolangHomeFile implements FtpFile {

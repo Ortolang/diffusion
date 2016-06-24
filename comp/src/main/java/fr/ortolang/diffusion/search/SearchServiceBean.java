@@ -152,6 +152,7 @@ public class SearchServiceBean implements SearchService {
 					authorisation.checkPermission(result.getKey(), subjects, "read");
 					checkedResults.add(result);
 				} catch ( AccessDeniedException e ) {
+                    continue;
 				}
 			}
 			return checkedResults;

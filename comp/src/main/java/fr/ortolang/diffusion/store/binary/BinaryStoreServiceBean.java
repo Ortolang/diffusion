@@ -62,7 +62,6 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
-import fr.ortolang.diffusion.extraction.parser.OrtolangXMLParser;
 import org.apache.commons.io.IOUtils;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
@@ -119,7 +118,6 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
 
     private ContentHandler handler;
     private Parser autoDetectParser;
-    private Parser ortolangParser;
 
     public BinaryStoreServiceBean() {
     }
@@ -140,7 +138,6 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
         }
         this.handler = new DefaultHandler();
         this.autoDetectParser = new AutoDetectParser();
-        this.ortolangParser = new OrtolangXMLParser();
     }
 
     public HashedFilterInputStreamFactory getHashedFilterInputStreamFactory() {

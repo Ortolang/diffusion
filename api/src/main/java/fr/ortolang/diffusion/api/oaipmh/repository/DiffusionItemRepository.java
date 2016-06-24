@@ -77,7 +77,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
     public static final String PREFIX_IDENTIFIER = "oai:ortolang.fr:";
 
     public static String identifier(String semanticUri) {
-        return semanticUri.substring(semanticUri.lastIndexOf("/")+1);
+        return semanticUri.substring(semanticUri.lastIndexOf("/") + 1);
     }
 
     private SearchService search;
@@ -95,7 +95,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
         List<String> metadataFormat = new ArrayList<String>();
         try {
             String doc = search.getCollection(key);
-            if(doc!=null) {
+            if (doc != null) {
                 metadataFormat.add("oai_dc");
                 metadataFormat.add("olac");
             }
@@ -119,51 +119,43 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
     }
 
     @Override
-    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, int offset, int length, Date from)
-            throws OAIException {
+    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, int offset, int length, Date from) throws OAIException {
         return getItemIdentifiers(filters, "oai_dc", offset, length, from);
     }
 
     @Override
-    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from)
-            throws OAIException {
+    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from) throws OAIException {
         return getItemIdentifiersFromQuery(metadataPrefix, from, null, offset, length);
     }
 
     @Override
-    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, int offset, int length, String setSpec)
-            throws OAIException {
+    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, int offset, int length, String setSpec) throws OAIException {
         return getItemIdentifiers(filters, "oai_dc", offset, length, setSpec);
     }
 
     @Override
-    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec)
-            throws OAIException {
+    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec) throws OAIException {
         //TODO filter on setSpec
         return getItemIdentifiersFromQuery(metadataPrefix, null, null, offset, length);
     }
 
     @Override
-    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, int offset, int length, Date from, Date until)
-            throws OAIException {
+    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, int offset, int length, Date from, Date until) throws OAIException {
         return getItemIdentifiers(filters, "oai_dc", offset, length, from, until);
     }
 
     @Override
-    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from, Date until)
-            throws OAIException {
+    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from, Date until) throws OAIException {
         return getItemIdentifiersFromQuery(metadataPrefix, from, until, offset, length);
     }
 
     @Override
-    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, int offset, int length, String setSpec, Date from)
-            throws OAIException {
+    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, int offset, int length, String setSpec, Date from) throws OAIException {
         return getItemIdentifiers(filters, "oai_dc", offset, length, setSpec, from);
     }
 
     @Override
-    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from)
-            throws OAIException {
+    public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from) throws OAIException {
         //TODO filter on setSpec
         return getItemIdentifiersFromQuery(metadataPrefix, from, null, offset, length);
     }
@@ -180,32 +172,29 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
     }
 
     @Override
-    public ListItemIdentifiersResult getItemIdentifiersUntil(List<ScopedFilter> filters, int offset, int length, Date until)
-            throws OAIException {
+    public ListItemIdentifiersResult getItemIdentifiersUntil(List<ScopedFilter> filters, int offset, int length, Date until) throws OAIException {
         return getItemIdentifiersUntil(filters, "oai_dc", offset, length, until);
     }
 
     @Override
-    public ListItemIdentifiersResult getItemIdentifiersUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date until)
-            throws OAIException {
+    public ListItemIdentifiersResult getItemIdentifiersUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date until) throws OAIException {
         return getItemIdentifiersFromQuery(metadataPrefix, null, until, offset, length);
     }
 
     @Override
-    public ListItemIdentifiersResult getItemIdentifiersUntil(List<ScopedFilter> filters, int offset, int length, String setSpec, Date until)
-            throws OAIException {
+    public ListItemIdentifiersResult getItemIdentifiersUntil(List<ScopedFilter> filters, int offset, int length, String setSpec, Date until) throws OAIException {
         return getItemIdentifiersUntil(filters, "oai_dc", offset, length, setSpec, until);
     }
 
     @Override
-    public ListItemIdentifiersResult getItemIdentifiersUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date until)
-            throws OAIException {
+    public ListItemIdentifiersResult getItemIdentifiersUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date until) throws OAIException {
         //TODO filter on setSpec
         return getItemIdentifiersFromQuery(metadataPrefix, null, until, offset, length);
     }
 
     /**
      * Retrieves identifier of records based of a query and a metadata prefix.
+     *
      * @param query
      * @param metadataPrefix
      * @param offset
@@ -224,15 +213,15 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
             fieldsMap.put("status", "published");
             fieldsMap.put("meta_ortolang-workspace-json.wsalias", "");
             fieldsMap.put("meta_ortolang-item-json.title", "");
-            if(from!=null) {
+            if (from != null) {
                 fieldsMap.put("lastModificationDate>=", from.getTime());
             }
-            if(until!=null) {
-                fieldsMap.put("lastModificationDate<=", until.getTime()+86400000);
+            if (until != null) {
+                fieldsMap.put("lastModificationDate<=", until.getTime() + 86400000);
             }
             List<String> docs = search.findCollections(fieldsProjection, null, null, null, null, null, fieldsMap);
             Map<String, DiffusionItemIdentifier> registerMap = new HashMap<>();
-            for(String doc : docs) {
+            for (String doc : docs) {
                 StringReader reader = new StringReader(doc);
                 JsonReader jsonReader = Json.createReader(reader);
                 JsonObject jsonObj = jsonReader.readObject();
@@ -241,15 +230,15 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
                     JsonNumber lastModificationDate = jsonObj.getJsonNumber("lastModificationDate");
                     Long longTimestamp = lastModificationDate.longValue();
                     Date datestamp = new Date(longTimestamp);
-                    DiffusionItemIdentifier itemIdentifier = new DiffusionItemIdentifier().withIdentifier(PREFIX_IDENTIFIER+key).withDatestamp(datestamp);
+                    DiffusionItemIdentifier itemIdentifier = new DiffusionItemIdentifier().withIdentifier(PREFIX_IDENTIFIER + key).withDatestamp(datestamp);
 
-                    if(registerMap.containsKey(itemIdentifier.getIdentifier()) && registerMap.get(itemIdentifier.getIdentifier()).getDatestamp().before(itemIdentifier.getDatestamp())) {
+                    if (registerMap.containsKey(itemIdentifier.getIdentifier()) && registerMap.get(itemIdentifier.getIdentifier()).getDatestamp().before(itemIdentifier.getDatestamp())) {
                         list.set(list.indexOf(registerMap.get(itemIdentifier.getIdentifier())), itemIdentifier);
                     } else {
                         list.add(itemIdentifier);
                     }
                     registerMap.put(itemIdentifier.getIdentifier(), itemIdentifier);
-                } catch(NullPointerException | ClassCastException | NumberFormatException e) {
+                } catch (NullPointerException | ClassCastException | NumberFormatException e) {
                     LOGGER.log(Level.WARNING, "No property 'key' or lastModificationDate in json object", e);
                 } finally {
                     jsonReader.close();
@@ -257,21 +246,19 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
                 }
             }
         } catch (SearchServiceException e) {
-            LOGGER.log(Level.SEVERE, "Unable to get item identifiers with metadataPrefix : "+metadataPrefix+" and from "+from+" until "+until);
+            LOGGER.log(Level.SEVERE, "Unable to get item identifiers with metadataPrefix : " + metadataPrefix + " and from " + from + " until " + until);
         }
         return new ListItemIdentifiersResult(offset + length < list.size(), new ArrayList<ItemIdentifier>(list.subList(offset, min(offset + length, list.size()))));
     }
 
     @Override
-    public Item getItem(String identifier) throws IdDoesNotExistException,
-            OAIException {
+    public Item getItem(String identifier) throws IdDoesNotExistException, OAIException {
         return getItem(identifier, "oai_dc");
     }
 
     @Override
-    public Item getItem(String identifier, String metadataPrefix) throws IdDoesNotExistException,
-            OAIException {
-        if(!identifier.startsWith(DiffusionItemRepository.PREFIX_IDENTIFIER))
+    public Item getItem(String identifier, String metadataPrefix) throws IdDoesNotExistException, OAIException {
+        if (!identifier.startsWith(DiffusionItemRepository.PREFIX_IDENTIFIER))
             throw new IdDoesNotExistException();
         String key = identifier.replaceFirst(DiffusionItemRepository.PREFIX_IDENTIFIER, "");
         try {
@@ -283,121 +270,105 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
             List<String> docs = search.findCollections(fieldsProjection, null, null, null, null, null, fieldsMap);
 
             DiffusionItem lastItem = null;
-            for(String doc : docs) {
+            for (String doc : docs) {
                 DiffusionItem item = diffusionItem(doc, metadataPrefix);
-                if(lastItem==null) {
+                if (lastItem == null) {
                     lastItem = item;
                 } else if (lastItem.getDatestamp().before(item.getDatestamp())) {
                     lastItem = item;
                 }
             }
-            if(lastItem!=null) {
+            if (lastItem != null) {
                 return lastItem;
             } else {
-                throw new OAIException("There is no record for this identifier "+identifier);
+                throw new OAIException("There is no record for this identifier " + identifier);
             }
         } catch (SearchServiceException | IOException e) {
-            LOGGER.log(Level.SEVERE, "Unable to get item with key : "+identifier, e);
+            LOGGER.log(Level.SEVERE, "Unable to get item with key : " + identifier, e);
         }
         throw new IdDoesNotExistException();
     }
 
     @Override
-    public ListItemsResults getItems(List<ScopedFilter> filters, int offset, int length)
-            throws OAIException {
+    public ListItemsResults getItems(List<ScopedFilter> filters, int offset, int length) throws OAIException {
         return getItems(filters, "oai_dc", offset, length);
     }
 
     @Override
-    public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length)
-            throws OAIException {
+    public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length) throws OAIException {
         return getItemsFromQuery(metadataPrefix, null, null, offset, length);
     }
 
     @Override
-    public ListItemsResults getItems(List<ScopedFilter> filters, int offset,
-            int length, Date from) throws OAIException {
+    public ListItemsResults getItems(List<ScopedFilter> filters, int offset, int length, Date from) throws OAIException {
         return getItems(filters, "oai_dc", offset, length, from);
     }
 
     @Override
-    public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset,
-            int length, Date from) throws OAIException {
+    public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from) throws OAIException {
         return getItemsFromQuery(metadataPrefix, from, null, offset, length);
     }
 
     @Override
-    public ListItemsResults getItems(List<ScopedFilter> filters, int offset,
-            int length, String setSpec) throws OAIException {
+    public ListItemsResults getItems(List<ScopedFilter> filters, int offset, int length, String setSpec) throws OAIException {
         return getItems(filters, "oai_dc", offset, length, setSpec);
     }
 
     @Override
-    public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset,
-            int length, String setSpec) throws OAIException {
+    public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec) throws OAIException {
         //TODO filter by spec
         return getItemsFromQuery(metadataPrefix, null, null, offset, length);
     }
 
     @Override
-    public ListItemsResults getItems(List<ScopedFilter> filters, int offset,
-            int length, Date from, Date until) throws OAIException {
+    public ListItemsResults getItems(List<ScopedFilter> filters, int offset, int length, Date from, Date until) throws OAIException {
         return getItems(filters, "oai_dc", offset, length, from, until);
     }
 
     @Override
-    public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset,
-            int length, Date from, Date until) throws OAIException {
+    public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from, Date until) throws OAIException {
         return getItemsFromQuery(metadataPrefix, from, until, offset, length);
     }
 
     @Override
-    public ListItemsResults getItems(List<ScopedFilter> filters, int offset,
-            int length, String setSpec, Date from) throws OAIException {
+    public ListItemsResults getItems(List<ScopedFilter> filters, int offset, int length, String setSpec, Date from) throws OAIException {
         return getItems(filters, "oai_dc", offset, length, setSpec, from);
     }
 
     @Override
-    public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset,
-            int length, String setSpec, Date from) throws OAIException {
+    public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from) throws OAIException {
         // TODO Filter by set
-        return getItemsFromQuery(metadataPrefix, from , null, offset, length);
+        return getItemsFromQuery(metadataPrefix, from, null, offset, length);
     }
 
     @Override
-    public ListItemsResults getItems(List<ScopedFilter> filters, int offset,
-            int length, String setSpec, Date from, Date until) throws OAIException {
+    public ListItemsResults getItems(List<ScopedFilter> filters, int offset, int length, String setSpec, Date from, Date until) throws OAIException {
         return getItems(filters, "oai_dc", offset, length, setSpec, from, until);
     }
 
     @Override
-    public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset,
-            int length, String setSpec, Date from, Date until) throws OAIException {
+    public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from, Date until) throws OAIException {
         // TODO Filter by set
-        return getItemsFromQuery(metadataPrefix,from, until, offset, length);
+        return getItemsFromQuery(metadataPrefix, from, until, offset, length);
     }
 
     @Override
-    public ListItemsResults getItemsUntil(List<ScopedFilter> filters, int offset,
-            int length, Date until) throws OAIException {
+    public ListItemsResults getItemsUntil(List<ScopedFilter> filters, int offset, int length, Date until) throws OAIException {
         return getItemsUntil(filters, "oai_dc", offset, length, until);
     }
 
     @Override
-    public ListItemsResults getItemsUntil(List<ScopedFilter> filters, String metadataPrefix, int offset,
-            int length, Date until) throws OAIException {
+    public ListItemsResults getItemsUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date until) throws OAIException {
         return getItemsFromQuery(metadataPrefix, null, until, offset, length);
     }
 
     @Override
-    public ListItemsResults getItemsUntil(List<ScopedFilter> filters, int offset,
-            int length, String setSpec, Date until) throws OAIException {
+    public ListItemsResults getItemsUntil(List<ScopedFilter> filters, int offset, int length, String setSpec, Date until) throws OAIException {
         return getItemsUntil(filters, "oai_dc", offset, length, setSpec, until);
     }
 
     @Override
-    public ListItemsResults getItemsUntil(List<ScopedFilter> filters, String metadataPrefix, int offset,
-            int length, String setSpec, Date until) throws OAIException {
+    public ListItemsResults getItemsUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date until) throws OAIException {
         // TODO Filter by set
         return getItemsFromQuery(metadataPrefix, null, until, offset, length);
     }
@@ -410,21 +381,21 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
             fieldsMap.put("status", "published");
             fieldsMap.put("meta_ortolang-workspace-json.wsalias", "");
             fieldsMap.put("meta_ortolang-item-json.title", "");
-            if(from!=null) {
+            if (from != null) {
                 fieldsMap.put("lastModificationDate>=", from.getTime());
             }
-            if(until!=null) {
-                fieldsMap.put("lastModificationDate<=", until.getTime()+86400000);
+            if (until != null) {
+                fieldsMap.put("lastModificationDate<=", until.getTime() + 86400000);
             }
             List<String> docs = search.findCollections(fieldsProjection, null, null, null, null, null, fieldsMap);
 
-            if(docs.size()>0) {
+            if (!docs.isEmpty()) {
                 Map<String, DiffusionItem> registerMap = new HashMap<>();
 
-                for(String doc : docs) {
+                for (String doc : docs) {
                     DiffusionItem item = diffusionItem(doc, metadataPrefix);
-                    if(item!=null) {
-                        if(registerMap.containsKey(item.getIdentifier()) && registerMap.get(item.getIdentifier()).getDatestamp().before(item.getDatestamp())) {
+                    if (item != null) {
+                        if (registerMap.containsKey(item.getIdentifier()) && registerMap.get(item.getIdentifier()).getDatestamp().before(item.getDatestamp())) {
                             list.set(list.indexOf(registerMap.get(item.getIdentifier())), item);
                         } else {
                             list.add(item);
@@ -434,7 +405,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
                 }
             }
         } catch (SearchServiceException | IOException e) {
-            LOGGER.log(Level.SEVERE, "Unable to get item with metadataPrefix : "+metadataPrefix+" and from "+from+" until "+until, e);
+            LOGGER.log(Level.SEVERE, "Unable to get item with metadataPrefix : " + metadataPrefix + " and from " + from + " until " + until, e);
         }
         return new ListItemsResults(offset + length < list.size(), new ArrayList<Item>(list.subList(offset, min(offset + length, list.size()))));
     }
@@ -456,18 +427,18 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
             InputStream metadata = null;
             if ("oai_dc".equals(metadataPrefix)) {
                 metadata = transformToOAI_DC(jsonDoc, workspaceDoc);
-            } else if("olac".equals(metadataPrefix)) {
+            } else if ("olac".equals(metadataPrefix)) {
                 metadata = transformToOLAC(jsonDoc, workspaceDoc);
             }
 
-            if(metadata!=null) {
+            if (metadata != null) {
                 item = DiffusionItem.item();
-                item.withIdentifier(PREFIX_IDENTIFIER+wsalias);
+                item.withIdentifier(PREFIX_IDENTIFIER + wsalias);
                 item.withDatestamp(datestamp);
                 item.withMetadata(metadata);
             }
 
-        } catch(NullPointerException | ClassCastException | NumberFormatException e) {
+        } catch (NullPointerException | ClassCastException | NumberFormatException e) {
             LOGGER.log(Level.WARNING, "No property 'key' or lastModificationDate in json object", e);
         } finally {
             jsonReader.close();
@@ -479,8 +450,8 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     protected JsonObject searchWorkspace(String wsalias) {
         try {
-            List<String> workspace = search.jsonSearch("SELECT FROM Workspace WHERE `meta_ortolang-workspace-json.wsalias` = '"+wsalias+"'");
-            if(workspace.size()>0) {
+            List<String> workspace = search.jsonSearch("SELECT FROM Workspace WHERE `meta_ortolang-workspace-json.wsalias` = '" + wsalias + "'");
+            if (!workspace.isEmpty()) {
 
                 StringReader reader = new StringReader(workspace.get(0));
                 JsonReader jsonReader = Json.createReader(reader);
@@ -490,20 +461,21 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
                     jsonReader.close();
 
                     return jsonDoc;
-                } catch(Exception e) {
-                    LOGGER.log(Level.WARNING, "Cannot read json object representation for the workspace "+wsalias, e);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Cannot read json object representation for the workspace " + wsalias, e);
                 } finally {
                     reader.close();
                 }
             }
         } catch (SearchServiceException e) {
-            LOGGER.log(Level.WARNING, "Unable to get workspace with wsalias : "+wsalias, e);
+            LOGGER.log(Level.WARNING, "Unable to get workspace with wsalias : " + wsalias, e);
         }
         return null;
     }
 
     /**
      * Converts JSON document (String representation) to XML OAI_DC
+     *
      * @param document
      * @return
      * @throws OrtolangException
@@ -519,6 +491,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     /**
      * Converts JSON document (String representation) to XML OLAC
+     *
      * @param document
      * @return
      * @throws OrtolangException

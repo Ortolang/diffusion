@@ -89,8 +89,8 @@ public class GroupRepresentation {
         this.members = members;
     }
 
-    public boolean addMember(ProfileCardRepresentation member) {
-        return members.add(member);
+    public void addMember(ProfileCardRepresentation member) {
+        members.add(member);
     }
 
     public static GroupRepresentation fromGroup(Group group) {

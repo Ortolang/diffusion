@@ -167,7 +167,7 @@ public class RuntimeResource {
         }
 
         Map<String, Object> mparams = new HashMap<String, Object> ();
-        params.entrySet().stream().filter(entry -> entry.getValue().size() > 0).forEach(entry -> {
+        params.entrySet().stream().filter(entry -> !entry.getValue().isEmpty()).forEach(entry -> {
             StringBuilder values = new StringBuilder();
             for (String value : entry.getValue()) {
                 values.append(value).append(",");
@@ -215,7 +215,7 @@ public class RuntimeResource {
         }
 
         for ( Entry<String, List<InputPart>> entry : form.entrySet() ) {
-            if ( entry.getValue().size() > 0 ) {
+            if ( !entry.getValue().isEmpty() ) {
                 StringBuilder values = new StringBuilder();
                 for ( InputPart value : entry.getValue() ) {
                     if ( value.getHeaders().containsKey("Content-Disposition") && value.getHeaders().getFirst("Content-Disposition").contains("filename=") ) {

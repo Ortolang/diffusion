@@ -201,10 +201,8 @@ public class MetadataFormat {
             return false;
         if (schema != null ? !schema.equals(that.schema) : that.schema != null)
             return false;
-        if (form != null ? !form.equals(that.form) : that.form != null)
-            return false;
+        return form != null ? form.equals(that.form) : that.form == null;
 
-        return true;
     }
 
     @Override public int hashCode() {

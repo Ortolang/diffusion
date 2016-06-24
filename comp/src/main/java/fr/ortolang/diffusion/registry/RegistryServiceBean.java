@@ -74,256 +74,256 @@ import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 @PermitAll
 public class RegistryServiceBean implements RegistryService {
 
-	private static final  Logger LOGGER = Logger.getLogger(RegistryServiceBean.class.getName());
-	
-	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final  Logger LOGGER = Logger.getLogger(RegistryServiceBean.class.getName());
+
+    private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
 
     @PersistenceContext(unitName = "ortolangPU")
-	private EntityManager em;
-	@Resource
-	private SessionContext ctx;
-	
-	public RegistryServiceBean() {
-	}
-	
-	public void setEntityManager(EntityManager em) {
-		this.em = em;
-	}
+    private EntityManager em;
+    @Resource
+    private SessionContext ctx;
 
-	public EntityManager getEntityManager() {
-		return this.em;
-	}
+    public RegistryServiceBean() {
+    }
 
-	public void setSessionContext(SessionContext ctx) {
-		this.ctx = ctx;
-	}
+    public void setEntityManager(EntityManager em) {
+        this.em = em;
+    }
 
-	public SessionContext getSessionContext() {
-		return this.ctx;
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void register(String key, OrtolangObjectIdentifier identifier, String author) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException {
-		LOGGER.log(Level.FINE, "creating key [" + key + "] for OOI [" + identifier + "]");
-		try {
-			findEntryByKey(key);
-			throw new KeyAlreadyExistsException("the key [" + key + "] already exists");
-		} catch (KeyNotFoundException e) {
-		}
-		try {
-			findEntryByIdentifier(identifier);
-			throw new IdentifierAlreadyRegisteredException("the identifier [" + identifier + "] is already registered");
-		} catch (IdentifierNotRegisteredException e) {
-		}
-		try {
-			long current = System.currentTimeMillis();
-			RegistryEntry entry = new RegistryEntry();
-			entry.setKey(key);
-			entry.setIdentifier(identifier.serialize());
-			entry.setAuthor(author);
-			entry.setCreationDate(current);
-			entry.setLastModificationDate(current);
-			em.persist(entry);
-		} catch ( Exception e ) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			ctx.setRollbackOnly();
-			throw new RegistryServiceException(e);
-		}
-	}
+    public EntityManager getEntityManager() {
+        return this.em;
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void register(String key, OrtolangObjectIdentifier identifier, String parent, boolean inherit) throws RegistryServiceException, KeyAlreadyExistsException, KeyNotFoundException, IdentifierAlreadyRegisteredException {
-		LOGGER.log(Level.FINE, "creating key [" + key + "] for OOI [" + identifier + "] and with parent [" + parent + "]");
-		try {
-			findEntryByKey(key);
-			throw new KeyAlreadyExistsException("the key [" + key + "] already exists");
-		} catch (KeyNotFoundException e) {
-		}
-		try {
-			findEntryByIdentifier(identifier);
-			throw new IdentifierAlreadyRegisteredException("the identifier [" + identifier + "] is already registered");
-		} catch (IdentifierNotRegisteredException e) {
-		}
-		RegistryEntry pentry;
-		try {
-			pentry = findEntryByKey(parent);
-		} catch (KeyNotFoundException e) {
-			throw new KeyNotFoundException("no entry found for parent [" + key + "]");
-		}
-		
-		if ( pentry.getChildren() != null ) {
-			throw new RegistryServiceException("a newer version already exists for this parent and branching is not permitted");
-		}
-		
-		try {
-			pentry.setChildren(key);
-			em.merge(pentry);
-			RegistryEntry entry = new RegistryEntry();
-			entry.setKey(key);
-			entry.setIdentifier(identifier.serialize());
-			entry.setParent(parent);
-			entry.setAuthor(pentry.getAuthor());
-			entry.setCreationDate(pentry.getCreationDate());
-			entry.setLastModificationDate(System.currentTimeMillis());
-			if ( inherit ) {
-				entry.setPropertiesContent(pentry.getPropertiesContent());
-			}
-			em.persist(entry);
-		} catch ( Exception e ) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			ctx.setRollbackOnly();
-			throw new RegistryServiceException(e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public boolean hasChildren(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "checking children existence for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		return entry.getChildren() != null;
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public String getChildren(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "getting children for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		return entry.getChildren();
-	}
+    public void setSessionContext(SessionContext ctx) {
+        this.ctx = ctx;
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public String getParent(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "getting parent for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		return entry.getParent();
-	}
+    public SessionContext getSessionContext() {
+        return this.ctx;
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public boolean isHidden(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "checking visibility state for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		return entry.isHidden();
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void update(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		LOGGER.log(Level.FINE, "updating key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		if ( entry.isLocked() ) {
-			throw new KeyLockedException("Key [" + key + "] is locked and cannot be updated");
-		}
-		try {
-			entry.setLastModificationDate(System.currentTimeMillis());
-			em.merge(entry);
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			ctx.setRollbackOnly();
-			throw new RegistryServiceException(e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public long getCreationDate(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "getting creation date for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		return entry.getCreationDate();
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public long getLastModificationDate(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "getting last modification date for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		return entry.getLastModificationDate();
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public String getAuthor(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "getting author for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		return entry.getAuthor();
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void hide(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		LOGGER.log(Level.FINE, "hidding key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		if ( entry.isLocked() ) {
-			throw new KeyLockedException("Key [" + key + "] is locked and cannot be hide");
-		}
-		try {
-			entry.setHidden(true);
-			em.merge(entry);
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			ctx.setRollbackOnly();
-			throw new RegistryServiceException(e);
-		}
-	}
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void register(String key, OrtolangObjectIdentifier identifier, String author) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException {
+        LOGGER.log(Level.FINE, "creating key [" + key + "] for OOI [" + identifier + "]");
+        try {
+            findEntryByKey(key);
+            throw new KeyAlreadyExistsException("the key [" + key + "] already exists");
+        } catch (KeyNotFoundException e) {
+        }
+        try {
+            findEntryByIdentifier(identifier);
+            throw new IdentifierAlreadyRegisteredException("the identifier [" + identifier + "] is already registered");
+        } catch (IdentifierNotRegisteredException e) {
+        }
+        try {
+            long current = System.currentTimeMillis();
+            RegistryEntry entry = new RegistryEntry();
+            entry.setKey(key);
+            entry.setIdentifier(identifier.serialize());
+            entry.setAuthor(author);
+            entry.setCreationDate(current);
+            entry.setLastModificationDate(current);
+            em.persist(entry);
+        } catch ( Exception e ) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            ctx.setRollbackOnly();
+            throw new RegistryServiceException(e);
+        }
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void show(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		LOGGER.log(Level.FINE, "showing key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		if ( entry.isLocked() ) {
-			throw new KeyLockedException("Key [" + key + "] is locked and cannot be shown");
-		}
-		try {
-			entry.setHidden(false);
-			em.merge(entry);
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			ctx.setRollbackOnly();
-			throw new RegistryServiceException(e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public boolean isLocked(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "checking lock state for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		return entry.isLocked();
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public String getLock(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "getting lock owner for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		return entry.getLock();
-	}
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void register(String key, OrtolangObjectIdentifier identifier, String parent, boolean inherit) throws RegistryServiceException, KeyAlreadyExistsException, KeyNotFoundException, IdentifierAlreadyRegisteredException {
+        LOGGER.log(Level.FINE, "creating key [" + key + "] for OOI [" + identifier + "] and with parent [" + parent + "]");
+        try {
+            findEntryByKey(key);
+            throw new KeyAlreadyExistsException("the key [" + key + "] already exists");
+        } catch (KeyNotFoundException e) {
+        }
+        try {
+            findEntryByIdentifier(identifier);
+            throw new IdentifierAlreadyRegisteredException("the identifier [" + identifier + "] is already registered");
+        } catch (IdentifierNotRegisteredException e) {
+        }
+        RegistryEntry pentry;
+        try {
+            pentry = findEntryByKey(parent);
+        } catch (KeyNotFoundException e) {
+            throw new KeyNotFoundException("no entry found for parent [" + key + "]");
+        }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		LOGGER.log(Level.FINE, "locking key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		if ( entry.isLocked() ) {
-			throw new KeyLockedException("Key [" + key + "] is already locked");
-		}
-		try {
-			entry.setLock(owner);
-			em.merge(entry);
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			ctx.setRollbackOnly();
-			throw new RegistryServiceException(e);
-		}
-	}
-	
-	@Override
+        if ( pentry.getChildren() != null ) {
+            throw new RegistryServiceException("a newer version already exists for this parent and branching is not permitted");
+        }
+
+        try {
+            pentry.setChildren(key);
+            em.merge(pentry);
+            RegistryEntry entry = new RegistryEntry();
+            entry.setKey(key);
+            entry.setIdentifier(identifier.serialize());
+            entry.setParent(parent);
+            entry.setAuthor(pentry.getAuthor());
+            entry.setCreationDate(pentry.getCreationDate());
+            entry.setLastModificationDate(System.currentTimeMillis());
+            if ( inherit ) {
+                entry.setPropertiesContent(pentry.getPropertiesContent());
+            }
+            em.persist(entry);
+        } catch ( Exception e ) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            ctx.setRollbackOnly();
+            throw new RegistryServiceException(e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public boolean hasChildren(String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "checking children existence for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        return entry.getChildren() != null;
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String getChildren(String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "getting children for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        return entry.getChildren();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String getParent(String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "getting parent for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        return entry.getParent();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public boolean isHidden(String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "checking visibility state for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        return entry.isHidden();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void update(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
+        LOGGER.log(Level.FINE, "updating key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        if ( entry.isLocked() ) {
+            throw new KeyLockedException("Key [" + key + "] is locked and cannot be updated");
+        }
+        try {
+            entry.setLastModificationDate(System.currentTimeMillis());
+            em.merge(entry);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            ctx.setRollbackOnly();
+            throw new RegistryServiceException(e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public long getCreationDate(String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "getting creation date for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        return entry.getCreationDate();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public long getLastModificationDate(String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "getting last modification date for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        return entry.getLastModificationDate();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String getAuthor(String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "getting author for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        return entry.getAuthor();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void hide(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
+        LOGGER.log(Level.FINE, "hidding key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        if ( entry.isLocked() ) {
+            throw new KeyLockedException("Key [" + key + "] is locked and cannot be hide");
+        }
+        try {
+            entry.setHidden(true);
+            em.merge(entry);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            ctx.setRollbackOnly();
+            throw new RegistryServiceException(e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void show(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
+        LOGGER.log(Level.FINE, "showing key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        if ( entry.isLocked() ) {
+            throw new KeyLockedException("Key [" + key + "] is locked and cannot be shown");
+        }
+        try {
+            entry.setHidden(false);
+            em.merge(entry);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            ctx.setRollbackOnly();
+            throw new RegistryServiceException(e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public boolean isLocked(String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "checking lock state for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        return entry.isLocked();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String getLock(String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "getting lock owner for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        return entry.getLock();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
+        LOGGER.log(Level.FINE, "locking key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        if ( entry.isLocked() ) {
+            throw new KeyLockedException("Key [" + key + "] is already locked");
+        }
+        try {
+            entry.setLock(owner);
+            em.merge(entry);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            ctx.setRollbackOnly();
+            throw new RegistryServiceException(e);
+        }
+    }
+
+    @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void unlock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
         LOGGER.log(Level.FINE, "unlocking key [" + key + "]");
@@ -340,309 +340,309 @@ public class RegistryServiceBean implements RegistryService {
             throw new RegistryServiceException(e);
         }
     }
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "getting state for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		return entry.getPublicationStatus();
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void setPublicationStatus(String key, String state) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		LOGGER.log(Level.FINE, "setting key [" + key + "] with state [" + state + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		if ( entry.isLocked() ) {
-			throw new KeyLockedException("Key [" + key + "] is locked, publication status cannot be modified");
-		}
-		try {
-			entry.setPublicationStatus(state);
-			em.merge(entry);
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			ctx.setRollbackOnly();
-			throw new RegistryServiceException(e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void delete(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		delete(key, false);
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void delete(String key, boolean force) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		LOGGER.log(Level.FINE, "deleting key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		if ( !force && entry.isLocked() ) {
-			throw new KeyLockedException("Key [" + key + "] is locked and cannot be deleted");
-		}
-		try {
-			entry.setDeleted(true);
-			em.merge(entry);
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			ctx.setRollbackOnly();
-			throw new RegistryServiceException(e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public OrtolangObjectIdentifier lookup(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "lookup identifier for key [" + key + "]");
-		return OrtolangObjectIdentifier.deserialize(findEntryByKey(key).getIdentifier());
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public String lookup(OrtolangObjectIdentifier identifier) throws RegistryServiceException, IdentifierNotRegisteredException {
-		LOGGER.log(Level.FINE, "lookup key for identifier [" + identifier + "]");
-		return findEntryByIdentifier(identifier).getKey();
-	}
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> list(int offset, int limit, String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException {
-		LOGGER.log(Level.FINE, "listing keys with offset:" + offset + " and limit:" + limit + " and identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter);
-		if (offset < 0) {
-			throw new RegistryServiceException("offset MUST be >= 0");
-		}
-		if (limit < 1) {
-			throw new RegistryServiceException("limit MUST be >= 1");
-		}
-		StringBuilder ifilter = new StringBuilder();
-		if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
-			 ifilter.append(identifierFilter);
-		} 
-		ifilter.append("%");
-		StringBuilder sfilter = new StringBuilder();
-		if ( statusFilter != null ) {
-			sfilter.append(statusFilter.value());
-		} else {
-			sfilter.append("%");
-		}
-		TypedQuery<String> query;
-		LOGGER.log(Level.FINE, "listing all keys only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
-		query = em.createNamedQuery("listVisibleKeys", String.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString()).setFirstResult(offset).setMaxResults(limit);
-		return query.getResultList();
-	}
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "getting state for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        return entry.getPublicationStatus();
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public long count(String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException {
-		LOGGER.log(Level.FINE, "counting keys with identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter);
-		StringBuilder ifilter = new StringBuilder();
-		if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
-			 ifilter.append(identifierFilter);
-		} 
-		ifilter.append("%");
-		StringBuilder sfilter = new StringBuilder();
-		if ( statusFilter != null ) {
-			sfilter.append(statusFilter.value());
-		} else {
-			sfilter.append("%");
-		}
-		TypedQuery<Long> query;
-		query = em.createNamedQuery("countVisibleEntries", Long.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString());
-		return query.getSingleResult();
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-		LOGGER.log(Level.FINE, "setting property [" + name + "] with value [" + value + "] for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		if ( entry.isLocked() ) {
-			throw new KeyLockedException("Key [" + key + "] is locked, property cannot be setted");
-		}
-		try {
-			entry.setProperty(name, value);
-			em.merge(entry);
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			ctx.setRollbackOnly();
-			throw new RegistryServiceException(e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public String getProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException {
-		LOGGER.log(Level.FINE, "getting property [" + name + "] for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		try {
-			if (!entry.getProperties().containsKey(name)) {
-				throw new PropertyNotFoundException("no property with name [" + name + "] found for key [" + key + "]");
-			}
-			return (String) entry.getProperties().get(name);
-		} catch (IOException e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			throw new RegistryServiceException(e);
-		}
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<OrtolangObjectProperty> getProperties(String key) throws RegistryServiceException, KeyNotFoundException {
-		LOGGER.log(Level.FINE, "getting properties for key [" + key + "]");
-		RegistryEntry entry = findEntryByKey(key);
-		List<OrtolangObjectProperty> properties = new ArrayList<OrtolangObjectProperty>();
-		try {
-			Properties props = entry.getProperties();
-			for ( String name : props.stringPropertyNames() ) {
-				properties.add(new OrtolangObjectProperty(name, props.getProperty(name)));
-			}
-			return properties;
-		} catch (IOException e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-			throw new RegistryServiceException(e);
-		}
-	}
-	
-	//Admin interface
-	
-	@Override
-	@RolesAllowed("admin")
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void setPublicationStatus(String key, String state) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
+        LOGGER.log(Level.FINE, "setting key [" + key + "] with state [" + state + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        if ( entry.isLocked() ) {
+            throw new KeyLockedException("Key [" + key + "] is locked, publication status cannot be modified");
+        }
+        try {
+            entry.setPublicationStatus(state);
+            em.merge(entry);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            ctx.setRollbackOnly();
+            throw new RegistryServiceException(e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void delete(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
+        delete(key, false);
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void delete(String key, boolean force) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
+        LOGGER.log(Level.FINE, "deleting key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        if ( !force && entry.isLocked() ) {
+            throw new KeyLockedException("Key [" + key + "] is locked and cannot be deleted");
+        }
+        try {
+            entry.setDeleted(true);
+            em.merge(entry);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            ctx.setRollbackOnly();
+            throw new RegistryServiceException(e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public OrtolangObjectIdentifier lookup(String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "lookup identifier for key [" + key + "]");
+        return OrtolangObjectIdentifier.deserialize(findEntryByKey(key).getIdentifier());
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String lookup(OrtolangObjectIdentifier identifier) throws RegistryServiceException, IdentifierNotRegisteredException {
+        LOGGER.log(Level.FINE, "lookup key for identifier [" + identifier + "]");
+        return findEntryByIdentifier(identifier).getKey();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<String> list(int offset, int limit, String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "listing keys with offset:" + offset + " and limit:" + limit + " and identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter);
+        if (offset < 0) {
+            throw new RegistryServiceException("offset MUST be >= 0");
+        }
+        if (limit < 1) {
+            throw new RegistryServiceException("limit MUST be >= 1");
+        }
+        StringBuilder ifilter = new StringBuilder();
+        if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
+            ifilter.append(identifierFilter);
+        }
+        ifilter.append("%");
+        StringBuilder sfilter = new StringBuilder();
+        if ( statusFilter != null ) {
+            sfilter.append(statusFilter.value());
+        } else {
+            sfilter.append("%");
+        }
+        TypedQuery<String> query;
+        LOGGER.log(Level.FINE, "listing all keys only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
+        query = em.createNamedQuery("listVisibleKeys", String.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString()).setFirstResult(offset).setMaxResults(limit);
+        return query.getResultList();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public long count(String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "counting keys with identifierFilter:" + identifierFilter + " and statusFilter: " + statusFilter);
+        StringBuilder ifilter = new StringBuilder();
+        if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
+            ifilter.append(identifierFilter);
+        }
+        ifilter.append("%");
+        StringBuilder sfilter = new StringBuilder();
+        if ( statusFilter != null ) {
+            sfilter.append(statusFilter.value());
+        } else {
+            sfilter.append("%");
+        }
+        TypedQuery<Long> query;
+        query = em.createNamedQuery("countVisibleEntries", Long.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString());
+        return query.getSingleResult();
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
+        LOGGER.log(Level.FINE, "setting property [" + name + "] with value [" + value + "] for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        if ( entry.isLocked() ) {
+            throw new KeyLockedException("Key [" + key + "] is locked, property cannot be setted");
+        }
+        try {
+            entry.setProperty(name, value);
+            em.merge(entry);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            ctx.setRollbackOnly();
+            throw new RegistryServiceException(e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String getProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException {
+        LOGGER.log(Level.FINE, "getting property [" + name + "] for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        try {
+            if (!entry.getProperties().containsKey(name)) {
+                throw new PropertyNotFoundException("no property with name [" + name + "] found for key [" + key + "]");
+            }
+            return (String) entry.getProperties().get(name);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            throw new RegistryServiceException(e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<OrtolangObjectProperty> getProperties(String key) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "getting properties for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        List<OrtolangObjectProperty> properties = new ArrayList<OrtolangObjectProperty>();
+        try {
+            Properties props = entry.getProperties();
+            for ( String name : props.stringPropertyNames() ) {
+                properties.add(new OrtolangObjectProperty(name, props.getProperty(name)));
+            }
+            return properties;
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            throw new RegistryServiceException(e);
+        }
+    }
+
+    //Admin interface
+
+    @Override
+    @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public long systemCountAllEntries(String identifierFilter) throws RegistryServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting all entries with identifierFilter:" + identifierFilter);
         StringBuilder ifilter = new StringBuilder();
         if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
-             ifilter.append(identifierFilter);
-        } 
+            ifilter.append(identifierFilter);
+        }
         ifilter.append("%");
         TypedQuery<Long> query = em.createNamedQuery("countAllEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
         return query.getSingleResult();
     }
-	
-	@Override
+
+    @Override
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public long systemCountDeletedEntries(String identifierFilter) throws RegistryServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting deleted entries with identifierFilter:" + identifierFilter);
         StringBuilder ifilter = new StringBuilder();
         if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
-             ifilter.append(identifierFilter);
-        } 
+            ifilter.append(identifierFilter);
+        }
         ifilter.append("%");
         TypedQuery<Long> query = em.createNamedQuery("countDeletedEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
         return query.getSingleResult();
     }
-	
-	@Override
+
+    @Override
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public long systemCountHiddenEntries(String identifierFilter) throws RegistryServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting hidden entries with identifierFilter:" + identifierFilter);
         StringBuilder ifilter = new StringBuilder();
         if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
-             ifilter.append(identifierFilter);
-        } 
+            ifilter.append(identifierFilter);
+        }
         ifilter.append("%");
         TypedQuery<Long> query = em.createNamedQuery("countHiddenEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
         return query.getSingleResult();
     }
-	
-	@Override
+
+    @Override
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<RegistryEntry> systemListEntries(String keyFilter, String identifierFilter) throws RegistryServiceException {
-            LOGGER.log(Level.FINE, "#SYSTEM# list entries for key filter [" + keyFilter + "] and identifierFilter [" + identifierFilter + "]");
-            if ( keyFilter == null ) {
-                    keyFilter = "";
-            }
-            if ( identifierFilter == null ) {
-                identifierFilter = "";
-            }
-            TypedQuery<RegistryEntry> query = em.createNamedQuery("findEntryByKeyAndIdentifier", RegistryEntry.class).setParameter("keyFilter", keyFilter + "%").setParameter("identifierFilter", identifierFilter + "%");
-            return query.getResultList();
+        LOGGER.log(Level.FINE, "#SYSTEM# list entries for key filter [" + keyFilter + "] and identifierFilter [" + identifierFilter + "]");
+        if ( keyFilter == null ) {
+            keyFilter = "";
+        }
+        if ( identifierFilter == null ) {
+            identifierFilter = "";
+        }
+        TypedQuery<RegistryEntry> query = em.createNamedQuery("findEntryByKeyAndIdentifier", RegistryEntry.class).setParameter("keyFilter", keyFilter + "%").setParameter("identifierFilter", identifierFilter + "%");
+        return query.getResultList();
     }
-	
-	@Override
+
+    @Override
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public RegistryEntry systemReadEntry(String key) throws RegistryServiceException, KeyNotFoundException {
-            LOGGER.log(Level.FINE, "#SYSTEM# read entry for key [" + key + "]");
-		return em.find(RegistryEntry.class, key);
+        LOGGER.log(Level.FINE, "#SYSTEM# read entry for key [" + key + "]");
+        return em.find(RegistryEntry.class, key);
     }
-	
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	private RegistryEntry findEntryByKey(String key) throws KeyNotFoundException {
-		RegistryEntry entry = em.find(RegistryEntry.class, key);
-		if ( entry == null ) {
-			throw new KeyNotFoundException("no entry found for key [" + key + "]");
-		}
-		if ( entry.isDeleted() ) {
-			throw new KeyNotFoundException("entry for key [" + key + "] has been deleted");
-		}
-		
-		return entry;
-	}
-	
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	private RegistryEntry findEntryByKey(String key, LockModeType lock) throws KeyNotFoundException {
-		RegistryEntry entry = em.find(RegistryEntry.class, key, lock);
-		if ( entry == null ) {
-			throw new KeyNotFoundException("no entry found for key [" + key + "]");
-		}
-		if ( entry.isDeleted() ) {
-			throw new KeyNotFoundException("entry for key [" + key + "] has been deleted");
-		}
-		
-		return entry;
-	}
-	
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	private RegistryEntry findEntryByIdentifier(OrtolangObjectIdentifier identifier) throws IdentifierNotRegisteredException {
-		List<RegistryEntry> entries;
 
-		TypedQuery<RegistryEntry> query = em.createNamedQuery("findEntryByIdentifier", RegistryEntry.class).setParameter("identifier", identifier.serialize()); 
-		entries = query.getResultList();
-		if ( entries == null || entries.size() == 0 ) {
-			throw new IdentifierNotRegisteredException("no entry found with identifier [" + identifier + "]");
-		}
-		if ( entries.size() > 1 ) {
-			LOGGER.log(Level.SEVERE, "the identifier [" + identifier + "] is registered more than once !!");
-		}
-		if ( entries.get(0).isDeleted() ) {
-			throw new IdentifierNotRegisteredException("no entry found with identifier [" + identifier + "]");
-		}
-		return entries.get(0);
-	}
-	
-	//Service methods
-    
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    private RegistryEntry findEntryByKey(String key) throws KeyNotFoundException {
+        RegistryEntry entry = em.find(RegistryEntry.class, key);
+        if ( entry == null ) {
+            throw new KeyNotFoundException("no entry found for key [" + key + "]");
+        }
+        if ( entry.isDeleted() ) {
+            throw new KeyNotFoundException("entry for key [" + key + "] has been deleted");
+        }
+
+        return entry;
+    }
+
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    private RegistryEntry findEntryByKey(String key, LockModeType lock) throws KeyNotFoundException {
+        RegistryEntry entry = em.find(RegistryEntry.class, key, lock);
+        if ( entry == null ) {
+            throw new KeyNotFoundException("no entry found for key [" + key + "]");
+        }
+        if ( entry.isDeleted() ) {
+            throw new KeyNotFoundException("entry for key [" + key + "] has been deleted");
+        }
+
+        return entry;
+    }
+
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    private RegistryEntry findEntryByIdentifier(OrtolangObjectIdentifier identifier) throws IdentifierNotRegisteredException {
+        List<RegistryEntry> entries;
+
+        TypedQuery<RegistryEntry> query = em.createNamedQuery("findEntryByIdentifier", RegistryEntry.class).setParameter("identifier", identifier.serialize());
+        entries = query.getResultList();
+        if ( entries == null || entries.isEmpty() ) {
+            throw new IdentifierNotRegisteredException("no entry found with identifier [" + identifier + "]");
+        }
+        if ( entries.size() > 1 ) {
+            LOGGER.log(Level.SEVERE, "the identifier [" + identifier + "] is registered more than once !!");
+        }
+        if ( entries.get(0).isDeleted() ) {
+            throw new IdentifierNotRegisteredException("no entry found with identifier [" + identifier + "]");
+        }
+        return entries.get(0);
+    }
+
+    //Service methods
+
     @Override
     public String getServiceName() {
         return RegistryService.SERVICE_NAME;
     }
-    
+
     @Override
     public Map<String, String> getServiceInfos() {
         Map<String, String>infos = new HashMap<String, String> ();
         try {
             infos.put(INFO_SIZE, Long.toString(systemCountAllEntries(null)));
-        } catch ( Exception e ) { 
+        } catch ( Exception e ) {
             LOGGER.log(Level.INFO, "unable to collect info: " + INFO_SIZE, e);
         }
         try {
             infos.put(INFO_DELETED, Long.toString(systemCountDeletedEntries(null)));
-        } catch ( Exception e ) { 
+        } catch ( Exception e ) {
             LOGGER.log(Level.INFO, "unable to collect info: " + INFO_DELETED, e);
         }
         try {
             infos.put(INFO_HIDDEN, Long.toString(systemCountHiddenEntries(null)));
-        } catch ( Exception e ) { 
+        } catch ( Exception e ) {
             LOGGER.log(Level.INFO, "unable to collect info: " + INFO_HIDDEN, e);
         }
-        try { 
+        try {
             infos.put(INFO_PUBLISHED, Long.toString(count(null, OrtolangObjectState.Status.PUBLISHED)));
-        } catch ( Exception e ) { 
+        } catch ( Exception e ) {
             LOGGER.log(Level.INFO, "unable to collect info: " + INFO_PUBLISHED, e);
         }
         return infos;

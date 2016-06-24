@@ -134,8 +134,8 @@ public class Job implements Serializable, Delayed {
         return parameters.containsKey(name);
     }
 
-    public String setParameter(String name, String value) {
-        return parameters.put(name, value);
+    public void setParameter(String name, String value) {
+        parameters.put(name, value);
     }
 
     @Override

@@ -200,16 +200,13 @@ public class PathBuilder {
     }
 
     private boolean checkFiliation(String parent, String children) {
-        if ( parent.length() <= 1 ) {
+        if (parent.length() <= 1) {
             return true;
         }
-        if ( children.length() <= parent.length() ) {
+        if (children.length() <= parent.length()) {
             return false;
         }
-        if ( !children.startsWith(parent) ) {
-            return false;
-        }
-        return children.charAt(parent.length()) == PATH_SEPARATOR_CHAR;
+        return children.startsWith(parent) && children.charAt(parent.length()) == PATH_SEPARATOR_CHAR;
     }
 
     @Override

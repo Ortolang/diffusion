@@ -59,8 +59,8 @@ public class CollectionWrapper extends OrtolangObjectWrapper {
         this.children = children;
     }
 
-    public boolean addChild(OrtolangObjectWrapper child) {
-        return children.add(child);
+    public void addChild(OrtolangObjectWrapper child) {
+        children.add(child);
     }
 
     @Override

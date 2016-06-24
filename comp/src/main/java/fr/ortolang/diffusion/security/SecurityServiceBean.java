@@ -236,7 +236,7 @@ public class SecurityServiceBean implements SecurityService {
                 throw new SecurityServiceException("rule subject must be an object managed by " + MembershipService.SERVICE_NAME);
             }
             Map<String, List<String>> rules = authorisation.getPolicyRules(key);
-            if ( permissions == null || permissions.size() == 0 ) {
+            if ( permissions == null || permissions.isEmpty() ) {
                 rules.remove(subject);
             } else {
                 rules.put(subject, permissions);

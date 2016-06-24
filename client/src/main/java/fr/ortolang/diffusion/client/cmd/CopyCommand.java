@@ -1,6 +1,5 @@
 package fr.ortolang.diffusion.client.cmd;
 
-import java.io.Console;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -10,12 +9,7 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
 
 import fr.ortolang.diffusion.client.OrtolangClient;
 import fr.ortolang.diffusion.client.OrtolangClientException;
@@ -36,10 +30,8 @@ public class CopyCommand extends Command {
 
 	@Override
 	public void execute(String[] args) {
-		CommandLineParser parser = new BasicParser();
+		CommandLineParser parser = new DefaultParser();
 		CommandLine cmd;
-		String username = "";
-		String password = null;
         String localPath = null;
         String workspace = null;
         String remotePath = null;
@@ -49,18 +41,9 @@ public class CopyCommand extends Command {
 			if (cmd.hasOption("h")) {
 				help();
 			}
-			if (cmd.hasOption("U")) {
-				username = cmd.getOptionValue("U");
-				if (cmd.hasOption("P")) {
-					password = cmd.getOptionValue("P");
-				} else {
-					Console cons;
-					char[] passwd;
-					if ((cons = System.console()) != null && (passwd = cons.readPassword("[%s]", "Password:")) != null) {
-					    password = new String(passwd);
-					}
-				}
-			}
+            String[] credentials = getCredentials(cmd);
+            String username = credentials[0];
+            String password = credentials[1];
 			
 			if (cmd.hasOption("w")) {
 			    workspace = cmd.getOptionValue("w");
@@ -111,7 +94,7 @@ public class CopyCommand extends Command {
 			client.logout();
 			client.close();
 		} catch (ParseException e) {
-			System.out.println("Failed to parse comand line properties " +  e.getMessage());
+			System.out.println("Failed to parse command line properties " +  e.getMessage());
 			help();
 		} catch (OrtolangClientException | OrtolangClientAccountException e) {
 			System.out.println("Unexpected error !!");
@@ -168,8 +151,8 @@ public class CopyCommand extends Command {
     }
     
 	private void help() {
-		HelpFormatter formater = new HelpFormatter();
-		formater.printHelp("Copy local directory to an ortolang workspace", options);
+		HelpFormatter formatter = new HelpFormatter();
+		formatter.printHelp("Copy local directory to an ortolang workspace", options);
 		System.exit(0);
 	}
 

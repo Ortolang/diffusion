@@ -45,7 +45,7 @@ public class ApiHelper {
     private ApiHelper() {
     }
 
-    public static CacheControl setCacheControlFromState(OrtolangObjectState state, CacheControl cacheControl) {
+    public static void setCacheControlFromState(OrtolangObjectState state, CacheControl cacheControl) {
         if (state.isLocked()) {
             // 691200 = 8 days
             cacheControl.setMaxAge(691200);
@@ -54,6 +54,5 @@ public class ApiHelper {
             cacheControl.setMaxAge(0);
             cacheControl.setMustRevalidate(true);
         }
-        return cacheControl;
     }
 }
