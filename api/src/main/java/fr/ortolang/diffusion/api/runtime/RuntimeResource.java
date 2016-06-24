@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
@@ -144,7 +145,7 @@ public class RuntimeResource {
     @Path("/processes")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @GZIP
-    public Response startInstance(MultivaluedMap<String, String> params) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException {
+    public Response startInstance(MultivaluedMap<String, String> params) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException, URISyntaxException {
         LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /runtime/processes");
         String key = UUID.randomUUID().toString();
 
@@ -188,7 +189,8 @@ public class RuntimeResource {
     @Path("/processes")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @GZIP
-    public Response startInstance(MultipartFormDataInput input) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException, IOException, CoreServiceException, DataCollisionException {
+    public Response startInstance(MultipartFormDataInput input)
+            throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException, IOException, CoreServiceException, DataCollisionException, URISyntaxException {
         LOGGER.log(Level.INFO, "POST(multipart/form-data) /runtime/processes");
         String key = UUID.randomUUID().toString();
 

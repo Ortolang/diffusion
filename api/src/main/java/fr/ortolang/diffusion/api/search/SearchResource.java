@@ -130,17 +130,17 @@ import java.util.logging.Logger;
             for (String field : fields.split(",")) {
                 String[] fieldPart = field.split(":");
                 if (fieldPart.length > 1) {
-                	String[] fieldNamePart = fieldPart[0].split("\\.");
-                	if (fieldNamePart.length > 1) {
-                		fieldsProjection.put("meta_"+fieldNamePart[0]+"." + fieldNamePart[1], fieldPart[1]);
-                	}
+                    String[] fieldNamePart = fieldPart[0].split("\\.");
+                    if (fieldNamePart.length > 1) {
+                        fieldsProjection.put("meta_"+fieldNamePart[0]+"." + fieldNamePart[1], fieldPart[1]);
+                    }
                 } else {
-                	String[] fieldNamePart = field.split("\\.");
-                	if (fieldNamePart.length > 1) {
-                		fieldsProjection.put("meta_"+fieldNamePart[0]+"." + fieldNamePart[1], null);
-                	} else {
-                		fieldsProjection.put(field, null);
-                	}
+                    String[] fieldNamePart = field.split("\\.");
+                    if (fieldNamePart.length > 1) {
+                        fieldsProjection.put("meta_"+fieldNamePart[0]+"." + fieldNamePart[1], null);
+                    } else {
+                        fieldsProjection.put(field, null);
+                    }
                 }
 
             }
@@ -314,32 +314,22 @@ import java.util.logging.Logger;
     @GZIP
     public Response countWorkspaces(@Context HttpServletRequest request) {
         LOGGER.log(Level.INFO, "GET /search/count/workspaces");
-        String fields = null;
-        String content = null;
-        String group = null;
-        Map<String, Object> fieldsMap = new HashMap<String, Object>();
+        Map<String, Object> fieldsMap = new HashMap<>();
         for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
-            if ("fields".equals(parameter.getKey())) {
-                fields = parameter.getValue()[0];
-            } else if ("content".equals(parameter.getKey())) {
-                content = parameter.getValue()[0];
-            } else if ("group".equals(parameter.getKey())) {
-                group = parameter.getValue()[0];
-            } else if (!parameter.getKey().equals("scope")) {
-                // Ignore scope param
+            if (!"fields".equals(parameter.getKey()) && !"content".equals(parameter.getKey()) && !"group".equals(parameter.getKey()) && !"scope".equals(parameter.getKey())) {
                 if (parameter.getKey().endsWith("[]")) {
                     List<String> paramArr = new ArrayList<String>();
                     Collections.addAll(paramArr, parameter.getValue());
                     String[] fieldPart = parameter.getKey().substring(0, parameter.getKey().length() - 2).split("\\.");
                     if (fieldPart.length > 1) {
-                        fieldsMap.put("meta_"+parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
+                        fieldsMap.put("meta_" + parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
                     } else {
                         fieldsMap.put("meta_ortolang-workspace-json." + parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
                     }
                 } else {
                     String[] fieldPart = parameter.getKey().split("\\.");
                     if (fieldPart.length > 1) {
-                        fieldsMap.put("meta_"+parameter.getKey(), parameter.getValue()[0]);
+                        fieldsMap.put("meta_" + parameter.getKey(), parameter.getValue()[0]);
                     } else {
                         fieldsMap.put("meta_ortolang-workspace-json." + parameter.getKey(), parameter.getValue()[0]);
                     }

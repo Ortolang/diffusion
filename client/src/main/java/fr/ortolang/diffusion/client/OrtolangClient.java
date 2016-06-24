@@ -80,7 +80,7 @@ public class OrtolangClient {
     private String currentUser = null;
     private String authorization = null;
 
-    private OrtolangClient() {
+    private OrtolangClient() throws IOException {
         LOGGER.log(Level.INFO, "Creating new OrtolangClient");
         ResteasyClientBuilder builder = new ResteasyClientBuilder();
         builder.register(OrtolangClientCookieFilter.class);
@@ -100,7 +100,18 @@ public class OrtolangClient {
     }
 
     private static class OrtolangClientHolder {
-        static final OrtolangClient INSTANCE = new OrtolangClient();
+        static final OrtolangClient INSTANCE;
+        static {
+            OrtolangClient ortolangClient;
+            try {
+                ortolangClient = new OrtolangClient();
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Cannot instantiate OrtolangClient", e);
+                ortolangClient = null;
+            }
+            INSTANCE = ortolangClient;
+        }
+
         private OrtolangClientHolder() {
         }
     }

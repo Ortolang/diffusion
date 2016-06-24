@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.client.account;
  * #L%
  */
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,7 +68,7 @@ public class OrtolangClientAccountManager {
 	private String appsecret;
 	private Map<String, OrtolangClientAccount> accounts = new HashMap<String, OrtolangClientAccount> ();
 	
-	public OrtolangClientAccountManager(Client client) {
+	public OrtolangClientAccountManager(Client client) throws IOException {
 		LOGGER.log(Level.INFO, "Creating OrtolangClientAccountManager");
 		
 		this.authurl = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.url");

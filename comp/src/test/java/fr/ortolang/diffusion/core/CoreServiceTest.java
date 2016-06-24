@@ -413,14 +413,14 @@ public class CoreServiceTest {
             LOGGER.log(Level.INFO, "Workspace created with 3 collections");
             LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-            String akey = core.resolveWorkspacePath(wsk, "head", "/a");
+            String akey = core.resolveWorkspacePath(wsk, Workspace.HEAD, "/a");
             Collection collection = core.readCollection(akey);
             assertEquals(1, collection.getClock());
             assertEquals("a", collection.getName());
             assertEquals(1, collection.getClock());
             assertEquals(2, collection.getElements().size());
-            String bkey = core.resolveWorkspacePath(wsk, "head", "/a/b");
-            String ckey = core.resolveWorkspacePath(wsk, "head", "/a/c");
+            String bkey = core.resolveWorkspacePath(wsk, Workspace.HEAD, "/a/b");
+            String ckey = core.resolveWorkspacePath(wsk, Workspace.HEAD, "/a/c");
             assertTrue(collection.findElementByName("b").getKey().equals(bkey));
             assertTrue(collection.findElementByName("c").getKey().equals(ckey));
 
@@ -476,7 +476,7 @@ public class CoreServiceTest {
             core.createCollection(wsk, "/a/c/f");
             LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-            String acfkey = core.resolveWorkspacePath(wsk, "head", "/a/c/f");
+            String acfkey = core.resolveWorkspacePath(wsk, Workspace.HEAD, "/a/c/f");
             int acfclock = core.readCollection(acfkey).getClock();
             core.moveCollection(wsk, "/a/c/f", "/a/e/f");
             LOGGER.log(Level.INFO, walkWorkspace(wsk));
@@ -489,7 +489,7 @@ public class CoreServiceTest {
             acfclock = core.readCollection(acfkey).getClock();
             core.moveCollection(wsk, "/a/e/f", "/a/c/g");
             LOGGER.log(Level.INFO, walkWorkspace(wsk));
-            acfkey = core.resolveWorkspacePath(wsk, "head", "/a/c/g");
+            acfkey = core.resolveWorkspacePath(wsk, Workspace.HEAD, "/a/c/g");
             collection = core.readCollection(acfkey);
             assertEquals(1, collection.getElements().size());
             assertEquals(acfclock + 1, collection.getClock());
@@ -544,7 +544,7 @@ public class CoreServiceTest {
             } catch (PathAlreadyExistsException e){
                 //
             }
-            String oKey = core.resolveWorkspacePath(wsk, "head", "/o");
+            String oKey = core.resolveWorkspacePath(wsk, Workspace.HEAD, "/o");
             core.moveElements(wsk, sources, "/o");
             Collection collectionO = core.readCollection(oKey);
             assertNotNull(collectionO.findElementByName("a"));
@@ -567,7 +567,7 @@ public class CoreServiceTest {
             }
             sources = Arrays.asList("/o", "/n");
             core.deleteElements(wsk, sources, true);
-            String head = core.resolveWorkspacePath(wsk, "head", "/");
+            String head = core.resolveWorkspacePath(wsk, Workspace.HEAD, "/");
             Collection collectionHead = core.readCollection(head);
             assertNull(collectionHead.findElementByName("o"));
             assertNull(collectionHead.findElementByName("n"));
@@ -611,7 +611,7 @@ public class CoreServiceTest {
             LOGGER.log(Level.INFO, "Workspace created");
             LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-            String key = core.resolveWorkspacePath(wsk, "head", "/a");
+            String key = core.resolveWorkspacePath(wsk, Workspace.HEAD, "/a");
             Collection col = core.readCollection(key);
             int initialSize = col.getElements().size();
 
@@ -652,7 +652,7 @@ public class CoreServiceTest {
                 }
             }
 
-            key = core.resolveWorkspacePath(wsk, "head", "/a");
+            key = core.resolveWorkspacePath(wsk, Workspace.HEAD, "/a");
             col = core.readCollection(key);
 
             assertEquals(expectedSize, col.getElements().size());
@@ -678,10 +678,15 @@ public class CoreServiceTest {
             
             String sha1 = core.put(new ByteArrayInputStream("dadaduc1".getBytes()));
             String sha11 = core.put(new ByteArrayInputStream("dadaduc11".getBytes()));
+            String sha111 = core.put(new ByteArrayInputStream("dadaduc111".getBytes()));
             String sha2 = core.put(new ByteArrayInputStream("dadaduc2".getBytes()));
             String sha3 = core.put(new ByteArrayInputStream("dadaduc3".getBytes()));
-            
+            String sha4 = core.put(new ByteArrayInputStream("dadaduc4".getBytes()));
+            String sha5 = core.put(new ByteArrayInputStream("dadaduc5".getBytes()));
+            String sha55 = core.put(new ByteArrayInputStream("dadaduc55".getBytes()));
+
             core.createMetadataFormat("acl", "ACL", null, null, false, false);
+            core.createMetadataFormat("foo", "FOO", null, null, false, false);
 
             String wsk = UUID.randomUUID().toString();
             core.createWorkspace(wsk, "WorkspaceCollection", "test");
@@ -693,38 +698,91 @@ public class CoreServiceTest {
             core.createMetadataObject(wsk, "/a", "acl", sha1, "acl.json", false);
             core.createMetadataObject(wsk, "/a/b", "acl", sha2, "acl.json", false);
             core.createMetadataObject(wsk, "/a/c", "acl", sha3, "acl.json", false);
-            LOGGER.log(Level.INFO, "Workspace created with 3 collections and 3 metadata");
+            core.createMetadataObject(wsk, "/", "acl", sha4, "acl.json", false);
+            core.createMetadataObject(wsk, "/a/d", "acl", sha5, "acl.json", false);
+            core.createMetadataObject(wsk, "/a/d", "foo", sha55, "foo.bar", false);
+            LOGGER.log(Level.INFO, "Workspace created with 4 collections and 5 metadata");
             LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-            String akey = core.resolveWorkspaceMetadata(wsk, "head", "/a", "acl");
+            String akey = core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/a", "acl");
             MetadataObject md1 = core.readMetadataObject(akey);
             assertEquals("acl", md1.getName());
             assertEquals(sha1, md1.getStream());
             
-            String abkey = core.resolveWorkspaceMetadata(wsk, "head", "/a/b", "acl");
+            String abkey = core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/a/b", "acl");
             MetadataObject md2 = core.readMetadataObject(abkey);
             assertEquals("acl", md2.getName());
             assertEquals(sha2, md2.getStream());
             
-            String ackey = core.resolveWorkspaceMetadata(wsk, "head", "/a/c", "acl");
+            String ackey = core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/a/c", "acl");
             MetadataObject md3 = core.readMetadataObject(ackey);
             assertEquals("acl", md3.getName());
             assertEquals(sha3, md3.getStream());
-            
+
+            String adkey = core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/", "acl");
+            MetadataObject md4 = core.readMetadataObject(adkey);
+            assertEquals("acl", md4.getName());
+            assertEquals(sha4, md4.getStream());
+
+            String aekey = core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/a/d", "acl");
+            MetadataObject md5 = core.readMetadataObject(aekey);
+            assertEquals("acl", md5.getName());
+            assertEquals(sha5, md5.getStream());
+            String aeekey = core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/a/d", "foo");
+            MetadataObject md55 = core.readMetadataObject(aeekey);
+            assertEquals("foo", md55.getName());
+            assertEquals(sha55, md55.getStream());
+
             core.snapshotWorkspace(wsk);
             LOGGER.log(Level.INFO, "Workspace snapshoted");
             LOGGER.log(Level.INFO, walkWorkspace(wsk));
 
-            core.updateMetadataObject(wsk, "/a", "acl", sha11, "acl.json", true);
-            
+            // DELETE
+            core.deleteMetadataObject(wsk, "/a/b", "acl", false);
             try {
-                String ackey2 = core.resolveWorkspaceMetadata(wsk, "head", "/a/c", "acl");
+                core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/a/b", "acl");
+                fail("Should have raised an InvalidPathException");
+            } catch (InvalidPathException e) {
+                LOGGER.log(Level.INFO, "/a/b metadata ACL deleted");
+            }
+
+            core.deleteMetadataObject(wsk, "/", "acl", false);
+
+            try {
+                core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/", "acl");
+                fail("Should have raised an InvalidPathException");
+            } catch (InvalidPathException e) {
+                LOGGER.log(Level.INFO, "/ metadata ACL deleted");
+            }
+
+            // UPDATE
+            LOGGER.log(Level.INFO, walkWorkspace(wsk));
+            LOGGER.log(Level.INFO, "Metadata update");
+            core.updateMetadataObject(wsk, "/a", "acl", sha11, "acl.json", false);
+
+            core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/a/d", "acl");
+            LOGGER.log(Level.INFO, "/a/d metadata ACL still existing");
+
+            LOGGER.log(Level.INFO, "Metadata update (purging children)");
+            core.updateMetadataObject(wsk, "/a", "acl", sha111, "acl.json", true);
+
+            try {
+                core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/a/d", "acl");
+                fail("Should have raised an InvalidPathException");
+            } catch (InvalidPathException e) {
+                LOGGER.log(Level.INFO, "/a/d metadata ACL deleted");
+            }
+            // Check other metadata still there
+            core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/a/d", "foo");
+
+            try {
+                String ackey2 = core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/a/c", "acl");
                 registry.lookup(ackey2);
                 LOGGER.log(Level.INFO, "/a/c metadata ACL [" + ackey2 + "] lookup OK.");
             } catch (Exception e) {
                 LOGGER.log(Level.INFO, "/a/c metadata ACL lookup FAILED: " + e.getMessage());
             }
-            
+
             LOGGER.log(Level.INFO, "Metadata /a[acl] updated");
             LOGGER.log(Level.INFO, walkWorkspace(wsk));
 

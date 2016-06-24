@@ -149,11 +149,11 @@ public class ThumbnailServiceBean implements ThumbnailService {
 						}
 					}
 				}
-				if (!generated && object.getObjectIdentifier().getService().equals(CoreService.SERVICE_NAME) && object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE)) {
+				if (!generated && object instanceof DataObject) {
 					generated = generate(key, ((DataObject) object).getMimeType(), ((DataObject) object).getStream(), size);
 				}
 				if ( !generated ) {
-					throw new ThumbnailServiceException("unable to generate thumbnail for object that are not dataobjects");
+					throw new ThumbnailServiceException("unable to generate thumbnail for object that are not data objects");
 				}
 			}
 			return new Thumbnail(getFile(key, size), ThumbnailService.THUMBS_MIMETYPE);

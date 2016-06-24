@@ -37,6 +37,8 @@ package fr.ortolang.diffusion.client;
  */
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
@@ -44,43 +46,43 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class OrtolangClientConfig {
-	
-	public static final String CONFIG_FILENAME = "client.properties";
 
-	private static final Logger LOGGER = Logger.getLogger(OrtolangClientConfig.class.getName());
-	private static OrtolangClientConfig config;
-	private Properties props;
-	
-	private OrtolangClientConfig(String configFilePath) throws Exception {
-		props = new Properties();
+    public static final String CONFIG_FILENAME = "client.properties";
+
+    private static final Logger LOGGER = Logger.getLogger(OrtolangClientConfig.class.getName());
+    private static OrtolangClientConfig config;
+    private Properties props;
+
+    private OrtolangClientConfig(String configFilePath) throws IOException {
+        props = new Properties();
         try (FileInputStream in = new FileInputStream(configFilePath)) {
-        	props.load(in);
+            props.load(in);
         }
     }
 
-    private OrtolangClientConfig(URL configFileURL) throws Exception {
-    	props = new Properties();
+    private OrtolangClientConfig(URL configFileURL) throws IOException {
+        props = new Properties();
         try (InputStream in = configFileURL.openStream()) {
-        	props.load(in);
-        } 
+            props.load(in);
+        }
     }
 
-    public static synchronized OrtolangClientConfig getInstance() {
-        try {
-            if (config == null) {
-            	String clientname = null;
-            	try ( InputStream in = OrtolangClientConfig.class.getClassLoader().getResource(CONFIG_FILENAME).openStream())  {
-            		Properties clientconfig = new Properties();
-            		clientconfig.load(in);
-                   	clientname = clientconfig.getProperty("client.name");
+    public static synchronized OrtolangClientConfig getInstance() throws IOException {
+        if (config == null) {
+            try {
+                String clientname = null;
+                try ( InputStream in = OrtolangClientConfig.class.getClassLoader().getResource(CONFIG_FILENAME).openStream())  {
+                    Properties clientconfig = new Properties();
+                    clientconfig.load(in);
+                    clientname = clientconfig.getProperty("client.name");
                 } catch (NullPointerException e) {
                     LOGGER.log(Level.SEVERE, "Cannot find custom config file");
                 }
-            	if ( clientname == null ) {
-            		clientname = "";
-            	} else {
-            		clientname = clientname + ".";
-            	}
+                if ( clientname == null ) {
+                    clientname = "";
+                } else {
+                    clientname = clientname + ".";
+                }
                 String configFilePath = System.getProperty(clientname + "client.config.file");
                 if (configFilePath != null && configFilePath.length() != 0) {
                     config = new OrtolangClientConfig(configFilePath);
@@ -90,22 +92,21 @@ public class OrtolangClientConfig {
                     config = new OrtolangClientConfig(configFileURL);
                     LOGGER.log(Level.INFO, "using default config file : " + configFileURL.getPath());
                 }
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "unable to load configuration", e);
+                throw e;
             }
-
-            return config;
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "unable to load configuration", e);
         }
-        return null;
+        return config;
     }
 
-	public String getProperty(String name) {
-		return props.getProperty(name);
-	}
-	
-	public Properties getProperties() {
-		return props;
-	}
-	
+    public String getProperty(String name) {
+        return props.getProperty(name);
+    }
+
+    public Properties getProperties() {
+        return props;
+    }
+
 
 }

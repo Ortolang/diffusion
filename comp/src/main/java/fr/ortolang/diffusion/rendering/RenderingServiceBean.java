@@ -184,11 +184,10 @@ public class RenderingServiceBean implements RenderingService {
                             break;
                         }
                     }
-                    boolean processed = false;
                     if (template != null) {
                         Map<String, Object> data = new HashMap<String, Object>();
                         // TODO populate data using collection and collection metadata.
-                        processed = process(key, template, data);
+                        process(key, template, data);
                     }
                 } else if (object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE)) {
                     LOGGER.log(Level.FINEST, "key is a DataObject, searching render engine");

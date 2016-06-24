@@ -172,7 +172,7 @@ public class SearchServiceBean implements SearchService {
 
         // Execute the query
         List<String> results;
-        if (query != null && query.length() > 0) {
+        if (query.length() > 0) {
             LOGGER.log(Level.FINE, "Performing json search with query : "+query);
             long timestamp1 = System.currentTimeMillis();
             try {
@@ -195,7 +195,7 @@ public class SearchServiceBean implements SearchService {
 
         // Execute the query
         int count = 0;
-        if (query != null && query.length() > 0) {
+        if (query.length() > 0) {
             LOGGER.log(Level.FINE, "Performing json search with query : "+query);
             try {
                 List<String> results = jsonStore.search(query);
@@ -231,7 +231,7 @@ public class SearchServiceBean implements SearchService {
 
         // Execute the query
         List<String> results;
-        if (query != null && query.length() > 0) {
+        if (query.length() > 0) {
             try {
                 results = jsonStore.search(query);
             } catch (JsonStoreServiceException e) {
@@ -268,7 +268,7 @@ public class SearchServiceBean implements SearchService {
         }
         // Execute the query
         List<String> results;
-        if (query != null && query.length() > 0) {
+        if (query.length() > 0) {
             try {
                 LOGGER.log(Level.FINE, "Performing json search with query : "+query);
                 long timestamp1 = System.currentTimeMillis();
@@ -311,7 +311,7 @@ public class SearchServiceBean implements SearchService {
 
         // Execute the query
         int count = 0;
-        if (query != null && query.length() > 0) {
+        if (query.length() > 0) {
             LOGGER.log(Level.FINE, "Performing json search with query : "+query);
             try {
                 List<String> results = jsonStore.search(query);
@@ -334,7 +334,7 @@ public class SearchServiceBean implements SearchService {
 
         // Execute the query
         List<String> results;
-        if (query != null && query.length() > 0) {
+        if (query.length() > 0) {
             try {
                 results = jsonStore.search(query);
             } catch (JsonStoreServiceException e) {

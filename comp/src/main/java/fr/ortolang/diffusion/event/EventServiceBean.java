@@ -229,23 +229,20 @@ public class EventServiceBean implements EventService {
             }
             feed.setKey(key);
 
-            boolean endOfEvents = false;
-            List<OrtolangEvent> oevents = new ArrayList<OrtolangEvent>();
-            while (!endOfEvents) {
-                List<Event> events = em.createNamedQuery("listAllEventsFromDate", Event.class).setParameter("date", from).setLockMode(LockModeType.NONE).getResultList();
-                for (Event event : events) {
-                    for (EventFeedFilter filter : feed.getFilters()) {
-                        if (filter.match(event)) {
-                            try {
-                                if (event.getFromObject() != null && event.getFromObject().length() > 0) {
-                                    authorisation.checkPermission(event.getFromObject(), subjects, "read");
-                                }
-                                oevents.add(event);
-                            } catch (AccessDeniedException e) {
-                                LOGGER.log(Level.FINEST, "no permission to read event with id: " + event.getId());
+            List<OrtolangEvent> oevents = new ArrayList<>();
+            List<Event> events = em.createNamedQuery("listAllEventsFromDate", Event.class).setParameter("date", from).setLockMode(LockModeType.NONE).getResultList();
+            for (Event event : events) {
+                for (EventFeedFilter filter : feed.getFilters()) {
+                    if (filter.match(event)) {
+                        try {
+                            if (event.getFromObject() != null && event.getFromObject().length() > 0) {
+                                authorisation.checkPermission(event.getFromObject(), subjects, "read");
                             }
-                            break;
+                            oevents.add(event);
+                        } catch (AccessDeniedException e) {
+                            LOGGER.log(Level.FINEST, "no permission to read event with id: " + event.getId());
                         }
+                        break;
                     }
                 }
             }
@@ -272,23 +269,20 @@ public class EventServiceBean implements EventService {
             }
             feed.setKey(key);
 
-            boolean endOfEvents = false;
             List<OrtolangEvent> oevents = new ArrayList<OrtolangEvent>();
-            while (!endOfEvents) {
-                List<Event> events = em.createNamedQuery("listAllEventsFromId", Event.class).setParameter("id", id).setLockMode(LockModeType.NONE).getResultList();
-                for (Event event : events) {
-                    for (EventFeedFilter filter : feed.getFilters()) {
-                        if (filter.match(event)) {
-                            try {
-                                if (event.getFromObject() != null && event.getFromObject().length() > 0) {
-                                    authorisation.checkPermission(event.getFromObject(), subjects, "read");
-                                }
-                                oevents.add(event);
-                            } catch (AccessDeniedException e) {
-                                LOGGER.log(Level.FINEST, "no permission to read event with id: " + event.getId());
+            List<Event> events = em.createNamedQuery("listAllEventsFromId", Event.class).setParameter("id", id).setLockMode(LockModeType.NONE).getResultList();
+            for (Event event : events) {
+                for (EventFeedFilter filter : feed.getFilters()) {
+                    if (filter.match(event)) {
+                        try {
+                            if (event.getFromObject() != null && event.getFromObject().length() > 0) {
+                                authorisation.checkPermission(event.getFromObject(), subjects, "read");
                             }
-                            break;
+                            oevents.add(event);
+                        } catch (AccessDeniedException e) {
+                            LOGGER.log(Level.FINEST, "no permission to read event with id: " + event.getId());
                         }
+                        break;
                     }
                 }
             }
@@ -535,7 +529,7 @@ public class EventServiceBean implements EventService {
         }
         return query.getSingleResult();
     }
-    
+
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public long systemCountAllEvents() throws EventServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting all events");

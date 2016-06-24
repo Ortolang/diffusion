@@ -9,6 +9,7 @@
             <property name="serverConfig">ortolang-test.xml</property>
             <property name="allowConnectingToRunningServer">true</property>
             <property name="javaVmArguments">-Dortolang.home=${ortolang.home}</property>
+            <!--<property name="javaVmArguments">-Dortolang.home=${ortolang.home} -agentlib:jdwp=transport=dt_socket,address=8787,server=y,suspend=y</property>-->
         </configuration>
     </container>
 </arquillian>

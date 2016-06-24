@@ -242,7 +242,7 @@ public class SecurityServiceBean implements SecurityService {
                 rules.put(subject, permissions);
             }
             authorisation.setPolicyRules(key, rules);
-            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("subject", subject).addArgument("permissions", Arrays.deepToString(permissions.toArray()));
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder(2).addArgument("subject", subject).addArgument("permissions", permissions != null ? Arrays.deepToString(permissions.toArray()) : null);
             notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "set-rule"), argumentsBuilder.build());
         } catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
             ctx.setRollbackOnly();

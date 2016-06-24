@@ -87,6 +87,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -195,7 +196,7 @@ public class AdminResource {
 	    	//TODO return with the metadata key
 	    	URI location = ApiUriBuilder.getApiUriBuilder().path(ObjectResource.class).path(form.getKey()).build();
 	    	return Response.created(location).build();
-	    } catch (DataCollisionException e) {
+	    } catch (DataCollisionException | URISyntaxException e) {
 	        LOGGER.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
 	        return Response.serverError().entity(e.getMessage()).build();
 	    }

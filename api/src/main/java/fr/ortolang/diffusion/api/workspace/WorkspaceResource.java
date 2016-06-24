@@ -40,6 +40,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -184,7 +185,8 @@ public class WorkspaceResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @GZIP
     public Response createWorkspace(@FormParam("type") @DefaultValue("default") String type, @FormParam("name") @DefaultValue("No Name Provided") String name, @FormParam("alias") String alias)
-            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException, AliasAlreadyExistsException {
+            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException, AliasAlreadyExistsException,
+            URISyntaxException {
         LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
         String key = java.util.UUID.randomUUID().toString();
         Workspace workspace;
@@ -204,7 +206,8 @@ public class WorkspaceResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @GZIP
     public Response createWorkspace(WorkspaceRepresentation representation)
-            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException, AliasAlreadyExistsException {
+            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException, AliasAlreadyExistsException,
+            URISyntaxException {
         LOGGER.log(Level.INFO, "POST(application/json) /workspaces");
         String key = UUID.randomUUID().toString();
         Workspace workspace;
@@ -483,7 +486,7 @@ public class WorkspaceResource {
                     return Response.created(newly).entity(representation).build();
                 }
             }
-        } catch (DataCollisionException | UnsupportedEncodingException e) {
+        } catch (DataCollisionException | UnsupportedEncodingException | URISyntaxException e) {
             LOGGER.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
             return Response.serverError().entity(e.getMessage()).build();
         }

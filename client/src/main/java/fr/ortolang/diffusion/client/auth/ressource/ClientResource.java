@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.client.auth.ressource;
  * #L%
  */
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -64,99 +65,98 @@ import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
 @Produces({ MediaType.APPLICATION_JSON })
 public class ClientResource {
 
-	private static final Logger LOGGER = Logger.getLogger(ClientResource.class.getName());
-	
-	private static boolean initialized = false;
-	private static String authUrl;
-	private static String authRealm; 
-	private static String appName; 
-	private static String callbackUrl; 
-	private static Map<String, String> states = new HashMap<String, String> ();
-	private static OrtolangClient client = OrtolangClient.getInstance();
-	
-	@Context 
-	private SecurityContext ctx;
-	
-	public ClientResource() {
-		LOGGER.log(Level.INFO, "Creating new ClientResource");
-		if ( !initialized ) {
-			authUrl = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.url");
-			authRealm = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.realm");
-			appName = OrtolangClientConfig.getInstance().getProperty("client.app.name");
-			callbackUrl = OrtolangClientConfig.getInstance().getProperty("client.auth.callback.url");
-			initialized = true;
-		}
-	}
+    private static final Logger LOGGER = Logger.getLogger(ClientResource.class.getName());
 
-	@GET
-	@Path("/grant")
-	public Response getAuthStatus() {
-		LOGGER.log(Level.INFO, "Checking grant status for " + ctx.getUserPrincipal());
-		String user;
-		if ( ctx.getUserPrincipal() != null ) {
-			user = ctx.getUserPrincipal().getName();
-		} else {
-			return Response.status(Status.UNAUTHORIZED).build();
-		}
-		if ( !client.getAccountManager().exists(user) ) {
-			LOGGER.log(Level.FINE, "Generating authentication url");
-			String state = UUID.randomUUID().toString();
-			states.put(state, user);
-			StringBuilder url = new StringBuilder();
-			url.append(authUrl).append("/realms/").append(authRealm);
-			url.append("/tokens/login?client_id=").append(appName);
-			url.append("&state=").append(state);
-			url.append("&response_type=code");
-			url.append("&redirect_uri=").append(callbackUrl);
-			JsonObject jsonObject = Json.createObjectBuilder().add("url", url.toString()).build();
-			return Response.ok(jsonObject).build();
-		
-		} else if( client.getAccountManager().sessionExpired(user) ){
-			LOGGER.log(Level.FINE, "Re-generating authentication url");
-			String state = UUID.randomUUID().toString();
-			states.put(state, user);
-			StringBuilder url = new StringBuilder();
-			url.append(authUrl).append("/realms/").append(authRealm);
-			url.append("/tokens/login?client_id=").append(appName);
-			url.append("&state=").append(state);
-			url.append("&response_type=code");
-			url.append("&redirect_uri=").append(callbackUrl);
-			JsonObject jsonObject = Json.createObjectBuilder().add("url", url.toString()).build();
-			return Response.ok(jsonObject).build();
-		} else {
-			return Response.ok().build();
-		}
-	}
-	
-	@GET
-	@Path("/code")
-	@Produces(MediaType.TEXT_HTML)
-	public Response setAuthCode(@QueryParam("code") String code, @QueryParam("state") String state) {
-		LOGGER.log(Level.INFO, "Setting grant code");
-		if ( states.containsKey(state) ) {
-			try {
-				client.getAccountManager().setAuthorisationCode(states.get(state), code);
-			} catch (OrtolangClientAccountException e) {
-				return Response.serverError().entity(e.getMessage()).build();
-			}
-			return Response.ok("<HTML><HEAD></HEAD><BODY onload=\"javascript:window.close();\"></BODY></HTML>").build();
-		} else {
-			return Response.status(Status.UNAUTHORIZED).build();
-		}
-	}
-	
-	@GET
-	@Path("/revoke")
-	public Response revoke() {
-		LOGGER.log(Level.INFO, "Revoking grant");
-		//String user = null;
-		if ( ctx.getUserPrincipal() != null ) {
-			//user = ctx.getUserPrincipal().getName();
-		} else {
-			return Response.status(Status.UNAUTHORIZED).build();
-		}
-		//TODO make something !!
-		return Response.ok().build();
-	}
-	
+    private static boolean initialized = false;
+    private static String authUrl;
+    private static String authRealm;
+    private static String appName;
+    private static String callbackUrl;
+    private static Map<String, String> states = new HashMap<String, String> ();
+    private static OrtolangClient client = OrtolangClient.getInstance();
+
+    @Context
+    private SecurityContext ctx;
+
+    public ClientResource() throws IOException {
+        LOGGER.log(Level.INFO, "Creating new ClientResource");
+        if ( !initialized ) {
+            authUrl = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.url");
+            authRealm = OrtolangClientConfig.getInstance().getProperty("diffusion.auth.realm");
+            appName = OrtolangClientConfig.getInstance().getProperty("client.app.name");
+            callbackUrl = OrtolangClientConfig.getInstance().getProperty("client.auth.callback.url");
+            initialized = true;
+        }
+    }
+
+    @GET
+    @Path("/grant")
+    public Response getAuthStatus() {
+        LOGGER.log(Level.INFO, "Checking grant status for " + ctx.getUserPrincipal());
+        String user;
+        if ( ctx.getUserPrincipal() != null ) {
+            user = ctx.getUserPrincipal().getName();
+        } else {
+            return Response.status(Status.UNAUTHORIZED).build();
+        }
+        if ( !client.getAccountManager().exists(user) ) {
+            LOGGER.log(Level.FINE, "Generating authentication url");
+            String state = UUID.randomUUID().toString();
+            states.put(state, user);
+            StringBuilder url = new StringBuilder();
+            url.append(authUrl).append("/realms/").append(authRealm);
+            url.append("/tokens/login?client_id=").append(appName);
+            url.append("&state=").append(state);
+            url.append("&response_type=code");
+            url.append("&redirect_uri=").append(callbackUrl);
+            JsonObject jsonObject = Json.createObjectBuilder().add("url", url.toString()).build();
+            return Response.ok(jsonObject).build();
+
+        } else if( client.getAccountManager().sessionExpired(user) ){
+            LOGGER.log(Level.FINE, "Re-generating authentication url");
+            String state = UUID.randomUUID().toString();
+            states.put(state, user);
+            StringBuilder url = new StringBuilder();
+            url.append(authUrl).append("/realms/").append(authRealm);
+            url.append("/tokens/login?client_id=").append(appName);
+            url.append("&state=").append(state);
+            url.append("&response_type=code");
+            url.append("&redirect_uri=").append(callbackUrl);
+            JsonObject jsonObject = Json.createObjectBuilder().add("url", url.toString()).build();
+            return Response.ok(jsonObject).build();
+        } else {
+            return Response.ok().build();
+        }
+    }
+
+    @GET
+    @Path("/code")
+    @Produces(MediaType.TEXT_HTML)
+    public Response setAuthCode(@QueryParam("code") String code, @QueryParam("state") String state) {
+        LOGGER.log(Level.INFO, "Setting grant code");
+        if ( states.containsKey(state) ) {
+            try {
+                client.getAccountManager().setAuthorisationCode(states.get(state), code);
+            } catch (OrtolangClientAccountException e) {
+                return Response.serverError().entity(e.getMessage()).build();
+            }
+            return Response.ok("<HTML><HEAD></HEAD><BODY onload=\"javascript:window.close();\"></BODY></HTML>").build();
+        } else {
+            return Response.status(Status.UNAUTHORIZED).build();
+        }
+    }
+
+    @GET
+    @Path("/revoke")
+    public Response revoke() {
+        LOGGER.log(Level.INFO, "Revoking grant");
+        //String user = null;
+        if ( ctx.getUserPrincipal() == null ) {
+            return Response.status(Status.UNAUTHORIZED).build();
+        }
+        //user = ctx.getUserPrincipal().getName();
+        //TODO make something !!
+        return Response.ok().build();
+    }
+
 }
