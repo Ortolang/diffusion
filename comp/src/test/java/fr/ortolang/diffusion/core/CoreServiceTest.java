@@ -741,8 +741,8 @@ public class CoreServiceTest {
             core.deleteMetadataObject(wsk, "/a/b", "acl", false);
             try {
                 core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/a/b", "acl");
-                fail("Should have raised an InvalidPathException");
-            } catch (InvalidPathException e) {
+                fail("Should have raised an CoreServiceException");
+            } catch (CoreServiceException e) {
                 LOGGER.log(Level.INFO, "/a/b metadata ACL deleted");
             }
 
@@ -750,8 +750,8 @@ public class CoreServiceTest {
 
             try {
                 core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/", "acl");
-                fail("Should have raised an InvalidPathException");
-            } catch (InvalidPathException e) {
+                fail("Should have raised an CoreServiceException");
+            } catch (CoreServiceException e) {
                 LOGGER.log(Level.INFO, "/ metadata ACL deleted");
             }
 
@@ -768,8 +768,8 @@ public class CoreServiceTest {
 
             try {
                 core.resolveWorkspaceMetadata(wsk, Workspace.HEAD, "/a/d", "acl");
-                fail("Should have raised an InvalidPathException");
-            } catch (InvalidPathException e) {
+                fail("Should have raised an CoreServiceException");
+            } catch (CoreServiceException e) {
                 LOGGER.log(Level.INFO, "/a/d metadata ACL deleted");
             }
             // Check other metadata still there
