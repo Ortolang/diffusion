@@ -38,12 +38,13 @@ package fr.ortolang.diffusion.event;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.Map;
 
 import fr.ortolang.diffusion.event.entity.Event;
 
 public class EventLoggerFormatter {
 
-    private static HashMap<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> ();
+    private static Map<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> ();
     private static final String fieldSeparator = ",";
 
     private static SimpleDateFormat getEventDateFormatter() {

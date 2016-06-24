@@ -153,7 +153,7 @@ public class AuthorisationPolicy {
 
 	public Map<String, List<String>> getRules() throws IOException {
 		loadRules();
-		HashMap<String, List<String>> map = new HashMap<String, List<String>>();
+		Map<String, List<String>> map = new HashMap<String, List<String>>();
 		for (Entry<Object, Object> rule : rules.entrySet()) {
 			String subject = (String) rule.getKey();
 			if (rules.containsKey(subject) && !rules.getProperty(subject).equals("")) {

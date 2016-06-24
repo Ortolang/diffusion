@@ -161,7 +161,7 @@ public class SearchServiceBean implements SearchService {
 	}
 
     @Override
-	public List<String> findCollections(HashMap<String, String> fieldsProjection, String content, String group, String limit, String orderProp, String orderDir, HashMap<String, Object> fieldsMap) throws SearchServiceException {
+	public List<String> findCollections(Map<String, String> fieldsProjection, String content, String group, String limit, String orderProp, String orderDir, Map<String, Object> fieldsMap) throws SearchServiceException {
         LOGGER.log(Level.FINE, "find collections");
         String query;
         if (content != null) {
@@ -189,7 +189,7 @@ public class SearchServiceBean implements SearchService {
 	}
 
     @Override
-    public int countCollections(HashMap<String, Object> fieldsMap) throws SearchServiceException {
+    public int countCollections(Map<String, Object> fieldsMap) throws SearchServiceException {
         LOGGER.log(Level.FINE, "count collections");
         String query = countItemsWithFields("Collection", fieldsMap);
 
@@ -224,7 +224,7 @@ public class SearchServiceBean implements SearchService {
     }
 
     @Override
-    public List<String> findProfiles(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException {
+    public List<String> findProfiles(String content, Map<String, String> fieldsProjection) throws SearchServiceException {
         LOGGER.log(Level.FINE, "Gets profile with content : " + content);
         HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
         String query = findByContent("Profile", content, fieldsProjection, fieldsMap, null, null, null, null);
@@ -258,7 +258,7 @@ public class SearchServiceBean implements SearchService {
     }
 
     @Override
-    public List<String> findWorkspaces(String content, HashMap<String, String> fieldsProjection, String group, String limit, String orderProp, String orderDir, HashMap<String, Object> fieldsMap) throws SearchServiceException {
+    public List<String> findWorkspaces(String content, Map<String, String> fieldsProjection, String group, String limit, String orderProp, String orderDir, Map<String, Object> fieldsMap) throws SearchServiceException {
         LOGGER.log(Level.FINE, "Finds workspaces");
         String query;
         if (content != null) {
@@ -305,7 +305,7 @@ public class SearchServiceBean implements SearchService {
     }
 
     @Override
-    public int countWorkspaces(HashMap<String, Object> fieldsMap) throws SearchServiceException {
+    public int countWorkspaces(Map<String, Object> fieldsMap) throws SearchServiceException {
         LOGGER.log(Level.FINE, "count workspace");
         String query = countItemsWithFields("workspace", fieldsMap);
 
@@ -327,7 +327,7 @@ public class SearchServiceBean implements SearchService {
     }
 
     @Override
-    public List<String> findEntities(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException {
+    public List<String> findEntities(String content, Map<String, String> fieldsProjection) throws SearchServiceException {
         LOGGER.log(Level.FINE, "Finds entities with content : " + content);
         HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
         String query = findByContent("Entity", content, fieldsProjection, fieldsMap, null, null, null, null);
@@ -377,7 +377,7 @@ public class SearchServiceBean implements SearchService {
 		}
 	}
 
-    private String findByContent(String cls, String content, HashMap<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
+    private String findByContent(String cls, String content, Map<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
         StringBuilder queryBuilder = new StringBuilder();
         // SELECT FROM Collection LET $temp = (   SELECT FROM (     TRAVERSE * FROM $current WHILE $depth <= 7   )   WHERE any().toLowerCase().indexOf('dede') > -1 ) WHERE $temp.size() > 0
         queryBuilder.append("SELECT ");
@@ -433,7 +433,7 @@ public class SearchServiceBean implements SearchService {
         return queryBuilder.toString();
     }
 
-    private String findItemsByFields(String cls, HashMap<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
+    private String findItemsByFields(String cls, Map<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
         StringBuilder queryBuilder = new StringBuilder();
 
         queryBuilder.append("SELECT ");
@@ -481,7 +481,7 @@ public class SearchServiceBean implements SearchService {
         return queryBuilder.toString();
     }
 
-    private StringBuilder selectClause(HashMap<String, String> fieldsProjection) {
+    private StringBuilder selectClause(Map<String, String> fieldsProjection) {
         StringBuilder selectStr = new StringBuilder();
         if (fieldsProjection.isEmpty()) {
             selectStr.append("*");

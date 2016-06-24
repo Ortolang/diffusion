@@ -36,8 +36,8 @@ package fr.ortolang.diffusion.search;
  * #L%
  */
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.OrtolangService;
@@ -50,23 +50,23 @@ public interface SearchService extends OrtolangService {
 	
 	List<String> jsonSearch(String query) throws SearchServiceException;
 
-    List<String> findCollections(HashMap<String, String> fieldsProjection, String content, String group, String limit, String orderProp, String orderDir, HashMap<String, Object> fieldsMap) throws SearchServiceException;
+    List<String> findCollections(Map<String, String> fieldsProjection, String content, String group, String limit, String orderProp, String orderDir, Map<String, Object> fieldsMap) throws SearchServiceException;
 
-    int countCollections(HashMap<String, Object> fieldsMap) throws SearchServiceException;
+    int countCollections(Map<String, Object> fieldsMap) throws SearchServiceException;
 
 	String getCollection(String key) throws SearchServiceException;
 	
-	List<String> findProfiles(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException;
+	List<String> findProfiles(String content, Map<String, String> fieldsProjection) throws SearchServiceException;
 	
 	String getProfile(String key) throws SearchServiceException;
 	
-	List<String> findWorkspaces(String content, HashMap<String, String> fieldsProjection, String group, String limit, String orderProp, String orderDir, HashMap<String, Object> fieldsMap) throws SearchServiceException;
+	List<String> findWorkspaces(String content, Map<String, String> fieldsProjection, String group, String limit, String orderProp, String orderDir, Map<String, Object> fieldsMap) throws SearchServiceException;
 	
 	String getWorkspace(String wsalias) throws SearchServiceException;
 	
-	int countWorkspaces(HashMap<String, Object> fieldsMap) throws SearchServiceException;
+	int countWorkspaces(Map<String, Object> fieldsMap) throws SearchServiceException;
 
-	List<String> findEntities(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException;
+	List<String> findEntities(String content, Map<String, String> fieldsProjection) throws SearchServiceException;
 	
 	String getEntity(String id) throws SearchServiceException;
 }

@@ -185,7 +185,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
             Query q = new CustomScoreQuery(query, boostQuery);
 
             TopDocs docs = searcher.search(q, 100);
-            ArrayList<OrtolangSearchResult> results = new ArrayList<OrtolangSearchResult>(docs.totalHits);
+            List<OrtolangSearchResult> results = new ArrayList<OrtolangSearchResult>(docs.totalHits);
             SimpleHTMLFormatter formatter = new SimpleHTMLFormatter("<span class='highlighted'>", "</span>");
             QueryScorer scorer = new QueryScorer(query);
             Highlighter highlighter = new Highlighter(formatter, scorer);

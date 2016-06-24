@@ -3356,7 +3356,7 @@ public class CoreServiceBean implements CoreService {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<MetadataFormat> listMetadataFormat() throws CoreServiceException {
         List<MetadataFormat> formats = listAllMetadataFormat();
-        HashMap<String, MetadataFormat> latest = new HashMap<String, MetadataFormat>();
+        Map<String, MetadataFormat> latest = new HashMap<String, MetadataFormat>();
         for (MetadataFormat format : formats) {
             if (!latest.containsKey(format.getName())) {
                 latest.put(format.getName(), format);

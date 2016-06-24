@@ -90,7 +90,7 @@ import java.util.logging.Logger;
         String limit = null;
         String orderProp = null;
         String orderDir = null;
-        HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
+        Map<String, Object> fieldsMap = new HashMap<String, Object>();
         for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
             if (parameter.getKey().equals("fields")) {
                 fields = parameter.getValue()[0];
@@ -126,7 +126,7 @@ import java.util.logging.Logger;
                 }
             }
         }
-        HashMap<String, String> fieldsProjection = new HashMap<String, String>();
+        Map<String, String> fieldsProjection = new HashMap<String, String>();
         if (fields != null) {
             for (String field : fields.split(",")) {
                 String[] fieldPart = field.split(":");
@@ -179,7 +179,7 @@ import java.util.logging.Logger;
     public Response findProfiles(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
         LOGGER.log(Level.INFO, "GET /search/profiles?content=" + content + (fields != null ? "&fields=" + fields : ""));
         // Sets projections
-        HashMap<String, String> fieldsProjection = new HashMap<String, String>();
+        Map<String, String> fieldsProjection = new HashMap<String, String>();
         if (fields != null) {
             for (String field : fields.split(",")) {
                 String[] fieldPart = field.split(":");
@@ -227,7 +227,7 @@ import java.util.logging.Logger;
         String limit = null;
         String orderProp = null;
         String orderDir = null;
-        HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
+        Map<String, Object> fieldsMap = new HashMap<String, Object>();
         for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
             if (parameter.getKey().equals("fields")) {
                 fields = parameter.getValue()[0];
@@ -263,7 +263,7 @@ import java.util.logging.Logger;
                 }
             }
         }
-        HashMap<String, String> fieldsProjection = new HashMap<String, String>();
+        Map<String, String> fieldsProjection = new HashMap<String, String>();
         if (fields != null) {
             for (String field : fields.split(",")) {
                 if (field.contains(":")) {
@@ -319,7 +319,7 @@ import java.util.logging.Logger;
         String fields = null;
         String content = null;
         String group = null;
-        HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
+        Map<String, Object> fieldsMap = new HashMap<String, Object>();
         for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
             if (parameter.getKey().equals("fields")) {
                 fields = parameter.getValue()[0];
@@ -360,7 +360,7 @@ import java.util.logging.Logger;
     @GET @Path("/entities") @GZIP public Response findEntities(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
         LOGGER.log(Level.INFO, "GET /search/entities?content=" + content + "&fields=" + fields);
         // Sets projections
-        HashMap<String, String> fieldsProjection = new HashMap<String, String>();
+        Map<String, String> fieldsProjection = new HashMap<String, String>();
         if (fields != null) {
             for (String field : fields.split(",")) {
                 String[] fieldPart = field.split(":");

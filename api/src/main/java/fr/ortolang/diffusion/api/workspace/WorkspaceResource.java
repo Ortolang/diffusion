@@ -361,7 +361,7 @@ public class WorkspaceResource {
                     String publicationPolicy = core.readPublicationPolicy(wskey, root, path);
                     representation.setPublicationPolicy(publicationPolicy);
                     if (object instanceof Collection) {
-                        HashMap<String, String> publicationPolicies = new HashMap<>();
+                        Map<String, String> publicationPolicies = new HashMap<>();
                         String childPublicationPolicy;
                         for (CollectionElement collectionElement : ((Collection) object).getElements()) {
                             childPublicationPolicy = core.readPublicationPolicy(collectionElement.getKey());

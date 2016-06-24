@@ -49,6 +49,7 @@ import javax.jms.Message;
 import javax.jms.MessageListener;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -100,7 +101,7 @@ public class AtmosphereListenerBean implements MessageListener {
             }
 
             for (Map.Entry<String, Subscription> subscriptionRegistryEntry : subscription.getSubscriptions().entrySet()) {
-                HashSet<Filter> filters = new HashSet<>(subscriptionRegistryEntry.getValue().getFilters());
+                Set<Filter> filters = new HashSet<>(subscriptionRegistryEntry.getValue().getFilters());
                 filters.stream().filter(filter -> filter.matches(event)).forEach(filter -> {
                     LOGGER.log(Level.FINE, "Matching filter " + filter);
                     LOGGER.log(Level.INFO, "Sending atmosphere message to " + subscriptionRegistryEntry.getKey());
