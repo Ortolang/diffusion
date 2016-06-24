@@ -90,26 +90,22 @@ public class FtpServiceBean implements FtpService {
     private MembershipService membership;
     @EJB
     private RegistryService registry;
-    
-    private OrtolangFileSystemFactory fsFactory;
-	private OrtolangUserManager userManager;
-	private ListenerFactory lFactory;
-	private DataConnectionConfigurationFactory dcFactory;
-	private SslConfigurationFactory sslcFactory;
-	private ConnectionConfigFactory cFactory;
+
+    private ListenerFactory lFactory;
+    private ConnectionConfigFactory cFactory;
 	private FtpServer server;
 
 	public FtpServiceBean() {
-	    LOGGER.log(Level.FINE, "Instanciating ftp service");
+	    LOGGER.log(Level.FINE, "Instantiating ftp service");
     	FtpServerFactory serverFactory = new FtpServerFactory();
     	lFactory = new ListenerFactory();
     	lFactory.setPort(Integer.parseInt(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_PORT)));
-    	dcFactory = new DataConnectionConfigurationFactory();
+        DataConnectionConfigurationFactory dcFactory = new DataConnectionConfigurationFactory();
         dcFactory.setPassivePorts(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_PASSIVE_PORTS));
         lFactory.setDataConnectionConfiguration(dcFactory.createDataConnectionConfiguration());
         boolean sslActive = Boolean.parseBoolean(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.FTP_SERVER_SSL));
         if ( sslActive ) {
-        	sslcFactory = new SslConfigurationFactory();
+            SslConfigurationFactory sslcFactory = new SslConfigurationFactory();
         	sslcFactory.setKeystoreFile(new File(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SSL_KEYSTORE_FILE)));
         	sslcFactory.setKeystorePassword(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SSL_KEYSTORE_PASSWORD));
         	sslcFactory.setKeyAlias(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SSL_KEY_PASSWORD));
@@ -120,11 +116,11 @@ public class FtpServiceBean implements FtpService {
             lFactory.setImplicitSsl(true);
         }
     	serverFactory.addListener("default", lFactory.createListener());
-		fsFactory = new OrtolangFileSystemFactory();
+        OrtolangFileSystemFactory fsFactory = new OrtolangFileSystemFactory();
 		serverFactory.setFileSystem(fsFactory);
 		cFactory = new ConnectionConfigFactory();
 		serverFactory.setConnectionConfig(cFactory.createConnectionConfig());
-		userManager = new OrtolangUserManager();
+        OrtolangUserManager userManager = new OrtolangUserManager();
 		serverFactory.setUserManager(userManager);
 		server = serverFactory.createServer();
 	}

@@ -37,7 +37,6 @@ package fr.ortolang.diffusion.api.mapper;
  */
 
 import fr.ortolang.diffusion.OrtolangErrorCodes;
-import fr.ortolang.diffusion.core.AliasAlreadyExistsException;
 import fr.ortolang.diffusion.core.RootNotFoundException;
 
 import javax.ws.rs.core.Response;

@@ -66,15 +66,15 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.ortolang.diffusion.core.wrapper.CollectionWrapper;
+import fr.ortolang.diffusion.core.wrapper.OrtolangObjectWrapper;
 import org.apache.commons.io.IOUtils;
 import org.javers.core.Javers;
 import org.javers.core.JaversBuilder;
+import org.javers.core.diff.Change;
 import org.javers.core.diff.Diff;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -320,8 +320,8 @@ public class CoreServiceBean implements CoreService {
             registry.register(wskey, workspace.getObjectIdentifier(), caller);
 
             Map<String, List<String>> wsrules = new HashMap<String, List<String>>();
-            wsrules.put(members, Arrays.asList("read"));
-            wsrules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read"));
+            wsrules.put(members, Collections.singletonList("read"));
+            wsrules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
             wsrules.put(MembershipService.MODERATOR_GROUP_KEY, Arrays.asList("read", "create", "update", "delete"));
             authorisation.createPolicy(wskey, caller);
             authorisation.setPolicyRules(wskey, wsrules);
@@ -698,7 +698,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public String resolveWorkspaceAlias(String alias) throws CoreServiceException, AccessDeniedException, AliasNotFoundException {
+    public String resolveWorkspaceAlias(String alias) throws CoreServiceException, AliasNotFoundException {
         LOGGER.log(Level.FINE, "finding workspace for alias: " + alias);
         try {
             TypedQuery<Workspace> query = em.createNamedQuery("findWorkspaceByAlias", Workspace.class).setParameter("alias", alias);
@@ -716,7 +716,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, AccessDeniedException, PathNotFoundException {
+    public String resolveWorkspacePath(String wskey, String root, String path) throws CoreServiceException, InvalidPathException, PathNotFoundException {
         LOGGER.log(Level.FINE, "resolving into workspace [" + wskey + "] and root [" + root + "] path [" + path + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -845,7 +845,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public Map<String, Map<String, List<String>>> buildWorkspacePublicationMap(String wskey, String snapshot) throws CoreServiceException, AccessDeniedException {
+    public Map<String, Map<String, List<String>>> buildWorkspacePublicationMap(String wskey, String snapshot) throws CoreServiceException {
         LOGGER.log(Level.FINE, "building publication map for workspace [" + wskey + "]");
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -878,7 +878,7 @@ public class CoreServiceBean implements CoreService {
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void builtPublicationMap(String key, Map<String, Map<String, List<String>>> map, Map<String, List<String>> current, Map<String, String> params) throws KeyNotFoundException,
-            AccessDeniedException, CoreServiceException, OrtolangException {
+            CoreServiceException, OrtolangException {
         Object object = findObject(key);
         if (object instanceof MetadataSource) {
             MetadataElement mde = ((MetadataSource) object).findMetadataByName(MetadataFormat.ACL);
@@ -921,7 +921,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public Set<OrtolangObjectPid> buildWorkspacePidList(String wskey, String tag) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    public Set<OrtolangObjectPid> buildWorkspacePidList(String wskey, String tag) throws CoreServiceException {
         LOGGER.log(Level.FINE, "building pid list for workspace [" + wskey + "]");
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -953,7 +953,7 @@ public class CoreServiceBean implements CoreService {
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void buildHandleList(String wsalias, String tag, String key, Set<OrtolangObjectPid> pids, PathBuilder path, String apiUrlBase, String marketUrlBase) throws CoreServiceException,
-            KeyNotFoundException, AccessDeniedException, OrtolangException, InvalidPathException {
+            KeyNotFoundException, OrtolangException, InvalidPathException {
         OrtolangObject object = findObject(key);
         LOGGER.log(Level.FINE, "Generating pid for key: " + key);
         String target = ((path.isRoot()) ? marketUrlBase : apiUrlBase) + "/" + wsalias + "/" + tag + ((path.isRoot()) ? "" : path.build());
@@ -1021,7 +1021,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public Map<String, String> listWorkspaceContent(String wskey, String snapshot) throws CoreServiceException, AccessDeniedException {
+    public Map<String, String> listWorkspaceContent(String wskey, String snapshot) throws CoreServiceException {
         LOGGER.log(Level.FINE, "listing content of workspace [" + wskey + "]");
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1049,7 +1049,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    private void listContent(String key, PathBuilder path, Map<String, String> map) throws KeyNotFoundException, AccessDeniedException, CoreServiceException, OrtolangException, InvalidPathException {
+    private void listContent(String key, PathBuilder path, Map<String, String> map) throws OrtolangException, InvalidPathException {
         Object object = findObject(key);
         map.put(path.build(), key);
         if (object instanceof Collection) {
@@ -1060,7 +1060,38 @@ public class CoreServiceBean implements CoreService {
     }
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public void diffWorkspaceContent(String wskey, String lsnapshot, String rsnapshot) throws CoreServiceException, AccessDeniedException {
+    private CollectionWrapper getWorkspaceContentTree(String key, PathBuilder path, CollectionWrapper parent)
+            throws KeyNotFoundException, InvalidPathException, RegistryServiceException {
+        OrtolangObjectIdentifier identifier = registry.lookup(key);
+        OrtolangObjectWrapper ortolangObjectWrapper;
+        switch (identifier.getType()) {
+        case Collection.OBJECT_TYPE:
+            Collection collection = em.find(Collection.class, identifier.getId());
+            ortolangObjectWrapper = OrtolangObjectWrapper.fromOrtolangObject(collection, path.build());
+            for (CollectionElement element : collection.getElements()) {
+                getWorkspaceContentTree(element.getKey(), path.clone().path(element.getName()), (CollectionWrapper) ortolangObjectWrapper);
+            }
+            if (parent != null) {
+                parent.addChild(ortolangObjectWrapper);
+            }
+            return (CollectionWrapper) ortolangObjectWrapper;
+        case DataObject.OBJECT_TYPE:
+            DataObject dataObject = em.find(DataObject.class, identifier.getId());
+            ortolangObjectWrapper = OrtolangObjectWrapper.fromOrtolangObject(dataObject, path.build());
+            parent.addChild(ortolangObjectWrapper);
+            break;
+        case Link.OBJECT_TYPE:
+            Link link = em.find(Link.class, identifier.getId());
+            ortolangObjectWrapper = OrtolangObjectWrapper.fromOrtolangObject(link, path.build());
+            parent.addChild(ortolangObjectWrapper);
+            break;
+        }
+        return null;
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Change> diffWorkspaceContent(String wskey, String lsnapshot, String rsnapshot) throws CoreServiceException {
         LOGGER.log(Level.FINE, "diff content of workspace [" + wskey + "] between snapshots [" + lsnapshot + "] and [" + rsnapshot + "]");
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -1073,25 +1104,32 @@ public class CoreServiceBean implements CoreService {
             if (workspace == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
             }
-            if (!workspace.containsSnapshotName(lsnapshot)) {
-                throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + lsnapshot);
+            String lroot;
+            if (lsnapshot.equals(Workspace.HEAD)) {
+                lroot = workspace.getHead();
+            } else {
+                if (!workspace.containsSnapshotName(lsnapshot)) {
+                    throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + lsnapshot);
+                }
+                lroot = workspace.findSnapshotByName(lsnapshot).getKey();
             }
-            String lroot = workspace.findSnapshotByName(lsnapshot).getKey();
-
-            if (!workspace.containsSnapshotName(rsnapshot)) {
-                throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + rsnapshot);
+            String rroot;
+            if (rsnapshot.equals(Workspace.HEAD)) {
+                rroot = workspace.getHead();
+            } else {
+                if (!workspace.containsSnapshotName(rsnapshot)) {
+                    throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + rsnapshot);
+                }
+                rroot = workspace.findSnapshotByName(rsnapshot).getKey();
             }
-            String rroot = workspace.findSnapshotByName(rsnapshot).getKey();
 
-            Map<String, String> lcontent = new HashMap<String, String>();
-            listContent(lroot, PathBuilder.newInstance(), lcontent);
-
-            Map<String, String> rcontent = new HashMap<String, String>();
-            listContent(rroot, PathBuilder.newInstance(), rcontent);
+            CollectionWrapper lcontent = getWorkspaceContentTree(lroot, PathBuilder.newInstance(), null);
+            CollectionWrapper rcontent = getWorkspaceContentTree(rroot, PathBuilder.newInstance(), null);
 
             Javers javers = JaversBuilder.javers().build();
             Diff diff = javers.compare(lcontent, rcontent);
-            diff.prettyPrint();
+
+            return diff.getChanges();
 
         } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException | InvalidPathException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during diff workspace content", e);
@@ -1101,7 +1139,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+    public String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "find workspace [" + wskey + "] latest published snapshot");
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(wskey);
@@ -1155,7 +1193,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Collection createCollection(String wskey, String key, String path) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
+    public Collection createCollection(String wskey, String key, String path) throws CoreServiceException, KeyAlreadyExistsException, InvalidPathException,
             AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "creating collection with key [" + key + "] into workspace [" + wskey + "] at path [" + path + "]");
         try {
@@ -1449,8 +1487,7 @@ public class CoreServiceBean implements CoreService {
             LOGGER.log(Level.FINEST, "destination element does not exists, ok for creating it");
             if (!dpath.part().equals(spath.part())) {
                 if (scollection.getClock() < ws.getClock()) {
-                    Collection clone = cloneCollection(ws.getHead(), scollection, ws.getClock());
-                    scollection = clone;
+                    scollection = cloneCollection(ws.getHead(), scollection, ws.getClock());
                 }
                 scollection.setName(dpath.part());
                 em.merge(scollection);
@@ -1587,7 +1624,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public DataObject createDataObject(String wskey, String key, String path, String hash) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
+    public DataObject createDataObject(String wskey, String key, String path, String hash) throws CoreServiceException, KeyAlreadyExistsException, InvalidPathException,
             AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "create data object with key [" + key + "] into workspace [" + wskey + "] at path [" + path + "]");
         try {
@@ -1705,7 +1742,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public DataObject updateDataObject(String wskey, String path, String hash) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException,
+    public DataObject updateDataObject(String wskey, String path, String hash) throws CoreServiceException, InvalidPathException, AccessDeniedException, PathNotFoundException,
             WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "updating object into workspace [" + wskey + "] at path [" + path + "]");
         try {
@@ -1897,8 +1934,7 @@ public class CoreServiceBean implements CoreService {
             LOGGER.log(Level.FINEST, "destination element does not exists, creating it");
             if (!dpath.part().equals(spath.part())) {
                 if (sobject.getClock() < ws.getClock()) {
-                    DataObject clone = cloneDataObject(ws.getHead(), sobject, ws.getClock());
-                    sobject = clone;
+                    sobject = cloneDataObject(ws.getHead(), sobject, ws.getClock());
                 }
                 sobject.setName(dpath.part());
                 em.merge(sobject);
@@ -2024,7 +2060,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Link createLink(String wskey, String key, String path, String target) throws CoreServiceException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
+    public Link createLink(String wskey, String key, String path, String target) throws CoreServiceException, KeyAlreadyExistsException, InvalidPathException,
             AccessDeniedException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "create link with key [" + key + "] into workspace [" + wskey + "] at path [" + path + "]");
         try {
@@ -2130,7 +2166,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Link updateLink(String wskey, String path, String target) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, PathNotFoundException,
+    public Link updateLink(String wskey, String path, String target) throws CoreServiceException, InvalidPathException, AccessDeniedException, PathNotFoundException,
             WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "updating link into workspace [" + wskey + "] at path [" + path + "]");
         try {
@@ -2306,8 +2342,7 @@ public class CoreServiceBean implements CoreService {
 
             if (!dpath.part().equals(spath.part())) {
                 if (slink.getClock() < ws.getClock()) {
-                    Link clone = cloneLink(ws.getHead(), slink, ws.getClock());
-                    slink = clone;
+                    slink = cloneLink(ws.getHead(), slink, ws.getClock());
                 }
                 slink.setName(dpath.part());
                 em.merge(slink);
@@ -2418,7 +2453,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<String> findLinksForTarget(String target) throws CoreServiceException, AccessDeniedException {
+    public List<String> findLinksForTarget(String target) throws CoreServiceException {
         LOGGER.log(Level.FINE, "finding links for target [" + target + "]");
         try {
             TypedQuery<Link> query = em.createNamedQuery("findLinksForTarget", Link.class).setParameter("target", target);
@@ -2437,7 +2472,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public String resolveLinkTarget(String target) throws CoreServiceException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, AliasNotFoundException {
+    public String resolveLinkTarget(String target) throws CoreServiceException, InvalidPathException, PathNotFoundException, AccessDeniedException, AliasNotFoundException {
         LOGGER.log(Level.FINE, "resolving link target [" + target + "]");
         PathBuilder tpath = PathBuilder.fromPath(target);
         String[] tparts = tpath.buildParts();
@@ -2472,7 +2507,7 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public MetadataObject createMetadataObject(String wskey, String key, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException,
-            KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException {
+            KeyAlreadyExistsException, InvalidPathException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "create metadataobject with key [" + key + "] into workspace [" + wskey + "] for path [" + path + "] with name [" + name + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -2696,8 +2731,8 @@ public class CoreServiceBean implements CoreService {
     
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren, String format) throws CoreServiceException, KeyNotFoundException,
-            InvalidPathException, AccessDeniedException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException {
+    public MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren, String format) throws CoreServiceException,
+            InvalidPathException, MetadataFormatException, PathNotFoundException, WorkspaceReadOnlyException {
         LOGGER.log(Level.FINE, "updating metadata content into workspace [" + wskey + "] for path [" + path + "] and name [" + name + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -2923,8 +2958,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void deleteMetadataObject(String wskey, String path, String name, boolean recursive) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,
-            PathNotFoundException, WorkspaceReadOnlyException {
+    public void deleteMetadataObject(String wskey, String path, String name, boolean recursive) throws CoreServiceException, InvalidPathException, WorkspaceReadOnlyException, PathNotFoundException {
         LOGGER.log(Level.FINE, "deleting metadataobject into workspace [" + wskey + "] for path [" + path + "] with name [" + name + "]");
         try {
             PathBuilder npath = PathBuilder.fromPath(path);
@@ -3210,7 +3244,7 @@ public class CoreServiceBean implements CoreService {
     @RolesAllowed({"system", "admin"})
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void systemCreateMetadata(String key, String name, String hash, String filename)
-            throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
+            throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
             IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
         if (!name.startsWith("system-")) {
             throw new CoreServiceException("only system metadata can be added this way.");
@@ -3322,7 +3356,7 @@ public class CoreServiceBean implements CoreService {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<MetadataFormat> listMetadataFormat() throws CoreServiceException {
         List<MetadataFormat> formats = listAllMetadataFormat();
-        HashMap<String, MetadataFormat> latest = new HashMap<String, MetadataFormat>();
+        Map<String, MetadataFormat> latest = new HashMap<String, MetadataFormat>();
         for (MetadataFormat format : formats) {
             if (!latest.containsKey(format.getName())) {
                 latest.put(format.getName(), format);
@@ -3337,14 +3371,14 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<MetadataFormat> listAllMetadataFormat() throws CoreServiceException {
+    public List<MetadataFormat> listAllMetadataFormat() {
         TypedQuery<MetadataFormat> query = em.createNamedQuery("listMetadataFormat", MetadataFormat.class);
         return query.getResultList();
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public MetadataFormat getMetadataFormat(String name) throws CoreServiceException {
+    public MetadataFormat getMetadataFormat(String name) {
         LOGGER.log(Level.FINE, "reading metadata format for name [" + name + "]");
         TypedQuery<MetadataFormat> query = em.createNamedQuery("findMetadataFormatForName", MetadataFormat.class).setParameter("name", name);
         List<MetadataFormat> formats = query.getResultList();
@@ -3950,7 +3984,7 @@ public class CoreServiceBean implements CoreService {
     private Collection readCollectionAtPath(String root, PathBuilder path) throws PathNotFoundException, CoreServiceException, RegistryServiceException, KeyNotFoundException, InvalidPathException {
         LOGGER.log(Level.FINE, "Reading tree from root [" + root + "] to path [" + path.build() + "]");
         String[] parts = path.buildParts();
-        Collection node = null;
+        Collection node;
         PathBuilder current = PathBuilder.newInstance();
 
         OrtolangObjectIdentifier ridentifier = registry.lookup(root);
@@ -3992,8 +4026,8 @@ public class CoreServiceBean implements CoreService {
         LOGGER.log(Level.FINE, "Loading tree from root [" + root + "] to path [" + path.build() + "] with clock [" + clock + "]");
         try {
             String[] parts = path.buildParts();
-            Collection parent = null;
-            Collection leaf = null;
+            Collection parent;
+            Collection leaf;
             PathBuilder current = PathBuilder.newInstance();
 
             OrtolangObjectIdentifier ridentifier = registry.lookup(root);
@@ -4271,7 +4305,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    private void purgeChildrenMetadata(Collection collection, String wskey, String path, String name) throws OrtolangException, AccessDeniedException, KeyNotFoundException, InvalidPathException,
+    private void purgeChildrenMetadata(Collection collection, String wskey, String path, String name) throws OrtolangException, KeyNotFoundException, InvalidPathException,
             PathNotFoundException, WorkspaceReadOnlyException, CoreServiceException, RegistryServiceException {
         LOGGER.log(Level.FINE, "purging children metadata for path: " + path + " and name: " + name);
         MetadataElement metadataElement;

@@ -85,10 +85,6 @@ public class OAIPMHServlet {
 	@EJB
 	private static SearchService search;
 
-	private static Context context;
-	private static Repository repository;
-	private static DiffusionDataProvider dataProvider;
-
 	private static final Logger LOGGER = Logger.getLogger(OAIPMHServlet.class.getName());
 
 	@GET
@@ -98,8 +94,8 @@ public class OAIPMHServlet {
 	        , @QueryParam("metadataPrefix") String metadataPrefix
 	        , @QueryParam("from") String from
 	        , @QueryParam("until") String until) {
-		
-		context = new Context();
+
+		Context context = new Context();
 		context.withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
 		context.withMetadataFormat(MetadataFormat.metadataFormat("olac").withNamespace("http://www.language-archives.org/OLAC/1.1/").withSchemaLocation("http://www.language-archives.org/OLAC/1.1/olac.xsd"));
 		
@@ -135,14 +131,11 @@ public class OAIPMHServlet {
 			.withMaxListIdentifiers(100)
 			.withMaxListRecords(100)
 			.withMaxListSets(100);
-		
-		repository = new Repository()
-		    .withSetRepository(setRepository)
-		    .withItemRepository(itemRepository)
-		    .withResumptionTokenFormatter(new SimpleResumptionTokenFormat())
-		    .withConfiguration(repositoryConfiguration);
 
-		dataProvider = new DiffusionDataProvider(context, repository);
+		Repository repository = new Repository().withSetRepository(setRepository).withItemRepository(itemRepository).withResumptionTokenFormatter(new SimpleResumptionTokenFormat())
+				.withConfiguration(repositoryConfiguration);
+
+		DiffusionDataProvider dataProvider = new DiffusionDataProvider(context, repository);
 		
 		//
 		Map<String, List<String>> reqParam = new HashMap<String, List<String>>();
@@ -154,7 +147,7 @@ public class OAIPMHServlet {
 		
 		OAIRequest oaiRequest = new OAIRequest(reqParam);
 
-		OAIPMH response = null;
+		OAIPMH response;
 		try {
 			response = dataProvider.handle(oaiRequest);
 		} catch (OAIException e1) {
@@ -189,12 +182,7 @@ public class OAIPMHServlet {
 	}
 	
 	protected String write(final XmlWritable handle) throws XMLStreamException, XmlWriteException {
-		return OAIPMHServlet.toString(new XmlWritable() {
-			@Override
-			public void write(XmlWriter writer) throws XmlWriteException {
-				writer.write(handle);
-			}
-		});
+		return OAIPMHServlet.toString(writer -> writer.write(handle));
 	}
 
 	public static String toString(XmlWritable writable) throws XMLStreamException, XmlWriteException {

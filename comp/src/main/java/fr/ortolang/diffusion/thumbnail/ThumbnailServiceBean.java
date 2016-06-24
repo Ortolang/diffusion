@@ -70,10 +70,8 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -90,15 +88,11 @@ public class ThumbnailServiceBean implements ThumbnailService {
 	private static final Logger LOGGER = Logger.getLogger(ThumbnailServiceBean.class.getName());
 
 	private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
-    public static final String DEFAULT_THUMBNAILS_HOME = "thumbs";
+	private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+
+	public static final String DEFAULT_THUMBNAILS_HOME = "thumbs";
 	public static final int DISTINGUISH_SIZE = 2;
 
-	@EJB
-	private MembershipService membership;
-	@EJB
-	private AuthorisationService authorisation;
 	@EJB
 	private BinaryStoreService store;
 	@EJB
@@ -209,71 +203,67 @@ public class ThumbnailServiceBean implements ThumbnailService {
 
 	private boolean needGeneration(String key, int size, long lmd) throws DataNotFoundException, IOException {
 		File thumb = getFile(key, size);
-		if (thumb.exists()) {
-			return lmd > thumb.lastModified();
-		}
-		return true;
+		return !thumb.exists() || lmd > thumb.lastModified();
 	}
-	
+
 	private long getStoreNbFiles() throws IOException {
-        long nbfiles = Files.walk(base).count();
-        return nbfiles;
-    }
-    
-    private long getStoreSize() throws IOException {
-	    return Files.walk(base).mapToLong(this::size).sum();
-    }
-    
-    private long size(Path p) {
-        try {
-            return Files.size(p);
-        } catch ( Exception e ) {
-            return 0;
-        }
-    }
-	
+		return Files.walk(base).count();
+	}
+
+	private long getStoreSize() throws IOException {
+		return Files.walk(base).mapToLong(this::size).sum();
+	}
+
+	private long size(Path p) {
+		try {
+			return Files.size(p);
+		} catch ( Exception e ) {
+			return 0;
+		}
+	}
+
 	//Service methods
-    
-    @Override
-    public String getServiceName() {
-        return ThumbnailService.SERVICE_NAME;
-    }
-    
-    @Override
-    public Map<String, String> getServiceInfos() {
-        Map<String, String> infos = new HashMap<String, String> ();
-        infos.put(INFO_PATH, this.base.toString());
-        try {
-            infos.put(INFO_FILES, Long.toString(getStoreNbFiles()));
-        } catch ( Exception e ) { 
-            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_FILES, e);
-        }
-        try {
-            infos.put(INFO_SIZE, Long.toString(getStoreSize()));
-        } catch ( Exception e ) { 
-            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_SIZE, e);
-        }
-       return infos;
-    }
 
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
+	@Override
+	public String getServiceName() {
+		return ThumbnailService.SERVICE_NAME;
+	}
 
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
+	@Override
+	public Map<String, String> getServiceInfos() {
+		Map<String, String> infos = new HashMap<String, String> ();
+		infos.put(INFO_PATH, this.base.toString());
+		try {
+			infos.put(INFO_FILES, Long.toString(getStoreNbFiles()));
+		} catch ( Exception e ) {
+			LOGGER.log(Level.INFO, "unable to collect info: " + INFO_FILES, e);
+		}
+		try {
+			infos.put(INFO_SIZE, Long.toString(getStoreSize()));
+		} catch ( Exception e ) {
+			LOGGER.log(Level.INFO, "unable to collect info: " + INFO_SIZE, e);
+		}
+		return infos;
+	}
 
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
+	@Override
+	public String[] getObjectTypeList() {
+		return OBJECT_TYPE_LIST;
+	}
 
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
+	@Override
+	public String[] getObjectPermissionsList(String type) throws OrtolangException {
+		return OBJECT_PERMISSIONS_LIST;
+	}
+
+	@Override
+	public OrtolangObject findObject(String key) throws OrtolangException {
+		throw new OrtolangException("this service does not managed any object");
+	}
+
+	@Override
+	public OrtolangObjectSize getSize(String key) throws OrtolangException {
+		throw new OrtolangException("this service does not managed any object");
+	}
 
 }

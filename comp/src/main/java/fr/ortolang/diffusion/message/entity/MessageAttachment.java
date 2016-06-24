@@ -90,12 +90,11 @@ public class MessageAttachment {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("{Name:").append(getName());
-        builder.append(",Type:").append(getType());
-        builder.append(",Size:").append(getSize());
-        builder.append(",Hash:").append(getHash()).append("}");
-        return builder.toString();
+        return "MessageAttachment{" +
+                "name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", size=" + size +
+                ", hash='" + hash + '\'' +
+                '}';
     }
-
 }

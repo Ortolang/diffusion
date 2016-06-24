@@ -350,7 +350,7 @@ public class EventServiceBean implements EventService {
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void addEventFeedFilter(String key, String eventTypeRE, String fromObjectRE, String objectTypeRE, String throwedByRE) throws EventServiceException, AccessDeniedException,
             KeyNotFoundException {
-        LOGGER.log(Level.FINE, "adding flter in event feed with key [" + key + "]");
+        LOGGER.log(Level.FINE, "adding filter in event feed with key [" + key + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -383,7 +383,7 @@ public class EventServiceBean implements EventService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void removeEventFeedFilter(String key, String id) throws EventServiceException, AccessDeniedException, KeyNotFoundException {
-        LOGGER.log(Level.FINE, "removing flter in event feed with key [" + key + "]");
+        LOGGER.log(Level.FINE, "removing filter in event feed with key [" + key + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -533,14 +533,14 @@ public class EventServiceBean implements EventService {
             query = em.createNamedQuery("countEvents", Long.class).setParameter("eventTypeFilter", eventTypeFilterRE).setParameter("fromObjectFilter", fromResourceFilterRE)
                     .setParameter("objectTypeFilter", resourceTypeFilterRE).setParameter("throwedByFilter", throwedByFilterRE);
         }
-        return query.getSingleResult().longValue();
+        return query.getSingleResult();
     }
     
     @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
     public long systemCountAllEvents() throws EventServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting all events");
         TypedQuery<Long> query = em.createNamedQuery("countAllEvents", Long.class);
-        return query.getSingleResult().longValue();
+        return query.getSingleResult();
     }
 
     /* Service Methods */

@@ -88,13 +88,13 @@ public class MetadataElement implements Serializable {
 		StringTokenizer tokenizer = new StringTokenizer(serializedElement, "/");
 		return new MetadataElement(tokenizer.nextToken(), tokenizer.nextToken());
 	}
-	
+
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append("{Name:").append(getName());
-		builder.append(",Key:").append(getKey()).append("}");
-		return builder.toString();
+		return "MetadataElement{" +
+				"name='" + name + '\'' +
+				", key='" + key + '\'' +
+				'}';
 	}
 
 	@Override

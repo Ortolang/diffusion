@@ -73,11 +73,9 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
-import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.rendering.engine.TEIRenderEngine;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -103,17 +101,14 @@ public class RenderingServiceBean implements RenderingService {
     public static final int DISTINGUISH_SIZE = 2;
 
     @EJB
-    private MembershipService membership;
-    @EJB
-    private AuthorisationService authorisation;
-    @EJB
     private BinaryStoreService store;
     @EJB
     private BrowserService browser;
-    @EJB
-    private CoreService core;
+
     private Path base;
+
     private Map<String, RenderEngine> engines = new HashMap<String, RenderEngine>();
+
     private Configuration config;
 
     public RenderingServiceBean() {
@@ -196,7 +191,7 @@ public class RenderingServiceBean implements RenderingService {
                         processed = process(key, template, data);
                     }
                 } else if (object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE)) {
-                    LOGGER.log(Level.FINEST, "key is a dataobject, serching render engine");
+                    LOGGER.log(Level.FINEST, "key is a DataObject, searching render engine");
                     RenderEngine engine = null;
                     if (engineid.length() > 0) {
                         engine = engines.get(engineid);
@@ -296,20 +291,15 @@ public class RenderingServiceBean implements RenderingService {
 
     private boolean isCached(String key, String engine, long lmd) throws DataNotFoundException, IOException {
         Path view = getPath(key, engine);
-        if (Files.exists(view)) {
-            return lmd < Files.getLastModifiedTime(view).toMillis();
-        }
-        return false;
+        return Files.exists(view) && lmd < Files.getLastModifiedTime(view).toMillis();
     }
 
     private long getStoreNbFiles() throws IOException {
-        long nbfiles = Files.walk(base).count();
-        return nbfiles;
+        return Files.walk(base).count();
     }
 
     private long getStoreSize() throws IOException {
-        long size = Files.walk(base).mapToLong(this::size).sum();
-        return size;
+        return Files.walk(base).mapToLong(this::size).sum();
     }
 
     private long size(Path p) {

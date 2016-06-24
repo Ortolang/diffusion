@@ -147,7 +147,7 @@ public class RegistryServiceBean implements RegistryService {
 			throw new IdentifierAlreadyRegisteredException("the identifier [" + identifier + "] is already registered");
 		} catch (IdentifierNotRegisteredException e) {
 		}
-		RegistryEntry pentry = null;
+		RegistryEntry pentry;
 		try {
 			pentry = findEntryByKey(parent);
 		} catch (KeyNotFoundException e) {
@@ -449,7 +449,7 @@ public class RegistryServiceBean implements RegistryService {
 		}
 		TypedQuery<Long> query;
 		query = em.createNamedQuery("countVisibleEntries", Long.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString());
-		return query.getSingleResult().longValue();
+		return query.getSingleResult();
 	}
 	
 	@Override
@@ -517,7 +517,7 @@ public class RegistryServiceBean implements RegistryService {
         } 
         ifilter.append("%");
         TypedQuery<Long> query = em.createNamedQuery("countAllEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
-        return query.getSingleResult().longValue();
+        return query.getSingleResult();
     }
 	
 	@Override
@@ -531,7 +531,7 @@ public class RegistryServiceBean implements RegistryService {
         } 
         ifilter.append("%");
         TypedQuery<Long> query = em.createNamedQuery("countDeletedEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
-        return query.getSingleResult().longValue();
+        return query.getSingleResult();
     }
 	
 	@Override
@@ -545,7 +545,7 @@ public class RegistryServiceBean implements RegistryService {
         } 
         ifilter.append("%");
         TypedQuery<Long> query = em.createNamedQuery("countHiddenEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
-        return query.getSingleResult().longValue();
+        return query.getSingleResult();
     }
 	
 	@Override
@@ -568,8 +568,7 @@ public class RegistryServiceBean implements RegistryService {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public RegistryEntry systemReadEntry(String key) throws RegistryServiceException, KeyNotFoundException {
             LOGGER.log(Level.FINE, "#SYSTEM# read entry for key [" + key + "]");
-            RegistryEntry entry = em.find(RegistryEntry.class, key);
-            return entry;
+		return em.find(RegistryEntry.class, key);
     }
 	
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -600,7 +599,7 @@ public class RegistryServiceBean implements RegistryService {
 	
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private RegistryEntry findEntryByIdentifier(OrtolangObjectIdentifier identifier) throws IdentifierNotRegisteredException {
-		List<RegistryEntry> entries = null;
+		List<RegistryEntry> entries;
 
 		TypedQuery<RegistryEntry> query = em.createNamedQuery("findEntryByIdentifier", RegistryEntry.class).setParameter("identifier", identifier.serialize()); 
 		entries = query.getResultList();

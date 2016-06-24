@@ -36,24 +36,154 @@ package fr.ortolang.diffusion.core.entity;
  * #L%
  */
 
-import java.util.Set;
+import fr.ortolang.diffusion.OrtolangObject;
+import org.hibernate.annotations.Type;
 
-public interface MetadataSource {
-	
-	public Set<MetadataElement> getMetadatas();
-	
-	public void setMetadatas(Set<MetadataElement> metadatas);
-	
-	public boolean addMetadata(MetadataElement metadata);
-	
-	public boolean removeMetadata(MetadataElement metadata);
-	
-	public boolean containsMetadata(MetadataElement metadata);
-	
-	public boolean containsMetadataName(String name);
-	
-	public boolean containsMetadataKey(String key);
-	
-	public MetadataElement findMetadataByName(String name);
+import javax.persistence.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+@MappedSuperclass
+public abstract class MetadataSource extends OrtolangObject {
+
+    @Id
+    private String id;
+    @Version
+    private long version;
+    @Lob
+    @Type(type = "org.hibernate.type.TextType")
+    private String metadatasContent = "";
+    @Transient
+    private String key;
+    private String name;
+    private int clock;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
+    }
+
+    public String getMetadatasContent() {
+        return metadatasContent;
+    }
+
+    public void setMetadatasContent(String metadatasContent) {
+        this.metadatasContent = metadatasContent;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getClock() {
+        return clock;
+    }
+
+    public void setClock(int clock) {
+        this.clock = clock;
+    }
+
+    public Set<MetadataElement> getMetadatas() {
+        Set<MetadataElement> metadatas = new HashSet<>();
+        if (metadatasContent != null && metadatasContent.length() > 0) {
+            metadatas.addAll(Arrays.asList(metadatasContent.split("\n")).stream().map(MetadataElement::deserialize).collect(Collectors.toList()));
+        }
+        return metadatas;
+    }
+
+    public void setMetadatas(Set<MetadataElement> metadatas) {
+        StringBuilder newMetadatasContent = new StringBuilder();
+        for (MetadataElement metadata : metadatas) {
+            if (newMetadatasContent.length() > 0) {
+                newMetadatasContent.append("\n");
+            }
+            newMetadatasContent.append(metadata.serialize());
+        }
+        setMetadatasContent(newMetadatasContent.toString());
+    }
+
+    public boolean addMetadata(MetadataElement metadata) {
+        if (!containsMetadata(metadata)) {
+            if (metadatasContent.length() > 0) {
+                metadatasContent += "\n" + metadata.serialize();
+            } else {
+                metadatasContent = metadata.serialize();
+            }
+            setMetadatasContent(metadatasContent);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean removeMetadata(MetadataElement metadata) {
+        if (containsMetadata(metadata)) {
+            metadatasContent = metadatasContent.replaceAll("(?m)^(" + metadata.serialize() + ")\n?", "");
+            if (metadatasContent.endsWith("\n")) {
+                metadatasContent = metadatasContent.substring(0, metadatasContent.length() - 1);
+            }
+            setMetadatasContent(metadatasContent);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean containsMetadata(MetadataElement metadata) {
+        return metadatasContent.contains(metadata.serialize());
+    }
+
+    public boolean containsMetadataName(String name) {
+        return metadatasContent.contains(name + "/");
+    }
+
+    public boolean containsMetadataKey(String key) {
+        return metadatasContent.contains("/" + key);
+    }
+
+    public MetadataElement findMetadataByName(String name) {
+        Pattern pattern = Pattern.compile("(?s).*(" + name + "/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
+        Matcher matcher = pattern.matcher(metadatasContent);
+        if (matcher.matches()) {
+            return MetadataElement.deserialize(matcher.group(1));
+        }
+        return null;
+    }
+
+    @Override
+    public String getObjectKey() {
+        return getKey();
+    }
+
+    @Override
+    public String getObjectName() {
+        return getName();
+    }
 
 }

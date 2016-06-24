@@ -151,7 +151,7 @@ public class OLAC extends OAI_DC {
 		                    
 		                    olac.addOlacField("contributor", "olac:role", roleId, person(contributor));
 		                    
-		                    if(roleId.equals("author")) {
+		                    if("author".equals(roleId)) {
 		                    	olac.addDcField("creator", person(contributor));
 		                    }
 		                }
@@ -241,7 +241,7 @@ public class OLAC extends OAI_DC {
 	                }
 	            }
 	            JsonNumber lastModificationDate = doc.getJsonNumber("lastModificationDate");
-	            Long longTimestamp = Long.valueOf(lastModificationDate.longValue());
+	            Long longTimestamp = lastModificationDate.longValue();
 	            Date datestamp = new Date(longTimestamp);
 	            olac.addDctermsField("modified", "dcterms:W3CDTF", w3cdtf.format(datestamp));
             

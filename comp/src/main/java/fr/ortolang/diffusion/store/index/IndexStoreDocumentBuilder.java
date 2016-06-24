@@ -46,53 +46,56 @@ import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
 
 public class IndexStoreDocumentBuilder {
-	
-	public static final String IDENTIFIER_FIELD = "IDENTIFIER";
-	public static final String SERVICE_FIELD = "SERVICE";
-	public static final String TYPE_FIELD = "TYPE";
-	public static final String KEY_FIELD = "KEY";
-	public static final String NAME_FIELD = "NAME";
-	public static final String VISIBLITY_FIELD = "VISIBILITY";
-	public static final String LOCK_FIELD = "LOCK";
-	public static final String STATUS_FIELD = "STATUS";
-	public static final String CONTENT_FIELD = "CONTENT";
-	public static final String CONTENT_PROPERTY_FIELD_PREFIX = "CONTENT.PROPERTY.";
-	public static final String PROPERTY_FIELD_PREFIX = "PROPERTY.";
-	public static final String BOOST_FIELD = "BOOST";
-	public static final String CONTEXT_ROOT_FIELD = "ROOT";
-	public static final String CONTEXT_PATH_FIELD = "PATH";
-	
-	public static Document buildDocument(OrtolangIndexableObject<IndexablePlainTextContent> object) {
-		Document document = new Document();
-		document.add(new Field(IDENTIFIER_FIELD, object.getIdentifier().serialize(), TextField.TYPE_STORED));
-		document.add(new Field(SERVICE_FIELD, object.getService(), StringField.TYPE_STORED));
-		document.add(new Field(TYPE_FIELD, object.getType(), StringField.TYPE_STORED));
-		document.add(new Field(KEY_FIELD, object.getKey(), StringField.TYPE_STORED));
-		if ( object.getContent().getName().length() > 0 ) {
-		    document.add(new Field(NAME_FIELD, object.getContent().getName(), TextField.TYPE_STORED));
-		} else {
-		    document.add(new Field(NAME_FIELD, object.getKey(), StringField.TYPE_STORED));
-		}
-		if ( object.isHidden() ) {
-			document.add(new Field(VISIBLITY_FIELD, "hidden", StringField.TYPE_STORED));
-		} else {
-			document.add(new Field(VISIBLITY_FIELD, "visible", StringField.TYPE_STORED));
-		} 
-		if ( object.isLocked() ) {
-			document.add(new Field(LOCK_FIELD, "locked", StringField.TYPE_STORED));
-		} else {
-			document.add(new Field(LOCK_FIELD, "unlocked", StringField.TYPE_STORED));
-		}
-		for ( OrtolangObjectProperty prop : object.getProperties() ) {
-			document.add(new Field(PROPERTY_FIELD_PREFIX + prop.getName().toUpperCase(), prop.getValue().toLowerCase(), StringField.TYPE_STORED));
-		}
-		document.add(new Field(STATUS_FIELD, object.getStatus().toLowerCase(), StringField.TYPE_STORED));
-		document.add(new Field(CONTENT_FIELD, object.getContent().toString(), TextField.TYPE_STORED));
-		document.add(new NumericDocValuesField(BOOST_FIELD, object.getContent().getBoost()));
-		for ( IndexablePlainTextContentProperty property : object.getContent().getProperties() ) {
-			document.add(new Field(CONTENT_PROPERTY_FIELD_PREFIX + property.getName().toUpperCase(), property.getValue().toLowerCase(), TextField.TYPE_STORED));
-		}
-		return document;
-	}
+
+    private IndexStoreDocumentBuilder() {
+    }
+
+    public static final String IDENTIFIER_FIELD = "IDENTIFIER";
+    public static final String SERVICE_FIELD = "SERVICE";
+    public static final String TYPE_FIELD = "TYPE";
+    public static final String KEY_FIELD = "KEY";
+    public static final String NAME_FIELD = "NAME";
+    public static final String VISIBLITY_FIELD = "VISIBILITY";
+    public static final String LOCK_FIELD = "LOCK";
+    public static final String STATUS_FIELD = "STATUS";
+    public static final String CONTENT_FIELD = "CONTENT";
+    public static final String CONTENT_PROPERTY_FIELD_PREFIX = "CONTENT.PROPERTY.";
+    public static final String PROPERTY_FIELD_PREFIX = "PROPERTY.";
+    public static final String BOOST_FIELD = "BOOST";
+    public static final String CONTEXT_ROOT_FIELD = "ROOT";
+    public static final String CONTEXT_PATH_FIELD = "PATH";
+
+    public static Document buildDocument(OrtolangIndexableObject<IndexablePlainTextContent> object) {
+        Document document = new Document();
+        document.add(new Field(IDENTIFIER_FIELD, object.getIdentifier().serialize(), TextField.TYPE_STORED));
+        document.add(new Field(SERVICE_FIELD, object.getService(), StringField.TYPE_STORED));
+        document.add(new Field(TYPE_FIELD, object.getType(), StringField.TYPE_STORED));
+        document.add(new Field(KEY_FIELD, object.getKey(), StringField.TYPE_STORED));
+        if ( object.getContent().getName().length() > 0 ) {
+            document.add(new Field(NAME_FIELD, object.getContent().getName(), TextField.TYPE_STORED));
+        } else {
+            document.add(new Field(NAME_FIELD, object.getKey(), StringField.TYPE_STORED));
+        }
+        if ( object.isHidden() ) {
+            document.add(new Field(VISIBLITY_FIELD, "hidden", StringField.TYPE_STORED));
+        } else {
+            document.add(new Field(VISIBLITY_FIELD, "visible", StringField.TYPE_STORED));
+        }
+        if ( object.isLocked() ) {
+            document.add(new Field(LOCK_FIELD, "locked", StringField.TYPE_STORED));
+        } else {
+            document.add(new Field(LOCK_FIELD, "unlocked", StringField.TYPE_STORED));
+        }
+        for ( OrtolangObjectProperty prop : object.getProperties() ) {
+            document.add(new Field(PROPERTY_FIELD_PREFIX + prop.getName().toUpperCase(), prop.getValue().toLowerCase(), StringField.TYPE_STORED));
+        }
+        document.add(new Field(STATUS_FIELD, object.getStatus().toLowerCase(), StringField.TYPE_STORED));
+        document.add(new Field(CONTENT_FIELD, object.getContent().toString(), TextField.TYPE_STORED));
+        document.add(new NumericDocValuesField(BOOST_FIELD, object.getContent().getBoost()));
+        for ( IndexablePlainTextContentProperty property : object.getContent().getProperties() ) {
+            document.add(new Field(CONTENT_PROPERTY_FIELD_PREFIX + property.getName().toUpperCase(), property.getValue().toLowerCase(), TextField.TYPE_STORED));
+        }
+        return document;
+    }
 
 }

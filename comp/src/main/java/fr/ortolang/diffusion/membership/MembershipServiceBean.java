@@ -41,12 +41,7 @@ import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -239,12 +234,12 @@ public class MembershipServiceBean implements MembershipService {
 
             authorisation.createPolicy(key, key);
             Map<String, List<String>> readRules = new HashMap<String, List<String>>();
-            readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList("read"));
+            readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Collections.singletonList("read"));
             authorisation.setPolicyRules(key, readRules);
 
             createGroup(friendGroupKey, connectedIdentifier + "'s Collaborators", "List of collaborators of user " + connectedIdentifier);
             Map<String, List<String>> friendsReadRules = new HashMap<String, List<String>>();
-            friendsReadRules.put(friendGroupKey, Arrays.asList("read"));
+            friendsReadRules.put(friendGroupKey, Collections.singletonList("read"));
             authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
 
             notification.throwEvent(key, key, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "create"));
@@ -288,12 +283,12 @@ public class MembershipServiceBean implements MembershipService {
 
             authorisation.createPolicy(key, key);
             Map<String, List<String>> readRules = new HashMap<String, List<String>>();
-            readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList(new String[] { "read" }));
+            readRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Collections.singletonList("read"));
             authorisation.setPolicyRules(key, readRules);
 
             createGroup(friendGroupKey, identifier + "'s Collaborators", "List of collaborators of user " + identifier);
             Map<String, List<String>> friendsReadRules = new HashMap<String, List<String>>();
-            friendsReadRules.put(friendGroupKey, Arrays.asList(new String[] { "read" }));
+            friendsReadRules.put(friendGroupKey, Collections.singletonList("read"));
             authorisation.setPolicyRules(friendGroupKey, friendsReadRules);
             authorisation.updatePolicyOwner(friendGroupKey, key);
             
@@ -680,7 +675,7 @@ public class MembershipServiceBean implements MembershipService {
 
             authorisation.createPolicy(key, caller);
             Map<String, List<String>> rules = new HashMap<String, List<String>>();
-            rules.put(key, Arrays.asList("read"));
+            rules.put(key, Collections.singletonList("read"));
             authorisation.setPolicyRules(key, rules);
             
             indexing.index(key);

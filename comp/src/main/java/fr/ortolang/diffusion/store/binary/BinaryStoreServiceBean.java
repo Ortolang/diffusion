@@ -369,13 +369,11 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
     }
 
     private long getStoreNbFiles() throws IOException {
-        long nbfiles = Files.walk(base).count();
-        return nbfiles;
+        return Files.walk(base).count();
     }
 
     private long getStoreSize() throws IOException {
-        long size = Files.walk(base).mapToLong(this::size).sum();
-        return size;
+        return Files.walk(base).mapToLong(this::size).sum();
     }
 
     private long size(Path p) {

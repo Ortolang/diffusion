@@ -248,7 +248,7 @@ public class Profile extends OrtolangObject {
 
     public void removeGroup(String group) {
         if (isMemberOf(group)) {
-            groupsList = groupsList.replaceAll("(" + group + "){1},?", "");
+            groupsList = groupsList.replaceAll("(" + group + "),?", "");
         }
         if ( groupsList.endsWith(",") ) {
             groupsList = groupsList.substring(0, groupsList.length()-1);
@@ -257,7 +257,7 @@ public class Profile extends OrtolangObject {
 
     @JsonIgnore
     public String[] getGroups() {
-        if (groupsList.equals("")) {
+        if (groupsList.isEmpty()) {
             return new String[0];
         }
         return groupsList.split(",");

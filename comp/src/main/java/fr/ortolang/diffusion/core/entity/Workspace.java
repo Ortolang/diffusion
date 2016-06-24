@@ -61,7 +61,7 @@ public class Workspace extends OrtolangObject {
 	public static final String OBJECT_TYPE = "workspace";
 	public static final String HEAD = "head";
 	public static final String LATEST = "latest";
-	
+
 	@Id
 	private String id;
 	@Version
@@ -84,7 +84,7 @@ public class Workspace extends OrtolangObject {
 	@Lob
 	@Type(type = "org.hibernate.type.TextType")
 	private String tagsContent = "";
-	
+
 	public Workspace() {
 		clock = 1;
 		changed = false;
@@ -92,7 +92,7 @@ public class Workspace extends OrtolangObject {
 		alias = "";
 		privileged = "";
 	}
-	
+
 	public String getId() {
 		return id;
 	}
@@ -112,11 +112,11 @@ public class Workspace extends OrtolangObject {
 	public String getAlias() {
 		return alias;
 	}
-	
+
 	public void setAlias(String alias) {
 		this.alias = alias;
 	}
-	
+
 	public String getType() {
 		return type;
 	}
@@ -124,23 +124,23 @@ public class Workspace extends OrtolangObject {
 	public void setType(String type) {
 		this.type = type;
 	}
-	
+
 	public boolean hasChanged() {
 		return changed;
 	}
-	
+
 	public void setChanged(boolean changed) {
 		this.changed = changed;
 	}
-	
+
 	public boolean isReadOnly() {
-	    return readOnly;
+		return readOnly;
 	}
-	
+
 	public void setReadOnly(boolean readOnly) {
-	    this.readOnly = readOnly;
+		this.readOnly = readOnly;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
@@ -148,7 +148,7 @@ public class Workspace extends OrtolangObject {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public String getHead() {
 		return head;
 	}
@@ -156,23 +156,23 @@ public class Workspace extends OrtolangObject {
 	public void setHead(String head) {
 		this.head = head;
 	}
-	
+
 	public int getClock() {
 		return clock;
 	}
-	
+
 	public void incrementClock() {
 		this.clock++;
 	}
-	
+
 	public void setSnapshotsContent(String snapshotsContent) {
 		this.snapshotsContent = snapshotsContent;
 	}
-	
+
 	public String getSnapshotsContent() {
 		return snapshotsContent;
 	}
-	
+
 	public Set<SnapshotElement> getSnapshots() {
 		Set<SnapshotElement> snapshots = new HashSet<SnapshotElement>();
 		if ( snapshotsContent != null && snapshotsContent.length() > 0 ) {
@@ -182,11 +182,11 @@ public class Workspace extends OrtolangObject {
 		}
 		return snapshots;
 	}
-	
+
 	public boolean hasSnapshot() {
 		return snapshotsContent != null && snapshotsContent.length() > 0;
 	}
-	
+
 	public void setSnapshots(Set<SnapshotElement> snapshots) {
 		StringBuilder newsnapshots = new StringBuilder();
 		for ( SnapshotElement snapshot : snapshots ) {
@@ -197,7 +197,7 @@ public class Workspace extends OrtolangObject {
 		}
 		snapshotsContent = newsnapshots.toString();
 	}
-	
+
 	public boolean addSnapshot(SnapshotElement snapshot) {
 		if ( !containsSnapshot(snapshot) ) {
 			if ( snapshotsContent.length() > 0 ) {
@@ -209,7 +209,7 @@ public class Workspace extends OrtolangObject {
 		}
 		return false;
 	}
-	
+
 	public boolean removeSnapshot(SnapshotElement snapshot) {
 		if ( containsSnapshot(snapshot) ) {
 			snapshotsContent = snapshotsContent.replaceAll("(?m)^(" + snapshot.serialize() + ")\n?", "");
@@ -221,19 +221,19 @@ public class Workspace extends OrtolangObject {
 			return false;
 		}
 	}
-	
+
 	public boolean containsSnapshot(SnapshotElement snapshot) {
 		return snapshotsContent.length() > 0 && snapshotsContent.contains(snapshot.serialize());
 	}
-	
+
 	public boolean containsSnapshotName(String name) {
 		return snapshotsContent.contains(name + "/");
 	}
-	
+
 	public boolean containsSnapshotKey(String key) {
 		return snapshotsContent.contains("/" + key);
 	}
-	
+
 	public SnapshotElement findSnapshotByName(String name) {
 		Pattern pattern = Pattern.compile("(?s).*(" + name + "/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
 		Matcher matcher = pattern.matcher(snapshotsContent);
@@ -242,7 +242,7 @@ public class Workspace extends OrtolangObject {
 		}
 		return null;
 	}
-	
+
 	public SnapshotElement findSnapshotByKey(String key) {
 		StringTokenizer tok = new StringTokenizer(snapshotsContent, "\r\n");
 		while ( tok.hasMoreTokens() ) {
@@ -253,15 +253,15 @@ public class Workspace extends OrtolangObject {
 		}
 		return null;
 	}
-	
+
 	public void setTagsContent(String tagsContent) {
 		this.tagsContent = tagsContent;
 	}
-	
+
 	public String getTagsContent() {
 		return tagsContent;
 	}
-	
+
 	public Set<TagElement> getTags() {
 		Set<TagElement> tags = new HashSet<TagElement>();
 		if ( tagsContent != null && tagsContent.length() > 0 ) {
@@ -271,7 +271,7 @@ public class Workspace extends OrtolangObject {
 		}
 		return tags;
 	}
-	
+
 	public void setTags(Set<TagElement> tags) {
 		StringBuilder newtags = new StringBuilder();
 		for ( TagElement tag : tags ) {
@@ -282,7 +282,7 @@ public class Workspace extends OrtolangObject {
 		}
 		tagsContent = newtags.toString();
 	}
-	
+
 	public boolean addTag(TagElement tag) {
 		if ( !containsTag(tag) ) {
 			if ( tagsContent.length() > 0 ) {
@@ -294,7 +294,7 @@ public class Workspace extends OrtolangObject {
 		}
 		return false;
 	}
-	
+
 	public boolean removeTag(TagElement tag) {
 		if ( containsTag(tag) ) {
 			tagsContent = tagsContent.replaceAll("(?m)^(" + tag.serialize() + ")\n?", "");
@@ -306,19 +306,19 @@ public class Workspace extends OrtolangObject {
 			return false;
 		}
 	}
-	
+
 	public boolean containsTag(TagElement tag) {
 		return tagsContent.length() > 0 && tagsContent.contains(tag.serialize());
 	}
-	
+
 	public boolean containsTagName(String name) {
 		return findTagByName(name) != null;
 	}
-	
+
 	public boolean containsTagSnapshot(String snapshot) {
 		return tagsContent.contains("/" + snapshot);
 	}
-	
+
 	public TagElement findTagByName(String name) {
 		StringTokenizer tok = new StringTokenizer(tagsContent, "\r\n");
 		String start = name + "/";
@@ -330,7 +330,7 @@ public class Workspace extends OrtolangObject {
 		}
 		return null;
 	}
-	
+
 	public TagElement findTagBySnapshot(String snapshot) {
 		StringTokenizer tok = new StringTokenizer(tagsContent, "\r\n");
 		String end = "/" + snapshot;
@@ -350,16 +350,16 @@ public class Workspace extends OrtolangObject {
 	public void setMembers(String members) {
 		this.members = members;
 	}
-	
+
 	public String getPrivileged() {
-        return privileged;
-    }
+		return privileged;
+	}
 
-    public void setPrivileged(String privileged) {
-        this.privileged = privileged;
-    }
+	public void setPrivileged(String privileged) {
+		this.privileged = privileged;
+	}
 
-    @Override
+	@Override
 	public String getObjectName() {
 		return name;
 	}
@@ -374,6 +374,6 @@ public class Workspace extends OrtolangObject {
 		return new OrtolangObjectIdentifier(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, id);
 	}
 
-	
+
 
 }

@@ -44,24 +44,24 @@
         <version.javax.javaee>7.0</version.javax.javaee>
         <version.jboss.resteasy>3.0.11.Final</version.jboss.resteasy>
         <version.keycloak>1.7.0.Final</version.keycloak>
-        <version.shrinkwrap>1.2.2</version.shrinkwrap>
-        <version.shrinkwrap-resolver>2.1.1</version.shrinkwrap-resolver>
+        <version.shrinkwrap>1.2.6</version.shrinkwrap>
+        <version.shrinkwrap-resolver>2.2.2</version.shrinkwrap-resolver>
         <version.arquillian>1.1.11.Final</version.arquillian>
         <version.wildfly.arquillian>1.1.0.Final</version.wildfly.arquillian>
         <version.fasterxml.jackson>2.7.4</version.fasterxml.jackson>
         <version.commons-io>2.5</version.commons-io>
-        <version.springframework.spring-context>4.2.6.RELEASE</version.springframework.spring-context>
+        <version.springframework.spring-context>4.3.0.RELEASE</version.springframework.spring-context>
         <version.lyncode.xoai>4.1.0</version.lyncode.xoai>
-        <version.json>20141113</version.json>
+        <version.json>20160212</version.json>
         <version.thetransactioncompany.cors-filter>2.5</version.thetransactioncompany.cors-filter>
         <version.json-glassfish>1.0.4</version.json-glassfish>
         <version.base64>2.3.9</version.base64>
         <version.commons-cli>1.3.1</version.commons-cli>
-        <version.javamelody>1.59.0</version.javamelody>
+        <version.javamelody>1.60.0</version.javamelody>
         <version.atmopshere>2.4.4</version.atmopshere>
-        <version.apache.lucene>6.0.1</version.apache.lucene>
+        <version.apache.lucene>6.1.0</version.apache.lucene>
         <version.openrdf.sesame>2.8.3</version.openrdf.sesame>
-        <version.orientechnologies.orientdb>2.2.0</version.orientechnologies.orientdb>
+        <version.orientechnologies.orientdb>2.2.3</version.orientechnologies.orientdb>
         <version.common-compress>1.11</version.common-compress>
         <version.hdlnet>7.3.1</version.hdlnet>
         <version.bagit>4.9.0</version.bagit>

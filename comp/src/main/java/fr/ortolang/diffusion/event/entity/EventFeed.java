@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.event.entity;
  * #L%
  */
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -107,7 +108,7 @@ public class EventFeed extends OrtolangObject {
         return filters;
     }
 
-    public void setFilters(ArrayList<EventFeedFilter> filters) {
+    public void setFilters(List<EventFeedFilter> filters) {
         this.filters = filters;
     }
     

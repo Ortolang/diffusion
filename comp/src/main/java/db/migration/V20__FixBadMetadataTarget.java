@@ -41,13 +41,18 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
 
 import fr.ortolang.diffusion.core.entity.MetadataElement;
 
 public class V20__FixBadMetadataTarget implements JdbcMigration {
-    
+
+    private static final Logger LOGGER = Logger.getLogger(V20__FixBadMetadataTarget.class.getName());
+
+    @Override
     public void migrate(Connection connection) throws Exception {
         try {
             PreparedStatement col_stmt = connection.prepareStatement("SELECT * FROM collection;");
@@ -110,7 +115,7 @@ public class V20__FixBadMetadataTarget implements JdbcMigration {
                 col_stmt.close();
             }
         } catch ( SQLException e ) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
             throw e;
         }
     }

@@ -60,19 +60,19 @@ public class OrtolangBaseFile implements FtpFile {
     private String group;
     private long lastModified;
     private long size;
-    
+
     public OrtolangBaseFile(PathBuilder path, String name) {
         this(path, name, true, false);
     }
-    
+
     public OrtolangBaseFile(PathBuilder path, String name,  boolean directory, boolean exists) {
         this(path, name, directory, exists, false, false, 0, 0);
     }
-    
+
     public OrtolangBaseFile(PathBuilder path, String name, boolean directory, boolean exists, boolean writeable, boolean removable) {
         this(path, name, directory, exists, writeable, removable, 0, 0);
     }
-    
+
     public OrtolangBaseFile(PathBuilder path, String name, boolean directory, boolean exists, boolean writeable, boolean removable, long lastModified, long size) {
         this.path = path;
         this.name = name;
@@ -97,6 +97,7 @@ public class OrtolangBaseFile implements FtpFile {
         this.path = path;
     }
 
+    @Override
     public String getName() {
         return name;
     }
@@ -105,6 +106,7 @@ public class OrtolangBaseFile implements FtpFile {
         this.name = name;
     }
 
+    @Override
     public boolean isHidden() {
         return hidden;
     }
@@ -113,6 +115,7 @@ public class OrtolangBaseFile implements FtpFile {
         this.hidden = hidden;
     }
 
+    @Override
     public boolean isDirectory() {
         return directory;
     }
@@ -130,6 +133,7 @@ public class OrtolangBaseFile implements FtpFile {
         this.exists = exists;
     }
 
+    @Override
     public boolean isReadable() {
         return readable;
     }
@@ -146,6 +150,7 @@ public class OrtolangBaseFile implements FtpFile {
         this.writeable = writeable;
     }
 
+    @Override
     public boolean isRemovable() {
         return removable;
     }
@@ -170,6 +175,7 @@ public class OrtolangBaseFile implements FtpFile {
         this.group = group;
     }
 
+    @Override
     public long getLastModified() {
         return lastModified;
     }
@@ -180,6 +186,7 @@ public class OrtolangBaseFile implements FtpFile {
         return true;
     }
 
+    @Override
     public long getSize() {
         return size;
     }
@@ -193,7 +200,7 @@ public class OrtolangBaseFile implements FtpFile {
         return false;
     }
 
-    
+
     @Override
     public String getAbsolutePath() {
         return path.build();
@@ -249,5 +256,4 @@ public class OrtolangBaseFile implements FtpFile {
         throw new IOException("unable to create input stream for base file");
     }
 
-    
 }

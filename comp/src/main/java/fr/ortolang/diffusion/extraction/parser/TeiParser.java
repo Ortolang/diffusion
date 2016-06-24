@@ -58,7 +58,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TeiParser extends XMLParser {
+class TeiParser extends XMLParser {
 
     private static final Logger LOGGER = Logger.getLogger(TeiParser.class.getName());
 

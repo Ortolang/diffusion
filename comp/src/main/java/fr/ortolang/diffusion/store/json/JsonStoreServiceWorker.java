@@ -43,7 +43,6 @@ import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.jobs.JobService;
 import fr.ortolang.diffusion.jobs.entity.Job;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 
 import javax.annotation.PostConstruct;

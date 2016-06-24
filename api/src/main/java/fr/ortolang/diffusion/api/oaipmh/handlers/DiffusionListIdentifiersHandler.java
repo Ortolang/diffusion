@@ -38,12 +38,10 @@ package fr.ortolang.diffusion.api.oaipmh.handlers;
 
 import java.util.List;
 
-import com.lyncode.xoai.dataprovider.exceptions.BadArgumentException;
 import com.lyncode.xoai.dataprovider.exceptions.DoesNotSupportSetsException;
 import com.lyncode.xoai.dataprovider.exceptions.HandlerException;
 import com.lyncode.xoai.dataprovider.exceptions.InternalOAIException;
 import com.lyncode.xoai.dataprovider.exceptions.NoMatchesException;
-import com.lyncode.xoai.dataprovider.exceptions.NoMetadataFormatsException;
 import com.lyncode.xoai.dataprovider.exceptions.OAIException;
 import com.lyncode.xoai.dataprovider.handlers.VerbHandler;
 import com.lyncode.xoai.dataprovider.handlers.helpers.ResumptionTokenHelper;
@@ -62,7 +60,7 @@ import fr.ortolang.diffusion.api.oaipmh.handlers.helpers.MultiMetadataItemReposi
 import fr.ortolang.diffusion.api.oaipmh.repository.MultiMetadataItemRepository;
 
 public class DiffusionListIdentifiersHandler extends VerbHandler<ListIdentifiers> {
-	private final MultiMetadataItemRepositoryHelper itemRepositoryHelper;
+    private final MultiMetadataItemRepositoryHelper itemRepositoryHelper;
 
     public DiffusionListIdentifiersHandler(Context context, Repository repository) {
         super(context, repository);
@@ -144,10 +142,7 @@ public class DiffusionListIdentifiersHandler extends VerbHandler<ListIdentifiers
     }
 
 
-    private Header createHeader(OAICompiledRequest parameters,
-                                    ItemIdentifier itemIdentifier) throws BadArgumentException,
-            OAIException,
-            NoMetadataFormatsException {
+    private Header createHeader(OAICompiledRequest parameters, ItemIdentifier itemIdentifier) {
         MetadataFormat format = getContext().formatForPrefix(parameters
                 .getMetadataPrefix());
         if (!itemIdentifier.isDeleted() && !canDisseminate(itemIdentifier, format))

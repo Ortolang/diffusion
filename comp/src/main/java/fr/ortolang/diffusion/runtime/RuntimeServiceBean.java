@@ -61,8 +61,6 @@ import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
-import javax.enterprise.concurrent.ContextService;
-import javax.enterprise.concurrent.ManagedScheduledExecutorService;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
@@ -128,10 +126,6 @@ public class RuntimeServiceBean implements RuntimeService {
     private EntityManager em;
     @Resource
     private SessionContext ctx;
-    @Resource
-    private ManagedScheduledExecutorService executor;
-    @Resource
-    private ContextService contextService;
 
     public RuntimeServiceBean() {
     }
@@ -447,7 +441,7 @@ public class RuntimeServiceBean implements RuntimeService {
             }
             process.appendLog(new Date() + "  PROCESS STATE CHANGED TO " + state);
             em.merge(process);
-            
+
             String key = registry.lookup(process.getObjectIdentifier());
             registry.update(key);
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("state", state.name());
@@ -459,7 +453,7 @@ public class RuntimeServiceBean implements RuntimeService {
             throw new RuntimeServiceException("unable to update process state", e);
         }
     }
-    
+
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void updateProcessStatus(String pid, String status, String explanation) throws RuntimeServiceException {
@@ -473,7 +467,7 @@ public class RuntimeServiceBean implements RuntimeService {
             process.setExplanation(explanation);
             process.appendLog(new Date() + "  PROCESS STATUS CHANGED TO " + status);
             em.merge(process);
-            
+
             String key = registry.lookup(process.getObjectIdentifier());
             registry.update(key);
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("status", status).addArgument("explanation", explanation);
@@ -497,11 +491,11 @@ public class RuntimeServiceBean implements RuntimeService {
             }
             process.appendLog(log);
             em.merge(process);
-            
+
             String key = registry.lookup(process.getObjectIdentifier());
             registry.update(key);
             appendProcessTrace(pid, log + "\r\n");
-            
+
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("message", log);
             notification.throwEvent(key, RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, OrtolangEvent.buildEventType(RuntimeService.SERVICE_NAME, Process.OBJECT_TYPE, "log-info"),
                     argumentsBuilder.build());
@@ -540,7 +534,7 @@ public class RuntimeServiceBean implements RuntimeService {
             }
             process.setActivity(name);
             em.merge(process);
-            
+
             String key = registry.lookup(process.getObjectIdentifier());
             registry.update(key);
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("activity", name);

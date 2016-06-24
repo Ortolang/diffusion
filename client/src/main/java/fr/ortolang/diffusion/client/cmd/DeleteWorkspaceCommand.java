@@ -36,26 +36,19 @@ package fr.ortolang.diffusion.client.cmd;
  * #L%
  */
 
-import java.io.Console;
+import fr.ortolang.diffusion.client.OrtolangClient;
+import fr.ortolang.diffusion.client.OrtolangClientException;
+import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
+import org.apache.commons.cli.*;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-
-import fr.ortolang.diffusion.client.OrtolangClient;
-import fr.ortolang.diffusion.client.OrtolangClientException;
-import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
-
 public class DeleteWorkspaceCommand extends Command {
 
-    private Options options = new Options();
+    private final Options options = new Options();
 
     public DeleteWorkspaceCommand() {
         options.addOption("h", "help", false, "show help.");
@@ -63,33 +56,22 @@ public class DeleteWorkspaceCommand extends Command {
         options.addOption("P", "password", true, "password for login");
         options.addOption("k", "key", true, "the workspace key");
         options.addOption("a", "alias", true, "the workspace alias");
-        options.addOption("f", "force", false, "force the supression even if workspace contains published versions (must be root)");
+        options.addOption("f", "force", false, "force the suppression even if workspace contains published versions (must be root)");
     }
 
     @Override
     public void execute(String[] args) {
-        CommandLineParser parser = new BasicParser();
+        CommandLineParser parser = new DefaultParser();
         CommandLine cmd;
-        String username = "";
-        String password = null;
-        Map<String, String> params = new HashMap<String, String> ();
+        Map<String, String> params = new HashMap<>();
         try {
             cmd = parser.parse(options, args);
             if (cmd.hasOption("h")) {
                 help();
             }
-            if (cmd.hasOption("U")) {
-                username = cmd.getOptionValue("U");
-                if (cmd.hasOption("P")) {
-                    password = cmd.getOptionValue("P");
-                } else {
-                    Console cons;
-                    char[] passwd;
-                    if ((cons = System.console()) != null && (passwd = cons.readPassword("[%s]", "Password:")) != null) {
-                        password = new String(passwd);
-                    }
-                }
-            }
+            String[] credentials = getCredentials(cmd);
+            String username = credentials[0];
+            String password = credentials[1];
 
             if (cmd.hasOption("k")) {
                 params.put("wskey", cmd.getOptionValue("k"));
@@ -98,7 +80,7 @@ public class DeleteWorkspaceCommand extends Command {
             } else {
                 help();
             }
-            
+
             if (cmd.hasOption("f")) {
                 params.put("force", "true");
             }
@@ -109,7 +91,7 @@ public class DeleteWorkspaceCommand extends Command {
                 client.login(username);
             }
             System.out.println("Connected as user: " + client.connectedProfile());
-            String pkey = client.createProcess("delete-workspace", "Delete Workspace " + ((cmd.hasOption("k")?cmd.getOptionValue("k"):cmd.getOptionValue("a"))), params, Collections.<String, File> emptyMap());
+            String pkey = client.createProcess("delete-workspace", "Delete Workspace " + (cmd.hasOption("k") ? cmd.getOptionValue("k") : cmd.getOptionValue("a")), params, Collections.<String, File> emptyMap());
             System.out.println("Delete-Workspace process created with key : " + pkey);
 
             client.logout();

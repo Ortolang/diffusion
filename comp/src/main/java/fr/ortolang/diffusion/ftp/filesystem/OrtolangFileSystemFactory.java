@@ -55,8 +55,7 @@ public class OrtolangFileSystemFactory implements FileSystemFactory {
 	public FileSystemView createFileSystemView(User user) throws FtpException {
 	    synchronized (user) {
 	        LOGGER.log(Level.FINE, "creating new filesystem view for user: " + user.getName());
-	        OrtolangFileSystemView fsview = new OrtolangFileSystemView(user);
-	        return fsview;
+		    return new OrtolangFileSystemView(user);
 	    }
 	}
 

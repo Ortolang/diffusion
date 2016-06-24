@@ -103,6 +103,7 @@ public class CoreServiceTest {
         jar.addPackage("fr.ortolang.diffusion.browser");
         jar.addPackage("fr.ortolang.diffusion.core");
         jar.addPackage("fr.ortolang.diffusion.core.entity");
+        jar.addPackage("fr.ortolang.diffusion.core.wrapper");
         jar.addPackage("fr.ortolang.diffusion.event");
         jar.addPackage("fr.ortolang.diffusion.event.entity");
         jar.addPackage("fr.ortolang.diffusion.extraction");
@@ -146,14 +147,15 @@ public class CoreServiceTest {
         ear.addAsLibraries(pom.resolve("org.wildfly:wildfly-ejb-client-bom:pom:9.0.1.Final").withTransitivity().asFile());
         ear.addAsLibraries(pom.resolve("org.codehaus.jettison:jettison:1.3.3").withTransitivity().asFile());
         ear.addAsLibraries(pom.resolve("commons-io:commons-io:2.5").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-core:6.0.1").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-highlighter:6.0.1").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-analyzers-common:6.0.1").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-queryparser:6.0.1").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-core:6.1.0").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-highlighter:6.1.0").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-analyzers-common:6.1.0").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.lucene:lucene-queryparser:6.1.0").withTransitivity().asFile());
         ear.addAsLibraries(pom.resolve("org.apache.tika:tika-core:1.13").withTransitivity().asFile());
-        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-parsers:1.13").withoutTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.apache.tika:tika-parsers:1.13").withTransitivity().asFile());
         ear.addAsLibraries(pom.resolve("commons-codec:commons-codec:1.10").withTransitivity().asFile());
         ear.addAsLibraries(pom.resolve("com.github.fge:json-schema-validator:2.2.6").withTransitivity().asFile());
+        ear.addAsLibraries(pom.resolve("org.javers:javers-core:1.6.7").withTransitivity().asFile());
         LOGGER.log(Level.INFO, "Created EAR for test : " + ear.toString(true));
 
         return ear;

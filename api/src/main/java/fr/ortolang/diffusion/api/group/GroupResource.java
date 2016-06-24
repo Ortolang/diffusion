@@ -61,14 +61,12 @@ import javax.ws.rs.core.UriInfo;
 import org.jboss.resteasy.annotations.GZIP;
 
 import fr.ortolang.diffusion.api.profile.ProfileCardRepresentation;
-import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 
 /**
  * @resourceDescription Operations on Groups
@@ -80,11 +78,7 @@ public class GroupResource {
     private static final Logger LOGGER = Logger.getLogger(GroupResource.class.getName());
 
     @EJB
-    private BrowserService browser;
-    @EJB
     private MembershipService membership;
-    @EJB
-    private AuthorisationService authorisation;
     @Context
     private UriInfo uriInfo;
 
@@ -97,7 +91,7 @@ public class GroupResource {
         URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
         return Response.created(location).build();
     }
-    
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createGroup(GroupRepresentation group) throws MembershipServiceException, AccessDeniedException, KeyAlreadyExistsException {
@@ -107,7 +101,7 @@ public class GroupResource {
         URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
         return Response.created(location).build();
     }
-    
+
     @GET
     @Path("/{key}")
     @GZIP
@@ -122,7 +116,7 @@ public class GroupResource {
         }
         return Response.ok(representation).build();
     }
-    
+
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -138,7 +132,7 @@ public class GroupResource {
         }
         return Response.ok(representation).build();
     }
-    
+
     @PUT
     @Path("/{key}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -154,7 +148,7 @@ public class GroupResource {
         }
         return Response.ok(representation).build();
     }
-    
+
     @DELETE
     @Path("/{key}")
     public Response deleteGroup(@PathParam(value = "key") String key) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {
@@ -177,7 +171,7 @@ public class GroupResource {
         }
         return Response.ok(representation).build();
     }
-    
+
     @DELETE
     @Path("/{key}/members/{member}")
     public Response removeMember(@PathParam(value = "key") String key, @PathParam(value = "member") String member, @QueryParam("members") @DefaultValue("true") boolean members) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {

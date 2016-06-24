@@ -77,7 +77,7 @@ public class StatisticsResource {
             throws NumberFormatException, StatisticsServiceException, StatisticNameNotFoundException {
         LOGGER.log(Level.INFO, "GET /stats/" + name);
         StatisticsRepresentation representation = new StatisticsRepresentation();
-        representation.setKey(name);;
+        representation.setKey(name);
         representation.setValues(stats.history(name, Long.parseLong(from), Long.parseLong(to)));
         return representation;
     }

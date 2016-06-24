@@ -44,7 +44,7 @@ import fr.ortolang.diffusion.OrtolangService;
 
 public interface IndexStoreService extends OrtolangService {
 	
-	static final String SERVICE_NAME = "index-store";
+	String SERVICE_NAME = "index-store";
 	
 	void index(OrtolangIndexableObject<IndexablePlainTextContent> object) throws IndexStoreServiceException;
 	

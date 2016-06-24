@@ -111,7 +111,7 @@ public class MetadataFormatResource {
     public void download(final @QueryParam(value = "id") String id, final @QueryParam(value = "name") String name, @Context HttpServletResponse response) throws OrtolangException, CoreServiceException, DataNotFoundException, IOException, BinaryStoreServiceException {
         LOGGER.log(Level.INFO, "GET /metadataformats/download");
 
-        MetadataFormat format = null;
+        MetadataFormat format;
         if ( id != null && id.length() > 0 ) {
             format = core.findMetadataFormatById(id);
         } else if ( name != null && name.length() > 0 ) {

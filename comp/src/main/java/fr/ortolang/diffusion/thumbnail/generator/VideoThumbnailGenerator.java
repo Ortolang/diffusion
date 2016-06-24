@@ -52,7 +52,7 @@ import fr.ortolang.diffusion.thumbnail.util.ImageResizer;
 
 public class VideoThumbnailGenerator implements ThumbnailGenerator {
 
-    private static List<String> acceptedMIMETypes = Arrays.asList(
+    private static final List<String> acceptedMIMETypes = Arrays.asList(
             "video/mp4",
             "video/quicktime",
             "video/x-msvideo",
@@ -65,6 +65,7 @@ public class VideoThumbnailGenerator implements ThumbnailGenerator {
             "video/x-flv"
     );
 
+    @Override
     public void generate(File input, File output, int width, int height) throws ThumbnailGeneratorException {
         FFmpegFrameGrabber g = new FFmpegFrameGrabber(input);
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
@@ -82,6 +83,7 @@ public class VideoThumbnailGenerator implements ThumbnailGenerator {
         }
     }
 
+    @Override
     public List<String> getAcceptedMIMETypes() {
         return acceptedMIMETypes;
     }

@@ -63,7 +63,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.StreamingOutput;
@@ -130,7 +129,7 @@ public class MessageResource {
     @GET
     @GZIP
     public Response listThreads(@QueryParam(value = "wskey") String wskey, @QueryParam(value = "o") @DefaultValue(value = "0") int offset,
-            @QueryParam(value = "l") @DefaultValue(value = "10") int limit, @Context Request request) throws KeyNotFoundException, AccessDeniedException, MessageServiceException, BrowserServiceException {
+            @QueryParam(value = "l") @DefaultValue(value = "10") int limit) throws KeyNotFoundException, AccessDeniedException, MessageServiceException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /threads?wskey=" + wskey);
         List<String> wsfeeds = service.findThreadsForWorkspace(wskey);
         GenericCollectionRepresentation<ThreadRepresentation> representation = new GenericCollectionRepresentation<ThreadRepresentation>();
@@ -145,9 +144,9 @@ public class MessageResource {
         representation.setLimit(limit);
         representation.setSize(wsfeeds.size());
         representation.setFirst(messages.clone().queryParam("wskey", wskey).queryParam("o", 0).queryParam("l", limit).build());
-        representation.setPrevious(messages.clone().queryParam("wskey", wskey).queryParam("o", Math.max(0, (offset - limit))).queryParam("l", limit).build());
+        representation.setPrevious(messages.clone().queryParam("wskey", wskey).queryParam("o", Math.max(0, offset - limit)).queryParam("l", limit).build());
         representation.setSelf(messages.clone().queryParam("wskey", wskey).queryParam("o", offset).queryParam("l", limit).build());
-        representation.setNext(messages.clone().queryParam("wskey", wskey).queryParam("o", (wsfeeds.size() > (offset + limit)) ? (offset + limit) : offset).queryParam("l", limit).build());
+        representation.setNext(messages.clone().queryParam("wskey", wskey).queryParam("o", (wsfeeds.size() > offset + limit) ? (offset + limit) : offset).queryParam("l", limit).build());
         representation.setLast(messages.clone().queryParam("wskey", wskey).queryParam("o", ((wsfeeds.size() - 1) / limit) * limit).queryParam("l", limit).build());
         return Response.ok(representation).build();
     }
@@ -155,7 +154,7 @@ public class MessageResource {
     @GET
     @Path("/{key}")
     @GZIP
-    public Response getThread(@PathParam(value = "key") String key, @Context Request request) throws KeyNotFoundException, AccessDeniedException, MessageServiceException, BrowserServiceException {
+    public Response getThread(@PathParam(value = "key") String key) throws KeyNotFoundException, AccessDeniedException, MessageServiceException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /threads/" + key);
         Thread thread = service.readThread(key);
         OrtolangObjectInfos infos = browser.getInfos(key);
@@ -186,7 +185,7 @@ public class MessageResource {
     @Path("/{key}/messages")
     @GZIP
     public Response browseThread(@PathParam(value = "key") String key, @QueryParam(value = "fromdate") Date from, @QueryParam(value = "o") @DefaultValue(value = "0") int offset,
-            @QueryParam(value = "l") @DefaultValue(value = "10") int limit, @Context Request request) throws KeyNotFoundException, MessageServiceException, OrtolangException, BrowserServiceException {
+            @QueryParam(value = "l") @DefaultValue(value = "10") int limit) throws KeyNotFoundException, MessageServiceException, OrtolangException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /threads/" + key + "/messages");
         GenericCollectionRepresentation<MessageRepresentation> representation = new GenericCollectionRepresentation<MessageRepresentation>();
         UriBuilder content = ApiUriBuilder.getApiUriBuilder().path(MessageResource.class).path(key).path("messages");
@@ -198,9 +197,9 @@ public class MessageResource {
             representation.setLimit(limit);
             representation.setSize(size);
             representation.setFirst(content.clone().queryParam("key", key).queryParam("o", 0).queryParam("l", limit).build());
-            representation.setPrevious(content.clone().queryParam("key", key).queryParam("o", Math.max(0, (offset - limit))).queryParam("l", limit).build());
+            representation.setPrevious(content.clone().queryParam("key", key).queryParam("o", Math.max(0, offset - limit)).queryParam("l", limit).build());
             representation.setSelf(content.clone().queryParam("key", key).queryParam("o", offset).queryParam("l", limit).build());
-            representation.setNext(content.clone().queryParam("key", key).queryParam("o", (size > (offset + limit)) ? (offset + limit) : offset).queryParam("l", limit).build());
+            representation.setNext(content.clone().queryParam("key", key).queryParam("o", size > offset + limit ? offset + limit : offset).queryParam("l", limit).build());
             representation.setLast(content.clone().queryParam("key", key).queryParam("o", ((size - 1) / limit) * limit).queryParam("l", limit).build());
         } else {
             msgs = service.browseThreadSinceDate(key, from);
@@ -270,7 +269,7 @@ public class MessageResource {
                 String name = "unknown";
                 String[] contentDisposition = part.getHeaders().getFirst("Content-Disposition").split(";");
                 for (String filename : contentDisposition) {
-                    if ((filename.trim().startsWith("filename"))) {
+                    if (filename.trim().startsWith("filename")) {
                         String[] names = filename.split("=");
                         name = names[1].trim().replaceAll("\"", "");
                     }
@@ -294,9 +293,7 @@ public class MessageResource {
         builder.header("Content-Lenght", attachment.getSize());
         builder.type(attachment.getType());
         File file = service.getMessageAttachment(mkey, name);
-        StreamingOutput stream = output -> {
-            Files.copy(file, output);
-        };
+        StreamingOutput stream = output -> Files.copy(file, output);
         builder.entity(stream);
         return builder.build();
     }

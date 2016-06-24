@@ -36,11 +36,8 @@ package fr.ortolang.diffusion.core.entity;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
-
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 
@@ -52,319 +49,194 @@ import java.util.regex.Pattern;
 
 @Entity
 @SuppressWarnings("serial")
-public class Collection extends OrtolangObject implements MetadataSource {
-	
-	public static final String OBJECT_TYPE = "collection";
-	public static final String MIME_TYPE = "ortolang/collection";
-	
-	private static final int MAX_SEGMENT_SIZE = 7500;
-	
-	@Id
-	private String id;
-	@Version
-	private long version;
-	@Transient
-	private String key;
-	private boolean root;
-	private int clock; 
-	private String name;
-	@Column(length=8000)
-	@ElementCollection(fetch=FetchType.EAGER)
-	private Set<String> segments;
-	@Lob
-	@Type(type = "org.hibernate.type.TextType")
-	private String metadatasContent = "";
-	
-	@Transient
-	private Set<CollectionElement> elements = null;
-	
-	public Collection() {
-		segments = new HashSet<String>();
-	}
-	
-	public String getId() {
-		return id;
-	}
+public class Collection extends MetadataSource {
 
-	public void setId(String id) {
-		this.id = id;
-	}
+    public static final String OBJECT_TYPE = "collection";
+    public static final String MIME_TYPE = "ortolang/collection";
 
-	public String getKey() {
-		return key;
-	}
+    private static final int MAX_SEGMENT_SIZE = 7500;
 
-	public void setKey(String key) {
-		this.key = key;
-	}
-	
-	public boolean isRoot() {
-		return root;
-	}
-	
-	public void setRoot(boolean root) {
-		this.root = root;
-	}
+    private boolean root;
+    @Column(length=8000)
+    @ElementCollection(fetch=FetchType.EAGER)
+    private Set<String> segments;
 
-	public int getClock() {
-		return clock;
-	}
-	
-	public void setClock(int clock) {
-		this.clock = clock;
-	}
+    @Transient
+    private Set<CollectionElement> elements = null;
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public void setSegments(Set<String> segments) {
-		this.segments = segments;
-	}
-	
-	public Set<String> getSegments() {
-		return segments;
-	}
-	
-	public boolean isEmpty() {
-		if ( elements != null ) {
-			return elements.size() == 0;
-		} else {
-			for ( String segment : segments ) {
-				if ( segment.length() > 0 ) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-	
-	public Set<CollectionElement> getElements() {
-		if ( elements != null ) {
-			return elements;
-		} else {
-			elements = new HashSet<CollectionElement>();
-			for ( String segment : segments ) {
-				if ( segment.length() > 0 ) {
-					for ( String element : Arrays.asList(segment.split("\n")) ) {
-						elements.add(CollectionElement.deserialize(element));
-					}
-				}
-			}
-			return elements;
-		}
-	}
-	
-	public void clearElements() {
-		elements = null;
-		segments.clear();
-	}
-	
-	public void setElements(Set<CollectionElement> elements) {
-		this.elements = elements;
-		segments.clear();
-		StringBuilder newsegment = new StringBuilder();
-		for ( CollectionElement element : elements ) {
-			String serializedElement = element.serialize();
-			if ( newsegment.length() >= (MAX_SEGMENT_SIZE+serializedElement.length()) ) {
-				segments.add(newsegment.toString());
-				newsegment = new StringBuilder();
-			}
-			if ( newsegment.length() > 0 ) {
-				newsegment.append("\n");
-			}
-			newsegment.append(serializedElement);
-		}
-		if ( newsegment.length() > 0 ) {
-			segments.add(newsegment.toString());
-		}
-	}
-	
-	public boolean addElement(CollectionElement element) {
-		if ( !containsElement(element) ) {
-			elements = null;
-			String serializedElement = element.serialize();
-			String freesegment = "";
-			for ( String segment : segments ) {
-				if ( segment.length() < (MAX_SEGMENT_SIZE+serializedElement.length()) ) {
-					freesegment = segment;
-					segments.remove(segment);
-					break;
-				}
-			}
-			if ( freesegment.length() > 0 ) {
-				freesegment += ("\n" + serializedElement);
-			} else {
-				freesegment += serializedElement;
-			}
-			segments.add(freesegment);
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
-	public boolean removeElement(CollectionElement element) {
-		if ( containsElement(element) ) {
-			elements = null;
-			String newsegment = "";
-			for ( String segment : segments ) {
-				if (segment.contains(element.serialize())) {
-					newsegment = segment;
-					segments.remove(segment);
-					break;
-				}
-			}
-			newsegment = newsegment.replaceAll("(?m)^(" + Pattern.quote(element.serialize()) + ")\n?", "");
-			if ( newsegment.endsWith("\n") ) {
-				newsegment = newsegment.substring(0, newsegment.length()-1);
-			}
-			if ( newsegment.length() > 0 ) {
-				segments.add(newsegment);
-			}
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
-	public boolean containsElement(CollectionElement element) {
-		for ( String segment : segments ) {
-			if (segment.contains(element.serialize())) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	public boolean containsElementName(String name) {
-		for ( String segment : segments ) {
-			if (segment.contains("\t" + name + "\t")) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	public boolean containsElementKey(String key) {
-		for ( String segment : segments ) {
-			if (segment.contains("\t" + key)) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	public CollectionElement findElementByName(String name) {
-		Pattern pattern = Pattern.compile("(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\t" + Pattern.quote(name) + "\t([0-9]{13})\t([0-9]+)\t([^\t]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
-		for ( String segment : segments ) {
-			Matcher matcher = pattern.matcher(segment);
-			if ( matcher.matches() ) {
-				return CollectionElement.deserialize(matcher.group(1));
-			}
-		}
-		return null;
-	}
-	
-	public void setMetadatasContent(String metadatasContent) {
-		this.metadatasContent = metadatasContent;
-	}
-	
-	public String getMetadatasContent() {
-		return metadatasContent;
-	}
-	
-	@Override
-	public Set<MetadataElement> getMetadatas() {
-		Set<MetadataElement> metadatas = new HashSet<MetadataElement>();
-		if ( metadatasContent != null && metadatasContent.length() > 0 ) {
-			for ( String metadata : Arrays.asList(metadatasContent.split("\n")) ) {
-				metadatas.add(MetadataElement.deserialize(metadata));
-			}
-		}
-		return metadatas;
-	}
-	
-	@Override
-	public void setMetadatas(Set<MetadataElement> metadatas) {
-		StringBuffer newmetadatas = new StringBuffer();
-		for ( MetadataElement metadata : metadatas ) {
-			if ( newmetadatas.length() > 0 ) {
-				newmetadatas.append("\n");
-			}
-			newmetadatas.append(metadata.serialize());
-		}
-		metadatasContent = newmetadatas.toString();
-	}
-	
-	@Override
-	public boolean addMetadata(MetadataElement metadata) {
-		if ( !containsMetadata(metadata) ) {
-			if ( metadatasContent.length() > 0 ) {
-				metadatasContent += "\n" + metadata.serialize();
-			} else {
-				metadatasContent = metadata.serialize();
-			}
-			return true;
-		}
-		return false;
-	}
-	
-	@Override
-	public boolean removeMetadata(MetadataElement metadata) {
-		if ( containsMetadata(metadata) ) {
-			metadatasContent = metadatasContent.replaceAll("(?m)^(" + Pattern.quote(metadata.serialize()) + ")\n?", "");
-			if ( metadatasContent.endsWith("\n") ) {
-				metadatasContent = metadatasContent.substring(0, metadatasContent.length()-1);
-			}
-			return true;
-		} else {
-			return false;
-		}
-	}
-	
-	@Override
-	public boolean containsMetadata(MetadataElement metadata) {
-        return metadatasContent.length() > 0 && metadatasContent.contains(metadata.serialize());
+    public Collection() {
+        segments = new HashSet<String>();
     }
-	
-	@Override
-	public boolean containsMetadataName(String name) {
-        return metadatasContent.contains(name + "/");
-    }
-	
-	@Override
-	public boolean containsMetadataKey(String key) {
-        return metadatasContent.contains("/" + key);
-    }
-	
-	@Override
-	public MetadataElement findMetadataByName(String name) {
-		Pattern pattern = Pattern.compile("(?s).*(" + Pattern.quote(name) + "/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
-		Matcher matcher = pattern.matcher(metadatasContent);
-		if ( matcher.matches() ) {
-			return MetadataElement.deserialize(matcher.group(1));
-		}
-		return null;
-	}
-	
-	@Override
-	public String getObjectKey() {
-		return key;
-	}
 
-	@Override
-	public String getObjectName() {
-		return getName();
-	}
+    public boolean isRoot() {
+        return root;
+    }
 
-	@Override
-	public OrtolangObjectIdentifier getObjectIdentifier() {
-		return new OrtolangObjectIdentifier(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, id);
-	}
-	
+    public void setRoot(boolean root) {
+        this.root = root;
+    }
+
+    public void setSegments(Set<String> segments) {
+        this.segments = segments;
+    }
+
+    public Set<String> getSegments() {
+        return segments;
+    }
+
+    public boolean isEmpty() {
+        if ( elements != null ) {
+            return elements.isEmpty();
+        } else {
+            for ( String segment : segments ) {
+                if ( segment.length() > 0 ) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public Set<CollectionElement> getElements() {
+        if ( elements != null ) {
+            return elements;
+        } else {
+            elements = new HashSet<CollectionElement>();
+            for ( String segment : segments ) {
+                if ( segment.length() > 0 ) {
+                    for ( String element : Arrays.asList(segment.split("\n")) ) {
+                        elements.add(CollectionElement.deserialize(element));
+                    }
+                }
+            }
+            return elements;
+        }
+    }
+
+    public void clearElements() {
+        elements = null;
+        segments.clear();
+    }
+
+    public void setElements(Set<CollectionElement> elements) {
+        this.elements = elements;
+        segments.clear();
+        StringBuilder newsegment = new StringBuilder();
+        for ( CollectionElement element : elements ) {
+            String serializedElement = element.serialize();
+            if ( newsegment.length() >= (MAX_SEGMENT_SIZE+serializedElement.length()) ) {
+                segments.add(newsegment.toString());
+                newsegment = new StringBuilder();
+            }
+            if ( newsegment.length() > 0 ) {
+                newsegment.append("\n");
+            }
+            newsegment.append(serializedElement);
+        }
+        if ( newsegment.length() > 0 ) {
+            segments.add(newsegment.toString());
+        }
+    }
+
+    public boolean addElement(CollectionElement element) {
+        if ( !containsElement(element) ) {
+            elements = null;
+            String serializedElement = element.serialize();
+            String freesegment = "";
+            for ( String segment : segments ) {
+                if ( segment.length() < (MAX_SEGMENT_SIZE+serializedElement.length()) ) {
+                    freesegment = segment;
+                    segments.remove(segment);
+                    break;
+                }
+            }
+            if ( freesegment.length() > 0 ) {
+                freesegment += ("\n" + serializedElement);
+            } else {
+                freesegment += serializedElement;
+            }
+            segments.add(freesegment);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean removeElement(CollectionElement element) {
+        if ( containsElement(element) ) {
+            elements = null;
+            String newsegment = "";
+            for ( String segment : segments ) {
+                if (segment.contains(element.serialize())) {
+                    newsegment = segment;
+                    segments.remove(segment);
+                    break;
+                }
+            }
+            newsegment = newsegment.replaceAll("(?m)^(" + Pattern.quote(element.serialize()) + ")\n?", "");
+            if ( newsegment.endsWith("\n") ) {
+                newsegment = newsegment.substring(0, newsegment.length()-1);
+            }
+            if ( newsegment.length() > 0 ) {
+                segments.add(newsegment);
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean containsElement(CollectionElement element) {
+        for ( String segment : segments ) {
+            if (segment.contains(element.serialize())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean containsElementName(String name) {
+        for ( String segment : segments ) {
+            if (segment.contains("\t" + name + "\t")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean containsElementKey(String key) {
+        for ( String segment : segments ) {
+            if (segment.contains("\t" + key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public CollectionElement findElementByName(String name) {
+        Pattern pattern = Pattern.compile("(?s).*((" + Collection.OBJECT_TYPE + "|" + DataObject.OBJECT_TYPE + "|" + Link.OBJECT_TYPE + ")\t" + Pattern.quote(name) + "\t([0-9]{13})\t([0-9]+)\t([^\t]+)\t([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
+        for ( String segment : segments ) {
+            Matcher matcher = pattern.matcher(segment);
+            if ( matcher.matches() ) {
+                return CollectionElement.deserialize(matcher.group(1));
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public MetadataElement findMetadataByName(String name) {
+        Pattern pattern = Pattern.compile("(?s).*(" + Pattern.quote(name) + "/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
+        Matcher matcher = pattern.matcher(getMetadatasContent());
+        if ( matcher.matches() ) {
+            return MetadataElement.deserialize(matcher.group(1));
+        }
+        return null;
+    }
+
+    @Override
+    public OrtolangObjectIdentifier getObjectIdentifier() {
+        return new OrtolangObjectIdentifier(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE, getId());
+    }
+
 }

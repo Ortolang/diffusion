@@ -92,7 +92,7 @@ public class ClientResource {
 	@Path("/grant")
 	public Response getAuthStatus() {
 		LOGGER.log(Level.INFO, "Checking grant status for " + ctx.getUserPrincipal());
-		String user = null;
+		String user;
 		if ( ctx.getUserPrincipal() != null ) {
 			user = ctx.getUserPrincipal().getName();
 		} else {

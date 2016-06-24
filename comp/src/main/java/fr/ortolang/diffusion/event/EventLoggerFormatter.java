@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.api.filter;
+package fr.ortolang.diffusion.event;
 
 /*
  * #%L
@@ -36,26 +36,37 @@ package fr.ortolang.diffusion.api.filter;
  * #L%
  */
 
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
+import java.util.Map;
 
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.ext.Provider;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import fr.ortolang.diffusion.event.entity.Event;
 
-@SuppressWarnings("deprecation")
-@Provider
-@ServerInterceptor
-public class ContentTypeSetterPreProcessorInterceptor implements ContainerRequestFilter {
-	
-	private static final Logger LOGGER = Logger.getLogger(ContentTypeSetterPreProcessorInterceptor.class.getName());
+public class EventLoggerFormatter {
 
-	@Override
-	public void filter(ContainerRequestContext requestContext) {
-		LOGGER.log(Level.FINE, "content type setter for Input Part");
-		requestContext.getHeaders().putSingle(InputPart.DEFAULT_CHARSET_PROPERTY, "UTF-8");
-	}
+    private EventLoggerFormatter() {
+    }
+
+    private static Map<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> ();
+    private static final String fieldSeparator = ",";
+
+    private static SimpleDateFormat getEventDateFormatter() {
+        String key = Thread.currentThread().getId() + "";
+        if ( !sdf.containsKey(key) ) {
+            sdf.put(key, new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSSS ZZ"));
+        }
+        return sdf.get(key);
+    }
+
+    public static String formatEvent(Event e) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("[").append(getEventDateFormatter().format(e.getDate())).append("]")
+                .append(fieldSeparator).append(e.getFromObject())
+                .append(fieldSeparator).append(e.getObjectType())
+                .append(fieldSeparator).append(e.getType())
+                .append(fieldSeparator).append(e.getThrowedBy())
+                .append(fieldSeparator).append(e.getArguments());
+        return builder.toString();
+    }
 
 }

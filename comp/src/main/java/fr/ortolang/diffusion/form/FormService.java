@@ -46,16 +46,16 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface FormService extends OrtolangService {
 	
-	public static final String SERVICE_NAME = "form";
+	String SERVICE_NAME = "form";
 	
-	public List<Form> listForms() throws FormServiceException;
+	List<Form> listForms() throws FormServiceException;
 	
-	public void createForm(String key, String name, String definition) throws FormServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	void createForm(String key, String name, String definition) throws FormServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
-	public Form readForm(String key) throws FormServiceException, KeyNotFoundException;
+	Form readForm(String key) throws FormServiceException, KeyNotFoundException;
 	
-	public void updateForm(String key, String name, String definition) throws FormServiceException, KeyNotFoundException, AccessDeniedException;
+	void updateForm(String key, String name, String definition) throws FormServiceException, KeyNotFoundException, AccessDeniedException;
 	
-	public void deleteForm(String key) throws FormServiceException, KeyNotFoundException, AccessDeniedException;
+	void deleteForm(String key) throws FormServiceException, KeyNotFoundException, AccessDeniedException;
 
 }

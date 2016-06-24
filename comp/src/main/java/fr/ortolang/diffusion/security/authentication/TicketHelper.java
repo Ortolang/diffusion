@@ -52,6 +52,9 @@ import java.util.logging.Logger;
 
 public class TicketHelper {
 
+    private TicketHelper() {
+    }
+
     private static final Logger LOGGER = Logger.getLogger(TicketHelper.class.getName());
 
     private static final String ALGORITHM = "AES";
@@ -161,7 +164,7 @@ public class TicketHelper {
         private void writeObject(ObjectOutputStream oos) throws IOException {
             oos.writeUTF(username) ;
             oos.writeUTF(hash) ;
-            oos.writeLong(expiration); ;
+            oos.writeLong(expiration);
         }
 
         @Override

@@ -115,8 +115,7 @@ public class OrtolangFileSystemView implements FileSystemView {
     @Override
 	public FtpFile getHomeDirectory() throws FtpException {
 	    LOGGER.log(Level.FINE, "getting home directory");
-		OrtolangHomeFile home = new OrtolangHomeFile(this, user);
-		return home;
+        return new OrtolangHomeFile(this, user);
 	}
 
 	@Override
@@ -144,7 +143,7 @@ public class OrtolangFileSystemView implements FileSystemView {
 	public FtpFile getFile(String path) throws FtpException {
 	    LOGGER.log(Level.FINE, "getting file for path: " + path);
 	    try {
-	        String newpath = "";
+	        String newpath;
 	        if ( path.startsWith("~") ) {
 	            newpath = path.replace("~", "");
 	        } else if ( path.startsWith(PathBuilder.PATH_SEPARATOR) ) {
@@ -170,7 +169,7 @@ public class OrtolangFileSystemView implements FileSystemView {
 	public boolean changeWorkingDirectory(String path) throws FtpException {
 	    LOGGER.log(Level.FINE, "changing working directory to path: " + path);
 	    try {
-	        String newpath = "";
+	        String newpath;
             if ( path.startsWith("~") ) {
                 newpath = path.replace("~", "");
             } else if ( path.startsWith(PathBuilder.PATH_SEPARATOR) ) {
