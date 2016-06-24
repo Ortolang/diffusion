@@ -151,7 +151,7 @@ public class OLAC extends OAI_DC {
 		                    
 		                    olac.addOlacField("contributor", "olac:role", roleId, person(contributor));
 		                    
-		                    if(roleId.equals("author")) {
+		                    if("author".equals(roleId)) {
 		                    	olac.addDcField("creator", person(contributor));
 		                    }
 		                }

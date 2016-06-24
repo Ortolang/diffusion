@@ -169,18 +169,18 @@ public class PathBuilder {
         StringBuilder newPath = new StringBuilder();
         int index = 0;
 
-        for (int i = 0; i < paths.length; i++) {
-            if (!paths[i].equals("") && !paths[i].equals(".")) {
-                if (paths[i].equals("..")) {
-                    if (index > 0) {
-                        index--;
-                    }
-                } else {
-                    newPaths[index] = paths[i];
-                    index++;
-                }
-            }
-        }
+		for (String pathPart : paths) {
+			if (!pathPart.isEmpty() && !".".equals(pathPart)) {
+				if ("..".equals(pathPart)) {
+					if (index > 0) {
+						index--;
+					}
+				} else {
+					newPaths[index] = pathPart;
+					index++;
+				}
+			}
+		}
         for (int i = 0; i < index; i++) {
             newPath.append(PATH_SEPARATOR).append(newPaths[i]);
         }

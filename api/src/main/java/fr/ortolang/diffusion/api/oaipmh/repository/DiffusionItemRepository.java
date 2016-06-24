@@ -454,9 +454,9 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
             JsonObject workspaceDoc = searchWorkspace(wsalias);
 
             InputStream metadata = null;
-            if(metadataPrefix.equals("oai_dc")) {
+            if ("oai_dc".equals(metadataPrefix)) {
                 metadata = transformToOAI_DC(jsonDoc, workspaceDoc);
-            } else if(metadataPrefix.equals("olac")) {
+            } else if("olac".equals(metadataPrefix)) {
                 metadata = transformToOLAC(jsonDoc, workspaceDoc);
             }
 

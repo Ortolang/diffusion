@@ -508,7 +508,7 @@ public class SearchServiceBean implements SearchService {
                 whereStr.append(" WHERE ");
             }
             if (field.getValue() instanceof String) {
-                if (field.getValue().equals("")) {
+                if (((String) field.getValue()).isEmpty()) {
                     whereStr.append("`").append(field.getKey()).append("` IS NOT NULL");
                 } else {
                     whereStr.append("`").append(field.getKey()).append("` = '").append(field.getValue()).append("'");

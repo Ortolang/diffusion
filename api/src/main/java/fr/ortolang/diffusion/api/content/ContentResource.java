@@ -361,7 +361,7 @@ public class ContentResource {
                     representation.setOrder(order);
                     representation.setLinkbykey(true);
                     representation.setElements(new ArrayList<CollectionElement>(((Collection) object).getElements()));
-                    if (asc.equals("D")) {
+                    if ("D".equals(asc)) {
                         switch (order) {
                         case "T":
                             Collections.sort(representation.getElements(), CollectionElement.ElementTypeDescComparator);
@@ -439,7 +439,7 @@ public class ContentResource {
             for (String alias : aliases) {
                 elements.add(new CollectionElement(Collection.OBJECT_TYPE, alias, -1, -1, "ortolang/workspace", ""));
             }
-            if (asc.equals("D")) {
+            if ("D".equals(asc)) {
                 Collections.sort(elements, CollectionElement.ElementNameDescComparator);
                 representation.setAsc(false);
             } else {
@@ -504,7 +504,7 @@ public class ContentResource {
                 for (TagElement tag : workspace.getTags()) {
                     elements.add(new CollectionElement(Collection.OBJECT_TYPE, tag.getName(), -1, -1, "ortolang/tag", workspace.findSnapshotByName(tag.getSnapshot()).getKey()));
                 }
-                if (asc.equals("D")) {
+                if ("D".equals(asc)) {
                     Collections.sort(elements, CollectionElement.ElementNameDescComparator);
                     representation.setAsc(false);
                 } else {
@@ -601,7 +601,7 @@ public class ContentResource {
             if (builder == null) {
                 Collection collection = core.readCollection(rkey);
                 representation.setElements(new ArrayList<CollectionElement>(collection.getElements()));
-                if (asc.equals("D")) {
+                if ("D".equals(asc)) {
                     switch (order) {
                     case "T":
                         Collections.sort(representation.getElements(), CollectionElement.ElementTypeDescComparator);
@@ -729,7 +729,7 @@ public class ContentResource {
                     builder.lastModified(lmd);
                 } else if (object instanceof Collection) {
                     representation.setElements(new ArrayList<CollectionElement>(((Collection) object).getElements()));
-                    if (asc.equals("D")) {
+                    if ("D".equals(asc)) {
                         switch (order) {
                         case "T":
                             Collections.sort(representation.getElements(), CollectionElement.ElementTypeDescComparator);

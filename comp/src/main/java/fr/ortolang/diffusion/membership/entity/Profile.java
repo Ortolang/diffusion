@@ -257,7 +257,7 @@ public class Profile extends OrtolangObject {
 
     @JsonIgnore
     public String[] getGroups() {
-        if (groupsList.equals("")) {
+        if (groupsList.isEmpty()) {
             return new String[0];
         }
         return groupsList.split(",");

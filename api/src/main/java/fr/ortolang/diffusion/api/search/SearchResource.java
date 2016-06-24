@@ -90,23 +90,22 @@ import java.util.logging.Logger;
         String limit = null;
         String orderProp = null;
         String orderDir = null;
-        Map<String, Object> fieldsMap = new HashMap<String, Object>();
+        Map<String, Object> fieldsMap = new HashMap<>();
         for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
-            if (parameter.getKey().equals("fields")) {
+            if ("fields".equals(parameter.getKey())) {
                 fields = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("content")) {
+            } else if ("content".equals(parameter.getKey())) {
                 content = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("group")) {
+            } else if ("group".equals(parameter.getKey())) {
                 group = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("limit")) {
+            } else if ("limit".equals(parameter.getKey())) {
                 limit = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("orderProp")) {
+            } else if ("orderProp".equals(parameter.getKey())) {
                 orderProp = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("orderDir")) {
+            } else if ("orderDir".equals(parameter.getKey())) {
                 orderDir = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("scope")) {
+            } else if (!"scope".equals(parameter.getKey())) {
                 // Ignore scope param
-            } else {
                 if (parameter.getKey().endsWith("[]")) {
                     List<String> paramArr = new ArrayList<String>();
                     Collections.addAll(paramArr, parameter.getValue());
@@ -126,7 +125,7 @@ import java.util.logging.Logger;
                 }
             }
         }
-        Map<String, String> fieldsProjection = new HashMap<String, String>();
+        Map<String, String> fieldsProjection = new HashMap<>();
         if (fields != null) {
             for (String field : fields.split(",")) {
                 String[] fieldPart = field.split(":");
@@ -227,23 +226,22 @@ import java.util.logging.Logger;
         String limit = null;
         String orderProp = null;
         String orderDir = null;
-        Map<String, Object> fieldsMap = new HashMap<String, Object>();
+        Map<String, Object> fieldsMap = new HashMap<>();
         for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
-            if (parameter.getKey().equals("fields")) {
+            if ("fields".equals(parameter.getKey())) {
                 fields = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("content")) {
+            } else if ("content".equals(parameter.getKey())) {
                 content = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("group")) {
+            } else if ("group".equals(parameter.getKey())) {
                 group = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("limit")) {
+            } else if ("limit".equals(parameter.getKey())) {
                 limit = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("orderProp")) {
+            } else if ("orderProp".equals(parameter.getKey())) {
                 orderProp = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("orderDir")) {
+            } else if ("orderDir".equals(parameter.getKey())) {
                 orderDir = parameter.getValue()[0];
-            } else if (parameter.getKey().equals("scope")) {
+            } else if (!"scope".equals(parameter.getKey())) {
                 // Ignore scope param
-            } else {
                 if (parameter.getKey().endsWith("[]")) {
                     List<String> paramArr = new ArrayList<String>();
                     Collections.addAll(paramArr, parameter.getValue());
@@ -263,7 +261,7 @@ import java.util.logging.Logger;
                 }
             }
         }
-        Map<String, String> fieldsProjection = new HashMap<String, String>();
+        Map<String, String> fieldsProjection = new HashMap<>();
         if (fields != null) {
             for (String field : fields.split(",")) {
                 if (field.contains(":")) {

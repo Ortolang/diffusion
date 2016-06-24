@@ -310,10 +310,10 @@ public class AdminResource {
     public Response searchHandles(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("10000") @QueryParam("l") int limit, @QueryParam("filter") String filter, @DefaultValue("name") @QueryParam("type") String type) throws HandleStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/store/handle");
         List<Handle> handles = Collections.emptyList();
-        if ( type != null && type.equals("name") ) {
+        if ( type != null && "name".equals(type)) {
             handles = handle.findHandlesByName(offset, limit, filter);
         }
-        if ( type != null && type.equals("value") ) {
+        if ( type != null && "value".equals(type)) {
             handles = handle.findHandlesByValue(offset, limit, filter);
         } 
         return Response.ok(handles).build();

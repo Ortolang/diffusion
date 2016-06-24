@@ -189,7 +189,7 @@ public class ExtractionServiceWorker {
                             String hash = dataObject.getStream();
                             LOGGER.log(Level.FINEST, "Extracting metadata for data object with key: " + key);
                             // Do not parse xml files that are too large (greater than 50 MB)
-                            if (mimeType.equals("application/xml") && binarystore.size(hash) > 50000000) {
+                            if ("application/xml".equals(mimeType) && binarystore.size(hash) > 50000000) {
                                 jobService.remove(job.getId());
                                 continue;
                             }
@@ -202,11 +202,11 @@ public class ExtractionServiceWorker {
                                 metadataName = MetadataFormat.IMAGE;
                             } else if (mimeType.startsWith("video/") || contentType.startsWith("video/")) {
                                 metadataName = MetadataFormat.VIDEO;
-                            } else if (mimeType.equals("application/xml") || contentType.equals("application/xml") || mimeType.endsWith("+xml") || contentType.endsWith("+xml")) {
+                            } else if ("application/xml".equals(mimeType) || "application/xml".equals(contentType) || mimeType.endsWith("+xml") || contentType.endsWith("+xml")) {
                                 if (metadata.get(OrtolangXMLParser.xmlTypeKey) != null) {
                                     metadataName = MetadataFormat.XML;
                                 }
-                            } else if (contentType.equals("application/pdf")) {
+                            } else if ("application/pdf".equals(contentType)) {
                                 metadataName = MetadataFormat.PDF;
                             } else if (contentType.contains("text/")) {
                                 metadataName = MetadataFormat.TEXT;
@@ -226,14 +226,14 @@ public class ExtractionServiceWorker {
                                         JSONArray jsonArray = new JSONArray(Arrays.asList(metadata.getValues(name)));
                                         metadataJson.put(name, jsonArray);
                                     } else {
-                                        if (name.equals("ortolang:json")) {
+                                        if ("ortolang:json".equals(name)) {
                                             String tmp = metadataJson.toString();
                                             String ortolangJson = metadata.get("ortolang:json");
                                             tmp = tmp.substring(0, tmp.lastIndexOf("}"));
                                             tmp += ortolangJson.replaceFirst("\\{", ",");
                                             metadataJson = new JSONObject(tmp);
                                         } else {
-                                            if (name.equals("File Name") && metadata.get(name).startsWith("apache-tika")) {
+                                            if ("File Name".equals(name) && metadata.get(name).startsWith("apache-tika")) {
                                                 continue;
                                             }
                                             metadataJson.put(name, metadata.get(name));

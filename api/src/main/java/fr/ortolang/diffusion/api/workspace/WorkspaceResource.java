@@ -440,7 +440,7 @@ public class WorkspaceResource {
                         }
                     }
                     if (mdexists) {
-                        updatedObject = core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false, form.getFormat().equals("") ? null : form.getFormat());
+                        updatedObject = core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false, form.getFormat().isEmpty() ? null : form.getFormat());
                         break;
                     } else {
                         try {

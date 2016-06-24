@@ -48,7 +48,7 @@ public class CacheFilter implements ContainerResponseFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
-        if (requestContext.getHeaderString(HttpHeaders.CACHE_CONTROL) != null && requestContext.getHeaderString(HttpHeaders.CACHE_CONTROL).equals("no-cache")) {
+        if (requestContext.getHeaderString(HttpHeaders.CACHE_CONTROL) != null && "no-cache".equals(requestContext.getHeaderString(HttpHeaders.CACHE_CONTROL))) {
             responseContext.getHeaders().putSingle(HttpHeaders.CACHE_CONTROL, "no-cache");
         }
     }

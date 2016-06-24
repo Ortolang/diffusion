@@ -174,7 +174,7 @@ public class OAI_DC {
                         String roleId = metaRole.getString("id");
                         oai_dc.addDcField("contributor", person(contributor)+" ("+roleId+")");
 
-                        if(roleId.equals("author")) {
+                        if("author".equals(roleId)) {
                             oai_dc.addDcField("creator", person(contributor));
                         }
                     }

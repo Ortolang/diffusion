@@ -122,7 +122,7 @@ public class AuthorisationPolicy {
 
 	public List<String> getPermissions(String subject) throws IOException {
 		loadRules();
-		if (rules.containsKey(subject) && !rules.getProperty(subject).equals("")) {
+		if (rules.containsKey(subject) && !rules.getProperty(subject).isEmpty()) {
 			return Arrays.asList(rules.getProperty(subject).split(","));
 		} else {
 			return Collections.emptyList();
@@ -156,7 +156,7 @@ public class AuthorisationPolicy {
 		Map<String, List<String>> map = new HashMap<String, List<String>>();
 		for (Entry<Object, Object> rule : rules.entrySet()) {
 			String subject = (String) rule.getKey();
-			if (rules.containsKey(subject) && !rules.getProperty(subject).equals("")) {
+			if (rules.containsKey(subject) && !rules.getProperty(subject).isEmpty()) {
 				map.put(subject, Arrays.asList(((String) rule.getValue()).split(",")));
 			} else {
 				map.put(subject, new ArrayList<String> ());

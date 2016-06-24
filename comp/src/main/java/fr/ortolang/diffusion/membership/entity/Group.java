@@ -142,7 +142,7 @@ public class Group extends OrtolangObject {
 	}
 
 	public String[] getMembers() {
-		if (membersList.equals("")) {
+		if (membersList.isEmpty()) {
 			return EMPTY_STRING_ARRAY;
 		}
 
