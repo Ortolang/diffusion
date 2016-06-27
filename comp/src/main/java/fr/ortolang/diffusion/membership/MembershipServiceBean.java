@@ -215,6 +215,7 @@ public class MembershipServiceBean implements MembershipService {
                 registry.lookup(key);
                 throw new ProfileAlreadyExistsException("A profile already exists for identifier: " + connectedIdentifier);
             } catch (KeyNotFoundException e) {
+                LOGGER.log(Level.FINEST, "No existing profile for identifier " + connectedIdentifier + "; starting creation");
             }
 
             String friendGroupKey = connectedIdentifier + "-friends";

@@ -202,7 +202,7 @@ public class ExtractionServiceWorker {
                             } else if (mimeType.startsWith("video/") || contentType.startsWith("video/")) {
                                 metadataName = MetadataFormat.VIDEO;
                             } else if ("application/xml".equals(mimeType) || "application/xml".equals(contentType) || mimeType.endsWith("+xml") || contentType.endsWith("+xml")) {
-                                if (metadata.get(OrtolangXMLParser.xmlTypeKey) != null) {
+                                if (metadata.get(OrtolangXMLParser.XML_TYPE_KEY) != null) {
                                     metadataName = MetadataFormat.XML;
                                 }
                             } else if ("application/pdf".equals(contentType)) {
@@ -248,14 +248,12 @@ public class ExtractionServiceWorker {
                             LOGGER.log(Level.WARNING, "unknown job action: " + job.getAction());
                         }
                         jobService.remove(job.getId());
-                    } catch (MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | SAXException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException | IndexingServiceException | AuthorisationServiceException e) {
+                    } catch (MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException | IndexingServiceException | AuthorisationServiceException e) {
                         LOGGER.log(Level.WARNING, "unable to extract metadata for data object with key " + key, e);
-                        if (e instanceof SAXException) {
-                            LOGGER.log(Level.WARNING, "Could not parse XML document: removing extraction job " + job.getId(), e);
-                            jobService.remove(job.getId());
-                        } else {
-                            jobService.updateFailingJob(job, e);
-                        }
+                        jobService.updateFailingJob(job, e);
+                    } catch (SAXException e) {
+                        LOGGER.log(Level.WARNING, "Could not parse XML document: removing extraction job " + job.getId() + "for data object with key " + key, e);
+                        jobService.remove(job.getId());
                     }
 
                 } catch (InterruptedException e) {

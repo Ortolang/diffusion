@@ -87,7 +87,7 @@ class TeiParser extends XMLParser {
             try (OutputStream outputStream = new ByteArrayOutputStream()) {
                 transformer.transform(new DOMSource(context.get(Document.class)), new StreamResult(outputStream));
                 metadata.add("ortolang:json", outputStream.toString());
-                metadata.add(OrtolangXMLParser.xmlTypeKey, OrtolangXMLParser.XMLType.TEI.name());
+                metadata.add(OrtolangXMLParser.XML_TYPE_KEY, OrtolangXMLParser.XMLType.TEI.name());
             }
         } catch (TransformerException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);

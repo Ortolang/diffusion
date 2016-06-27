@@ -222,9 +222,7 @@ public class Profile extends OrtolangObject {
     }
 
     public void setPublicKeys(Set<String> keys) {
-        for (String key : keys) {
-            addPublicKey(key);
-        }
+        keys.forEach(this::addPublicKey);
     }
 
     @JsonIgnore

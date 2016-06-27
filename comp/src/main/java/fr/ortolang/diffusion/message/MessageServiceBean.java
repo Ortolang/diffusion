@@ -343,10 +343,10 @@ public class MessageServiceBean implements MessageService {
             checkObjectType(identifier, Thread.OBJECT_TYPE);
             authorisation.checkPermission(key, subjects, "read");
 
-            TypedQuery<Message> query = em.createNamedQuery("findThreadMessagesSinceDate", Message.class).setParameter("thread", key).setParameter("date", date);
-            List<Message> msgs = query.getResultList();
-            loadKeyFromRegistry(msgs);
-            return msgs;
+            TypedQuery<Message> query = em.createNamedQuery("findThreadMessagesAfterDate", Message.class).setParameter("thread", key).setParameter("after", date);
+            List<Message> messages = query.getResultList();
+            loadKeyFromRegistry(messages);
+            return messages;
         } catch (MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | RegistryServiceException e) {
             throw new MessageServiceException("unable to browse messages", e);
         }

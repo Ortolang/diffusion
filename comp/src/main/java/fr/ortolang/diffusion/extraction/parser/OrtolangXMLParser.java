@@ -63,7 +63,7 @@ public class OrtolangXMLParser extends CompositeParser {
 
     private static final Logger LOGGER = Logger.getLogger(OrtolangXMLParser.class.getName());
 
-    public static final String xmlTypeKey = "XML-Type";
+    public static final String XML_TYPE_KEY = "XML-Type";
 
     public enum XMLType {
         TEI,

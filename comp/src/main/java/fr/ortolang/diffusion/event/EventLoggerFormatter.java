@@ -47,8 +47,8 @@ public class EventLoggerFormatter {
     private EventLoggerFormatter() {
     }
 
-    private static Map<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> ();
-    private static final String fieldSeparator = ",";
+    private static Map<String, SimpleDateFormat> sdf = new HashMap<>();
+    private static final String FIELD_SEPARATOR = ",";
 
     private static SimpleDateFormat getEventDateFormatter() {
         String key = Thread.currentThread().getId() + "";
@@ -61,11 +61,11 @@ public class EventLoggerFormatter {
     public static String formatEvent(Event e) {
         StringBuilder builder = new StringBuilder();
         builder.append("[").append(getEventDateFormatter().format(e.getDate())).append("]")
-                .append(fieldSeparator).append(e.getFromObject())
-                .append(fieldSeparator).append(e.getObjectType())
-                .append(fieldSeparator).append(e.getType())
-                .append(fieldSeparator).append(e.getThrowedBy())
-                .append(fieldSeparator).append(e.getArguments());
+                .append(FIELD_SEPARATOR).append(e.getFromObject())
+                .append(FIELD_SEPARATOR).append(e.getObjectType())
+                .append(FIELD_SEPARATOR).append(e.getType())
+                .append(FIELD_SEPARATOR).append(e.getThrowedBy())
+                .append(FIELD_SEPARATOR).append(e.getArguments());
         return builder.toString();
     }
 

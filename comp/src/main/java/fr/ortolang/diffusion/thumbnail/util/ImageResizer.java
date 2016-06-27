@@ -186,6 +186,7 @@ public class ImageResizer {
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
+                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     }
                 }
             }

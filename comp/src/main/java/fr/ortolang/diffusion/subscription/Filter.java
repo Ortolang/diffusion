@@ -71,12 +71,12 @@ public class Filter {
             this.throwedByPattern = Pattern.compile(throwedByPatternRegEx);
         }
         if (argumentsPatternsRegEx != null && argumentsPatternsRegEx.length > 0) {
-            Map<String, Pattern> argumentsPatterns = new HashMap<>(argumentsPatternsRegEx.length);
+            Map<String, Pattern> map = new HashMap<>(argumentsPatternsRegEx.length);
             for (String argumentPatternRegEx : argumentsPatternsRegEx) {
                 String[] keyValue = argumentPatternRegEx.split(",");
-                argumentsPatterns.put(keyValue[0], Pattern.compile(keyValue[1]));
+                map.put(keyValue[0], Pattern.compile(keyValue[1]));
             }
-            this.argumentsPatterns = argumentsPatterns;
+            this.argumentsPatterns = map;
         }
     }
 

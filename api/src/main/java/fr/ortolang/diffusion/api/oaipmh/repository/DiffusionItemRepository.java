@@ -195,11 +195,6 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
     /**
      * Retrieves identifier of records based of a query and a metadata prefix.
      *
-     * @param query
-     * @param metadataPrefix
-     * @param offset
-     * @param length
-     * @return
      */
     protected ListItemIdentifiersResult getItemIdentifiersFromQuery(String metadataPrefix, Date from, Date until, int offset, int length) {
 
@@ -426,7 +421,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
             InputStream metadata = null;
             if ("oai_dc".equals(metadataPrefix)) {
-                metadata = transformToOAI_DC(jsonDoc, workspaceDoc);
+                metadata = transformToOaiDC(jsonDoc, workspaceDoc);
             } else if ("olac".equals(metadataPrefix)) {
                 metadata = transformToOLAC(jsonDoc, workspaceDoc);
             }
@@ -476,15 +471,8 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
     /**
      * Converts JSON document (String representation) to XML OAI_DC
      *
-     * @param document
-     * @return
-     * @throws OrtolangException
-     * @throws KeyNotFoundException
-     * @throws CoreServiceException
-     * @throws DataNotFoundException
-     * @throws IOException
      */
-    protected InputStream transformToOAI_DC(JsonObject jsonDoc, JsonObject workspaceDoc) {
+    protected InputStream transformToOaiDC(JsonObject jsonDoc, JsonObject workspaceDoc) {
         OAI_DC oaiDc = OAI_DC.valueOf(jsonDoc, workspaceDoc);
         return new ByteArrayInputStream(oaiDc.toString().getBytes(StandardCharsets.UTF_8));
     }
@@ -492,13 +480,6 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
     /**
      * Converts JSON document (String representation) to XML OLAC
      *
-     * @param document
-     * @return
-     * @throws OrtolangException
-     * @throws KeyNotFoundException
-     * @throws CoreServiceException
-     * @throws DataNotFoundException
-     * @throws IOException
      */
     protected InputStream transformToOLAC(JsonObject jsonDoc, JsonObject workspaceDoc) {
         OLAC olac = OLAC.valueOf(jsonDoc, workspaceDoc);

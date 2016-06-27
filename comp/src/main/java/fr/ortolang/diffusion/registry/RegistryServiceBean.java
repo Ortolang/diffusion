@@ -580,7 +580,6 @@ public class RegistryServiceBean implements RegistryService {
         if ( entry.isDeleted() ) {
             throw new KeyNotFoundException("entry for key [" + key + "] has been deleted");
         }
-
         return entry;
     }
 

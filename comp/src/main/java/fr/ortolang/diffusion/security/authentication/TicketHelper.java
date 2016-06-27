@@ -64,7 +64,7 @@ public class TicketHelper {
     private static SecretKey key;
 
     // Default ticket validity period in ms
-    private static final long DEFAULT_TICKET_VALIDITY = 5 * 60000;
+    private static final long DEFAULT_TICKET_VALIDITY = 5 * 60000L;
 
     static {
         try {

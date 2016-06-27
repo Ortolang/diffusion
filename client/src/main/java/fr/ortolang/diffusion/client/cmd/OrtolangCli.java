@@ -67,12 +67,12 @@ public class OrtolangCli {
 
     public void parse(String[] args) {
         if ( args.length > 0 ) {
-            String command = args[0];
-            if ( commands.containsKey(command) ) {
-                System.out.println("Executing command: " + command);
+            String commandName = args[0];
+            if ( commands.containsKey(commandName) ) {
+                System.out.println("Executing command: " + commandName);
                 try {
-                    Command instance = (Command) Class.forName(commands.get(command)).newInstance();
-                    instance.execute(Arrays.copyOfRange(args, 1, args.length));
+                    Command command = (Command) Class.forName(commands.get(commandName)).newInstance();
+                    command.execute(Arrays.copyOfRange(args, 1, args.length));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

@@ -146,10 +146,10 @@ public class JsonStoreServiceBean implements JsonStoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public String getDocument(String key, String clz) throws JsonStoreServiceException {
-    	ODocument doc = getDocumentByKey(key);
-    	if(doc.getClassName().equals(clz)) {
-    		return doc.toJSON("fetchPlan:*:-1");
-    	}
+        ODocument doc = getDocumentByKey(key);
+        if(doc.getClassName().equals(clz)) {
+            return doc.toJSON("fetchPlan:*:-1");
+        }
         return null;
     }
 
@@ -164,46 +164,42 @@ public class JsonStoreServiceBean implements JsonStoreService {
         }
     }
 
-	@Override
-	@Lock(LockType.WRITE)
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException {
-		LOGGER.log(Level.FINE, "Indexing object with key: " + object.getKey());
-		try (ODatabaseDocumentTx db = pool.acquire()) {
-			ODocument oldDoc = getDocumentByKey(object.getKey());
-//			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object, oldDoc);
-			
-			ODocument doc;
-			if(oldDoc!=null) {
-				doc = oldDoc;
-			} else {
-				doc = new ODocument(object.getType());
-			}
+    @Override
+    @Lock(LockType.WRITE)
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void index(OrtolangIndexableObject<IndexableJsonContent> object) throws JsonStoreServiceException {
+        LOGGER.log(Level.FINE, "Indexing object with key: " + object.getKey());
+        try (ODatabaseDocumentTx db = pool.acquire()) {
+            ODocument oldDoc = getDocumentByKey(object.getKey());
+            //			ODocument doc = JsonStoreDocumentBuilder.buildDocument(object, oldDoc);
 
-			String json = JsonStoreDocumentBuilder.buildDocument(object);
-			doc.fromJSON(json);
-			
-			db.save(doc);
-			OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
-			ortolangKeyIdx.remove(object.getKey());
-			ortolangKeyIdx.put(object.getKey(), doc);
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to index object ", e);
-		}
-	}
+            ODocument doc;
+            if(oldDoc!=null) {
+                doc = oldDoc;
+            } else {
+                doc = new ODocument(object.getType());
+            }
+
+            String json = JsonStoreDocumentBuilder.buildDocument(object);
+            doc.fromJSON(json);
+
+            db.save(doc);
+            OIndex<?> ortolangKeyIdx = db.getMetadata().getIndexManager().getIndex("ortolangKey");
+            ortolangKeyIdx.remove(object.getKey());
+            ortolangKeyIdx.put(object.getKey(), doc);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to index object ", e);
+        }
+    }
 
     @Override
     @Lock(LockType.WRITE)
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void remove(String key) throws JsonStoreServiceException {
         LOGGER.log(Level.FINE, "Removing object with key: " + key);
-        try (ODatabaseDocumentTx db = pool.acquire()) {
-            ODocument oldDoc = getDocumentByKey(key);
-            if (oldDoc != null) {
-                oldDoc.delete();
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "unable to remove object ", e);
+        ODocument oldDoc = getDocumentByKey(key);
+        if (oldDoc != null) {
+            oldDoc.delete();
         }
     }
 
@@ -320,8 +316,8 @@ public class JsonStoreServiceBean implements JsonStoreService {
         return null;
     }
 
-	private long getStoreSize() throws IOException {
-		return Files.walk(base).mapToLong(this::size).sum();
+    private long getStoreSize() throws IOException {
+        return Files.walk(base).mapToLong(this::size).sum();
     }
 
     private long size(Path p) {

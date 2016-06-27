@@ -49,7 +49,7 @@ import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 import fr.ortolang.diffusion.store.json.JsonStoreDocumentBuilder;
 import fr.ortolang.diffusion.store.json.OrtolangKeyExtractor;
 
-public class OrtolangIndexableObjectFactory<T> {
+public class OrtolangIndexableObjectFactory {
 
     private OrtolangIndexableObjectFactory() {
     }
