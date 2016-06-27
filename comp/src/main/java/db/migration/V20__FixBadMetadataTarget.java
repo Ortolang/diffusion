@@ -53,7 +53,7 @@ public class V20__FixBadMetadataTarget implements JdbcMigration {
     private static final Logger LOGGER = Logger.getLogger(V20__FixBadMetadataTarget.class.getName());
 
     @Override
-    public void migrate(Connection connection) throws Exception {
+    public void migrate(Connection connection) throws SQLException {
         try {
             PreparedStatement col_stmt = connection.prepareStatement("SELECT * FROM collection;");
             try {
@@ -120,7 +120,7 @@ public class V20__FixBadMetadataTarget implements JdbcMigration {
         }
     }
     
-    private boolean fixMetadataTarget(Connection connection, String target, String mdkey) throws Exception {
+    private boolean fixMetadataTarget(Connection connection, String target, String mdkey) throws SQLException {
         boolean result = true; 
         String md_id = null;
         PreparedStatement md_id_stmt = connection.prepareStatement("SELECT re.identifier FROM registryentry re WHERE re.key = '" + mdkey + "'");

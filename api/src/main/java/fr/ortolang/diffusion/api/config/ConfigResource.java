@@ -52,6 +52,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.template.TemplateEngineException;
 import org.jboss.resteasy.annotations.GZIP;
 
@@ -75,7 +76,7 @@ public class ConfigResource {
     @GET
     @Path("/version")
     @Produces({ MediaType.TEXT_PLAIN })
-    public Response version() throws Exception {
+    public Response version() throws OrtolangException {
         if ( version == null ) {
             try {
                 InputStream manifestStream = ctx.getResourceAsStream("META-INF/MANIFEST.MF");
@@ -84,7 +85,7 @@ public class ConfigResource {
                 version = attributes.getValue("API-Version");
             } catch(IOException ex) {
                 LOGGER.log(Level.WARNING, "Error while reading version: " + ex.getMessage());
-                throw new Exception("Unable to read version");
+                throw new OrtolangException("Unable to read version");
             }
         }
         return Response.ok(version).build();

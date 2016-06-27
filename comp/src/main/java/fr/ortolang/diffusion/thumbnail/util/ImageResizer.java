@@ -36,6 +36,8 @@ package fr.ortolang.diffusion.thumbnail.util;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangException;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -82,19 +84,19 @@ public class ImageResizer {
         this.thumbHeight = thumbHeight;
     }
 
-    public void setInputImage(File input) throws Exception {
+    public void setInputImage(File input) throws IOException, OrtolangException {
         BufferedImage image = ImageIO.read(input);
         setInputImage(image);
     }
 
-    public void setInputImage(InputStream input) throws Exception {
+    public void setInputImage(InputStream input) throws IOException, OrtolangException {
         BufferedImage image = ImageIO.read(input);
         setInputImage(image);
     }
 
-    public void setInputImage(BufferedImage input) throws Exception {
+    public void setInputImage(BufferedImage input) throws OrtolangException {
         if (input == null) {
-            throw new Exception("The image reader could not open the file.");
+            throw new OrtolangException("The image reader could not open the file.");
         }
 
         this.inputImage = input;

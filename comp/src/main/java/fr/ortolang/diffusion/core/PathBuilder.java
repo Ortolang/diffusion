@@ -37,7 +37,7 @@ package fr.ortolang.diffusion.core;
  */
 
 
-public class PathBuilder {
+public class PathBuilder implements Cloneable {
 
     public static final String PATH_SEPARATOR = "/";
     public static final char PATH_SEPARATOR_CHAR = '/';
@@ -228,6 +228,11 @@ public class PathBuilder {
 
     @Override
     public PathBuilder clone() {
+        try {
+            super.clone();
+        } catch (CloneNotSupportedException e) {
+            //
+        }
         PathBuilder clone = new PathBuilder();
         clone.builder = new StringBuilder().append(builder);
         return clone;

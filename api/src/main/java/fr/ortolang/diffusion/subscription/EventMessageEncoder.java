@@ -49,7 +49,7 @@ public class EventMessageEncoder implements Encoder<EventMessage, String> {
     public String encode(EventMessage eventMessage) {
         try{
             return mapper.writeValueAsString(eventMessage);
-        }catch(IOException e){
+        } catch(IOException e){
             throw new RuntimeException(e);
         }
     }

@@ -194,7 +194,7 @@ public class CollectionElement implements Serializable, Comparable<CollectionEle
         }
     }
 
-    public static Comparator<CollectionElement> ElementNameAscComparator = (element1, element2) -> {
+    public static final Comparator<CollectionElement> ElementNameAscComparator = (element1, element2) -> {
         if (element1.getType().equals(element2.getType())) {
             return element1.getName().compareToIgnoreCase(element2.getName());
         } else {
@@ -202,7 +202,7 @@ public class CollectionElement implements Serializable, Comparable<CollectionEle
         }
     };
 
-    public static Comparator<CollectionElement> ElementNameDescComparator = (element1, element2) -> {
+    public static final Comparator<CollectionElement> ElementNameDescComparator = (element1, element2) -> {
         if (element1.getType().equals(element2.getType())) {
             return element2.getName().compareToIgnoreCase(element1.getName());
         } else {
@@ -210,7 +210,7 @@ public class CollectionElement implements Serializable, Comparable<CollectionEle
         }
     };
 
-    public static Comparator<CollectionElement> ElementSizeAscComparator = (element1, element2) -> {
+    public static final Comparator<CollectionElement> ElementSizeAscComparator = (element1, element2) -> {
         if (element1.getType().equals(element2.getType())) {
             return (int) (element1.getSize() - element2.getSize());
         } else {
@@ -218,7 +218,7 @@ public class CollectionElement implements Serializable, Comparable<CollectionEle
         }
     };
 
-    public static Comparator<CollectionElement> ElementSizeDescComparator = (element1, element2) -> {
+    public static final Comparator<CollectionElement> ElementSizeDescComparator = (element1, element2) -> {
         if (element1.getType().equals(element2.getType())) {
             return (int) (element2.getSize() - element1.getSize());
         } else {
@@ -226,7 +226,7 @@ public class CollectionElement implements Serializable, Comparable<CollectionEle
         }
     };
 
-    public static Comparator<CollectionElement> ElementTypeAscComparator = (element1, element2) -> {
+    public static final Comparator<CollectionElement> ElementTypeAscComparator = (element1, element2) -> {
         if (element1.getType().equals(element2.getType())) {
             return element1.getMimeType().compareToIgnoreCase(element2.getMimeType());
         } else {
@@ -234,7 +234,7 @@ public class CollectionElement implements Serializable, Comparable<CollectionEle
         }
     };
 
-    public static Comparator<CollectionElement> ElementTypeDescComparator = (element1, element2) -> {
+    public static final Comparator<CollectionElement> ElementTypeDescComparator = (element1, element2) -> {
         if (element2.getType().equals(element1.getType())) {
             return element2.getMimeType().compareToIgnoreCase(element1.getMimeType());
         } else {
@@ -242,7 +242,7 @@ public class CollectionElement implements Serializable, Comparable<CollectionEle
         }
     };
 
-    public static Comparator<CollectionElement> ElementDateAscComparator = (element1, element2) -> {
+    public static final Comparator<CollectionElement> ElementDateAscComparator = (element1, element2) -> {
         if (element1.getType().equals(element2.getType())) {
             return (int) (element1.getModification() - element2.getModification());
         } else {
@@ -250,7 +250,7 @@ public class CollectionElement implements Serializable, Comparable<CollectionEle
         }
     };
 
-    public static Comparator<CollectionElement> ElementDateDescComparator = (element1, element2) -> {
+    public static final Comparator<CollectionElement> ElementDateDescComparator = (element1, element2) -> {
         if (element1.getType().equals(element2.getType())) {
             return (int) (element2.getModification() - element1.getModification());
         } else {
