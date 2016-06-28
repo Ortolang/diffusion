@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.api.referential;
 
+import java.net.URI;
+
 /*
  * #%L
  * ORTOLANG
@@ -41,9 +43,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -54,11 +59,13 @@ import javax.ws.rs.core.Response;
 
 import org.jboss.resteasy.annotations.GZIP;
 
+import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.referential.ReferentialServiceException;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntity;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
@@ -104,6 +111,30 @@ public class ReferentialEntityResource {
         }
         return Response.ok(representation).build();
     }
+    
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @GZIP
+    public Response create(@FormParam(value = "name") String name, @FormParam("type") String type, @FormParam("content") String content) throws ReferentialServiceException, AccessDeniedException, KeyAlreadyExistsException {
+    	LOGGER.log(Level.INFO, "POST(application/json) /referentialentities");
+    	if (name == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'name' is mandatory").build();
+        }
+    	if (type == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'type' is mandatory").build();
+        }
+    	ReferentialEntity entity;
+    	ReferentialEntityType entityType = getEntityType(type);
+    	if(entityType!=null) {
+    		entity = referential.createEntity(name, entityType, content);
+    	} else {
+    		return Response.status(Response.Status.BAD_REQUEST).entity("representation does not contains a valid type").build();
+    	}
+    	URI location = ApiUriBuilder.getApiUriBuilder().path(ReferentialEntityResource.class).path(entity.getKey()).build();
+    	ReferentialEntityRepresentation entityRepresentation = ReferentialEntityRepresentation.fromReferentialEntity(entity);
+    	return Response.created(location).entity(entityRepresentation).build();
+    }
+
 
     @GET
     @Path("/{name}")

@@ -267,7 +267,7 @@ public class ReferentialServiceBean implements ReferentialService {
 
 	@Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void createEntity(String name, ReferentialEntityType type, String content)
+	public ReferentialEntity createEntity(String name, ReferentialEntityType type, String content)
 			throws ReferentialServiceException, KeyAlreadyExistsException,
 			AccessDeniedException {
 		LOGGER.log(Level.FINE, "creating ReferentielEntity for identifier name [" + name + "]");
@@ -294,6 +294,8 @@ public class ReferentialServiceBean implements ReferentialService {
     		authorisation.createPolicy(key, caller);
 
     		notification.throwEvent(key, caller, ReferentialEntity.OBJECT_TYPE, OrtolangEvent.buildEventType(ReferentialService.SERVICE_NAME, ReferentialEntity.OBJECT_TYPE, "create"));
+    		
+    		return refEntity;
     	} catch (NotificationServiceException | RegistryServiceException | IdentifierAlreadyRegisteredException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException
     			| KeyLockedException | IndexingServiceException e) {
     		ctx.setRollbackOnly();

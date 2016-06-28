@@ -52,7 +52,7 @@ public interface ReferentialService extends OrtolangService, OrtolangIndexableSe
 	
 	public List<ReferentialEntity> listEntities(ReferentialEntityType type) throws ReferentialServiceException;
 	
-	public void createEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyAlreadyExistsException, AccessDeniedException;
+	public ReferentialEntity createEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyAlreadyExistsException, AccessDeniedException;
 	
 	public ReferentialEntity readEntity(String name) throws ReferentialServiceException, KeyNotFoundException;
 	
