@@ -122,8 +122,8 @@ public class ExtractionServiceWorker {
     @PostConstruct
     public void init() {
         startThread();
-        // Restore unprocessed jobs in queue
         List<Job> extractionJobs = jobService.getJobsOfType(ExtractionService.JOB_TYPE);
+        LOGGER.log(Level.INFO, "Restoring " + extractionJobs.size() + " extraction jobs in queue");
         queue.addAll(extractionJobs);
     }
 

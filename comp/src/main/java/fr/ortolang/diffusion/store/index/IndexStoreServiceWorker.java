@@ -88,8 +88,8 @@ public class IndexStoreServiceWorker {
         Thread thread = managedThreadFactory.newThread(worker);
         thread.setName("Index Store Worker Thread");
         thread.start();
-        // Restore unprocessed jobs in queue
         List<Job> indexingJobs = jobService.getJobsOfType(JOB_TYPE);
+        LOGGER.log(Level.INFO, "Restoring " + indexingJobs.size() + " indexing jobs in queue");
         queue.addAll(indexingJobs);
     }
 

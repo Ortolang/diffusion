@@ -92,8 +92,8 @@ public class JsonStoreServiceWorker {
         Thread thread = managedThreadFactory.newThread(worker);
         thread.setName("Json Store Worker Thread");
         thread.start();
-        // Restore unprocessed jobs in queue
         List<Job> indexingJobs = jobService.getJobsOfType(JOB_TYPE);
+        LOGGER.log(Level.INFO, "Restoring " + indexingJobs.size() + " json-indexing jobs in queue");
         queue.addAll(indexingJobs);
     }
 
