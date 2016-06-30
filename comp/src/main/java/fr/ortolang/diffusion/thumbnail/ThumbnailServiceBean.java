@@ -129,11 +129,11 @@ public class ThumbnailServiceBean implements ThumbnailService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public Thumbnail getThumbnail(String key, int size) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException {
+	public Thumbnail getThumbnail(String key, int size, boolean min) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException {
 		LOGGER.log(Level.FINE, "get thumbnail for key [" + key + "] and size [" + size + "]");
 		try {
 			OrtolangObjectState state = browser.getState(key);
-			if (needGeneration(key, size, state.getLastModification())) {
+			if (needGeneration(key, size, min, state.getLastModification())) {
 				OrtolangObject object = browser.findObject(key);
 				boolean generated = false;
 				if (object.getObjectIdentifier().getService().equals(CoreService.SERVICE_NAME)) {
@@ -142,7 +142,7 @@ public class ThumbnailServiceBean implements ThumbnailService {
 						if (metadataElement != null) {
 							MetadataObject metadataObject = core.readMetadataObject(metadataElement.getKey());
 							File file = store.getFile(metadataObject.getStream());
-							generated = generate(key, metadataObject.getContentType(), metadataObject.getStream(), size);
+							generated = generate(key, metadataObject.getContentType(), metadataObject.getStream(), size, min);
 							if (!generated) {
 								return new Thumbnail(file, metadataObject.getContentType());
 							}
@@ -150,13 +150,13 @@ public class ThumbnailServiceBean implements ThumbnailService {
 					}
 				}
 				if (!generated && object instanceof DataObject) {
-					generated = generate(key, ((DataObject) object).getMimeType(), ((DataObject) object).getStream(), size);
+					generated = generate(key, ((DataObject) object).getMimeType(), ((DataObject) object).getStream(), size, min);
 				}
 				if ( !generated ) {
 					throw new ThumbnailServiceException("unable to generate thumbnail for object that are not data objects");
 				}
 			}
-			return new Thumbnail(getFile(key, size), ThumbnailService.THUMBS_MIMETYPE);
+			return new Thumbnail(getFile(key, size, min), ThumbnailService.THUMBS_MIMETYPE);
 		} catch (DataNotFoundException | IOException | OrtolangException | BrowserServiceException e) {
 			LOGGER.log(Level.WARNING, "unexpected error while retrieving thumbnail", e);
 			throw new ThumbnailServiceException("error while retrieving thumbnail", e);
@@ -164,10 +164,10 @@ public class ThumbnailServiceBean implements ThumbnailService {
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	private boolean generate(String key, String mimetype, String hash, int size) throws ThumbnailServiceException {
+	private boolean generate(String key, String mimetype, String hash, int size, boolean min) throws ThumbnailServiceException {
 		LOGGER.log(Level.FINE, "Generating thumbnail for key: " + key + " and size: " + size);
 		try {
-			File output = getFile(key, size);
+			File output = getFile(key, size, min);
 			if ( output.exists() ) {
 				output.delete();
 			}
@@ -178,7 +178,7 @@ public class ThumbnailServiceBean implements ThumbnailService {
 			for (ThumbnailGenerator generator : generators) {
 				if (generator.getAcceptedMIMETypes().contains(mimetype)) {
 					try {
-						generator.generate(input, output, size, size);
+						generator.generate(input, output, size, size, min);
 						generated = true;
 						LOGGER.log(Level.FINE, "thumbnail generated for key: " + key + " in file: " + output);
 						break;
@@ -196,13 +196,13 @@ public class ThumbnailServiceBean implements ThumbnailService {
 		}
 	}
 
-	private File getFile(String key, int size) throws DataNotFoundException {
+	private File getFile(String key, int size, boolean min) throws DataNotFoundException {
 		String digit = key.substring(0, DISTINGUISH_SIZE);
-		return Paths.get(base.toString(), digit, key + "_" + size + ".jpg").toFile();
+		return Paths.get(base.toString(), digit, key + "_" + size + (min ? "_min" : "") +".jpg").toFile();
 	}
 
-	private boolean needGeneration(String key, int size, long lmd) throws DataNotFoundException, IOException {
-		File thumb = getFile(key, size);
+	private boolean needGeneration(String key, int size, boolean min, long lmd) throws DataNotFoundException, IOException {
+		File thumb = getFile(key, size, min);
 		return !thumb.exists() || lmd > thumb.lastModified();
 	}
 

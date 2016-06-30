@@ -66,7 +66,7 @@ public class VideoThumbnailGenerator implements ThumbnailGenerator {
     );
 
     @Override
-    public void generate(File input, File output, int width, int height) throws ThumbnailGeneratorException {
+    public void generate(File input, File output, int width, int height, boolean min) throws ThumbnailGeneratorException {
         FFmpegFrameGrabber g = new FFmpegFrameGrabber(input);
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
             g.start();
@@ -75,7 +75,7 @@ public class VideoThumbnailGenerator implements ThumbnailGenerator {
             ImageIO.write(converter.getBufferedImage(f), "jpg", baos);
             g.stop();
 
-            ImageResizer resizer = new ImageResizer(width, height);
+            ImageResizer resizer = new ImageResizer(width, height, min);
             resizer.setInputImage(new ByteArrayInputStream(baos.toByteArray()));
             resizer.writeOutput(output);
         } catch (Exception e) {

@@ -41,7 +41,7 @@ import java.util.List;
 
 public interface ThumbnailGenerator {
 	
-	void generate(File input, File output, int width, int height) throws ThumbnailGeneratorException;
+	void generate(File input, File output, int width, int height, boolean min) throws ThumbnailGeneratorException;
 
 	List<String> getAcceptedMIMETypes();
 

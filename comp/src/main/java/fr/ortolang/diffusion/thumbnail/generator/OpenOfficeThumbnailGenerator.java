@@ -51,7 +51,7 @@ import fr.ortolang.diffusion.thumbnail.util.ImageResizer;
 public class OpenOfficeThumbnailGenerator implements ThumbnailGenerator {
 
     @Override
-    public void generate(File input, File output, int width, int height) throws ThumbnailGeneratorException {
+    public void generate(File input, File output, int width, int height, boolean min) throws ThumbnailGeneratorException {
         try (ZipFile zipFile = new ZipFile(input)) {
             ZipEntry entry = zipFile.getEntry("Thumbnails/thumbnail.png");
             if (entry == null) {
@@ -59,7 +59,7 @@ public class OpenOfficeThumbnailGenerator implements ThumbnailGenerator {
             }
 
             try (InputStream is = new BufferedInputStream(zipFile.getInputStream(entry)) ) {
-                ImageResizer resizer = new ImageResizer(width, height);
+                ImageResizer resizer = new ImageResizer(width, height, min);
                 resizer.setInputImage(is);
                 resizer.writeOutput(output);
             } catch (Exception e) {

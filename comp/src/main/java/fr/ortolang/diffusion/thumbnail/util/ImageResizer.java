@@ -67,6 +67,7 @@ public class ImageResizer {
     private int imageHeight;
     private int thumbWidth;
     private int thumbHeight;
+    private boolean min;
 
     private int scaledWidth;
     private int scaledHeight;
@@ -79,9 +80,10 @@ public class ImageResizer {
         jpegParams.setCompressionQuality(0.95F);
     }
 
-    public ImageResizer(int thumbWidth, int thumbHeight) {
+    public ImageResizer(int thumbWidth, int thumbHeight, boolean min) {
         this.thumbWidth = thumbWidth;
         this.thumbHeight = thumbHeight;
+        this.min = min;
     }
 
     public void setInputImage(File input) throws IOException, OrtolangException {
@@ -136,7 +138,12 @@ public class ImageResizer {
     }
 
     private void calcDimensions() {
-        double resizeRatio = Math.min(((double) thumbWidth) / imageWidth, ((double) thumbHeight) / imageHeight);
+        double resizeRatio;
+        if (min) {
+            resizeRatio = Math.max(((double) thumbWidth) / imageWidth, ((double) thumbHeight) / imageHeight);
+        } else {
+            resizeRatio = Math.min(((double) thumbWidth) / imageWidth, ((double) thumbHeight) / imageHeight);
+        }
         scaledWidth = (int) Math.round(imageWidth * resizeRatio);
         scaledHeight = (int) Math.round(imageHeight * resizeRatio);
     }

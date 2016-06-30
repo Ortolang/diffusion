@@ -51,6 +51,6 @@ public interface ThumbnailService extends OrtolangService {
     String INFO_SIZE = "size";
     String INFO_FILES = "files";
     
-	Thumbnail getThumbnail(String key, int size) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException;
+	Thumbnail getThumbnail(String key, int size, boolean min) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException;
 	
 }

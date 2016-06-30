@@ -47,8 +47,8 @@ import fr.ortolang.diffusion.thumbnail.util.ImageResizer;
 public class ImageThumbnailGenerator implements ThumbnailGenerator {
 
     @Override
-    public void generate(File input, File output, int width, int height) throws ThumbnailGeneratorException {
-        ImageResizer resizer = new ImageResizer(width, height);
+    public void generate(File input, File output, int width, int height, boolean min) throws ThumbnailGeneratorException {
+        ImageResizer resizer = new ImageResizer(width, height, min);
         try {
             resizer.setInputImage(input);
             resizer.writeOutput(output);
