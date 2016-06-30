@@ -46,13 +46,13 @@ import javax.persistence.NamedQuery;
 
 @Entity
 @IdClass(StatisticValuePK.class)
-@NamedQueries({ 
+@NamedQueries({
     @NamedQuery(name = "findValuesForName", query = "SELECT v FROM StatisticValue v WHERE v.name = :name ORDER BY v.timestamp DESC"),
     @NamedQuery(name = "findValuesForNameFromTo", query = "SELECT v FROM StatisticValue v WHERE v.name = :name AND v.timestamp > :from AND v.timestamp < :to ORDER BY v.timestamp ASC")
 })
 @SuppressWarnings("serial")
 public class StatisticValue implements Serializable {
-    
+
     @Id
     private String name;
     @Id

@@ -49,6 +49,7 @@ import javax.transaction.Status;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.core.*;
 import fr.ortolang.diffusion.core.entity.*;
+import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -98,19 +99,20 @@ public class LoadSnapshotTask extends RuntimeEngineTask {
             if (!execution.hasVariable(SNAPSHOT_NAME_PARAM_NAME)) {
                 LOGGER.log(Level.FINE, "Updating publicationDate and datasize fields in item metadata");
                 MetadataElement ortolangItemMetadata = getCoreService().readCollection(workspace.getHead()).findMetadataByName(MetadataFormat.ITEM);
-                InputStream metadataInputStream = core.download(ortolangItemMetadata.getKey());
-                String json = new BufferedReader(new InputStreamReader(metadataInputStream)).lines().collect(Collectors.joining("\n"));
-                metadataInputStream.close();
-                JSONObject jsonObject = new JSONObject(json);
-                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                Date date = new Date();
-                jsonObject.put("publicationDate", dateFormat.format(date));
-                jsonObject.put("datasize", Long.toString(core.getSize(workspace.getHead()).getSize()));
-                json = jsonObject.toString();
-                String hash = getBinaryStore().put(new ByteArrayInputStream(json.getBytes()));
-                core.updateMetadataObject(wskey, "/", MetadataFormat.ITEM, hash, MetadataFormat.ITEM + ".json", false);
-
-                LOGGER.log(Level.FINE, "Snapshot name NOT provided and workspace has changed since last snapshot, generating a new snapshot");
+                if (ortolangItemMetadata != null || !execution.getVariable(INITIER_PARAM_NAME, String.class).equals(MembershipService.SUPERUSER_IDENTIFIER)) {
+                    InputStream metadataInputStream = core.download(ortolangItemMetadata.getKey());
+                    String json = new BufferedReader(new InputStreamReader(metadataInputStream)).lines().collect(Collectors.joining("\n"));
+                    metadataInputStream.close();
+                    JSONObject jsonObject = new JSONObject(json);
+                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    Date date = new Date();
+                    jsonObject.put("publicationDate", dateFormat.format(date));
+                    jsonObject.put("datasize", Long.toString(core.getSize(workspace.getHead()).getSize()));
+                    json = jsonObject.toString();
+                    String hash = getBinaryStore().put(new ByteArrayInputStream(json.getBytes()));
+                    core.updateMetadataObject(wskey, "/", MetadataFormat.ITEM, hash, MetadataFormat.ITEM + ".json", false);
+                }
+                LOGGER.log(Level.FINE, "Snapshot name NOT provided and workspace has changed since last snapshot, generæating a new snapshot");
                 snapshotName = getCoreService().snapshotWorkspace(wskey);
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "New snapshot [" + snapshotName + "] created"));
                 execution.setVariable(SNAPSHOT_NAME_PARAM_NAME, snapshotName);
@@ -138,7 +140,7 @@ public class LoadSnapshotTask extends RuntimeEngineTask {
             }
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Snapshot loaded and publication status is good for publication, starting publication"));
 
-        } catch (CoreServiceException | KeyNotFoundException | RegistryServiceException | WorkspaceReadOnlyException | DataNotFoundException | OrtolangException | DataCollisionException | BinaryStoreServiceException | MetadataFormatException | InvalidPathException | PathNotFoundException | IOException e) {
+        } catch (CoreServiceException | KeyNotFoundException | RegistryServiceException | WorkspaceReadOnlyException | DataNotFoundException | OrtolangException | DataCollisionException | BinaryStoreServiceException | MetadataFormatException | InvalidPathException | PathNotFoundException | IOException | RuntimeException e) {
             throw new RuntimeEngineTaskException("unexpected error during snapshot task execution", e);
         }
 
