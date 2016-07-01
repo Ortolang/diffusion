@@ -67,7 +67,7 @@
         <version.hibernate-core>4.3.5.Final</version.hibernate-core>
         <version.activiti-engine>5.20.0</version.activiti-engine>
         <version.json-schema-validator>2.2.6</version.json-schema-validator>
-        <version.javacv>1.1</version.javacv>
+        <version.javacv>1.2</version.javacv>
         <version.guava>18.0</version.guava>
         <version.ftpserver-core>1.0.6</version.ftpserver-core>
         <version.je>5.0.73</version.je>
