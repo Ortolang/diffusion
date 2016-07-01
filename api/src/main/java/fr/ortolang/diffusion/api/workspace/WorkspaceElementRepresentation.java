@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.api.workspace;
  * #L%
  */
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.core.entity.*;
@@ -47,6 +48,7 @@ import java.util.Map;
 import java.util.Set;
 
 @XmlRootElement(name = "workspace-element")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkspaceElementRepresentation {
 
     @XmlAttribute
