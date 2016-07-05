@@ -47,11 +47,9 @@ import javax.transaction.Status;
 import org.activiti.engine.delegate.DelegateExecution;
 
 import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public class PublishSnapshotTask extends RuntimeEngineTask {
 
@@ -86,7 +84,7 @@ public class PublishSnapshotTask extends RuntimeEngineTask {
 		try {
 			LOGGER.log(Level.FINE, "building publication map...");
 			map = getCoreService().buildWorkspacePublicationMap(wskey, snapshot);
-		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException e) {
+		} catch (CoreServiceException e) {
 			throw new RuntimeEngineTaskException("unexpected error while trying to built the publication map", e);
 		}
 		LOGGER.log(Level.FINE, "publication map built containing " + map.size() + " keys");

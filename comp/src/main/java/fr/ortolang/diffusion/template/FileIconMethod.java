@@ -59,7 +59,7 @@ public class FileIconMethod implements TemplateMethodModelEx {
 		}
 		String extension = Files.getFileExtension(((SimpleScalar) arguments.get(0)).getAsString());
 		String mimetype = ((SimpleScalar) arguments.get(1)).getAsString();
-		if ( extension != null && extMapping.containsKey(extension) ) {
+		if (extMapping.containsKey(extension)) {
 			return extMapping.get(extension);
 		}
 		if (mimetype != null) {

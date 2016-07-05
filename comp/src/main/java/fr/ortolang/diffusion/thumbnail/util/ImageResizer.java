@@ -36,6 +36,8 @@ package fr.ortolang.diffusion.thumbnail.util;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangException;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -65,6 +67,7 @@ public class ImageResizer {
     private int imageHeight;
     private int thumbWidth;
     private int thumbHeight;
+    private boolean min;
 
     private int scaledWidth;
     private int scaledHeight;
@@ -77,24 +80,25 @@ public class ImageResizer {
         jpegParams.setCompressionQuality(0.95F);
     }
 
-    public ImageResizer(int thumbWidth, int thumbHeight) {
+    public ImageResizer(int thumbWidth, int thumbHeight, boolean min) {
         this.thumbWidth = thumbWidth;
         this.thumbHeight = thumbHeight;
+        this.min = min;
     }
 
-    public void setInputImage(File input) throws Exception {
+    public void setInputImage(File input) throws IOException, OrtolangException {
         BufferedImage image = ImageIO.read(input);
         setInputImage(image);
     }
 
-    public void setInputImage(InputStream input) throws Exception {
+    public void setInputImage(InputStream input) throws IOException, OrtolangException {
         BufferedImage image = ImageIO.read(input);
         setInputImage(image);
     }
 
-    public void setInputImage(BufferedImage input) throws Exception {
+    public void setInputImage(BufferedImage input) throws OrtolangException {
         if (input == null) {
-            throw new Exception("The image reader could not open the file.");
+            throw new OrtolangException("The image reader could not open the file.");
         }
 
         this.inputImage = input;
@@ -134,7 +138,12 @@ public class ImageResizer {
     }
 
     private void calcDimensions() {
-        double resizeRatio = Math.min(((double) thumbWidth) / imageWidth, ((double) thumbHeight) / imageHeight);
+        double resizeRatio;
+        if (min) {
+            resizeRatio = Math.max(((double) thumbWidth) / imageWidth, ((double) thumbHeight) / imageHeight);
+        } else {
+            resizeRatio = Math.min(((double) thumbWidth) / imageWidth, ((double) thumbHeight) / imageHeight);
+        }
         scaledWidth = (int) Math.round(imageWidth * resizeRatio);
         scaledHeight = (int) Math.round(imageHeight * resizeRatio);
     }
@@ -184,6 +193,7 @@ public class ImageResizer {
                     try {
                         Thread.sleep(100);
                     } catch (InterruptedException e) {
+                        LOGGER.log(Level.SEVERE, e.getMessage(), e);
                     }
                 }
             }

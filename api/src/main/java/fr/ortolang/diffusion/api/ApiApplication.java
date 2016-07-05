@@ -85,7 +85,7 @@ import fr.ortolang.diffusion.subscription.SubscriptionResource;
 @ApplicationPath("/*")
 public class ApiApplication extends Application {
 
-    private HashSet<Class<?>> classes = new HashSet<Class<?>>();
+    private Set<Class<?>> classes = new HashSet<>();
 
     public ApiApplication() {
         classes.add(ObjectResource.class);
@@ -117,7 +117,7 @@ public class ApiApplication extends Application {
 
     @Override
     public Set<Object> getSingletons() {
-        HashSet<Object> set = new HashSet<Object>();
+        Set<Object> set = new HashSet<>();
         set.add(new ContentTypeSetterPreProcessorInterceptor());
         set.add(new CacheFilter());
         set.add(new AccessDeniedExceptionMapper());

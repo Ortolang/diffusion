@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.notification;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
@@ -97,7 +98,7 @@ public class NotificationServiceBean implements NotificationService {
 			message.setStringProperty(OrtolangEvent.FROM_OBJECT, fromObject);
 			message.setStringProperty(OrtolangEvent.OBJECT_TYPE, objectType);
 			message.setStringProperty(OrtolangEvent.TYPE, eventType);
-			if (arguments != null) {
+			if (arguments != null && arguments instanceof Serializable) {
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				ObjectOutputStream oos = new ObjectOutputStream(baos);
 				oos.writeObject(arguments);

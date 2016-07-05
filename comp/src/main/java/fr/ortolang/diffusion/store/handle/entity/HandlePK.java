@@ -80,21 +80,17 @@ public class HandlePK implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
+	public boolean equals(Object o) {
+		if (this == o)
 			return true;
-		if (obj == null)
+		if (o == null || getClass() != o.getClass())
 			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		HandlePK other = (HandlePK) obj;
-		if (!Arrays.equals(handle, other.handle))
-			return false;
-		if (index != other.index)
-			return false;
-		return true;
-	}
-	
-	
 
+		HandlePK handlePK = (HandlePK) o;
+
+		if (index != handlePK.index)
+			return false;
+		return Arrays.equals(handle, handlePK.handle);
+
+	}
 }

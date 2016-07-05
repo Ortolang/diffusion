@@ -79,7 +79,6 @@ import org.apache.lucene.search.highlight.QueryScorer;
 import org.apache.lucene.search.highlight.SimpleHTMLFormatter;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.Version;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
@@ -107,7 +106,6 @@ public class IndexStoreServiceBean implements IndexStoreService {
     private Path base;
     private Analyzer analyzer;
     private Directory directory;
-    private IndexWriterConfig config;
     private IndexWriter writer;
 
     public IndexStoreServiceBean() {
@@ -122,7 +120,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
             analyzer = new FrenchAnalyzer();
             directory = FSDirectory.open(base);
             LOGGER.log(Level.FINEST, "directory implementation: " + directory.getClass());
-            config = new IndexWriterConfig(analyzer);
+            IndexWriterConfig config = new IndexWriterConfig(analyzer);
             writer = new IndexWriter(directory, config);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "unable to configure lucene index writer", e);
@@ -187,7 +185,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
             Query q = new CustomScoreQuery(query, boostQuery);
 
             TopDocs docs = searcher.search(q, 100);
-            ArrayList<OrtolangSearchResult> results = new ArrayList<OrtolangSearchResult>(docs.totalHits);
+            List<OrtolangSearchResult> results = new ArrayList<OrtolangSearchResult>(docs.totalHits);
             SimpleHTMLFormatter formatter = new SimpleHTMLFormatter("<span class='highlighted'>", "</span>");
             QueryScorer scorer = new QueryScorer(query);
             Highlighter highlighter = new Highlighter(formatter, scorer);

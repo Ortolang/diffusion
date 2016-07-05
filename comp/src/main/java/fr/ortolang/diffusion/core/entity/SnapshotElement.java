@@ -40,92 +40,97 @@ import java.io.Serializable;
 import java.util.StringTokenizer;
 
 @SuppressWarnings("serial")
-public class SnapshotElement implements Serializable {
-	
-	private String name;
-	private String key;
+public class SnapshotElement implements Serializable, Cloneable {
 
-	public SnapshotElement() {
-	}
+    private String name;
+    private String key;
 
-	public SnapshotElement(String name, String key) {
-		this.name = name;
-		this.key = key;
-	}
+    public SnapshotElement() {
+    }
 
-	public String getName() {
-		return name;
-	}
+    public SnapshotElement(String name, String key) {
+        this.name = name;
+        this.key = key;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getKey() {
-		return key;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setKey(String key) {
-		this.key = key;
-	}
-	
-	@Override
-	public SnapshotElement clone() {
-		SnapshotElement clone = new SnapshotElement();
-		clone.setKey(this.getKey());
-		clone.setName(this.getName());
-		return clone;
-	}
-	
-	public String serialize() {
-		return this.getName() + "/" + this.getKey();
-	}
-	
-	public static SnapshotElement deserialize(String serializedElement) {
-		if (serializedElement == null) {
-			return null;
-		}
-		StringTokenizer tokenizer = new StringTokenizer(serializedElement, "/");
-		return new SnapshotElement(tokenizer.nextToken(), tokenizer.nextToken());
-	}
+    public String getKey() {
+        return key;
+    }
 
-	@Override
-	public String toString() {
-		return "SnapshotElement{" +
-				"name='" + name + '\'' +
-				", key='" + key + '\'' +
-				'}';
-	}
+    public void setKey(String key) {
+        this.key = key;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((key == null) ? 0 : key.hashCode());
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
-	}
+    @Override
+    public SnapshotElement clone() {
+        try {
+            super.clone();
+        } catch (CloneNotSupportedException e) {
+            //
+        }
+        SnapshotElement clone = new SnapshotElement();
+        clone.setKey(this.getKey());
+        clone.setName(this.getName());
+        return clone;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		SnapshotElement other = (SnapshotElement) obj;
-		if (key == null) {
-			if (other.key != null)
-				return false;
-		} else if (!key.equals(other.key))
-			return false;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
-			return false;
-		return true;
-	}
-	
+    public String serialize() {
+        return this.getName() + "/" + this.getKey();
+    }
+
+    public static SnapshotElement deserialize(String serializedElement) {
+        if (serializedElement == null) {
+            return null;
+        }
+        StringTokenizer tokenizer = new StringTokenizer(serializedElement, "/");
+        return new SnapshotElement(tokenizer.nextToken(), tokenizer.nextToken());
+    }
+
+    @Override
+    public String toString() {
+        return "SnapshotElement{" +
+                "name='" + name + '\'' +
+                ", key='" + key + '\'' +
+                '}';
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((key == null) ? 0 : key.hashCode());
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        SnapshotElement other = (SnapshotElement) obj;
+        if (key == null) {
+            if (other.key != null)
+                return false;
+        } else if (!key.equals(other.key))
+            return false;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        return true;
+    }
+
 }

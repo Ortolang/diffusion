@@ -49,13 +49,15 @@ import javax.ws.rs.ext.MessageBodyReader;
 @SuppressWarnings("rawtypes")
 public class OrtolangClientFileBodyReader implements MessageBodyReader {
 
-	public boolean isReadable(Class type, Type genericType, Annotation[] annotations, MediaType mediaType) {
-		return true;
-	}
+    @Override
+    public boolean isReadable(Class type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        return true;
+    }
 
-	public InputStream readFrom(Class type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap httpHeaders, InputStream entityStream) throws IOException,
-			WebApplicationException {
-		
-		return entityStream;
-	}
+    @Override
+    public InputStream readFrom(Class type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap httpHeaders, InputStream entityStream) throws IOException,
+            WebApplicationException {
+
+        return entityStream;
+    }
 }

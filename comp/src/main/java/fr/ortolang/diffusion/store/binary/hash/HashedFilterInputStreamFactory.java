@@ -41,6 +41,6 @@ import java.security.NoSuchAlgorithmException;
 
 public interface HashedFilterInputStreamFactory {
 	
-	public HashedFilterInputStream getHashedFilterInputStream(InputStream is) throws NoSuchAlgorithmException;
+	HashedFilterInputStream getHashedFilterInputStream(InputStream is) throws NoSuchAlgorithmException;
 
 }

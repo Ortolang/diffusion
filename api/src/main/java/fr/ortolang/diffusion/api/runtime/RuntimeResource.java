@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
@@ -50,9 +51,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.transaction.UserTransaction;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -72,7 +71,6 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
 
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
-import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -92,11 +90,7 @@ public class RuntimeResource {
     private static final Logger LOGGER = Logger.getLogger(RuntimeResource.class.getName());
 
     @EJB
-    private CoreService core;
-    @EJB
     private RuntimeService runtime;
-    @Resource
-    private UserTransaction userTx;
 
     @GET
     @Path("/types")
@@ -151,17 +145,17 @@ public class RuntimeResource {
     @Path("/processes")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @GZIP
-    public Response startInstance(MultivaluedMap<String, String> params) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException {
+    public Response startInstance(MultivaluedMap<String, String> params) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException, URISyntaxException {
         LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /runtime/processes");
         String key = UUID.randomUUID().toString();
 
-        String definition = null;
+        String definition;
         if ( !params.containsKey("process-type") ) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'process-type' is mandatory").build();
         } else {
             definition = params.remove("process-type").get(0);
         }
-        String name = null;
+        String name;
         if ( !params.containsKey("process-name") ) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'process-name' is mandatory").build();
         } else {
@@ -173,15 +167,13 @@ public class RuntimeResource {
         }
 
         Map<String, Object> mparams = new HashMap<String, Object> ();
-        for ( Entry<String, List<String>> entry : params.entrySet() ) {
-            if ( entry.getValue().size() > 0 ) {
-                StringBuilder values = new StringBuilder();
-                for ( String value : entry.getValue() ) {
-                    values.append(value).append(",");
-                }
-                mparams.put(entry.getKey(), values.substring(0, values.length()-1));
+        params.entrySet().stream().filter(entry -> !entry.getValue().isEmpty()).forEach(entry -> {
+            StringBuilder values = new StringBuilder();
+            for (String value : entry.getValue()) {
+                values.append(value).append(",");
             }
-        }
+            mparams.put(entry.getKey(), values.substring(0, values.length() - 1));
+        });
 
         try {
             Process process = runtime.createProcess(key, definition, name, wskey);
@@ -197,20 +189,21 @@ public class RuntimeResource {
     @Path("/processes")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @GZIP
-    public Response startInstance(MultipartFormDataInput input) throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException, IOException, CoreServiceException, DataCollisionException {
+    public Response startInstance(MultipartFormDataInput input)
+            throws RuntimeServiceException, AccessDeniedException, KeyAlreadyExistsException, IOException, CoreServiceException, DataCollisionException, URISyntaxException {
         LOGGER.log(Level.INFO, "POST(multipart/form-data) /runtime/processes");
         String key = UUID.randomUUID().toString();
 
         Map<String, Object> mparams = new HashMap<String, Object> ();
         Map<String, List<InputPart>> form = input.getFormDataMap();
 
-        String definition = null;
+        String definition;
         if ( !form.containsKey("process-type") ) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'process-type' is mandatory").build();
         } else {
             definition = form.remove("process-type").get(0).getBodyAsString();
         }
-        String name = null;
+        String name;
         if ( !form.containsKey("process-name") ) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'process-name' is mandatory").build();
         } else {
@@ -222,7 +215,7 @@ public class RuntimeResource {
         }
 
         for ( Entry<String, List<InputPart>> entry : form.entrySet() ) {
-            if ( entry.getValue().size() > 0 ) {
+            if ( !entry.getValue().isEmpty() ) {
                 StringBuilder values = new StringBuilder();
                 for ( InputPart value : entry.getValue() ) {
                     if ( value.getHeaders().containsKey("Content-Disposition") && value.getHeaders().getFirst("Content-Disposition").contains("filename=") ) {

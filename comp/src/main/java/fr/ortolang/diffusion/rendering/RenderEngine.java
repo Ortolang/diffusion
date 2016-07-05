@@ -41,14 +41,14 @@ import java.util.Locale;
 
 public interface RenderEngine {
     
-    public String getId();
+    String getId();
     
-    public String getName(Locale locale);
+    String getName(Locale locale);
     
-    public String getDescription(Locale locale);
+    String getDescription(Locale locale);
    
-    public boolean canRender(String mimetype);
+    boolean canRender(String mimetype);
     
-    public boolean render(Path input, Path output);
+    boolean render(Path input, Path output);
 
 }

@@ -57,7 +57,7 @@ public class VideoPreviewGeneratorTest {
 		VideoThumbnailGenerator generator = new VideoThumbnailGenerator();
 		Path out = Files.createTempFile("preview-mp4-", ".jpg");
 		Path in = Paths.get(this.getClass().getClassLoader().getResource("small.mp4").getFile());
-		generator.generate(in.toFile(), out.toFile(), 300, 300);
+		generator.generate(in.toFile(), out.toFile(), 300, 300, false);
 		LOGGER.log(Level.INFO, "preview generated");
 	}
 	
@@ -66,7 +66,7 @@ public class VideoPreviewGeneratorTest {
 		VideoThumbnailGenerator generator = new VideoThumbnailGenerator();
 		Path out = Files.createTempFile("preview-ogv-", ".jpg");
 		Path in = Paths.get(this.getClass().getClassLoader().getResource("small.ogv").getFile());
-		generator.generate(in.toFile(), out.toFile(), 300, 300);
+		generator.generate(in.toFile(), out.toFile(), 300, 300, false);
 		LOGGER.log(Level.INFO, "preview generated");
 	}
 

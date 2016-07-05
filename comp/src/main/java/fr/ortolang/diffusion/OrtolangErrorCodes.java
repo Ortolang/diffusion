@@ -47,4 +47,7 @@ public final class OrtolangErrorCodes {
     public static final String COLLECTION_NOT_EMPTY_EXCEPTION = "7";
     public static final String ACCESS_DENIED_EXCEPTION = "8";
     public static final String METADATA_FORMAT_EXCEPTION = "9";
+
+    private OrtolangErrorCodes() {
+    }
 }

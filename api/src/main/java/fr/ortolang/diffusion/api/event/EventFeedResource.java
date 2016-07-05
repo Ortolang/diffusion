@@ -53,7 +53,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
@@ -83,7 +82,7 @@ public class EventFeedResource {
     @GET
     @Path("/{key}")
     @GZIP
-    public Response getEventFeed(@PathParam(value = "key") String key, @QueryParam(value = "id") Long id, @QueryParam(value = "o") @DefaultValue(value = "0") int offset, @QueryParam(value = "l") @DefaultValue(value = "10") int limit, @Context Request request) throws KeyNotFoundException, AccessDeniedException, EventServiceException {
+    public Response getEventFeed(@PathParam(value = "key") String key, @QueryParam(value = "id") Long id, @QueryParam(value = "o") @DefaultValue(value = "0") int offset, @QueryParam(value = "l") @DefaultValue(value = "10") int limit) throws KeyNotFoundException, AccessDeniedException, EventServiceException {
         LOGGER.log(Level.INFO, "GET /feeds/" + key);
         EventFeed feed = events.readEventFeed(key);
         List<OrtolangEvent> content;
@@ -112,7 +111,7 @@ public class EventFeedResource {
     @GET
     @Path("/{key}/filters")
     @GZIP
-    public Response listEventFeedFilters(@PathParam(value = "key") String key, @Context Request request) throws KeyNotFoundException, AccessDeniedException, EventServiceException {
+    public Response listEventFeedFilters(@PathParam(value = "key") String key) throws KeyNotFoundException, AccessDeniedException, EventServiceException {
         LOGGER.log(Level.INFO, "GET /feeds/" + key + "/filters");
         EventFeed feed = events.readEventFeed(key);
         GenericCollectionRepresentation<EventFeedFilterRepresentation> representation = new GenericCollectionRepresentation<EventFeedFilterRepresentation>();

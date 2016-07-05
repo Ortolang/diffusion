@@ -50,63 +50,47 @@ import com.lyncode.xoai.dataprovider.repository.ItemRepository;
 
 public interface MultiMetadataItemRepository extends ItemRepository {
 
-    public List<String> getListMetadataFormats(String identifier) throws IdDoesNotExistException, NoMetadataFormatsException, OAIException;
+    List<String> getListMetadataFormats(String identifier) throws IdDoesNotExistException, NoMetadataFormatsException, OAIException;
     
-	public ListItemIdentifiersResult getItemIdentifiers(
-			List<ScopedFilter> filters, String metadataPrefix, int offset, int length) throws OAIException;
+	ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length) throws OAIException;
 	
-	public ListItemIdentifiersResult getItemIdentifiers(
-			List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from)
+	ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from)
 			throws OAIException;
 	
-	public ListItemIdentifiersResult getItemIdentifiers(
-			List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec)
+	ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec)
 			throws OAIException;
 	
-	public ListItemIdentifiersResult getItemIdentifiers(
-			List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from, Date until)
+	ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from, Date until)
 			throws OAIException;
 			
-	public ListItemIdentifiersResult getItemIdentifiers(
-			List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from)
+	ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from)
 			throws OAIException;
 			
-	public ListItemIdentifiersResult getItemIdentifiers(
-			List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec,
-			Date from, Date until) throws OAIException;
+	ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from, Date until) throws OAIException;
 	
-	public ListItemIdentifiersResult getItemIdentifiersUntil(
-			List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date until)
+	ListItemIdentifiersResult getItemIdentifiersUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date until)
 			throws OAIException;
 	
-	public ListItemIdentifiersResult getItemIdentifiersUntil(
-			List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date until)
+	ListItemIdentifiersResult getItemIdentifiersUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date until)
 			throws OAIException;
 	
-	public Item getItem(String identifier, String metadataPrefix) throws IdDoesNotExistException,
+	Item getItem(String identifier, String metadataPrefix) throws IdDoesNotExistException,
 				OAIException;
 
-	public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length)
+	ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length)
 			throws OAIException;
 	
-	public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset,
-			int length, Date from) throws OAIException;
+	ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from) throws OAIException;
 	
-	public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset,
-			int length, String setSpec) throws OAIException;
+	ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec) throws OAIException;
 	
-	public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset,
-			int length, Date from, Date until) throws OAIException;
+	ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from, Date until) throws OAIException;
 	
-	public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset,
-			int length, String setSpec, Date from) throws OAIException;
+	ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from) throws OAIException;
 	
-	public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset,
-			int length, String setSpec, Date from, Date until) throws OAIException;
+	ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from, Date until) throws OAIException;
 			
-	public ListItemsResults getItemsUntil(List<ScopedFilter> filters, String metadataPrefix, int offset,
-			int length, Date until) throws OAIException;
+	ListItemsResults getItemsUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date until) throws OAIException;
 	
-	public ListItemsResults getItemsUntil(List<ScopedFilter> filters, String metadataPrefix, int offset,
-			int length, String setSpec, Date until) throws OAIException;
+	ListItemsResults getItemsUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date until) throws OAIException;
 }

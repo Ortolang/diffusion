@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.jobs.entity;
  * #L%
  */
 
+import javax.annotation.Nonnull;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -133,8 +134,8 @@ public class Job implements Serializable, Delayed {
         return parameters.containsKey(name);
     }
 
-    public String setParameter(String name, String value) {
-        return parameters.put(name, value);
+    public void setParameter(String name, String value) {
+        parameters.put(name, value);
     }
 
     @Override
@@ -149,13 +150,13 @@ public class Job implements Serializable, Delayed {
     }
 
     @Override
-    public long getDelay(TimeUnit unit) {
+    public long getDelay(@Nonnull TimeUnit unit) {
         long diff = timestamp - System.currentTimeMillis();
         return unit.convert(diff, TimeUnit.MILLISECONDS);
     }
 
     @Override
-    public int compareTo(Delayed obj) {
+    public int compareTo(@Nonnull Delayed obj) {
         if (!(obj instanceof Job)) {
             throw new IllegalArgumentException("Illegal comparison to non-Job");
         }

@@ -70,10 +70,8 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -90,15 +88,11 @@ public class ThumbnailServiceBean implements ThumbnailService {
 	private static final Logger LOGGER = Logger.getLogger(ThumbnailServiceBean.class.getName());
 
 	private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
-    public static final String DEFAULT_THUMBNAILS_HOME = "thumbs";
+	private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+
+	public static final String DEFAULT_THUMBNAILS_HOME = "thumbs";
 	public static final int DISTINGUISH_SIZE = 2;
 
-	@EJB
-	private MembershipService membership;
-	@EJB
-	private AuthorisationService authorisation;
 	@EJB
 	private BinaryStoreService store;
 	@EJB
@@ -135,11 +129,11 @@ public class ThumbnailServiceBean implements ThumbnailService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public Thumbnail getThumbnail(String key, int size) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException {
+	public Thumbnail getThumbnail(String key, int size, boolean min) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException {
 		LOGGER.log(Level.FINE, "get thumbnail for key [" + key + "] and size [" + size + "]");
 		try {
 			OrtolangObjectState state = browser.getState(key);
-			if (needGeneration(key, size, state.getLastModification())) {
+			if (needGeneration(key, size, min, state.getLastModification())) {
 				OrtolangObject object = browser.findObject(key);
 				boolean generated = false;
 				if (object.getObjectIdentifier().getService().equals(CoreService.SERVICE_NAME)) {
@@ -148,21 +142,21 @@ public class ThumbnailServiceBean implements ThumbnailService {
 						if (metadataElement != null) {
 							MetadataObject metadataObject = core.readMetadataObject(metadataElement.getKey());
 							File file = store.getFile(metadataObject.getStream());
-							generated = generate(key, metadataObject.getContentType(), metadataObject.getStream(), size);
+							generated = generate(key, metadataObject.getContentType(), metadataObject.getStream(), size, min);
 							if (!generated) {
 								return new Thumbnail(file, metadataObject.getContentType());
 							}
 						}
 					}
 				}
-				if (!generated && object.getObjectIdentifier().getService().equals(CoreService.SERVICE_NAME) && object.getObjectIdentifier().getType().equals(DataObject.OBJECT_TYPE)) {
-					generated = generate(key, ((DataObject) object).getMimeType(), ((DataObject) object).getStream(), size);
+				if (!generated && object instanceof DataObject) {
+					generated = generate(key, ((DataObject) object).getMimeType(), ((DataObject) object).getStream(), size, min);
 				}
 				if ( !generated ) {
-					throw new ThumbnailServiceException("unable to generate thumbnail for object that are not dataobjects");
+					throw new ThumbnailServiceException("unable to generate thumbnail for object that are not data objects");
 				}
 			}
-			return new Thumbnail(getFile(key, size), ThumbnailService.THUMBS_MIMETYPE);
+			return new Thumbnail(getFile(key, size, min), ThumbnailService.THUMBS_MIMETYPE);
 		} catch (DataNotFoundException | IOException | OrtolangException | BrowserServiceException e) {
 			LOGGER.log(Level.WARNING, "unexpected error while retrieving thumbnail", e);
 			throw new ThumbnailServiceException("error while retrieving thumbnail", e);
@@ -170,10 +164,10 @@ public class ThumbnailServiceBean implements ThumbnailService {
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	private boolean generate(String key, String mimetype, String hash, int size) throws ThumbnailServiceException {
+	private boolean generate(String key, String mimetype, String hash, int size, boolean min) throws ThumbnailServiceException {
 		LOGGER.log(Level.FINE, "Generating thumbnail for key: " + key + " and size: " + size);
 		try {
-			File output = getFile(key, size);
+			File output = getFile(key, size, min);
 			if ( output.exists() ) {
 				output.delete();
 			}
@@ -184,7 +178,7 @@ public class ThumbnailServiceBean implements ThumbnailService {
 			for (ThumbnailGenerator generator : generators) {
 				if (generator.getAcceptedMIMETypes().contains(mimetype)) {
 					try {
-						generator.generate(input, output, size, size);
+						generator.generate(input, output, size, size, min);
 						generated = true;
 						LOGGER.log(Level.FINE, "thumbnail generated for key: " + key + " in file: " + output);
 						break;
@@ -202,78 +196,74 @@ public class ThumbnailServiceBean implements ThumbnailService {
 		}
 	}
 
-	private File getFile(String key, int size) throws DataNotFoundException {
+	private File getFile(String key, int size, boolean min) throws DataNotFoundException {
 		String digit = key.substring(0, DISTINGUISH_SIZE);
-		return Paths.get(base.toString(), digit, key + "_" + size + ".jpg").toFile();
+		return Paths.get(base.toString(), digit, key + "_" + size + (min ? "_min" : "") +".jpg").toFile();
 	}
 
-	private boolean needGeneration(String key, int size, long lmd) throws DataNotFoundException, IOException {
-		File thumb = getFile(key, size);
-		if (thumb.exists()) {
-			return lmd > thumb.lastModified();
-		}
-		return true;
+	private boolean needGeneration(String key, int size, boolean min, long lmd) throws DataNotFoundException, IOException {
+		File thumb = getFile(key, size, min);
+		return !thumb.exists() || lmd > thumb.lastModified();
 	}
-	
+
 	private long getStoreNbFiles() throws IOException {
-        long nbfiles = Files.walk(base).count();
-        return nbfiles;
-    }
-    
-    private long getStoreSize() throws IOException {
-	    return Files.walk(base).mapToLong(this::size).sum();
-    }
-    
-    private long size(Path p) {
-        try {
-            return Files.size(p);
-        } catch ( Exception e ) {
-            return 0;
-        }
-    }
-	
+		return Files.walk(base).count();
+	}
+
+	private long getStoreSize() throws IOException {
+		return Files.walk(base).mapToLong(this::size).sum();
+	}
+
+	private long size(Path p) {
+		try {
+			return Files.size(p);
+		} catch ( Exception e ) {
+			return 0;
+		}
+	}
+
 	//Service methods
-    
-    @Override
-    public String getServiceName() {
-        return ThumbnailService.SERVICE_NAME;
-    }
-    
-    @Override
-    public Map<String, String> getServiceInfos() {
-        Map<String, String> infos = new HashMap<String, String> ();
-        infos.put(INFO_PATH, this.base.toString());
-        try {
-            infos.put(INFO_FILES, Long.toString(getStoreNbFiles()));
-        } catch ( Exception e ) { 
-            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_FILES, e);
-        }
-        try {
-            infos.put(INFO_SIZE, Long.toString(getStoreSize()));
-        } catch ( Exception e ) { 
-            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_SIZE, e);
-        }
-       return infos;
-    }
 
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
+	@Override
+	public String getServiceName() {
+		return ThumbnailService.SERVICE_NAME;
+	}
 
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
+	@Override
+	public Map<String, String> getServiceInfos() {
+		Map<String, String> infos = new HashMap<String, String> ();
+		infos.put(INFO_PATH, this.base.toString());
+		try {
+			infos.put(INFO_FILES, Long.toString(getStoreNbFiles()));
+		} catch ( Exception e ) {
+			LOGGER.log(Level.INFO, "unable to collect info: " + INFO_FILES, e);
+		}
+		try {
+			infos.put(INFO_SIZE, Long.toString(getStoreSize()));
+		} catch ( Exception e ) {
+			LOGGER.log(Level.INFO, "unable to collect info: " + INFO_SIZE, e);
+		}
+		return infos;
+	}
 
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
+	@Override
+	public String[] getObjectTypeList() {
+		return OBJECT_TYPE_LIST;
+	}
 
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
+	@Override
+	public String[] getObjectPermissionsList(String type) throws OrtolangException {
+		return OBJECT_PERMISSIONS_LIST;
+	}
+
+	@Override
+	public OrtolangObject findObject(String key) throws OrtolangException {
+		throw new OrtolangException("this service does not managed any object");
+	}
+
+	@Override
+	public OrtolangObjectSize getSize(String key) throws OrtolangException {
+		throw new OrtolangException("this service does not managed any object");
+	}
 
 }

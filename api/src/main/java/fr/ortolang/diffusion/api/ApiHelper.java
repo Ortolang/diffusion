@@ -42,7 +42,10 @@ import javax.ws.rs.core.CacheControl;
 
 public class ApiHelper {
 
-    public static CacheControl setCacheControlFromState(OrtolangObjectState state, CacheControl cacheControl) {
+    private ApiHelper() {
+    }
+
+    public static void setCacheControlFromState(OrtolangObjectState state, CacheControl cacheControl) {
         if (state.isLocked()) {
             // 691200 = 8 days
             cacheControl.setMaxAge(691200);
@@ -51,6 +54,5 @@ public class ApiHelper {
             cacheControl.setMaxAge(0);
             cacheControl.setMustRevalidate(true);
         }
-        return cacheControl;
     }
 }

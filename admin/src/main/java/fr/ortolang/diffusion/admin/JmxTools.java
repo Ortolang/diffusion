@@ -30,18 +30,18 @@ public class JmxTools {
     public static long getLongAttr(MBeanServer mBeanServer, ObjectName oName, String attrName, long defaultValue) {
         try {
             Object o = mBeanServer.getAttribute(oName, attrName);
-            return o == null ? defaultValue : ((Long) o).longValue();
+            return o == null ? defaultValue : (Long) o;
         } catch (Exception e) {
             return defaultValue;
         }
     }
 
     public static long getLongAttr(MBeanServer mBeanServer, ObjectName oName, String attrName) throws Exception {
-        return ((Long) mBeanServer.getAttribute(oName, attrName)).longValue();
+        return (Long) mBeanServer.getAttribute(oName, attrName);
     }
 
     public static int getIntAttr(MBeanServer mBeanServer, ObjectName oName, String attrName) throws Exception {
-        return ((Integer) mBeanServer.getAttribute(oName, attrName)).intValue();
+        return (Integer) mBeanServer.getAttribute(oName, attrName);
     }
 
     public static String getStringAttr(MBeanServer mBeanServer, ObjectName oName, String attrName) throws Exception {
@@ -52,7 +52,7 @@ public class JmxTools {
     public static long getLongAttr(CompositeData cds, String name) {
         Object o = cds.get(name);
         if (o != null && o instanceof Long) {
-            return ((Long)o).longValue();
+            return (Long) o;
         } else {
             return 0;
         }
@@ -65,14 +65,14 @@ public class JmxTools {
 
     public static boolean getBooleanAttr(CompositeData cds, String name) {
         Object o = cds.get(name);
-        return o != null && o instanceof Boolean && ((Boolean) o).booleanValue();
+        return o != null && o instanceof Boolean && (Boolean) o;
     }
 
     public static int getIntAttr(CompositeData cds, String name, int defaultValue) {
         Object o = cds.get(name);
 
         if (o != null && o instanceof Integer) {
-            return ((Integer)o).intValue();
+            return (Integer) o;
         } else {
             return defaultValue;
         }

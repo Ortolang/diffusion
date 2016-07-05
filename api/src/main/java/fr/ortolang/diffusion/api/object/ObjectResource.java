@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.api.object;
  * #L%
  */
 
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -44,7 +45,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.EJB;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -79,9 +79,7 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathNotFoundException;
-import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -96,13 +94,9 @@ public class ObjectResource {
     @EJB
     private BrowserService browser;
     @EJB
-    private SearchService search;
-    @EJB
     private SecurityService security;
     @EJB
     private CoreService core;
-    @EJB
-    private MembershipService membership;
     @EJB
     private HandleStoreService handleStore;
 
@@ -112,7 +106,7 @@ public class ObjectResource {
     @GET
     @GZIP
     public Response list(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "25") @QueryParam(value = "limit") int limit,
-            @QueryParam(value = "service") String service, @QueryParam(value = "type") String type, @QueryParam(value = "status") String status) throws BrowserServiceException {
+            @QueryParam(value = "service") String service, @QueryParam(value = "type") String type, @QueryParam(value = "status") String status) throws BrowserServiceException, URISyntaxException {
         LOGGER.log(Level.INFO, "GET /objects?offset=" + offset + "&limit=" + limit + "&status=" + status);
         List<String> keys = browser.list(offset, limit, (service != null && service.length() > 0) ? service : "", (type != null && type.length() > 0) ? type : "",
                 (status != null && status.length() > 0) ? OrtolangObjectState.Status.valueOf(status) : null);
@@ -128,9 +122,9 @@ public class ObjectResource {
         representation.setSize(nbentries);
         representation.setLimit(keys.size());
         representation.setFirst(objects.clone().queryParam("offset", 0).queryParam("limit", limit).build());
-        representation.setPrevious(objects.clone().queryParam("offset", Math.max(0, (offset - limit))).queryParam("limit", limit).build());
+        representation.setPrevious(objects.clone().queryParam("offset", Math.max(0, offset - limit)).queryParam("limit", limit).build());
         representation.setSelf(objects.clone().queryParam("offset", offset).queryParam("limit", limit).build());
-        representation.setNext(objects.clone().queryParam("offset", (nbentries > (offset + limit)) ? (offset + limit) : offset).queryParam("limit", limit).build());
+        representation.setNext(objects.clone().queryParam("offset", nbentries > offset + limit ? (offset + limit) : offset).queryParam("limit", limit).build());
         representation.setLast(objects.clone().queryParam("offset", ((nbentries - 1) / limit) * limit).queryParam("limit", limit).build());
         return Response.ok(representation).build();
     }
@@ -138,7 +132,7 @@ public class ObjectResource {
     @GET
     @Path("/{key}")
     @GZIP
-    public Response get(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException, SecurityServiceException,
+    public Response get(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, SecurityServiceException,
             OrtolangException {
         LOGGER.log(Level.INFO, "GET /objects/" + key);
 
@@ -156,7 +150,7 @@ public class ObjectResource {
             OrtolangObject object = browser.findObject(key);
             OrtolangObjectInfos infos = browser.getInfos(key);
             String owner = security.getOwner(key);
-            
+
             ObjectRepresentation representation = new ObjectRepresentation();
             representation.setKey(key);
             representation.setService(object.getObjectIdentifier().getService());
@@ -174,7 +168,7 @@ public class ObjectResource {
             representation.setAuthor(infos.getAuthor());
             representation.setCreationDate(infos.getCreationDate() + "");
             representation.setLastModificationDate(infos.getLastModificationDate() + "");
-            
+
             builder = Response.ok(representation);
             builder.lastModified(lmd);
         }
@@ -182,7 +176,7 @@ public class ObjectResource {
         builder.cacheControl(cc);
         return builder.build();
     }
-    
+
     @GET
     @Path("/{key}/history")
     @GZIP
@@ -207,7 +201,7 @@ public class ObjectResource {
         builder.cacheControl(cc);
         return builder.build();
     }
-    
+
     @GET
     @Path("/{key}/properties")
     @GZIP
@@ -232,7 +226,7 @@ public class ObjectResource {
         builder.cacheControl(cc);
         return builder.build();
     }
-    
+
     @GET
     @Path("/{key}/permissions")
     @GZIP
@@ -296,8 +290,7 @@ public class ObjectResource {
     @GET
     @Path("/{key}/size")
     @GZIP
-    public Response getObjectSize(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, OrtolangException, KeyNotFoundException,
-            CoreServiceException {
+    public Response getObjectSize(@PathParam(value = "key") String key) throws OrtolangException, KeyNotFoundException, CoreServiceException {
         LOGGER.log(Level.INFO, "GET /objects/" + key + "/size");
         OrtolangObjectSize ortolangObjectSize = core.getSize(key);
         return Response.ok(ortolangObjectSize).build();
@@ -306,7 +299,7 @@ public class ObjectResource {
     @POST
     @Path("/{key}/index")
     @GZIP
-    public Response reindex(@PathParam(value = "key") String key, @Context HttpServletResponse response) throws AccessDeniedException, KeyNotFoundException, BrowserServiceException {
+    public Response reindex(@PathParam(value = "key") String key) throws AccessDeniedException, KeyNotFoundException, BrowserServiceException {
         LOGGER.log(Level.INFO, "POST /objects/" + key + "/index");
         browser.index(key);
         return Response.ok().build();
@@ -315,7 +308,7 @@ public class ObjectResource {
     @GET
     @Path("/{key}/authorized")
     @GZIP
-    public Response isAuthorized(@PathParam(value = "key") String key, @DefaultValue(value = "download") @QueryParam(value = "permission") String permission, @Context Request request) throws OrtolangException, KeyNotFoundException,
+    public Response isAuthorized(@PathParam(value = "key") String key, @DefaultValue(value = "download") @QueryParam(value = "permission") String permission) throws OrtolangException, KeyNotFoundException,
             InvalidPathException, BrowserServiceException, SecurityServiceException, CoreServiceException, PathNotFoundException {
         LOGGER.log(Level.INFO, "GET /objects/" + key + "/authorized");
         Map<String, Boolean> map = new HashMap<>(1);

@@ -152,6 +152,7 @@ public class SearchServiceBean implements SearchService {
 					authorisation.checkPermission(result.getKey(), subjects, "read");
 					checkedResults.add(result);
 				} catch ( AccessDeniedException e ) {
+                    continue;
 				}
 			}
 			return checkedResults;
@@ -161,7 +162,7 @@ public class SearchServiceBean implements SearchService {
 	}
 
     @Override
-	public List<String> findCollections(HashMap<String, String> fieldsProjection, String content, String group, String limit, String orderProp, String orderDir, HashMap<String, Object> fieldsMap) throws SearchServiceException {
+	public List<String> findCollections(Map<String, String> fieldsProjection, String content, String group, String limit, String orderProp, String orderDir, Map<String, Object> fieldsMap) throws SearchServiceException {
         LOGGER.log(Level.FINE, "find collections");
         String query;
         if (content != null) {
@@ -172,7 +173,7 @@ public class SearchServiceBean implements SearchService {
 
         // Execute the query
         List<String> results;
-        if (query != null && query.length() > 0) {
+        if (query.length() > 0) {
             LOGGER.log(Level.FINE, "Performing json search with query : "+query);
             long timestamp1 = System.currentTimeMillis();
             try {
@@ -189,17 +190,17 @@ public class SearchServiceBean implements SearchService {
 	}
 
     @Override
-    public int countCollections(HashMap<String, Object> fieldsMap) throws SearchServiceException {
+    public int countCollections(Map<String, Object> fieldsMap) throws SearchServiceException {
         LOGGER.log(Level.FINE, "count collections");
         String query = countItemsWithFields("Collection", fieldsMap);
 
         // Execute the query
         int count = 0;
-        if (query != null && query.length() > 0) {
+        if (query.length() > 0) {
             LOGGER.log(Level.FINE, "Performing json search with query : "+query);
             try {
                 List<String> results = jsonStore.search(query);
-                if (results.size()>0) {
+                if (!results.isEmpty()) {
                     count = extractCount(results.get(0));
                 }
                 LOGGER.log(Level.FINE, "Count : "+count);
@@ -224,14 +225,14 @@ public class SearchServiceBean implements SearchService {
     }
 
     @Override
-    public List<String> findProfiles(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException {
+    public List<String> findProfiles(String content, Map<String, String> fieldsProjection) throws SearchServiceException {
         LOGGER.log(Level.FINE, "Gets profile with content : " + content);
         HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
         String query = findByContent("Profile", content, fieldsProjection, fieldsMap, null, null, null, null);
 
         // Execute the query
         List<String> results;
-        if (query != null && query.length() > 0) {
+        if (query.length() > 0) {
             try {
                 results = jsonStore.search(query);
             } catch (JsonStoreServiceException e) {
@@ -258,7 +259,7 @@ public class SearchServiceBean implements SearchService {
     }
 
     @Override
-    public List<String> findWorkspaces(String content, HashMap<String, String> fieldsProjection, String group, String limit, String orderProp, String orderDir, HashMap<String, Object> fieldsMap) throws SearchServiceException {
+    public List<String> findWorkspaces(String content, Map<String, String> fieldsProjection, String group, String limit, String orderProp, String orderDir, Map<String, Object> fieldsMap) throws SearchServiceException {
         LOGGER.log(Level.FINE, "Finds workspaces");
         String query;
         if (content != null) {
@@ -268,7 +269,7 @@ public class SearchServiceBean implements SearchService {
         }
         // Execute the query
         List<String> results;
-        if (query != null && query.length() > 0) {
+        if (query.length() > 0) {
             try {
                 LOGGER.log(Level.FINE, "Performing json search with query : "+query);
                 long timestamp1 = System.currentTimeMillis();
@@ -305,17 +306,17 @@ public class SearchServiceBean implements SearchService {
     }
 
     @Override
-    public int countWorkspaces(HashMap<String, Object> fieldsMap) throws SearchServiceException {
+    public int countWorkspaces(Map<String, Object> fieldsMap) throws SearchServiceException {
         LOGGER.log(Level.FINE, "count workspace");
         String query = countItemsWithFields("workspace", fieldsMap);
 
         // Execute the query
         int count = 0;
-        if (query != null && query.length() > 0) {
+        if (query.length() > 0) {
             LOGGER.log(Level.FINE, "Performing json search with query : "+query);
             try {
                 List<String> results = jsonStore.search(query);
-                if (results.size()>0) {
+                if (!results.isEmpty()) {
                     count = extractCount(results.get(0));
                 }
                 LOGGER.log(Level.FINE, "Count : "+count);
@@ -327,14 +328,14 @@ public class SearchServiceBean implements SearchService {
     }
 
     @Override
-    public List<String> findEntities(String content, HashMap<String, String> fieldsProjection) throws SearchServiceException {
+    public List<String> findEntities(String content, Map<String, String> fieldsProjection) throws SearchServiceException {
         LOGGER.log(Level.FINE, "Finds entities with content : " + content);
         HashMap<String, Object> fieldsMap = new HashMap<String, Object>();
         String query = findByContent("Entity", content, fieldsProjection, fieldsMap, null, null, null, null);
 
         // Execute the query
         List<String> results;
-        if (query != null && query.length() > 0) {
+        if (query.length() > 0) {
             try {
                 results = jsonStore.search(query);
             } catch (JsonStoreServiceException e) {
@@ -377,7 +378,7 @@ public class SearchServiceBean implements SearchService {
 		}
 	}
 
-    private String findByContent(String cls, String content, HashMap<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
+    private String findByContent(String cls, String content, Map<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
         StringBuilder queryBuilder = new StringBuilder();
         // SELECT FROM Collection LET $temp = (   SELECT FROM (     TRAVERSE * FROM $current WHILE $depth <= 7   )   WHERE any().toLowerCase().indexOf('dede') > -1 ) WHERE $temp.size() > 0
         queryBuilder.append("SELECT ");
@@ -433,7 +434,7 @@ public class SearchServiceBean implements SearchService {
         return queryBuilder.toString();
     }
 
-    private String findItemsByFields(String cls, HashMap<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
+    private String findItemsByFields(String cls, Map<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {
         StringBuilder queryBuilder = new StringBuilder();
 
         queryBuilder.append("SELECT ");
@@ -481,14 +482,15 @@ public class SearchServiceBean implements SearchService {
         return queryBuilder.toString();
     }
 
-    private StringBuilder selectClause(HashMap<String, String> fieldsProjection) {
+    private StringBuilder selectClause(Map<String, String> fieldsProjection) {
         StringBuilder selectStr = new StringBuilder();
         if (fieldsProjection.isEmpty()) {
             selectStr.append("*");
         } else {
             for (Map.Entry<String, String> fieldProjectionEntry : fieldsProjection.entrySet()) {
-                if (selectStr.length() > 0)
+                if (selectStr.length() > 0) {
                     selectStr.append(",");
+                }
                 selectStr.append("`").append(fieldProjectionEntry.getKey()).append("`");
                 if (fieldProjectionEntry.getValue()!=null) {
                     selectStr.append(" AS ").append(fieldProjectionEntry.getValue()).append(" ");
@@ -501,17 +503,18 @@ public class SearchServiceBean implements SearchService {
     @SuppressWarnings({ "rawtypes", "unchecked" }) private StringBuilder whereClause(Map<String, Object> fields) {
         StringBuilder whereStr = new StringBuilder();
         for (Map.Entry<String, Object> field : fields.entrySet()) {
-            if (whereStr.length() > 0)
+            if (whereStr.length() > 0) {
                 whereStr.append(" AND ");
-            else
+            } else {
                 whereStr.append(" WHERE ");
+            }
             if (field.getValue() instanceof String) {
-                if (field.getValue().equals("")) {
+                if (((String) field.getValue()).isEmpty()) {
                     whereStr.append("`").append(field.getKey()).append("` IS NOT NULL");
                 } else {
                     whereStr.append("`").append(field.getKey()).append("` = '").append(field.getValue()).append("'");
                 }
-            } else if (field.getValue() instanceof List && ((List) field.getValue()).size() > 0) {
+            } else if (field.getValue() instanceof List && !((List) field.getValue()).isEmpty()) {
                 whereStr.append("`").append(field.getKey()).append("` IN [").append(arrayValues((List<String>) field.getValue())).append("]");
             } else if (field.getValue() instanceof Long) {
                 whereStr.append("`").append(field.getKey().substring(0, field.getKey().length()-2)).append("` ").append(field.getKey().substring(field.getKey().length()-2)).append(" '").append(field.getValue()).append("'");
@@ -523,8 +526,9 @@ public class SearchServiceBean implements SearchService {
     private StringBuilder arrayValues(List<String> values) {
         StringBuilder valuesStr = new StringBuilder();
         for (String value : values) {
-            if (valuesStr.length() > 0)
+            if (valuesStr.length() > 0) {
                 valuesStr.append(",");
+            }
             valuesStr.append("'").append(value).append("'");
         }
         return valuesStr;
@@ -538,9 +542,7 @@ public class SearchServiceBean implements SearchService {
             JsonObject jsonObj = jsonReader.readObject();
             fieldValue = jsonObj.getInt("count");
             
-        } catch(IllegalStateException | NullPointerException | ClassCastException e) {
-            LOGGER.log(Level.WARNING, "No property 'count' in json object", e);
-        } catch(JsonException e) {
+        } catch(IllegalStateException | NullPointerException | ClassCastException | JsonException e) {
             LOGGER.log(Level.WARNING, "No property 'count' in json object", e);
         } finally {
             jsonReader.close();

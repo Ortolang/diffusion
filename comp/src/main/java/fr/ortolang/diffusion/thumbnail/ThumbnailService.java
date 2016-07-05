@@ -44,13 +44,13 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 
 public interface ThumbnailService extends OrtolangService {
 	
-	public static final String SERVICE_NAME = "thumbnail";
-	public static final String THUMBS_MIMETYPE = "image/jpeg";
+	String SERVICE_NAME = "thumbnail";
+	String THUMBS_MIMETYPE = "image/jpeg";
 	
-	public static final String INFO_PATH = "path";
-    public static final String INFO_SIZE = "size";
-    public static final String INFO_FILES = "files";
+	String INFO_PATH = "path";
+    String INFO_SIZE = "size";
+    String INFO_FILES = "files";
     
-	public Thumbnail getThumbnail(String key, int size) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException;
+	Thumbnail getThumbnail(String key, int size, boolean min) throws ThumbnailServiceException, AccessDeniedException, KeyNotFoundException, CoreServiceException, BinaryStoreServiceException;
 	
 }

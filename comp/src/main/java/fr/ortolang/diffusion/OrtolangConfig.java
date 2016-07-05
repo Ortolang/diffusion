@@ -36,6 +36,7 @@ package fr.ortolang.diffusion;
  * #L%
  */
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -53,7 +54,7 @@ public class OrtolangConfig {
     private Path home;
     private Path orientdbConfig;
 
-    private OrtolangConfig() throws Exception {
+    private OrtolangConfig() throws OrtolangException, IOException {
         if (System.getProperty("ortolang.home") != null && System.getProperty("ortolang.home").length() > 0) {
             home = Paths.get(System.getProperty("ortolang.home"));
         } else if (System.getenv("ORTOLANG_HOME") != null && System.getenv("ORTOLANG_HOME").length() > 0) {
@@ -76,7 +77,7 @@ public class OrtolangConfig {
             String fileVersion = this.getProperty(Property.CONFIG_VERSION);
             if (!fileVersion.equals(CURRENT_CONFIG_VERSION)) {
                 LOGGER.log(Level.SEVERE, "Configuration File Version mismatch with Current Config Version: " + fileVersion + " != " + CURRENT_CONFIG_VERSION + "  --> UPDATE CONFIGURATION FILE");
-                throw new Exception("Version mismatch between config file version: " + fileVersion + " and current config version: " + CURRENT_CONFIG_VERSION + " !! Please update your config file");
+                throw new OrtolangException("Version mismatch between config file version: " + fileVersion + " and current config version: " + CURRENT_CONFIG_VERSION + " !! Please update your config file");
             }
         }
         orientdbConfig = Paths.get(home.toString(), "orientdb-config.xml");
@@ -159,7 +160,7 @@ public class OrtolangConfig {
 
         private final String key;
 
-        private Property(String name) {
+        Property(String name) {
             this.key = name;
         }
 

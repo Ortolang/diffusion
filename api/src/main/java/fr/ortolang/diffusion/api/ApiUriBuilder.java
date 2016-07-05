@@ -37,20 +37,20 @@ package fr.ortolang.diffusion.api;
  */
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import javax.ws.rs.core.UriBuilder;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 
 public class ApiUriBuilder {
-	
-	public static UriBuilder getApiUriBuilder() {
-		try {
-			URI uri = new URI(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL));
-			return UriBuilder.fromUri(uri);
-		} catch (Exception e) {
-			return null;
-		}
-	}
-	
+
+    private ApiUriBuilder() {
+    }
+
+    public static UriBuilder getApiUriBuilder() throws URISyntaxException {
+        URI uri = new URI(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL));
+        return UriBuilder.fromUri(uri);
+    }
+
 }

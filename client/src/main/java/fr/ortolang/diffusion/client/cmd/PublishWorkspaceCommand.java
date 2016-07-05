@@ -36,24 +36,17 @@ package fr.ortolang.diffusion.client.cmd;
  * #L%
  */
 
-import java.io.Console;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-
 import fr.ortolang.diffusion.client.OrtolangClient;
 import fr.ortolang.diffusion.client.OrtolangClientException;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
+import org.apache.commons.cli.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class PublishWorkspaceCommand  extends Command {
 
-    private Options options = new Options();
+    private final Options options = new Options();
 
     public PublishWorkspaceCommand() {
         options.addOption("h", "help", false, "show help.");
@@ -64,35 +57,24 @@ public class PublishWorkspaceCommand  extends Command {
 
     @Override
     public void execute(String[] args) {
-        CommandLineParser parser = new BasicParser();
-        CommandLine cmd = null;
-        String username = "";
-        String password = null;
-        Map<String, String> params = new HashMap<String, String> ();
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd;
+        Map<String, String> params = new HashMap<>();
         try {
             cmd = parser.parse(options, args);
             if (cmd.hasOption("h")) {
                 help();
             }
-            if (cmd.hasOption("U")) {
-                username = cmd.getOptionValue("U");
-                if (cmd.hasOption("P")) {
-                    password = cmd.getOptionValue("P");
-                } else {
-                    Console cons;
-                    char[] passwd;
-                    if ((cons = System.console()) != null && (passwd = cons.readPassword("[%s]", "Password:")) != null) {
-                        password = new String(passwd);
-                    }
-                }
-            }
-            
+            String[] credentials = getCredentials(cmd);
+            String username = credentials[0];
+            String password = credentials[1];
+
             if ( cmd.hasOption("k") ) {
                 params.put("wskey", cmd.getOptionValue("k"));
             } else {
                 help();
             }
-            
+
             OrtolangClient client = OrtolangClient.getInstance();
             if ( username.length() > 0 ) {
                 client.getAccountManager().setCredentials(username, password);
@@ -101,12 +83,12 @@ public class PublishWorkspaceCommand  extends Command {
             System.out.println("Connected as user: " + client.connectedProfile());
             String pkey = client.createProcess("publish-workspace", "Publish Workspace '" + cmd.getOptionValue("k") + "'", params, null);
             System.out.println("Publish-Workspace process created with key : " + pkey);
-            
+
             client.logout();
             client.close();
-            
+
         } catch (ParseException e) {
-            System.out.println("Failed to parse comand line properties " +  e.getMessage());
+            System.out.println("Failed to parse command line properties " +  e.getMessage());
             help();
         } catch (OrtolangClientException | OrtolangClientAccountException e) {
             System.out.println("Unexpected error !!");
@@ -115,8 +97,8 @@ public class PublishWorkspaceCommand  extends Command {
     }
 
     private void help() {
-        HelpFormatter formater = new HelpFormatter();
-        formater.printHelp("Publish Workspace", options);
+        HelpFormatter formatter = new HelpFormatter();
+        formatter.printHelp("Publish Workspace", options);
         System.exit(0);
     }
 

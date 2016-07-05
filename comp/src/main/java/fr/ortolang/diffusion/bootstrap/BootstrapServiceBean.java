@@ -50,11 +50,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
-import javax.ejb.SessionContext;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
@@ -88,7 +86,6 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
-import fr.ortolang.diffusion.store.json.JsonStoreService;
 
 @Startup
 @Singleton(name = BootstrapService.SERVICE_NAME)
@@ -115,10 +112,6 @@ public class BootstrapServiceBean implements BootstrapService {
     private RuntimeService runtime;
     @EJB
     private FormService form;
-    @EJB
-    private JsonStoreService jsonStore;
-    @Resource
-    private SessionContext ctx;
 
     public BootstrapServiceBean() {
         LOGGER.log(Level.FINE, "new bootstrap service instance created");

@@ -69,13 +69,13 @@ public class DeleteWorkspaceTask extends RuntimeEngineTask {
 
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		String wskey = null;
+		String wskey;
 		String wsalias = null;
 		if (execution.hasVariable(WORKSPACE_ALIAS_PARAM_NAME)) {
 			wsalias = execution.getVariable(WORKSPACE_ALIAS_PARAM_NAME, String.class);
 			try {
 				wskey = getCoreService().resolveWorkspaceAlias(wsalias);
-			} catch (CoreServiceException | AccessDeniedException | AliasNotFoundException e) {
+			} catch (CoreServiceException | AliasNotFoundException e) {
 				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occurred while resolving workspace alias: " + wsalias + " " + e.getMessage()));
 				throw new RuntimeEngineTaskException("unexpected error occurred while resolving workspace alias: " + wsalias, e);
 			}

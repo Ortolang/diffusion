@@ -36,9 +36,30 @@ package fr.ortolang.diffusion.client.cmd;
  * #L%
  */
 
+import org.apache.commons.cli.CommandLine;
+
+import java.io.Console;
 
 public abstract class Command {
-	
-	public abstract void execute(String[] args) throws Exception;
-	
+
+    public abstract void execute(String[] args);
+
+    protected String[] getCredentials(CommandLine cmd) {
+        String username = null;
+        String password = null;
+        if (cmd.hasOption("U")) {
+            username = cmd.getOptionValue("U");
+            if (cmd.hasOption("P")) {
+                password = cmd.getOptionValue("P");
+            } else {
+                Console cons;
+                char[] passwd;
+                if ((cons = System.console()) != null && (passwd = cons.readPassword("[%s]", "Password:")) != null) {
+                    password = new String(passwd);
+                }
+            }
+        }
+        return new String[] { username, password };
+    }
+
 }

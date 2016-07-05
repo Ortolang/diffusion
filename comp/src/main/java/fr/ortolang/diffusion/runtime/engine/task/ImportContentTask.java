@@ -76,303 +76,305 @@ import gov.loc.repository.bagit.BagFactory;
 
 public class ImportContentTask extends RuntimeEngineTask {
 
-	private static final Logger LOGGER = Logger.getLogger(ImportContentTask.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ImportContentTask.class.getName());
 
-	public static final String NAME = "Import Content";
-	private Set<String> collectionCreationCache = new HashSet<String>();
-	private String wskey;
-	
-	public ImportContentTask() {
-	}
+    public static final String NAME = "Import Content";
+    private Set<String> collectionCreationCache = new HashSet<String>();
+    private String wskey;
 
-	@Override
-	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-		checkParameters(execution);
-		Path bagpath = Paths.get(execution.getVariable(BAG_PATH_PARAM_NAME, String.class));
-		Bag bag = loadBag(bagpath);
-		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Bag file loaded from local file: " + bag.getFile()));
-		BufferedReader reader = new BufferedReader(new StringReader(execution.getVariable(IMPORT_OPERATIONS_PARAM_NAME, String.class)));
-		StringBuilder report = new StringBuilder();
+    public ImportContentTask() {
+    }
+
+    @Override
+    public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
+        checkParameters(execution);
+        Path bagpath = Paths.get(execution.getVariable(BAG_PATH_PARAM_NAME, String.class));
+        Bag bag = loadBag(bagpath);
+        throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Bag file loaded from local file: " + bag.getFile()));
+        BufferedReader reader = new BufferedReader(new StringReader(execution.getVariable(IMPORT_OPERATIONS_PARAM_NAME, String.class)));
+        StringBuilder report = new StringBuilder();
         try {
-			if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
-				LOGGER.log(Level.FINE, "starting new user transaction.");
-				getUserTransaction().begin();
-				report.append("[BEGIN-TRAN]\r\n");
-			}
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
-		}
-		
-		boolean partial = false;
-		LOGGER.log(Level.FINE, "purge collection creation cache.");
-		purgeCache();
+            if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
+                LOGGER.log(Level.FINE, "starting new user transaction.");
+                getUserTransaction().begin();
+                report.append("[BEGIN-TRAN]\r\n");
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
+        }
+
+        boolean partial = false;
+        LOGGER.log(Level.FINE, "purge collection creation cache.");
+        purgeCache();
         try {
-			String line = null;
-			boolean needcommit;
-			long tscommit = System.currentTimeMillis();
-			while ((line = reader.readLine()) != null) {
-				LOGGER.log(Level.FINE, "- executing operation: " + line);
-				needcommit = false;
-				String[] operation = line.split("\t", -1);
-				try {
-					switch (operation[0]) {
-						case "create-workspace":
-							wskey = UUID.randomUUID().toString();
-							createWorkspace(operation[1], operation[2], operation[3], operation[4], operation[5]);
-							execution.setVariable(WORKSPACE_KEY_PARAM_NAME, wskey);
-							needcommit = true;
-							report.append("[DONE] " + line + "\r\n");
-							break;
-						case "create-object":
-							createObject(bag, operation[1], operation[2], operation[3]);
-							report.append("[DONE] " + line + "\r\n");
-							break;
-						case "update-object":
-							updateObject(bag, operation[1], operation[2]);
-							report.append("[DONE] " + line + "\r\n");
-							break;
-						case "delete-object":
-							deleteObject(operation[2]);
-							report.append("[DONE] " + line + "\r\n");
-							break;
-						case "create-metadata":
-							createMetadata(bag, operation[1], operation[2], operation[3]);
-							report.append("[DONE] " + line + "\r\n");
-							break;
-						case "update-metadata":
-							updateMetadata(bag, operation[1], operation[2], operation[3]);
-							report.append("[DONE] " + line + "\r\n");
-							break;
-						case "delete-metadata":
-							deleteMetadata(operation[2], operation[3]);
-							report.append("[DONE] " + line + "\r\n");
-							break;
-						case "snapshot-workspace":
-							snapshotWorkspace(operation[1]);
-							purgeCache();
-							needcommit = true;
-							report.append("[DONE] " + line + "\r\n");
-							break;
-						default:
-							partial = true;
-							report.append("[ERROR] " + line + " \r\n\t -> Unknown operation\r\n");
-					}
-				} catch ( Exception e ) {
-					partial = true;
-					report.append("[ERROR] " + line + " \r\n\t -> Message: " + e.getMessage() + "\r\n");
-					LOGGER.log(Level.FINE, "ImportContentTask exception raised", e);
-				}
-				if ( System.currentTimeMillis() - tscommit > 30000 ) {
-					LOGGER.log(Level.FINE, "current transaction exceed 30sec, need commit.");
-					needcommit = true;
-				}
-				try {
-					if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
-					    report.append("[COMMIT-TRAN]\r\n");
-						LOGGER.log(Level.FINE, "committing active user transaction.");
-						getUserTransaction().commit();
-						tscommit = System.currentTimeMillis();
-						getUserTransaction().begin();
-						report.append("[BEGIN-TRAN]\r\n");
-					}
-				} catch (Exception e) {
-					LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
-				}
-				if ( partial ) {
-				    report.append("[ERROR] Stopping content import due to previous errors... \r\n");
-				    break;
-				}
-			}
-		} catch (IOException e) {
-			partial = true;
-			report.append("[ERROR] unable to read script \r\n\t -> Message: " + e.getMessage() + "\r\n");
-			LOGGER.log(Level.SEVERE, "- unexpected error during reading operations script", e);
-		}
-		try {
-			LOGGER.log(Level.FINE, "committing active user transaction and starting new one.");
-			getUserTransaction().commit();
-			report.append("[COMMIT-TRAN]\r\n");
-			getUserTransaction().begin();
-			report.append("[BEGIN-TRAN]\r\n");
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
-		}
-		
-		try {
-			bag.close();
-		} catch ( IOException e ) {
-			LOGGER.log(Level.SEVERE, "- error during closing bag", e);
-		}
-		LOGGER.log(Level.FINE, "- import content done");
-		execution.setVariable("partial", partial);
-		throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), report.toString(), null));
-		if ( partial ) {
-		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some content has not been imported (see trace for detail), import aborted !!"));
-		    throw new RuntimeEngineTaskException("Unable to fullfill the import content task due to errors");
-		} else {
-		    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All content imported successfully"));
-		}
-		
-	}
+            String line;
+            boolean needcommit;
+            long tscommit = System.currentTimeMillis();
+            while ((line = reader.readLine()) != null) {
+                LOGGER.log(Level.FINE, "- executing operation: " + line);
+                needcommit = false;
+                String[] operation = line.split("\t", -1);
+                try {
+                    switch (operation[0]) {
+                    case "create-workspace":
+                        wskey = UUID.randomUUID().toString();
+                        createWorkspace(operation[1], operation[2], operation[3], operation[4], operation[5]);
+                        execution.setVariable(WORKSPACE_KEY_PARAM_NAME, wskey);
+                        needcommit = true;
+                        report.append("[DONE] ").append(line).append("\r\n");
+                        break;
+                    case "create-object":
+                        createObject(bag, operation[1], operation[2], operation[3]);
+                        report.append("[DONE] ").append(line).append("\r\n");
+                        break;
+                    case "update-object":
+                        updateObject(bag, operation[1], operation[2]);
+                        report.append("[DONE] ").append(line).append("\r\n");
+                        break;
+                    case "delete-object":
+                        deleteObject(operation[2]);
+                        report.append("[DONE] ").append(line).append("\r\n");
+                        break;
+                    case "create-metadata":
+                        createMetadata(bag, operation[1], operation[2], operation[3]);
+                        report.append("[DONE] ").append(line).append("\r\n");
+                        break;
+                    case "update-metadata":
+                        updateMetadata(bag, operation[1], operation[2], operation[3]);
+                        report.append("[DONE] ").append(line).append("\r\n");
+                        break;
+                    case "delete-metadata":
+                        deleteMetadata(operation[2], operation[3]);
+                        report.append("[DONE] ").append(line).append("\r\n");
+                        break;
+                    case "snapshot-workspace":
+                        snapshotWorkspace();
+                        purgeCache();
+                        needcommit = true;
+                        report.append("[DONE] ").append(line).append("\r\n");
+                        break;
+                    default:
+                        partial = true;
+                        report.append("[ERROR] ").append(line).append(" \r\n\t -> Unknown operation\r\n");
+                    }
+                } catch ( Exception e ) {
+                    partial = true;
+                    report.append("[ERROR] ").append(line).append(" \r\n\t -> Message: ").append(e.getMessage()).append("\r\n");
+                    LOGGER.log(Level.FINE, "ImportContentTask exception raised", e);
+                }
+                if ( System.currentTimeMillis() - tscommit > 30000 ) {
+                    LOGGER.log(Level.FINE, "current transaction exceed 30sec, need commit.");
+                    needcommit = true;
+                }
+                try {
+                    if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
+                        report.append("[COMMIT-TRAN]\r\n");
+                        LOGGER.log(Level.FINE, "committing active user transaction.");
+                        getUserTransaction().commit();
+                        tscommit = System.currentTimeMillis();
+                        getUserTransaction().begin();
+                        report.append("[BEGIN-TRAN]\r\n");
+                    }
+                } catch (Exception e) {
+                    LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
+                }
+                if ( partial ) {
+                    report.append("[ERROR] Stopping content import due to previous errors... \r\n");
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            partial = true;
+            report.append("[ERROR] unable to read script \r\n\t -> Message: ").append(e.getMessage()).append("\r\n");
+            LOGGER.log(Level.SEVERE, "- unexpected error during reading operations script", e);
+        }
+        try {
+            LOGGER.log(Level.FINE, "committing active user transaction and starting new one.");
+            getUserTransaction().commit();
+            report.append("[COMMIT-TRAN]\r\n");
+            getUserTransaction().begin();
+            report.append("[BEGIN-TRAN]\r\n");
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
+        }
 
-	@Override
-	public String getTaskName() {
-		return NAME;
-	}
+        try {
+            bag.close();
+        } catch ( IOException e ) {
+            LOGGER.log(Level.SEVERE, "- error during closing bag", e);
+        }
+        LOGGER.log(Level.FINE, "- import content done");
+        execution.setVariable("partial", partial);
+        throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), report.toString(), null));
+        if ( partial ) {
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Some content has not been imported (see trace for detail), import aborted !!"));
+            throw new RuntimeEngineTaskException("Unable to fullfill the import content task due to errors");
+        } else {
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All content imported successfully"));
+        }
 
-	private void checkParameters(DelegateExecution execution) throws RuntimeEngineTaskException {
-		if (!execution.hasVariable(BAG_PATH_PARAM_NAME)) {
-			throw new RuntimeEngineTaskException("execution variable " + BAG_PATH_PARAM_NAME + " is not set");
-		}
-		if (!execution.hasVariable(IMPORT_OPERATIONS_PARAM_NAME)) {
-			throw new RuntimeEngineTaskException("execution variable " + IMPORT_OPERATIONS_PARAM_NAME + " is not set");
-		}
-	}
+    }
 
-	private Bag loadBag(Path bagpath) throws RuntimeEngineTaskException {
-		if (!Files.exists(bagpath)) {
-			throw new RuntimeEngineTaskException("bag file " + bagpath + " does not exists");
-		}
-		BagFactory factory = new BagFactory();
-		Bag bag = factory.createBag(bagpath.toFile());
-		return bag;
-	}
+    @Override
+    public String getTaskName() {
+        return NAME;
+    }
 
-	private void purgeCache() {
-		collectionCreationCache = new HashSet<String>();
-	}
-	
-	private void createWorkspace(String alias, String name, String type, String owner, String members) throws RuntimeEngineTaskException {
-		try {
-			Workspace ws = getCoreService().createWorkspace(wskey, alias, name, type);
-			if ( members != null && members.length() > 0 ) {
-				for ( String member : members.split(",") ) {
-					getMembershipService().addMemberInGroup(ws.getMembers(), member);
-				}
-			}
-			if ( owner != null && owner.length() > 0 ) {
-			    getSecurityService().changeOwner(ws.getMembers(), owner);
-			    getSecurityService().changeOwner(wskey, owner);
-				getMembershipService().addMemberInGroup(ws.getMembers(), owner);
+    private void checkParameters(DelegateExecution execution) throws RuntimeEngineTaskException {
+        if (!execution.hasVariable(BAG_PATH_PARAM_NAME)) {
+            throw new RuntimeEngineTaskException("execution variable " + BAG_PATH_PARAM_NAME + " is not set");
+        }
+        if (!execution.hasVariable(IMPORT_OPERATIONS_PARAM_NAME)) {
+            throw new RuntimeEngineTaskException("execution variable " + IMPORT_OPERATIONS_PARAM_NAME + " is not set");
+        }
+    }
+
+    private Bag loadBag(Path bagpath) throws RuntimeEngineTaskException {
+        if (!Files.exists(bagpath)) {
+            throw new RuntimeEngineTaskException("bag file " + bagpath + " does not exists");
+        }
+        BagFactory factory = new BagFactory();
+        return factory.createBag(bagpath.toFile());
+    }
+
+    private void purgeCache() {
+        collectionCreationCache = new HashSet<String>();
+    }
+
+    private void createWorkspace(String alias, String name, String type, String owner, String members) throws RuntimeEngineTaskException {
+        try {
+            Workspace ws = getCoreService().createWorkspace(wskey, alias, name, type);
+            if ( members != null && members.length() > 0 ) {
+                for ( String member : members.split(",") ) {
+                    getMembershipService().addMemberInGroup(ws.getMembers(), member);
+                }
+            }
+            if ( owner != null && owner.length() > 0 ) {
+                getSecurityService().changeOwner(ws.getMembers(), owner);
+                getSecurityService().changeOwner(wskey, owner);
+                getMembershipService().addMemberInGroup(ws.getMembers(), owner);
                 getMembershipService().removeMemberFromGroup(ws.getMembers(), MembershipService.SUPERUSER_IDENTIFIER);
-			}
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "unable to create workspace", e);
-			throw new RuntimeEngineTaskException("unable to create workspace : " + e.getMessage(), e);
-		}
-	}
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to create workspace", e);
+            throw new RuntimeEngineTaskException("unable to create workspace : " + e.getMessage(), e);
+        }
+    }
 
-	private void createObject(Bag bag, String bagpath, String sha1, String path) throws RuntimeEngineTaskException {
-		try {
-			if ( sha1 == null || (sha1 != null && !getBinaryStore().contains(sha1)) ) {
-				InputStream is = bag.getBagFile(bagpath).newInputStream();
-				sha1 = getCoreService().put(is);
-				is.close();
-			}
-			PathBuilder opath = PathBuilder.fromPath(path);
-			PathBuilder oppath = opath.clone().parent();
-			if (!oppath.isRoot() && !collectionCreationCache.contains(oppath.build())) {
-				String[] parents = opath.clone().parent().buildParts();
-				String current = "";
-				for (int i = 0; i < parents.length; i++) {
-					current += "/" + parents[i];
-					if (!collectionCreationCache.contains(current)) {
-						try {
-							getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, current);
-						} catch (PathNotFoundException e) {
-							getCoreService().createCollection(wskey, current);
-						}
-						collectionCreationCache.add(current);
-					}
-				}
-			}
-			String current = opath.build();
-			getCoreService().createDataObject(wskey, current, sha1);
-		} catch (IOException e) {
-			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | PathAlreadyExistsException | KeyAlreadyExistsException e) {
-			throw new RuntimeEngineTaskException("Error creating object for path [" + path + "] : " + e.getMessage(), e);
-		} 
-	}
+    private void createObject(Bag bag, String bagpath, String sha1, String path) throws RuntimeEngineTaskException {
+        try {
+            String hash;
+            if (sha1 == null || !getBinaryStore().contains(sha1)) {
+                InputStream is = bag.getBagFile(bagpath).newInputStream();
+                hash = getCoreService().put(is);
+                is.close();
+            } else {
+                hash = sha1;
+            }
+            PathBuilder opath = PathBuilder.fromPath(path);
+            PathBuilder oppath = opath.clone().parent();
+            if (!oppath.isRoot() && !collectionCreationCache.contains(oppath.build())) {
+                String[] parents = opath.clone().parent().buildParts();
+                String current = "";
+                for (int i = 0; i < parents.length; i++) {
+                    current += "/" + parents[i];
+                    if (!collectionCreationCache.contains(current)) {
+                        try {
+                            getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, current);
+                        } catch (PathNotFoundException e) {
+                            getCoreService().createCollection(wskey, current);
+                        }
+                        collectionCreationCache.add(current);
+                    }
+                }
+            }
+            String current = opath.build();
+            getCoreService().createDataObject(wskey, current, hash);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "unable to close input stream", e);
+        } catch (BinaryStoreServiceException | CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | PathAlreadyExistsException | KeyAlreadyExistsException e) {
+            throw new RuntimeEngineTaskException("Error creating object for path [" + path + "] : " + e.getMessage(), e);
+        }
+    }
 
-	private void updateObject(Bag bag, String bagpath, String path) throws RuntimeEngineTaskException {
-		try {
-			InputStream is = bag.getBagFile(bagpath).newInputStream();
-			String hash = getCoreService().put(is);
-			is.close();
-			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
-			getCoreService().updateDataObject(wskey, path, hash);
-		} catch (IOException e) {
-			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException e) {
-			throw new RuntimeEngineTaskException("Error updating object for path [" + path + "] : " + e.getMessage(), e);
-		}
-	}
+    private void updateObject(Bag bag, String bagpath, String path) throws RuntimeEngineTaskException {
+        try {
+            InputStream is = bag.getBagFile(bagpath).newInputStream();
+            String hash = getCoreService().put(is);
+            is.close();
+            getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
+            getCoreService().updateDataObject(wskey, path, hash);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "unable to close input stream", e);
+        } catch (CoreServiceException | DataCollisionException | AccessDeniedException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException e) {
+            throw new RuntimeEngineTaskException("Error updating object for path [" + path + "] : " + e.getMessage(), e);
+        }
+    }
 
-	private void deleteObject(String path) throws RuntimeEngineTaskException {
-		try {
-			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
-			getCoreService().deleteDataObject(wskey, path);
-			PathBuilder opath = PathBuilder.fromPath(path).parent();
-	        while (!opath.isRoot()) {
-	            try {
-	                getCoreService().deleteCollection(wskey, opath.build());
-	            } catch (CollectionNotEmptyException | CoreServiceException | KeyNotFoundException | AccessDeniedException | WorkspaceReadOnlyException e) {
-	                break;
-	            }
-	            opath.parent();
-	        }
-		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException e ) {
-			LOGGER.log(Level.FINE, "Error deleting object for path: " + path, e);
-			throw new RuntimeEngineTaskException("Error deleting object for path [" + path + "] : " + e.getMessage(), e);
-		}
-	}
+    private void deleteObject(String path) throws RuntimeEngineTaskException {
+        try {
+            getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
+            getCoreService().deleteDataObject(wskey, path);
+            PathBuilder opath = PathBuilder.fromPath(path).parent();
+            while (!opath.isRoot()) {
+                try {
+                    getCoreService().deleteCollection(wskey, opath.build());
+                } catch (CollectionNotEmptyException | CoreServiceException | KeyNotFoundException | AccessDeniedException | WorkspaceReadOnlyException e) {
+                    break;
+                }
+                opath.parent();
+            }
+        } catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException e ) {
+            LOGGER.log(Level.FINE, "Error deleting object for path: " + path, e);
+            throw new RuntimeEngineTaskException("Error deleting object for path [" + path + "] : " + e.getMessage(), e);
+        }
+    }
 
-	private void createMetadata(Bag bag, String bagpath, String path, String name) throws RuntimeEngineTaskException {
-		try {
-			InputStream is = bag.getBagFile(bagpath).newInputStream();
-			String hash = getCoreService().put(is);
-			is.close();
-			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
-			getCoreService().createMetadataObject(wskey, path, name, hash, null, false);
-		} catch (IOException e) {
-			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | MetadataFormatException | KeyAlreadyExistsException e ) {
-			throw new RuntimeEngineTaskException("Error creating metadata for path [" + path + "] : " + e.getMessage(), e);
-		} 
-	}
+    private void createMetadata(Bag bag, String bagpath, String path, String name) throws RuntimeEngineTaskException {
+        try {
+            InputStream is = bag.getBagFile(bagpath).newInputStream();
+            String hash = getCoreService().put(is);
+            is.close();
+            getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
+            getCoreService().createMetadataObject(wskey, path, name, hash, null, false);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "unable to close input stream", e);
+        } catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | MetadataFormatException | KeyAlreadyExistsException e ) {
+            throw new RuntimeEngineTaskException("Error creating metadata for path [" + path + "] : " + e.getMessage(), e);
+        }
+    }
 
-	private void updateMetadata(Bag bag, String bagpath, String path, String name) throws RuntimeEngineTaskException {
-		try {
-			InputStream is = bag.getBagFile(bagpath).newInputStream();
-			String hash = getCoreService().put(is);
-			is.close();
-			getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
-			getCoreService().updateMetadataObject(wskey, path, name, hash, null, false);
-		} catch (IOException e) {
-			LOGGER.log(Level.WARNING, "unable to close input stream", e);
-		} catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | MetadataFormatException e) {
-			throw new RuntimeEngineTaskException("Error updating metadata for path [" + path + "] : " + e.getMessage(), e);
-		} 
-	}
+    private void updateMetadata(Bag bag, String bagpath, String path, String name) throws RuntimeEngineTaskException {
+        try {
+            InputStream is = bag.getBagFile(bagpath).newInputStream();
+            String hash = getCoreService().put(is);
+            is.close();
+            getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
+            getCoreService().updateMetadataObject(wskey, path, name, hash, null, false);
+        } catch (IOException e) {
+            LOGGER.log(Level.WARNING, "unable to close input stream", e);
+        } catch (CoreServiceException | DataCollisionException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException | PathNotFoundException | MetadataFormatException e) {
+            throw new RuntimeEngineTaskException("Error updating metadata for path [" + path + "] : " + e.getMessage(), e);
+        }
+    }
 
-	private void deleteMetadata(String path, String name) throws RuntimeEngineTaskException {
-		try {
-		    getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
-		    getCoreService().deleteMetadataObject(wskey, path, name, false);
-		} catch (PathNotFoundException e) {
-		    LOGGER.log(Level.WARNING, "metadata target does not exists, maybe deleted previously ??", e);
-		} catch (CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException | InvalidPathException e) {
-			throw new RuntimeEngineTaskException("Error deleting metadata for path [" + path + "] : " + e.getMessage(), e);
-		} 
-	}
+    private void deleteMetadata(String path, String name) throws RuntimeEngineTaskException {
+        try {
+            getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, path);
+            getCoreService().deleteMetadataObject(wskey, path, name, false);
+        } catch (PathNotFoundException e) {
+            LOGGER.log(Level.WARNING, "metadata target does not exists, maybe deleted previously ??", e);
+        } catch (CoreServiceException | WorkspaceReadOnlyException | InvalidPathException e) {
+            throw new RuntimeEngineTaskException("Error deleting metadata for path [" + path + "] : " + e.getMessage(), e);
+        }
+    }
 
-	private void snapshotWorkspace(String name) throws RuntimeEngineTaskException {
-		try {
-			getCoreService().snapshotWorkspace(wskey);
-		} catch ( CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
-			throw new RuntimeEngineTaskException("Error snapshoting workspace : " + e.getMessage(), e);
-		} 
-	}
+    private void snapshotWorkspace() throws RuntimeEngineTaskException {
+        try {
+            getCoreService().snapshotWorkspace(wskey);
+        } catch ( CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {
+            throw new RuntimeEngineTaskException("Error snapshoting workspace : " + e.getMessage(), e);
+        }
+    }
 
 }

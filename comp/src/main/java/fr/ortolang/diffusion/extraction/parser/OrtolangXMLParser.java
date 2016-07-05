@@ -63,14 +63,14 @@ public class OrtolangXMLParser extends CompositeParser {
 
     private static final Logger LOGGER = Logger.getLogger(OrtolangXMLParser.class.getName());
 
-    public static final String xmlTypeKey = "XML-Type";
+    public static final String XML_TYPE_KEY = "XML-Type";
 
     public enum XMLType {
         TEI,
         TRANS
     }
 
-    private static List<Parser> xmlParsers = Arrays.asList(new Parser[]{
+    private static final List<Parser> xmlParsers = Arrays.asList(new Parser[]{
             new TeiParser(), new TransParser()
     });
 
@@ -118,9 +118,9 @@ public class OrtolangXMLParser extends CompositeParser {
             DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
             Document doc = documentBuilder.parse(stream);
             OrtolangContext ortolangContext = null;
-            if (doc.getDocumentElement().hasAttribute("xmlns") && doc.getDocumentElement().getAttribute("xmlns").equals("http://www.tei-c.org/ns/1.0")) {
+            if (doc.getDocumentElement().hasAttribute("xmlns") && "http://www.tei-c.org/ns/1.0".equals(doc.getDocumentElement().getAttribute("xmlns"))) {
                  ortolangContext = new OrtolangContext(XMLType.TEI);
-            } else if (doc.getDoctype() != null && doc.getDoctype().getName().equals("Trans")) {
+            } else if (doc.getDoctype() != null && "Trans".equals(doc.getDoctype().getName())) {
                  ortolangContext = new OrtolangContext(XMLType.TRANS);
             }
             if (ortolangContext != null) {

@@ -41,59 +41,60 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class OrtolangCli {
-	
-	private static OrtolangCli instance;
-	private Map<String, String> commands = new HashMap<String, String>();
-	
-	private OrtolangCli() {
-		commands.put("delete-workspace", DeleteWorkspaceCommand.class.getName());
-		commands.put("import-workspace", ImportWorkspaceCommand.class.getName());
-		commands.put("publish-workspace", PublishWorkspaceCommand.class.getName());
-		commands.put("import-zip", ImportZipCommand.class.getName());
-		commands.put("import-profiles", ImportProfilesCommand.class.getName());
-		commands.put("import-referential", ImportReferentialCommand.class.getName());
-		commands.put("check-bag", CheckBagCommand.class.getName());
-		commands.put("reindex-all-root-collection", ReindexAllRootCollectionCommand.class.getName());
-		commands.put("reindex", ReindexCommand.class.getName());
-	}
-	
-	public static OrtolangCli getInstance() {
-		if (instance == null) {
-			instance = new OrtolangCli();
-		}
-		return instance;
-	}
-	
-	public void parse(String[] args) {
-		if ( args.length > 0 ) {
-			String command = args[0];
-			if ( commands.containsKey(command) ) {
-				System.out.println("Executing command: " + command);
-				try {
-					Command instance = (Command) Class.forName(commands.get(command)).newInstance();
-					instance.execute(Arrays.copyOfRange(args, 1, args.length));
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			} else {
-				System.out.println("Command not found");
-				help();
-			}
-		} else {
-			help();
-		}
-	}
-	
-	private void help() {
-		System.out.println("Ortolang CLI available commands :");
-		for (String command : commands.keySet()) {
-			System.out.println("\t " + command);
-		}
-		System.exit(0);
-	}
-	
-	public static void main(String[] args) {
-		OrtolangCli.getInstance().parse(args);
-	}
+
+    private static OrtolangCli instance;
+    private final Map<String, String> commands = new HashMap<>();
+
+    private OrtolangCli() {
+        commands.put("delete-workspace", DeleteWorkspaceCommand.class.getName());
+        commands.put("import-workspace", ImportWorkspaceCommand.class.getName());
+        commands.put("publish-workspace", PublishWorkspaceCommand.class.getName());
+        commands.put("import-zip", ImportZipCommand.class.getName());
+        commands.put("import-profiles", ImportProfilesCommand.class.getName());
+        commands.put("import-referential", ImportReferentialCommand.class.getName());
+        commands.put("check-bag", CheckBagCommand.class.getName());
+        commands.put("reindex-all-root-collection", ReindexAllRootCollectionCommand.class.getName());
+        commands.put("reindex", ReindexCommand.class.getName());
+        commands.put("cp", CopyCommand.class.getName());
+    }
+
+    public static OrtolangCli getInstance() {
+        if (instance == null) {
+            instance = new OrtolangCli();
+        }
+        return instance;
+    }
+
+    public void parse(String[] args) {
+        if ( args.length > 0 ) {
+            String commandName = args[0];
+            if ( commands.containsKey(commandName) ) {
+                System.out.println("Executing command: " + commandName);
+                try {
+                    Command command = (Command) Class.forName(commands.get(commandName)).newInstance();
+                    command.execute(Arrays.copyOfRange(args, 1, args.length));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                System.out.println("Command not found");
+                help();
+            }
+        } else {
+            help();
+        }
+    }
+
+    private void help() {
+        System.out.println("Ortolang CLI available commands :");
+        for (String command : commands.keySet()) {
+            System.out.println("\t " + command);
+        }
+        System.exit(0);
+    }
+
+    public static void main(String[] args) {
+        OrtolangCli.getInstance().parse(args);
+    }
 
 }

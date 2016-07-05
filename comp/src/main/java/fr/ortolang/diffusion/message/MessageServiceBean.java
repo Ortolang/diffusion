@@ -75,7 +75,6 @@ import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Workspace;
-import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
@@ -93,7 +92,6 @@ import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
@@ -124,15 +122,11 @@ public class MessageServiceBean implements MessageService {
     @EJB
     private CoreService core;
     @EJB
-    private EventService events;
-    @EJB
     private AuthorisationService authorisation;
     @EJB
     private IndexingService indexing;
     @EJB
     private NotificationService notification;
-    @EJB
-    private SecurityService security;
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
     @Resource
@@ -252,10 +246,10 @@ public class MessageServiceBean implements MessageService {
 
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("wskey", wskey).addArgument("name", name);
             notification.throwEvent(key, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "create"), argsBuilder.build());
-            
+
             argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("name", name);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "create"), argsBuilder.build());
-            
+
             return thread;
         } catch (KeyAlreadyExistsException e) {
             ctx.setRollbackOnly();
@@ -328,7 +322,7 @@ public class MessageServiceBean implements MessageService {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             checkObjectType(identifier, Thread.OBJECT_TYPE);
             authorisation.checkPermission(key, subjects, "read");
-            
+
             TypedQuery<Message> query = em.createNamedQuery("findThreadMessages", Message.class).setParameter("thread", key).setFirstResult(offset).setMaxResults(limit);
             List<Message> msgs = query.getResultList();
             loadKeyFromRegistry(msgs);
@@ -348,16 +342,16 @@ public class MessageServiceBean implements MessageService {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             checkObjectType(identifier, Thread.OBJECT_TYPE);
             authorisation.checkPermission(key, subjects, "read");
-            
-            TypedQuery<Message> query = em.createNamedQuery("findThreadMessagesSinceDate", Message.class).setParameter("thread", key).setParameter("date", date);
-            List<Message> msgs = query.getResultList();
-            loadKeyFromRegistry(msgs);
-            return msgs;
+
+            TypedQuery<Message> query = em.createNamedQuery("findThreadMessagesAfterDate", Message.class).setParameter("thread", key).setParameter("after", date);
+            List<Message> messages = query.getResultList();
+            loadKeyFromRegistry(messages);
+            return messages;
         } catch (MembershipServiceException | KeyNotFoundException | AuthorisationServiceException | RegistryServiceException e) {
             throw new MessageServiceException("unable to browse messages", e);
         }
     }
-    
+
     private void loadKeyFromRegistry(List<Message> msgs) throws RegistryServiceException {
         ListIterator<Message> iter = msgs.listIterator();
         while(iter.hasNext()){
@@ -366,7 +360,7 @@ public class MessageServiceBean implements MessageService {
                 String mkey = registry.lookup(msg.getObjectIdentifier());
                 msg.setKey(mkey);
             } catch ( IdentifierNotRegisteredException e ) {
-                LOGGER.log(Level.WARNING, "found a message that is not bound in registry, maybe orphean, should clean it !!, identifier: " + msg.getObjectIdentifier() );                    
+                LOGGER.log(Level.WARNING, "found a message that is not bound in registry, maybe orphean, should clean it !!, identifier: " + msg.getObjectIdentifier() );
                 iter.remove();
             }
         }
@@ -423,7 +417,7 @@ public class MessageServiceBean implements MessageService {
             em.remove(thread);
             registry.delete(key);
             indexing.remove(key);
-            
+
             List<Message> msgs = em.createNamedQuery("findThreadMessages", Message.class).setParameter("thread", key).getResultList();
             for ( Message msg : msgs ) {
                 try {
@@ -436,7 +430,7 @@ public class MessageServiceBean implements MessageService {
                 }
             }
             em.createNamedQuery("deleteThreadMessages", Message.class).setParameter("thread", key).executeUpdate();
-            
+
             notification.throwEvent(key, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "delete"));
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("name", thread.getName());
             notification.throwEvent(thread.getWorkspace(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "delete"), argsBuilder.build());
@@ -467,7 +461,7 @@ public class MessageServiceBean implements MessageService {
             thread.setLastActivity(new Date());
             em.merge(thread);
             registry.update(tkey);
-            
+
             if (parent != null && parent.length() > 0) {
                 OrtolangObjectIdentifier pidentifier = registry.lookup(parent);
                 checkObjectType(pidentifier, Message.OBJECT_TYPE);
@@ -501,7 +495,7 @@ public class MessageServiceBean implements MessageService {
             notification.throwEvent(tkey, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "post"), argsBuilder.build());
             notification.throwEvent(thread.getWorkspace(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "post"), argsBuilder.build());
             notification.throwEvent(key, caller, Message.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Message.OBJECT_TYPE, "create"), null);
-            
+
             return message;
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyAlreadyExistsException
                 | IdentifierAlreadyRegisteredException | IndexingServiceException e) {
@@ -554,7 +548,7 @@ public class MessageServiceBean implements MessageService {
 
             registry.update(key);
             indexing.index(key);
-            
+
             notification.throwEvent(key, caller, Message.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Message.OBJECT_TYPE, "update"));
         } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException | IndexingServiceException e) {
             ctx.setRollbackOnly();
@@ -617,7 +611,7 @@ public class MessageServiceBean implements MessageService {
             throw new MessageServiceException("unable to add attachment to message with key [" + key + "]", e);
         }
     }
-    
+
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void removeMessageAttachment(String key, String name) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
@@ -667,7 +661,7 @@ public class MessageServiceBean implements MessageService {
             if ( !message.containsAttachmentName(name) ) {
                 throw new MessageServiceException("no attachment found with name [" + name + "] for message with key: " + key);
             }
-            
+
             notification.throwEvent(key, caller, Message.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Message.OBJECT_TYPE, "download-attachment"));
             return binarystore.getFile(message.findAttachmentByName(name).getHash());
         } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | BinaryStoreServiceException e) {
@@ -684,7 +678,7 @@ public class MessageServiceBean implements MessageService {
                 throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
             }
             IndexablePlainTextContent content = new IndexablePlainTextContent();
-            
+
             if (identifier.getType().equals(Thread.OBJECT_TYPE)) {
                 Thread mf = em.find(Thread.class, identifier.getId());
                 if (mf == null) {
@@ -698,7 +692,7 @@ public class MessageServiceBean implements MessageService {
                     content.addContentPart(mf.getDescription());
                 }
             }
-            
+
             if (identifier.getType().equals(Message.OBJECT_TYPE)) {
                 Message message = em.find(Message.class, identifier.getId());
                 if (message == null) {
@@ -858,17 +852,17 @@ public class MessageServiceBean implements MessageService {
             }
             OrtolangObjectSize ortolangObjectSize = new OrtolangObjectSize();
             switch (midentifier.getType()) {
-                case Thread.OBJECT_TYPE: {
-                    authorisation.checkPermission(key, subjects, "read");
-                    TypedQuery<Long> query = em.createNamedQuery("countThreadMessages", Long.class).setParameter("thread", key);
-                    ortolangObjectSize.addElement(Thread.OBJECT_TYPE, query.getSingleResult());
-                    break;
-                }
-                case Message.OBJECT_TYPE: {
-                    Message message = em.find(Message.class, midentifier.getId());
-                    ortolangObjectSize.addElement(Message.OBJECT_TYPE, message.getTitle().length() + message.getBody().length());
-                    break;
-                }
+            case Thread.OBJECT_TYPE: {
+                authorisation.checkPermission(key, subjects, "read");
+                TypedQuery<Long> query = em.createNamedQuery("countThreadMessages", Long.class).setParameter("thread", key);
+                ortolangObjectSize.addElement(Thread.OBJECT_TYPE, query.getSingleResult());
+                break;
+            }
+            case Message.OBJECT_TYPE: {
+                Message message = em.find(Message.class, midentifier.getId());
+                ortolangObjectSize.addElement(Message.OBJECT_TYPE, message.getTitle().length() + message.getBody().length());
+                break;
+            }
             }
             return ortolangObjectSize;
         } catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException | AccessDeniedException | KeyNotFoundException e) {

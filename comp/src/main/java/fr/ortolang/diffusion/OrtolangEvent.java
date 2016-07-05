@@ -63,7 +63,7 @@ public abstract class OrtolangEvent {
     public static final String OBJECT_TYPE = "objecttype";
     public static final String ARGUMENTS = "arguments";
 
-    private static HashMap<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> ();
+    private static Map<String, SimpleDateFormat> sdf = new HashMap<String, SimpleDateFormat> ();
 
     public static SimpleDateFormat getEventDateFormatter() {
         String key = Thread.currentThread().getId() + "";
@@ -169,10 +169,7 @@ public abstract class OrtolangEvent {
         }
 
         public ArgumentsBuilder addArgument(String key, String value) {
-            if ( value == null ) {
-                value = "";
-            }
-            args.put(key, value);
+            args.put(key, value == null ? "" : value);
             return this;
         }
 

@@ -96,7 +96,7 @@ public class OrtolangObjectState implements Serializable {
 	public String toString() {
 		StringBuilder buffer = new StringBuilder();
 		if ( isLocked() ) {
-			buffer.append("locked by (" + getLock() + "), ");
+			buffer.append("locked by (").append(getLock()).append("), ");
 		} else {
 			buffer.append("unlocked, ");
 		}
@@ -105,8 +105,8 @@ public class OrtolangObjectState implements Serializable {
 		} else {
 			buffer.append("visible, ");
 		}
-		buffer.append("status (" + getStatus() + "), ");
-		buffer.append("last modified on " + lastModification);
+		buffer.append("status (").append(getStatus()).append("), ");
+		buffer.append("last modified on ").append(lastModification);
 		return buffer.toString();
 	}
 
@@ -116,7 +116,7 @@ public class OrtolangObjectState implements Serializable {
 		
 		private String value;
 		
-		private Status(String value) {
+		Status(String value) {
 			this.value = value;
 		}
 		

@@ -262,7 +262,7 @@ public class ProfileResource {
 
     @GET
     @Path("/{key}/size")
-    public Response getProfileSize(@PathParam(value = "key") String key) throws AccessDeniedException, OrtolangException, KeyNotFoundException {
+    public Response getProfileSize(@PathParam(value = "key") String key) throws OrtolangException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /profiles/" + key + "/size");
         OrtolangObjectSize size = membership.getSize(key);
         return Response.ok(size).build();
@@ -270,7 +270,7 @@ public class ProfileResource {
 
     @GET
     @Path("/{key}/ticket")
-    public Response getProfileTicket(@PathParam(value = "key") String key) throws AccessDeniedException, OrtolangException, KeyNotFoundException, MembershipServiceException {
+    public Response getProfileTicket(@PathParam(value = "key") String key) throws OrtolangException, KeyNotFoundException, MembershipServiceException {
         LOGGER.log(Level.INFO, "GET /profiles/" + key + "/ticket");
         Profile profile = membership.readProfile(key);
         String ticket = TicketHelper.makeTicket(profile.getId(), profile.getKey());

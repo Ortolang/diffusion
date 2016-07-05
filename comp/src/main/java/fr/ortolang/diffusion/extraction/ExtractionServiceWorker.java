@@ -36,7 +36,6 @@ package fr.ortolang.diffusion.extraction;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
@@ -107,6 +106,7 @@ public class ExtractionServiceWorker {
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
 
+    @SuppressWarnings("EjbEnvironmentInspection")
     @Resource
     private ManagedThreadFactory managedThreadFactory;
 
@@ -122,8 +122,8 @@ public class ExtractionServiceWorker {
     @PostConstruct
     public void init() {
         startThread();
-        // Restore unprocessed jobs in queue
         List<Job> extractionJobs = jobService.getJobsOfType(ExtractionService.JOB_TYPE);
+        LOGGER.log(Level.INFO, "Restoring " + extractionJobs.size() + " extraction jobs in queue");
         queue.addAll(extractionJobs);
     }
 
@@ -188,7 +188,7 @@ public class ExtractionServiceWorker {
                             String hash = dataObject.getStream();
                             LOGGER.log(Level.FINEST, "Extracting metadata for data object with key: " + key);
                             // Do not parse xml files that are too large (greater than 50 MB)
-                            if (mimeType.equals("application/xml") && binarystore.size(hash) > 50000000) {
+                            if ("application/xml".equals(mimeType) && binarystore.size(hash) > 50000000) {
                                 jobService.remove(job.getId());
                                 continue;
                             }
@@ -201,11 +201,11 @@ public class ExtractionServiceWorker {
                                 metadataName = MetadataFormat.IMAGE;
                             } else if (mimeType.startsWith("video/") || contentType.startsWith("video/")) {
                                 metadataName = MetadataFormat.VIDEO;
-                            } else if (mimeType.equals("application/xml") || contentType.equals("application/xml") || mimeType.endsWith("+xml") || contentType.endsWith("+xml")) {
-                                if (metadata.get(OrtolangXMLParser.xmlTypeKey) != null) {
+                            } else if ("application/xml".equals(mimeType) || "application/xml".equals(contentType) || mimeType.endsWith("+xml") || contentType.endsWith("+xml")) {
+                                if (metadata.get(OrtolangXMLParser.XML_TYPE_KEY) != null) {
                                     metadataName = MetadataFormat.XML;
                                 }
-                            } else if (contentType.equals("application/pdf")) {
+                            } else if ("application/pdf".equals(contentType)) {
                                 metadataName = MetadataFormat.PDF;
                             } else if (contentType.contains("text/")) {
                                 metadataName = MetadataFormat.TEXT;
@@ -225,14 +225,14 @@ public class ExtractionServiceWorker {
                                         JSONArray jsonArray = new JSONArray(Arrays.asList(metadata.getValues(name)));
                                         metadataJson.put(name, jsonArray);
                                     } else {
-                                        if (name.equals("ortolang:json")) {
+                                        if ("ortolang:json".equals(name)) {
                                             String tmp = metadataJson.toString();
                                             String ortolangJson = metadata.get("ortolang:json");
                                             tmp = tmp.substring(0, tmp.lastIndexOf("}"));
                                             tmp += ortolangJson.replaceFirst("\\{", ",");
                                             metadataJson = new JSONObject(tmp);
                                         } else {
-                                            if (name.equals("File Name") && metadata.get(name).startsWith("apache-tika")) {
+                                            if ("File Name".equals(name) && metadata.get(name).startsWith("apache-tika")) {
                                                 continue;
                                             }
                                             metadataJson.put(name, metadata.get(name));
@@ -248,14 +248,12 @@ public class ExtractionServiceWorker {
                             LOGGER.log(Level.WARNING, "unknown job action: " + job.getAction());
                         }
                         jobService.remove(job.getId());
-                    } catch (OrtolangException | MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | SAXException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException | IndexingServiceException | AuthorisationServiceException e) {
+                    } catch (MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException | IndexingServiceException | AuthorisationServiceException e) {
                         LOGGER.log(Level.WARNING, "unable to extract metadata for data object with key " + key, e);
-                        if (e instanceof SAXException) {
-                            LOGGER.log(Level.WARNING, "Could not parse XML document: removing extraction job " + job.getId(), e);
-                            jobService.remove(job.getId());
-                        } else {
-                            jobService.updateFailingJob(job, e);
-                        }
+                        jobService.updateFailingJob(job, e);
+                    } catch (SAXException e) {
+                        LOGGER.log(Level.WARNING, "Could not parse XML document: removing extraction job " + job.getId() + "for data object with key " + key, e);
+                        jobService.remove(job.getId());
                     }
 
                 } catch (InterruptedException e) {

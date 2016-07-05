@@ -85,7 +85,7 @@ public class ReferentialEntityResource {
 	        
 	    	if(entityType != null) {
 	    	    
-	    	    List<ReferentialEntity> refs = null;
+	    	    List<ReferentialEntity> refs;
 	    	    if(term!=null) {
 	    	        refs = referential.findEntitiesByTerm(entityType, term, lang);
 	    	    } else {

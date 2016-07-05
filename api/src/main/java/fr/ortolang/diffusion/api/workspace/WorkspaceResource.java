@@ -40,6 +40,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,6 +51,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.ejb.EJB;
 import javax.json.Json;
@@ -73,10 +75,10 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import org.javers.core.diff.Change;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangEvent;
@@ -125,7 +127,6 @@ import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
@@ -184,7 +185,8 @@ public class WorkspaceResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @GZIP
     public Response createWorkspace(@FormParam("type") @DefaultValue("default") String type, @FormParam("name") @DefaultValue("No Name Provided") String name, @FormParam("alias") String alias)
-            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException, AliasAlreadyExistsException {
+            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException, AliasAlreadyExistsException,
+            URISyntaxException {
         LOGGER.log(Level.INFO, "POST(application/x-www-form-urlencoded) /workspaces");
         String key = java.util.UUID.randomUUID().toString();
         Workspace workspace;
@@ -204,7 +206,8 @@ public class WorkspaceResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @GZIP
     public Response createWorkspace(WorkspaceRepresentation representation)
-            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException, AliasAlreadyExistsException {
+            throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException, AliasAlreadyExistsException,
+            URISyntaxException {
         LOGGER.log(Level.INFO, "POST(application/json) /workspaces");
         String key = UUID.randomUUID().toString();
         Workspace workspace;
@@ -361,7 +364,7 @@ public class WorkspaceResource {
                     String publicationPolicy = core.readPublicationPolicy(wskey, root, path);
                     representation.setPublicationPolicy(publicationPolicy);
                     if (object instanceof Collection) {
-                        HashMap<String, String> publicationPolicies = new HashMap<>();
+                        Map<String, String> publicationPolicies = new HashMap<>();
                         String childPublicationPolicy;
                         for (CollectionElement collectionElement : ((Collection) object).getElements()) {
                             childPublicationPolicy = core.readPublicationPolicy(collectionElement.getKey());
@@ -388,7 +391,7 @@ public class WorkspaceResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @GZIP
     public Response createWorkspaceElement(@PathParam(value = "wskey") String wskey, @MultipartForm WorkspaceElementFormRepresentation form, @Context HttpHeaders headers)
-            throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
+            throws CoreServiceException, KeyNotFoundException, InvalidPathException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/elements");
         try {
             String contentTransferEncoding = "UTF-8";
@@ -440,18 +443,18 @@ public class WorkspaceResource {
                         }
                     }
                     if (mdexists) {
-                        updatedObject = core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false, form.getFormat().equals("") ? null : form.getFormat());
+                        updatedObject = core.updateMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false, form.getFormat().isEmpty() ? null : form.getFormat());
                         break;
                     } else {
-                    	try {
-	                        MetadataObject metadataObject = core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
-	                        WorkspaceElementRepresentation representation = makeRepresentation(metadataObject, wskey, npath);
-	                        URI newly = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build())
-	                                .queryParam("metadataname", name).build();
-	                        return Response.created(newly).entity(representation).build();
-                    	} catch(MetadataFormatException mfe) {
-                    		return Response.status(Response.Status.BAD_REQUEST).entity("{\"errorMessage\":\""+mfe.getMessage()+"\"}").build();
-                    	}
+                        try {
+                            MetadataObject metadataObject = core.createMetadataObject(wskey, npath.build(), name, form.getStreamHash(), form.getStreamFilename(), false);
+                            WorkspaceElementRepresentation representation = makeRepresentation(metadataObject, wskey, npath);
+                            URI newly = ApiUriBuilder.getApiUriBuilder().path(WorkspaceResource.class).path(wskey).path("elements").queryParam("path", npath.build())
+                                    .queryParam("metadataname", name).build();
+                            return Response.created(newly).entity(representation).build();
+                        } catch(MetadataFormatException mfe) {
+                            return Response.status(Response.Status.BAD_REQUEST).entity("{\"errorMessage\":\""+mfe.getMessage()+"\"}").build();
+                        }
                     }
                 default:
                     return Response.status(Response.Status.BAD_REQUEST).entity("unable to update element of type: " + form.getType()).build();
@@ -483,7 +486,7 @@ public class WorkspaceResource {
                     return Response.created(newly).entity(representation).build();
                 }
             }
-        } catch (DataCollisionException | UnsupportedEncodingException e) {
+        } catch (DataCollisionException | UnsupportedEncodingException | URISyntaxException e) {
             LOGGER.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
             return Response.serverError().entity(e.getMessage()).build();
         }
@@ -493,7 +496,7 @@ public class WorkspaceResource {
     @Path("/{wskey}/elements")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateWorkspaceElement(@PathParam(value = "wskey") String wskey, WorkspaceElementRepresentation representation, @QueryParam(value = "destination") String destination) throws CoreServiceException,
-            KeyNotFoundException, InvalidPathException, AccessDeniedException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
+            KeyNotFoundException, InvalidPathException, KeyAlreadyExistsException, OrtolangException, BrowserServiceException, MetadataFormatException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException {
         LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/elements");
         PathBuilder npath = PathBuilder.fromPath(representation.getPath());
         core.resolveWorkspacePath(wskey, "head", npath.build());
@@ -655,21 +658,32 @@ public class WorkspaceResource {
         }
         return Response.ok().build();
     }
-    
+
     @GET
     @Path("/{wskey}/events")
     @GZIP
-    public Response listWorkspaceEvents(@PathParam(value = "wskey") String wskey, @QueryParam(value = "offset") @DefaultValue(value = "0") int offset, @QueryParam(value = "limit") @DefaultValue(value = "25") int limit, @Context Request request)
- throws EventServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
+    public Response listWorkspaceEvents(@PathParam(value = "wskey") String wskey, @QueryParam(value = "offset") @DefaultValue(value = "0") int offset, @QueryParam(value = "limit") @DefaultValue(value = "25") int limit)
+            throws EventServiceException, BrowserServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/events");
         long wscreation = browser.getInfos(wskey).getCreationDate();
-        GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>(); 
+        GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<>();
         List<OrtolangEvent> events = event.findEvents(null, wskey, null, null, wscreation, offset, limit);
         representation.setEntries(events);
         representation.setOffset(offset);
         representation.setLimit(limit);
         representation.setSize(events.size());
         return Response.ok(representation).build();
+    }
+
+    @GET
+    @Path("/{wskey}/diff")
+    @GZIP
+    public Response diffWorkspaceContent(@PathParam(value = "wskey") String wskey, @QueryParam(value = "lsnapshot") String lsnapshot, @QueryParam(value = "rsnapshot") String rsnapshot)
+            throws AccessDeniedException, CoreServiceException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/diff");
+        List<Change> changes = core.diffWorkspaceContent(wskey, lsnapshot, rsnapshot);
+        List<DiffRepresentation> representations = changes.stream().map(DiffRepresentation::fromChange).collect(Collectors.toList());
+        return Response.ok(representations).build();
     }
 
     @GET

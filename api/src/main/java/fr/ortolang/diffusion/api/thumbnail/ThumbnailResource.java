@@ -86,7 +86,7 @@ public class ThumbnailResource {
     private static final String DEFAULT_THUMBNAIL_IMAGE = "empty.png";
     private static final String DEFAULT_THUMBNAIL_MIMETYPE = "image/png";
     private static File defaultThumb = null;
-    
+
     @EJB
     private CoreService core;
     @EJB
@@ -95,7 +95,6 @@ public class ThumbnailResource {
     private ThumbnailService thumbnails;
     @Context
     private UriInfo uriInfo;
-    
 
     private File getDefaultThumb() {
         if (defaultThumb == null) {
@@ -113,26 +112,27 @@ public class ThumbnailResource {
     @GET
     @Path("/{key}")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-    public Response getThumbnailFromKey(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size, @QueryParam("l") @DefaultValue("true") boolean login,
-            @Context SecurityContext security, @Context Request request) throws BrowserServiceException, KeyNotFoundException, OrtolangException, ThumbnailServiceException {
+    public Response getThumbnailFromKey(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size, @QueryParam("min") @DefaultValue("false") boolean min,
+            @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security, @Context Request request)
+            throws BrowserServiceException, KeyNotFoundException, OrtolangException, ThumbnailServiceException {
         LOGGER.log(Level.INFO, "GET /thumbs/" + key);
-        return getThumbnail(key, size, login, security, request);
+        return getThumbnail(key, size, min, login, security, request);
     }
 
     @GET
     @Path("/{alias}/{root}/{path:.*}")
     public Response getThumbnailFromPath(@PathParam("alias") final String alias, @PathParam("root") final String root, @PathParam("path") final String path,
-            @QueryParam("size") @DefaultValue("300") int size, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext security, @Context Request request)
+            @QueryParam("size") @DefaultValue("300") int size, @QueryParam("min") @DefaultValue("false") boolean min, @QueryParam("l") @DefaultValue("true") boolean login,
+            @Context SecurityContext security, @Context Request request)
             throws CoreServiceException, AliasNotFoundException, OrtolangException, InvalidPathException, PathNotFoundException, KeyNotFoundException, ThumbnailServiceException,
             BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /thumbs/" + alias + "/" + root + "/" + path);
         String wskey = core.resolveWorkspaceAlias(alias);
         String key = core.resolveWorkspacePath(wskey, root, path);
-        return getThumbnail(key, size, login, security, request);
+        return getThumbnail(key, size, min, login, security, request);
     }
 
-    private Response getThumbnail(@PathParam(value = "key") String key, @QueryParam("size") @DefaultValue("300") int size, @QueryParam("l") @DefaultValue("true") boolean login,
-            @Context SecurityContext security, @Context Request request) throws BrowserServiceException, KeyNotFoundException {
+    private Response getThumbnail(String key, int size, boolean min, boolean login, SecurityContext security, Request request) throws BrowserServiceException, KeyNotFoundException {
         try {
             OrtolangObjectState state = browser.getState(key);
             CacheControl cc = new CacheControl();
@@ -145,7 +145,7 @@ public class ThumbnailResource {
             }
             if (builder == null) {
                 try {
-                    Thumbnail thumbnail = thumbnails.getThumbnail(key, size);
+                    Thumbnail thumbnail = thumbnails.getThumbnail(key, size, min);
                     builder = Response.ok(thumbnail.getFile()).header("Content-Type", thumbnail.getContentType());
                     builder.lastModified(lmd);
                 } catch (Exception e) {

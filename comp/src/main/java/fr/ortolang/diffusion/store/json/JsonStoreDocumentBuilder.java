@@ -49,9 +49,12 @@ import javax.json.JsonReader;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 
 public class JsonStoreDocumentBuilder {
-	
-	private static final Logger LOGGER = Logger.getLogger(JsonStoreDocumentBuilder.class.getName());
-			
+
+    private JsonStoreDocumentBuilder() {
+    }
+
+    private static final Logger LOGGER = Logger.getLogger(JsonStoreDocumentBuilder.class.getName());
+
     public static final String KEY_PROPERTY = "key";
     public static final String STATUS_PROPERTY = "status";
     public static final String META_PROPERTY = "meta";
@@ -59,26 +62,26 @@ public class JsonStoreDocumentBuilder {
 
     public static String buildDocument(OrtolangIndexableObject<IndexableJsonContent> object) {
 
-    	JsonObjectBuilder builder = Json.createObjectBuilder();
+        JsonObjectBuilder builder = Json.createObjectBuilder();
 
-    	builder.add(KEY_PROPERTY, object.getKey());
-    	builder.add(STATUS_PROPERTY, object.getStatus());
-    	builder.add(LAST_MODIFICATION_DATE_PROPERTY, object.getLastModificationDate());
+        builder.add(KEY_PROPERTY, object.getKey());
+        builder.add(STATUS_PROPERTY, object.getStatus());
+        builder.add(LAST_MODIFICATION_DATE_PROPERTY, object.getLastModificationDate());
 
         if (object.getContent() != null && object.getContent().getStream() != null) {
             for (Map.Entry<String, String> entry : object.getContent().getStream().entrySet()) {
-                
+
                 StringReader reader = new StringReader(entry.getValue());
-				JsonReader jsonReader = Json.createReader(reader);
-				try {
-					JsonObject jsonObj = jsonReader.readObject();
-					builder.add(META_PROPERTY + "_" + entry.getKey(), jsonObj);
-				} catch(NullPointerException | ClassCastException e) {
-					LOGGER.log(Level.WARNING, "Cannot add json object to document : " + e.getMessage(), e);
-				} finally {
-					jsonReader.close();
-					reader.close();
-				}
+                JsonReader jsonReader = Json.createReader(reader);
+                try {
+                    JsonObject jsonObj = jsonReader.readObject();
+                    builder.add(META_PROPERTY + "_" + entry.getKey(), jsonObj);
+                } catch(NullPointerException | ClassCastException e) {
+                    LOGGER.log(Level.WARNING, "Cannot add json object to document : " + e.getMessage(), e);
+                } finally {
+                    jsonReader.close();
+                    reader.close();
+                }
             }
         }
 

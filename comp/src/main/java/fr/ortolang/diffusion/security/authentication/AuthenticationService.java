@@ -41,8 +41,8 @@ import fr.ortolang.diffusion.OrtolangService;
 
 public interface AuthenticationService extends OrtolangService {
 	
-	public static final String SERVICE_NAME = "authentication";
+	String SERVICE_NAME = "authentication";
     
-    public String getConnectedIdentifier();
+    String getConnectedIdentifier();
     
 }

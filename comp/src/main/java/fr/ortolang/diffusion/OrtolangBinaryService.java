@@ -51,6 +51,6 @@ import java.util.List;
  */
 public interface OrtolangBinaryService {
 	
-	public abstract List<OrtolangObject> findObjectByBinaryHash(String hash) throws OrtolangException;
+	List<OrtolangObject> findObjectByBinaryHash(String hash) throws OrtolangException;
 
 }

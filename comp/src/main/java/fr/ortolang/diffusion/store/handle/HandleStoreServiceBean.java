@@ -73,119 +73,118 @@ import fr.ortolang.diffusion.store.handle.entity.Handle;
 @PermitAll
 public class HandleStoreServiceBean implements HandleStoreService {
 
-	private static final Logger LOGGER = Logger.getLogger(HandleStoreServiceBean.class.getName());
-	private static byte[] admin = null;
-	
-	private static final String[] OBJECT_TYPE_LIST = new String[] { };
+    private static final Logger LOGGER = Logger.getLogger(HandleStoreServiceBean.class.getName());
+    private static byte[] admin = null;
+
+    private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
+
     @PersistenceContext(unitName = "ortolangPU")
-	private EntityManager em;
+    private EntityManager em;
 
-	private byte[] getAdminValue() {
-		if ( admin == null ) {
-			String adminHandle = "0.NA/" + OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX);
-			admin = Encoder.encodeAdminRecord(new AdminRecord(adminHandle.getBytes(), 300, true, true, true, true, true, true, true, true, true, true, true, true));
-		}
-		return admin;
-	}
+    private byte[] getAdminValue() {
+        if ( admin == null ) {
+            String adminHandle = "0.NA/" + OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX);
+            admin = Encoder.encodeAdminRecord(new AdminRecord(adminHandle.getBytes(), 300, true, true, true, true, true, true, true, true, true, true, true, true));
+        }
+        return admin;
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void recordHandle(String handle, String key, String url) throws HandleStoreServiceException {
-		String name = handle.toUpperCase(Locale.ENGLISH);
-		LOGGER.log(Level.FINE, "recording handle : " + handle);
-		try {
-			List<Handle> oldHandles = listHandleValues(name);
-			for ( Handle old : oldHandles ) {
-				LOGGER.log(Level.FINE, "deleting previously recorded handle for this name: " + old);
-				em.remove(old);
-				em.flush();
-			}
-		} catch (HandleNotFoundException e) {
-			//
-		}
-		int timestamp = (int) (System.currentTimeMillis() / 1000);
-		Handle adminValue = new Handle(name.getBytes(), 100, key, Common.ADMIN_TYPE, getAdminValue(), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
-		Handle urlValue = new Handle(name.getBytes(), 1, key, Common.STD_TYPE_URL, url.getBytes(), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
-		em.persist(adminValue);
-		em.persist(urlValue);
-	}
-	
-	@Override
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void recordHandle(String handle, String key, String url) throws HandleStoreServiceException {
+        String name = handle.toUpperCase(Locale.ENGLISH);
+        LOGGER.log(Level.FINE, "recording handle : " + handle);
+        try {
+            List<Handle> oldHandles = listHandleValues(name);
+            for ( Handle old : oldHandles ) {
+                LOGGER.log(Level.FINE, "deleting previously recorded handle for this name: " + old);
+                em.remove(old);
+                em.flush();
+            }
+        } catch (HandleNotFoundException e) {
+            //
+        }
+        int timestamp = (int) (System.currentTimeMillis() / 1000);
+        Handle adminValue = new Handle(name.getBytes(), 100, key, Common.ADMIN_TYPE, getAdminValue(), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
+        Handle urlValue = new Handle(name.getBytes(), 1, key, Common.STD_TYPE_URL, url.getBytes(), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
+        em.persist(adminValue);
+        em.persist(urlValue);
+    }
+
+    @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void dropHandle(String handle) throws HandleStoreServiceException {
-	    String name = handle.toUpperCase(Locale.ENGLISH);
-	    LOGGER.log(Level.FINE, "dropping handle : " + handle);
-        List<Handle> handles = null;
-        TypedQuery<Handle> query = em.createNamedQuery("findHandleByName", Handle.class).setParameter("name", name.getBytes()); 
+        String name = handle.toUpperCase(Locale.ENGLISH);
+        LOGGER.log(Level.FINE, "dropping handle : " + handle);
+        List<Handle> handles;
+        TypedQuery<Handle> query = em.createNamedQuery("findHandleByName", Handle.class).setParameter("name", name.getBytes());
         handles = query.getResultList();
-        if ( handles != null && handles.size() > 0 ) {
+        if ( handles != null && !handles.isEmpty()) {
             for ( Handle hdl : handles ) {
                 em.remove(hdl);
             }
         }
     }
-	
-	@Override
+
+    @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Handle> findHandlesByName(int offset, int limit, String filter) throws HandleStoreServiceException {
         String name = "%" + filter.toUpperCase(Locale.ENGLISH) + "%";
         TypedQuery<Handle> query = em.createNamedQuery("searchHandleByName", Handle.class).setFirstResult(offset).setMaxResults(limit).setParameter("name", name.getBytes());
         return query.getResultList();
     }
-	
-	@Override
+
+    @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Handle> findHandlesByValue(int offset, int limit, String filter) throws HandleStoreServiceException {
         String value = "%" + filter + "%";
-        TypedQuery<Handle> query = em.createNamedQuery("searchHandleByValue", Handle.class).setFirstResult(offset).setMaxResults(limit).setParameter("value", value.getBytes()); 
+        TypedQuery<Handle> query = em.createNamedQuery("searchHandleByValue", Handle.class).setFirstResult(offset).setMaxResults(limit).setParameter("value", value.getBytes());
         return query.getResultList();
     }
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<Handle> listHandleValues(String handle) throws HandleStoreServiceException, HandleNotFoundException {
-		String name = handle.toUpperCase(Locale.ENGLISH);
-		List<Handle> handles = null;
-		TypedQuery<Handle> query = em.createNamedQuery("findHandleByName", Handle.class).setParameter("name", name.getBytes()); 
-		handles = query.getResultList();
-		if ( handles == null || handles.size() == 0 ) {
-			throw new HandleNotFoundException("no values found with handle [" + handle + "]");
-		}
-		return handles;
-	}
-	
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public List<String> listHandlesForKey(String key) throws HandleStoreServiceException {
-		List<String> names = new ArrayList<String> ();
-		TypedQuery<byte[]> query = em.createNamedQuery("findHandleNameForKey", byte[].class).setParameter("key", key);
-		List<byte[]> bnames = query.getResultList(); 
-		try {
-			for (byte[] bname : bnames) {
-				names.add(new String(bname, "UTF-8"));
-			}
-		} catch ( UnsupportedEncodingException e ) {
-			throw new HandleStoreServiceException("unable to decode name", e);
-		}
-		return names;
-	}
-	
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public long countHandles() throws HandleStoreServiceException {
-	    TypedQuery<Long> query = em.createNamedQuery("countHandles", Long.class);
-        Long nbhandles = query.getSingleResult(); 
-        return nbhandles;
-	}
-	
-	//Service methods
-    
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Handle> listHandleValues(String handle) throws HandleStoreServiceException, HandleNotFoundException {
+        String name = handle.toUpperCase(Locale.ENGLISH);
+        List<Handle> handles;
+        TypedQuery<Handle> query = em.createNamedQuery("findHandleByName", Handle.class).setParameter("name", name.getBytes());
+        handles = query.getResultList();
+        if ( handles == null || handles.isEmpty() ) {
+            throw new HandleNotFoundException("no values found with handle [" + handle + "]");
+        }
+        return handles;
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<String> listHandlesForKey(String key) throws HandleStoreServiceException {
+        List<String> names = new ArrayList<String> ();
+        TypedQuery<byte[]> query = em.createNamedQuery("findHandleNameForKey", byte[].class).setParameter("key", key);
+        List<byte[]> bnames = query.getResultList();
+        try {
+            for (byte[] bname : bnames) {
+                names.add(new String(bname, "UTF-8"));
+            }
+        } catch ( UnsupportedEncodingException e ) {
+            throw new HandleStoreServiceException("unable to decode name", e);
+        }
+        return names;
+    }
+
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public long countHandles() throws HandleStoreServiceException {
+        TypedQuery<Long> query = em.createNamedQuery("countHandles", Long.class);
+        return query.getSingleResult();
+    }
+
+    //Service methods
+
     @Override
     public String getServiceName() {
         return HandleStoreService.SERVICE_NAME;
     }
-    
+
     @Override
     public Map<String, String> getServiceInfos() {
         Map<String, String> infos = new HashMap<String, String> ();
@@ -216,5 +215,5 @@ public class HandleStoreServiceBean implements HandleStoreService {
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");
     }
-	
+
 }

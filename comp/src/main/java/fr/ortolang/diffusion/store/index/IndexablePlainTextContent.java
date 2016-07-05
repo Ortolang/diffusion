@@ -61,7 +61,7 @@ public class IndexablePlainTextContent {
     }
 
     public void addContentPart(String content) {
-        sb.append(content + " ");
+        sb.append(content).append(" ");
     }
     
     public List<IndexablePlainTextContentProperty> getProperties() {

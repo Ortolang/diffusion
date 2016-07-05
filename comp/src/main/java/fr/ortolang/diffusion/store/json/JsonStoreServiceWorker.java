@@ -43,7 +43,6 @@ import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.jobs.JobService;
 import fr.ortolang.diffusion.jobs.entity.Job;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 
 import javax.annotation.PostConstruct;
@@ -93,8 +92,8 @@ public class JsonStoreServiceWorker {
         Thread thread = managedThreadFactory.newThread(worker);
         thread.setName("Json Store Worker Thread");
         thread.start();
-        // Restore unprocessed jobs in queue
         List<Job> indexingJobs = jobService.getJobsOfType(JOB_TYPE);
+        LOGGER.log(Level.INFO, "Restoring " + indexingJobs.size() + " json-indexing jobs in queue");
         queue.addAll(indexingJobs);
     }
 

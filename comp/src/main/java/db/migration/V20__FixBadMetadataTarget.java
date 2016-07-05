@@ -41,14 +41,19 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.flywaydb.core.api.migration.jdbc.JdbcMigration;
 
 import fr.ortolang.diffusion.core.entity.MetadataElement;
 
 public class V20__FixBadMetadataTarget implements JdbcMigration {
-    
-    public void migrate(Connection connection) throws Exception {
+
+    private static final Logger LOGGER = Logger.getLogger(V20__FixBadMetadataTarget.class.getName());
+
+    @Override
+    public void migrate(Connection connection) throws SQLException {
         try {
             PreparedStatement col_stmt = connection.prepareStatement("SELECT * FROM collection;");
             try {
@@ -110,12 +115,12 @@ public class V20__FixBadMetadataTarget implements JdbcMigration {
                 col_stmt.close();
             }
         } catch ( SQLException e ) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
             throw e;
         }
     }
     
-    private boolean fixMetadataTarget(Connection connection, String target, String mdkey) throws Exception {
+    private boolean fixMetadataTarget(Connection connection, String target, String mdkey) throws SQLException {
         boolean result = true; 
         String md_id = null;
         PreparedStatement md_id_stmt = connection.prepareStatement("SELECT re.identifier FROM registryentry re WHERE re.key = '" + mdkey + "'");

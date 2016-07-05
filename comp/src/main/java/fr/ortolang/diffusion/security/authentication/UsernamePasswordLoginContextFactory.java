@@ -53,63 +53,66 @@ import javax.security.auth.login.LoginException;
 
 public class UsernamePasswordLoginContextFactory {
 
-	static class NamePasswordCallbackHandler implements CallbackHandler {
-		private final String username;
-		private final String password;
+    private UsernamePasswordLoginContextFactory() {
+    }
 
-		private NamePasswordCallbackHandler(String username, String password) {
-			this.username = username;
-			this.password = password;
-		}
+    static class NamePasswordCallbackHandler implements CallbackHandler {
+        private final String username;
+        private final String password;
 
-		@Override
-		public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
-			for (Callback current : callbacks) {
-				if (current instanceof NameCallback) {
-					((NameCallback) current).setName(username);
-				} else if (current instanceof PasswordCallback) {
-					((PasswordCallback) current).setPassword(password.toCharArray());
-				} else {
-					throw new UnsupportedCallbackException(current);
-				}
-			}
-		}
-	}
+        private NamePasswordCallbackHandler(String username, String password) {
+            this.username = username;
+            this.password = password;
+        }
 
-	static class JBossJaasConfiguration extends Configuration {
-		private final String configurationName;
+        @Override
+        public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+            for (Callback current : callbacks) {
+                if (current instanceof NameCallback) {
+                    ((NameCallback) current).setName(username);
+                } else if (current instanceof PasswordCallback) {
+                    ((PasswordCallback) current).setPassword(password.toCharArray());
+                } else {
+                    throw new UnsupportedCallbackException(current);
+                }
+            }
+        }
+    }
 
-		JBossJaasConfiguration(String configurationName) {
-			this.configurationName = configurationName;
-		}
+    static class JBossJaasConfiguration extends Configuration {
+        private final String configurationName;
 
-		@Override
-		public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
-			if (!configurationName.equals(name)) {
-				throw new IllegalArgumentException("Unexpected configuration name '" + name + "'");
-			}
+        JBossJaasConfiguration(String configurationName) {
+            this.configurationName = configurationName;
+        }
 
-			return new AppConfigurationEntry[] { 
-					createClientLoginModuleConfigEntry(),
-				};
-		}
-		
-		private AppConfigurationEntry createClientLoginModuleConfigEntry() {
-			Map<String, String> options = new HashMap<String, String>();
-			options.put("multi-threaded", "true");
-			options.put("restore-login-identity", "true");
+        @Override
+        public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
+            if (!configurationName.equals(name)) {
+                throw new IllegalArgumentException("Unexpected configuration name '" + name + "'");
+            }
 
-			return new AppConfigurationEntry("org.jboss.security.ClientLoginModule", AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options);
-		}
-	}
+            return new AppConfigurationEntry[] {
+                    createClientLoginModuleConfigEntry(),
+            };
+        }
 
-	public static LoginContext createLoginContext(final String username, final String password) throws LoginException {
-		final String configurationName = "ortolang";
-		
-		CallbackHandler cbh = new UsernamePasswordLoginContextFactory.NamePasswordCallbackHandler(username, password);
+        private AppConfigurationEntry createClientLoginModuleConfigEntry() {
+            Map<String, String> options = new HashMap<String, String>();
+            options.put("multi-threaded", "true");
+            options.put("restore-login-identity", "true");
+
+            return new AppConfigurationEntry("org.jboss.security.ClientLoginModule", AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options);
+        }
+    }
+
+    public static LoginContext createLoginContext(final String username, final String password) throws LoginException {
+        final String configurationName = "ortolang";
+
+        CallbackHandler cbh = new UsernamePasswordLoginContextFactory.NamePasswordCallbackHandler(username, password);
         Configuration config = new JBossJaasConfiguration(configurationName);
 
         return new LoginContext(configurationName, new Subject(), cbh, config);
-	}
+    }
 
 }

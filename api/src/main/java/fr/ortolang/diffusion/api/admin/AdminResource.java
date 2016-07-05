@@ -85,9 +85,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -196,7 +196,7 @@ public class AdminResource {
 	    	//TODO return with the metadata key
 	    	URI location = ApiUriBuilder.getApiUriBuilder().path(ObjectResource.class).path(form.getKey()).build();
 	    	return Response.created(location).build();
-	    } catch (DataCollisionException e) {
+	    } catch (DataCollisionException | URISyntaxException e) {
 	        LOGGER.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
 	        return Response.serverError().entity(e.getMessage()).build();
 	    }
@@ -291,7 +291,7 @@ public class AdminResource {
         long nbresults = event.systemCountEvents(etype, ofrom, otype, throwed, after);
         List<OrtolangEvent> events = (List<OrtolangEvent>) event.systemFindEvents(etype, ofrom, otype, throwed, after, offset, limit);
         
-        UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
+//        UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
         GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>();
         representation.setEntries(events);
         representation.setOffset((offset <= 0) ? 1 : offset);
@@ -311,10 +311,10 @@ public class AdminResource {
     public Response searchHandles(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("10000") @QueryParam("l") int limit, @QueryParam("filter") String filter, @DefaultValue("name") @QueryParam("type") String type) throws HandleStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/store/handle");
         List<Handle> handles = Collections.emptyList();
-        if ( type != null && type.equals("name") ) {
+        if ( type != null && "name".equals(type)) {
             handles = handle.findHandlesByName(offset, limit, filter);
         }
-        if ( type != null && type.equals("value") ) {
+        if ( type != null && "value".equals(type)) {
             handles = handle.findHandlesByValue(offset, limit, filter);
         } 
         return Response.ok(handles).build();

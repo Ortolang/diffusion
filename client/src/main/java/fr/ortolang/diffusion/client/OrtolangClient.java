@@ -72,401 +72,415 @@ import fr.ortolang.diffusion.client.account.OrtolangClientAccountManager;
 
 public class OrtolangClient {
 
-	private static final Logger LOGGER = Logger.getLogger(OrtolangClient.class.getName());
-	
-	private OrtolangClientAccountManager accountManager;
-	private WebTarget base;
-	private Client client;
-	private String currentUser = null;
-	private String authorization = null;
+    private static final Logger LOGGER = Logger.getLogger(OrtolangClient.class.getName());
 
-	private OrtolangClient() {
-		LOGGER.log(Level.INFO, "Creating new OrtolangClient");
-		ResteasyClientBuilder builder = new ResteasyClientBuilder();
-		builder.register(OrtolangClientCookieFilter.class);
-		if (Boolean.valueOf(OrtolangClientConfig.getInstance().getProperty("trustmanager.disabled"))) {
-			builder.disableTrustManager();
-		}
-		client = builder.build();
-		
-		base = client.target(OrtolangClientConfig.getInstance().getProperty("diffusion.api.url"));
-		accountManager = new OrtolangClientAccountManager(client);
-		
-		LOGGER.log(Level.INFO, "Client created");
-	}
+    private OrtolangClientAccountManager accountManager;
+    private WebTarget base;
+    private Client client;
+    private String currentUser = null;
+    private String authorization = null;
+
+    private OrtolangClient() throws IOException {
+        LOGGER.log(Level.INFO, "Creating new OrtolangClient");
+        ResteasyClientBuilder builder = new ResteasyClientBuilder();
+        builder.register(OrtolangClientCookieFilter.class);
+        if (Boolean.valueOf(OrtolangClientConfig.getInstance().getProperty("trustmanager.disabled"))) {
+            builder.disableTrustManager();
+        }
+        client = builder.build();
+
+        base = client.target(OrtolangClientConfig.getInstance().getProperty("diffusion.api.url"));
+        accountManager = new OrtolangClientAccountManager(client);
+
+        LOGGER.log(Level.INFO, "Client created");
+    }
 
     public static OrtolangClient getInstance() {
         return OrtolangClientHolder.INSTANCE;
     }
 
     private static class OrtolangClientHolder {
-        static final OrtolangClient INSTANCE = new OrtolangClient();
+        static final OrtolangClient INSTANCE;
+        static {
+            OrtolangClient ortolangClient;
+            try {
+                ortolangClient = new OrtolangClient();
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Cannot instantiate OrtolangClient", e);
+                ortolangClient = null;
+            }
+            INSTANCE = ortolangClient;
+        }
+
+        private OrtolangClientHolder() {
+        }
     }
-	
-	public OrtolangClientAccountManager getAccountManager() {
-		return accountManager;
-	}
-	
-	public void close() {
-		client.close();
-	}
 
-	public void login(String user) throws OrtolangClientException {
-		if (accountManager.exists(user)) {
-			currentUser = user;
-			return;
-		}
-		throw new OrtolangClientException("user is unknown, use OrtolangClientAccountManager to set user authentication information");
-	}
+    public OrtolangClientAccountManager getAccountManager() {
+        return accountManager;
+    }
 
-	public void logout() {
-		currentUser = null;
-	}
-	
-	private synchronized void updateAuthorization() throws OrtolangClientAccountException {
-		if (currentUser != null) {
-			authorization = accountManager.getHttpAuthorisationHeader(currentUser);
-		}
-	}
+    public void close() {
+        client.close();
+    }
 
-	private Invocation.Builder injectAuthHeader(Invocation.Builder builder) {
-		if (authorization != null) {
-			builder.header("Authorization", authorization);
-		}
-		return builder;
-	}
+    public void login(String user) throws OrtolangClientException {
+        if (accountManager.exists(user)) {
+            currentUser = user;
+            return;
+        }
+        throw new OrtolangClientException("user is unknown, use OrtolangClientAccountManager to set user authentication information");
+    }
 
-	public synchronized String connectedProfile() throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/profiles/connected");
-		Response response = injectAuthHeader(target.request(MediaType.APPLICATION_JSON_TYPE)).get();
-		if (response.getStatus() == Status.OK.getStatusCode()) {
-			String json = response.readEntity(String.class);
-			JsonObject object = Json.createReader(new StringReader(json)).readObject();
-			response.close();
-			return object.getJsonString("key").getString();
-		} else {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-	}
+    public void logout() {
+        currentUser = null;
+    }
 
-	public synchronized JsonObject listObjects(String service, String type, String status, int offset, int limit) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/objects");
-		Builder request = target.queryParam("service", service).queryParam("type", type).queryParam("status", status)
-				.queryParam("offset", offset).queryParam("limit", limit).request();
-		Response response = injectAuthHeader(request).accept(MediaType.APPLICATION_JSON_TYPE).get();
-		if (response.getStatus() == Status.OK.getStatusCode()) {
-			String object = response.readEntity(String.class);
-			JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
-			response.close();
-			return jsonObject;
-		} else {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-	}
-	
-	public synchronized boolean isObjectExists(String key) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("objects").path(key);
-		Response response = injectAuthHeader(target.request()).accept(MediaType.MEDIA_TYPE_WILDCARD).get();
-		if (response.getStatus() == Status.OK.getStatusCode() || response.getStatus() == Status.UNAUTHORIZED.getStatusCode()) {
-			response.close();
-			return true;
-		} else if (response.getStatus() == Status.NOT_FOUND.getStatusCode()) {
-			response.close();
-			return false;
-		} else {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-	}
+    private synchronized void updateAuthorization() throws OrtolangClientAccountException {
+        if (currentUser != null) {
+            authorization = accountManager.getHttpAuthorisationHeader(currentUser);
+        }
+    }
 
-	public synchronized JsonObject getObject(String key) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/objects").path(key);
-		Response response = injectAuthHeader(target.request()).accept(MediaType.APPLICATION_JSON_TYPE).get();
-		if (response.getStatus() == Status.OK.getStatusCode()) {
-			String object = response.readEntity(String.class);
-			JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
-			response.close();
-			return jsonObject;
-		} else if (response.getStatus() == Status.NOT_FOUND.getStatusCode()) {
-			response.close();
-			return null;
-		} else {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-	}
+    private Invocation.Builder injectAuthHeader(Invocation.Builder builder) {
+        if (authorization != null) {
+            builder.header("Authorization", authorization);
+        }
+        return builder;
+    }
 
-	public synchronized void reindex(String key) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/objects").path(key).path("/index");
-		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity("", "text/plain"));
-		if (response.getStatus() != Status.OK.getStatusCode()) {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-		response.close();
-	}
-	
-	public synchronized Path downloadObject(String key) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("content").path("key").path(key).queryParam("fd", "true");
-		Response response = injectAuthHeader(target.request()).accept(MediaType.WILDCARD_TYPE).get();
-		if (response.getStatus() == Status.OK.getStatusCode()) {
-			try {
-				Path temp = Files.createTempFile("ortolang-client", ".tmp");
-				try (InputStream is = response.readEntity(InputStream.class); OutputStream os = Files.newOutputStream(temp)) {
-					byte[] buffer = new byte[1024];
-					int nbreads = 0;
-					while ( (nbreads = is.read(buffer)) > -1 ) {
-						os.write(buffer, 0, nbreads);
-					}
-					return temp;
-				} finally {
-					response.close();
-				}
-			} catch (IOException e) {
-				LOGGER.log(Level.SEVERE, "unable to download file for key: " + key, e);
-				throw new OrtolangClientException("unable to download file for key: " + key, e);
-			} 
-		} else {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-	}
+    public synchronized String connectedProfile() throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/profiles/connected");
+        Response response = injectAuthHeader(target.request(MediaType.APPLICATION_JSON_TYPE)).get();
+        if (response.getStatus() == Status.OK.getStatusCode()) {
+            String json = response.readEntity(String.class);
+            JsonObject object = Json.createReader(new StringReader(json)).readObject();
+            response.close();
+            return object.getJsonString("key").getString();
+        } else {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+    }
 
-	public synchronized void createWorkspace(String key, String type, String name) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/workspaces");
-		Form form = new Form().param("key", key).param("type", type).param("name", name);
-		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
-		if (response.getStatus() != Status.CREATED.getStatusCode()) {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-	}
+    public synchronized JsonObject listObjects(String service, String type, String status, int offset, int limit) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/objects");
+        Builder request = target.queryParam("service", service).queryParam("type", type).queryParam("status", status)
+                .queryParam("offset", offset).queryParam("limit", limit).request();
+        Response response = injectAuthHeader(request).accept(MediaType.APPLICATION_JSON_TYPE).get();
+        if (response.getStatus() == Status.OK.getStatusCode()) {
+            String object = response.readEntity(String.class);
+            JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
+            response.close();
+            return jsonObject;
+        } else {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+    }
 
-	public synchronized JsonObject readWorkspace(String key) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/workspaces").path(key);
-		Response response = injectAuthHeader(target.request()).accept(MediaType.APPLICATION_JSON_TYPE).get();
-		if (response.getStatus() == Status.OK.getStatusCode()) {
-			String object = response.readEntity(String.class);
-			JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
-			response.close();
-			return jsonObject;
-		} else {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-	}
+    public synchronized boolean isObjectExists(String key) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("objects").path(key);
+        Response response = injectAuthHeader(target.request()).accept(MediaType.MEDIA_TYPE_WILDCARD).get();
+        if (response.getStatus() == Status.OK.getStatusCode() || response.getStatus() == Status.UNAUTHORIZED.getStatusCode()) {
+            response.close();
+            return true;
+        } else if (response.getStatus() == Status.NOT_FOUND.getStatusCode()) {
+            response.close();
+            return false;
+        } else {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+    }
 
-	public synchronized void writeCollection(String workspace, String path, String description) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/workspaces/" + workspace + "/elements");
-		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
-		mdo.addFormData("path", new ByteArrayInputStream(path.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("type", new ByteArrayInputStream("collection".getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("description", new ByteArrayInputStream(description.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
-		};
-		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
-		if (response.getStatus() != Status.CREATED.getStatusCode() && response.getStatus() != Status.OK.getStatusCode()) {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-		response.close();
-	}
+    public synchronized JsonObject getObject(String key) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/objects").path(key);
+        Response response = injectAuthHeader(target.request()).accept(MediaType.APPLICATION_JSON_TYPE).get();
+        if (response.getStatus() == Status.OK.getStatusCode()) {
+            String object = response.readEntity(String.class);
+            JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
+            response.close();
+            return jsonObject;
+        } else if (response.getStatus() == Status.NOT_FOUND.getStatusCode()) {
+            response.close();
+            return null;
+        } else {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+    }
 
-	public synchronized void writeDataObject(String workspace, String path, String description, File content, File preview) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/workspaces/" + workspace + "/elements");
-		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
-		mdo.addFormData("path", new ByteArrayInputStream(path.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("type", new ByteArrayInputStream("object".getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("description", new ByteArrayInputStream(description.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		try {
-			if (content != null) {
-				mdo.addFormData("stream", new FileInputStream(content), MediaType.APPLICATION_OCTET_STREAM_TYPE);
-			}
-			if (preview != null) {
-				mdo.addFormData("preview", new FileInputStream(preview), MediaType.APPLICATION_OCTET_STREAM_TYPE);
-			}
-		} catch (FileNotFoundException e) {
-			throw new OrtolangClientException("unable to read file " + e.getMessage(), e);
-		}
-		GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
-		};
-		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
-		if (response.getStatus() != Status.CREATED.getStatusCode() && response.getStatus() != Status.OK.getStatusCode()) {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-		response.close();
-	}
+    public synchronized void reindex(String key) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/objects").path(key).path("/index");
+        Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity("", "text/plain"));
+        if (response.getStatus() != Status.OK.getStatusCode()) {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+        response.close();
+    }
 
-	public synchronized void writeMetaData(String workspace, String path, String name, String format, File content) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/workspaces/" + workspace + "/elements");
-		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
-		mdo.addFormData("path", new ByteArrayInputStream(path.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("type", new ByteArrayInputStream("metadata".getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("format", new ByteArrayInputStream(format.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		try {
-			if (content != null) {
-				mdo.addFormData("stream", new FileInputStream(content), MediaType.APPLICATION_OCTET_STREAM_TYPE);
-			}
-		} catch (FileNotFoundException e) {
-			throw new OrtolangClientException("unable to read file " + e.getMessage(), e);
-		}
-		GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
-		};
-		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
-		if (response.getStatus() != Status.CREATED.getStatusCode() && response.getStatus() != Status.OK.getStatusCode()) {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-		response.close();
-	}
+    public synchronized Path downloadObject(String key) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("content").path("key").path(key).queryParam("fd", "true");
+        Response response = injectAuthHeader(target.request()).accept(MediaType.WILDCARD_TYPE).get();
+        if (response.getStatus() == Status.OK.getStatusCode()) {
+            try {
+                Path temp = Files.createTempFile("ortolang-client", ".tmp");
+                try (InputStream is = response.readEntity(InputStream.class); OutputStream os = Files.newOutputStream(temp)) {
+                    byte[] buffer = new byte[1024];
+                    int nbreads;
+                    while ( (nbreads = is.read(buffer)) > -1 ) {
+                        os.write(buffer, 0, nbreads);
+                    }
+                    return temp;
+                } finally {
+                    response.close();
+                }
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "unable to download file for key: " + key, e);
+                throw new OrtolangClientException("unable to download file for key: " + key, e);
+            }
+        } else {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+    }
 
-	public synchronized JsonObject getWorkspaceElement(String workspace, String root, String path) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("workspaces").path(workspace).path("elements");
-		Response response = injectAuthHeader(target.queryParam("path", path).queryParam("root", root).request(MediaType.APPLICATION_JSON_TYPE)).get();
-		if (response.getStatus() == Status.OK.getStatusCode()) {
-			String object = response.readEntity(String.class);
-			JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
-			response.close();
-			return jsonObject;
-		} else {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-	}
+    public synchronized void createWorkspace(String key, String type, String name) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/workspaces");
+        Form form = new Form().param("key", key).param("type", type).param("name", name);
+        Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
+        if (response.getStatus() != Status.CREATED.getStatusCode()) {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+    }
 
-	public synchronized void snapshotWorkspace(String workspace) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("workspaces").path(workspace).path("snapshots");
-		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(null, "text/plain"));
-		if (response.getStatus() != Status.OK.getStatusCode()) {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-		response.close();
-	}
-	
-	public synchronized String createRemoteProcess(String toolId, String name, String toolKey) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/runtime/remote-processes");
-		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
-		mdo.addFormData("tool-jobid", new ByteArrayInputStream(toolId.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("tool-key", new ByteArrayInputStream(toolKey.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("tool-name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		
-		GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {};
-		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA));
-		if (response.getStatus() != Status.CREATED.getStatusCode()) {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		} else {
-			String path = response.getLocation().getPath();
-			response.close();
-			return path.substring(path.lastIndexOf("/") + 1);
-		}
-	}
+    public synchronized JsonObject readWorkspace(String key) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/workspaces").path(key);
+        Response response = injectAuthHeader(target.request()).accept(MediaType.APPLICATION_JSON_TYPE).get();
+        if (response.getStatus() == Status.OK.getStatusCode()) {
+            String object = response.readEntity(String.class);
+            JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
+            response.close();
+            return jsonObject;
+        } else {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+    }
 
-	 public synchronized void updateRemoteProcess(String pid, String state, String log, long start, long stop, String activity) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/runtime/remote-processes/").path(pid);
-		Form form = new Form();
-		if(state != null){
-			form.param("status", state);
-		}
-		if(log != null){
-			form.param("log", log);
-		}
-		if(start != 0){
-			form.param("start", Long.toString(start));
-		}
-		if(stop != 0){
-			form.param("stop", Long.toString(stop));
-		}
-		if(activity != null){
-			form.param("activity", activity);
-		}
-		
-		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
-		if (response.getStatus() != Status.OK.getStatusCode()) {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		} else {
-			response.close();
-		}
-	}
+    public synchronized void writeCollection(String workspace, String path, String description) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/workspaces/" + workspace + "/elements");
+        MultipartFormDataOutput mdo = new MultipartFormDataOutput();
+        mdo.addFormData("path", new ByteArrayInputStream(path.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        mdo.addFormData("type", new ByteArrayInputStream("collection".getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        mdo.addFormData("description", new ByteArrayInputStream(description.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
+        };
+        Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
+        if (response.getStatus() != Status.CREATED.getStatusCode() && response.getStatus() != Status.OK.getStatusCode()) {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+        response.close();
+    }
 
-	
-	public synchronized String createProcess(String type, String name, Map<String, String> params, Map<String, File> attachments) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/runtime/processes");
-		MultipartFormDataOutput mdo = new MultipartFormDataOutput();
-		mdo.addFormData("process-type", new ByteArrayInputStream(type.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("process-name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		mdo.addFormData("name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		for (Entry<String, String> param : params.entrySet()) {
-			mdo.addFormData(param.getKey(), new ByteArrayInputStream(param.getValue().getBytes()), MediaType.TEXT_PLAIN_TYPE);
-		}
-		try {
-			for (Entry<String, File> attachment : attachments.entrySet()) {
-				mdo.addFormData(attachment.getKey(), new FileInputStream(attachment.getValue()), MediaType.APPLICATION_OCTET_STREAM_TYPE);
-			}
-		} catch (FileNotFoundException e) {
-			throw new OrtolangClientException("unable to read file " + e.getMessage(), e);
-		}
-		GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
-		};
-		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
-		if (response.getStatus() != Status.CREATED.getStatusCode()) {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		} else {
-			String path = response.getLocation().getPath();
-			response.close();
-			return path.substring(path.lastIndexOf("/") + 1);
-		}
-	}
+    public synchronized void writeDataObject(String workspace, String path, String description, File content, File preview) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/workspaces/" + workspace + "/elements");
+        MultipartFormDataOutput mdo = new MultipartFormDataOutput();
+        mdo.addFormData("path", new ByteArrayInputStream(path.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        mdo.addFormData("type", new ByteArrayInputStream("object".getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        mdo.addFormData("description", new ByteArrayInputStream(description.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        try {
+            if (content != null) {
+                mdo.addFormData("stream", new FileInputStream(content), MediaType.APPLICATION_OCTET_STREAM_TYPE);
+            }
+            if (preview != null) {
+                mdo.addFormData("preview", new FileInputStream(preview), MediaType.APPLICATION_OCTET_STREAM_TYPE);
+            }
+        } catch (FileNotFoundException e) {
+            throw new OrtolangClientException("unable to read file " + e.getMessage(), e);
+        }
+        GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
+        };
+        Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
+        if (response.getStatus() != Status.CREATED.getStatusCode() && response.getStatus() != Status.OK.getStatusCode()) {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+        response.close();
+    }
 
-	public synchronized JsonObject getProcess(String key) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/runtime/processes").path(key);
-		Response response = injectAuthHeader(target.request(MediaType.APPLICATION_JSON_TYPE)).get();
-		if (response.getStatus() == Status.OK.getStatusCode()) {
-			String object = response.readEntity(String.class);
-			JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
-			response.close();
-			return jsonObject;
-		} else {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-	}
+    public synchronized void writeMetaData(String workspace, String path, String name, String format, File content) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/workspaces/" + workspace + "/elements");
+        MultipartFormDataOutput mdo = new MultipartFormDataOutput();
+        mdo.addFormData("path", new ByteArrayInputStream(path.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        mdo.addFormData("type", new ByteArrayInputStream("metadata".getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        mdo.addFormData("name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        mdo.addFormData("format", new ByteArrayInputStream(format.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        try {
+            if (content != null) {
+                mdo.addFormData("stream", new FileInputStream(content), MediaType.APPLICATION_OCTET_STREAM_TYPE);
+            }
+        } catch (FileNotFoundException e) {
+            throw new OrtolangClientException("unable to read file " + e.getMessage(), e);
+        }
+        GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
+        };
+        Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
+        if (response.getStatus() != Status.CREATED.getStatusCode() && response.getStatus() != Status.OK.getStatusCode()) {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+        response.close();
+    }
 
-	public synchronized void submitToolJob(String key, String name, String status) throws OrtolangClientException, OrtolangClientAccountException {
-		updateAuthorization();
-		WebTarget target = base.path("/tools/" + key + "/job-new");
-		Form form = new Form().param("key", key).param("status", status).param("name", name);
-		Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
-		if (response.getStatus() != Status.CREATED.getStatusCode()) {
-			response.close();
-			throw new OrtolangClientException("unexpected response code: " + response.getStatus());
-		}
-		response.close();
-	}
+    public synchronized JsonObject getWorkspaceElement(String workspace, String root, String path) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("workspaces").path(workspace).path("elements");
+        Response response = injectAuthHeader(target.queryParam("path", path).queryParam("root", root).request(MediaType.APPLICATION_JSON_TYPE)).get();
+        if (response.getStatus() == Status.OK.getStatusCode()) {
+            String object = response.readEntity(String.class);
+            JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
+            response.close();
+            return jsonObject;
+        } else {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+    }
+
+    public synchronized void snapshotWorkspace(String workspace) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("workspaces").path(workspace).path("snapshots");
+        Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(null, "text/plain"));
+        if (response.getStatus() != Status.OK.getStatusCode()) {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+        response.close();
+    }
+
+    public synchronized String createRemoteProcess(String toolId, String name, String toolKey) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/runtime/remote-processes");
+        MultipartFormDataOutput mdo = new MultipartFormDataOutput();
+        mdo.addFormData("tool-jobid", new ByteArrayInputStream(toolId.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        mdo.addFormData("tool-key", new ByteArrayInputStream(toolKey.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        mdo.addFormData("tool-name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        mdo.addFormData("name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+
+        GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
+        };
+        Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA));
+        if (response.getStatus() != Status.CREATED.getStatusCode()) {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        } else {
+            String path = response.getLocation().getPath();
+            response.close();
+            return path.substring(path.lastIndexOf("/") + 1);
+        }
+    }
+
+    public synchronized void updateRemoteProcess(String pid, String state, String log, long start, long stop, String activity) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/runtime/remote-processes/").path(pid);
+        Form form = new Form();
+        if(state != null){
+            form.param("status", state);
+        }
+        if(log != null){
+            form.param("log", log);
+        }
+        if(start != 0){
+            form.param("start", Long.toString(start));
+        }
+        if(stop != 0){
+            form.param("stop", Long.toString(stop));
+        }
+        if(activity != null){
+            form.param("activity", activity);
+        }
+
+        Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
+        if (response.getStatus() != Status.OK.getStatusCode()) {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        } else {
+            response.close();
+        }
+    }
+
+
+    public synchronized String createProcess(String type, String name, Map<String, String> params, Map<String, File> attachments) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/runtime/processes");
+        MultipartFormDataOutput mdo = new MultipartFormDataOutput();
+        mdo.addFormData("process-type", new ByteArrayInputStream(type.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        mdo.addFormData("process-name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        mdo.addFormData("name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        for (Entry<String, String> param : params.entrySet()) {
+            mdo.addFormData(param.getKey(), new ByteArrayInputStream(param.getValue().getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        }
+        try {
+            for (Entry<String, File> attachment : attachments.entrySet()) {
+                mdo.addFormData(attachment.getKey(), new FileInputStream(attachment.getValue()), MediaType.APPLICATION_OCTET_STREAM_TYPE);
+            }
+        } catch (FileNotFoundException e) {
+            throw new OrtolangClientException("unable to read file " + e.getMessage(), e);
+        }
+        GenericEntity<MultipartFormDataOutput> entity = new GenericEntity<MultipartFormDataOutput>(mdo) {
+        };
+        Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(entity, MediaType.MULTIPART_FORM_DATA_TYPE));
+        if (response.getStatus() != Status.CREATED.getStatusCode()) {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        } else {
+            String path = response.getLocation().getPath();
+            response.close();
+            return path.substring(path.lastIndexOf("/") + 1);
+        }
+    }
+
+    public synchronized JsonObject getProcess(String key) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/runtime/processes").path(key);
+        Response response = injectAuthHeader(target.request(MediaType.APPLICATION_JSON_TYPE)).get();
+        if (response.getStatus() == Status.OK.getStatusCode()) {
+            String object = response.readEntity(String.class);
+            JsonObject jsonObject = Json.createReader(new StringReader(object)).readObject();
+            response.close();
+            return jsonObject;
+        } else {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+    }
+
+    public synchronized void submitToolJob(String key, String name, String status) throws OrtolangClientException, OrtolangClientAccountException {
+        updateAuthorization();
+        WebTarget target = base.path("/tools/" + key + "/job-new");
+        Form form = new Form().param("key", key).param("status", status).param("name", name);
+        Response response = injectAuthHeader(target.request(MediaType.MEDIA_TYPE_WILDCARD)).post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
+        if (response.getStatus() != Status.CREATED.getStatusCode()) {
+            response.close();
+            throw new OrtolangClientException("unexpected response code: " + response.getStatus());
+        }
+        response.close();
+    }
 
 }

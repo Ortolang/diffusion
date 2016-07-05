@@ -47,7 +47,6 @@ import fr.ortolang.diffusion.core.entity.*;
 import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.rendering.RenderingService;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -56,7 +55,6 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.template.TemplateEngine;
 import fr.ortolang.diffusion.template.TemplateEngineException;
-import fr.ortolang.diffusion.thumbnail.ThumbnailService;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
@@ -99,14 +97,10 @@ public class ContentResource {
     @EJB
     private BinaryStoreService store;
     @EJB
-    private ThumbnailService thumbnails;
-    @EJB
-    private RenderingService viewer;
-    @EJB
     private SecurityService security;
     @Context
     private UriInfo uriInfo;
-    
+
     private static Map<String, Map<String, Object>> exportations;
 
     static  {
@@ -116,9 +110,9 @@ public class ContentResource {
     @GET
     @Path("/exportations/{id}")
     @SuppressWarnings("unchecked")
-    public Response resumeExportation(@PathParam("id") String id, @Context Request request, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
+    public Response resumeExportation(@PathParam("id") String id, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         Map<String, Object> params = exportations.get(id);
-        Response response = export(false, (String) params.get("followsymlink"), (String) params.get("filename"), (String) params.get("format"), (List<String>) params.get("path"), request,
+        Response response = export(false, (String) params.get("followsymlink"), (String) params.get("filename"), (String) params.get("format"), (List<String>) params.get("path"),
                 securityContext);
         exportations.remove(id);
         return response;
@@ -130,21 +124,21 @@ public class ContentResource {
     @Consumes({ MediaType.APPLICATION_FORM_URLENCODED })
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response exportPost(final @QueryParam("scope") @DefaultValue("") String scope, final @FormParam("followsymlink") @DefaultValue("false") String followSymlink, @FormParam("filename") @DefaultValue("download") String filename,
-            @FormParam("format") @DefaultValue("zip") String format, final @FormParam("path") List<String> paths, @Context Request request, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
+            @FormParam("format") @DefaultValue("zip") String format, final @FormParam("path") List<String> paths, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "POST /export");
-        return export(!scope.isEmpty(), followSymlink, filename, format, paths, request, securityContext);
+        return export(!scope.isEmpty(), followSymlink, filename, format, paths, securityContext);
     }
 
     @GET
     @Path("/export")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response exportGet(final @QueryParam("scope") @DefaultValue("") String scope, final @QueryParam("followsymlink") @DefaultValue("false") String followSymlink, @QueryParam("filename") @DefaultValue("download") String filename,
-            @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, @Context Request request, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
+            @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "GET /export");
-        return export(!scope.isEmpty(), followSymlink, filename, format, paths, request, securityContext);
+        return export(!scope.isEmpty(), followSymlink, filename, format, paths, securityContext);
     }
 
-    private Response export(boolean connected, String followSymlink, String filename, String format, List<String> paths, Request request, SecurityContext securityContext) throws UnsupportedEncodingException {
+    private Response export(boolean connected, String followSymlink, String filename, String format, List<String> paths, SecurityContext securityContext) throws UnsupportedEncodingException {
         if (connected && securityContext.getUserPrincipal() == null) {
             LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
             Map<String, Object> params = new HashMap<>();
@@ -367,7 +361,7 @@ public class ContentResource {
                     representation.setOrder(order);
                     representation.setLinkbykey(true);
                     representation.setElements(new ArrayList<CollectionElement>(((Collection) object).getElements()));
-                    if (asc.equals("D")) {
+                    if ("D".equals(asc)) {
                         switch (order) {
                         case "T":
                             Collections.sort(representation.getElements(), CollectionElement.ElementTypeDescComparator);
@@ -445,7 +439,7 @@ public class ContentResource {
             for (String alias : aliases) {
                 elements.add(new CollectionElement(Collection.OBJECT_TYPE, alias, -1, -1, "ortolang/workspace", ""));
             }
-            if (asc.equals("D")) {
+            if ("D".equals(asc)) {
                 Collections.sort(elements, CollectionElement.ElementNameDescComparator);
                 representation.setAsc(false);
             } else {
@@ -510,7 +504,7 @@ public class ContentResource {
                 for (TagElement tag : workspace.getTags()) {
                     elements.add(new CollectionElement(Collection.OBJECT_TYPE, tag.getName(), -1, -1, "ortolang/tag", workspace.findSnapshotByName(tag.getSnapshot()).getKey()));
                 }
-                if (asc.equals("D")) {
+                if ("D".equals(asc)) {
                     Collections.sort(elements, CollectionElement.ElementNameDescComparator);
                     representation.setAsc(false);
                 } else {
@@ -607,7 +601,7 @@ public class ContentResource {
             if (builder == null) {
                 Collection collection = core.readCollection(rkey);
                 representation.setElements(new ArrayList<CollectionElement>(collection.getElements()));
-                if (asc.equals("D")) {
+                if ("D".equals(asc)) {
                     switch (order) {
                     case "T":
                         Collections.sort(representation.getElements(), CollectionElement.ElementTypeDescComparator);
@@ -672,7 +666,7 @@ public class ContentResource {
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response path(@PathParam("alias") String alias, @PathParam("root") final String root, @PathParam("path") String path, @QueryParam("fd") boolean download,
             @QueryParam("O") @DefaultValue("A") String asc, @QueryParam("C") @DefaultValue("N") String order, @QueryParam("l") @DefaultValue("true") boolean login, @Context SecurityContext securityContext,
-            @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AccessDeniedException, AliasNotFoundException, InvalidPathException,
+            @Context Request request) throws TemplateEngineException, CoreServiceException, KeyNotFoundException, AliasNotFoundException, InvalidPathException,
             OrtolangException, BinaryStoreServiceException, DataNotFoundException, URISyntaxException, BrowserServiceException, UnsupportedEncodingException, SecurityServiceException,
             PathNotFoundException {
         LOGGER.log(Level.INFO, "GET /content/" + alias + "/" + root + "/" + path);
@@ -735,7 +729,7 @@ public class ContentResource {
                     builder.lastModified(lmd);
                 } else if (object instanceof Collection) {
                     representation.setElements(new ArrayList<CollectionElement>(((Collection) object).getElements()));
-                    if (asc.equals("D")) {
+                    if ("D".equals(asc)) {
                         switch (order) {
                         case "T":
                             Collections.sort(representation.getElements(), CollectionElement.ElementTypeDescComparator);
@@ -802,7 +796,7 @@ public class ContentResource {
 
     interface ArchiveEntryFactory {
 
-        public ArchiveEntry createArchiveEntry(String name, long modificationDate, long size);
+        ArchiveEntry createArchiveEntry(String name, long modificationDate, long size);
     }
 
 }

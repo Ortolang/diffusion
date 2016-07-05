@@ -57,7 +57,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class TransParser extends XMLParser {
+class TransParser extends XMLParser {
 
     private static final Logger LOGGER = Logger.getLogger(TransParser.class.getName());
 
@@ -78,7 +78,7 @@ public class TransParser extends XMLParser {
             Document document = context.get(Document.class);
             transformer.transform(new DOMSource(document), new StreamResult(outputStream));
             metadata.add("ortolang:json", outputStream.toString());
-            metadata.add(OrtolangXMLParser.xmlTypeKey, "Trans");
+            metadata.add(OrtolangXMLParser.XML_TYPE_KEY, "Trans");
             outputStream.close();
         } catch (TransformerException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);

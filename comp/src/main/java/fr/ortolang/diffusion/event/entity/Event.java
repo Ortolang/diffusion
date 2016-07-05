@@ -180,18 +180,15 @@ public class Event extends OrtolangEvent implements Serializable {
 
     @PostLoad
     private void onPostLoad() {
-        if (serializedArgs != null && serializedArgs.length() > 0 ) {
-            try {
-                this.args = deserializeArgs(serializedArgs);
-                LOGGER.log(Level.FINEST, "arguments deserialized for event");
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "unable to deserialize event arguments");
-            }
-        }
+        postLoadUpdate();
     }
 
     @PostUpdate
     private void onPostUpdate() {
+        postLoadUpdate();
+    }
+
+    private void postLoadUpdate() {
         if (serializedArgs != null && serializedArgs.length() > 0 ) {
             try {
                 this.args = deserializeArgs(serializedArgs);
@@ -203,7 +200,7 @@ public class Event extends OrtolangEvent implements Serializable {
     }
 
     private static String serializeArgs(Map<String, String> args) throws IOException {
-        if (args == null || args.size() == 0 ) {
+        if (args == null || args.isEmpty() ) {
             return "";
         }
         Properties props = new Properties();

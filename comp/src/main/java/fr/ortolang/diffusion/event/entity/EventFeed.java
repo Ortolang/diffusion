@@ -107,7 +107,7 @@ public class EventFeed extends OrtolangObject {
         return filters;
     }
 
-    public void setFilters(ArrayList<EventFeedFilter> filters) {
+    public void setFilters(List<EventFeedFilter> filters) {
         this.filters = filters;
     }
     
