@@ -110,7 +110,6 @@ public class JsonStoreServiceBean implements JsonStoreService {
                     db.create();
                     db.command(new OCommandSQL("CREATE INDEX ortolangKey unique string")).execute();
                 }
-                ODatabaseRecordThreadLocal.INSTANCE.set(db);
             }
             pool = new OPartitionedDatabasePool("plocal:" + this.base.toFile().getAbsolutePath(), "admin", "admin");
         } catch (Exception e) {
@@ -199,9 +198,14 @@ public class JsonStoreServiceBean implements JsonStoreService {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void remove(String key) throws JsonStoreServiceException {
         LOGGER.log(Level.FINE, "Removing object with key: " + key);
-        ODocument oldDoc = getDocumentByKey(key);
-        if (oldDoc != null) {
-            oldDoc.delete();
+        try (ODatabaseDocumentTx db = pool.acquire()) {
+            ODatabaseRecordThreadLocal.INSTANCE.set(db);
+            ODocument oldDoc = getDocumentByKey(key);
+            if (oldDoc != null) {
+                oldDoc.delete();
+            }
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "unable to remove object ", e);
         }
     }
 

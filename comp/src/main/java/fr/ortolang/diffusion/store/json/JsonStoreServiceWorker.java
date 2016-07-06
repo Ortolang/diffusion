@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.store.json;
  * #L%
  */
 
+import com.orientechnologies.common.exception.OException;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangIndexableObjectFactory;
@@ -177,7 +178,7 @@ public class JsonStoreServiceWorker {
                             LOGGER.log(Level.WARNING, "unknown job action: " + job.getAction());
                         }
                         jobService.remove(job.getId());
-                    } catch (JsonStoreServiceException | OrtolangException e) {
+                    } catch (OException | JsonStoreServiceException | OrtolangException e) {
                         LOGGER.log(Level.WARNING, "unable to perform job action " + job.getAction() + " for key " + job.getTarget(), e);
                         jobService.updateFailingJob(job, e);
                     }
