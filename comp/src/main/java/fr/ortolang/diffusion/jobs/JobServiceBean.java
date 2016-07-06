@@ -134,7 +134,7 @@ public class JobServiceBean implements JobService {
 
     @Override
     public void updateFailingJob(Job job, Exception e) {
-        if (e instanceof KeyNotFoundException) {
+        if (e instanceof KeyNotFoundException || (e.getCause() != null && e.getCause() instanceof KeyNotFoundException)) {
             LOGGER.log(Level.WARNING, "Key not found: removing job of type " + job.getType() + " (action: " + job.getAction() + ", target: " + job.getTarget() + ")");
             remove(job.getId());
             return;
@@ -146,7 +146,9 @@ public class JobServiceBean implements JobService {
         }
         job.setParameter(Job.FAILING_TIMES_KEY, times != null ? times : "1");
         job.setParameter(Job.FAILING_EXPLANATION_KEY, e.toString());
-        job.setParameter(Job.FAILING_CAUSED_BY_KEY, e.getCause().toString());
+        if (e.getCause() != null) {
+            job.setParameter(Job.FAILING_CAUSED_BY_KEY, e.getCause().toString());
+        }
         update(job);
     }
 
