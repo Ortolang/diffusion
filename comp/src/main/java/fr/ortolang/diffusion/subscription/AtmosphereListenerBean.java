@@ -104,7 +104,7 @@ public class AtmosphereListenerBean implements MessageListener {
                 Set<Filter> filters = new HashSet<>(subscriptionRegistryEntry.getValue().getFilters());
                 filters.stream().filter(filter -> filter.matches(event)).forEach(filter -> {
                     LOGGER.log(Level.FINE, "Matching filter " + filter);
-                    LOGGER.log(Level.INFO, "Sending atmosphere message to " + subscriptionRegistryEntry.getKey());
+                    LOGGER.log(Level.FINE, "Sending atmosphere message to " + subscriptionRegistryEntry.getKey());
                     subscriptionRegistryEntry.getValue().getBroadcaster().broadcast(event);
                     if (hasToBeRemoved(filter, event)) {
                         LOGGER.log(Level.INFO, "Removing filter from " + subscriptionRegistryEntry.getKey() + " subscription");
