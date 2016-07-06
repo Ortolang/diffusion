@@ -59,6 +59,8 @@ public class Job implements Serializable, Delayed {
 
     public static final String FAILING_EXPLANATION_KEY = "failingExplanation";
 
+    public static final String FAILING_CAUSED_BY_KEY = "failingCausedBy";
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
