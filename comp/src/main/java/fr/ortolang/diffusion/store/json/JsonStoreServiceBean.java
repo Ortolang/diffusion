@@ -51,6 +51,7 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.*;
 
+import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool;
@@ -109,6 +110,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
                     db.create();
                     db.command(new OCommandSQL("CREATE INDEX ortolangKey unique string")).execute();
                 }
+                ODatabaseRecordThreadLocal.INSTANCE.set(db);
             }
             pool = new OPartitionedDatabasePool("plocal:" + this.base.toFile().getAbsolutePath(), "admin", "admin");
         } catch (Exception e) {
