@@ -38,6 +38,7 @@ import java.net.URI;
  * #L%
  */
 
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,6 +57,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilderException;
 
 import org.jboss.resteasy.annotations.GZIP;
 
@@ -115,7 +117,7 @@ public class ReferentialEntityResource {
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @GZIP
-    public Response create(@FormParam(value = "name") String name, @FormParam("type") String type, @FormParam("content") String content) throws ReferentialServiceException, AccessDeniedException, KeyAlreadyExistsException {
+    public Response create(@FormParam(value = "name") String name, @FormParam("type") String type, @FormParam("content") String content) throws ReferentialServiceException, AccessDeniedException, KeyAlreadyExistsException, IllegalArgumentException, UriBuilderException, URISyntaxException {
     	LOGGER.log(Level.INFO, "POST(application/json) /referentialentities");
     	if (name == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'name' is mandatory").build();
