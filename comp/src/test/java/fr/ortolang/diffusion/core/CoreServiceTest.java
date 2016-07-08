@@ -36,6 +36,13 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -48,8 +55,6 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
-
-import fr.ortolang.diffusion.registry.RegistryServiceException;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -78,10 +83,10 @@ import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
-import static org.junit.Assert.*;
 
 @RunWith(Arquillian.class)
 public class CoreServiceTest {
@@ -569,6 +574,104 @@ public class CoreServiceTest {
             assertNull(collectionHead.findElementByName("n"));
 
             LOGGER.log(Level.INFO, walkWorkspace(wsk));
+
+        } finally {
+            loginContext.logout();
+        }
+    }
+    
+    @Test
+    public void testUpdateDataObjectWithSnapshot()
+            throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, InvalidPathException,
+            CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException, RegistryServiceException {
+        LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
+        loginContext.login();
+        try {
+            LOGGER.log(Level.INFO, membership.getProfileKeyForConnectedIdentifier());
+            try {
+                membership.createProfile("User", "ONE", "user.one@ortolang.fr");
+            } catch (ProfileAlreadyExistsException e) {
+                LOGGER.log(Level.INFO, "Profile user1 already exists !!");
+            }
+
+            String wskey = UUID.randomUUID().toString();
+            core.createWorkspace(wskey, "WorkspaceCollection", "test");
+
+            core.createCollection(wskey, "/a");
+            core.createCollection(wskey, "/a/b");
+            String hash1 = core.put(new ByteArrayInputStream("First version of fileone.txt".getBytes()));
+            DataObject objectv1 = core.createDataObject(wskey, "/a/b/fileone.txt", hash1);
+            
+            LOGGER.log(Level.INFO, "Workspace created with 2 collections and one dataobject");        
+            LOGGER.log(Level.INFO, walkWorkspace(wskey));
+                   
+            String bkeyv1 = core.resolveWorkspacePath(wskey, Workspace.HEAD, "/a/b");
+            String okeyv1 = core.resolveWorkspacePath(wskey, Workspace.HEAD, "/a/b/fileone.txt");
+            Collection collectionv1 = core.readCollection(bkeyv1);
+            CollectionElement elementv1 = collectionv1.findElementByName("fileone.txt");
+            DataObject dataobjectv1 = core.readDataObject(okeyv1);
+            
+            assertEquals(okeyv1, objectv1.getKey());
+            assertEquals(hash1, objectv1.getStream());
+            assertEquals(28, objectv1.getSize());
+            assertEquals("text/plain", objectv1.getMimeType());
+            
+            assertEquals(okeyv1, dataobjectv1.getKey());
+            assertEquals(hash1, dataobjectv1.getStream());
+            assertEquals(28, dataobjectv1.getSize());
+            assertEquals("text/plain", dataobjectv1.getMimeType());
+            
+            assertEquals(okeyv1, elementv1.getKey());
+            assertEquals("text/plain", elementv1.getMimeType());
+            assertEquals(28, elementv1.getSize());
+            
+            core.snapshotWorkspace(wskey);
+            String hash2 = core.put(new ByteArrayInputStream("Second version of fileone.txt".getBytes()));
+            DataObject objectv2 = core.updateDataObject(wskey, "/a/b/fileone.txt", hash2);
+            
+            LOGGER.log(Level.INFO, "Workspace snapshotted and object updated");
+            LOGGER.log(Level.INFO, walkWorkspace(wskey));
+            
+            String bkeyv2 = core.resolveWorkspacePath(wskey, Workspace.HEAD, "/a/b");
+            String okeyv2 = core.resolveWorkspacePath(wskey, Workspace.HEAD, "/a/b/fileone.txt");
+            Collection collectionv2 = core.readCollection(bkeyv2);
+            CollectionElement elementv2 = collectionv2.findElementByName("fileone.txt");
+            DataObject dataobjectv2 = core.readDataObject(okeyv2);
+            
+            assertEquals(okeyv2, objectv2.getKey());
+            assertEquals(hash2, objectv2.getStream());
+            assertEquals(29, objectv2.getSize());
+            assertEquals("text/plain", objectv2.getMimeType());
+            
+            assertEquals(okeyv2, dataobjectv2.getKey());
+            assertEquals(hash2, dataobjectv2.getStream());
+            assertEquals(29, dataobjectv2.getSize());
+            assertEquals("text/plain", dataobjectv2.getMimeType());
+            
+            assertEquals(okeyv2, elementv2.getKey());
+            assertEquals("text/plain", elementv2.getMimeType());
+            assertEquals(29, elementv2.getSize());
+            
+            bkeyv1 = core.resolveWorkspacePath(wskey, "1", "/a/b");
+            okeyv1 = core.resolveWorkspacePath(wskey, "1", "/a/b/fileone.txt");
+            collectionv1 = core.readCollection(bkeyv1);
+            elementv1 = collectionv1.findElementByName("fileone.txt");
+            dataobjectv1 = core.readDataObject(okeyv1);
+            
+            assertEquals(okeyv1, objectv1.getKey());
+            assertEquals(hash1, objectv1.getStream());
+            assertEquals(28, objectv1.getSize());
+            assertEquals("text/plain", objectv1.getMimeType());
+            
+            assertEquals(okeyv1, dataobjectv1.getKey());
+            assertEquals(hash1, dataobjectv1.getStream());
+            assertEquals(28, dataobjectv1.getSize());
+            assertEquals("text/plain", dataobjectv1.getMimeType());
+            
+            assertEquals(okeyv1, elementv1.getKey());
+            assertEquals("text/plain", elementv1.getMimeType());
+            assertEquals(28, elementv1.getSize());
+            
 
         } finally {
             loginContext.logout();
