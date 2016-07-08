@@ -121,8 +121,11 @@ public class BootstrapServiceBean implements BootstrapService {
     public void init() {
         try {
             String version = getClass().getPackage().getImplementationVersion();
-            LOGGER.log(Level.INFO, "\n\n      ____  ____  __________  __    ___    _   ________\n" + "     / __ \\/ __ \\/_  __/ __ \\/ /   /   |  / | / / ____/\n"
-                    + "    / / / / /_/ / / / / / / / /   / /| | /  |/ / / __  \n" + "   / /_/ / _, _/ / / / /_/ / /___/ ___ |/ /|  / /_/ /  \n"
+            LOGGER.log(Level.INFO, "\n\n"
+                    + "      ____  ____  __________  __    ___    _   ________\n"
+                    + "     / __ \\/ __ \\/_  __/ __ \\/ /   /   |  / | / / ____/\n"
+                    + "    / / / / /_/ / / / / / / / /   / /| | /  |/ / / __  \n"
+                    + "   / /_/ / _, _/ / / / /_/ / /___/ ___ |/ /|  / /_/ /  \n"
                     + "   \\____/_/ |_| /_/  \\____/_____/_/  |_/_/ |_/\\____/   \n"
                     + (version.contains("SNAPSHOT") ? "\n                                    " : "\n                                             ")
                     + version + "\n");

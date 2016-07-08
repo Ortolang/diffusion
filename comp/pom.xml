@@ -230,6 +230,7 @@
                 <configuration>
                     <systemPropertyVariables>
                         <ortolang.home>${ortolang.home}</ortolang.home>
+                        <jboss.home>${jboss.home}</jboss.home>
                     </systemPropertyVariables>
                     <includes>
                         <include>**/DiffusionTestSuite.java</include>
