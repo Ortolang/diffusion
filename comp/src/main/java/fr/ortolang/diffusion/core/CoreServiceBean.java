@@ -1774,6 +1774,10 @@ public class CoreServiceBean implements CoreService {
                     throw new CoreServiceException("unable to load object with id [" + identifier.getId() + "] from storage");
                 }
                 object.setKey(element.getKey());
+                if (object.getClock() < ws.getClock()) {
+                    DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
+                    object = clone;
+                }
                 if (hash.length() > 0) {
                     object.setSize(binarystore.size(hash));
                     object.setMimeType(binarystore.type(hash, object.getName()));
@@ -1783,17 +1787,9 @@ public class CoreServiceBean implements CoreService {
                     object.setMimeType("application/octet-stream");
                     object.setStream("");
                 }
-                if (object.getClock() < ws.getClock()) {
-                    DataObject clone = cloneDataObject(ws.getHead(), object, ws.getClock());
-                    parent.removeElement(element);
-                    CollectionElement celement = new CollectionElement(DataObject.OBJECT_TYPE, clone.getName(), System.currentTimeMillis(), clone.getSize(), clone.getMimeType(), clone.getKey());
-                    parent.addElement(celement);
-                    object = clone;
-                } else {
-                    parent.removeElement(element);
-                    CollectionElement celement = new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getSize(), object.getMimeType(), object.getKey());
-                    parent.addElement(celement);
-                }
+                parent.removeElement(element);
+                CollectionElement celement = new CollectionElement(DataObject.OBJECT_TYPE, object.getName(), System.currentTimeMillis(), object.getSize(), object.getMimeType(), object.getKey());
+                parent.addElement(celement);
                 em.merge(parent);
                 em.merge(object);
                 registry.update(parent.getKey());
