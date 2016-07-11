@@ -36,13 +36,13 @@ package fr.ortolang.diffusion.api.auth;
  * #L%
  */
 
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -52,26 +52,38 @@ import fr.ortolang.diffusion.api.content.ContentResource;
 
 @Path("/auth")
 public class AuthResource {
-    
+
     private static final Logger LOGGER = Logger.getLogger(ContentResource.class.getName());
-    
+
     public static final String REDIRECT_PATH_PARAM_NAME = "redirect";
-    
+
     @Context
     private UriInfo uriInfo;
-    
+
     @GET
-    public Response authenticate(@CookieParam(REDIRECT_PATH_PARAM_NAME) String credirect, @QueryParam(REDIRECT_PATH_PARAM_NAME) String qredirect) {
+    public Response authenticate(@CookieParam(REDIRECT_PATH_PARAM_NAME) String cookieRedirect, @QueryParam(REDIRECT_PATH_PARAM_NAME) String queryRedirect) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "GET /content/auth");
-        UriBuilder builder = uriInfo.getBaseUriBuilder();
-        if (credirect != null && credirect.length() > 0) {
-            LOGGER.log(Level.FINE, "redirecting to path found in cookie : " + credirect);
-            builder.path(credirect);
-        } else if (qredirect != null && qredirect.length() > 0) {
-            LOGGER.log(Level.FINE, "redirecting to path found in query : " + qredirect);
-            builder.path(qredirect);
+        URI redirect = null;
+        if (cookieRedirect != null && !cookieRedirect.isEmpty()) {
+            LOGGER.log(Level.FINE, "redirecting to path found in cookie : " + cookieRedirect);
+            redirect = decodeRedirect(cookieRedirect);
+        } else if (queryRedirect != null && !queryRedirect.isEmpty()) {
+            LOGGER.log(Level.FINE, "redirecting to path found in query : " + queryRedirect);
+            redirect = decodeRedirect(queryRedirect);
+        }
+        if (redirect == null) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+        UriBuilder builder = uriInfo.getBaseUriBuilder().path(redirect.getPath());
+        if (redirect.getQuery() != null) {
+            builder.replaceQuery(redirect.getQuery());
         }
         return Response.seeOther(builder.build()).build();
+    }
+
+    private URI decodeRedirect(String redirect) {
+        String decodedUri = new String(Base64.getUrlDecoder().decode(redirect.getBytes()));
+        return URI.create(decodedUri);
     }
 
 }

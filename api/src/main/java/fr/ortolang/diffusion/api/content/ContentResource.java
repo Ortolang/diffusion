@@ -64,7 +64,6 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.io.IOUtils;
-import org.jboss.resteasy.specimpl.ResteasyUriBuilder;
 
 import javax.ejb.EJB;
 import javax.ws.rs.*;
@@ -148,11 +147,13 @@ public class ContentResource {
             params.put("path", paths);
             String id = UUID.randomUUID().toString();
             exportations.put(id ,params);
-            NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, "/content/exportations/" + id, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT),
+            String redirect = "/content/exportations/" + id;
+            String encodedRedirect = Base64.getUrlEncoder().encodeToString(redirect.getBytes());
+            NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, encodedRedirect, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT),
                     uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-            UriBuilder builder = new ResteasyUriBuilder();
-            builder.path(ContentResource.class).queryParam("followsymlink", followSymlink).queryParam("filename", filename).queryParam("format", format).queryParam("path", paths);
-            return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, "/content/exportations/" + id).build()).cookie(rcookie).build();
+            UriBuilder builder = UriBuilder.fromResource(ContentResource.class);
+            builder.queryParam("followsymlink", followSymlink).queryParam("filename", filename).queryParam("format", format).queryParam("path", paths);
+            return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, encodedRedirect).build()).cookie(rcookie).build();
         }
         ResponseBuilder builder = handleExport(false, filename, format, paths);
         return builder.build();
@@ -360,40 +361,8 @@ public class ContentResource {
                     representation.setParentPath("");
                     representation.setOrder(order);
                     representation.setLinkbykey(true);
-                    representation.setElements(new ArrayList<CollectionElement>(((Collection) object).getElements()));
-                    if ("D".equals(asc)) {
-                        switch (order) {
-                        case "T":
-                            Collections.sort(representation.getElements(), CollectionElement.ElementTypeDescComparator);
-                            break;
-                        case "M":
-                            Collections.sort(representation.getElements(), CollectionElement.ElementDateDescComparator);
-                            break;
-                        case "S":
-                            Collections.sort(representation.getElements(), CollectionElement.ElementSizeDescComparator);
-                            break;
-                        default:
-                            Collections.sort(representation.getElements(), CollectionElement.ElementNameDescComparator);
-                            break;
-                        }
-                        representation.setAsc(false);
-                    } else {
-                        switch (order) {
-                        case "T":
-                            Collections.sort(representation.getElements(), CollectionElement.ElementTypeAscComparator);
-                            break;
-                        case "M":
-                            Collections.sort(representation.getElements(), CollectionElement.ElementDateAscComparator);
-                            break;
-                        case "S":
-                            Collections.sort(representation.getElements(), CollectionElement.ElementSizeAscComparator);
-                            break;
-                        default:
-                            Collections.sort(representation.getElements(), CollectionElement.ElementNameAscComparator);
-                            break;
-                        }
-                        representation.setAsc(true);
-                    }
+                    representation.setElements(new ArrayList<>(((Collection) object).getElements()));
+                    sort(representation, asc, order);
                     builder = Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation));
                     builder.lastModified(lmd);
                 } else if (object instanceof Link) {
@@ -405,21 +374,11 @@ public class ContentResource {
             builder.cacheControl(cc);
             return builder.build();
         } catch (AccessDeniedException e) {
-            if (securityContext.getUserPrincipal() == null || securityContext.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
-                if (login) {
-                    LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, "/content/key/" + key, OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT),
-                            uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, "/content/key/" + key).build()).cookie(rcookie)
-                            .build();
-                } else {
-                    LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
-                    return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
-                }
-            } else {
-                LOGGER.log(Level.FINE, "user is already authenticated, access denied");
-                return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
-            }
+            Map<String, Object> params = new HashMap<>();
+            params.put("fd", download);
+            params.put("O", asc);
+            params.put("C", order);
+            return redirectToAuth("/content/key/" + key, login, params, securityContext);
         }
     }
 
@@ -435,34 +394,17 @@ public class ContentResource {
             representation.setPath("/");
             representation.setOrder("N");
             List<String> aliases = core.listAllWorkspaceAlias();
-            List<CollectionElement> elements = new ArrayList<CollectionElement>(aliases.size());
+            List<CollectionElement> elements = new ArrayList<>(aliases.size());
             for (String alias : aliases) {
                 elements.add(new CollectionElement(Collection.OBJECT_TYPE, alias, -1, -1, "ortolang/workspace", ""));
             }
-            if ("D".equals(asc)) {
-                Collections.sort(elements, CollectionElement.ElementNameDescComparator);
-                representation.setAsc(false);
-            } else {
-                Collections.sort(elements, CollectionElement.ElementNameAscComparator);
-                representation.setAsc(true);
-            }
+            sort(representation, elements, asc);
             representation.setElements(elements);
             return Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation)).build();
         } catch (AccessDeniedException e) {
-            if (securityContext.getUserPrincipal() == null || securityContext.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
-                if (login) {
-                    LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, "/content", OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_CONTEXT), uriInfo
-                            .getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false, false);
-                    return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, "/content").build()).cookie(rcookie).build();
-                } else {
-                    LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
-                    return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
-                }
-            } else {
-                LOGGER.log(Level.FINE, "user is already authenticated, access denied");
-                return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
-            }
+            Map<String, Object> params = new HashMap<>();
+            params.put("O", asc);
+            return redirectToAuth("/content", login, params, securityContext);
         }
     }
 
@@ -492,7 +434,7 @@ public class ContentResource {
             }
             if (builder == null) {
                 Workspace workspace = core.readWorkspace(wskey);
-                List<CollectionElement> elements = new ArrayList<CollectionElement>();
+                List<CollectionElement> elements = new ArrayList<>();
                 String latest = core.findWorkspaceLatestPublishedSnapshot(wskey);
                 if (latest != null && latest.length() > 0) {
                     elements.add(new CollectionElement(Collection.OBJECT_TYPE, Workspace.LATEST, -1, -1, "ortolang/snapshot", latest));
@@ -504,13 +446,7 @@ public class ContentResource {
                 for (TagElement tag : workspace.getTags()) {
                     elements.add(new CollectionElement(Collection.OBJECT_TYPE, tag.getName(), -1, -1, "ortolang/tag", workspace.findSnapshotByName(tag.getSnapshot()).getKey()));
                 }
-                if ("D".equals(asc)) {
-                    Collections.sort(elements, CollectionElement.ElementNameDescComparator);
-                    representation.setAsc(false);
-                } else {
-                    Collections.sort(elements, CollectionElement.ElementNameAscComparator);
-                    representation.setAsc(true);
-                }
+                sort(representation, elements, asc);
                 representation.setElements(elements);
                 builder = Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation));
                 builder.lastModified(lmd);
@@ -518,24 +454,9 @@ public class ContentResource {
             builder.cacheControl(cc);
             return builder.build();
         } catch (AccessDeniedException e) {
-            if (securityContext.getUserPrincipal() == null || securityContext.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
-                if (login) {
-                    LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getBase() + representation.getPath(), OrtolangConfig.getInstance().getProperty(
-                            OrtolangConfig.Property.API_CONTEXT), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false,
-                            false);
-                    return Response
-                            .seeOther(
-                                    uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getBase() + representation.getPath()).build())
-                            .cookie(rcookie).build();
-                } else {
-                    LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
-                    return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
-                }
-            } else {
-                LOGGER.log(Level.FINE, "user is already authenticated, access denied");
-                return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
-            }
+            Map<String, Object> params = new HashMap<>();
+            params.put("O", asc);
+            return redirectToAuth(representation.getBase() + representation.getPath(), login, params, securityContext);
         }
     }
 
@@ -600,64 +521,18 @@ public class ContentResource {
             }
             if (builder == null) {
                 Collection collection = core.readCollection(rkey);
-                representation.setElements(new ArrayList<CollectionElement>(collection.getElements()));
-                if ("D".equals(asc)) {
-                    switch (order) {
-                    case "T":
-                        Collections.sort(representation.getElements(), CollectionElement.ElementTypeDescComparator);
-                        break;
-                    case "M":
-                        Collections.sort(representation.getElements(), CollectionElement.ElementDateDescComparator);
-                        break;
-                    case "S":
-                        Collections.sort(representation.getElements(), CollectionElement.ElementSizeDescComparator);
-                        break;
-                    default:
-                        Collections.sort(representation.getElements(), CollectionElement.ElementNameDescComparator);
-                        break;
-                    }
-                    representation.setAsc(false);
-                } else {
-                    switch (order) {
-                    case "T":
-                        Collections.sort(representation.getElements(), CollectionElement.ElementTypeAscComparator);
-                        break;
-                    case "M":
-                        Collections.sort(representation.getElements(), CollectionElement.ElementDateAscComparator);
-                        break;
-                    case "S":
-                        Collections.sort(representation.getElements(), CollectionElement.ElementSizeAscComparator);
-                        break;
-                    default:
-                        Collections.sort(representation.getElements(), CollectionElement.ElementNameAscComparator);
-                        break;
-                    }
-                    representation.setAsc(true);
-                }
+                representation.setElements(new ArrayList<>(collection.getElements()));
+                sort(representation, asc, order);
                 builder = Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation));
                 builder.lastModified(lmd);
             }
             builder.cacheControl(cc);
             return builder.build();
         } catch (AccessDeniedException e) {
-            if (securityContext.getUserPrincipal() == null || securityContext.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
-                if (login) {
-                    LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getBase() + representation.getPath(), OrtolangConfig.getInstance().getProperty(
-                            OrtolangConfig.Property.API_CONTEXT), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false,
-                            false);
-                    return Response
-                            .seeOther(
-                                    uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getBase() + representation.getPath()).build())
-                            .cookie(rcookie).build();
-                } else {
-                    LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
-                    return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
-                }
-            } else {
-                LOGGER.log(Level.FINE, "user is already authenticated, access denied");
-                return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
-            }
+            Map<String, Object> params = new HashMap<>();
+            params.put("O", asc);
+            params.put("C", order);
+            return redirectToAuth(representation.getBase() + representation.getPath(), login, params, securityContext);
         }
     }
 
@@ -728,40 +603,8 @@ public class ContentResource {
                     }
                     builder.lastModified(lmd);
                 } else if (object instanceof Collection) {
-                    representation.setElements(new ArrayList<CollectionElement>(((Collection) object).getElements()));
-                    if ("D".equals(asc)) {
-                        switch (order) {
-                        case "T":
-                            Collections.sort(representation.getElements(), CollectionElement.ElementTypeDescComparator);
-                            break;
-                        case "M":
-                            Collections.sort(representation.getElements(), CollectionElement.ElementDateDescComparator);
-                            break;
-                        case "S":
-                            Collections.sort(representation.getElements(), CollectionElement.ElementSizeDescComparator);
-                            break;
-                        default:
-                            Collections.sort(representation.getElements(), CollectionElement.ElementNameDescComparator);
-                            break;
-                        }
-                        representation.setAsc(false);
-                    } else {
-                        switch (order) {
-                        case "T":
-                            Collections.sort(representation.getElements(), CollectionElement.ElementTypeAscComparator);
-                            break;
-                        case "M":
-                            Collections.sort(representation.getElements(), CollectionElement.ElementDateAscComparator);
-                            break;
-                        case "S":
-                            Collections.sort(representation.getElements(), CollectionElement.ElementSizeAscComparator);
-                            break;
-                        default:
-                            Collections.sort(representation.getElements(), CollectionElement.ElementNameAscComparator);
-                            break;
-                        }
-                        representation.setAsc(true);
-                    }
+                    representation.setElements(new ArrayList<>(((Collection) object).getElements()));
+                    sort(representation, asc, order);
                     builder = Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation));
                     builder.lastModified(lmd);
                 } else if (object instanceof Link) {
@@ -773,24 +616,84 @@ public class ContentResource {
             builder.cacheControl(cc);
             return builder.build();
         } catch (AccessDeniedException e) {
-            if (securityContext.getUserPrincipal() == null || securityContext.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
-                if (login) {
-                    LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
-                    NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getBase() + representation.getPath(), OrtolangConfig.getInstance().getProperty(
-                            OrtolangConfig.Property.API_CONTEXT), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false,
-                            false);
-                    return Response
-                            .seeOther(
-                                    uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, representation.getBase() + representation.getPath()).build())
-                            .cookie(rcookie).build();
-                } else {
-                    LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
-                    return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
+            Map<String, Object> params = new HashMap<>();
+            params.put("fd", download);
+            params.put("O", asc);
+            params.put("C", order);
+            return redirectToAuth(representation.getBase() + representation.getPath(), login, params, securityContext);
+        }
+    }
+
+    private Response redirectToAuth(String path, boolean login, Map<String, Object> params, SecurityContext securityContext) {
+        if (securityContext.getUserPrincipal() == null || securityContext.getUserPrincipal().getName().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+            if (login) {
+                UriBuilder builder = UriBuilder.fromPath(path);
+                for (Map.Entry<String, Object> param : params.entrySet()) {
+                    builder.queryParam(param.getKey(), param.getValue());
                 }
+                String redirect = builder.build().toString();
+                String encodedRedirect = Base64.getUrlEncoder().encodeToString(redirect.getBytes());
+                LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
+                NewCookie rcookie = new NewCookie(AuthResource.REDIRECT_PATH_PARAM_NAME, encodedRedirect, OrtolangConfig.getInstance().getProperty(
+                        OrtolangConfig.Property.API_CONTEXT), uriInfo.getBaseUri().getHost(), 1, "Redirect path after authentication", 300, new Date(System.currentTimeMillis() + 300000), false,
+                        false);
+                return Response
+                        .seeOther(
+                                uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, encodedRedirect).build())
+                        .cookie(rcookie).build();
             } else {
-                LOGGER.log(Level.FINE, "user is already authenticated, access denied");
+                LOGGER.log(Level.FINE, "user is not authenticated, but login redirect disabled");
                 return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
             }
+        } else {
+            LOGGER.log(Level.FINE, "user is already authenticated, access denied");
+            return Response.status(Status.UNAUTHORIZED).entity("You are not authorized to access this content").build();
+        }
+    }
+
+    private void sort(ContentRepresentation representation, String asc, String order) {
+        if ("D".equals(asc)) {
+            switch (order) {
+            case "T":
+                Collections.sort(representation.getElements(), CollectionElement.ElementTypeDescComparator);
+                break;
+            case "M":
+                Collections.sort(representation.getElements(), CollectionElement.ElementDateDescComparator);
+                break;
+            case "S":
+                Collections.sort(representation.getElements(), CollectionElement.ElementSizeDescComparator);
+                break;
+            default:
+                Collections.sort(representation.getElements(), CollectionElement.ElementNameDescComparator);
+                break;
+            }
+            representation.setAsc(false);
+        } else {
+            switch (order) {
+            case "T":
+                Collections.sort(representation.getElements(), CollectionElement.ElementTypeAscComparator);
+                break;
+            case "M":
+                Collections.sort(representation.getElements(), CollectionElement.ElementDateAscComparator);
+                break;
+            case "S":
+                Collections.sort(representation.getElements(), CollectionElement.ElementSizeAscComparator);
+                break;
+            default:
+                Collections.sort(representation.getElements(), CollectionElement.ElementNameAscComparator);
+                break;
+            }
+            representation.setAsc(true);
+        }
+    }
+
+    private void sort(ContentRepresentation representation, List<CollectionElement> elements, String asc) {
+        if ("D".equals(asc)) {
+            Collections.sort(elements, CollectionElement.ElementNameDescComparator);
+            representation.setAsc(false);
+        } else {
+            Collections.sort(elements, CollectionElement.ElementNameAscComparator);
+            representation.setAsc(true);
         }
     }
 
