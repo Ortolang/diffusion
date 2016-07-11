@@ -265,9 +265,9 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>${version.flyway.plugin}</version>
                 <configuration>
-                    <url>jdbc:postgresql://localhost:5432/ortolang</url>
-                    <user>ortolang</user>
-                    <password>tagada54</password>
+                    <url>${flyway.jdbc.url}</url>
+                    <user>${flyway.jdbc.username}</user>
+                    <password>${flyway.jdbc.password}</password>
                 </configuration>
                 <dependencies>
                     <dependency>

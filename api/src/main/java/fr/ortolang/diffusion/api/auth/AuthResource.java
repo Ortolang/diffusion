@@ -18,7 +18,7 @@ package fr.ortolang.diffusion.api.auth;
  * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
  * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
  * %%
- * Copyright (C) 2013 - 2015 Ortolang Team
+ * Copyright (C) 2013 - 2016 Ortolang Team
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
