@@ -36,26 +36,32 @@ package fr.ortolang.diffusion.api.filter;
  * #L%
  */
 
-import org.jboss.resteasy.annotations.interception.ServerInterceptor;
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
-
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.ext.Provider;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.ext.Provider;
+
+import org.jboss.resteasy.annotations.interception.ServerInterceptor;
+import org.jboss.resteasy.core.ResourceMethodInvoker;
+import org.jboss.resteasy.core.ServerResponse;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.spi.Failure;
+import org.jboss.resteasy.spi.HttpRequest;
+import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
 
 @SuppressWarnings("deprecation")
 @Provider
 @ServerInterceptor
-public class ContentTypeSetterPreProcessorInterceptor implements ContainerRequestFilter {
-	
+public class ContentTypeSetterPreProcessorInterceptor implements PreProcessInterceptor {
+
 	private static final Logger LOGGER = Logger.getLogger(ContentTypeSetterPreProcessorInterceptor.class.getName());
 
 	@Override
-	public void filter(ContainerRequestContext requestContext) {
+	public ServerResponse preProcess(HttpRequest request, ResourceMethodInvoker method) throws Failure, WebApplicationException {
 		LOGGER.log(Level.FINE, "content type setter for Input Part");
-		requestContext.getHeaders().putSingle(InputPart.DEFAULT_CHARSET_PROPERTY, "UTF-8");
+		request.setAttribute(InputPart.DEFAULT_CHARSET_PROPERTY, "UTF-8");
+		return null;
 	}
 
 }
