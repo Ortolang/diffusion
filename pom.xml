@@ -32,7 +32,7 @@
     <properties>
         <version.ear.plugin>2.10.1</version.ear.plugin>
         <version.ejb.plugin>2.5.1</version.ejb.plugin>
-        <version.wildfly.maven.plugin>1.1.0.Alpha5</version.wildfly.maven.plugin>
+        <version.wildfly.maven.plugin>1.1.0.Alpha10</version.wildfly.maven.plugin>
         <version.wildfly>9.0.1.Final</version.wildfly>
         <slf4j.version>1.6.4</slf4j.version>
         <version.apache.tika>1.13</version.apache.tika>
@@ -201,6 +201,9 @@
                     <groupId>org.wildfly.plugins</groupId>
                     <artifactId>wildfly-maven-plugin</artifactId>
                     <version>${version.wildfly.maven.plugin}</version>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
