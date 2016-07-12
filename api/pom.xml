@@ -75,12 +75,12 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
-            <version>1.9</version>
+            <version>${version.common-compress}</version>
         </dependency>
         <dependency>
             <groupId>net.bull.javamelody</groupId>
             <artifactId>javamelody-core</artifactId>
-            <version>1.59.0</version>
+            <version>${version.javamelody}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
