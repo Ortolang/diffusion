@@ -248,6 +248,66 @@ public class BootstrapServiceBean implements BootstrapService {
         } catch (RegistryServiceException e) {
             throw new BootstrapServiceException("unable to check platform bootstrap status", e);
         }
+        
+        try {
+            try {
+                registry.lookup(MembershipService.REVIEWERS_GROUP_KEY);
+            } catch ( KeyNotFoundException e ) {
+                LOGGER.log(Level.FINE, "reviewers group not found, creating");
+                Map<String, List<String>> anonReadRules = new HashMap<String, List<String>>();
+                anonReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
+                membership.createGroup(MembershipService.REVIEWERS_GROUP_KEY, "Reviewers", "Reviewers of the platform can rate content");
+                membership.addMemberInGroup(MembershipService.REVIEWERS_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
+                authorisation.setPolicyRules(MembershipService.REVIEWERS_GROUP_KEY, anonReadRules);
+            }
+        } catch (AccessDeniedException | RegistryServiceException | AuthorisationServiceException |  MembershipServiceException | KeyAlreadyExistsException | KeyNotFoundException e ) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while trying to check or create reviewers group", e);
+            throw new BootstrapServiceException("unable to bootstrap reviewers group", e);
+        }
+        
+        try {
+            try {
+                registry.lookup(MembershipService.PUBLISHERS_GROUP_KEY);
+            } catch ( KeyNotFoundException e ) {
+                LOGGER.log(Level.FINE, "publishers group not found, creating");
+                Map<String, List<String>> anonReadRules = new HashMap<String, List<String>>();
+                anonReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
+                membership.createGroup(MembershipService.PUBLISHERS_GROUP_KEY, "Publishers", "Publishers of the platform are responsibles for final publication approval.");
+                membership.addMemberInGroup(MembershipService.PUBLISHERS_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
+                authorisation.setPolicyRules(MembershipService.PUBLISHERS_GROUP_KEY, anonReadRules);
+            }
+        } catch (AccessDeniedException | RegistryServiceException | AuthorisationServiceException |  MembershipServiceException | KeyAlreadyExistsException | KeyNotFoundException e ) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while trying to check or create publishers group", e);
+            throw new BootstrapServiceException("unable to create publishers group", e);
+        }
+        
+//        try {
+//            try {
+//                registry.lookup("moderation-form");
+//            } catch ( KeyNotFoundException e ) {
+//                LOGGER.log(Level.FINE, "moderation-form not found, creating");
+//                InputStream is4 = getClass().getClassLoader().getResourceAsStream("forms/moderation-form.json");
+//                String jsonDefinition4 = IOUtils.toString(is4, "UTF-8");
+//                form.createForm("moderation-form", "Moderation Form", jsonDefinition4);
+//            }
+//        } catch (AccessDeniedException | RegistryServiceException | FormServiceException | KeyAlreadyExistsException | IOException e ) {
+//            LOGGER.log(Level.SEVERE, "unexpected error occurred while importing moderation form", e);
+//            throw new BootstrapServiceException("unable to create moderation form", e);
+//        }
+//        
+//        try {
+//            try {
+//                registry.lookup("publication-form");
+//            } catch ( KeyNotFoundException e ) {
+//                LOGGER.log(Level.FINE, "publication-form not found, creating");
+//                InputStream is4 = getClass().getClassLoader().getResourceAsStream("forms/publication-form.json");
+//                String jsonDefinition4 = IOUtils.toString(is4, "UTF-8");
+//                form.createForm("publication-form", "Publication Form", jsonDefinition4);
+//            }
+//        } catch (AccessDeniedException | RegistryServiceException | FormServiceException | KeyAlreadyExistsException | IOException e ) {
+//            LOGGER.log(Level.SEVERE, "unexpected error occurred while importing publication form", e);
+//            throw new BootstrapServiceException("unable to create publication form", e);
+//        }
 
         try {
             LOGGER.log(Level.INFO, "import process types");

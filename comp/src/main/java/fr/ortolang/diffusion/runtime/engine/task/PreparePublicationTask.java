@@ -42,7 +42,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -125,6 +128,11 @@ public class PreparePublicationTask extends RuntimeEngineTask {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Snapshot loaded and publication status is good for publication, starting publication"));
             
             LOGGER.log(Level.FINE, "Load reviewers group members for paralell review task creation");
+            List<String> reviewers = Arrays.asList(getMembershipService().readGroup(MembershipService.REVIEWERS_GROUP_KEY).getMembers());
+            execution.setVariable(REVIEWERS_LIST, reviewers);
+            
+            LOGGER.log(Level.FINE, "Initialize an empty variable for review results");
+            execution.setVariable(REVIEW_RESULTS, new ArrayList<String>());
 
         } catch (Exception e) {
             try {

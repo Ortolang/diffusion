@@ -172,10 +172,22 @@
     </serviceTask>
     <endEvent id="endevent3" name="End"></endEvent>
     <serviceTask id="servicetask1" name="Prepare Workspace" activiti:class="fr.ortolang.diffusion.runtime.engine.task.PreparePublicationTask"></serviceTask>
-    <serviceTask id="servicetask2" name="Notify Initier" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+    <serviceTask id="servicetask2" name="Notify Initier" activiti:class="fr.ortolang.diffusion.runtime.engine.task.NotifyTask">
       <extensionElements>
-        <activiti:field name="message">
-          <activiti:string><![CDATA[send notification email to initier that publication process is started]]></activiti:string>
+        <activiti:field name="userid">
+          <activiti:expression><![CDATA[${initier}]]></activiti:expression>
+        </activiti:field>
+        <activiti:field name="userType">
+          <activiti:string><![CDATA[user]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="titleKey">
+          <activiti:string><![CDATA[accept.title]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="subjectKey">
+          <activiti:string><![CDATA[accept.subject]]></activiti:string>
+        </activiti:field>
+        <activiti:field name="bodyKey">
+          <activiti:string><![CDATA[accept.body]]></activiti:string>
         </activiti:field>
       </extensionElements>
     </serviceTask>
@@ -445,7 +457,7 @@
         <omgdi:waypoint x="670.0" y="397.0"></omgdi:waypoint>
         <omgdi:waypoint x="605.0" y="397.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="12.0" width="100.0" x="619.0" y="380.0"></omgdc:Bounds>
+          <omgdc:Bounds height="12.0" width="45.0" x="619.0" y="380.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow15" id="BPMNEdge_flow15">
@@ -495,7 +507,7 @@
         <omgdi:waypoint x="1014.0" y="198.0"></omgdi:waypoint>
         <omgdi:waypoint x="1014.0" y="251.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="12.0" width="100.0" x="1019.0" y="219.0"></omgdc:Bounds>
+          <omgdc:Bounds height="12.0" width="37.0" x="1019.0" y="219.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow26" id="BPMNEdge_flow26">
@@ -520,7 +532,7 @@
         <omgdi:waypoint x="1140.0" y="170.0"></omgdi:waypoint>
         <omgdi:waypoint x="1140.0" y="377.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="12.0" width="100.0" x="1078.0" y="170.0"></omgdc:Bounds>
+          <omgdc:Bounds height="12.0" width="45.0" x="1078.0" y="170.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow38" id="BPMNEdge_flow38">
@@ -529,7 +541,7 @@
         <omgdi:waypoint x="1014.0" y="344.0"></omgdi:waypoint>
         <omgdi:waypoint x="1014.0" y="306.0"></omgdi:waypoint>
         <bpmndi:BPMNLabel>
-          <omgdc:Bounds height="12.0" width="100.0" x="775.0" y="331.0"></omgdc:Bounds>
+          <omgdc:Bounds height="12.0" width="37.0" x="775.0" y="331.0"></omgdc:Bounds>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow39" id="BPMNEdge_flow39">

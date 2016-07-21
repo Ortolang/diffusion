@@ -104,6 +104,9 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     public static final String FORCE_PARAM_NAME = "force";
     
     public static final String INITIER_PARAM_NAME = "initier";
+    
+    public static final String REVIEWERS_LIST = "reviewers";
+    public static final String REVIEW_RESULTS = "reviewresults";
 
     private static final Logger LOGGER = Logger.getLogger(RuntimeEngineTask.class.getName());
 
