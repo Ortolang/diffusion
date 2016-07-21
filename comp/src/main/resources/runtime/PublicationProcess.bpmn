@@ -1,0 +1,542 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://diffusion.ortolang.fr/process">
+  <signal id="cancelreview" name="Cancel Review" activiti:scope="processInstance"></signal>
+  <process id="publication" name="Publication Process" isExecutable="true">
+    <startEvent id="startevent1" name="Start"></startEvent>
+    <subProcess id="review" name="Review Process" activiti:async="true" activiti:exclusive="false">
+      <multiInstanceLoopCharacteristics isSequential="false" activiti:collection="${reviewers}" activiti:elementVariable="reviewer"></multiInstanceLoopCharacteristics>
+      <startEvent id="startevent4" name="Start"></startEvent>
+      <serviceTask id="servicetaskR1" name="Notify Reviewer" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+        <extensionElements>
+          <activiti:field name="message">
+            <activiti:expression><![CDATA[Notify reviewer ${reviewer} of pending task]]></activiti:expression>
+          </activiti:field>
+        </extensionElements>
+      </serviceTask>
+      <userTask id="usertask2" name="Review" activiti:assignee="${reviewer}" activiti:dueDate="P8D" activiti:formKey="review-snapshot-form"></userTask>
+      <serviceTask id="servicetaskR3" name="Notify Validators" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+        <extensionElements>
+          <activiti:field name="message">
+            <activiti:string><![CDATA[Send email to validators group to notify new review submission]]></activiti:string>
+          </activiti:field>
+        </extensionElements>
+      </serviceTask>
+      <endEvent id="endevent2" name="End"></endEvent>
+      <boundaryEvent id="boundarytimer2" name="Timer" attachedToRef="usertask2" cancelActivity="false">
+        <timerEventDefinition>
+          <timeCycle>0 0/5 * * * ?</timeCycle>
+        </timerEventDefinition>
+      </boundaryEvent>
+      <serviceTask id="servicetaskR11" name="Remind Reviewer" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+        <extensionElements>
+          <activiti:field name="message">
+            <activiti:expression><![CDATA[Send email to reviewer: ${reviewer} to remind pending task]]></activiti:expression>
+          </activiti:field>
+        </extensionElements>
+      </serviceTask>
+      <serviceTask id="servicetaskR2" name="Collect" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+        <extensionElements>
+          <activiti:field name="message">
+            <activiti:string><![CDATA[Collect review result and populate process review Map]]></activiti:string>
+          </activiti:field>
+        </extensionElements>
+      </serviceTask>
+      <sequenceFlow id="flow30" sourceRef="startevent4" targetRef="servicetaskR1"></sequenceFlow>
+      <sequenceFlow id="flow31" sourceRef="servicetaskR1" targetRef="usertask2"></sequenceFlow>
+      <sequenceFlow id="flow32" sourceRef="usertask2" targetRef="servicetaskR2"></sequenceFlow>
+      <sequenceFlow id="flow33" sourceRef="servicetaskR2" targetRef="servicetaskR3"></sequenceFlow>
+      <sequenceFlow id="flow34" sourceRef="servicetaskR3" targetRef="endevent2"></sequenceFlow>
+      <sequenceFlow id="flow35" sourceRef="boundarytimer2" targetRef="servicetaskR11"></sequenceFlow>
+      <boundaryEvent id="boundarysignal2" name="Signal" attachedToRef="usertask2" cancelActivity="true">
+        <signalEventDefinition signalRef="cancelreview"></signalEventDefinition>
+      </boundaryEvent>
+      <sequenceFlow id="flow36" sourceRef="boundarysignal2" targetRef="endevent2"></sequenceFlow>
+    </subProcess>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <serviceTask id="servicetask3" name="Lock" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LockWorkspaceTask">
+      <extensionElements>
+        <activiti:field name="wskey">
+          <activiti:expression><![CDATA[${wskey}]]></activiti:expression>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask51" name="Unlock" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[unlock workspce because publication rejected]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <parallelGateway id="parallelgateway2" name="Parallel Gateway"></parallelGateway>
+    <exclusiveGateway id="isSuperUser" name="is Super User"></exclusiveGateway>
+    <serviceTask id="servicetask4" name="Notify Moderators" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Send email to moderators group to notify from pending task]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask5" name="Update Status" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Update ortolang process status to : waiting moderation]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <userTask id="usertask1" name="Moderate" activiti:candidateGroups="moderators" activiti:formKey="review-snapshot-form"></userTask>
+    <boundaryEvent id="boundarytimer1" name="Timer" attachedToRef="usertask1" cancelActivity="false">
+      <timerEventDefinition>
+        <timeCycle>0 0/5 * * * ?</timeCycle>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <serviceTask id="servicetask50" name="Remind Moderators" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Send remind email to moderators for pending task]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask52" name="Notify Initier" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Send email to initier to notify moderation refused]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask53" name="Update Status" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Update process status to : Rejected by moderators]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask7" name="Notify Validators" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Send email to validators to notify of pending task]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <userTask id="usertask3" name="Validate" activiti:candidateGroups="validators" activiti:formKey="validate-snapshot-form"></userTask>
+    <intermediateThrowEvent id="signalintermediatethrowevent1" name="SignalThrowEvent">
+      <signalEventDefinition signalRef="cancelreview"></signalEventDefinition>
+    </intermediateThrowEvent>
+    <serviceTask id="servicetask21" name="Auto Review" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Set auto review values]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask9" name="Unlock" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Unlock workspace because publication accepted]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask10" name="Tag" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Tag snapshot using provided tag]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask11" name="Publish" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Publish all snapshot keys]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask12" name="Generate PIDs" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Generate handles for all snapshot keys]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask13" name="Notify Initier" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Send email to initier to notify publication success]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask14" name="Update Status" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Set ortolang process status to : Publication Success]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <endEvent id="endevent3" name="End"></endEvent>
+    <serviceTask id="servicetask1" name="Prepare Workspace" activiti:class="fr.ortolang.diffusion.runtime.engine.task.PreparePublicationTask"></serviceTask>
+    <serviceTask id="servicetask2" name="Notify Initier" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[send notification email to initier that publication process is started]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask6" name="Set Permissions" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Set permission on workspace to allow reviewers and validators to see snapshot content]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <serviceTask id="servicetask8" name="Set Permissions" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LogTask">
+      <extensionElements>
+        <activiti:field name="message">
+          <activiti:string><![CDATA[Set permission on workspace to remove read permission for reviewers and validators]]></activiti:string>
+        </activiti:field>
+      </extensionElements>
+    </serviceTask>
+    <sequenceFlow id="flow1" sourceRef="startevent1" targetRef="servicetask1"></sequenceFlow>
+    <sequenceFlow id="flow2" sourceRef="servicetask1" targetRef="servicetask2"></sequenceFlow>
+    <sequenceFlow id="flow3" sourceRef="servicetask2" targetRef="isSuperUser"></sequenceFlow>
+    <sequenceFlow id="flow4" name="non" sourceRef="isSuperUser" targetRef="servicetask3">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!initier.equals("root")}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow5" sourceRef="servicetask3" targetRef="servicetask4"></sequenceFlow>
+    <sequenceFlow id="flow6" sourceRef="servicetask4" targetRef="servicetask5"></sequenceFlow>
+    <sequenceFlow id="flow7" sourceRef="servicetask5" targetRef="usertask1"></sequenceFlow>
+    <sequenceFlow id="flow8" sourceRef="boundarytimer1" targetRef="servicetask50"></sequenceFlow>
+    <sequenceFlow id="flow11" sourceRef="parallelgateway2" targetRef="servicetask6"></sequenceFlow>
+    <sequenceFlow id="flow12" sourceRef="servicetask6" targetRef="servicetask7"></sequenceFlow>
+    <sequenceFlow id="flow13" sourceRef="servicetask7" targetRef="usertask3"></sequenceFlow>
+    <sequenceFlow id="flow14" name="accepted" sourceRef="usertask3" targetRef="signalintermediatethrowevent1">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${accepted.equals("true")}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow15" sourceRef="signalintermediatethrowevent1" targetRef="servicetask8"></sequenceFlow>
+    <sequenceFlow id="flow16" sourceRef="servicetask8" targetRef="servicetask9"></sequenceFlow>
+    <sequenceFlow id="flow17" sourceRef="servicetask9" targetRef="servicetask10"></sequenceFlow>
+    <sequenceFlow id="flow18" sourceRef="servicetask10" targetRef="servicetask11"></sequenceFlow>
+    <sequenceFlow id="flow19" sourceRef="servicetask11" targetRef="servicetask12"></sequenceFlow>
+    <sequenceFlow id="flow20" sourceRef="servicetask12" targetRef="servicetask13"></sequenceFlow>
+    <sequenceFlow id="flow21" sourceRef="servicetask13" targetRef="servicetask14"></sequenceFlow>
+    <sequenceFlow id="flow22" sourceRef="servicetask14" targetRef="endevent3"></sequenceFlow>
+    <sequenceFlow id="flow23" name="oui" sourceRef="isSuperUser" targetRef="servicetask21">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${initier.equals("root")}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow24" sourceRef="servicetask21" targetRef="servicetask10"></sequenceFlow>
+    <sequenceFlow id="flow25" name="refused" sourceRef="usertask1" targetRef="servicetask51">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!accepted.equals("true")}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow26" sourceRef="servicetask51" targetRef="servicetask52"></sequenceFlow>
+    <sequenceFlow id="flow27" sourceRef="servicetask52" targetRef="servicetask53"></sequenceFlow>
+    <sequenceFlow id="flow28" sourceRef="servicetask53" targetRef="endevent1"></sequenceFlow>
+    <sequenceFlow id="flow29" sourceRef="parallelgateway2" targetRef="review"></sequenceFlow>
+    <sequenceFlow id="flow37" name="accepted" sourceRef="usertask1" targetRef="parallelgateway2">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${accepted.equals("true")}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow38" name="refused" sourceRef="usertask3" targetRef="servicetask51">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!accepted.equals("true")}]]></conditionExpression>
+    </sequenceFlow>
+    <boundaryEvent id="boundarytimer3" name="Timer" attachedToRef="usertask3" cancelActivity="false">
+      <timerEventDefinition>
+        <timeCycle>0 0/5 * * * ?</timeCycle>
+      </timerEventDefinition>
+    </boundaryEvent>
+    <serviceTask id="servicetask54" name="Remind Validators"></serviceTask>
+    <sequenceFlow id="flow39" sourceRef="boundarytimer3" targetRef="servicetask54"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_publication">
+    <bpmndi:BPMNPlane bpmnElement="publication" id="BPMNPlane_publication">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="40.0" y="50.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="review" id="BPMNShape_review">
+        <omgdc:Bounds height="358.0" width="321.0" x="759.0" y="462.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent4" id="BPMNShape_startevent4">
+        <omgdc:Bounds height="35.0" width="35.0" x="991.0" y="514.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetaskR1" id="BPMNShape_servicetaskR1">
+        <omgdc:Bounds height="55.0" width="105.0" x="799.0" y="504.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask2" id="BPMNShape_usertask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="799.0" y="584.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="boundarytimer2" id="BPMNShape_boundarytimer2">
+        <omgdc:Bounds height="30.0" width="30.0" x="890.0" y="569.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="boundarysignal2" id="BPMNShape_boundarysignal2">
+        <omgdc:Bounds height="30.0" width="30.0" x="890.0" y="619.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetaskR3" id="BPMNShape_servicetaskR3">
+        <omgdc:Bounds height="55.0" width="105.0" x="801.0" y="744.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent2" id="BPMNShape_endevent2">
+        <omgdc:Bounds height="35.0" width="35.0" x="976.0" y="754.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetaskR11" id="BPMNShape_servicetaskR11">
+        <omgdc:Bounds height="55.0" width="105.0" x="956.0" y="584.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetaskR2" id="BPMNShape_servicetaskR2">
+        <omgdc:Bounds height="55.0" width="105.0" x="801.0" y="664.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="584.0" y="261.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask3" id="BPMNShape_servicetask3">
+        <omgdc:Bounds height="55.0" width="114.0" x="420.0" y="143.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask51" id="BPMNShape_servicetask51">
+        <omgdc:Bounds height="55.0" width="105.0" x="962.0" y="251.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="parallelgateway2" id="BPMNShape_parallelgateway2">
+        <omgdc:Bounds height="40.0" width="40.0" x="1120.0" y="377.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="isSuperUser" id="BPMNShape_isSuperUser">
+        <omgdc:Bounds height="40.0" width="40.0" x="313.0" y="150.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask4" id="BPMNShape_servicetask4">
+        <omgdc:Bounds height="55.0" width="105.0" x="670.0" y="143.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask5" id="BPMNShape_servicetask5">
+        <omgdc:Bounds height="55.0" width="105.0" x="813.0" y="143.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask1" id="BPMNShape_usertask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="962.0" y="143.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="boundarytimer1" id="BPMNShape_boundarytimer1">
+        <omgdc:Bounds height="30.0" width="30.0" x="1022.0" y="130.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask50" id="BPMNShape_servicetask50">
+        <omgdc:Bounds height="55.0" width="105.0" x="890.0" y="40.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask52" id="BPMNShape_servicetask52">
+        <omgdc:Bounds height="55.0" width="105.0" x="816.0" y="251.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask53" id="BPMNShape_servicetask53">
+        <omgdc:Bounds height="55.0" width="105.0" x="668.0" y="251.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask7" id="BPMNShape_servicetask7">
+        <omgdc:Bounds height="55.0" width="105.0" x="818.0" y="370.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="usertask3" id="BPMNShape_usertask3">
+        <omgdc:Bounds height="55.0" width="105.0" x="670.0" y="370.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="boundarytimer3" id="BPMNShape_boundarytimer3">
+        <omgdc:Bounds height="30.0" width="30.0" x="706.0" y="412.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="signalintermediatethrowevent1" id="BPMNShape_signalintermediatethrowevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="570.0" y="380.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask21" id="BPMNShape_servicetask21">
+        <omgdc:Bounds height="55.0" width="105.0" x="281.0" y="559.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask9" id="BPMNShape_servicetask9">
+        <omgdc:Bounds height="55.0" width="105.0" x="424.0" y="460.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask10" id="BPMNShape_servicetask10">
+        <omgdc:Bounds height="55.0" width="105.0" x="424.0" y="559.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask11" id="BPMNShape_servicetask11">
+        <omgdc:Bounds height="55.0" width="105.0" x="424.0" y="662.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask12" id="BPMNShape_servicetask12">
+        <omgdc:Bounds height="55.0" width="105.0" x="424.0" y="775.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask13" id="BPMNShape_servicetask13">
+        <omgdc:Bounds height="55.0" width="105.0" x="281.0" y="775.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask14" id="BPMNShape_servicetask14">
+        <omgdc:Bounds height="55.0" width="105.0" x="130.0" y="775.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent3" id="BPMNShape_endevent3">
+        <omgdc:Bounds height="35.0" width="35.0" x="40.0" y="785.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask1" id="BPMNShape_servicetask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="130.0" y="40.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask2" id="BPMNShape_servicetask2">
+        <omgdc:Bounds height="55.0" width="105.0" x="132.0" y="143.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask6" id="BPMNShape_servicetask6">
+        <omgdc:Bounds height="55.0" width="105.0" x="964.0" y="370.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask8" id="BPMNShape_servicetask8">
+        <omgdc:Bounds height="55.0" width="105.0" x="424.0" y="370.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask54" id="BPMNShape_servicetask54">
+        <omgdc:Bounds height="55.0" width="105.0" x="584.0" y="460.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow30" id="BPMNEdge_flow30">
+        <omgdi:waypoint x="991.0" y="531.0"></omgdi:waypoint>
+        <omgdi:waypoint x="904.0" y="531.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow31" id="BPMNEdge_flow31">
+        <omgdi:waypoint x="851.0" y="559.0"></omgdi:waypoint>
+        <omgdi:waypoint x="851.0" y="584.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow32" id="BPMNEdge_flow32">
+        <omgdi:waypoint x="851.0" y="639.0"></omgdi:waypoint>
+        <omgdi:waypoint x="853.0" y="664.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow33" id="BPMNEdge_flow33">
+        <omgdi:waypoint x="853.0" y="719.0"></omgdi:waypoint>
+        <omgdi:waypoint x="853.0" y="744.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow34" id="BPMNEdge_flow34">
+        <omgdi:waypoint x="906.0" y="771.0"></omgdi:waypoint>
+        <omgdi:waypoint x="976.0" y="771.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow35" id="BPMNEdge_flow35">
+        <omgdi:waypoint x="905.0" y="599.0"></omgdi:waypoint>
+        <omgdi:waypoint x="936.0" y="612.0"></omgdi:waypoint>
+        <omgdi:waypoint x="956.0" y="611.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow36" id="BPMNEdge_flow36">
+        <omgdi:waypoint x="905.0" y="649.0"></omgdi:waypoint>
+        <omgdi:waypoint x="993.0" y="754.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
+        <omgdi:waypoint x="75.0" y="67.0"></omgdi:waypoint>
+        <omgdi:waypoint x="130.0" y="67.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
+        <omgdi:waypoint x="182.0" y="95.0"></omgdi:waypoint>
+        <omgdi:waypoint x="184.0" y="143.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow3" id="BPMNEdge_flow3">
+        <omgdi:waypoint x="237.0" y="170.0"></omgdi:waypoint>
+        <omgdi:waypoint x="313.0" y="170.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow4" id="BPMNEdge_flow4">
+        <omgdi:waypoint x="353.0" y="170.0"></omgdi:waypoint>
+        <omgdi:waypoint x="420.0" y="170.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="18.0" x="352.0" y="159.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+        <omgdi:waypoint x="534.0" y="170.0"></omgdi:waypoint>
+        <omgdi:waypoint x="670.0" y="170.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+        <omgdi:waypoint x="775.0" y="170.0"></omgdi:waypoint>
+        <omgdi:waypoint x="813.0" y="170.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
+        <omgdi:waypoint x="918.0" y="170.0"></omgdi:waypoint>
+        <omgdi:waypoint x="962.0" y="170.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
+        <omgdi:waypoint x="1037.0" y="130.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1036.0" y="67.0"></omgdi:waypoint>
+        <omgdi:waypoint x="995.0" y="67.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow11" id="BPMNEdge_flow11">
+        <omgdi:waypoint x="1120.0" y="397.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1069.0" y="397.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow12" id="BPMNEdge_flow12">
+        <omgdi:waypoint x="964.0" y="397.0"></omgdi:waypoint>
+        <omgdi:waypoint x="923.0" y="397.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow13" id="BPMNEdge_flow13">
+        <omgdi:waypoint x="818.0" y="397.0"></omgdi:waypoint>
+        <omgdi:waypoint x="775.0" y="397.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow14" id="BPMNEdge_flow14">
+        <omgdi:waypoint x="670.0" y="397.0"></omgdi:waypoint>
+        <omgdi:waypoint x="605.0" y="397.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="100.0" x="619.0" y="380.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow15" id="BPMNEdge_flow15">
+        <omgdi:waypoint x="570.0" y="397.0"></omgdi:waypoint>
+        <omgdi:waypoint x="529.0" y="397.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow16" id="BPMNEdge_flow16">
+        <omgdi:waypoint x="476.0" y="425.0"></omgdi:waypoint>
+        <omgdi:waypoint x="476.0" y="460.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow17" id="BPMNEdge_flow17">
+        <omgdi:waypoint x="476.0" y="515.0"></omgdi:waypoint>
+        <omgdi:waypoint x="476.0" y="559.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow18" id="BPMNEdge_flow18">
+        <omgdi:waypoint x="476.0" y="614.0"></omgdi:waypoint>
+        <omgdi:waypoint x="476.0" y="662.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow19" id="BPMNEdge_flow19">
+        <omgdi:waypoint x="476.0" y="717.0"></omgdi:waypoint>
+        <omgdi:waypoint x="476.0" y="775.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow20" id="BPMNEdge_flow20">
+        <omgdi:waypoint x="424.0" y="802.0"></omgdi:waypoint>
+        <omgdi:waypoint x="386.0" y="802.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow21" id="BPMNEdge_flow21">
+        <omgdi:waypoint x="281.0" y="802.0"></omgdi:waypoint>
+        <omgdi:waypoint x="235.0" y="802.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow22" id="BPMNEdge_flow22">
+        <omgdi:waypoint x="130.0" y="802.0"></omgdi:waypoint>
+        <omgdi:waypoint x="75.0" y="802.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow23" id="BPMNEdge_flow23">
+        <omgdi:waypoint x="333.0" y="190.0"></omgdi:waypoint>
+        <omgdi:waypoint x="333.0" y="559.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="14.0" x="333.0" y="190.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow24" id="BPMNEdge_flow24">
+        <omgdi:waypoint x="386.0" y="586.0"></omgdi:waypoint>
+        <omgdi:waypoint x="424.0" y="586.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow25" id="BPMNEdge_flow25">
+        <omgdi:waypoint x="1014.0" y="198.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1014.0" y="251.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="100.0" x="1019.0" y="219.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow26" id="BPMNEdge_flow26">
+        <omgdi:waypoint x="962.0" y="278.0"></omgdi:waypoint>
+        <omgdi:waypoint x="921.0" y="278.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow27" id="BPMNEdge_flow27">
+        <omgdi:waypoint x="816.0" y="278.0"></omgdi:waypoint>
+        <omgdi:waypoint x="773.0" y="278.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow28" id="BPMNEdge_flow28">
+        <omgdi:waypoint x="668.0" y="278.0"></omgdi:waypoint>
+        <omgdi:waypoint x="619.0" y="278.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow29" id="BPMNEdge_flow29">
+        <omgdi:waypoint x="1140.0" y="417.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1139.0" y="639.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1080.0" y="641.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow37" id="BPMNEdge_flow37">
+        <omgdi:waypoint x="1067.0" y="170.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1140.0" y="170.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1140.0" y="377.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="100.0" x="1078.0" y="170.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow38" id="BPMNEdge_flow38">
+        <omgdi:waypoint x="722.0" y="370.0"></omgdi:waypoint>
+        <omgdi:waypoint x="723.0" y="344.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1014.0" y="344.0"></omgdi:waypoint>
+        <omgdi:waypoint x="1014.0" y="306.0"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="12.0" width="100.0" x="775.0" y="331.0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow39" id="BPMNEdge_flow39">
+        <omgdi:waypoint x="721.0" y="442.0"></omgdi:waypoint>
+        <omgdi:waypoint x="720.0" y="487.0"></omgdi:waypoint>
+        <omgdi:waypoint x="689.0" y="487.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

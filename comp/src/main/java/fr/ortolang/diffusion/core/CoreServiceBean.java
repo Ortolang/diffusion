@@ -266,7 +266,7 @@ public class CoreServiceBean implements CoreService {
             membership.createGroup(members, name + "'s Members", "Members of a workspace have all permissions on workspace content");
             membership.addMemberInGroup(members, caller);
             Map<String, List<String>> membersrules = authorisation.getPolicyRules(members);
-            membersrules.put(MembershipService.MODERATOR_GROUP_KEY, Arrays.asList("read", "update"));
+            membersrules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "update"));
             authorisation.setPolicyRules(members, membersrules);
             
             String head = UUID.randomUUID().toString();
@@ -282,7 +282,7 @@ public class CoreServiceBean implements CoreService {
 
             Map<String, List<String>> rules = new HashMap<String, List<String>>();
             rules.put(members, Arrays.asList("read", "create", "update", "delete", "download"));
-            rules.put(MembershipService.MODERATOR_GROUP_KEY, Arrays.asList("read", "create", "update", "delete", "download"));
+            rules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "create", "update", "delete", "download"));
             authorisation.createPolicy(head, members);
             authorisation.setPolicyRules(head, rules);
 
@@ -322,7 +322,7 @@ public class CoreServiceBean implements CoreService {
             Map<String, List<String>> wsrules = new HashMap<String, List<String>>();
             wsrules.put(members, Collections.singletonList("read"));
             wsrules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
-            wsrules.put(MembershipService.MODERATOR_GROUP_KEY, Arrays.asList("read", "create", "update", "delete"));
+            wsrules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "create", "update", "delete"));
             authorisation.createPolicy(wskey, caller);
             authorisation.setPolicyRules(wskey, wsrules);
 
@@ -466,14 +466,14 @@ public class CoreServiceBean implements CoreService {
             if (workspace == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && workspace.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && workspace.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to snapshot workspace with key [" + wskey + "] because it is read only");
             }
 
             String name = String.valueOf(workspace.getClock());
 
             if (!workspace.hasChanged()) {
-                throw new CoreServiceException("unable to snapshot because workspace has no pending modifications since last snapshot");
+                return name;
             }
 
             try {
@@ -545,7 +545,7 @@ public class CoreServiceBean implements CoreService {
             if (workspace == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && workspace.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && workspace.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to tag workspace with key [" + wskey + "] because it is read only");
             }
             workspace.setKey(wskey);
@@ -604,7 +604,7 @@ public class CoreServiceBean implements CoreService {
             if (workspace == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && workspace.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && workspace.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to update workspace with key [" + wskey + "] because it is read only");
             }
             workspace.setName(name);
@@ -649,7 +649,7 @@ public class CoreServiceBean implements CoreService {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
             }
             if (!force) {
-                if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && workspace.isReadOnly()) {
+                if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && workspace.isReadOnly()) {
                     throw new WorkspaceReadOnlyException("unable to delete workspace with key [" + wskey + "] because it is read only");
                 }
                 if (workspace.getType().equals(WorkspaceType.SYSTEM.name())) {
@@ -1186,7 +1186,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to create collection in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -1419,7 +1419,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to move collection in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -1517,7 +1517,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to delete collection in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -1617,7 +1617,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to create data object in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -1735,7 +1735,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to update data object in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -1862,7 +1862,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to move data object in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -1954,7 +1954,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to delete data object in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -2052,7 +2052,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to create link in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -2155,7 +2155,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to update link in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -2270,7 +2270,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to move link in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -2363,7 +2363,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to delete link in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -2492,7 +2492,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to create metadata object in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -2725,7 +2725,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to update metadata object in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);
@@ -2957,7 +2957,7 @@ public class CoreServiceBean implements CoreService {
             if (ws == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + wsidentifier.getId() + "] from storage");
             }
-            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY) && ws.isReadOnly()) {
+            if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && ws.isReadOnly()) {
                 throw new WorkspaceReadOnlyException("unable to delete meta data object in workspace with key [" + wskey + "] because it is read only");
             }
             ws.setKey(wskey);

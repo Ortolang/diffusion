@@ -36,7 +36,10 @@ package fr.ortolang.diffusion.runtime.engine.task;
  * #L%
  */
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -46,34 +49,33 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Status;
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.core.*;
-import fr.ortolang.diffusion.core.entity.*;
-import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
-import fr.ortolang.diffusion.store.binary.DataCollisionException;
-import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import org.activiti.engine.delegate.DelegateExecution;
+import org.activiti.engine.impl.util.json.JSONObject;
 
 import fr.ortolang.diffusion.OrtolangObjectState;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
+import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
-import org.activiti.engine.impl.util.json.JSONObject;
 
-public class LoadSnapshotTask extends RuntimeEngineTask {
+public class PreparePublicationTask extends RuntimeEngineTask {
 
-    public static final String NAME = "Snapshot Workspace";
-    private static final Logger LOGGER = Logger.getLogger(LoadSnapshotTask.class.getName());
+    public static final String NAME = "Prepare Workspace";
+    private static final Logger LOGGER = Logger.getLogger(PreparePublicationTask.class.getName());
 
-    public LoadSnapshotTask() {
+    public PreparePublicationTask() {
     }
 
     @Override
     public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-        checkParameters(execution);
+
+        if (!execution.hasVariable(WORKSPACE_KEY_PARAM_NAME)) {
+            throw new RuntimeEngineTaskException("execution variable " + WORKSPACE_KEY_PARAM_NAME + " is not set");
+        }
         String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
 
         try {
@@ -88,7 +90,7 @@ public class LoadSnapshotTask extends RuntimeEngineTask {
 
         try {
             Workspace workspace = getCoreService().readWorkspace(wskey);
-            if ( workspace.getAlias() != null && workspace.getAlias().length() > 0 ) {
+            if (workspace.getAlias() != null && workspace.getAlias().length() > 0) {
                 execution.setVariable(WORKSPACE_ALIAS_PARAM_NAME, workspace.getAlias());
             } else {
                 execution.setVariable(WORKSPACE_ALIAS_PARAM_NAME, wskey);
@@ -96,66 +98,67 @@ public class LoadSnapshotTask extends RuntimeEngineTask {
 
             String snapshotName;
             String rootCollection;
-            if (!execution.hasVariable(SNAPSHOT_NAME_PARAM_NAME)) {
+            if (execution.hasVariable(SNAPSHOT_NAME_PARAM_NAME)) {
+                snapshotName = execution.getVariable(SNAPSHOT_NAME_PARAM_NAME, String.class);
+                LOGGER.log(Level.FINE, "Using provided snapshot name: " + snapshotName);
+            } else {
                 LOGGER.log(Level.FINE, "Updating publicationDate and datasize fields in item metadata");
-                MetadataElement ortolangItemMetadata = getCoreService().readCollection(workspace.getHead()).findMetadataByName(MetadataFormat.ITEM);
-                if (ortolangItemMetadata != null || !execution.getVariable(INITIER_PARAM_NAME, String.class).equals(MembershipService.SUPERUSER_IDENTIFIER)) {
-                    InputStream metadataInputStream = core.download(ortolangItemMetadata.getKey());
-                    String json = new BufferedReader(new InputStreamReader(metadataInputStream)).lines().collect(Collectors.joining("\n"));
-                    metadataInputStream.close();
-                    JSONObject jsonObject = new JSONObject(json);
-                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                    Date date = new Date();
-                    jsonObject.put("publicationDate", dateFormat.format(date));
-                    jsonObject.put("datasize", Long.toString(core.getSize(workspace.getHead()).getSize()));
-                    json = jsonObject.toString();
-                    String hash = getBinaryStore().put(new ByteArrayInputStream(json.getBytes()));
-                    core.updateMetadataObject(wskey, "/", MetadataFormat.ITEM, hash, MetadataFormat.ITEM + ".json", false);
-                }
-                LOGGER.log(Level.FINE, "Snapshot name NOT provided and workspace has changed since last snapshot, generæating a new snapshot");
+                updateMetadata(wskey, workspace.getHead(), execution.getVariable(INITIER_PARAM_NAME, String.class));
+                LOGGER.log(Level.FINE, "Retreiving workspace snapshot name and setting process variable accordingly");
                 snapshotName = getCoreService().snapshotWorkspace(wskey);
-                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "New snapshot [" + snapshotName + "] created"));
                 execution.setVariable(SNAPSHOT_NAME_PARAM_NAME, snapshotName);
-                try {
-                    LOGGER.log(Level.FINE, "User Transaction Status: " + getUserTransaction().getStatus());
-                    if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
-                        LOGGER.log(Level.FINE, "START User Transaction");
-                        getUserTransaction().begin();
-                    }
-                } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
-                }
+                LOGGER.log(Level.FINE, "Using retreived snapshot name: " + snapshotName);
             }
-            snapshotName = execution.getVariable(SNAPSHOT_NAME_PARAM_NAME, String.class);
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Snapshot name: " + snapshotName));
+            LOGGER.log(Level.FINE, "Loading snapshot element");
             SnapshotElement snapshot = workspace.findSnapshotByName(snapshotName);
             if (snapshot == null) {
                 throw new RuntimeEngineTaskException("unable to find a snapshot with name " + snapshotName + " in workspace " + wskey);
             }
             rootCollection = snapshot.getKey();
 
+            LOGGER.log(Level.FINE, "Checking snapshot publication status");
             String publicationStatus = getRegistryService().getPublicationStatus(rootCollection);
             if (!publicationStatus.equals(OrtolangObjectState.Status.DRAFT.value())) {
-                throw new RuntimeEngineTaskException("Snapshot publication status is not " + OrtolangObjectState.Status.DRAFT
-                        + ", maybe already published or involved in another publication process");
+                throw new RuntimeEngineTaskException("Snapshot publication status is not " + OrtolangObjectState.Status.DRAFT + ", maybe already published or involved in another publication process");
             }
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Snapshot loaded and publication status is good for publication, starting publication"));
+            
+            LOGGER.log(Level.FINE, "Load reviewers group members for paralell review task creation");
 
-        } catch (CoreServiceException | KeyNotFoundException | RegistryServiceException | WorkspaceReadOnlyException | DataNotFoundException | OrtolangException | DataCollisionException | BinaryStoreServiceException | MetadataFormatException | InvalidPathException | PathNotFoundException | IOException | RuntimeException e) {
-            throw new RuntimeEngineTaskException("unexpected error during snapshot task execution", e);
+        } catch (Exception e) {
+            try {
+                LOGGER.log(Level.FINE, "ROLLBACK Active User Transaction.");
+                getUserTransaction().rollback();
+            } catch (Exception e1) {
+                LOGGER.log(Level.SEVERE, "unable to rollback active user transaction", e1);
+            }
+            throw new RuntimeEngineTaskException("unexpected error during prepare workspace task execution", e);
         }
 
         try {
             LOGGER.log(Level.FINE, "COMMIT Active User Transaction.");
             getUserTransaction().commit();
-            getUserTransaction().begin();
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
         }
     }
 
-    private void checkParameters(DelegateExecution execution) throws RuntimeEngineTaskException {
-        if (!execution.hasVariable(WORKSPACE_KEY_PARAM_NAME)) {
-            throw new RuntimeEngineTaskException("execution variable " + WORKSPACE_KEY_PARAM_NAME + " is not set");
+    // TODO Put thoses informations in a dedicated system metadata format, not "item"
+    private void updateMetadata(String wskey, String wshead, String initier) throws Exception {
+        MetadataElement ortolangItemMetadata = getCoreService().readCollection(wshead).findMetadataByName(MetadataFormat.ITEM);
+        if (ortolangItemMetadata != null || initier.equals(MembershipService.SUPERUSER_IDENTIFIER)) {
+            InputStream metadataInputStream = core.download(ortolangItemMetadata.getKey());
+            String json = new BufferedReader(new InputStreamReader(metadataInputStream)).lines().collect(Collectors.joining("\n"));
+            metadataInputStream.close();
+            JSONObject jsonObject = new JSONObject(json);
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = new Date();
+            jsonObject.put("publicationDate", dateFormat.format(date));
+            jsonObject.put("datasize", Long.toString(core.getSize(wshead).getSize()));
+            json = jsonObject.toString();
+            String hash = getBinaryStore().put(new ByteArrayInputStream(json.getBytes()));
+            core.updateMetadataObject(wskey, "/", MetadataFormat.ITEM, hash, MetadataFormat.ITEM + ".json", false);
         }
     }
 

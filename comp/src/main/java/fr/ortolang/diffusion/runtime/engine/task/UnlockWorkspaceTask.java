@@ -43,7 +43,9 @@ import javax.ejb.EJBTransactionRolledbackException;
 import javax.transaction.Status;
 
 import fr.ortolang.diffusion.notification.NotificationServiceException;
+
 import org.activiti.engine.delegate.DelegateExecution;
+import org.activiti.engine.delegate.Expression;
 
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -56,35 +58,48 @@ public class UnlockWorkspaceTask extends RuntimeEngineTask {
     private static final Logger LOGGER = Logger.getLogger(UnlockWorkspaceTask.class.getName());
     public static final String NAME = "Unlock Workspace";
 
+    private Expression wskey;
+
     public UnlockWorkspaceTask() {
+    }
+
+    public Expression getWskey() {
+        return wskey;
+    }
+
+    public void setWskey(Expression wskey) {
+        this.wskey = wskey;
     }
 
     @Override
     public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
-        String wskey = execution.getVariable(WORKSPACE_KEY_PARAM_NAME, String.class);
-        
         try {
             LOGGER.log(Level.FINE, "User Transaction Status: " + getUserTransaction().getStatus());
             if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
-                LOGGER.log(Level.FINE, "START User Transaction");
+                LOGGER.log(Level.FINE, "BEGIN User Transaction");
                 getUserTransaction().begin();
             }
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
+            LOGGER.log(Level.SEVERE, "unable to begin new user transaction", e);
         }
         
         try {
-            LOGGER.log(Level.FINE, "unlocking workspace with key: " + wskey);
-            getCoreService().systemSetWorkspaceReadOnly(wskey, false);
+            LOGGER.log(Level.FINE, "unlocking workspace with key: " + wskey.getExpressionText());
+            getCoreService().systemSetWorkspaceReadOnly(wskey.getExpressionText(), false);
         } catch (SecurityException | IllegalStateException | EJBTransactionRolledbackException | CoreServiceException | KeyNotFoundException | NotificationServiceException e) {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
+            try {
+                LOGGER.log(Level.FINE, "ROLLBACK Active User Transaction.");
+                getUserTransaction().rollback();
+            } catch (Exception e2) {
+                LOGGER.log(Level.SEVERE, "unable to rollback active user transaction", e2);
+            }
             throw new RuntimeEngineTaskException("unexpected error occurred", e);
         }
 
         try {
             LOGGER.log(Level.FINE, "COMMIT Active User Transaction.");
             getUserTransaction().commit();
-            getUserTransaction().begin();
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
         }

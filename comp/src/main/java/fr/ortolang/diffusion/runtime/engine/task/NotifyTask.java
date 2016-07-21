@@ -38,7 +38,9 @@ package fr.ortolang.diffusion.runtime.engine.task;
 
 import java.io.UnsupportedEncodingException;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -53,12 +55,10 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.template.MessageResolverMethod;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
 
-import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
@@ -66,8 +66,8 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
-import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.template.MessageResolverMethod;
 import fr.ortolang.diffusion.template.TemplateEngine;
 import fr.ortolang.diffusion.template.TemplateEngineException;
 
@@ -76,177 +76,152 @@ public class NotifyTask extends RuntimeEngineTask {
     private static final Logger LOGGER = Logger.getLogger(NotifyTask.class.getName());
     private static final ClassLoader TEMPLATE_ENGINE_CL = NotifyTask.class.getClassLoader();
 
+    public static final Locale DEFAULT_LOCALE = Locale.FRANCE;
     public static final String NAME = "Notify";
-    public static final String ACTION_SUBMIT = "submit";
-    public static final String ACTION_REJECT = "reject";
-    public static final String ACTION_ACCEPT = "accept";
-    public static final String ACTION_REMIND = "remind";
 
-    private static final String SENDER_NAME = "ORTOLANG";
-    private static final String SENDER_EMAIL = "noreply@ortolang.fr";
-
-    private Expression action;
+    private Expression userid;
+    private Expression groupid;
+    private Expression userType;
+    private Expression titleKey;
+    private Expression subjectKey;
+    private Expression bodyKey;
 
     public NotifyTask() {
     }
 
-    public Expression getAction() {
-        return action;
+    public Expression getUserType() {
+        return userType;
     }
 
-    public void setAction(Expression action) {
-        this.action = action;
+    public void setUserType(Expression userType) {
+        this.userType = userType;
+    }
+
+    public Expression getUserId() {
+        return userid;
+    }
+
+    public void setUserId(Expression userid) {
+        this.userid = userid;
+    }
+
+    public Expression getGroupId() {
+        return groupid;
+    }
+
+    public void setGroupId(Expression groupid) {
+        this.groupid = groupid;
+    }
+
+    public Expression getTitleKey() {
+        return titleKey;
+    }
+
+    public void setTitleKey(Expression titleKey) {
+        this.titleKey = titleKey;
+    }
+
+    public Expression getSubjectKey() {
+        return subjectKey;
+    }
+
+    public void setSubjectKey(Expression subjectKey) {
+        this.subjectKey = subjectKey;
+    }
+
+    public Expression getBodyKey() {
+        return bodyKey;
+    }
+
+    public void setBodyKey(Expression bodyKey) {
+        this.bodyKey = bodyKey;
     }
 
     @Override
     public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
         try {
-            String initier = execution.getVariable(Process.INITIER_VAR_NAME, String.class);
             String wsalias = (String) execution.getVariable("wsalias");
+
             String marketUrl = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL);
-            ProfileData userLanguage = getMembershipService().systemGetProfileInfo(initier, "language");
-            String language;
-            if ( userLanguage != null ) {
-                language = userLanguage.getValue();
-            } else {
-                language = "fr";
-            }
-            Locale locale = new Locale(language);
-            Map<String, Object> model = new HashMap<>(execution.getVariables());
-            model.put("msg", new MessageResolverMethod(locale));
-            model.put("titleArgs", null);
-            model.put("bodyArgs", null);
-            model.put("marketUrl", marketUrl);
-            switch ((String) action.getValue(execution)) {
-            case ACTION_SUBMIT:
-                LOGGER.log(Level.FINE, "Notifying initier and moderators for new publication submission");
+            String senderName = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SMTP_SENDER_NAME);
+            String senderEmail = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SMTP_SENDER_EMAIL);
+
+            List<String> recipients = new ArrayList<String>();
+            String user = (String) userid.getValue(execution);
+            if ( user != null && user.length() > 0 ) {
+                LOGGER.log(Level.FINE, "Searching email for user: " + user);
                 try {
-                    String initierEmail = getMembershipService().systemReadProfileEmail(initier);
-                    if (initierEmail == null || initierEmail.length() == 0) {
-                        throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier [" + initier + "], no email provided in profile"));
+                    String useremail = getMembershipService().systemReadProfileEmail(user);
+                    if (useremail == null || useremail.length() == 0) {
+                        LOGGER.log(Level.INFO, "No email found for user: " + user + ", unable to notify");
                     } else {
-                        model.put("userType", "user");
-                        model.put("title", "submit.title.initier");
-                        model.put("body", "submit.body.initier");
-                        model.put("bodyArgs", wsalias);
-                        String subject = getMessage("submit.subject", locale, wsalias);
-                        String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
-                        notify(SENDER_NAME, SENDER_EMAIL, initierEmail, subject, message);
+                        LOGGER.log(Level.FINE, "Email found for user: " + user + ", adding to recipients list");
+                        recipients.add(useremail);
                     }
-                } catch (MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier: " + e.getMessage()));
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error during notifying initier",  e));
+                } catch (MembershipServiceException | KeyNotFoundException e ) {
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "error while trying to load email for user: " + user));
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error while trying to load email for user: " + user, e));
                 }
+            }
+            String group = (String) groupid.getValue(execution);
+            if ( group != null && group.length() > 0 ) {
+                LOGGER.log(Level.FINE, "Loading Group with group: " + group);
                 try {
-                    Group moderators = getMembershipService().readGroup(MembershipService.MODERATOR_GROUP_KEY);
-                    for (String moderator : moderators.getMembers()) {
-                        String moderatorEmail = getMembershipService().systemReadProfileEmail(moderator);
-                        if (moderatorEmail == null || moderatorEmail.length() == 0) {
-                            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify moderator [" + moderator
-                                    + "], no email provided in profile"));
+                    Group g = getMembershipService().readGroup(group);
+                    for (String member : g.getMembers()) {
+                        String memberemail = getMembershipService().systemReadProfileEmail(member);
+                        if (memberemail == null || memberemail.length() == 0) {
+                            LOGGER.log(Level.INFO, "No email found for group member: " + member + ", unable to notify");
                         } else {
-                            ProfileData moderatorLanguage = getMembershipService().systemGetProfileInfo(moderator, "language");
-                            String mLanguage;
-                            if ( moderatorLanguage != null ) {
-                                mLanguage = moderatorLanguage.getValue();
-                            } else {
-                                mLanguage = "fr";
-                            }
-                            Locale moderatorLocale = new Locale(mLanguage);
-                            model.put("msg", new MessageResolverMethod(moderatorLocale));
-                            model.put("userType", "moderator");
-                            model.put("title", "submit.title.moderator");
-                            model.put("body", "submit.body.moderator");
-                            model.put("bodyArgs", new String[] {wsalias, marketUrl});
-                            String subject = getMessage("submit.subject", moderatorLocale, wsalias);
-                            String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
-                            notify(SENDER_NAME, SENDER_EMAIL, moderatorEmail, subject, message);
+                            LOGGER.log(Level.FINE, "Email found for group member [" + member + ", adding to recipients list");
+                            recipients.add(memberemail);
                         }
                     }
-                } catch (AccessDeniedException | MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify moderators: " + e.getMessage()));
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error during notifying moderators",  e));
-                }
-                break;
-            case ACTION_ACCEPT:
-                LOGGER.log(Level.FINE, "Notifying initier publication accepted");
-                try {
-                    String initierEmail = getMembershipService().systemReadProfileEmail(initier);
-                    if (initierEmail == null || initierEmail.length() == 0) {
-                        throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier [" + initier + "], no email provided in profile"));
-                    } else {
-                        model.put("userType", "user");
-                        model.put("title", "accept.title");
-                        model.put("body", "accept.body");
-                        model.put("bodyArgs", wsalias);
-                        String subject = getMessage("accept.subject", locale, wsalias);
-                        String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
-                        notify(SENDER_NAME, SENDER_EMAIL, initierEmail, subject, message);
-                    }
-                } catch (MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier: " + e.getMessage()));
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error during notifying initier",  e));
-                }
-                break;
-            case ACTION_REJECT:
-                LOGGER.log(Level.FINE, "Notifying initier publication rejected");
-                try {
-                    String initierEmail = getMembershipService().systemReadProfileEmail(initier);
-                    if (initierEmail == null || initierEmail.length() == 0) {
-                        throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier [" + initier + "], no email provided in profile"));
-                    } else {
-                        model.put("userType", "user");
-                        model.put("title", "reject.title");
-                        model.put("body", "reject.body");
-                        model.put("bodyArgs", new Object[] {wsalias, model.get("reason")});
-                        String subject = getMessage("reject.subject", locale, wsalias);
-                        String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
-                        notify(SENDER_NAME, SENDER_EMAIL, initierEmail, subject, message);
-                    }
-                } catch (MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify initier: " + e.getMessage()));
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error during notifying initier",  e));
-                }
-                break;
-            case ACTION_REMIND:
-                LOGGER.log(Level.FINE, "Remind moderators for submitted publication query");
-                try {
-                    Group moderators = getMembershipService().readGroup(MembershipService.MODERATOR_GROUP_KEY);
-                    for (String moderator : moderators.getMembers()) {
-                        String moderatorEmail = getMembershipService().systemReadProfileEmail(moderator);
-                        if (moderatorEmail == null || moderatorEmail.length() == 0) {
-                            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify moderator [" + moderator
-                                    + "], no email provided in profile"));
-                        } else {
-                            model.put("userType", "moderator");
-                            model.put("title", "remind.title");
-                            model.put("body", "remind.body");
-                            model.put("bodyArgs", wsalias);
-                            String subject = getMessage("remind.subject", locale, wsalias);
-                            String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
-                            notify(SENDER_NAME, SENDER_EMAIL, moderatorEmail, subject, message);
-                        }
-                    }
-                } catch (AccessDeniedException | MembershipServiceException | KeyNotFoundException | UnsupportedEncodingException | MessagingException | RuntimeEngineTaskException | TemplateEngineException e) {
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify moderators: " + e.getMessage()));
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error during notifying moderators",  e));
-                }
-                break;
-            default:
-                LOGGER.log(Level.FINE, "Unable to understand this action: " + action.getValue(execution));
+                } catch (MembershipServiceException | KeyNotFoundException | AccessDeniedException e ) {
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "error while trying to load emails for group: " + group));
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error while trying to load emails for group: " + group, e));
+                } 
             }
-        } catch (SecurityException | IllegalStateException | MembershipServiceException | KeyNotFoundException | EJBTransactionRolledbackException e) {
+            
+            for ( String recipient : recipients ) {
+                try {
+                    Locale locale = getUserLocale(user);
+                    Map<String, Object> model = new HashMap<>(execution.getVariables());
+                    Object[] args = new Object[] { marketUrl, wsalias, senderName, model.get("reason") };
+                    model.put("userType", getUserType().getValue(execution));
+                    model.put("title", getTitleKey().getValue(execution));
+                    model.put("body", getBodyKey().getValue(execution));
+                    model.put("msg", new MessageResolverMethod(locale));
+                    model.put("marketUrl", marketUrl);
+                    model.put("wsalias", wsalias);
+                    model.put("args", args);
+                    String subject = getMessage("submit.subject", locale, args);
+                    String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
+                    notify(senderName, senderEmail, recipient, subject, message);
+                } catch (UnsupportedEncodingException | MessagingException | TemplateEngineException | MembershipServiceException | KeyNotFoundException  e) {
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify recipient: " + recipient));
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "unable to notify recipient: " + recipient, e));
+                }
+            }
+
+        } catch (SecurityException | IllegalStateException | EJBTransactionRolledbackException e) {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
             throw new RuntimeEngineTaskException("unexpected error occurred", e);
         }
 
-        //        try {
-//            LOGGER.log(Level.FINE, "COMMIT Active User Transaction.");
-//            getUserTransaction().commit();
-//            getUserTransaction().begin();
-//        } catch (Exception e) {
-//            LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
-//        }
+    }
+
+    private Locale getUserLocale(String userid) throws MembershipServiceException, KeyNotFoundException, RuntimeEngineTaskException {
+        ProfileData recipientLanguageData = getMembershipService().systemGetProfileInfo(userid, "language");
+        if (recipientLanguageData != null) {
+            return new Locale(recipientLanguageData.getValue());
+        } else {
+            return DEFAULT_LOCALE;
+        }
+    }
+
+    private String getMessage(String key, Locale locale, Object... arguments) {
+        return MessageFormat.format(ResourceBundle.getBundle("notification", locale).getString(key), arguments);
     }
 
     private void notify(String senderName, String senderEmail, String receiverEmail, String subject, String message) throws MessagingException, UnsupportedEncodingException,
@@ -257,10 +232,6 @@ public class NotifyTask extends RuntimeEngineTask {
         msg.setFrom(new InternetAddress(senderEmail, senderName));
         msg.setContent(message, "text/html; charset=\"UTF-8\"");
         Transport.send(msg);
-    }
-
-    private String getMessage(String key, Locale locale, Object ... arguments) {
-        return MessageFormat.format(ResourceBundle.getBundle("notification", locale).getString(key), arguments);
     }
 
     @Override

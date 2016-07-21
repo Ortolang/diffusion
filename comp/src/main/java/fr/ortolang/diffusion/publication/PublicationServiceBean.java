@@ -167,7 +167,7 @@ public class PublicationServiceBean implements PublicationService {
 		try {
 			String caller = membership.getProfileKeyForConnectedIdentifier();
 			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			if (!caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATOR_GROUP_KEY)) {
+			if (!caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY)) {
 				throw new AccessDeniedException("user " + caller + " is not allowed to publish, only moderators can publish content");
 			}
 

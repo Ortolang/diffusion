@@ -161,9 +161,9 @@ public class BootstrapServiceBean implements BootstrapService {
                 authorisation.setPolicyRules(MembershipService.UNAUTHENTIFIED_IDENTIFIER, anonReadRules);
 
                 LOGGER.log(Level.FINE, "creating moderators group");
-                membership.createGroup(MembershipService.MODERATOR_GROUP_KEY, "Publication Moderators", "Moderators of the platform can publish content");
-                membership.addMemberInGroup(MembershipService.MODERATOR_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
-                authorisation.setPolicyRules(MembershipService.MODERATOR_GROUP_KEY, anonReadRules);
+                membership.createGroup(MembershipService.MODERATORS_GROUP_KEY, "Publication Moderators", "Moderators of the platform can publish content");
+                membership.addMemberInGroup(MembershipService.MODERATORS_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
+                authorisation.setPolicyRules(MembershipService.MODERATORS_GROUP_KEY, anonReadRules);
 
                 LOGGER.log(Level.FINE, "creating esr group");
                 membership.createGroup(MembershipService.ESR_GROUP_KEY, "ESR Members", "People from Superior Teaching and Research Group");

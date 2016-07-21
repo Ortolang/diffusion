@@ -212,7 +212,9 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
     public void deleteProcess(String key) throws RuntimeEngineException {
 	    try {
             ProcessInstance instance = engine.getRuntimeService().createProcessInstanceQuery().processInstanceBusinessKey(key).singleResult();
-            engine.getRuntimeService().deleteProcessInstance(instance.getId(), "Ortolang process deleted also");
+            if ( instance != null ) {
+                engine.getRuntimeService().deleteProcessInstance(instance.getId(), "Ortolang process deleted also");
+            }
         } catch (ActivitiException e) {
             throw new RuntimeEngineException("unexpected error while deleting process instance", e);
         }

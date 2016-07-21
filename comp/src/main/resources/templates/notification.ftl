@@ -72,7 +72,7 @@
 <body style="background-color: #f4f4f4; margin: 0 !important; padding: 0 !important;">
 
 <!-- HIDDEN PREHEADER TEXT -->
-<div style="display: none; font-size: 1px; color: #fefefe; line-height: 1px; font-family: 'Lato', Helvetica, Arial, sans-serif; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden;">${msg(body, bodyArgs)}</div>
+<div style="display: none; font-size: 1px; color: #fefefe; line-height: 1px; font-family: 'Lato', Helvetica, Arial, sans-serif; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden;">${msg(body, args)}</div>
 
 <table border="0" cellpadding="0" cellspacing="0" width="100%">
     <!-- LOGO -->
@@ -110,7 +110,7 @@
             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;" >
                 <tr>
                     <td bgcolor="#ffffff" align="center" style="padding: 30px 30px 0px 30px; border-radius: 4px 4px 0px 0px;  color: #111111; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-height: 25px;" >
-                        <h2 style="font-size: 24px; font-weight: 400; margin: 0;">${msg(title, titleArgs)}</h2>
+                        <h2 style="font-size: 24px; font-weight: 400; margin: 0;">${msg(title, args)}</h2>
                     </td>
                 </tr>
             </table>
@@ -132,7 +132,7 @@
             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;" >
                 <!-- COPY -->
                 <tr>
-                    <td bgcolor="#ffffff" align="left" style="padding: 20px 30px 30px 30px; border-radius: 0px 0px 4px 4px; color: #666666; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-height: 25px;" >${msg(body, bodyArgs)}</td>
+                    <td bgcolor="#ffffff" align="left" style="padding: 20px 30px 30px 30px; border-radius: 0px 0px 4px 4px; color: #666666; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 18px; font-weight: 400; line-height: 25px;" >${msg(body, args)}</td>
                 </tr>
             </table>
             <!--[if (gte mso 9)|(IE)]>
