@@ -37,7 +37,6 @@ package fr.ortolang.diffusion.bootstrap;
  */
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,7 +44,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,7 +56,6 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 
-import fr.ortolang.diffusion.core.*;
 import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.RunAsPrincipal;
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -67,25 +64,16 @@ import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.form.FormService;
-import fr.ortolang.diffusion.form.FormServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.membership.MembershipServiceException;
-import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
 import fr.ortolang.diffusion.membership.entity.ProfileStatus;
-import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.runtime.RuntimeService;
-import fr.ortolang.diffusion.runtime.RuntimeServiceException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
-import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
-import fr.ortolang.diffusion.store.binary.DataCollisionException;
 
 @Startup
 @Singleton(name = BootstrapService.SERVICE_NAME)
@@ -97,8 +85,8 @@ public class BootstrapServiceBean implements BootstrapService {
 
     private static final Logger LOGGER = Logger.getLogger(BootstrapServiceBean.class.getName());
 
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    private static final String[] OBJECT_TYPE_LIST = new String[] {};
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] {};
 
     @EJB
     private RegistryService registry;
@@ -121,14 +109,10 @@ public class BootstrapServiceBean implements BootstrapService {
     public void init() {
         try {
             String version = getClass().getPackage().getImplementationVersion();
-            LOGGER.log(Level.INFO, "\n\n"
-                    + "      ____  ____  __________  __    ___    _   ________\n"
-                    + "     / __ \\/ __ \\/_  __/ __ \\/ /   /   |  / | / / ____/\n"
-                    + "    / / / / /_/ / / / / / / / /   / /| | /  |/ / / __  \n"
-                    + "   / /_/ / _, _/ / / / /_/ / /___/ ___ |/ /|  / /_/ /  \n"
+            LOGGER.log(Level.INFO, "\n\n" + "      ____  ____  __________  __    ___    _   ________\n" + "     / __ \\/ __ \\/_  __/ __ \\/ /   /   |  / | / / ____/\n"
+                    + "    / / / / /_/ / / / / / / / /   / /| | /  |/ / / __  \n" + "   / /_/ / _, _/ / / / /_/ / /___/ ___ |/ /|  / /_/ /  \n"
                     + "   \\____/_/ |_| /_/  \\____/_____/_/  |_/_/ |_/\\____/   \n"
-                    + (version.contains("SNAPSHOT") ? "\n                                    " : "\n                                             ")
-                    + version + "\n");
+                    + (version.contains("SNAPSHOT") ? "\n                                    " : "\n                                             ") + version + "\n");
             OrtolangConfig.getInstance();
             bootstrap();
         } catch (Exception e) {
@@ -139,40 +123,64 @@ public class BootstrapServiceBean implements BootstrapService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void bootstrap() throws BootstrapServiceException {
-        LOGGER.log(Level.INFO, "checking bootstrap status...");
+        LOGGER.log(Level.INFO, "Starting bootstrap...");
+
+        Map<String, List<String>> anonReadRules = new HashMap<String, List<String>>();
+        anonReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
+
         try {
-            registry.lookup(BootstrapService.WORKSPACE_KEY);
-            LOGGER.log(Level.INFO, "bootstrap key found, skipping initial creation.");
-        } catch (KeyNotFoundException e) {
-            try {
-                LOGGER.log(Level.INFO, "bootstrap key not found, creating  platform initial content...");
 
-                Map<String, List<String>> anonReadRules = new HashMap<String, List<String>>();
-                anonReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
-
+            if (!registry.exists(MembershipService.SUPERUSER_IDENTIFIER)) {
                 LOGGER.log(Level.FINE, "creating root profile");
                 membership.createProfile(MembershipService.SUPERUSER_IDENTIFIER, "Super", "User", "root@ortolang.org", ProfileStatus.ACTIVE);
-                membership.addProfilePublicKey(MembershipService.SUPERUSER_IDENTIFIER, "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDqv8kWdXIgWbFJfOiu9fQYiazwfnpZogatgo3278PIAQ4eaj6p+sjQMQX0hew+rHXCqvi6FaG6Lql7fkJv/NJpSyhyCKYNCxmYKwUvaViOuRLDmnpziEX39WDmiWBE0Q+DNuKIZMx3yZNX/BeBp0FfooKkCnZWEDo4pzcYVp2RlwZuEDZQcQ6KP2S9+z2WQPmsE9tcyPNL12hp8tiG8J/XsPXxnn1mgJxyiwQmEYDxXZTAazeewqftz4GU3Xc9qWOa4GXK/2l0GB/XVuFLoyrXve+hnsiFpeIslJuGl0+AAX+lCULjDcA72r4aT30Z4HV+wxiQxk/j+2CtCw/vfeit achile-laptop");
+                membership
+                        .addProfilePublicKey(
+                                MembershipService.SUPERUSER_IDENTIFIER,
+                                "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDqv8kWdXIgWbFJfOiu9fQYiazwfnpZogatgo3278PIAQ4eaj6p+sjQMQX0hew+rHXCqvi6FaG6Lql7fkJv/NJpSyhyCKYNCxmYKwUvaViOuRLDmnpziEX39WDmiWBE0Q+DNuKIZMx3yZNX/BeBp0FfooKkCnZWEDo4pzcYVp2RlwZuEDZQcQ6KP2S9+z2WQPmsE9tcyPNL12hp8tiG8J/XsPXxnn1mgJxyiwQmEYDxXZTAazeewqftz4GU3Xc9qWOa4GXK/2l0GB/XVuFLoyrXve+hnsiFpeIslJuGl0+AAX+lCULjDcA72r4aT30Z4HV+wxiQxk/j+2CtCw/vfeit achile-laptop");
+            }
 
+            if (!registry.exists(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
                 LOGGER.log(Level.FINE, "creating anonymous profile");
                 membership.createProfile(MembershipService.UNAUTHENTIFIED_IDENTIFIER, "Anonymous", "User", "anon@ortolang.org", ProfileStatus.ACTIVE);
                 LOGGER.log(Level.FINE, "change owner of anonymous profile to root and set anon read rules");
                 authorisation.updatePolicyOwner(MembershipService.UNAUTHENTIFIED_IDENTIFIER, MembershipService.SUPERUSER_IDENTIFIER);
                 authorisation.setPolicyRules(MembershipService.UNAUTHENTIFIED_IDENTIFIER, anonReadRules);
+            }
 
+            if (!registry.exists(MembershipService.MODERATORS_GROUP_KEY)) {
                 LOGGER.log(Level.FINE, "creating moderators group");
                 membership.createGroup(MembershipService.MODERATORS_GROUP_KEY, "Publication Moderators", "Moderators of the platform can publish content");
                 membership.addMemberInGroup(MembershipService.MODERATORS_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
                 authorisation.setPolicyRules(MembershipService.MODERATORS_GROUP_KEY, anonReadRules);
+            }
 
+            if (!registry.exists(MembershipService.PUBLISHERS_GROUP_KEY)) {
+                LOGGER.log(Level.FINE, "creating publishers group");
+                membership.createGroup(MembershipService.PUBLISHERS_GROUP_KEY, "Reviewers", "Reviewers of the platform can rate content");
+                membership.addMemberInGroup(MembershipService.PUBLISHERS_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
+                authorisation.setPolicyRules(MembershipService.PUBLISHERS_GROUP_KEY, anonReadRules);
+            }
+
+            if (!registry.exists(MembershipService.REVIEWERS_GROUP_KEY)) {
+                LOGGER.log(Level.FINE, "creating reviewers group");
+                membership.createGroup(MembershipService.REVIEWERS_GROUP_KEY, "Reviewers", "Reviewers of the platform can rate content");
+                membership.addMemberInGroup(MembershipService.REVIEWERS_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
+                authorisation.setPolicyRules(MembershipService.REVIEWERS_GROUP_KEY, anonReadRules);
+            }
+
+            if (!registry.exists(MembershipService.ESR_GROUP_KEY)) {
                 LOGGER.log(Level.FINE, "creating esr group");
                 membership.createGroup(MembershipService.ESR_GROUP_KEY, "ESR Members", "People from Superior Teaching and Research Group");
                 authorisation.setPolicyRules(MembershipService.ESR_GROUP_KEY, anonReadRules);
-                
+            }
+
+            if (!registry.exists(MembershipService.ADMIN_GROUP_KEY)) {
                 LOGGER.log(Level.FINE, "creating admins group");
                 membership.createGroup(MembershipService.ADMIN_GROUP_KEY, "Administrators", "Administrators of the platform");
                 authorisation.setPolicyRules(MembershipService.ADMIN_GROUP_KEY, anonReadRules);
+            }
 
+            if (!registry.exists(BootstrapService.WORKSPACE_KEY)) {
                 LOGGER.log(Level.FINE, "create system workspace");
                 core.createWorkspace(BootstrapService.WORKSPACE_KEY, "system", "System Workspace", WorkspaceType.SYSTEM.toString());
                 Properties props = new Properties();
@@ -181,146 +189,103 @@ public class BootstrapServiceBean implements BootstrapService {
                 props.setProperty("bootstrap.version", BootstrapService.VERSION);
                 String hash = core.put(new ByteArrayInputStream(props.toString().getBytes()));
                 core.createDataObject(BootstrapService.WORKSPACE_KEY, "/bootstrap.txt", hash);
+            }
+
+            if (!registry.exists(AuthorisationPolicyTemplate.DEFAULT)) {
+                LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.DEFAULT + "] authorisation policy template");
+                authorisation.createPolicy(AuthorisationPolicyTemplate.DEFAULT_POLICY, MembershipService.SUPERUSER_IDENTIFIER);
+                Map<String, List<String>> defaultPolicyRules = new HashMap<String, List<String>>();
+                defaultPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read", "download"));
+                authorisation.setPolicyRules(AuthorisationPolicyTemplate.DEFAULT_POLICY, defaultPolicyRules);
+                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.DEFAULT, "Default template allows all users to read and download content", AuthorisationPolicyTemplate.DEFAULT_POLICY);
+            }
+
+            if (!registry.exists(AuthorisationPolicyTemplate.FORALL)) {
                 LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.FORALL + "] authorisation policy template");
-                String forallPolicyKey = UUID.randomUUID().toString();
-                authorisation.createPolicy(forallPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
+                authorisation.createPolicy(AuthorisationPolicyTemplate.FORALL_POLICY, MembershipService.SUPERUSER_IDENTIFIER);
                 Map<String, List<String>> forallPolicyRules = new HashMap<String, List<String>>();
                 forallPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read", "download"));
-                authorisation.setPolicyRules(forallPolicyKey, forallPolicyRules);
-                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.FORALL, "All users can read and download this content", forallPolicyKey);
-                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.DEFAULT, "Default template allows all users to read and download content", forallPolicyKey);
+                authorisation.setPolicyRules(AuthorisationPolicyTemplate.FORALL_POLICY, forallPolicyRules);
+                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.FORALL, "All users can read and download this content", AuthorisationPolicyTemplate.FORALL_POLICY);
+            }
 
+            if (!registry.exists(AuthorisationPolicyTemplate.AUTHENTIFIED)) {
                 LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.AUTHENTIFIED + "] authorisation policy template");
-                String authentifiedPolicyKey = UUID.randomUUID().toString();
-                authorisation.createPolicy(authentifiedPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
+                authorisation.createPolicy(AuthorisationPolicyTemplate.AUTHENTIFIED_POLICY, MembershipService.SUPERUSER_IDENTIFIER);
                 Map<String, List<String>> authentifiedPolicyRules = new HashMap<String, List<String>>();
                 authentifiedPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
                 authentifiedPolicyRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList("read", "download"));
-                authorisation.setPolicyRules(authentifiedPolicyKey, authentifiedPolicyRules);
-                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.AUTHENTIFIED, "All users can read this content but download is restricted to authentified users only", authentifiedPolicyKey);
+                authorisation.setPolicyRules(AuthorisationPolicyTemplate.AUTHENTIFIED_POLICY, authentifiedPolicyRules);
+                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.AUTHENTIFIED, "All users can read this content but download is restricted to authentified users only",
+                        AuthorisationPolicyTemplate.AUTHENTIFIED_POLICY);
+            }
 
+            if (!registry.exists(AuthorisationPolicyTemplate.ESR)) {
                 LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.ESR + "] authorisation policy template");
-                String esrPolicyKey = UUID.randomUUID().toString();
-                authorisation.createPolicy(esrPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
+                authorisation.createPolicy(AuthorisationPolicyTemplate.ESR_POLICY, MembershipService.SUPERUSER_IDENTIFIER);
                 Map<String, List<String>> esrPolicyRules = new HashMap<String, List<String>>();
                 esrPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
                 esrPolicyRules.put(MembershipService.ESR_GROUP_KEY, Arrays.asList("read", "download"));
-                authorisation.setPolicyRules(esrPolicyKey, esrPolicyRules);
-                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.ESR, "All users can read this content but download is restricted to ESR users only", esrPolicyKey);
+                authorisation.setPolicyRules(AuthorisationPolicyTemplate.ESR_POLICY, esrPolicyRules);
+                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.ESR, "All users can read this content but download is restricted to ESR users only",
+                        AuthorisationPolicyTemplate.ESR_POLICY);
+            }
 
+            if (!registry.exists(AuthorisationPolicyTemplate.RESTRICTED)) {
                 LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.RESTRICTED + "] authorisation policy template");
-                String restrictedPolicyKey = UUID.randomUUID().toString();
-                authorisation.createPolicy(restrictedPolicyKey, MembershipService.SUPERUSER_IDENTIFIER);
+                authorisation.createPolicy(AuthorisationPolicyTemplate.RESTRICTED_POLICY, MembershipService.SUPERUSER_IDENTIFIER);
                 Map<String, List<String>> restrictedPolicyRules = new HashMap<String, List<String>>();
                 restrictedPolicyRules.put("${workspace.members}", Arrays.asList("read", "download"));
-                authorisation.setPolicyRules(restrictedPolicyKey, restrictedPolicyRules);
-                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.RESTRICTED, "Only workspace members can read and download this content, all other users cannot see this content", restrictedPolicyKey);
-
-                LOGGER.log(Level.FINE, "import forms");
-                LOGGER.log(Level.FINE, "import form : test-process-start-form");
-                InputStream is = getClass().getClassLoader().getResourceAsStream("forms/test-process-start-form.json");
-                String jsonDefinition = IOUtils.toString(is, "UTF-8");
-                form.createForm("test-process-start-form", "Test Process Start Form", jsonDefinition);
-                LOGGER.log(Level.FINE, "import form : test-process-confirm-form");
-                InputStream is2 = getClass().getClassLoader().getResourceAsStream("forms/test-process-confirm-form.json");
-                String jsonDefinition2 = IOUtils.toString(is2, "UTF-8");
-                form.createForm("test-process-confirm-form", "Test Process Confirm Form", jsonDefinition2);
-                LOGGER.log(Level.FINE, "import form : import-zip-form");
-                InputStream is3 = getClass().getClassLoader().getResourceAsStream("forms/import-zip-process-start-form.json");
-                String jsonDefinition3 = IOUtils.toString(is3, "UTF-8");
-                form.createForm("import-zip-process-start-form", "Import Zip Process Start Form", jsonDefinition3);
-                LOGGER.log(Level.FINE, "import form : review-snapshot-form");
-                InputStream is4 = getClass().getClassLoader().getResourceAsStream("forms/review-snapshot-form.json");
-                String jsonDefinition4 = IOUtils.toString(is4, "UTF-8");
-                form.createForm("review-snapshot-form", "Review Snapshot Form", jsonDefinition4);
-                LOGGER.log(Level.FINE, "import form : test-process-confirm-form");
-                InputStream is5 = getClass().getClassLoader().getResourceAsStream("forms/ortolang-item-form.json");
-                String jsonDefinition5 = IOUtils.toString(is5, "UTF-8");
-                form.createForm("ortolang-item-form", "Schema Form for an ORTOLANG item", jsonDefinition5);
-
-                LOGGER.log(Level.INFO, "bootstrap done.");
-            } catch (MembershipServiceException | ProfileAlreadyExistsException | AuthorisationServiceException | CoreServiceException | KeyAlreadyExistsException | IOException | AliasAlreadyExistsException
-                    | AccessDeniedException | KeyNotFoundException | InvalidPathException | DataCollisionException | FormServiceException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException e1) {
-                LOGGER.log(Level.SEVERE, "unexpected error occurred while bootstrapping platform", e1);
-                throw new BootstrapServiceException("unable to bootstrap platform", e1);
+                authorisation.setPolicyRules(AuthorisationPolicyTemplate.RESTRICTED_POLICY, restrictedPolicyRules);
+                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.RESTRICTED, "Only workspace members can read and download this content, all other users cannot see this content",
+                        AuthorisationPolicyTemplate.RESTRICTED_POLICY);
             }
 
-        } catch (RegistryServiceException e) {
-            throw new BootstrapServiceException("unable to check platform bootstrap status", e);
-        }
-        
-        try {
-            try {
-                registry.lookup(MembershipService.REVIEWERS_GROUP_KEY);
-            } catch ( KeyNotFoundException e ) {
-                LOGGER.log(Level.FINE, "reviewers group not found, creating");
-                Map<String, List<String>> anonReadRules = new HashMap<String, List<String>>();
-                anonReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
-                membership.createGroup(MembershipService.REVIEWERS_GROUP_KEY, "Reviewers", "Reviewers of the platform can rate content");
-                membership.addMemberInGroup(MembershipService.REVIEWERS_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
-                authorisation.setPolicyRules(MembershipService.REVIEWERS_GROUP_KEY, anonReadRules);
+            if (!registry.exists(FormService.IMPORT_ZIP_FORM)) {
+                LOGGER.log(Level.FINE, "create form : " + FormService.IMPORT_ZIP_FORM);
+                InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.IMPORT_ZIP_FORM + ".json");
+                String json = IOUtils.toString(is, "UTF-8");
+                form.createForm(FormService.IMPORT_ZIP_FORM, "Import Zip Process Start Form", json);
             }
-        } catch (AccessDeniedException | RegistryServiceException | AuthorisationServiceException |  MembershipServiceException | KeyAlreadyExistsException | KeyNotFoundException e ) {
-            LOGGER.log(Level.SEVERE, "unexpected error occurred while trying to check or create reviewers group", e);
-            throw new BootstrapServiceException("unable to bootstrap reviewers group", e);
-        }
-        
-        try {
-            try {
-                registry.lookup(MembershipService.PUBLISHERS_GROUP_KEY);
-            } catch ( KeyNotFoundException e ) {
-                LOGGER.log(Level.FINE, "publishers group not found, creating");
-                Map<String, List<String>> anonReadRules = new HashMap<String, List<String>>();
-                anonReadRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
-                membership.createGroup(MembershipService.PUBLISHERS_GROUP_KEY, "Publishers", "Publishers of the platform are responsibles for final publication approval.");
-                membership.addMemberInGroup(MembershipService.PUBLISHERS_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
-                authorisation.setPolicyRules(MembershipService.PUBLISHERS_GROUP_KEY, anonReadRules);
-            }
-        } catch (AccessDeniedException | RegistryServiceException | AuthorisationServiceException |  MembershipServiceException | KeyAlreadyExistsException | KeyNotFoundException e ) {
-            LOGGER.log(Level.SEVERE, "unexpected error occurred while trying to check or create publishers group", e);
-            throw new BootstrapServiceException("unable to create publishers group", e);
-        }
-        
-//        try {
-//            try {
-//                registry.lookup("moderation-form");
-//            } catch ( KeyNotFoundException e ) {
-//                LOGGER.log(Level.FINE, "moderation-form not found, creating");
-//                InputStream is4 = getClass().getClassLoader().getResourceAsStream("forms/moderation-form.json");
-//                String jsonDefinition4 = IOUtils.toString(is4, "UTF-8");
-//                form.createForm("moderation-form", "Moderation Form", jsonDefinition4);
-//            }
-//        } catch (AccessDeniedException | RegistryServiceException | FormServiceException | KeyAlreadyExistsException | IOException e ) {
-//            LOGGER.log(Level.SEVERE, "unexpected error occurred while importing moderation form", e);
-//            throw new BootstrapServiceException("unable to create moderation form", e);
-//        }
-//        
-//        try {
-//            try {
-//                registry.lookup("publication-form");
-//            } catch ( KeyNotFoundException e ) {
-//                LOGGER.log(Level.FINE, "publication-form not found, creating");
-//                InputStream is4 = getClass().getClassLoader().getResourceAsStream("forms/publication-form.json");
-//                String jsonDefinition4 = IOUtils.toString(is4, "UTF-8");
-//                form.createForm("publication-form", "Publication Form", jsonDefinition4);
-//            }
-//        } catch (AccessDeniedException | RegistryServiceException | FormServiceException | KeyAlreadyExistsException | IOException e ) {
-//            LOGGER.log(Level.SEVERE, "unexpected error occurred while importing publication form", e);
-//            throw new BootstrapServiceException("unable to create publication form", e);
-//        }
 
-        try {
-            LOGGER.log(Level.INFO, "import process types");
-            runtime.importProcessTypes();
-            
+            if (!registry.exists(FormService.REVIEW_SNAPSHOT_FORM)) {
+                LOGGER.log(Level.FINE, "create form : " + FormService.REVIEW_SNAPSHOT_FORM);
+                InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.REVIEW_SNAPSHOT_FORM + ".json");
+                String json = IOUtils.toString(is, "UTF-8");
+                form.createForm(FormService.REVIEW_SNAPSHOT_FORM, "Workspace publication's review form", json);
+            }
+
+            if (!registry.exists(FormService.MODERATE_SNAPSHOT_FORM)) {
+                LOGGER.log(Level.FINE, "create form : " + FormService.MODERATE_SNAPSHOT_FORM);
+                InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.MODERATE_SNAPSHOT_FORM + ".json");
+                String json = IOUtils.toString(is, "UTF-8");
+                form.createForm(FormService.MODERATE_SNAPSHOT_FORM, "Workspace publication's moderation form", json);
+            }
+
+            if (!registry.exists(FormService.PUBLISH_SNAPSHOT_FORM)) {
+                LOGGER.log(Level.FINE, "create form : " + FormService.PUBLISH_SNAPSHOT_FORM);
+                InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.PUBLISH_SNAPSHOT_FORM + ".json");
+                String json = IOUtils.toString(is, "UTF-8");
+                form.createForm(FormService.PUBLISH_SNAPSHOT_FORM, "Workspace publication's form", json);
+            }
+
+            if (!registry.exists(FormService.ITEM_FORM)) {
+                LOGGER.log(Level.FINE, "create form : " + FormService.ITEM_FORM);
+                InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.ITEM_FORM + ".json");
+                String json = IOUtils.toString(is, "UTF-8");
+                form.createForm(FormService.ITEM_FORM, "Schema Form for an ORTOLANG item", json);
+            }
+
             LOGGER.log(Level.FINE, "import metadataformat schemas");
             InputStream schemaItemInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.15-with-object-language-copy.json");
             String schemaItemHash = core.put(schemaItemInputStream);
-            core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.", schemaItemHash, "ortolang-item-form", true, true);
+            core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.",
+                    schemaItemHash, "ortolang-item-form", true, true);
 
             InputStream schemaInputStream2 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-acl-schema.json");
             String schemaHash2 = core.put(schemaInputStream2);
-            core.createMetadataFormat(MetadataFormat.ACL, "Les métadonnées de contrôle d'accès permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, "", true, false);
+            core.createMetadataFormat(MetadataFormat.ACL, "Les métadonnées de contrôle d'accès permettent de paramétrer la visibilité d'une ressource lors de sa publication.", schemaHash2, "", true,
+                    false);
 
             InputStream schemaWorkspaceInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-workspace-schema.json");
             String schemaWorkspaceHash = core.put(schemaWorkspaceInputStream);
@@ -333,7 +298,7 @@ public class BootstrapServiceBean implements BootstrapService {
             InputStream schemaThumbInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-thumb-schema.json");
             String schemaThumbHash = core.put(schemaThumbInputStream);
             core.createMetadataFormat(MetadataFormat.THUMB, "Schema for ORTOLANG objects thumbnail", schemaThumbHash, "", false, false);
-            
+
             InputStream schemaTemplateInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-template-schema.json");
             String schemaTemplateHash = core.put(schemaTemplateInputStream);
             core.createMetadataFormat(MetadataFormat.TEMPLATE, "Schema for ORTOLANG collection template", schemaTemplateHash, "", false, false);
@@ -373,9 +338,15 @@ public class BootstrapServiceBean implements BootstrapService {
             InputStream schemaOfficeInputStream = getClass().getClassLoader().getResourceAsStream("schema/system-x-office.json");
             String schemaOfficeHash = core.put(schemaOfficeInputStream);
             core.createMetadataFormat(MetadataFormat.OFFICE, "Schema for ORTOLANG Office metadata", schemaOfficeHash, "", false, false);
-        } catch (RuntimeServiceException | CoreServiceException | DataCollisionException e1) {
-            LOGGER.log(Level.SEVERE, "unexpected error occurred while importing process types and metadataformat schemas", e1);
+
+            LOGGER.log(Level.INFO, "reimport process types");
+            runtime.importProcessTypes();
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "error during bootstrap: " + e.getMessage());
+            throw new BootstrapServiceException("error during bootstrap", e);
         }
+
     }
 
     @Override
@@ -385,7 +356,6 @@ public class BootstrapServiceBean implements BootstrapService {
 
     @Override
     public Map<String, String> getServiceInfos() {
-        //TODO parse the bootstrap file to read status and infos.
         return Collections.emptyMap();
     }
 
@@ -403,7 +373,7 @@ public class BootstrapServiceBean implements BootstrapService {
     public OrtolangObject findObject(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");
     }
-    
+
     @Override
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");

@@ -48,6 +48,12 @@ public interface FormService extends OrtolangService {
 	
 	String SERVICE_NAME = "form";
 	
+	String IMPORT_ZIP_FORM = "import-zip-process-start-form";
+	String REVIEW_SNAPSHOT_FORM = "review-snapshot-form";
+	String PUBLISH_SNAPSHOT_FORM = "publish-snapshot-form";
+	String MODERATE_SNAPSHOT_FORM = "moderate-snapshot-form";
+	String ITEM_FORM = "ortolang-item-form";
+	
 	List<Form> listForms() throws FormServiceException;
 	
 	void createForm(String key, String name, String definition) throws FormServiceException, KeyAlreadyExistsException, AccessDeniedException;

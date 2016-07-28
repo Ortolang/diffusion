@@ -124,6 +124,8 @@ public interface RegistryService extends OrtolangService {
 	
 	long count(String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException;
 	
+	boolean exists(String key) throws RegistryServiceException;
+	
 
 	List<RegistryEntry> systemListEntries(String keyFilter, String identifierFilter) throws RegistryServiceException;
 	

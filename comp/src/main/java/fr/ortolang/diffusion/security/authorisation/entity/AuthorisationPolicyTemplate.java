@@ -55,6 +55,12 @@ public class AuthorisationPolicyTemplate {
 	public static final String ESR = "esr";
 	public static final String RESTRICTED = "restricted";
 	
+	public static final String DEFAULT_POLICY = "default-policy";
+    public static final String FORALL_POLICY = "forall-policy";
+    public static final String AUTHENTIFIED_POLICY = "authentified-policy";
+    public static final String ESR_POLICY = "esr-policy";
+    public static final String RESTRICTED_POLICY = "restricted-policy";
+	
 	@Id
 	private String name;
 	private String description;

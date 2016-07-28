@@ -404,6 +404,18 @@ public class RegistryServiceBean implements RegistryService {
         LOGGER.log(Level.FINE, "lookup key for identifier [" + identifier + "]");
         return findEntryByIdentifier(identifier).getKey();
     }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public boolean exists(String key) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "testing existence of key [" + key + "]");
+        try {
+            findEntryByKey(key);
+            return true;
+        } catch ( KeyNotFoundException e ) {
+            return false;
+        }
+    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
