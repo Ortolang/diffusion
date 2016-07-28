@@ -47,7 +47,6 @@ import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ejb.EJBTransactionRolledbackException;
 import javax.mail.Message;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
@@ -81,20 +80,10 @@ public class NotifyTask extends RuntimeEngineTask {
 
     private Expression userid;
     private Expression groupid;
-    private Expression userType;
-    private Expression titleKey;
-    private Expression subjectKey;
-    private Expression bodyKey;
+    private Expression keyName;
+    private Expression keyType;
 
     public NotifyTask() {
-    }
-
-    public Expression getUserType() {
-        return userType;
-    }
-
-    public void setUserType(Expression userType) {
-        this.userType = userType;
     }
 
     public Expression getUserId() {
@@ -113,28 +102,20 @@ public class NotifyTask extends RuntimeEngineTask {
         this.groupid = groupid;
     }
 
-    public Expression getTitleKey() {
-        return titleKey;
+    public Expression getKeyType() {
+        return keyType;
     }
 
-    public void setTitleKey(Expression titleKey) {
-        this.titleKey = titleKey;
+    public void setKeyType(Expression keyType) {
+        this.keyType = keyType;
     }
 
-    public Expression getSubjectKey() {
-        return subjectKey;
+    public Expression getKeyName() {
+        return keyName;
     }
 
-    public void setSubjectKey(Expression subjectKey) {
-        this.subjectKey = subjectKey;
-    }
-
-    public Expression getBodyKey() {
-        return bodyKey;
-    }
-
-    public void setBodyKey(Expression bodyKey) {
-        this.bodyKey = bodyKey;
+    public void setKeyName(Expression keyName) {
+        this.keyName = keyName;
     }
 
     @Override
@@ -148,7 +129,7 @@ public class NotifyTask extends RuntimeEngineTask {
 
             List<String> recipients = new ArrayList<String>();
             String user = (String) userid.getValue(execution);
-            if ( user != null && user.length() > 0 ) {
+            if (user != null && user.length() > 0) {
                 LOGGER.log(Level.FINE, "Searching email for user: " + user);
                 try {
                     String useremail = getMembershipService().systemReadProfileEmail(user);
@@ -158,13 +139,13 @@ public class NotifyTask extends RuntimeEngineTask {
                         LOGGER.log(Level.FINE, "Email found for user: " + user + ", adding to recipients list");
                         recipients.add(useremail);
                     }
-                } catch (MembershipServiceException | KeyNotFoundException e ) {
+                } catch (MembershipServiceException | KeyNotFoundException e) {
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "error while trying to load email for user: " + user));
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error while trying to load email for user: " + user, e));
                 }
             }
             String group = (String) groupid.getValue(execution);
-            if ( group != null && group.length() > 0 ) {
+            if (group != null && group.length() > 0) {
                 LOGGER.log(Level.FINE, "Loading Group with group: " + group);
                 try {
                     Group g = getMembershipService().readGroup(group);
@@ -177,34 +158,34 @@ public class NotifyTask extends RuntimeEngineTask {
                             recipients.add(memberemail);
                         }
                     }
-                } catch (MembershipServiceException | KeyNotFoundException | AccessDeniedException e ) {
+                } catch (MembershipServiceException | KeyNotFoundException | AccessDeniedException e) {
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "error while trying to load emails for group: " + group));
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error while trying to load emails for group: " + group, e));
-                } 
+                }
             }
-            
-            for ( String recipient : recipients ) {
+
+            for (String recipient : recipients) {
                 try {
                     Locale locale = getUserLocale(user);
                     Map<String, Object> model = new HashMap<>(execution.getVariables());
                     Object[] args = new Object[] { marketUrl, wsalias, senderName, model.get("reason") };
-                    model.put("userType", getUserType().getValue(execution));
-                    model.put("title", getTitleKey().getValue(execution));
-                    model.put("body", getBodyKey().getValue(execution));
+                    model.put("userType", getKeyType().getValue(execution));
+                    model.put("title", getBunbleKey(execution, "title"));
+                    model.put("body", getBunbleKey(execution, "body"));
                     model.put("msg", new MessageResolverMethod(locale));
                     model.put("marketUrl", marketUrl);
                     model.put("wsalias", wsalias);
                     model.put("args", args);
-                    String subject = getMessage("submit.subject", locale, args);
+                    String subject = getMessage(getBunbleKey(execution, "title"), locale, args);
                     String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
                     notify(senderName, senderEmail, recipient, subject, message);
-                } catch (UnsupportedEncodingException | MessagingException | TemplateEngineException | MembershipServiceException | KeyNotFoundException  e) {
+                } catch (UnsupportedEncodingException | MessagingException | TemplateEngineException | MembershipServiceException | KeyNotFoundException e) {
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify recipient: " + recipient));
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "unable to notify recipient: " + recipient, e));
                 }
             }
 
-        } catch (SecurityException | IllegalStateException | EJBTransactionRolledbackException e) {
+        } catch (Exception e) {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Unexpected error occured: " + e.getMessage()));
             throw new RuntimeEngineTaskException("unexpected error occurred", e);
         }
@@ -218,6 +199,15 @@ public class NotifyTask extends RuntimeEngineTask {
         } else {
             return DEFAULT_LOCALE;
         }
+    }
+
+    private String getBunbleKey(DelegateExecution execution, String part) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(getKeyName().getValue(execution)).append(".").append(part);
+        if (getKeyType().getValue(execution) != null && ((String) getKeyType().getValue(execution)).length() > 0) {
+            builder.append(".").append(getKeyType().getValue(execution));
+        }
+        return builder.toString();
     }
 
     private String getMessage(String key, Locale locale, Object... arguments) {

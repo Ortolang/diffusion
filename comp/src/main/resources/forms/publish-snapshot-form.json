@@ -1,0 +1,29 @@
+[
+  {
+    "key": "accepted",
+    "type": "select",
+    "templateOptions": {
+      "required": true,
+      "label": "Do you agree the publication ?",
+      "options": [
+        {
+          "name": "Yes",
+          "value": "true"
+        },
+        {
+          "name": "No",
+          "value": "false"
+        }
+      ]
+    }
+  },
+  {
+    "key": "reason",
+    "type": "textarea",
+    "templateOptions": {
+      "required": true,
+      "label": "Reason",
+      "default": ""
+    }
+  }
+]

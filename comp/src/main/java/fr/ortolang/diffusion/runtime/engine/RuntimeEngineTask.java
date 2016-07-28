@@ -71,9 +71,9 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 
     public static final String PROFILES_PATH_PARAM_NAME = "profilespath";
     public static final String PROFILES_OVERWRITE_PARAM_NAME = "profilesoverwrites";
-    
+
     public static final String HANDLES_PATH_PARAM_NAME = "handlespath";
-    
+
     public static final String BAG_PATH_PARAM_NAME = "bagpath";
     public static final String BAG_VERSIONS_PARAM_NAME = "bagversions";
     public static final String BAG_VERSION_PARAM_NAME = "bagversion";
@@ -84,7 +84,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     public static final String SNAPSHOTS_TO_PUBLISH_PARAM_NAME = "snapshotsToPublish";
     public static final String SNAPSHOT_NAME_PARAM_NAME = "snapshot";
     public static final String SNAPSHOTS_TAGS_PARAM_NAME = "snapshotTags";
-    
+
     public static final String WORKSPACE_KEY_PARAM_NAME = "wskey";
     public static final String WORKSPACE_NAME_PARAM_NAME = "wsname";
     public static final String WORKSPACE_TYPE_PARAM_NAME = "wstype";
@@ -96,15 +96,15 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     public static final String REFERENTIEL_TYPE_PARAM_NAME = "referentieltype";
 
     public static final String REFERENTIAL_PATH_PARAM_NAME = "referentialpath";
-    
+
     public static final String PUBLICATION_REJECT_REASON = "rejectreason";
-    
+
     public static final String TASK_ACTION = "action";
-    
+
     public static final String FORCE_PARAM_NAME = "force";
-    
+
     public static final String INITIER_PARAM_NAME = "initier";
-    
+
     public static final String REVIEWERS_LIST = "reviewers";
     public static final String REVIEW_RESULTS = "reviewresults";
 
@@ -125,16 +125,16 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     protected NotificationService notification;
     protected IndexingService indexing;
     protected ReferentialService referential;
-    
+
     public Session getMailSession() throws RuntimeEngineTaskException {
         try {
-            if ( mailSession == null ) {
+            if (mailSession == null) {
                 mailSession = (Session) new InitialContext().lookup("java:jboss/mail/Default");
             }
             return mailSession;
         } catch (Exception e) {
             throw new RuntimeEngineTaskException(e);
-        } 
+        }
     }
 
     public MembershipService getMembershipService() throws RuntimeEngineTaskException {
@@ -293,28 +293,28 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 
     @Override
     public void execute(DelegateExecution execution) {
+
+        String bkey = execution.getProcessBusinessKey();
+        String aname = execution.getCurrentActivityName();
+
         try {
             LOGGER.log(Level.INFO, "Starting " + this.getTaskName() + " execution");
-            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityStartEvent(execution.getProcessBusinessKey(), getTaskName(), "SERVICE TASK " + execution.getCurrentActivityName()
-                    + " STARTED"));
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityStartEvent(bkey, getTaskName(), "SERVICE TASK " + aname + " STARTED"));
 
             try {
                 LOGGER.log(Level.FINE, "Executing task");
                 executeTask(execution);
                 LOGGER.log(Level.FINE, "Task executed");
-            } catch (RuntimeEngineTaskException e) {
-                LOGGER.log(Level.SEVERE, "RuntimeTask exception intercepted, putting task in error and aborting process with pid: " + execution.getProcessBusinessKey(), e);
-                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "SERVICE TASK " + execution.getCurrentActivityName()
-                        + " IN ERROR: " + e.getMessage(), e));
-                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(execution.getProcessBusinessKey(), getTaskName(), "SERVICE TASK " + execution.getCurrentActivityName()
-                        + " IN ERROR: " + e.getMessage()));
-                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessAbortEvent(execution.getProcessBusinessKey(), e.getMessage()));
+            } catch (RuntimeEngineTaskException | RuntimeException e) {
+                LOGGER.log(Level.SEVERE, "RuntimeTask exception intercepted, putting task in error and aborting process with pid: " + bkey, e);
+                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(bkey, "SERVICE TASK " + aname + " IN ERROR: " + e.getMessage(), e));
+                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(bkey, getTaskName(), "SERVICE TASK " + aname + " IN ERROR: " + e.getMessage()));
+                throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessAbortEvent(bkey, e.getMessage()));
                 throw new BpmnError("RuntimeTaskExecutionError", e.getMessage());
             }
 
             LOGGER.log(Level.FINE, "Sending events of process evolution");
-            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityCompleteEvent(execution.getProcessBusinessKey(), getTaskName(), "SERVICE TASK " + execution.getCurrentActivityName()
-                    + " COMPLETED"));
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityCompleteEvent(bkey, getTaskName(), "SERVICE TASK " + aname + " COMPLETED"));
         } catch (RuntimeEngineTaskException e) {
             LOGGER.log(Level.SEVERE, "Unexpected runtime task exception", e);
             throw new BpmnError("Unexpected RuntimeTaskExecutionError", e.getMessage());

@@ -217,7 +217,7 @@ public class SecurityServiceBean implements SecurityService {
         }
         throw new SecurityServiceException("not implemented");
     }
-
+    
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void setRule(String key, String subject, List<String> permissions) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException {
@@ -248,7 +248,33 @@ public class SecurityServiceBean implements SecurityService {
             ctx.setRollbackOnly();
             throw new SecurityServiceException(e);
         }
-        throw new SecurityServiceException("not implemented");
+    }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void systemSetRule(String key, String subject, List<String> permissions) throws SecurityServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "{SYSTEM} setting rule for key [" + key + "] and subject [" + subject + "]");
+        try {
+            if ( registry.isLocked(key) ) {
+                throw new SecurityServiceException("key [" + key + "] is locked and cannot be modified.");
+            }
+
+            OrtolangObjectIdentifier identifier = registry.lookup(subject);
+            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+                throw new SecurityServiceException("rule subject must be an object managed by " + MembershipService.SERVICE_NAME);
+            }
+            Map<String, List<String>> rules = authorisation.getPolicyRules(key);
+            if ( permissions == null || permissions.isEmpty() ) {
+                rules.remove(subject);
+            } else {
+                rules.put(subject, permissions);
+            }
+            authorisation.setPolicyRules(key, rules);
+
+        } catch (KeyNotFoundException | RegistryServiceException | AuthorisationServiceException e) {
+            ctx.setRollbackOnly();
+            throw new SecurityServiceException(e);
+        }
     }
 
     @Override

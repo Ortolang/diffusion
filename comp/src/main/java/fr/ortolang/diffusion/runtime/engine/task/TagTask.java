@@ -46,14 +46,17 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 import fr.ortolang.diffusion.runtime.engine.TransactionnalRuntimeEngineTask;
 
-public class UnlockWorkspaceTask extends TransactionnalRuntimeEngineTask {
+public class TagTask extends TransactionnalRuntimeEngineTask {
 
-    private static final Logger LOGGER = Logger.getLogger(UnlockWorkspaceTask.class.getName());
-    public static final String NAME = "Unlock Workspace";
+    public static final String NAME = "Tag";
+
+    private static final Logger LOGGER = Logger.getLogger(TagTask.class.getName());
 
     private Expression wskey;
+    private Expression snapshot;
+    private Expression tag;
 
-    public UnlockWorkspaceTask() {
+    public TagTask() {
     }
 
     public Expression getWskey() {
@@ -64,14 +67,37 @@ public class UnlockWorkspaceTask extends TransactionnalRuntimeEngineTask {
         this.wskey = wskey;
     }
 
+    public Expression getSnapshot() {
+        return snapshot;
+    }
+
+    public void setSnapshot(Expression snapshot) {
+        this.snapshot = snapshot;
+    }
+
+    public Expression getTag() {
+        return tag;
+    }
+
+    public void setTag(Expression tag) {
+        this.tag = tag;
+    }
+
     @Override
     public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
+
+        String wskey = (String) getWskey().getValue(execution);
+        String snapshot = (String) getSnapshot().getValue(execution);
+        String tag = (String) getTag().getValue(execution);
+
         try {
-            LOGGER.log(Level.FINE, "unlocking workspace with key: " + wskey.getExpressionText());
-            getCoreService().systemSetWorkspaceReadOnly(wskey.getExpressionText(), false);
+            LOGGER.log(Level.FINE, "tagging workspace snapshot...");
+            getCoreService().tagWorkspace(wskey, tag, snapshot);
+            LOGGER.log(Level.FINE, "workspace snapshot [" + snapshot + "] tagged as [" + tag + "]");
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace Snapshot [" + snapshot + "] tagged as [" + tag + "]"));
         } catch (Exception e) {
-            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to unlock workspace: " + e.getMessage()));
-            throw new RuntimeEngineTaskException("error occurred while unlocking workspace", e);
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to tag workspace: " + e.getMessage()));
+            throw new RuntimeEngineTaskException("unexpected error while trying to tag workspace snapshot", e);
         }
     }
 

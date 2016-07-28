@@ -62,5 +62,7 @@ public interface SecurityService extends OrtolangService {
     void checkPermission(String key, String permission) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException;
 
     void checkAnonymousPermission(String key, String permission) throws SecurityServiceException, KeyNotFoundException, AccessDeniedException;
+    
+    void systemSetRule(String key, String subject, List<String> permissions) throws SecurityServiceException, KeyNotFoundException;
 
 }

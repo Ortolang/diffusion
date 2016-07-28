@@ -1,5 +1,17 @@
 package fr.ortolang.diffusion.runtime.engine.task;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.activiti.engine.delegate.DelegateExecution;
+import org.activiti.engine.delegate.Expression;
+
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
+import fr.ortolang.diffusion.runtime.engine.TransactionnalRuntimeEngineTask;
+
 /*
  * #%L
  * ORTOLANG
@@ -36,6 +48,59 @@ package fr.ortolang.diffusion.runtime.engine.task;
  * #L%
  */
 
-public class SetPermissionsTask {
+public class SetPermissionsTask extends TransactionnalRuntimeEngineTask {
+
+    private static final Logger LOGGER = Logger.getLogger(UpdateProcessStatusTask.class.getName());
+    public static final String NAME = "Set Permissions";
+
+    private Expression key;
+    private Expression permissions;
+    private Expression subject;
+
+    public SetPermissionsTask() {
+    }
+
+    public Expression getKey() {
+        return key;
+    }
+
+    public void setKey(Expression key) {
+        this.key = key;
+    }
+
+    public Expression getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(Expression permissions) {
+        this.permissions = permissions;
+    }
+
+    public Expression getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Expression subject) {
+        this.subject = subject;
+    }
+
+    @Override
+    public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
+        try {
+            String skey = (String) getKey().getValue(execution);
+            String ssubject = (String) getSubject().getValue(execution);
+            List<String> slpermissions = Arrays.asList(((String) getPermissions().getValue(execution)).split(","));
+            LOGGER.log(Level.FINE, "setting permissions for key: " + skey + ", and subject: " + ssubject + ", to: " + slpermissions);
+            getSecurityService().systemSetRule(skey, ssubject, slpermissions);
+        } catch (Exception e) {
+            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to set permissions: " + e.getMessage()));
+            throw new RuntimeEngineTaskException("error while setting permissions", e);
+        }
+    }
+
+    @Override
+    public String getTaskName() {
+        return NAME;
+    }
 
 }

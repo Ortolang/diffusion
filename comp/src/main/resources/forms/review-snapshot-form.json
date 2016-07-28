@@ -1,28 +1,40 @@
 [
   {
-    "key": "accepted",
+    "key": "review_grade",
     "type": "select",
     "templateOptions": {
       "required": true,
-      "label": "Do you agree the publication ?",
+      "label": "Quel grade voulez vous attribuer à cet publication ?",
       "options": [
         {
-          "name": "Yes",
-          "value": "true"
+          "name": "A",
+          "value": "A"
         },
         {
-          "name": "No",
-          "value": "false"
+          "name": "B",
+          "value": "B"
+        },
+        {
+          "name": "C",
+          "value": "C"
+        },
+        {
+          "name": "D",
+          "value": "D"
+        },
+        {
+          "name": "E",
+          "value": "E"
         }
       ]
     }
   },
   {
-    "key": "reason",
+    "key": "review_reason",
     "type": "textarea",
     "templateOptions": {
       "required": true,
-      "label": "Reason",
+      "label": "Quels sont les raison de votre choix ?",
       "default": ""
     }
   }
