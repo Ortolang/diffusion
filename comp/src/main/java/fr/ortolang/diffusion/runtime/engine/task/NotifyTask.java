@@ -38,9 +38,7 @@ package fr.ortolang.diffusion.runtime.engine.task;
 
 import java.io.UnsupportedEncodingException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -127,9 +125,9 @@ public class NotifyTask extends RuntimeEngineTask {
             String senderName = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SMTP_SENDER_NAME);
             String senderEmail = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SMTP_SENDER_EMAIL);
 
-            List<String> recipients = new ArrayList<String>();
-            String user = (String) userid.getValue(execution);
-            if (user != null && user.length() > 0) {
+            Map<String, String> recipients = new HashMap<String, String>();
+            if (userid != null && ((String) userid.getValue(execution)).length() > 0) {
+                String user = (String) userid.getValue(execution);
                 LOGGER.log(Level.FINE, "Searching email for user: " + user);
                 try {
                     String useremail = getMembershipService().systemReadProfileEmail(user);
@@ -137,15 +135,15 @@ public class NotifyTask extends RuntimeEngineTask {
                         LOGGER.log(Level.INFO, "No email found for user: " + user + ", unable to notify");
                     } else {
                         LOGGER.log(Level.FINE, "Email found for user: " + user + ", adding to recipients list");
-                        recipients.add(useremail);
+                        recipients.put(user, useremail);
                     }
                 } catch (MembershipServiceException | KeyNotFoundException e) {
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "error while trying to load email for user: " + user));
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error while trying to load email for user: " + user, e));
                 }
             }
-            String group = (String) groupid.getValue(execution);
-            if (group != null && group.length() > 0) {
+            if (groupid != null && ((String) groupid.getValue(execution)).length() > 0) {
+                String group = (String) groupid.getValue(execution);
                 LOGGER.log(Level.FINE, "Loading Group with group: " + group);
                 try {
                     Group g = getMembershipService().readGroup(group);
@@ -154,8 +152,8 @@ public class NotifyTask extends RuntimeEngineTask {
                         if (memberemail == null || memberemail.length() == 0) {
                             LOGGER.log(Level.INFO, "No email found for group member: " + member + ", unable to notify");
                         } else {
-                            LOGGER.log(Level.FINE, "Email found for group member [" + member + ", adding to recipients list");
-                            recipients.add(memberemail);
+                            LOGGER.log(Level.FINE, "Email found for group member: " + member + ", adding to recipients list");
+                            recipients.put(member, memberemail);
                         }
                     }
                 } catch (MembershipServiceException | KeyNotFoundException | AccessDeniedException e) {
@@ -164,9 +162,9 @@ public class NotifyTask extends RuntimeEngineTask {
                 }
             }
 
-            for (String recipient : recipients) {
+            for (String recipient : recipients.keySet()) {
                 try {
-                    Locale locale = getUserLocale(user);
+                    Locale locale = getUserLocale(recipient);
                     Map<String, Object> model = new HashMap<>(execution.getVariables());
                     Object[] args = new Object[] { marketUrl, wsalias, senderName, model.get("reason") };
                     model.put("userType", getKeyType().getValue(execution));
@@ -176,12 +174,12 @@ public class NotifyTask extends RuntimeEngineTask {
                     model.put("marketUrl", marketUrl);
                     model.put("wsalias", wsalias);
                     model.put("args", args);
-                    String subject = getMessage(getBunbleKey(execution, "title"), locale, args);
+                    String subject = getMessage(getBunbleKey(execution, "subject"), locale, args);
                     String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
-                    notify(senderName, senderEmail, recipient, subject, message);
+                    notify(senderName, senderEmail, recipients.get(recipient), subject, message);
                 } catch (UnsupportedEncodingException | MessagingException | TemplateEngineException | MembershipServiceException | KeyNotFoundException e) {
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify recipient: " + recipient));
-                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "unable to notify recipient: " + recipient, e));
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to notify profile: " + recipient));
+                    throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "unable to notify profile: " + recipient, e));
                 }
             }
 

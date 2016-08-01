@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -109,8 +110,11 @@ public class BootstrapServiceBean implements BootstrapService {
     public void init() {
         try {
             String version = getClass().getPackage().getImplementationVersion();
-            LOGGER.log(Level.INFO, "\n\n" + "      ____  ____  __________  __    ___    _   ________\n" + "     / __ \\/ __ \\/_  __/ __ \\/ /   /   |  / | / / ____/\n"
-                    + "    / / / / /_/ / / / / / / / /   / /| | /  |/ / / __  \n" + "   / /_/ / _, _/ / / / /_/ / /___/ ___ |/ /|  / /_/ /  \n"
+            LOGGER.log(Level.INFO, "\n\n" 
+                    + "      ____  ____  __________  __    ___    _   ________\n" 
+                    + "     / __ \\/ __ \\/_  __/ __ \\/ /   /   |  / | / / ____/\n"
+                    + "    / / / / /_/ / / / / / / / /   / /| | /  |/ / / __  \n" 
+                    + "   / /_/ / _, _/ / / / /_/ / /___/ ___ |/ /|  / /_/ /  \n"
                     + "   \\____/_/ |_| /_/  \\____/_____/_/  |_/_/ |_/\\____/   \n"
                     + (version.contains("SNAPSHOT") ? "\n                                    " : "\n                                             ") + version + "\n");
             OrtolangConfig.getInstance();
@@ -191,90 +195,112 @@ public class BootstrapServiceBean implements BootstrapService {
                 core.createDataObject(BootstrapService.WORKSPACE_KEY, "/bootstrap.txt", hash);
             }
 
-            if (!registry.exists(AuthorisationPolicyTemplate.DEFAULT)) {
+            if (!authorisation.isPolicyTemplateExists(AuthorisationPolicyTemplate.DEFAULT)) {
                 LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.DEFAULT + "] authorisation policy template");
-                authorisation.createPolicy(AuthorisationPolicyTemplate.DEFAULT_POLICY, MembershipService.SUPERUSER_IDENTIFIER);
+                String pid = UUID.randomUUID().toString();
+                authorisation.createPolicy(pid, MembershipService.SUPERUSER_IDENTIFIER);
                 Map<String, List<String>> defaultPolicyRules = new HashMap<String, List<String>>();
                 defaultPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read", "download"));
-                authorisation.setPolicyRules(AuthorisationPolicyTemplate.DEFAULT_POLICY, defaultPolicyRules);
-                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.DEFAULT, "Default template allows all users to read and download content", AuthorisationPolicyTemplate.DEFAULT_POLICY);
+                authorisation.setPolicyRules(pid, defaultPolicyRules);
+                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.DEFAULT, "Default template allows all users to read and download content", pid);
             }
 
-            if (!registry.exists(AuthorisationPolicyTemplate.FORALL)) {
+            if (!authorisation.isPolicyTemplateExists(AuthorisationPolicyTemplate.FORALL)) {
                 LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.FORALL + "] authorisation policy template");
-                authorisation.createPolicy(AuthorisationPolicyTemplate.FORALL_POLICY, MembershipService.SUPERUSER_IDENTIFIER);
+                String pid = UUID.randomUUID().toString();
+                authorisation.createPolicy(pid, MembershipService.SUPERUSER_IDENTIFIER);
                 Map<String, List<String>> forallPolicyRules = new HashMap<String, List<String>>();
                 forallPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Arrays.asList("read", "download"));
-                authorisation.setPolicyRules(AuthorisationPolicyTemplate.FORALL_POLICY, forallPolicyRules);
-                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.FORALL, "All users can read and download this content", AuthorisationPolicyTemplate.FORALL_POLICY);
+                authorisation.setPolicyRules(pid, forallPolicyRules);
+                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.FORALL, "All users can read and download this content", pid);
             }
 
-            if (!registry.exists(AuthorisationPolicyTemplate.AUTHENTIFIED)) {
+            if (!authorisation.isPolicyTemplateExists(AuthorisationPolicyTemplate.AUTHENTIFIED)) {
                 LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.AUTHENTIFIED + "] authorisation policy template");
-                authorisation.createPolicy(AuthorisationPolicyTemplate.AUTHENTIFIED_POLICY, MembershipService.SUPERUSER_IDENTIFIER);
+                String pid = UUID.randomUUID().toString();
+                authorisation.createPolicy(pid, MembershipService.SUPERUSER_IDENTIFIER);
                 Map<String, List<String>> authentifiedPolicyRules = new HashMap<String, List<String>>();
                 authentifiedPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
                 authentifiedPolicyRules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList("read", "download"));
-                authorisation.setPolicyRules(AuthorisationPolicyTemplate.AUTHENTIFIED_POLICY, authentifiedPolicyRules);
-                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.AUTHENTIFIED, "All users can read this content but download is restricted to authentified users only",
-                        AuthorisationPolicyTemplate.AUTHENTIFIED_POLICY);
+                authorisation.setPolicyRules(pid, authentifiedPolicyRules);
+                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.AUTHENTIFIED, "All users can read this content but download is restricted to authentified users only", pid);
             }
 
-            if (!registry.exists(AuthorisationPolicyTemplate.ESR)) {
+            if (!authorisation.isPolicyTemplateExists(AuthorisationPolicyTemplate.ESR)) {
                 LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.ESR + "] authorisation policy template");
-                authorisation.createPolicy(AuthorisationPolicyTemplate.ESR_POLICY, MembershipService.SUPERUSER_IDENTIFIER);
+                String pid = UUID.randomUUID().toString();
+                authorisation.createPolicy(pid, MembershipService.SUPERUSER_IDENTIFIER);
                 Map<String, List<String>> esrPolicyRules = new HashMap<String, List<String>>();
                 esrPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
                 esrPolicyRules.put(MembershipService.ESR_GROUP_KEY, Arrays.asList("read", "download"));
-                authorisation.setPolicyRules(AuthorisationPolicyTemplate.ESR_POLICY, esrPolicyRules);
-                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.ESR, "All users can read this content but download is restricted to ESR users only",
-                        AuthorisationPolicyTemplate.ESR_POLICY);
+                authorisation.setPolicyRules(pid, esrPolicyRules);
+                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.ESR, "All users can read this content but download is restricted to ESR users only", pid);
             }
 
-            if (!registry.exists(AuthorisationPolicyTemplate.RESTRICTED)) {
+            if (!authorisation.isPolicyTemplateExists(AuthorisationPolicyTemplate.RESTRICTED)) {
                 LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.RESTRICTED + "] authorisation policy template");
-                authorisation.createPolicy(AuthorisationPolicyTemplate.RESTRICTED_POLICY, MembershipService.SUPERUSER_IDENTIFIER);
+                String pid = UUID.randomUUID().toString();
+                authorisation.createPolicy(pid, MembershipService.SUPERUSER_IDENTIFIER);
                 Map<String, List<String>> restrictedPolicyRules = new HashMap<String, List<String>>();
                 restrictedPolicyRules.put("${workspace.members}", Arrays.asList("read", "download"));
-                authorisation.setPolicyRules(AuthorisationPolicyTemplate.RESTRICTED_POLICY, restrictedPolicyRules);
-                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.RESTRICTED, "Only workspace members can read and download this content, all other users cannot see this content",
-                        AuthorisationPolicyTemplate.RESTRICTED_POLICY);
+                authorisation.setPolicyRules(pid, restrictedPolicyRules);
+                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.RESTRICTED, "Only workspace members can read and download this content, all other users cannot see this content", pid);
             }
 
+            InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.IMPORT_ZIP_FORM + ".json");
+            String json = IOUtils.toString(is, "UTF-8");
             if (!registry.exists(FormService.IMPORT_ZIP_FORM)) {
-                LOGGER.log(Level.FINE, "create form : " + FormService.IMPORT_ZIP_FORM);
-                InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.IMPORT_ZIP_FORM + ".json");
-                String json = IOUtils.toString(is, "UTF-8");
+                LOGGER.log(Level.FINE, "create form : " + FormService.IMPORT_ZIP_FORM);                
                 form.createForm(FormService.IMPORT_ZIP_FORM, "Import Zip Process Start Form", json);
+            } else {
+                LOGGER.log(Level.FINE, "update form : " + FormService.IMPORT_ZIP_FORM);                
+                form.updateForm(FormService.IMPORT_ZIP_FORM, "Import Zip Process Start Form", json);
             }
+            is.close();
 
+            is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.REVIEW_SNAPSHOT_FORM + ".json");
+            json = IOUtils.toString(is, "UTF-8");
             if (!registry.exists(FormService.REVIEW_SNAPSHOT_FORM)) {
                 LOGGER.log(Level.FINE, "create form : " + FormService.REVIEW_SNAPSHOT_FORM);
-                InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.REVIEW_SNAPSHOT_FORM + ".json");
-                String json = IOUtils.toString(is, "UTF-8");
                 form.createForm(FormService.REVIEW_SNAPSHOT_FORM, "Workspace publication's review form", json);
+            } else {
+                LOGGER.log(Level.FINE, "update form : " + FormService.REVIEW_SNAPSHOT_FORM);                
+                form.updateForm(FormService.REVIEW_SNAPSHOT_FORM, "Workspace publication's review form", json);
             }
+            is.close();
 
+            is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.MODERATE_SNAPSHOT_FORM + ".json");
+            json = IOUtils.toString(is, "UTF-8");
             if (!registry.exists(FormService.MODERATE_SNAPSHOT_FORM)) {
                 LOGGER.log(Level.FINE, "create form : " + FormService.MODERATE_SNAPSHOT_FORM);
-                InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.MODERATE_SNAPSHOT_FORM + ".json");
-                String json = IOUtils.toString(is, "UTF-8");
                 form.createForm(FormService.MODERATE_SNAPSHOT_FORM, "Workspace publication's moderation form", json);
+            } else {
+                LOGGER.log(Level.FINE, "update form : " + FormService.MODERATE_SNAPSHOT_FORM);                
+                form.updateForm(FormService.MODERATE_SNAPSHOT_FORM, "Workspace publication's moderation form", json);
             }
+            is.close();
 
+            is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.PUBLISH_SNAPSHOT_FORM + ".json");
+            json = IOUtils.toString(is, "UTF-8");
             if (!registry.exists(FormService.PUBLISH_SNAPSHOT_FORM)) {
                 LOGGER.log(Level.FINE, "create form : " + FormService.PUBLISH_SNAPSHOT_FORM);
-                InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.PUBLISH_SNAPSHOT_FORM + ".json");
-                String json = IOUtils.toString(is, "UTF-8");
                 form.createForm(FormService.PUBLISH_SNAPSHOT_FORM, "Workspace publication's form", json);
+            }else {
+                LOGGER.log(Level.FINE, "update form : " + FormService.MODERATE_SNAPSHOT_FORM);                
+                form.updateForm(FormService.PUBLISH_SNAPSHOT_FORM, "Workspace publication's form", json);
             }
+            is.close();
 
+            is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.ITEM_FORM + ".json");
+            json = IOUtils.toString(is, "UTF-8");
             if (!registry.exists(FormService.ITEM_FORM)) {
                 LOGGER.log(Level.FINE, "create form : " + FormService.ITEM_FORM);
-                InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.ITEM_FORM + ".json");
-                String json = IOUtils.toString(is, "UTF-8");
                 form.createForm(FormService.ITEM_FORM, "Schema Form for an ORTOLANG item", json);
+            }else {
+                LOGGER.log(Level.FINE, "update form : " + FormService.ITEM_FORM);                
+                form.updateForm(FormService.ITEM_FORM, "Schema Form for an ORTOLANG item", json);
             }
+            is.close();
 
             LOGGER.log(Level.FINE, "import metadataformat schemas");
             InputStream schemaItemInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.15-with-object-language-copy.json");
@@ -343,7 +369,7 @@ public class BootstrapServiceBean implements BootstrapService {
             runtime.importProcessTypes();
 
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "error during bootstrap: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "error during bootstrap", e);
             throw new BootstrapServiceException("error during bootstrap", e);
         }
 

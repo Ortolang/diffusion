@@ -129,12 +129,22 @@ public class AuthorisationServiceBean implements AuthorisationService {
 	}
 
 	@Override
+    public boolean isPolicyTemplateExists(String name) throws AuthorisationServiceException {
+        LOGGER.log(Level.FINE, "check if policy template exists with name [" + name + "]");
+        AuthorisationPolicyTemplate template = em.find(AuthorisationPolicyTemplate.class, name);
+        if (template == null) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
 	public List<AuthorisationPolicyTemplate> listPolicyTemplates() throws AuthorisationServiceException {
 		LOGGER.log(Level.FINE, "listing all authorisation policy templates");
 		TypedQuery<AuthorisationPolicyTemplate> query = em.createNamedQuery("findAllAuthorisationPolicyTemplate", AuthorisationPolicyTemplate.class);
 		return query.getResultList();
 	}
-
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
 	public void createPolicy(String key, String owner) throws AuthorisationServiceException {

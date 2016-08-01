@@ -36,7 +36,10 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,7 +56,6 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -66,11 +68,11 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
-import javax.persistence.*;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.ortolang.diffusion.core.wrapper.CollectionWrapper;
-import fr.ortolang.diffusion.core.wrapper.OrtolangObjectWrapper;
 import org.apache.commons.io.IOUtils;
 import org.javers.core.Javers;
 import org.javers.core.JaversBuilder;
@@ -79,6 +81,7 @@ import org.javers.core.diff.Diff;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
@@ -107,6 +110,8 @@ import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
+import fr.ortolang.diffusion.core.wrapper.CollectionWrapper;
+import fr.ortolang.diffusion.core.wrapper.OrtolangObjectWrapper;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.extraction.ExtractionService;
 import fr.ortolang.diffusion.extraction.ExtractionServiceException;
@@ -3220,78 +3225,6 @@ public class CoreServiceBean implements CoreService {
         }
     }
 
-    @Override
-    @RolesAllowed({"system", "admin"})
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void systemCreateMetadata(String key, String name, String hash, String filename)
-            throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
-            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
-        if (!name.startsWith("system-")) {
-            throw new CoreServiceException("only system metadata can be added this way.");
-        }
-        OrtolangObjectIdentifier identifier = registry.lookup(key);
-        if (!identifier.getService().equals(SERVICE_NAME)) {
-            throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
-        }
-        OrtolangObject object;
-        switch (identifier.getType()) {
-        case DataObject.OBJECT_TYPE:
-            object = em.find(DataObject.class, identifier.getId());
-            break;
-        case Link.OBJECT_TYPE:
-            object = em.find(Link.class, identifier.getId());
-            break;
-        case Collection.OBJECT_TYPE:
-            object = em.find(Collection.class, identifier.getId());
-            break;
-        default:
-            throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
-        }
-        MetadataElement metadataElement = ((MetadataSource) object).findMetadataByName(name);
-        if (metadataElement != null) {
-            ((MetadataSource) object).removeMetadata(metadataElement);
-        }
-        MetadataObject meta = new MetadataObject();
-        meta.setId(UUID.randomUUID().toString());
-        meta.setName(name);
-
-        MetadataFormat format = getMetadataFormat(name);
-        if (format == null) {
-            LOGGER.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
-            throw new CoreServiceException("unknown metadata format for name: " + name);
-        }
-
-        if (hash != null && hash.length() > 0) {
-            if (format.isValidationNeeded()) {
-                validateMetadata(hash, format);
-            }
-            meta.setSize(binarystore.size(hash));
-            if (filename != null) {
-                meta.setContentType(binarystore.type(hash, filename));
-            } else {
-                meta.setContentType(binarystore.type(hash));
-            }
-            meta.setStream(hash);
-        } else {
-            meta.setSize(0);
-            meta.setContentType("application/octet-stream");
-            meta.setStream("");
-        }
-
-        meta.setFormat(format.getId());
-        meta.setTarget(key);
-        meta.setKey(UUID.randomUUID().toString());
-        em.persist(meta);
-
-        registry.register(meta.getKey(), meta.getObjectIdentifier(), "system");
-
-        indexing.index(key);
-        authorisation.clonePolicy(meta.getKey(), key);
-
-        ((MetadataSource) object).addMetadata(new MetadataElement(name, meta.getKey()));
-        em.merge(object);
-    }
-
     /* MetadataFormat */
 
     @Override
@@ -3956,6 +3889,77 @@ public class CoreServiceBean implements CoreService {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while setting workspace alias to [" + alias + "]", e);
             throw new CoreServiceException("unable to set workspace with key [" + wskey + "] alias to  [" + alias + "]", e);
         }
+    }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void systemCreateMetadata(String key, String name, String hash, String filename)
+            throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
+            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
+        if (!name.startsWith("system-")) {
+            throw new CoreServiceException("only system metadata can be added this way.");
+        }
+        OrtolangObjectIdentifier identifier = registry.lookup(key);
+        if (!identifier.getService().equals(SERVICE_NAME)) {
+            throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
+        }
+        OrtolangObject object;
+        switch (identifier.getType()) {
+        case DataObject.OBJECT_TYPE:
+            object = em.find(DataObject.class, identifier.getId());
+            break;
+        case Link.OBJECT_TYPE:
+            object = em.find(Link.class, identifier.getId());
+            break;
+        case Collection.OBJECT_TYPE:
+            object = em.find(Collection.class, identifier.getId());
+            break;
+        default:
+            throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
+        }
+        MetadataElement metadataElement = ((MetadataSource) object).findMetadataByName(name);
+        if (metadataElement != null) {
+            ((MetadataSource) object).removeMetadata(metadataElement);
+        }
+        MetadataObject meta = new MetadataObject();
+        meta.setId(UUID.randomUUID().toString());
+        meta.setName(name);
+
+        MetadataFormat format = getMetadataFormat(name);
+        if (format == null) {
+            LOGGER.log(Level.SEVERE, "Unable to find a metadata format for name: " + name);
+            throw new CoreServiceException("unknown metadata format for name: " + name);
+        }
+
+        if (hash != null && hash.length() > 0) {
+            if (format.isValidationNeeded()) {
+                validateMetadata(hash, format);
+            }
+            meta.setSize(binarystore.size(hash));
+            if (filename != null) {
+                meta.setContentType(binarystore.type(hash, filename));
+            } else {
+                meta.setContentType(binarystore.type(hash));
+            }
+            meta.setStream(hash);
+        } else {
+            meta.setSize(0);
+            meta.setContentType("application/octet-stream");
+            meta.setStream("");
+        }
+
+        meta.setFormat(format.getId());
+        meta.setTarget(key);
+        meta.setKey(UUID.randomUUID().toString());
+        em.persist(meta);
+
+        registry.register(meta.getKey(), meta.getObjectIdentifier(), "system");
+
+        indexing.index(key);
+        authorisation.clonePolicy(meta.getKey(), key);
+
+        ((MetadataSource) object).addMetadata(new MetadataElement(name, meta.getKey()));
+        em.merge(object);
     }
 
     /* ### Internal operations ### */

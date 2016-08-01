@@ -30,6 +30,12 @@ public abstract class TransactionnalRuntimeEngineTask extends RuntimeEngineTask 
                         getUserTransaction().setTransactionTimeout(getTransactionTimeout());
                         LOGGER.log(Level.FINE, "Timeout set to: " + getTransactionTimeout());
                     }
+                } else if (getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
+                    LOGGER.log(Level.FINE, "Transaction already active for task " + this.getTaskName());
+                    if (getTransactionTimeout() > 0) {
+                        getUserTransaction().setTransactionTimeout(getTransactionTimeout());
+                        LOGGER.log(Level.FINE, "Timeout set to: " + getTransactionTimeout());
+                    }
                 } else {
                     LOGGER.log(Level.SEVERE, "Unable to begin transaction, bad status: " + getUserTransaction().getStatus());
                     throw new RuntimeEngineTaskException("Unable to begin transaction, bad status: " + getUserTransaction().getStatus());
@@ -48,6 +54,8 @@ public abstract class TransactionnalRuntimeEngineTask extends RuntimeEngineTask 
 
                 LOGGER.log(Level.FINE, "Commit transaction for task " + this.getTaskName());
                 getUserTransaction().commit();
+                LOGGER.log(Level.FINE, "Begin a new transaction to avoid Null Pointer Exception " + this.getTaskName());
+                getUserTransaction().begin();
                 
             } catch (Exception e) {
                 LOGGER.log(Level.SEVERE, "Unexpected error occured during task execution, putting task in error and aborting process with pid: " + bkey, e);
@@ -62,7 +70,7 @@ public abstract class TransactionnalRuntimeEngineTask extends RuntimeEngineTask 
 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Unexpected runtime task exception", e);
-            throw new BpmnError("Unexpected RuntimeTaskExecutionError", e.getMessage());
+            throw new BpmnError("RuntimeTaskExecutionError", e.getMessage());
         }
     }
 

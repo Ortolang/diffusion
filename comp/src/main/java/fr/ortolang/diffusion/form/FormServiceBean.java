@@ -208,9 +208,14 @@ public class FormServiceBean implements FormService {
 			if (form == null) {
 				throw new FormServiceException("unable to find a form for id " + identifier.getId());
 			}
-			form.setName(name);
-			form.setDefinition(definition);
-			em.merge(form);
+			if ( form.getName().equals(name) && form.getDefinition().equals(definition) ) {
+			    LOGGER.log(Level.FINE, "form name and definition are the same than before for key [" + key + "], nothing to do");
+			    return;
+			}
+			
+    		form.setName(name);
+    		form.setDefinition(definition);
+    		em.merge(form);
 
 			registry.update(key);
 

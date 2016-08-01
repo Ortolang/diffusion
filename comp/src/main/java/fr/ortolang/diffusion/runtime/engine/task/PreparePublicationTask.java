@@ -132,6 +132,15 @@ public class PreparePublicationTask extends TransactionnalRuntimeEngineTask {
 
             LOGGER.log(Level.FINE, "Initialize an empty variable for review results");
             execution.setVariable(REVIEW_RESULTS, new String());
+            
+            LOGGER.log(Level.FINE, "Initialize default grade variable in case of Root submission without submitted grade");
+            if ( !execution.hasVariable(GRADE_PARAM_NAME) ) {
+                execution.setVariable(GRADE_PARAM_NAME, "D");
+            }
+            
+            LOGGER.log(Level.FINE, "Initialize default reason variable");
+            execution.setVariable(REASON_PARAM_NAME, "Aucune explication particulière fournie.");
+           
 
         } catch (Exception e) {
             throw new RuntimeEngineTaskException("unexpected error during prepare publication task execution", e);

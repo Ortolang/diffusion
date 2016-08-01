@@ -53,6 +53,8 @@ public interface AuthorisationService extends OrtolangService {
 	
 	List<AuthorisationPolicyTemplate> listPolicyTemplates() throws AuthorisationServiceException;
 	
+	boolean isPolicyTemplateExists(String name) throws AuthorisationServiceException;
+	
 	void createPolicy(String key, String owner) throws AuthorisationServiceException;
 	
 	void clonePolicy(String key, String origin) throws AuthorisationServiceException;

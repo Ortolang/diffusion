@@ -67,8 +67,8 @@ public class UnlockWorkspaceTask extends TransactionnalRuntimeEngineTask {
     @Override
     public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
         try {
-            LOGGER.log(Level.FINE, "unlocking workspace with key: " + wskey.getExpressionText());
-            getCoreService().systemSetWorkspaceReadOnly(wskey.getExpressionText(), false);
+            LOGGER.log(Level.FINE, "unlocking workspace with key: " + (String)wskey.getValue(execution));
+            getCoreService().systemSetWorkspaceReadOnly((String)wskey.getValue(execution), false);
         } catch (Exception e) {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to unlock workspace: " + e.getMessage()));
             throw new RuntimeEngineTaskException("error occurred while unlocking workspace", e);

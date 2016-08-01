@@ -107,6 +107,9 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
 
     public static final String REVIEWERS_LIST = "reviewers";
     public static final String REVIEW_RESULTS = "reviewresults";
+    
+    public static final String GRADE_PARAM_NAME = "grade";
+    public static final String REASON_PARAM_NAME = "reason";
 
     private static final Logger LOGGER = Logger.getLogger(RuntimeEngineTask.class.getName());
 

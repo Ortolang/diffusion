@@ -4,7 +4,7 @@
     "type": "select",
     "templateOptions": {
       "required": true,
-      "label": "Do you agree the publication ?",
+      "label": "Validez-vous la publication ?",
       "options": [
         {
           "name": "Yes",
@@ -18,11 +18,41 @@
     }
   },
   {
+    "key": "grade",
+    "type": "select",
+    "templateOptions": {
+      "required": true,
+      "label": "Si oui, quel grade voulez vous attribuer à cette publication ?",
+      "options": [
+        {
+          "name": "A",
+          "value": "A"
+        },
+        {
+          "name": "B",
+          "value": "B"
+        },
+        {
+          "name": "C",
+          "value": "C"
+        },
+        {
+          "name": "D",
+          "value": "D"
+        },
+        {
+          "name": "E",
+          "value": "E"
+        }
+      ]
+    }
+  },
+  {
     "key": "reason",
     "type": "textarea",
     "templateOptions": {
       "required": true,
-      "label": "Reason",
+      "label": "Quels sont les raison de votre choix ?",
       "default": ""
     }
   }

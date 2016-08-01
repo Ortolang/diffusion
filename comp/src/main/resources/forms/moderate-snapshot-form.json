@@ -4,7 +4,7 @@
     "type": "select",
     "templateOptions": {
       "required": true,
-      "label": "Acceptez vous la publication ?",
+      "label": "Poursuivre le processus de publication ?",
       "options": [
         {
           "name": "Yes",
@@ -22,7 +22,7 @@
     "type": "textarea",
     "templateOptions": {
       "required": true,
-      "label": "Raisons de votre choix",
+      "label": "Raison de votre choix",
       "default": ""
     }
   }
