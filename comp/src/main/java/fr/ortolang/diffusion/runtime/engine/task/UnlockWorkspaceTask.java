@@ -43,10 +43,10 @@ import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
 
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
-import fr.ortolang.diffusion.runtime.engine.TransactionnalRuntimeEngineTask;
 
-public class UnlockWorkspaceTask extends TransactionnalRuntimeEngineTask {
+public class UnlockWorkspaceTask extends RuntimeEngineTask {
 
     private static final Logger LOGGER = Logger.getLogger(UnlockWorkspaceTask.class.getName());
     public static final String NAME = "Unlock Workspace";

@@ -233,6 +233,17 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	
 	@Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public Map<String, Object> listProcessVariables(String key) throws RuntimeEngineException {
+        try {
+            ProcessInstance instance = engine.getRuntimeService().createProcessInstanceQuery().includeProcessVariables().processInstanceBusinessKey(key).singleResult();
+            return instance.getProcessVariables();
+        } catch (ActivitiException e) {
+            throw new RuntimeEngineException("unexpected error while getting process instance's variables", e);
+        }
+    }
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Process> findProcess(Map<String, Object> variables) throws RuntimeEngineException {
         try {
             ProcessInstanceQuery query = engine.getRuntimeService().createProcessInstanceQuery();

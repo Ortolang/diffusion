@@ -60,10 +60,10 @@ import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
-import fr.ortolang.diffusion.runtime.engine.TransactionnalRuntimeEngineTask;
 
-public class PreparePublicationTask extends TransactionnalRuntimeEngineTask {
+public class PreparePublicationTask extends RuntimeEngineTask {
 
     public static final String NAME = "Prepare Workspace";
     private static final Logger LOGGER = Logger.getLogger(PreparePublicationTask.class.getName());

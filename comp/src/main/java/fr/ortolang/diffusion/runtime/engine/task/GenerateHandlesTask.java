@@ -47,10 +47,10 @@ import fr.ortolang.diffusion.OrtolangObjectPid;
 import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
-import fr.ortolang.diffusion.runtime.engine.TransactionnalRuntimeEngineTask;
 
-public class GenerateHandlesTask extends TransactionnalRuntimeEngineTask {
+public class GenerateHandlesTask extends RuntimeEngineTask {
 
     public static final String NAME = "Generate Handles";
 
@@ -118,6 +118,6 @@ public class GenerateHandlesTask extends TransactionnalRuntimeEngineTask {
 
     @Override
     public int getTransactionTimeout() {
-        return 1200;
+        return 1800;
     }
 }

@@ -62,7 +62,7 @@ public abstract class TransactionnalRuntimeEngineTask extends RuntimeEngineTask 
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(bkey, "SERVICE TASK " + aname + " IN ERROR: " + e.getMessage(), e));
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(bkey, getTaskName(), "SERVICE TASK " + aname + " IN ERROR: " + e.getMessage()));
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessAbortEvent(bkey, e.getMessage()));
-                throw new BpmnError("RuntimeTaskExecutionError", e.getMessage());
+                throw e;
             }
 
             LOGGER.log(Level.FINE, "Sending events of process evolution");

@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.api.runtime;
 
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.Date;
 
 public class ProcessVariableRepresentation {
 	
@@ -48,6 +49,7 @@ public class ProcessVariableRepresentation {
 	public static final String DOUBLE_TYPE = "double";
 	public static final String BOOLEAN_TYPE = "boolean";
 	public static final String DATE_TYPE = "date";
+	public static final String OBJECT_TYPE = "object";
 	
 	
 	public static final DateFormat df = DateFormat.getDateTimeInstance();
@@ -98,6 +100,37 @@ public class ProcessVariableRepresentation {
 			}
 		default: return value;
 		}
+	}
+	
+	public static ProcessVariableRepresentation fromObject(String name, Object value) {
+	    ProcessVariableRepresentation instance = new ProcessVariableRepresentation();
+	    instance.setName(name);
+	    if ( value instanceof String ) {
+	        instance.setType(STRING_TYPE);
+	        instance.setValue((String)value);
+	    } else if ( value instanceof Integer ) {
+	        instance.setType(INTEGER_TYPE);
+            instance.setValue(((Integer)value).toString());
+	    } else if ( value instanceof Short ) {
+            instance.setType(SHORT_TYPE);
+            instance.setValue(((Short)value).toString());
+        } else if ( value instanceof Long ) {
+            instance.setType(LONG_TYPE);
+            instance.setValue(((Long)value).toString());
+        } else if ( value instanceof Double ) {
+            instance.setType(DOUBLE_TYPE);
+            instance.setValue(((Double)value).toString());
+        } else if ( value instanceof Boolean ) {
+            instance.setType(BOOLEAN_TYPE);
+            instance.setValue(((Boolean)value).toString());
+        } else if ( value instanceof Date ) {
+            instance.setType(DATE_TYPE);
+            instance.setValue(df.format((Date)value));
+        } else {
+	        instance.setType(OBJECT_TYPE);
+            instance.setValue(value.toString());
+	    }
+	    return instance;
 	}
 
 }

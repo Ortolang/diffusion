@@ -43,6 +43,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -266,6 +267,19 @@ public class RuntimeResource {
         LOGGER.log(Level.INFO, "GET /runtime/processes/" + key + "/trace");
         File trace = runtime.readProcessTrace(key);
         return Response.ok(trace).header("Content-Type", "text/plain").header("Content-Length", trace.length()).header("Accept-Ranges", "bytes").build();
+    }
+    
+    @GET
+    @Path("/processes/{key}/variables")
+    @GZIP
+    public Response readProcessVariables(@PathParam("key") String key) throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "GET /runtime/processes/" + key + "/variables");
+        Map<String, Object> vars = runtime.listProcessVariables(key);
+        List<ProcessVariableRepresentation> variables = new ArrayList<ProcessVariableRepresentation> ();
+        for ( Entry<String, Object> entry : vars.entrySet() ) {
+            variables.add(ProcessVariableRepresentation.fromObject(entry.getKey(), entry.getValue()));
+        }
+        return Response.ok(variables).build();
     }
 
     @GET

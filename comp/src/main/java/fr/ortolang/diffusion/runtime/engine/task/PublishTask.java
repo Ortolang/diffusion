@@ -46,10 +46,10 @@ import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
 
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
-import fr.ortolang.diffusion.runtime.engine.TransactionnalRuntimeEngineTask;
 
-public class PublishTask extends TransactionnalRuntimeEngineTask {
+public class PublishTask extends RuntimeEngineTask {
 
     public static final String NAME = "Publish";
 
@@ -118,7 +118,7 @@ public class PublishTask extends TransactionnalRuntimeEngineTask {
     
     @Override
     public int getTransactionTimeout() {
-        return 1200;
+        return 1800;
     }
 
 }

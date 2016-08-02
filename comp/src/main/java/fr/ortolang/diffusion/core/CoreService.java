@@ -61,6 +61,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+
 import org.javers.core.diff.Change;
 
 public interface CoreService extends OrtolangService, OrtolangBinaryService, OrtolangIndexableService {
@@ -227,7 +228,7 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
             throws CoreServiceException, OrtolangException, InvalidPathException, PathNotFoundException, ExtractionServiceException, KeyNotFoundException;
 	
 	/*System*/
-
+    
     Set<String> systemListWorkspaceKeys(String wskey) throws CoreServiceException, KeyNotFoundException;
     
     void systemSetWorkspaceReadOnly(String wskey, boolean readonly) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;

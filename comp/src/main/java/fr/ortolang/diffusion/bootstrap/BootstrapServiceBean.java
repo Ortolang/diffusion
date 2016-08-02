@@ -153,21 +153,21 @@ public class BootstrapServiceBean implements BootstrapService {
 
             if (!registry.exists(MembershipService.MODERATORS_GROUP_KEY)) {
                 LOGGER.log(Level.FINE, "creating moderators group");
-                membership.createGroup(MembershipService.MODERATORS_GROUP_KEY, "Publication Moderators", "Moderators of the platform can publish content");
+                membership.createGroup(MembershipService.MODERATORS_GROUP_KEY, "Publication Moderators", "Moderators of the platform check technical aspect of publication");
                 membership.addMemberInGroup(MembershipService.MODERATORS_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
                 authorisation.setPolicyRules(MembershipService.MODERATORS_GROUP_KEY, anonReadRules);
             }
 
             if (!registry.exists(MembershipService.PUBLISHERS_GROUP_KEY)) {
                 LOGGER.log(Level.FINE, "creating publishers group");
-                membership.createGroup(MembershipService.PUBLISHERS_GROUP_KEY, "Reviewers", "Reviewers of the platform can rate content");
+                membership.createGroup(MembershipService.PUBLISHERS_GROUP_KEY, "Publishers", "Publishers of the platform validates final publication");
                 membership.addMemberInGroup(MembershipService.PUBLISHERS_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
                 authorisation.setPolicyRules(MembershipService.PUBLISHERS_GROUP_KEY, anonReadRules);
             }
 
             if (!registry.exists(MembershipService.REVIEWERS_GROUP_KEY)) {
                 LOGGER.log(Level.FINE, "creating reviewers group");
-                membership.createGroup(MembershipService.REVIEWERS_GROUP_KEY, "Reviewers", "Reviewers of the platform can rate content");
+                membership.createGroup(MembershipService.REVIEWERS_GROUP_KEY, "Reviewers", "Reviewers of the platform rate content");
                 membership.addMemberInGroup(MembershipService.REVIEWERS_GROUP_KEY, MembershipService.SUPERUSER_IDENTIFIER);
                 authorisation.setPolicyRules(MembershipService.REVIEWERS_GROUP_KEY, anonReadRules);
             }
@@ -178,10 +178,10 @@ public class BootstrapServiceBean implements BootstrapService {
                 authorisation.setPolicyRules(MembershipService.ESR_GROUP_KEY, anonReadRules);
             }
 
-            if (!registry.exists(MembershipService.ADMIN_GROUP_KEY)) {
+            if (!registry.exists(MembershipService.ADMINS_GROUP_KEY)) {
                 LOGGER.log(Level.FINE, "creating admins group");
-                membership.createGroup(MembershipService.ADMIN_GROUP_KEY, "Administrators", "Administrators of the platform");
-                authorisation.setPolicyRules(MembershipService.ADMIN_GROUP_KEY, anonReadRules);
+                membership.createGroup(MembershipService.ADMINS_GROUP_KEY, "Administrators", "Administrators of the platform");
+                authorisation.setPolicyRules(MembershipService.ADMINS_GROUP_KEY, anonReadRules);
             }
 
             if (!registry.exists(BootstrapService.WORKSPACE_KEY)) {

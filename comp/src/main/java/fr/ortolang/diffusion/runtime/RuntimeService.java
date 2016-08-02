@@ -87,6 +87,8 @@ public interface RuntimeService extends OrtolangService {
 	
 	File readProcessTrace(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
 	
+	Map<String, Object> listProcessVariables(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException;
+	
 	/* Task */
 
 	List<HumanTask> listCandidateTasks() throws RuntimeServiceException;

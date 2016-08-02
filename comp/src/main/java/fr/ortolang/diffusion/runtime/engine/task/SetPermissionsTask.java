@@ -9,8 +9,8 @@ import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
 
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
-import fr.ortolang.diffusion.runtime.engine.TransactionnalRuntimeEngineTask;
 
 /*
  * #%L
@@ -48,7 +48,7 @@ import fr.ortolang.diffusion.runtime.engine.TransactionnalRuntimeEngineTask;
  * #L%
  */
 
-public class SetPermissionsTask extends TransactionnalRuntimeEngineTask {
+public class SetPermissionsTask extends RuntimeEngineTask {
 
     private static final Logger LOGGER = Logger.getLogger(UpdateProcessStatusTask.class.getName());
     public static final String NAME = "Set Permissions";

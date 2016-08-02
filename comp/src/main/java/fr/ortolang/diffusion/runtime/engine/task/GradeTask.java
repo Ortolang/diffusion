@@ -12,10 +12,10 @@ import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
-import fr.ortolang.diffusion.runtime.engine.TransactionnalRuntimeEngineTask;
 
-public class GradeTask extends TransactionnalRuntimeEngineTask {
+public class GradeTask extends RuntimeEngineTask {
 
     public static final String NAME = "Grade";
 

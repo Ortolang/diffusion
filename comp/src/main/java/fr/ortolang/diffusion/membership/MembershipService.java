@@ -58,7 +58,7 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	String SUPERUSER_IDENTIFIER = "root";
 	
 	String ALL_AUTHENTIFIED_GROUP_KEY = "authentified";
-	String ADMIN_GROUP_KEY = "admins";
+	String ADMINS_GROUP_KEY = "admins";
 	String MODERATORS_GROUP_KEY = "moderators";
 	String REVIEWERS_GROUP_KEY = "reviewers";
 	String PUBLISHERS_GROUP_KEY = "publishers";

@@ -71,152 +71,153 @@ import java.util.logging.Logger;
 @PermitAll
 public class PublicationServiceBean implements PublicationService {
 
-	private static final Logger LOGGER = Logger.getLogger(PublicationServiceBean.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(PublicationServiceBean.class.getName());
 
-	private static final String[] OBJECT_TYPE_LIST = new String[] { };
-	private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-	
-	@EJB
-	private RegistryService registry;
-	@EJB
-	private MembershipService membership;
-	@EJB
-	private CoreService core;
-	@EJB
-	private BinaryStoreService binaryStore;
-	@EJB
-	private AuthorisationService authorisation;
-	@EJB
-	private IndexingService indexing;
-	@EJB
-	private NotificationService notification;
-	@Resource
-	private SessionContext ctx;
+    private static final String[] OBJECT_TYPE_LIST = new String[] {};
+    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] {};
 
-	public PublicationServiceBean() {
-	}
+    @EJB
+    private RegistryService registry;
+    @EJB
+    private MembershipService membership;
+    @EJB
+    private CoreService core;
+    @EJB
+    private BinaryStoreService binaryStore;
+    @EJB
+    private AuthorisationService authorisation;
+    @EJB
+    private IndexingService indexing;
+    @EJB
+    private NotificationService notification;
+    @Resource
+    private SessionContext ctx;
 
-	public RegistryService getRegistryService() {
-		return registry;
-	}
+    public PublicationServiceBean() {
+    }
 
-	public void setRegistryService(RegistryService registryService) {
-		this.registry = registryService;
-	}
+    public RegistryService getRegistryService() {
+        return registry;
+    }
 
-	public NotificationService getNotificationService() {
-		return notification;
-	}
+    public void setRegistryService(RegistryService registryService) {
+        this.registry = registryService;
+    }
 
-	public void setNotificationService(NotificationService notificationService) {
-		this.notification = notificationService;
-	}
+    public NotificationService getNotificationService() {
+        return notification;
+    }
 
-	public IndexingService getIndexingService() {
-		return indexing;
-	}
+    public void setNotificationService(NotificationService notificationService) {
+        this.notification = notificationService;
+    }
 
-	public void setIndexingService(IndexingService indexing) {
-		this.indexing = indexing;
-	}
+    public IndexingService getIndexingService() {
+        return indexing;
+    }
 
-	public MembershipService getMembershipService() {
-		return membership;
-	}
+    public void setIndexingService(IndexingService indexing) {
+        this.indexing = indexing;
+    }
 
-	public BinaryStoreService getBinaryStore() {
-		return binaryStore;
-	}
+    public MembershipService getMembershipService() {
+        return membership;
+    }
 
-	public void setBinaryStore(BinaryStoreService binaryStore) {
-		this.binaryStore = binaryStore;
-	}
+    public BinaryStoreService getBinaryStore() {
+        return binaryStore;
+    }
 
-	public void setMembershipService(MembershipService membership) {
-		this.membership = membership;
-	}
+    public void setBinaryStore(BinaryStoreService binaryStore) {
+        this.binaryStore = binaryStore;
+    }
 
-	public CoreService getCoreService() {
-		return core;
-	}
+    public void setMembershipService(MembershipService membership) {
+        this.membership = membership;
+    }
 
-	public void setCoreService(CoreService core) {
-		this.core = core;
-	}
+    public CoreService getCoreService() {
+        return core;
+    }
 
-	public AuthorisationService getAuthorisationService() {
-		return authorisation;
-	}
+    public void setCoreService(CoreService core) {
+        this.core = core;
+    }
 
-	public void setAuthorisationService(AuthorisationService authorisation) {
-		this.authorisation = authorisation;
-	}
+    public AuthorisationService getAuthorisationService() {
+        return authorisation;
+    }
 
-	public void setSessionContext(SessionContext ctx) {
-		this.ctx = ctx;
-	}
+    public void setAuthorisationService(AuthorisationService authorisation) {
+        this.authorisation = authorisation;
+    }
 
-	public SessionContext getSessionContext() {
-		return this.ctx;
-	}
+    public void setSessionContext(SessionContext ctx) {
+        this.ctx = ctx;
+    }
 
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void publish(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException {
-		LOGGER.log(Level.FINE, "publishing key : " + key);
-		try {
-			String caller = membership.getProfileKeyForConnectedIdentifier();
-			List<String> subjects = membership.getConnectedIdentifierSubjects();
-			if (!caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY)) {
-				throw new AccessDeniedException("user " + caller + " is not allowed to publish, only moderators can publish content");
-			}
+    public SessionContext getSessionContext() {
+        return this.ctx;
+    }
 
-			if (registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.PUBLISHED.value())) {
-				LOGGER.log(Level.WARNING, "key [" + key + "] is already published, nothing to do !!");
-			} else {
-				authorisation.updatePolicyOwner(key, MembershipService.SUPERUSER_IDENTIFIER);
-				authorisation.setPolicyRules(key, permissions);
-				registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
-				registry.update(key);
-				registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
-				indexing.index(key);
-				notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "publish"));
-			}
-		} catch (KeyLockedException | AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException | IndexingServiceException e) {
-			LOGGER.log(Level.SEVERE, "error during publication of key", e);
-			ctx.setRollbackOnly();
-			throw new PublicationServiceException("error during publishing key : " + e);
-		}
-	}
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void publish(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "publishing key : " + key);
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            if (!caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && !subjects.contains(MembershipService.PUBLISHERS_GROUP_KEY)) {
+                throw new AccessDeniedException("user " + caller + " is not allowed to publish, only moderators or publishers can publish content");
+            }
 
-	@Override
-	public String getServiceName() {
-		return PublicationService.SERVICE_NAME;
-	}
+            if (registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.PUBLISHED.value())) {
+                LOGGER.log(Level.WARNING, "key [" + key + "] is already published, nothing to do !!");
+            } else {
+                authorisation.updatePolicyOwner(key, MembershipService.SUPERUSER_IDENTIFIER);
+                authorisation.setPolicyRules(key, permissions);
+                registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
+                registry.update(key);
+                registry.lock(key, MembershipService.SUPERUSER_IDENTIFIER);
+                indexing.index(key);
+                notification.throwEvent(key, caller, OrtolangObject.OBJECT_TYPE, OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, OrtolangObject.OBJECT_TYPE, "publish"));
+            }
+        } catch (KeyLockedException | AuthorisationServiceException | KeyNotFoundException | RegistryServiceException | NotificationServiceException | MembershipServiceException
+                | IndexingServiceException e) {
+            LOGGER.log(Level.SEVERE, "error during publication of key", e);
+            ctx.setRollbackOnly();
+            throw new PublicationServiceException("error during publishing key : " + e);
+        }
+    }
 
-	@Override
-	public String[] getObjectTypeList() {
-		return OBJECT_TYPE_LIST;
-	}
+    @Override
+    public String getServiceName() {
+        return PublicationService.SERVICE_NAME;
+    }
 
-	@Override
-	public String[] getObjectPermissionsList(String type) throws OrtolangException {
-		return OBJECT_PERMISSIONS_LIST;
-	}
+    @Override
+    public String[] getObjectTypeList() {
+        return OBJECT_TYPE_LIST;
+    }
 
-	@Override
+    @Override
+    public String[] getObjectPermissionsList(String type) throws OrtolangException {
+        return OBJECT_PERMISSIONS_LIST;
+    }
+
+    @Override
     public Map<String, String> getServiceInfos() {
         return Collections.emptyMap();
     }
 
     @Override
-	public OrtolangObject findObject(String key) throws OrtolangException {
-		throw new OrtolangException("This service does not manage any object");
-	}
+    public OrtolangObject findObject(String key) throws OrtolangException {
+        throw new OrtolangException("This service does not manage any object");
+    }
 
     @Override
-	public OrtolangObjectSize getSize(String key) throws OrtolangException {
-		throw new OrtolangException("This service does not manage any object");
-	}
+    public OrtolangObjectSize getSize(String key) throws OrtolangException {
+        throw new OrtolangException("This service does not manage any object");
+    }
 
 }

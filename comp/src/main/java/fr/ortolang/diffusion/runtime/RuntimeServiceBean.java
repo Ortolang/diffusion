@@ -399,6 +399,31 @@ public class RuntimeServiceBean implements RuntimeService {
             throw new RuntimeServiceException("unable to read process", e);
         }
     }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public Map<String, Object> listProcessVariables(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.INFO, "Listing process variables for process with key: " + key);
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(key, subjects, "read");
+
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, Process.OBJECT_TYPE);
+            Process instance = em.find(Process.class, identifier.getId());
+            if (instance == null) {
+                throw new RuntimeServiceException("unable to find a process with id: " + identifier.getId());
+            }
+            if ( !instance.getState().equals(State.RUNNING) ) {
+                throw new RuntimeServiceException("listing process variables is only for process in state: " + State.RUNNING);
+            }
+            
+            return engine.listProcessVariables(instance.getId());
+        } catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException | RuntimeEngineException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while listing process variables", e);
+            throw new RuntimeServiceException("unable to list process variables", e);
+        }
+    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)

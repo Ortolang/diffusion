@@ -47,6 +47,8 @@ public abstract class OrtolangObject implements Serializable {
 	
 	public abstract String getObjectKey();
 	
+	public abstract void setKey(String key);
+	
 	public abstract OrtolangObjectIdentifier getObjectIdentifier();
 	
 	@Override

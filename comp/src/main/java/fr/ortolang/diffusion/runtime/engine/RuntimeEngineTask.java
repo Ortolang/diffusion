@@ -304,21 +304,33 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
             LOGGER.log(Level.INFO, "Starting " + this.getTaskName() + " execution");
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityStartEvent(bkey, getTaskName(), "SERVICE TASK " + aname + " STARTED"));
 
+            if (getTransactionTimeout() > 0) {
+                getUserTransaction().setTransactionTimeout(getTransactionTimeout());
+                LOGGER.log(Level.FINE, "Timeout set to: " + getTransactionTimeout());
+            }
+            
             try {
-                LOGGER.log(Level.FINE, "Executing task");
-                executeTask(execution);
-                LOGGER.log(Level.FINE, "Task executed");
+                try {
+                    LOGGER.log(Level.FINE, "Starting task execution");
+                    executeTask(execution);
+                    LOGGER.log(Level.FINE, "Task executed");
+                } catch (RuntimeEngineTaskException e) {
+                    LOGGER.log(Level.INFO, "RuntimeEngineException: " + e.getMessage() + " , need to rollback.");
+                    LOGGER.log(Level.FINE, "Rollback transaction for task " + this.getTaskName());
+                    getUserTransaction().setRollbackOnly();
+                    throw e;
+                }
             } catch (RuntimeEngineTaskException | RuntimeException e) {
                 LOGGER.log(Level.SEVERE, "RuntimeTask exception intercepted, putting task in error and aborting process with pid: " + bkey, e);
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(bkey, "SERVICE TASK " + aname + " IN ERROR: " + e.getMessage(), e));
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(bkey, getTaskName(), "SERVICE TASK " + aname + " IN ERROR: " + e.getMessage()));
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessAbortEvent(bkey, e.getMessage()));
-                throw new BpmnError("RuntimeTaskExecutionError", e.getMessage());
+                throw e;
             }
 
             LOGGER.log(Level.FINE, "Sending events of process evolution");
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityCompleteEvent(bkey, getTaskName(), "SERVICE TASK " + aname + " COMPLETED"));
-        } catch (RuntimeEngineTaskException e) {
+        } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Unexpected runtime task exception", e);
             throw new BpmnError("Unexpected RuntimeTaskExecutionError", e.getMessage());
         }
@@ -331,7 +343,11 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
             throw new RuntimeEngineTaskException("unexpected error while trying to throw event", e);
         }
     }
-
+    
+    public int getTransactionTimeout() {
+        return -1;
+    }
+    
     public abstract String getTaskName();
 
     public abstract void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException;
