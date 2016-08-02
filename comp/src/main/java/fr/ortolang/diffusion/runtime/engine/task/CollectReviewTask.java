@@ -5,6 +5,8 @@ import java.util.logging.Logger;
 
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
+import org.activiti.engine.impl.util.json.JSONObject;
+import org.json.JSONArray;
 
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
@@ -48,14 +50,19 @@ public class CollectReviewTask extends RuntimeEngineTask {
     @Override
     public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
         LOGGER.log(Level.FINE, "collecting reviewer result in parent process");
-        StringBuilder builder = new StringBuilder();
-        builder.append("(").append(getReviewer().getValue(execution)).append(") ");
-        builder.append("-> ").append(getGrade().getValue(execution));
-        builder.append(" - ").append(getReason().getValue(execution));
-        builder.append("\r\n");
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("reviewer", getReviewer().getValue(execution));
+        jsonObject.put("grade", getGrade().getValue(execution));
+        jsonObject.put("reason", getReason().getValue(execution));
         String review = execution.getVariable(REVIEW_RESULTS, String.class);
-        review += builder.toString();
-        execution.setVariable(REVIEW_RESULTS, review);
+        JSONArray array;
+        if ( review.length() <= 0 ) {
+            array = new JSONArray();
+        } else {
+            array = new JSONArray(review);
+        }
+        array.put(jsonObject);
+        execution.setVariable(REVIEW_RESULTS, array.toString());
     }
 
     @Override
