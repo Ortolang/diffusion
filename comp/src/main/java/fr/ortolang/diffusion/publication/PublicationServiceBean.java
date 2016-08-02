@@ -172,8 +172,10 @@ public class PublicationServiceBean implements PublicationService {
             }
 
             if (registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.PUBLISHED.value())) {
-                LOGGER.log(Level.WARNING, "key [" + key + "] is already published, nothing to do !!");
+                LOGGER.log(Level.FINE, "key [" + key + "] is already published, only apllying new permissions");
+                authorisation.setPolicyRules(key, permissions);
             } else {
+                LOGGER.log(Level.FINE, "publishing key [" + key + "], changing owner and applying publication permissions");
                 authorisation.updatePolicyOwner(key, MembershipService.SUPERUSER_IDENTIFIER);
                 authorisation.setPolicyRules(key, permissions);
                 registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
