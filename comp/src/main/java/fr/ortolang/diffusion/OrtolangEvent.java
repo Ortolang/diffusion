@@ -67,9 +67,7 @@ public abstract class OrtolangEvent {
 
     public static SimpleDateFormat getEventDateFormatter() {
         String key = Thread.currentThread().getId() + "";
-        if ( sdf.get(key) == null ) {
-            sdf.put(key, new SimpleDateFormat(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.DATE_FORMAT_PATTERN)));
-        }
+        sdf.putIfAbsent(key, new SimpleDateFormat(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.DATE_FORMAT_PATTERN)));
         return sdf.get(key);
     }
 

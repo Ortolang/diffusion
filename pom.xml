@@ -58,7 +58,7 @@
         <version.atmopshere>2.4.5</version.atmopshere>
         <version.apache.lucene>6.1.0</version.apache.lucene>
         <version.openrdf.sesame>2.8.3</version.openrdf.sesame>
-        <version.orientechnologies.orientdb>2.2.4</version.orientechnologies.orientdb>
+        <version.orientechnologies.orientdb>2.2.6</version.orientechnologies.orientdb>
         <version.common-compress>1.12</version.common-compress>
         <version.hdlnet>7.3.1</version.hdlnet>
         <version.bagit>4.9.0</version.bagit>
@@ -74,8 +74,8 @@
         <version.activation>1.1.1</version.activation>
         <version.freemarker>2.3.25-incubating</version.freemarker>
         <version.sigar>1.6.4</version.sigar>
-        <version.saxon>9.7.0-6</version.saxon>
-        <version.javers>2.0.3</version.javers>
+        <version.saxon>9.7.0-7</version.saxon>
+        <version.javers>2.1.1</version.javers>
         <additionalparam>-Xdoclint:none</additionalparam>
         <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
     </properties>
