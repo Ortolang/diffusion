@@ -49,7 +49,13 @@ import java.util.concurrent.TimeUnit;
         @NamedQuery(name = "countAllJobs", query = "SELECT count(j) FROM Job j"),
         @NamedQuery(name = "listAllJobs", query = "SELECT j FROM Job j ORDER BY j.id"),
         @NamedQuery(name = "countJobsOfType", query = "SELECT count(j) FROM Job j WHERE :type = j.type"),
-        @NamedQuery(name = "listJobsOfType", query = "SELECT j FROM Job j WHERE :type = j.type ORDER BY j.id")
+        @NamedQuery(name = "listJobsOfType", query = "SELECT j FROM Job j WHERE :type = j.type ORDER BY j.id"),
+        @NamedQuery(name = "countFailingJobs", query = "SELECT count(j) FROM Job j WHERE j.failing = true"),
+        @NamedQuery(name = "listFailingJobs", query = "SELECT j FROM Job j WHERE j.failing = true ORDER BY j.id"),
+        @NamedQuery(name = "listFailingJobsOfType", query = "SELECT j FROM Job j WHERE :type = j.type AND j.failing = true ORDER BY j.id"),
+        @NamedQuery(name = "countUnprocessedJobs", query = "SELECT count(j) FROM Job j WHERE j.failing = false"),
+        @NamedQuery(name = "listUnprocessedJobs", query = "SELECT j FROM Job j WHERE j.failing = false ORDER BY j.id"),
+        @NamedQuery(name = "listUnprocessedJobsOfType", query = "SELECT j FROM Job j WHERE :type = j.type AND j.failing = false ORDER BY j.id"),
 })
 public class Job implements Serializable, Delayed {
 
@@ -59,7 +65,11 @@ public class Job implements Serializable, Delayed {
 
     public static final String FAILING_EXPLANATION_KEY = "failingExplanation";
 
+    public static final String FAILING_EXPLANATION_MSG_KEY = "failingExplanationMsg";
+
     public static final String FAILING_CAUSED_BY_KEY = "failingCausedBy";
+
+    public static final String FAILING_CAUSED_BY_MSG_KEY = "failingCausedByMsg";
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -68,15 +78,18 @@ public class Job implements Serializable, Delayed {
     private String action;
     private String target;
     private long timestamp;
+    private boolean failing;
     @ElementCollection(fetch = FetchType.EAGER)
     private Map<String, String> parameters;
 
 
     public Job() {
         parameters = new HashMap<>();
+        failing = false;
     }
 
     public Job(String type, String action, String target, long timestamp, Map<String, String> args) {
+        super();
         this.type = type;
         this.action = action;
         this.target = target;
@@ -120,6 +133,14 @@ public class Job implements Serializable, Delayed {
         this.timestamp = timestamp;
     }
 
+    public boolean isFailing() {
+        return failing;
+    }
+
+    public void setFailing(boolean failing) {
+        this.failing = failing;
+    }
+
     public Map<String, String> getParameters() {
         return parameters;
     }
@@ -142,13 +163,7 @@ public class Job implements Serializable, Delayed {
 
     @Override
     public String toString() {
-        return "Job{" +
-                "id=" + id +
-                ", type='" + type + '\'' +
-                ", action='" + action + '\'' +
-                ", target='" + target + '\'' +
-                ", timestamp=" + timestamp +
-                "} " + super.toString();
+        return "Job{" + "id=" + id + ", type='" + type + '\'' + ", action='" + action + '\'' + ", target='" + target + '\'' + ", timestamp=" + timestamp + ", failing=" + failing + '}';
     }
 
     @Override

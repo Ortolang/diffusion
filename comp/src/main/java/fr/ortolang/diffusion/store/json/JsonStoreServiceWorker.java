@@ -43,6 +43,7 @@ import fr.ortolang.diffusion.OrtolangIndexableObjectFactory;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.jobs.JobService;
+import fr.ortolang.diffusion.jobs.OrtolangWorker;
 import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.registry.RegistryService;
 
@@ -59,15 +60,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-@Singleton
+@Singleton(name = "jsonWorker")
 @Startup
-public class JsonStoreServiceWorker {
+public class JsonStoreServiceWorker extends OrtolangWorker {
 
     private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceWorker.class.getName());
 
     private static final long DEFAULT_INDEXATION_DELAY = 15000;
 
     private static final String JOB_TYPE = "json-indexing";
+
+    public static final String ID = "jsonWorker";
 
     @EJB
     private JsonStoreService store;
@@ -80,6 +83,8 @@ public class JsonStoreServiceWorker {
 
     private JsonStoreWorkerThread worker;
 
+    private Thread workerThread;
+
     private DelayQueue<Job> queue;
 
     public JsonStoreServiceWorker() {
@@ -90,12 +95,17 @@ public class JsonStoreServiceWorker {
     @PostConstruct
     public void init() {
         LOGGER.log(Level.INFO, "Starting json store worker thread");
-        Thread thread = managedThreadFactory.newThread(worker);
-        thread.setName("Json Store Worker Thread");
-        thread.start();
-        List<Job> indexingJobs = jobService.getJobsOfType(JOB_TYPE);
+        workerThread = managedThreadFactory.newThread(worker);
+        workerThread.setName("Json Store Worker Thread");
+        workerThread.start();
+        List<Job> indexingJobs = jobService.getUnprocessedJobsOfType(JOB_TYPE);
         LOGGER.log(Level.INFO, "Restoring " + indexingJobs.size() + " json-indexing jobs in queue");
         queue.addAll(indexingJobs);
+    }
+
+    @Override
+    public void restart() {
+        init();
     }
 
     @PreDestroy
@@ -191,4 +201,13 @@ public class JsonStoreServiceWorker {
 
     }
 
+    @Override
+    public String getId() {
+        return ID;
+    }
+
+    @Override
+    public String getState() {
+        return workerThread.getState().name();
+    }
 }
