@@ -53,6 +53,8 @@ import java.util.concurrent.TimeUnit;
 })
 public class Job implements Serializable, Delayed {
 
+    private static final long serialVersionUID = -7953069381727021006L;
+
     public static final String OBJECT_TYPE = "job";
 
     public static final String FAILING_TIMES_KEY = "failingTimes";

@@ -73,7 +73,7 @@ public interface MessageService extends OrtolangService, OrtolangBinaryService, 
     
     void deleteThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
-    Message postMessage(String mfkey, String key, String parent, String title, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    Message postMessage(String tkey, String key, String parent, String title, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     Message readMessage(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     

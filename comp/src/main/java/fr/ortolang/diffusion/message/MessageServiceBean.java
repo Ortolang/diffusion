@@ -238,6 +238,8 @@ public class MessageServiceBean implements MessageService {
             } else {
                 trules.put(ws.getMembers(), Arrays.asList("read", "post"));
                 trules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "post"));
+                trules.put(MembershipService.PUBLISHERS_GROUP_KEY, Arrays.asList("read", "post"));
+                trules.put(MembershipService.REVIEWERS_GROUP_KEY, Arrays.asList("read", "post"));
             }
             authorisation.createPolicy(key, caller);
             authorisation.setPolicyRules(key, trules);
