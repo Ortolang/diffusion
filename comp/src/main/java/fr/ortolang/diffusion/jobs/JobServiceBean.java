@@ -145,6 +145,7 @@ public class JobServiceBean implements JobService {
             String parameter = job.getParameter(Job.FAILED_TIMES_KEY);
             times = String.valueOf(Integer.valueOf(parameter) + 1);
         }
+        job.setFailed(true);
         job.setParameter(Job.FAILED_TIMES_KEY, times != null ? times : "1");
         job.setParameter(Job.FAILED_EXPLANATION_KEY, e.getClass().getName());
         job.setParameter(Job.FAILED_EXPLANATION_MSG_KEY, e.getMessage());
