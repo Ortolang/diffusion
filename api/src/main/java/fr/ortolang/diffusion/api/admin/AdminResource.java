@@ -93,6 +93,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static net.sf.saxon.serialize.charcode.JavaCharacterSet.map;
+
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
 @Secured
@@ -386,12 +388,18 @@ public class AdminResource {
     @GET
     @Path("/jobs")
     @GZIP
-    public Response getJobs(@QueryParam("type") String type) {
+    public Response getJobs(@QueryParam("type") String type, @QueryParam("o") Integer offset, @QueryParam("l") Integer limit, @DefaultValue("false") @QueryParam("failing") boolean failing, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed) {
         List<Job> jobs;
-        if (type != null) {
-            jobs = jobService.getJobsOfType(type);
+        if (failing) {
+            jobs = jobService.getFailingJobsOfType(type, offset, limit);
+        } else if (unprocessed) {
+            jobs = jobService.getUnprocessedJobsOfType(type, offset, limit);
         } else {
-            jobs = jobService.getJobs();
+            if (type != null) {
+                jobs = jobService.getJobsOfType(type, offset, limit);
+            } else {
+                jobs = jobService.getJobs(offset, limit);
+            }
         }
         return Response.ok().entity(jobs).build();
     }
@@ -413,14 +421,33 @@ public class AdminResource {
 
     @GET
     @Path("/jobs/count")
-    public Response countJobs(@QueryParam("type") String type) throws CoreServiceException {
+    public Response countJobs(@QueryParam("type") String type, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed, @DefaultValue("false") @QueryParam("failing") boolean failing) throws CoreServiceException {
         Map<String, Long> map = new HashMap<>(1);
-        if (type != null) {
-            map.put("count", jobService.countJobsOfType(type));
+        if (failing) {
+            map.put("count", jobService.countFailingJobs());
+        } else if (unprocessed) {
+            map.put("count", jobService.countUnprocessedJobs());
         } else {
-            map.put("count", jobService.countJobs());
+            if (type != null) {
+                map.put("count", jobService.countJobsOfType(type));
+            } else {
+                map.put("count", jobService.countJobs());
+            }
         }
         return Response.ok().entity(map).build();
     }
 
+    @GET
+    @Path("/jobs/workers")
+    public Response getWorkersState() {
+        Map<String, String> workersState = jobService.getWorkersState();
+        return Response.ok().entity(workersState).build();
+    }
+
+    @PUT
+    @Path("/jobs/workers/{id}")
+    public Response restartWorker(@PathParam("id") String id) {
+        jobService.restartWorker(id);
+        return Response.ok().build();
+    }
 }

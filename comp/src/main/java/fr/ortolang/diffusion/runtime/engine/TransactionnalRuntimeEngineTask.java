@@ -58,7 +58,7 @@ public abstract class TransactionnalRuntimeEngineTask extends RuntimeEngineTask 
                 getUserTransaction().begin();
                 
             } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Unexpected error occured during task execution, putting task in error and aborting process with pid: " + bkey, e);
+                LOGGER.log(Level.SEVERE, "Unexpected error occurred during task execution, putting task in error and aborting process with pid: " + bkey, e);
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(bkey, "SERVICE TASK " + aname + " IN ERROR: " + e.getMessage(), e));
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityErrorEvent(bkey, getTaskName(), "SERVICE TASK " + aname + " IN ERROR: " + e.getMessage()));
                 throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessAbortEvent(bkey, e.getMessage()));

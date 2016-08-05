@@ -699,7 +699,7 @@ public class CoreServiceBean implements CoreService {
             Workspace workspace = readWorkspace(wskey);
             security.changeOwner(wskey, newOwner);
             security.changeOwner(workspace.getMembers(), newOwner);
-            membership.addMemberInGroup(newOwner, workspace.getMembers());
+            membership.addMemberInGroup(workspace.getMembers(), newOwner);
         } catch (SecurityServiceException | AccessDeniedException | KeyNotFoundException | MembershipServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred while changing workspace owner", e);

@@ -40,10 +40,13 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.extraction.ExtractionServiceWorker;
 import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.store.index.IndexStoreServiceWorker;
+import fr.ortolang.diffusion.store.json.JsonStoreServiceWorker;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.Resource;
@@ -51,6 +54,7 @@ import javax.annotation.security.PermitAll;
 import javax.ejb.*;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +77,12 @@ public class JobServiceBean implements JobService {
     private EntityManager em;
     @EJB
     private NotificationService notification;
+    @EJB
+    private IndexStoreServiceWorker indexWorker;
+    @EJB
+    private JsonStoreServiceWorker jsonWorker;
+    @EJB
+    private ExtractionServiceWorker extractionWorker;
     @Resource
     private SessionContext ctx;
 
@@ -145,9 +155,11 @@ public class JobServiceBean implements JobService {
             times = String.valueOf(Integer.valueOf(parameter) + 1);
         }
         job.setParameter(Job.FAILING_TIMES_KEY, times != null ? times : "1");
-        job.setParameter(Job.FAILING_EXPLANATION_KEY, e.toString());
+        job.setParameter(Job.FAILING_EXPLANATION_KEY, e.getClass().getName());
+        job.setParameter(Job.FAILING_EXPLANATION_MSG_KEY, e.getMessage());
         if (e.getCause() != null) {
-            job.setParameter(Job.FAILING_CAUSED_BY_KEY, e.getCause().toString());
+            job.setParameter(Job.FAILING_CAUSED_BY_KEY, e.getCause().getClass().getName());
+            job.setParameter(Job.FAILING_CAUSED_BY_MSG_KEY, e.getCause().getMessage());
         }
         update(job);
     }
@@ -158,9 +170,31 @@ public class JobServiceBean implements JobService {
     }
 
     @Override
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public long countUnprocessedJobs() {
+        return em.createNamedQuery("countUnprocessedJobs", Long.class).getSingleResult();
+    }
+
+    @Override
+    public long countFailingJobs() {
+        return em.createNamedQuery("countFailingJobs", Long.class).getSingleResult();
+    }
+
+    @Override
     public List<Job> getJobs() {
-        return em.createNamedQuery("listAllJobs", Job.class).getResultList();
+        return getJobs(null, null);
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public List<Job> getJobs(Integer offset, Integer limit) {
+        TypedQuery<Job> query = em.createNamedQuery("listAllJobs", Job.class);
+        if (offset != null) {
+            query.setFirstResult(offset);
+        }
+        if (limit != null) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
     }
 
     @Override
@@ -170,8 +204,91 @@ public class JobServiceBean implements JobService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public List<Job> getUnprocessedJobsOfType(String type) {
+        return getUnprocessedJobsOfType(type, null, null);
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public List<Job> getUnprocessedJobsOfType(String type, Integer offset, Integer limit) {
+        TypedQuery<Job> query;
+        if (type == null || type.isEmpty()) {
+            query = em.createNamedQuery("listUnprocessedJobs", Job.class);
+        } else {
+            query = em.createNamedQuery("listUnprocessedJobsOfType", Job.class).setParameter("type", type);
+        }
+        if (offset != null) {
+            query.setFirstResult(offset);
+        }
+        if (limit != null) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    @Override
+    public List<Job> getFailingJobsOfType(String type) {
+        return getFailingJobsOfType(type, null, null);
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public List<Job> getFailingJobsOfType(String type, Integer offset, Integer limit) {
+        TypedQuery<Job> query;
+        if (type == null || type.isEmpty()) {
+            query = em.createNamedQuery("listFailingJobs", Job.class);
+        } else {
+            query = em.createNamedQuery("listFailingJobsOfType", Job.class).setParameter("type", type);
+        }
+        if (offset != null) {
+            query.setFirstResult(offset);
+        }
+        if (limit != null) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    @Override
     public List<Job> getJobsOfType(String type) {
-        return em.createNamedQuery("listJobsOfType", Job.class).setParameter("type", type).getResultList();
+        return getJobsOfType(type, null, null);
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public List<Job> getJobsOfType(String type, Integer offset, Integer limit) {
+        TypedQuery<Job> query = em.createNamedQuery("listJobsOfType", Job.class).setParameter("type", type);
+        if (offset != null) {
+            query.setFirstResult(offset);
+        }
+        if (limit != null) {
+            query.setMaxResults(limit);
+        }
+        return query.getResultList();
+    }
+
+    @Override
+    public Map<String, String> getWorkersState() {
+        Map<String, String> map = new HashMap<>(3);
+        map.put(indexWorker.getId(), indexWorker.getState());
+        map.put(jsonWorker.getId(), jsonWorker.getState());
+        map.put(extractionWorker.getId(), extractionWorker.getState());
+        return map;
+    }
+
+    @Override
+    public void restartWorker(String id) {
+        switch (id) {
+        case ExtractionServiceWorker.ID:
+            extractionWorker.restart();
+            break;
+        case JsonStoreServiceWorker.ID:
+            jsonWorker.restart();
+            break;
+        case IndexStoreServiceWorker.ID:
+            indexWorker.restart();
+            break;
+        }
     }
 
     @Override

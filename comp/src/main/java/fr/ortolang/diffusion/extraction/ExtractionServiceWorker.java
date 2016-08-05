@@ -46,6 +46,7 @@ import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.extraction.parser.OrtolangXMLParser;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.jobs.JobService;
+import fr.ortolang.diffusion.jobs.OrtolangWorker;
 import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.registry.*;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
@@ -80,16 +81,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-@Singleton
+@Singleton(name = "extractionWorker")
 @Startup
 @RunAs("system")
 @SecurityDomain("ortolang")
 @PermitAll
-public class ExtractionServiceWorker {
+public class ExtractionServiceWorker extends OrtolangWorker {
 
     private static final Logger LOGGER = Logger.getLogger(ExtractionServiceWorker.class.getName());
 
     private static final int DELAY = 3000;
+
+    public static final String ID = "extractionWorker";
 
     @EJB
     private CoreService core;
@@ -112,6 +115,8 @@ public class ExtractionServiceWorker {
 
     private ExtractionWorkerThread worker;
 
+    private Thread workerThread;
+
     private DelayQueue<Job> queue;
 
     public ExtractionServiceWorker() {
@@ -122,21 +127,29 @@ public class ExtractionServiceWorker {
     @PostConstruct
     public void init() {
         startThread();
-        List<Job> extractionJobs = jobService.getJobsOfType(ExtractionService.JOB_TYPE);
+        List<Job> extractionJobs = jobService.getUnprocessedJobsOfType(ExtractionService.JOB_TYPE);
         LOGGER.log(Level.INFO, "Restoring " + extractionJobs.size() + " extraction jobs in queue");
         queue.addAll(extractionJobs);
     }
 
+    @Override
+    public void restart() {
+        if (!workerThread.isAlive()) {
+            this.worker = new ExtractionWorkerThread();
+            init();
+        }
+    }
+
     private void startThread() {
         LOGGER.log(Level.INFO, "Starting extraction worker thread");
-        Thread thread = managedThreadFactory.newThread(worker);
-        thread.setName("Extraction Worker Thread");
-        thread.start();
+        workerThread = managedThreadFactory.newThread(worker);
+        workerThread.setName("Extraction Worker Thread");
+        workerThread.start();
         Thread.UncaughtExceptionHandler h = (th, ex) -> {
             LOGGER.log(Level.SEVERE, "Uncaught exception", ex);
             startThread();
         };
-        thread.setUncaughtExceptionHandler(h);
+        workerThread.setUncaughtExceptionHandler(h);
     }
 
     @PreDestroy
@@ -248,12 +261,9 @@ public class ExtractionServiceWorker {
                             LOGGER.log(Level.WARNING, "unknown job action: " + job.getAction());
                         }
                         jobService.remove(job.getId());
-                    } catch (MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException | IndexingServiceException | AuthorisationServiceException e) {
+                    } catch (MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException | IndexingServiceException | AuthorisationServiceException | SAXException e) {
                         LOGGER.log(Level.WARNING, "unable to extract metadata for data object with key " + key, e);
                         jobService.updateFailingJob(job, e);
-                    } catch (SAXException e) {
-                        LOGGER.log(Level.WARNING, "Could not parse XML document: removing extraction job " + job.getId() + "for data object with key " + key, e);
-                        jobService.remove(job.getId());
                     }
 
                 } catch (InterruptedException e) {
@@ -265,6 +275,16 @@ public class ExtractionServiceWorker {
             }
         }
 
+    }
+
+    @Override
+    public String getId() {
+        return ID;
+    }
+
+    @Override
+    public String getState() {
+        return workerThread.getState().name();
     }
 
 }

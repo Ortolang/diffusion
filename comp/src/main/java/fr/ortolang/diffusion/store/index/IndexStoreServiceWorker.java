@@ -42,6 +42,7 @@ import fr.ortolang.diffusion.OrtolangIndexableObjectFactory;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.jobs.JobService;
+import fr.ortolang.diffusion.jobs.OrtolangWorker;
 import fr.ortolang.diffusion.jobs.entity.Job;
 
 import javax.annotation.PostConstruct;
@@ -57,12 +58,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-@Singleton
+@Singleton(name = "indexWorker")
 @Startup
-public class IndexStoreServiceWorker {
+public class IndexStoreServiceWorker extends OrtolangWorker {
 
     private static final Logger LOGGER = Logger.getLogger(IndexStoreServiceWorker.class.getName());
     private static final long DEFAULT_INDEXATION_DELAY = 15000;
+    public static final String ID = "indexWorker";
 
     private static final String JOB_TYPE = "indexing";
 
@@ -75,6 +77,8 @@ public class IndexStoreServiceWorker {
 
     private IndexStoreWorkerThread worker;
 
+    private Thread workerThread;
+
     private DelayQueue<Job> queue;
 
     public IndexStoreServiceWorker() {
@@ -85,12 +89,17 @@ public class IndexStoreServiceWorker {
     @PostConstruct
     public void init() {
         LOGGER.log(Level.INFO, "Starting index store worker thread");
-        Thread thread = managedThreadFactory.newThread(worker);
-        thread.setName("Index Store Worker Thread");
-        thread.start();
-        List<Job> indexingJobs = jobService.getJobsOfType(JOB_TYPE);
+        workerThread = managedThreadFactory.newThread(worker);
+        workerThread.setName("Index Store Worker Thread");
+        workerThread.start();
+        List<Job> indexingJobs = jobService.getUnprocessedJobsOfType(JOB_TYPE);
         LOGGER.log(Level.INFO, "Restoring " + indexingJobs.size() + " indexing jobs in queue");
         queue.addAll(indexingJobs);
+    }
+
+    @Override
+    public void restart() {
+        init();
     }
 
     @PreDestroy
@@ -186,4 +195,13 @@ public class IndexStoreServiceWorker {
 
     }
 
+    @Override
+    public String getId() {
+        return ID;
+    }
+
+    @Override
+    public String getState() {
+        return workerThread.getState().name();
+    }
 }
