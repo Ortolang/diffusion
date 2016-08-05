@@ -117,7 +117,7 @@ public class OrtolangServiceLocator {
             while (enumeration.hasMoreElements()) {
                 String name = enumeration.next().getName();
                 if (name.endsWith(WORKER_SUFFIX)) {
-                    LOGGER.log(Level.INFO, "jndi worker name found : " + name);
+                    LOGGER.log(Level.FINE, "jndi worker name found : " + name);
                     results.add(name.substring(0, name.indexOf("!")));
                 }
             }

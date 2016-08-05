@@ -98,12 +98,6 @@ public class JobServiceBean implements JobService {
         LOGGER.log(Level.FINE, "Creating job of type '" + type + "' (target: " + target + ')');
         Job job = new Job(type, action, target, timestamp, args);
         em.persist(job);
-        OrtolangEvent.ArgumentsBuilder argumentsBuilder = new OrtolangEvent.ArgumentsBuilder().addArgument("target", target).addArgument("type", type);
-        try {
-            notification.throwEvent(String.valueOf(job.getId()), "system", Job.OBJECT_TYPE, OrtolangEvent.buildEventType(JobService.SERVICE_NAME, Job.OBJECT_TYPE, "created"), argumentsBuilder.build());
-        } catch (NotificationServiceException e) {
-            LOGGER.log(Level.WARNING, "Unable to notify of a new job creation: " + e.getMessage());
-        }
         return job;
     }
 
@@ -114,23 +108,14 @@ public class JobServiceBean implements JobService {
         if (job != null) {
             LOGGER.log(Level.FINE, "Removing job " + id + " of type '" + job.getType() + "' (target: " + job.getTarget() + ')');
             em.remove(job);
-            try {
-                notification.throwEvent(String.valueOf(job.getId()), "system", Job.OBJECT_TYPE, OrtolangEvent.buildEventType(JobService.SERVICE_NAME, Job.OBJECT_TYPE, "removed"));
-            } catch (NotificationServiceException e) {
-                LOGGER.log(Level.WARNING, "Unable to notify of a job being removed: " + e.getMessage());
-            }
         }
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void update(Job job) {
+        LOGGER.log(Level.FINE, "Updating job " + job.getId() + " of type '" + job.getType() + "' (target: " + job.getTarget() + ')');
         em.merge(job);
-        try {
-            notification.throwEvent(String.valueOf(job.getId()), "system", Job.OBJECT_TYPE, OrtolangEvent.buildEventType(JobService.SERVICE_NAME, Job.OBJECT_TYPE, "updated"));
-        } catch (NotificationServiceException e) {
-            LOGGER.log(Level.WARNING, "Unable to notify of a job being updated: " + e.getMessage());
-        }
     }
 
     @Override
