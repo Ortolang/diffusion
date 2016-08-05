@@ -3,32 +3,74 @@
   <process id="import-workspace" name="Import Workspace Process" isExecutable="true" activiti:candidateStarterUsers="root">
     <startEvent id="start" name="Start"></startEvent>
     <sequenceFlow id="flow1" sourceRef="start" targetRef="load-bag"></sequenceFlow>
-    <serviceTask id="load-bag" name="Load Bag Content Task" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LoadBagContentTask">
+    <serviceTask id="load-bag" name="Load Bag Content" activiti:class="fr.ortolang.diffusion.runtime.engine.task.LoadBagContentTask">
       <documentation>Check the bag content according to md5 provided in the bag avoiding transfert data coruption.</documentation>
     </serviceTask>
     <endEvent id="end" name="End"></endEvent>
     <sequenceFlow id="flow2" sourceRef="load-bag" targetRef="import-content"></sequenceFlow>
-    <serviceTask id="import-content" name="Import Content Task" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportContentTask"></serviceTask>
-    <serviceTask id="publish-snapshot" name="Publish Snapshot Task" activiti:class="fr.ortolang.diffusion.runtime.engine.task.PublishSnapshotTask">
-      <multiInstanceLoopCharacteristics isSequential="true" activiti:collection="${snapshotsToPublish}" activiti:elementVariable="snapshot"></multiInstanceLoopCharacteristics>
-    </serviceTask>
+    <serviceTask id="import-content" name="Import Content" activiti:class="fr.ortolang.diffusion.runtime.engine.task.ImportContentTask"></serviceTask>
     <sequenceFlow id="flow5" sourceRef="import-content" targetRef="parallelgateway1"></sequenceFlow>
-    <sequenceFlow id="flow6" sourceRef="handle-snapshot" targetRef="end"></sequenceFlow>
     <parallelGateway id="parallelgateway1" name="Parallel Gateway"></parallelGateway>
-    <sequenceFlow id="flow7" sourceRef="parallelgateway1" targetRef="tag-snapshot">
+    <sequenceFlow id="flow7" sourceRef="parallelgateway1" targetRef="publish-snapshot">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!partial}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="flow8" sourceRef="parallelgateway1" targetRef="end">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${partial}]]></conditionExpression>
     </sequenceFlow>
-    <serviceTask id="handle-snapshot" name="Handle Snapshot Task" activiti:class="fr.ortolang.diffusion.runtime.engine.task.HandleSnapshotTask">
+    <subProcess id="publish-snapshot" name="Publish Snapshot">
       <multiInstanceLoopCharacteristics isSequential="true" activiti:collection="${snapshotsToPublish}" activiti:elementVariable="snapshot"></multiInstanceLoopCharacteristics>
-    </serviceTask>
-    <sequenceFlow id="flow9" sourceRef="publish-snapshot" targetRef="handle-snapshot"></sequenceFlow>
-    <serviceTask id="tag-snapshot" name="Tag Snapshot Task" activiti:class="fr.ortolang.diffusion.runtime.engine.task.TagSnapshotTask">
-      <multiInstanceLoopCharacteristics isSequential="true" activiti:collection="${snapshotsToPublish}" activiti:elementVariable="snapshot"></multiInstanceLoopCharacteristics>
-    </serviceTask>
-    <sequenceFlow id="flow10" sourceRef="tag-snapshot" targetRef="publish-snapshot"></sequenceFlow>
+      <serviceTask id="tag" name="Tag" activiti:class="fr.ortolang.diffusion.runtime.engine.task.TagTask">
+        <extensionElements>
+          <activiti:field name="wskey">
+            <activiti:expression><![CDATA[${wskey}]]></activiti:expression>
+          </activiti:field>
+          <activiti:field name="tag">
+            <activiti:expression><![CDATA[${wstag}]]></activiti:expression>
+          </activiti:field>
+          <activiti:field name="snapshot">
+            <activiti:expression><![CDATA[${snapshot}]]></activiti:expression>
+          </activiti:field>
+        </extensionElements>
+      </serviceTask>
+      <sequenceFlow id="flow10" sourceRef="tag" targetRef="publish"></sequenceFlow>
+      <serviceTask id="publish" name="Publish" activiti:class="fr.ortolang.diffusion.runtime.engine.task.PublishTask">
+        <extensionElements>
+          <activiti:field name="wskey">
+            <activiti:expression><![CDATA[${wskey}]]></activiti:expression>
+          </activiti:field>
+          <activiti:field name="snapshot">
+            <activiti:expression><![CDATA[${snapshot}]]></activiti:expression>
+          </activiti:field>
+        </extensionElements>
+      </serviceTask>
+      <sequenceFlow id="flow9" sourceRef="publish" targetRef="generate-handles"></sequenceFlow>
+      <serviceTask id="generate-handles" name="Generate Handles" activiti:class="fr.ortolang.diffusion.runtime.engine.task.GenerateHandlesTask">
+        <extensionElements>
+          <activiti:field name="wskey">
+            <activiti:expression><![CDATA[${wskey}]]></activiti:expression>
+          </activiti:field>
+          <activiti:field name="snapshot">
+            <activiti:expression><![CDATA[${snapshot}]]></activiti:expression>
+          </activiti:field>
+        </extensionElements>
+      </serviceTask>
+      <sequenceFlow id="flow6" sourceRef="generate-handles" targetRef="endevent1"></sequenceFlow>
+      <startEvent id="startevent1" name="Start"></startEvent>
+      <endEvent id="endevent1" name="End"></endEvent>
+      <sequenceFlow id="flow11" sourceRef="startevent1" targetRef="scripttask1"></sequenceFlow>
+      <sequenceFlow id="flow12" sourceRef="scripttask1" targetRef="tag"></sequenceFlow>
+      <scriptTask id="scripttask1" name="Load Tag" scriptFormat="groovy" activiti:autoStoreVariables="false">
+        <script>String snapshot = execution.getVariable('snapshot');
+Map&lt;String, String&gt; tags = execution.getVariable('snapshotTags');
+if ( tags.get(snapshot) != null ) {
+	tag = tags.get(snapshot);
+} else {
+	tag = 'v' + snapshot;
+}
+
+execution.setVariable(SNAPSHOTS_TAGS_PARAM_NAME, tagnames);</script>
+      </scriptTask>
+    </subProcess>
   </process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_import-workspace">
     <bpmndi:BPMNPlane bpmnElement="import-workspace" id="BPMNPlane_import-workspace">
@@ -39,54 +81,74 @@
         <omgdc:Bounds height="55.0" width="133.0" x="170.0" y="90.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="end" id="BPMNShape_end">
-        <omgdc:Bounds height="35.0" width="35.0" x="418.0" y="417.0"></omgdc:Bounds>
+        <omgdc:Bounds height="35.0" width="35.0" x="219.0" y="440.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="import-content" id="BPMNShape_import-content">
-        <omgdc:Bounds height="55.0" width="131.0" x="370.0" y="90.0"></omgdc:Bounds>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="publish-snapshot" id="BPMNShape_publish-snapshot">
-        <omgdc:Bounds height="55.0" width="131.0" x="171.0" y="300.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="131.0" x="171.0" y="208.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="parallelgateway1" id="BPMNShape_parallelgateway1">
-        <omgdc:Bounds height="40.0" width="40.0" x="415.0" y="197.0"></omgdc:Bounds>
+        <omgdc:Bounds height="40.0" width="40.0" x="216.0" y="320.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="handle-snapshot" id="BPMNShape_handle-snapshot">
-        <omgdc:Bounds height="55.0" width="133.0" x="170.0" y="407.0"></omgdc:Bounds>
+      <bpmndi:BPMNShape bpmnElement="publish-snapshot" id="BPMNShape_publish-snapshot">
+        <omgdc:Bounds height="531.0" width="245.0" x="390.0" y="75.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape bpmnElement="tag-snapshot" id="BPMNShape_tag-snapshot">
-        <omgdc:Bounds height="55.0" width="131.0" x="171.0" y="190.0"></omgdc:Bounds>
+      <bpmndi:BPMNShape bpmnElement="tag" id="BPMNShape_tag">
+        <omgdc:Bounds height="55.0" width="109.0" x="461.0" y="265.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="publish" id="BPMNShape_publish">
+        <omgdc:Bounds height="55.0" width="108.0" x="462.0" y="355.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="generate-handles" id="BPMNShape_generate-handles">
+        <omgdc:Bounds height="55.0" width="109.0" x="461.0" y="445.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="498.0" y="121.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35.0" width="35.0" x="498.0" y="535.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="scripttask1" id="BPMNShape_scripttask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="463.0" y="185.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
         <omgdi:waypoint x="110.0" y="117.0"></omgdi:waypoint>
         <omgdi:waypoint x="170.0" y="117.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow2" id="BPMNEdge_flow2">
-        <omgdi:waypoint x="303.0" y="117.0"></omgdi:waypoint>
-        <omgdi:waypoint x="370.0" y="117.0"></omgdi:waypoint>
+        <omgdi:waypoint x="236.0" y="145.0"></omgdi:waypoint>
+        <omgdi:waypoint x="236.0" y="208.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
-        <omgdi:waypoint x="435.0" y="145.0"></omgdi:waypoint>
-        <omgdi:waypoint x="435.0" y="197.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
-        <omgdi:waypoint x="303.0" y="434.0"></omgdi:waypoint>
-        <omgdi:waypoint x="418.0" y="434.0"></omgdi:waypoint>
+        <omgdi:waypoint x="236.0" y="263.0"></omgdi:waypoint>
+        <omgdi:waypoint x="236.0" y="320.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
-        <omgdi:waypoint x="415.0" y="217.0"></omgdi:waypoint>
-        <omgdi:waypoint x="302.0" y="217.0"></omgdi:waypoint>
+        <omgdi:waypoint x="256.0" y="340.0"></omgdi:waypoint>
+        <omgdi:waypoint x="390.0" y="340.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
-        <omgdi:waypoint x="435.0" y="237.0"></omgdi:waypoint>
-        <omgdi:waypoint x="435.0" y="417.0"></omgdi:waypoint>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
-        <omgdi:waypoint x="236.0" y="355.0"></omgdi:waypoint>
-        <omgdi:waypoint x="236.0" y="407.0"></omgdi:waypoint>
+        <omgdi:waypoint x="236.0" y="360.0"></omgdi:waypoint>
+        <omgdi:waypoint x="236.0" y="440.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow10" id="BPMNEdge_flow10">
-        <omgdi:waypoint x="236.0" y="245.0"></omgdi:waypoint>
-        <omgdi:waypoint x="236.0" y="300.0"></omgdi:waypoint>
+        <omgdi:waypoint x="515.0" y="320.0"></omgdi:waypoint>
+        <omgdi:waypoint x="516.0" y="355.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
+        <omgdi:waypoint x="516.0" y="410.0"></omgdi:waypoint>
+        <omgdi:waypoint x="515.0" y="445.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
+        <omgdi:waypoint x="515.0" y="500.0"></omgdi:waypoint>
+        <omgdi:waypoint x="515.0" y="535.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow11" id="BPMNEdge_flow11">
+        <omgdi:waypoint x="515.0" y="156.0"></omgdi:waypoint>
+        <omgdi:waypoint x="515.0" y="185.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow12" id="BPMNEdge_flow12">
+        <omgdi:waypoint x="515.0" y="240.0"></omgdi:waypoint>
+        <omgdi:waypoint x="515.0" y="265.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
