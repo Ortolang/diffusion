@@ -36,10 +36,7 @@ package fr.ortolang.diffusion.api.admin;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.Secured;
@@ -76,6 +73,7 @@ import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceWorker;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
+import fr.ortolang.diffusion.worker.WorkerService;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
@@ -92,8 +90,6 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import static net.sf.saxon.serialize.charcode.JavaCharacterSet.map;
 
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -129,6 +125,8 @@ public class AdminResource {
     private MembershipService membership;
     @EJB
     private JobService jobService;
+    @EJB
+    private WorkerService workerService;
 
     @GET
     @Path("/infos/{service}")
@@ -327,7 +325,7 @@ public class AdminResource {
     @GZIP
     public Response getJsonWorkerState() throws JsonStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/worker/json");
-        List<Job> jobs = jsonWorker.getQueueJobs();
+        List<OrtolangJob> jobs = jsonWorker.getQueue();
         return Response.ok(jobs).build();
     }
     
@@ -363,7 +361,7 @@ public class AdminResource {
     @GZIP
     public Response getIndexWorkerState() throws IndexStoreServiceException {
         LOGGER.log(Level.INFO, "GET /admin/worker/index");
-        List<Job> jobs = indexWorker.getQueueJobs();
+        List<OrtolangJob> jobs = indexWorker.getQueue();
         return Response.ok(jobs).build();
     }
 
@@ -388,10 +386,10 @@ public class AdminResource {
     @GET
     @Path("/jobs")
     @GZIP
-    public Response getJobs(@QueryParam("type") String type, @QueryParam("o") Integer offset, @QueryParam("l") Integer limit, @DefaultValue("false") @QueryParam("failing") boolean failing, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed) {
+    public Response getJobs(@QueryParam("type") String type, @QueryParam("o") Integer offset, @QueryParam("l") Integer limit, @DefaultValue("false") @QueryParam("failed") boolean failed, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed) {
         List<Job> jobs;
-        if (failing) {
-            jobs = jobService.getFailingJobsOfType(type, offset, limit);
+        if (failed) {
+            jobs = jobService.getFailedJobsOfType(type, offset, limit);
         } else if (unprocessed) {
             jobs = jobService.getUnprocessedJobsOfType(type, offset, limit);
         } else {
@@ -421,10 +419,10 @@ public class AdminResource {
 
     @GET
     @Path("/jobs/count")
-    public Response countJobs(@QueryParam("type") String type, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed, @DefaultValue("false") @QueryParam("failing") boolean failing) throws CoreServiceException {
+    public Response countJobs(@QueryParam("type") String type, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed, @DefaultValue("false") @QueryParam("failed") boolean failed) throws CoreServiceException {
         Map<String, Long> map = new HashMap<>(1);
-        if (failing) {
-            map.put("count", jobService.countFailingJobs());
+        if (failed) {
+            map.put("count", jobService.countFailedJobs());
         } else if (unprocessed) {
             map.put("count", jobService.countUnprocessedJobs());
         } else {
@@ -439,15 +437,15 @@ public class AdminResource {
 
     @GET
     @Path("/jobs/workers")
-    public Response getWorkersState() {
-        Map<String, String> workersState = jobService.getWorkersState();
+    public Response getWorkersState() throws OrtolangException {
+        Map<String, String> workersState = workerService.getWorkersState();
         return Response.ok().entity(workersState).build();
     }
 
-    @PUT
-    @Path("/jobs/workers/{id}")
-    public Response restartWorker(@PathParam("id") String id) {
-        jobService.restartWorker(id);
+    @GET
+    @Path("/jobs/workers/{id}/start")
+    public Response restartWorker(@PathParam("id") String id) throws OrtolangException {
+        workerService.startWorker(id);
         return Response.ok().build();
     }
 }

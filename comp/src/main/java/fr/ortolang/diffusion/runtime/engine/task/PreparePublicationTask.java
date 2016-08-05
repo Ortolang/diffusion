@@ -49,6 +49,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import fr.ortolang.diffusion.core.WorkspaceUnchangedException;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.Expression;
 import org.activiti.engine.impl.util.json.JSONObject;
@@ -102,7 +103,11 @@ public class PreparePublicationTask extends RuntimeEngineTask {
                 snapshotName = execution.getVariable(SNAPSHOT_NAME_PARAM_NAME, String.class);
                 LOGGER.log(Level.FINE, "Using provided snapshot name: " + snapshotName);
             } else {
-                snapshotName = getCoreService().snapshotWorkspace(wskey);
+                try {
+                    snapshotName = getCoreService().snapshotWorkspace(wskey);
+                } catch (WorkspaceUnchangedException e) {
+                    snapshotName = getCoreService().getLatestSnapshot(wskey);
+                }
                 execution.setVariable(SNAPSHOT_NAME_PARAM_NAME, snapshotName);
                 LOGGER.log(Level.FINE, "Using retreived snapshot name: " + snapshotName);
             }

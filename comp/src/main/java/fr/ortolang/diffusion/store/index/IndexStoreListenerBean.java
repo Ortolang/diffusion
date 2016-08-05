@@ -69,7 +69,7 @@ public class IndexStoreListenerBean implements MessageListener {
             String key = message.getStringProperty("key");
             LOGGER.log(Level.FINE, "submitting action to plain text indexation service worker");
             worker.submit(key, action);
-        } catch (JMSException | IndexStoreServiceException e) {
+        } catch (JMSException e) {
             LOGGER.log(Level.WARNING, "unable to handle indexation message", e);
         }
     }

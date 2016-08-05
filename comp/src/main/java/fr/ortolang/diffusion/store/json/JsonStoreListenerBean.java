@@ -36,8 +36,7 @@ package fr.ortolang.diffusion.store.json;
  * #L%
  */
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.security.PermitAll;
 import javax.ejb.ActivationConfigProperty;
@@ -46,8 +45,8 @@ import javax.ejb.MessageDriven;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
-
-import org.jboss.ejb3.annotation.SecurityDomain;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @MessageDriven(name = "JsonStoreListener", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
@@ -69,7 +68,7 @@ public class JsonStoreListenerBean implements MessageListener {
             String key = message.getStringProperty("key");
             LOGGER.log(Level.FINEST, "submitting action to json indexation service worker");
             worker.submit(key, action);
-        } catch (JMSException | JsonStoreServiceException e) {
+        } catch (JMSException e) {
             LOGGER.log(Level.WARNING, "unable to handle indexation message", e);
         }
     }

@@ -58,7 +58,7 @@ public interface JobService extends OrtolangService {
 
     long countUnprocessedJobs();
 
-    long countFailingJobs();
+    long countFailedJobs();
 
     List<Job> getJobs();
 
@@ -70,9 +70,9 @@ public interface JobService extends OrtolangService {
 
     List<Job> getUnprocessedJobsOfType(String type, Integer offset, Integer limit);
 
-    List<Job> getFailingJobsOfType(String type);
+    List<Job> getFailedJobsOfType(String type);
 
-    List<Job> getFailingJobsOfType(String type, Integer offset, Integer limit);
+    List<Job> getFailedJobsOfType(String type, Integer offset, Integer limit);
 
     List<Job> getJobsOfType(String type);
 
@@ -83,8 +83,4 @@ public interface JobService extends OrtolangService {
     void update(Job job);
 
     void updateFailingJob(Job job, Exception e);
-
-    Map<String, String> getWorkersState();
-
-    void restartWorker(String id);
 }

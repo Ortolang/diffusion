@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.jobs;
+package fr.ortolang.diffusion.worker;
 
 /*
  * #%L
@@ -36,11 +36,20 @@ package fr.ortolang.diffusion.jobs;
  * #L%
  */
 
-public abstract class OrtolangWorker {
+import fr.ortolang.diffusion.OrtolangException;
 
-    public abstract String getId();
+import java.util.List;
+import java.util.Map;
 
-    public abstract String getState();
+public interface WorkerService {
 
-    public abstract void restart();
+    String SERVICE_NAME = "worker";
+
+    List<String> listWorkers() throws OrtolangException;
+
+    Map<String, String> getWorkersState() throws OrtolangException;
+
+    void startWorker(String id) throws OrtolangException;
+
+    void stopWorker(String id) throws OrtolangException;
 }

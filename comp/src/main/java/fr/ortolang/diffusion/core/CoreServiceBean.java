@@ -463,7 +463,7 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public String snapshotWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceReadOnlyException {
+    public String snapshotWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceReadOnlyException, WorkspaceUnchangedException {
         LOGGER.log(Level.FINE, "snapshoting workspace [" + wskey + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -484,7 +484,7 @@ public class CoreServiceBean implements CoreService {
             String name = String.valueOf(workspace.getClock());
 
             if (!workspace.hasChanged()) {
-                return name;
+                throw new WorkspaceUnchangedException("unable to snapshot because workspace has no pending modifications since last snapshot");
             }
 
             try {
@@ -537,6 +537,28 @@ public class CoreServiceBean implements CoreService {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred while snapshoting workspace", e);
             throw new CoreServiceException("unable to snapshot workspace with key [" + wskey + "]", e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public String getLatestSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+
+            OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+            checkObjectType(identifier, Workspace.OBJECT_TYPE);
+            authorisation.checkPermission(wskey, subjects, "read");
+
+            Workspace workspace = em.find(Workspace.class, identifier.getId());
+            if (workspace == null) {
+                throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+            }
+
+            return String.valueOf(workspace.getClock() - 1);
+        } catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while getting latest workspace snapshot", e);
+            throw new CoreServiceException("unable to get latest snapshot for workspace with key [" + wskey + "]", e);
         }
     }
 
@@ -4399,7 +4421,7 @@ public class CoreServiceBean implements CoreService {
             }
         }
     }
-    
+
     private boolean applyReadOnly(String caller, List<String> subjects, Workspace workspace) {
         if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && workspace.isReadOnly() ) {
             return true;

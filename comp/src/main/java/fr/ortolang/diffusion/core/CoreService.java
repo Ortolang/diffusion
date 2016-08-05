@@ -84,7 +84,9 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
     void updateWorkspace(String wskey, String name) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
     
-    String snapshotWorkspace(String wskey) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
+    String snapshotWorkspace(String wskey) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException, WorkspaceUnchangedException;
+
+    String getLatestSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
     void tagWorkspace(String wskey, String tag, String snapshot) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
 

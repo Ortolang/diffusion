@@ -86,23 +86,14 @@ public class MembershipServiceTest {
     @ArquillianResource
     InitialContext initialContext;
 
-
     @Deployment
     public static EnterpriseArchive createDeployment() {
         JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "diffusion-server-ejb.jar");
         jar.addPackage("fr.ortolang.diffusion");
-        // jar.addPackage("fr.ortolang.diffusion.bootstrap");
         jar.addPackage("fr.ortolang.diffusion.browser");
-        jar.addPackage("fr.ortolang.diffusion.core");
-        jar.addPackage("fr.ortolang.diffusion.core.entity");
-        jar.addPackage("fr.ortolang.diffusion.core.wrapper");
         jar.addPackage("fr.ortolang.diffusion.event");
         jar.addPackage("fr.ortolang.diffusion.event.entity");
-        jar.addPackage("fr.ortolang.diffusion.extraction");
-        jar.addPackage("fr.ortolang.diffusion.extraction.parser");
         jar.addPackage("fr.ortolang.diffusion.indexing");
-        jar.addPackage("fr.ortolang.diffusion.jobs");
-        jar.addPackage("fr.ortolang.diffusion.jobs.entity");
         jar.addPackage("fr.ortolang.diffusion.membership");
         jar.addPackage("fr.ortolang.diffusion.membership.entity");
         jar.addPackage("fr.ortolang.diffusion.notification");
@@ -117,15 +108,8 @@ public class MembershipServiceTest {
         jar.addPackage("fr.ortolang.diffusion.store.handle");
         jar.addPackage("fr.ortolang.diffusion.store.handle.entity");
         jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
-        jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreServiceException");
         jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
-        jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreDocumentBuilder");
-        jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreService");
-        jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
-        jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
         jar.addAsResource("config.properties");
-        jar.addAsResource("xsl/tei2OrtolangMD.xsl");
-        jar.addAsResource("xsl/trans2OrtolangMD.xsl");
         jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
         LOGGER.log(Level.INFO, "Created JAR for test : " + jar.toString(true));
 

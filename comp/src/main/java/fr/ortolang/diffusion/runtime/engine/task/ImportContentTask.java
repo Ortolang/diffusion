@@ -51,17 +51,10 @@ import java.util.logging.Logger;
 
 import javax.transaction.Status;
 
+import fr.ortolang.diffusion.core.*;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import org.activiti.engine.delegate.DelegateExecution;
 
-import fr.ortolang.diffusion.core.CollectionNotEmptyException;
-import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.core.InvalidPathException;
-import fr.ortolang.diffusion.core.MetadataFormatException;
-import fr.ortolang.diffusion.core.PathAlreadyExistsException;
-import fr.ortolang.diffusion.core.PathBuilder;
-import fr.ortolang.diffusion.core.PathNotFoundException;
-import fr.ortolang.diffusion.core.WorkspaceReadOnlyException;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -369,7 +362,7 @@ public class ImportContentTask extends RuntimeEngineTask {
         }
     }
 
-    private void snapshotWorkspace() throws RuntimeEngineTaskException {
+    private void snapshotWorkspace() throws RuntimeEngineTaskException, WorkspaceUnchangedException {
         try {
             getCoreService().snapshotWorkspace(wskey);
         } catch ( CoreServiceException | AccessDeniedException | KeyNotFoundException | WorkspaceReadOnlyException e) {

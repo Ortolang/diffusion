@@ -51,11 +51,13 @@ public class OrtolangServiceLocator {
 
     private static final String NAMESPACE = "java:global/diffusion/components";
     private static final String SERVICE_SUFFIX = "Service";
+    private static final String WORKER_SUFFIX = "Worker";
 
     private static final Logger LOGGER = Logger.getLogger(OrtolangServiceLocator.class.getName());
     private static InitialContext jndi;
     private static Map<String, Object> objects = new HashMap<String, Object> ();
     private static Map<String, OrtolangService> services = new HashMap<String, OrtolangService> ();
+    private static Map<String, OrtolangWorker> workers = new HashMap<> ();
     private static Map<String, OrtolangIndexableService> indexableServices = new HashMap<String, OrtolangIndexableService> ();
 
     private OrtolangServiceLocator() {
@@ -78,7 +80,7 @@ public class OrtolangServiceLocator {
             List<String> results = new ArrayList<String>();
             while (enumeration.hasMoreElements()) {
                 String name = enumeration.next().getName();
-                if (name.endsWith(OrtolangServiceLocator.SERVICE_SUFFIX)) {
+                if (name.endsWith(SERVICE_SUFFIX)) {
                     LOGGER.log(Level.INFO, "jndi service name found : " + name);
                     results.add(name.substring(0, name.indexOf("!")));
                 }
@@ -95,7 +97,7 @@ public class OrtolangServiceLocator {
                 NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/");
                 while (enumeration.hasMoreElements()) {
                     String name = enumeration.next().getName();
-                    if (name.endsWith(OrtolangServiceLocator.SERVICE_SUFFIX) && name.substring(0, name.indexOf("!")).equals(serviceName)) {
+                    if (name.endsWith(SERVICE_SUFFIX) && name.substring(0, name.indexOf("!")).equals(serviceName)) {
                         services.put(serviceName, (OrtolangService) getJndiContext().lookup(NAMESPACE + "/" + name));
                         return services.get(serviceName);
                     }
@@ -103,6 +105,41 @@ public class OrtolangServiceLocator {
                 throw new OrtolangException("service not found: " + serviceName);
             }
             return services.get(serviceName);
+        } catch (Exception e) {
+            throw new OrtolangException(e);
+        }
+    }
+
+    public static List<String> listWorkers() throws OrtolangException {
+        try {
+            NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/");
+            List<String> results = new ArrayList<>();
+            while (enumeration.hasMoreElements()) {
+                String name = enumeration.next().getName();
+                if (name.endsWith(WORKER_SUFFIX)) {
+                    LOGGER.log(Level.INFO, "jndi worker name found : " + name);
+                    results.add(name.substring(0, name.indexOf("!")));
+                }
+            }
+            return results;
+        } catch (Exception e) {
+            throw new OrtolangException(e);
+        }
+    }
+
+    public static OrtolangWorker findWorker(String workerName) throws OrtolangException {
+        try {
+            if (!workers.containsKey(workerName)) {
+                NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/");
+                while (enumeration.hasMoreElements()) {
+                    String name = enumeration.next().getName();
+                    if (name.endsWith(WORKER_SUFFIX) && name.substring(0, name.indexOf("!")).equals(workerName)) {
+                        return workers.put(workerName, (OrtolangWorker) getJndiContext().lookup(NAMESPACE + "/" + name));
+                    }
+                }
+                throw new OrtolangException("worker not found: " + workerName);
+            }
+            return workers.get(workerName);
         } catch (Exception e) {
             throw new OrtolangException(e);
         }
@@ -125,7 +162,7 @@ public class OrtolangServiceLocator {
                 NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/");
                 while (enumeration.hasMoreElements()) {
                     String name = enumeration.next().getName();
-                    if (name.endsWith(OrtolangServiceLocator.SERVICE_SUFFIX) && name.substring(0, name.indexOf("!")).equals(serviceName)) {
+                    if (name.endsWith(SERVICE_SUFFIX) && name.substring(0, name.indexOf("!")).equals(serviceName)) {
                         indexableServices.put(serviceName, (OrtolangIndexableService) getJndiContext().lookup(NAMESPACE + "/" + name));
                         return indexableServices.get(serviceName);
                     }

@@ -36,83 +36,17 @@ package fr.ortolang.diffusion.api.workspace;
  * #L%
  */
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import javax.ejb.EJB;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-
-import org.javers.core.diff.Change;
-import org.jboss.resteasy.annotations.GZIP;
-import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
-
-
-import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectInfos;
-import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.filter.CORSFilter;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
-import fr.ortolang.diffusion.core.AliasAlreadyExistsException;
-import fr.ortolang.diffusion.core.AliasNotFoundException;
-import fr.ortolang.diffusion.core.CollectionNotEmptyException;
-import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.core.InvalidPathException;
-import fr.ortolang.diffusion.core.MetadataFormatException;
-import fr.ortolang.diffusion.core.PathAlreadyExistsException;
-import fr.ortolang.diffusion.core.PathBuilder;
-import fr.ortolang.diffusion.core.PathNotFoundException;
-import fr.ortolang.diffusion.core.WorkspaceReadOnlyException;
+import fr.ortolang.diffusion.core.*;
 import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.CollectionElement;
-import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.*;
 import fr.ortolang.diffusion.core.entity.Link;
-import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.core.entity.MetadataFormat;
-import fr.ortolang.diffusion.core.entity.MetadataObject;
-import fr.ortolang.diffusion.core.entity.MetadataSource;
-import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -131,6 +65,26 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import org.javers.core.diff.Change;
+import org.jboss.resteasy.annotations.GZIP;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
+
+import javax.ejb.EJB;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Path("/workspaces")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -598,7 +552,8 @@ public class WorkspaceResource {
 
     @POST
     @Path("/{wskey}/snapshots")
-    public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceReadOnlyException {
+    public Response snapshotWorkspace(@PathParam(value = "wskey") String wskey)
+            throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceReadOnlyException, WorkspaceUnchangedException {
         LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/snapshots");
         core.snapshotWorkspace(wskey);
         return Response.ok().build();

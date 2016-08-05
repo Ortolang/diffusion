@@ -65,7 +65,7 @@ public class ExtractionListenerBean implements MessageListener {
         try {
             String key = message.getStringProperty("key");
             LOGGER.log(Level.FINEST, "Starting to extract metadata for object with key " + key);
-            worker.submit(key);
+            worker.submit(key, null);
         } catch (JMSException e) {
             LOGGER.log(Level.WARNING, "Unable to handle extraction message", e);
         }

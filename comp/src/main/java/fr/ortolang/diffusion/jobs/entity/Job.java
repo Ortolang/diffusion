@@ -36,9 +36,10 @@ package fr.ortolang.diffusion.jobs.entity;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangJob;
+
 import javax.annotation.Nonnull;
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Delayed;
@@ -50,28 +51,26 @@ import java.util.concurrent.TimeUnit;
         @NamedQuery(name = "listAllJobs", query = "SELECT j FROM Job j ORDER BY j.id"),
         @NamedQuery(name = "countJobsOfType", query = "SELECT count(j) FROM Job j WHERE :type = j.type"),
         @NamedQuery(name = "listJobsOfType", query = "SELECT j FROM Job j WHERE :type = j.type ORDER BY j.id"),
-        @NamedQuery(name = "countFailingJobs", query = "SELECT count(j) FROM Job j WHERE j.failing = true"),
-        @NamedQuery(name = "listFailingJobs", query = "SELECT j FROM Job j WHERE j.failing = true ORDER BY j.id"),
-        @NamedQuery(name = "listFailingJobsOfType", query = "SELECT j FROM Job j WHERE :type = j.type AND j.failing = true ORDER BY j.id"),
-        @NamedQuery(name = "countUnprocessedJobs", query = "SELECT count(j) FROM Job j WHERE j.failing = false"),
-        @NamedQuery(name = "listUnprocessedJobs", query = "SELECT j FROM Job j WHERE j.failing = false ORDER BY j.id"),
-        @NamedQuery(name = "listUnprocessedJobsOfType", query = "SELECT j FROM Job j WHERE :type = j.type AND j.failing = false ORDER BY j.id"),
+        @NamedQuery(name = "countFailedJobs", query = "SELECT count(j) FROM Job j WHERE j.failed = true"),
+        @NamedQuery(name = "listFailedJobs", query = "SELECT j FROM Job j WHERE j.failed = true ORDER BY j.id"),
+        @NamedQuery(name = "listFailedJobsOfType", query = "SELECT j FROM Job j WHERE :type = j.type AND j.failed = true ORDER BY j.id"),
+        @NamedQuery(name = "countUnprocessedJobs", query = "SELECT count(j) FROM Job j WHERE j.failed = false"),
+        @NamedQuery(name = "listUnprocessedJobs", query = "SELECT j FROM Job j WHERE j.failed = false ORDER BY j.id"),
+        @NamedQuery(name = "listUnprocessedJobsOfType", query = "SELECT j FROM Job j WHERE :type = j.type AND j.failed = false ORDER BY j.id"),
 })
-public class Job implements Serializable, Delayed {
+public class Job extends OrtolangJob {
 
     private static final long serialVersionUID = -7953069381727021006L;
 
-    public static final String OBJECT_TYPE = "job";
+    public static final String FAILED_TIMES_KEY = "failedTimes";
 
-    public static final String FAILING_TIMES_KEY = "failingTimes";
+    public static final String FAILED_EXPLANATION_KEY = "failedExplanation";
 
-    public static final String FAILING_EXPLANATION_KEY = "failingExplanation";
+    public static final String FAILED_EXPLANATION_MSG_KEY = "failedExplanationMsg";
 
-    public static final String FAILING_EXPLANATION_MSG_KEY = "failingExplanationMsg";
+    public static final String FAILED_CAUSED_BY_KEY = "failedCausedBy";
 
-    public static final String FAILING_CAUSED_BY_KEY = "failingCausedBy";
-
-    public static final String FAILING_CAUSED_BY_MSG_KEY = "failingCausedByMsg";
+    public static final String FAILED_CAUSED_BY_MSG_KEY = "failedCausedByMsg";
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -80,14 +79,14 @@ public class Job implements Serializable, Delayed {
     private String action;
     private String target;
     private long timestamp;
-    private boolean failing;
+    private boolean failed;
     @ElementCollection(fetch = FetchType.EAGER)
     private Map<String, String> parameters;
 
 
     public Job() {
         parameters = new HashMap<>();
-        failing = false;
+        failed = false;
     }
 
     public Job(String type, String action, String target, long timestamp, Map<String, String> args) {
@@ -99,10 +98,12 @@ public class Job implements Serializable, Delayed {
         this.parameters = args;
     }
 
+    @Override
     public Long getId() {
         return id;
     }
 
+    @Override
     public String getType() {
         return type;
     }
@@ -111,6 +112,7 @@ public class Job implements Serializable, Delayed {
         this.type = type;
     }
 
+    @Override
     public String getAction() {
         return action;
     }
@@ -119,6 +121,7 @@ public class Job implements Serializable, Delayed {
         this.action = action;
     }
 
+    @Override
     public String getTarget() {
         return target;
     }
@@ -127,6 +130,7 @@ public class Job implements Serializable, Delayed {
         this.target = target;
     }
 
+    @Override
     public long getTimestamp() {
         return timestamp;
     }
@@ -135,14 +139,16 @@ public class Job implements Serializable, Delayed {
         this.timestamp = timestamp;
     }
 
-    public boolean isFailing() {
-        return failing;
+    @Override
+    public boolean hasFailed() {
+        return failed;
     }
 
-    public void setFailing(boolean failing) {
-        this.failing = failing;
+    public void setFailed(boolean failed) {
+        this.failed = failed;
     }
 
+    @Override
     public Map<String, String> getParameters() {
         return parameters;
     }
@@ -151,6 +157,7 @@ public class Job implements Serializable, Delayed {
         this.parameters = parameters;
     }
 
+    @Override
     public String getParameter(String name) {
         return parameters.get(name);
     }
@@ -165,7 +172,7 @@ public class Job implements Serializable, Delayed {
 
     @Override
     public String toString() {
-        return "Job{" + "id=" + id + ", type='" + type + '\'' + ", action='" + action + '\'' + ", target='" + target + '\'' + ", timestamp=" + timestamp + ", failing=" + failing + '}';
+        return "Job{" + "id=" + id + ", type='" + type + '\'' + ", action='" + action + '\'' + ", target='" + target + '\'' + ", timestamp=" + timestamp + ", failed=" + failed + '}';
     }
 
     @Override

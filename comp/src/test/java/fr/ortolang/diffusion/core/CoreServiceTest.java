@@ -104,18 +104,16 @@ public class CoreServiceTest {
     public static EnterpriseArchive createDeployment() {
         JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "diffusion-server-ejb.jar");
         jar.addPackage("fr.ortolang.diffusion");
-        // jar.addPackage("fr.ortolang.diffusion.bootstrap");
         jar.addPackage("fr.ortolang.diffusion.browser");
         jar.addPackage("fr.ortolang.diffusion.core");
         jar.addPackage("fr.ortolang.diffusion.core.entity");
         jar.addPackage("fr.ortolang.diffusion.core.wrapper");
         jar.addPackage("fr.ortolang.diffusion.event");
         jar.addPackage("fr.ortolang.diffusion.event.entity");
-        jar.addPackage("fr.ortolang.diffusion.extraction");
-        jar.addPackage("fr.ortolang.diffusion.extraction.parser");
+        jar.addClass("fr.ortolang.diffusion.extraction.ExtractionService");
+        jar.addClass("fr.ortolang.diffusion.extraction.ExtractionServiceBean");
+        jar.addClass("fr.ortolang.diffusion.extraction.ExtractionServiceException");
         jar.addPackage("fr.ortolang.diffusion.indexing");
-        jar.addPackage("fr.ortolang.diffusion.jobs");
-        jar.addPackage("fr.ortolang.diffusion.jobs.entity");
         jar.addPackage("fr.ortolang.diffusion.membership");
         jar.addPackage("fr.ortolang.diffusion.membership.entity");
         jar.addPackage("fr.ortolang.diffusion.notification");
@@ -130,15 +128,8 @@ public class CoreServiceTest {
         jar.addPackage("fr.ortolang.diffusion.store.handle");
         jar.addPackage("fr.ortolang.diffusion.store.handle.entity");
         jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
-        jar.addClass("fr.ortolang.diffusion.store.json.JsonStoreServiceException");
         jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
-        jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreDocumentBuilder");
-        jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreService");
-        jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceBean");
-        jar.addClass("fr.ortolang.diffusion.store.index.IndexStoreServiceException");
         jar.addAsResource("config.properties");
-        jar.addAsResource("xsl/tei2OrtolangMD.xsl");
-        jar.addAsResource("xsl/trans2OrtolangMD.xsl");
         jar.addAsResource("schema/ortolang-item-schema.json");
         jar.addAsResource("schema/ortolang-workspace-schema.json");
         jar.addAsResource("json/meta.json");
@@ -397,7 +388,8 @@ public class CoreServiceTest {
     @Test
     public void testCRUDCollection()
             throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, InvalidPathException,
-            CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException, RegistryServiceException {
+            CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException, RegistryServiceException,
+            WorkspaceUnchangedException {
         LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
         loginContext.login();
         try {
@@ -458,8 +450,10 @@ public class CoreServiceTest {
             try {
                 core.snapshotWorkspace(wsk);
                 fail("A second snapshot without changes should produce an exception");
-            } catch (Exception e) {
+            } catch (WorkspaceUnchangedException e) {
                 LOGGER.log(Level.INFO, e.getMessage());
+            } catch (Exception e) {
+                fail("Should produce WorkspaceUnchangedException");
             }
 
             core.createCollection(wsk, "/a/d");
@@ -587,7 +581,8 @@ public class CoreServiceTest {
     @Test
     public void testUpdateDataObjectWithSnapshot()
             throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, InvalidPathException,
-            CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException, RegistryServiceException {
+            CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException, RegistryServiceException,
+            WorkspaceUnchangedException {
         LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
         loginContext.login();
         try {
@@ -768,7 +763,8 @@ public class CoreServiceTest {
     @Test
     public void testCRUDMetadata()
             throws LoginException, CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, MembershipServiceException, KeyNotFoundException, InvalidPathException,
-            CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException, RegistryServiceException, MetadataFormatException {
+            CollectionNotEmptyException, DataCollisionException, PathNotFoundException, PathAlreadyExistsException, WorkspaceReadOnlyException, AliasAlreadyExistsException, RegistryServiceException,
+            MetadataFormatException, WorkspaceUnchangedException {
         LoginContext loginContext = UsernamePasswordLoginContextFactory.createLoginContext("user1", "tagada");
         loginContext.login();
         try {
