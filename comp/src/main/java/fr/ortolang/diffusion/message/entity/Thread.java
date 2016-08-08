@@ -57,32 +57,31 @@ import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.message.MessageService;
 
-
 @Entity
-@Table(indexes={@Index(columnList="lastActivity", name="threadLastActivityIndex"), @Index(columnList="workspace", name="threadWorkspaceIndex")})
-@NamedQueries(value= {
-        @NamedQuery(name="findThreadsForWorkspace", query="SELECT t FROM Thread t WHERE t.workspace = :wskey ORDER BY t.lastActivity DESC")
-})
+@Table(indexes = { @Index(columnList = "lastActivity", name = "threadLastActivityIndex"), @Index(columnList = "workspace", name = "threadWorkspaceIndex") })
+@NamedQueries(value = { @NamedQuery(name = "findThreadsForWorkspace", query = "SELECT t FROM Thread t WHERE t.workspace = :wskey ORDER BY t.lastActivity DESC") })
 @SuppressWarnings("serial")
 public class Thread extends OrtolangObject {
-    
+
     public static final String OBJECT_TYPE = "thread";
-    
+
     @Id
     private String id;
     @Version
     private long version;
     @Transient
     private String key;
-    @Column(length=1000)
+    @Column(length = 1000)
     private String name;
     @Temporal(TemporalType.TIMESTAMP)
     private Date lastActivity;
     @Lob
     @Type(type = "org.hibernate.type.TextType")
     private String description;
+    private String question;
+    private String answer;
     private String workspace;
-    
+
     public Thread() {
     }
 
@@ -133,7 +132,7 @@ public class Thread extends OrtolangObject {
     public void setDescription(String description) {
         this.description = description;
     }
-    
+
     public String getWorkspace() {
         return workspace;
     }
@@ -142,11 +141,27 @@ public class Thread extends OrtolangObject {
         this.workspace = workspace;
     }
 
+    public String getQuestion() {
+        return question;
+    }
+
+    public void setQuestion(String question) {
+        this.question = question;
+    }
+
+    public String getAnswer() {
+        return answer;
+    }
+
+    public void setAnswer(String answer) {
+        this.answer = answer;
+    }
+
     @Override
     public String getObjectKey() {
         return getKey();
     }
-    
+
     @Override
     public String getObjectName() {
         return getName();
