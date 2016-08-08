@@ -42,6 +42,8 @@ public interface OrtolangWorker {
 
     String getName();
 
+    String getType();
+
     String getState();
 
     List<OrtolangJob> getQueue();

@@ -118,6 +118,11 @@ public class IndexStoreServiceWorkerBean implements IndexStoreServiceWorker {
     }
 
     @Override
+    public String getType() {
+        return JOB_TYPE;
+    }
+
+    @Override
     public String getState() {
         return workerThread.getState().name();
     }

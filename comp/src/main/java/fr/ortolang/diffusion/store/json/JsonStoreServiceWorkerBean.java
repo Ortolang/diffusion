@@ -122,6 +122,11 @@ public class JsonStoreServiceWorkerBean implements JsonStoreServiceWorker {
     }
 
     @Override
+    public String getType() {
+        return JOB_TYPE;
+    }
+
+    @Override
     public String getState() {
         return workerThread.getState().name();
     }

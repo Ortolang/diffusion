@@ -37,6 +37,7 @@ package fr.ortolang.diffusion.worker;
  */
 
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangJob;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.OrtolangWorker;
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -44,9 +45,8 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import javax.annotation.security.PermitAll;
 import javax.ejb.Local;
 import javax.ejb.Stateless;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Local(WorkerService.class)
 @Stateless(name = WorkerService.SERVICE_NAME)
@@ -55,29 +55,48 @@ import java.util.Map;
 public class WorkerServiceBean implements WorkerService {
 
     @Override
+    public OrtolangWorker getWorker(String name) throws OrtolangException {
+        return OrtolangServiceLocator.findWorker(name);
+    }
+
+    @Override
     public List<String> listWorkers() throws OrtolangException {
         return OrtolangServiceLocator.listWorkers();
     }
+
     @Override
-    public Map<String, String> getWorkersState() throws OrtolangException {
-        Map<String, String> map = new HashMap<>();
-        List<String> workers = listWorkers();
-        for (String name : workers) {
-            OrtolangWorker worker = OrtolangServiceLocator.findWorker(name);
-            if (worker != null) {
-                map.put(worker.getName(), worker.getState());
+    public List<OrtolangWorker> getWorkers() throws OrtolangException {
+        List<String> names = listWorkers();
+        List<OrtolangWorker> workers = new ArrayList<>(names.size());
+        for (String name : names) {
+            workers.add(getWorker(name));
+        }
+        return workers;
+    }
+
+    @Override
+    public OrtolangWorker getWorkerForJobType(String type) throws OrtolangException {
+        List<OrtolangWorker> workers = getWorkers();
+        for (OrtolangWorker worker : workers) {
+            if (worker.getType().equals(type)) {
+                return worker;
             }
         }
-        return map;
+        return null;
     }
 
     @Override
     public void startWorker(String name) throws OrtolangException {
-        OrtolangServiceLocator.findWorker(name).start();
+        getWorker(name).start();
     }
 
     @Override
     public void stopWorker(String name) throws OrtolangException {
-        OrtolangServiceLocator.findWorker(name).stop();
+        getWorker(name).stop();
+    }
+
+    @Override
+    public List<OrtolangJob> getQueue(String name) throws OrtolangException {
+        return getWorker(name).getQueue();
     }
 }

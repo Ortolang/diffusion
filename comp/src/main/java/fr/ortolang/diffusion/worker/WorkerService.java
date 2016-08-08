@@ -37,6 +37,8 @@ package fr.ortolang.diffusion.worker;
  */
 
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangJob;
+import fr.ortolang.diffusion.OrtolangWorker;
 
 import java.util.List;
 import java.util.Map;
@@ -45,11 +47,18 @@ public interface WorkerService {
 
     String SERVICE_NAME = "worker";
 
+    OrtolangWorker getWorker(String name) throws OrtolangException;
+
     List<String> listWorkers() throws OrtolangException;
 
-    Map<String, String> getWorkersState() throws OrtolangException;
+    List<OrtolangWorker> getWorkers() throws OrtolangException;
 
-    void startWorker(String id) throws OrtolangException;
+    OrtolangWorker getWorkerForJobType(String type) throws OrtolangException;
 
-    void stopWorker(String id) throws OrtolangException;
+    void startWorker(String name) throws OrtolangException;
+
+    void stopWorker(String name) throws OrtolangException;
+
+    List<OrtolangJob> getQueue(String name) throws OrtolangException;
+
 }

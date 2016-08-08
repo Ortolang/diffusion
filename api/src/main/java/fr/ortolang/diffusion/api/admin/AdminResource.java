@@ -67,10 +67,8 @@ import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 import fr.ortolang.diffusion.store.handle.entity.Handle;
 import fr.ortolang.diffusion.store.index.IndexStoreService;
 import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
-import fr.ortolang.diffusion.store.index.IndexStoreServiceWorker;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
-import fr.ortolang.diffusion.store.json.JsonStoreServiceWorker;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
 import fr.ortolang.diffusion.worker.WorkerService;
@@ -102,11 +100,7 @@ public class AdminResource {
     @EJB
     private JsonStoreService json;
     @EJB
-    private JsonStoreServiceWorker jsonWorker;
-    @EJB
     private IndexStoreService index;
-    @EJB
-    private IndexStoreServiceWorker indexWorker;
     @EJB
     private HandleStoreService handle;
     @EJB
@@ -146,7 +140,7 @@ public class AdminResource {
         List<RegistryEntry> entries = registry.systemListEntries(kfilter, ifilter);
         return Response.ok(entries).build();
     }
-    
+
     @GET
     @Path("/registry/entries/{key}")
     @GZIP
@@ -173,35 +167,35 @@ public class AdminResource {
         registry.delete(key, true);
         return Response.ok().build();
     }
-    
+
 
     @POST
     @Path("/core/metadata")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @GZIP
     public Response createMetadata(@MultipartForm MetadataObjectFormRepresentation form) throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
-    	LOGGER.log(Level.INFO, "POST /admin/core/metadata");	
-    	try {
-	    	if (form.getKey() == null) {
-	            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
-	        }
-	    	if (form.getName() == null) {
-	            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'name' is mandatory").build();
-	        }
-	        if (form.getStream() != null) {
-	            form.setStreamHash(core.put(form.getStream()));
-	        }
-	
-	    	core.systemCreateMetadata(form.getKey(), form.getName(), form.getStreamHash(), form.getFilename());
-	    	//TODO return with the metadata key
-	    	URI location = ApiUriBuilder.getApiUriBuilder().path(ObjectResource.class).path(form.getKey()).build();
-	    	return Response.created(location).build();
-	    } catch (DataCollisionException | URISyntaxException e) {
-	        LOGGER.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
-	        return Response.serverError().entity(e.getMessage()).build();
-	    }
+        LOGGER.log(Level.INFO, "POST /admin/core/metadata");
+        try {
+            if (form.getKey() == null) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
+            }
+            if (form.getName() == null) {
+                return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'name' is mandatory").build();
+            }
+            if (form.getStream() != null) {
+                form.setStreamHash(core.put(form.getStream()));
+            }
+
+            core.systemCreateMetadata(form.getKey(), form.getName(), form.getStreamHash(), form.getFilename());
+            //TODO return with the metadata key
+            URI location = ApiUriBuilder.getApiUriBuilder().path(ObjectResource.class).path(form.getKey()).build();
+            return Response.created(location).build();
+        } catch (DataCollisionException | URISyntaxException e) {
+            LOGGER.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
+            return Response.serverError().entity(e.getMessage()).build();
+        }
     }
-    
+
     @DELETE
     @Path("/membership/profiles/{key}")
     public Response deleteProfile(@PathParam("key") String key) throws KeyNotFoundException, AccessDeniedException, MembershipServiceException {
@@ -209,7 +203,7 @@ public class AdminResource {
         membership.deleteProfile(key);
         return Response.ok().build();
     }
-    
+
     @GET
     @Path("/runtime/types")
     @GZIP
@@ -244,7 +238,7 @@ public class AdminResource {
         List<HumanTaskRepresentation> entries = runtime.systemListTasks().stream().map(HumanTaskRepresentation::fromHumanTask).collect(Collectors.toCollection(ArrayList::new));
         return Response.ok(entries).build();
     }
-    
+
     @GET
     @Path("/store/binary")
     @GZIP
@@ -253,7 +247,7 @@ public class AdminResource {
         List<BinaryStoreContent> infos = binary.systemBrowse(null, null);
         return Response.ok(infos).build();
     }
-    
+
     @GET
     @Path("/store/binary/{name}")
     @GZIP
@@ -262,7 +256,7 @@ public class AdminResource {
         List<BinaryStoreContent> infos = binary.systemBrowse(name, null);
         return Response.ok(infos).build();
     }
-    
+
     @GET
     @Path("/store/binary/{name}/{prefix}")
     @GZIP
@@ -271,7 +265,7 @@ public class AdminResource {
         List<BinaryStoreContent> infos = binary.systemBrowse(name, prefix);
         return Response.ok(infos).build();
     }
-    
+
     @GET
     @Path("/store/binary/{name}/{prefix}/{hash}")
     @GZIP
@@ -280,7 +274,7 @@ public class AdminResource {
         File content = binary.getFile(hash);
         return Response.ok(content).build();
     }
-    
+
     @GET
     @Path("/store/events")
     @GZIP
@@ -290,21 +284,21 @@ public class AdminResource {
         LOGGER.log(Level.INFO, "GET /admin/store/events");
         long nbresults = event.systemCountEvents(etype, ofrom, otype, throwed, after);
         List<OrtolangEvent> events = (List<OrtolangEvent>) event.systemFindEvents(etype, ofrom, otype, throwed, after, offset, limit);
-        
-//        UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
+
+        //        UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
         GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>();
         representation.setEntries(events);
         representation.setOffset((offset <= 0) ? 1 : offset);
         representation.setSize(nbresults);
         representation.setLimit(events.size());
-//        representation.setFirst(objects.clone().queryParam("o", 0).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-//        representation.setPrevious(objects.clone().queryParam("o", Math.max(0, (offset - limit))).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-//        representation.setSelf(objects.clone().queryParam("o", offset).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-//        representation.setNext(objects.clone().queryParam("o", (nbresults > (offset + limit)) ? (offset + limit) : offset).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-//        representation.setLast(objects.clone().queryParam("o", ((nbresults - 1) / limit) * limit).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
+        //        representation.setFirst(objects.clone().queryParam("o", 0).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
+        //        representation.setPrevious(objects.clone().queryParam("o", Math.max(0, (offset - limit))).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
+        //        representation.setSelf(objects.clone().queryParam("o", offset).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
+        //        representation.setNext(objects.clone().queryParam("o", (nbresults > (offset + limit)) ? (offset + limit) : offset).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
+        //        representation.setLast(objects.clone().queryParam("o", ((nbresults - 1) / limit) * limit).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
         return Response.ok(representation).build();
     }
-    
+
     @GET
     @Path("/store/handle")
     @GZIP
@@ -316,19 +310,10 @@ public class AdminResource {
         }
         if ( type != null && "value".equals(type)) {
             handles = handle.findHandlesByValue(offset, limit, filter);
-        } 
+        }
         return Response.ok(handles).build();
     }
-    
-    @GET
-    @Path("/store/json/worker")
-    @GZIP
-    public Response getJsonWorkerState() throws JsonStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/worker/json");
-        List<OrtolangJob> jobs = jsonWorker.getQueue();
-        return Response.ok(jobs).build();
-    }
-    
+
     @GET
     @Path("/store/json/documents/{key}")
     @GZIP
@@ -357,15 +342,6 @@ public class AdminResource {
     }
 
     @GET
-    @Path("/store/index/worker")
-    @GZIP
-    public Response getIndexWorkerState() throws IndexStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/worker/index");
-        List<OrtolangJob> jobs = indexWorker.getQueue();
-        return Response.ok(jobs).build();
-    }
-
-    @GET
     @Path("/store/index/documents/{key}")
     @GZIP
     public Response getIndexDocumentForKey(@PathParam(value = "key") String key) throws IndexStoreServiceException {
@@ -373,7 +349,7 @@ public class AdminResource {
         String document = index.systemGetDocument(key);
         return Response.ok(document).build();
     }
-    
+
     @GET
     @Path("/subscription")
     @GZIP
@@ -418,6 +394,15 @@ public class AdminResource {
     }
 
     @GET
+    @Path("/jobs/{id}/retry")
+    public Response retryJob(@PathParam(value = "id") Long id) throws OrtolangException {
+        Job job = jobService.read(id);
+        OrtolangWorker worker = workerService.getWorkerForJobType(job.getType());
+        worker.retry(id);
+        return Response.ok().build();
+    }
+
+    @GET
     @Path("/jobs/count")
     public Response countJobs(@QueryParam("type") String type, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed, @DefaultValue("false") @QueryParam("failed") boolean failed) throws CoreServiceException {
         Map<String, Long> map = new HashMap<>(1);
@@ -438,7 +423,12 @@ public class AdminResource {
     @GET
     @Path("/jobs/workers")
     public Response getWorkersState() throws OrtolangException {
-        Map<String, String> workersState = workerService.getWorkersState();
+        Map<String, String> workersState = new HashMap<>();
+        for (OrtolangWorker worker : workerService.getWorkers()) {
+            if (worker != null) {
+                workersState.put(worker.getName(), worker.getState());
+            }
+        }
         return Response.ok().entity(workersState).build();
     }
 
@@ -447,5 +437,22 @@ public class AdminResource {
     public Response restartWorker(@PathParam("id") String id) throws OrtolangException {
         workerService.startWorker(id);
         return Response.ok().build();
+    }
+
+    @GET
+    @Path("/jobs/workers/queue")
+    public Response getQueues() throws OrtolangException {
+        List<OrtolangJob> queue = new ArrayList<>();
+        for (OrtolangWorker worker : workerService.getWorkers()) {
+             queue.addAll(worker.getQueue());
+        }
+        return Response.ok(queue).build();
+    }
+
+    @GET
+    @Path("/jobs/workers/{id}/queue")
+    public Response getWorkerQueue(@PathParam("id") String id) throws OrtolangException {
+        List<OrtolangJob> queue = workerService.getQueue(id);
+        return Response.ok(queue).build();
     }
 }

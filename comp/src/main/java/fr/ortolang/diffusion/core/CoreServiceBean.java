@@ -3986,6 +3986,11 @@ public class CoreServiceBean implements CoreService {
 
         ((MetadataSource) object).addMetadata(new MetadataElement(name, meta.getKey()));
         em.merge(object);
+        try {
+            registry.update(key);
+        } catch (KeyLockedException e) {
+            LOGGER.log(Level.FINEST, "Key is locked, not updating last modification date");
+        }
     }
 
     /* ### Internal operations ### */

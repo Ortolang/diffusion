@@ -160,6 +160,11 @@ public class ExtractionServiceWorkerBean implements ExtractionServiceWorker {
     }
 
     @Override
+    public String getType() {
+        return JOB_TYPE;
+    }
+
+    @Override
     public String getState() {
         return workerThread.getState().name();
     }
