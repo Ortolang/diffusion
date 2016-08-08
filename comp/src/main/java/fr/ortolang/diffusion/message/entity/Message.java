@@ -93,6 +93,8 @@ public class Message extends OrtolangObject {
     private String body;
     private String thread;
     private String parent;
+    private boolean initial;
+    private boolean answer;
     @ElementCollection(fetch=FetchType.EAGER)
     private Set<MessageAttachment> attachments;
     
