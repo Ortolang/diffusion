@@ -211,7 +211,7 @@ public class MessageServiceBean implements MessageService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Thread createThread(String key, String wskey, String name, String description, boolean restricted) throws MessageServiceException, AccessDeniedException,
+    public Thread createThread(String key, String wskey, String title, String body, boolean restricted) throws MessageServiceException, AccessDeniedException,
             KeyAlreadyExistsException {
         LOGGER.log(Level.FINE, "creating thread [" + key + "]");
         try {
@@ -219,37 +219,55 @@ public class MessageServiceBean implements MessageService {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkAuthentified(subjects);
 
+            String mid = UUID.randomUUID().toString();
+            String mkey = UUID.randomUUID().toString();
+            Message question = new Message();
+            question.setId(mid);
+            question.setBody(body);
+            question.setThread(key);
+            question.setDate(new Date());
+            question.setKey(mkey);
+            em.persist(question);
+            
+            registry.register(key, question.getObjectIdentifier(), caller);
+            
             String id = UUID.randomUUID().toString();
             Thread thread = new Thread();
             thread.setId(id);
             thread.setKey(key);
-            thread.setName(name);
-            thread.setDescription(description);
+            thread.setTitle(title);
             thread.setWorkspace(wskey);
+            thread.setQuestion(mkey);
             thread.setLastActivity(new Date());
             em.persist(thread);
-
+            
             registry.register(key, thread.getObjectIdentifier(), caller);
-
+            
             Workspace ws = core.readWorkspace(wskey);
             Map<String, List<String>> trules = new HashMap<String, List<String>>();
             if (!restricted) {
+                trules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "update", "delete", "post"));
                 trules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList("read", "post"));
             } else {
                 trules.put(ws.getMembers(), Arrays.asList("read", "post"));
-                trules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "post"));
+                trules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "update", "delete", "post"));
                 trules.put(MembershipService.PUBLISHERS_GROUP_KEY, Arrays.asList("read", "post"));
                 trules.put(MembershipService.REVIEWERS_GROUP_KEY, Arrays.asList("read", "post"));
             }
             authorisation.createPolicy(key, caller);
             authorisation.setPolicyRules(key, trules);
+            
+            authorisation.createPolicy(mkey, caller);
+            authorisation.setPolicyRules(mkey, trules);
+
 
             indexing.index(key);
+            indexing.index(mkey);
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("wskey", wskey).addArgument("name", name);
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("wskey", wskey).addArgument("title", title);
             notification.throwEvent(key, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "create"), argsBuilder.build());
 
-            argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("name", name);
+            argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("title", title);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "create"), argsBuilder.build());
 
             return thread;
@@ -370,8 +388,8 @@ public class MessageServiceBean implements MessageService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateThread(String key, String name, String description) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
-        LOGGER.log(Level.FINE, "updating thread for key [" + key + "] and name [" + name + "]");
+    public void updateThread(String key, String title) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "updating thread for key [" + key + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -383,8 +401,7 @@ public class MessageServiceBean implements MessageService {
             if (thread == null) {
                 throw new MessageServiceException("unable to find a thread for id " + identifier.getId());
             }
-            thread.setName(name);
-            thread.setDescription(description);
+            thread.setTitle(title);
             thread.setLastActivity(new Date());
             em.merge(thread);
 
@@ -392,7 +409,7 @@ public class MessageServiceBean implements MessageService {
             indexing.index(key);
 
             notification.throwEvent(key, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "update"));
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("name", name);
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("title", title);
             notification.throwEvent(thread.getWorkspace(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "update"), argsBuilder.build());
 
         } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException | IndexingServiceException e) {
@@ -434,7 +451,7 @@ public class MessageServiceBean implements MessageService {
             em.createNamedQuery("deleteThreadMessages", Message.class).setParameter("thread", key).executeUpdate();
 
             notification.throwEvent(key, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "delete"));
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("name", thread.getName());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("title", thread.getTitle());
             notification.throwEvent(thread.getWorkspace(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "delete"), argsBuilder.build());
 
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
@@ -442,12 +459,53 @@ public class MessageServiceBean implements MessageService {
             throw new MessageServiceException("unable to delete thread with key [" + key + "]", e);
         }
     }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void markThreadAsAnswered(String tkey, String mkey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "marking thread as answered for key [" + tkey + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(tkey, subjects, "update");
+
+            OrtolangObjectIdentifier identifier = registry.lookup(tkey);
+            checkObjectType(identifier, Thread.OBJECT_TYPE);
+            Thread thread = em.find(Thread.class, identifier.getId());
+            if (thread == null) {
+                throw new MessageServiceException("unable to find a thread for id " + identifier.getId());
+            }
+            
+            OrtolangObjectIdentifier midentifier = registry.lookup(mkey);
+            checkObjectType(midentifier, Message.OBJECT_TYPE);
+            Message message = em.find(Message.class, midentifier.getId());
+            if (message == null) {
+                throw new MessageServiceException("unable to find a message for id " + midentifier.getId());
+            }
+            
+            thread.setAnswer(mkey);
+            thread.setLastActivity(new Date());
+            em.merge(thread);
+            
+            registry.update(tkey);
+            indexing.index(tkey);
+            
+            notification.throwEvent(tkey, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "answered"));
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("tkey", tkey).addArgument("title", thread.getTitle());
+            notification.throwEvent(thread.getWorkspace(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "answered"), argsBuilder.build());
+
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
+            ctx.setRollbackOnly();
+            throw new MessageServiceException("unable to mark thread as answered for thread with key [" + tkey + "]", e);
+        }
+    }
+
 
     /* Message */
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Message postMessage(String tkey, String key, String parent, String title, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
+    public Message postMessage(String tkey, String key, String parent, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "posting message into thread with key [" + tkey + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -478,7 +536,6 @@ public class MessageServiceBean implements MessageService {
             if (parent != null && parent.length() > 0) {
                 message.setParent(parent);
             }
-            message.setTitle(title);
             message.setBody(body);
             em.persist(message);
 
@@ -490,7 +547,7 @@ public class MessageServiceBean implements MessageService {
 
             indexing.index(key);
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("key", key).addArgument("threadname", thread.getName()).addArgument("title", title).addArgument("body", body);
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("key", key).addArgument("body", body);
             if (parent != null && parent.length() > 0) {
                 argsBuilder.addArgument("parent", parent);
             }
@@ -531,7 +588,7 @@ public class MessageServiceBean implements MessageService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateMessage(String key, String title, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
+    public void updateMessage(String key, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "updating message for key [" + key + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -544,7 +601,6 @@ public class MessageServiceBean implements MessageService {
             if (message == null) {
                 throw new MessageServiceException("unable to find a message for id " + identifier.getId());
             }
-            message.setTitle(title);
             message.setBody(body);
             em.merge(message);
 
@@ -682,16 +738,13 @@ public class MessageServiceBean implements MessageService {
             IndexablePlainTextContent content = new IndexablePlainTextContent();
 
             if (identifier.getType().equals(Thread.OBJECT_TYPE)) {
-                Thread mf = em.find(Thread.class, identifier.getId());
-                if (mf == null) {
+                Thread thread = em.find(Thread.class, identifier.getId());
+                if (thread == null) {
                     throw new OrtolangException("unable to load thread with id [" + identifier.getId() + "] from storage");
                 }
-                if (mf.getName() != null) {
-                    content.setName(mf.getName());
-                    content.addContentPart(mf.getName());
-                }
-                if (mf.getDescription() != null) {
-                    content.addContentPart(mf.getDescription());
+                if (thread.getTitle() != null) {
+                    content.setName(thread.getTitle());
+                    content.addContentPart(thread.getTitle());
                 }
             }
 
@@ -699,10 +752,6 @@ public class MessageServiceBean implements MessageService {
                 Message message = em.find(Message.class, identifier.getId());
                 if (message == null) {
                     throw new OrtolangException("unable to load message with id [" + identifier.getId() + "] from storage");
-                }
-                if (message.getTitle() != null) {
-                    content.setName(message.getTitle());
-                    content.addContentPart(message.getTitle());
                 }
                 if (message.getBody() != null && message.getBody().length() > 0) {
                     content.addContentPart(message.getBody());
@@ -734,9 +783,8 @@ public class MessageServiceBean implements MessageService {
                 }
                 JsonObjectBuilder builder = Json.createObjectBuilder();
                 builder.add("key", key);
-                builder.add("title", message.getTitle());
                 builder.add("body", message.getBody());
-                builder.add("feed", message.getThread());
+                builder.add("thread", message.getThread());
                 builder.add("parent", message.getParent());
                 JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
                 for (MessageAttachment attachment : message.getAttachments()) {
@@ -747,15 +795,14 @@ public class MessageServiceBean implements MessageService {
             }
 
             if (identifier.getType().equals(Thread.OBJECT_TYPE)) {
-                Thread mf = em.find(Thread.class, identifier.getId());
-                if (mf == null) {
+                Thread thread = em.find(Thread.class, identifier.getId());
+                if (thread == null) {
                     throw new OrtolangException("unable to load thread with id [" + identifier.getId() + "] from storage");
                 }
                 JsonObjectBuilder builder = Json.createObjectBuilder();
                 builder.add("key", key);
-                builder.add("name", mf.getName());
-                builder.add("description", mf.getName());
-                builder.add("workspace", mf.getWorkspace());
+                builder.add("title", thread.getTitle());
+                builder.add("workspace", thread.getWorkspace());
                 content.put(Thread.OBJECT_TYPE, builder.build().toString());
             }
             return content;
@@ -862,7 +909,7 @@ public class MessageServiceBean implements MessageService {
             }
             case Message.OBJECT_TYPE: {
                 Message message = em.find(Message.class, midentifier.getId());
-                ortolangObjectSize.addElement(Message.OBJECT_TYPE, message.getTitle().length() + message.getBody().length());
+                ortolangObjectSize.addElement(Message.OBJECT_TYPE, message.getBody().length());
                 break;
             }
             }

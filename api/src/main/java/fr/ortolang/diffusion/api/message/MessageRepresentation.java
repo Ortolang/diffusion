@@ -55,7 +55,6 @@ public class MessageRepresentation {
 
     @XmlAttribute(name = "key")
     private String key;
-    private String title;
     private String body;
     private Date date;
     private String thread;
@@ -73,14 +72,6 @@ public class MessageRepresentation {
 
     public void setKey(String key) {
         this.key = key;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     public String getBody() {
@@ -135,7 +126,6 @@ public class MessageRepresentation {
         MessageRepresentation representation = new MessageRepresentation();
         representation.setKey(message.getKey());
         representation.setThread(message.getThread());
-        representation.setTitle(message.getTitle());
         representation.setBody(message.getBody());
         representation.setDate(message.getDate());
         representation.setParent(message.getParent());

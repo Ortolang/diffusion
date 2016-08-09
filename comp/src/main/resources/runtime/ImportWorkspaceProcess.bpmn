@@ -59,16 +59,16 @@
       <endEvent id="endevent1" name="End"></endEvent>
       <sequenceFlow id="flow11" sourceRef="startevent1" targetRef="scripttask1"></sequenceFlow>
       <sequenceFlow id="flow12" sourceRef="scripttask1" targetRef="tag"></sequenceFlow>
-      <scriptTask id="scripttask1" name="Load Tag" scriptFormat="groovy" activiti:autoStoreVariables="false">
-        <script>String snapshot = execution.getVariable('snapshot');
-Map&lt;String, String&gt; tags = execution.getVariable('snapshotTags');
-if ( tags.get(snapshot) != null ) {
-	tag = tags.get(snapshot);
+      <scriptTask id="scripttask1" name="Load Tag" scriptFormat="javascript" activiti:autoStoreVariables="false">
+        <script>var snapshot = execution.getVariable("snapshot");
+var tags = execution.getVariable("snapshotTags");
+var tag;
+if ( tags[snapshot] !== null ) {
+	tag = tags[snapshot];
 } else {
-	tag = 'v' + snapshot;
+	tag = "v" + snapshot;
 }
-
-execution.setVariable(SNAPSHOTS_TAGS_PARAM_NAME, tagnames);</script>
+execution.setVariable("wstag", tag);</script>
       </scriptTask>
     </subProcess>
   </process>

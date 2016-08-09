@@ -108,21 +108,11 @@ public class MessageResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response createThread(@FormParam("wskey") String wskey, @FormParam("name") String name, @FormParam("description") String description) throws MessageServiceException, KeyNotFoundException,
+    public Response createThread(@FormParam("wskey") String wskey, @FormParam("title") String title, @FormParam("body") String body) throws MessageServiceException, KeyNotFoundException,
             AccessDeniedException, KeyAlreadyExistsException {
         LOGGER.log(Level.INFO, "POST /threads");
         String key = UUID.randomUUID().toString();
-        service.createThread(key, wskey, name, description, true);
-        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
-        return Response.created(location).build();
-    }
-
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Response createThread(ThreadRepresentation representation) throws MessageServiceException, KeyNotFoundException, AccessDeniedException, KeyAlreadyExistsException {
-        LOGGER.log(Level.INFO, "POST /threads");
-        String key = UUID.randomUUID().toString();
-        service.createThread(key, representation.getWorkspace(), representation.getName(), representation.getDescription(), true);
+        service.createThread(key, wskey, title, body, true);
         URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
         return Response.created(location).build();
     }
@@ -168,7 +158,7 @@ public class MessageResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateThread(@PathParam(value = "key") String key, ThreadRepresentation representation) throws MessageServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "PUT /threads/" + key);
-        service.updateThread(key, representation.getName(), representation.getDescription());
+        service.updateThread(key, representation.getTitle());
         Thread feed = service.readThread(key);
         ThreadRepresentation newrepresentation = ThreadRepresentation.fromThread(feed);
         return Response.ok(newrepresentation).build();
@@ -209,7 +199,7 @@ public class MessageResource {
             representation.setLimit(msgs.size());
 
         }
-        List<MessageRepresentation> msgsrep = new ArrayList<MessageRepresentation> ();
+        List<MessageRepresentation> msgsrep = new ArrayList<MessageRepresentation>();
         for (Message message : msgs) {
             OrtolangObjectInfos infos = browser.getInfos(message.getKey());
             msgsrep.add(MessageRepresentation.fromMessageAndInfos(message, infos));
@@ -221,11 +211,11 @@ public class MessageResource {
     @POST
     @Path("/{key}/messages")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response postMessage(@PathParam(value = "key") String key, @FormParam("parent") String parent, @FormParam("title") String title, @FormParam("body") String body)
-            throws AccessDeniedException, MessageServiceException, KeyNotFoundException {
+    public Response postMessage(@PathParam(value = "key") String key, @FormParam("parent") String parent, @FormParam("body") String body) throws AccessDeniedException, MessageServiceException,
+            KeyNotFoundException {
         LOGGER.log(Level.INFO, "POST /threads/" + key + "/messages");
         String mkey = UUID.randomUUID().toString();
-        service.postMessage(key, mkey, parent, title, body);
+        service.postMessage(key, mkey, parent, body);
         URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
         return Response.created(location).build();
     }
@@ -233,7 +223,8 @@ public class MessageResource {
     @GET
     @Path("/{key}/messages/{mkey}")
     @GZIP
-    public Response readMessage(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey) throws AccessDeniedException, MessageServiceException, KeyNotFoundException, BrowserServiceException {
+    public Response readMessage(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey) throws AccessDeniedException, MessageServiceException, KeyNotFoundException,
+            BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /threads/" + key + "/messages/" + mkey);
         Message msg = service.readMessage(mkey);
         OrtolangObjectInfos infos = browser.getInfos(msg.getKey());
@@ -243,10 +234,10 @@ public class MessageResource {
     @PUT
     @Path("/{key}/messages/{mkey}")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response updateMessage(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey, @FormParam("title") String title, @FormParam("body") String body)
-            throws AccessDeniedException, MessageServiceException, KeyNotFoundException {
+    public Response updateMessage(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey, @FormParam("body") String body) throws AccessDeniedException, MessageServiceException,
+            KeyNotFoundException {
         LOGGER.log(Level.INFO, "PUT /threads/" + key + "/messages/" + mkey);
-        service.updateMessage(mkey, title, body);
+        service.updateMessage(mkey, body);
         Message msg = service.readMessage(mkey);
         return Response.ok(MessageRepresentation.fromMessage(msg)).build();
     }

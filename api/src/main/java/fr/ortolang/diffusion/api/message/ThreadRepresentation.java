@@ -51,8 +51,7 @@ public class ThreadRepresentation {
     @XmlAttribute(name = "key")
     private String key;
     private String author;
-    private String name;
-    private String description;
+    private String title;
     private long creation;
     private long lastActivity;
     private String workspace;
@@ -68,20 +67,12 @@ public class ThreadRepresentation {
         this.key = key;
     }
 
-    public String getName() {
-        return name;
+    public String getTitle() {
+        return title;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public long getLastActivity() {
@@ -119,13 +110,12 @@ public class ThreadRepresentation {
     public static ThreadRepresentation fromThread(Thread thread) {
         ThreadRepresentation representation = new ThreadRepresentation();
         representation.setKey(thread.getKey());
-        representation.setName(thread.getName());
-        representation.setDescription(thread.getDescription());
+        representation.setTitle(thread.getTitle());
         representation.setLastActivity(thread.getLastActivity().getTime());
         representation.setWorkspace(thread.getWorkspace());
         return representation;
     }
-    
+
     public static ThreadRepresentation fromThreadAndInfos(Thread thread, OrtolangObjectInfos infos) {
         ThreadRepresentation representation = fromThread(thread);
         representation.setAuthor(infos.getAuthor());

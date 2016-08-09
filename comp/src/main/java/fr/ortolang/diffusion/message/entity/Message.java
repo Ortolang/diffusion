@@ -40,7 +40,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -81,8 +80,6 @@ public class Message extends OrtolangObject {
     private long version;
     @Transient
     private String key;
-    @Column(length = 1000)
-    private String title;
     @Temporal(TemporalType.TIMESTAMP)
     private Date date;
     @Lob
@@ -119,14 +116,6 @@ public class Message extends OrtolangObject {
 
     public void setKey(String key) {
         this.key = key;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     public String getThread() {
@@ -215,7 +204,17 @@ public class Message extends OrtolangObject {
 
     @Override
     public String getObjectName() {
-        return getTitle();
+        int i;
+        if (getBody().length() < 25) {
+            i = getBody().length();
+        } else {
+            for (i = 25; i < Math.min(50, getBody().length()); i++) {
+                if (getBody().charAt(i) == ' ') {
+                    break;
+                }
+            }
+        }
+        return getBody().substring(0, i).replaceAll("\r", "").replace("\n", "");
     }
 
     @Override

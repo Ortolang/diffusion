@@ -198,19 +198,17 @@ public class MessageServiceTest {
             
             core.createWorkspace("WSK1", "wsone", "WorkspaceOne", WorkspaceType.USER.toString());
             
-            message.createThread("K1", "WSK1", "TestFeed", "A Test MEssage Feed", false);
-            Thread mf = message.readThread("K1");
-            assertEquals("TestFeed", mf.getName());
-            assertEquals("A Test MEssage Feed", mf.getDescription());
-            assertEquals("K1", mf.getKey());
-            assertEquals("WSK1", mf.getWorkspace());
+            message.createThread("K1", "WSK1", "What is the color of the moon ?", "Hi everybody, I don't have any idea of this fucking question... Do you ?", false);
+            Thread thread = message.readThread("K1");
+            assertEquals("What is the color of the moon ?", thread.getTitle());
+            assertEquals("K1", thread.getKey());
+            assertEquals("WSK1", thread.getWorkspace());
             
-            message.updateThread("K1", "TestFeedo", "A Test MEssage FeedOO !!");
-            mf = message.readThread("K1");
-            assertEquals("TestFeedo", mf.getName());
-            assertEquals("A Test MEssage FeedOO !!", mf.getDescription());
-            assertEquals("K1", mf.getKey());
-            assertEquals("WSK1", mf.getWorkspace());
+            message.updateThread("K1", "What is the color of the mOOn ?");
+            thread = message.readThread("K1");
+            assertEquals("What is the color of the mOOn ?", thread.getTitle());
+            assertEquals("K1", thread.getKey());
+            assertEquals("WSK1", thread.getWorkspace());
             
             List<String> mfs = message.findThreadsForWorkspace("WSK1");
             assertTrue(mfs.contains("K1"));
@@ -218,25 +216,23 @@ public class MessageServiceTest {
             List<Message> messages = message.browseThread("K1", 0, 25);
             assertEquals(0, messages.size());
             
-            message.postMessage("K1", "MK1", "", "Does anybody can help me ??", "This is only a test message in order to ask for a question based on a logical answer that will produce some text using anything else than simple words...");
-            message.postMessage("K1", "MK2", "MK1", "Why do you say that !", "Stop fillign this feed with some stupid content that does not interest anybody !");
-            message.postMessage("K1", "MK3", "", "Somebody over there ??", "dadaduc");
+            message.postMessage("K1", "MK1", "", "This is only a test message in order to ask for a question based on a logical answer that will produce some text using anything else than simple words...");
+            message.postMessage("K1", "MK2", "MK1", "Stop fillign this feed with some stupid content that does not interest anybody !");
+            message.postMessage("K1", "MK3", "", "dadaduc");
             
             Message msg = message.readMessage("MK2");
             assertEquals("MK2", msg.getKey());
-            assertEquals("Why do you say that !", msg.getTitle());
             assertTrue(msg.getBody().contains("fillign"));
             
-            message.updateMessage("MK2", "Why do you say that ?", "Stop filling this feed with some stupid content that does not interest anybody !");
+            message.updateMessage("MK2", "Stop filling this feed with some stupid content that does not interest anybody !");
             msg = message.readMessage("MK2");
             assertEquals("MK2", msg.getKey());
-            assertEquals("Why do you say that ?", msg.getTitle());
             assertTrue(msg.getBody().contains("filling"));
             
             messages = message.browseThread("K1", 0, 25);
             assertEquals(3, messages.size());
             
-            message.postMessage("K1", "MK4", "MK3", "Try attachments", "et hop !");
+            message.postMessage("K1", "MK4", "MK3", "et hop !");
             message.addMessageAttachment("MK4", "test.txt", new ByteArrayInputStream("This is a simple text content".getBytes()));
             message.addMessageAttachment("MK4", "test.xml", new ByteArrayInputStream("<body>This is another simple text content</body>".getBytes()));
             

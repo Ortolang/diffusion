@@ -38,11 +38,9 @@ package fr.ortolang.diffusion.message.entity;
 
 import java.util.Date;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Index;
-import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -50,8 +48,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.persistence.Version;
-
-import org.hibernate.annotations.Type;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -71,13 +67,9 @@ public class Thread extends OrtolangObject {
     private long version;
     @Transient
     private String key;
-    @Column(length = 1000)
-    private String name;
+    private String title;
     @Temporal(TemporalType.TIMESTAMP)
     private Date lastActivity;
-    @Lob
-    @Type(type = "org.hibernate.type.TextType")
-    private String description;
     private String question;
     private String answer;
     private String workspace;
@@ -109,12 +101,12 @@ public class Thread extends OrtolangObject {
         this.key = key;
     }
 
-    public String getName() {
-        return name;
+    public String getTitle() {
+        return title;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public Date getLastActivity() {
@@ -123,14 +115,6 @@ public class Thread extends OrtolangObject {
 
     public void setLastActivity(Date lastActivity) {
         this.lastActivity = lastActivity;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public String getWorkspace() {
@@ -164,7 +148,7 @@ public class Thread extends OrtolangObject {
 
     @Override
     public String getObjectName() {
-        return getName();
+        return getTitle();
     }
 
     @Override

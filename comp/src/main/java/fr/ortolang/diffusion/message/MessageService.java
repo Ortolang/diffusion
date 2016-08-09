@@ -59,7 +59,7 @@ public interface MessageService extends OrtolangService, OrtolangBinaryService, 
     String INFO_MESSAGE_FEED_ALL = "threads.all";
     String INFO_MESSAGE_ALL = "messages.all";
     
-    Thread createThread(String key, String wskey, String name, String description, boolean restricted) throws MessageServiceException, AccessDeniedException, KeyAlreadyExistsException;
+    Thread createThread(String key, String wskey, String title, String body, boolean restricted) throws MessageServiceException, AccessDeniedException, KeyAlreadyExistsException;
     
     Thread readThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
@@ -69,15 +69,17 @@ public interface MessageService extends OrtolangService, OrtolangBinaryService, 
     
     List<Message> browseThreadSinceDate(String key, Date from) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
-    void updateThread(String key, String name, String description) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    void updateThread(String key, String title) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     void deleteThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
-    Message postMessage(String tkey, String key, String parent, String title, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    void markThreadAsAnswered(String tkey, String akey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    
+    Message postMessage(String tkey, String key, String parent, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     Message readMessage(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
-    void updateMessage(String key, String title, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    void updateMessage(String key, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     void deleteMessage(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
