@@ -594,7 +594,7 @@ public class RegistryServiceBean implements RegistryService {
         }
         return entry;
     }
-
+    
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     private RegistryEntry findEntryByKey(String key, LockModeType lock) throws KeyNotFoundException {
         RegistryEntry entry = em.find(RegistryEntry.class, key, lock);

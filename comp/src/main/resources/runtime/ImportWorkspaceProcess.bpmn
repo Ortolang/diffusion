@@ -58,7 +58,6 @@
       <startEvent id="startevent1" name="Start"></startEvent>
       <endEvent id="endevent1" name="End"></endEvent>
       <sequenceFlow id="flow11" sourceRef="startevent1" targetRef="scripttask1"></sequenceFlow>
-      <sequenceFlow id="flow12" sourceRef="scripttask1" targetRef="tag"></sequenceFlow>
       <scriptTask id="scripttask1" name="Load Tag" scriptFormat="javascript" activiti:autoStoreVariables="false">
         <script>var snapshot = execution.getVariable("snapshot");
 var tags = execution.getVariable("snapshotTags");
@@ -70,6 +69,9 @@ if ( tags[snapshot] !== null ) {
 }
 execution.setVariable("wstag", tag);</script>
       </scriptTask>
+      <serviceTask id="servicetask1" name="Start Transaction" activiti:class="fr.ortolang.diffusion.runtime.engine.task.StartTransactionTask"></serviceTask>
+      <sequenceFlow id="flow13" sourceRef="scripttask1" targetRef="servicetask1"></sequenceFlow>
+      <sequenceFlow id="flow14" sourceRef="servicetask1" targetRef="tag"></sequenceFlow>
     </subProcess>
   </process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_import-workspace">
@@ -90,25 +92,28 @@ execution.setVariable("wstag", tag);</script>
         <omgdc:Bounds height="40.0" width="40.0" x="216.0" y="320.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="publish-snapshot" id="BPMNShape_publish-snapshot">
-        <omgdc:Bounds height="531.0" width="245.0" x="390.0" y="75.0"></omgdc:Bounds>
+        <omgdc:Bounds height="616.0" width="245.0" x="380.0" y="32.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="tag" id="BPMNShape_tag">
-        <omgdc:Bounds height="55.0" width="109.0" x="461.0" y="265.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="109.0" x="451.0" y="310.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="publish" id="BPMNShape_publish">
-        <omgdc:Bounds height="55.0" width="108.0" x="462.0" y="355.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="108.0" x="452.0" y="400.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="generate-handles" id="BPMNShape_generate-handles">
-        <omgdc:Bounds height="55.0" width="109.0" x="461.0" y="445.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="109.0" x="451.0" y="490.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
-        <omgdc:Bounds height="35.0" width="35.0" x="498.0" y="121.0"></omgdc:Bounds>
+        <omgdc:Bounds height="35.0" width="35.0" x="488.0" y="78.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
-        <omgdc:Bounds height="35.0" width="35.0" x="498.0" y="535.0"></omgdc:Bounds>
+        <omgdc:Bounds height="35.0" width="35.0" x="488.0" y="580.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape bpmnElement="scripttask1" id="BPMNShape_scripttask1">
-        <omgdc:Bounds height="55.0" width="105.0" x="463.0" y="185.0"></omgdc:Bounds>
+        <omgdc:Bounds height="55.0" width="105.0" x="453.0" y="142.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="servicetask1" id="BPMNShape_servicetask1">
+        <omgdc:Bounds height="55.0" width="105.0" x="453.0" y="230.0"></omgdc:Bounds>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge bpmnElement="flow1" id="BPMNEdge_flow1">
         <omgdi:waypoint x="110.0" y="117.0"></omgdi:waypoint>
@@ -124,31 +129,35 @@ execution.setVariable("wstag", tag);</script>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow7" id="BPMNEdge_flow7">
         <omgdi:waypoint x="256.0" y="340.0"></omgdi:waypoint>
-        <omgdi:waypoint x="390.0" y="340.0"></omgdi:waypoint>
+        <omgdi:waypoint x="380.0" y="340.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow8" id="BPMNEdge_flow8">
         <omgdi:waypoint x="236.0" y="360.0"></omgdi:waypoint>
         <omgdi:waypoint x="236.0" y="440.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow10" id="BPMNEdge_flow10">
-        <omgdi:waypoint x="515.0" y="320.0"></omgdi:waypoint>
-        <omgdi:waypoint x="516.0" y="355.0"></omgdi:waypoint>
+        <omgdi:waypoint x="505.0" y="365.0"></omgdi:waypoint>
+        <omgdi:waypoint x="506.0" y="400.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow9" id="BPMNEdge_flow9">
-        <omgdi:waypoint x="516.0" y="410.0"></omgdi:waypoint>
-        <omgdi:waypoint x="515.0" y="445.0"></omgdi:waypoint>
+        <omgdi:waypoint x="506.0" y="455.0"></omgdi:waypoint>
+        <omgdi:waypoint x="505.0" y="490.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow6" id="BPMNEdge_flow6">
-        <omgdi:waypoint x="515.0" y="500.0"></omgdi:waypoint>
-        <omgdi:waypoint x="515.0" y="535.0"></omgdi:waypoint>
+        <omgdi:waypoint x="505.0" y="545.0"></omgdi:waypoint>
+        <omgdi:waypoint x="505.0" y="580.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="flow11" id="BPMNEdge_flow11">
-        <omgdi:waypoint x="515.0" y="156.0"></omgdi:waypoint>
-        <omgdi:waypoint x="515.0" y="185.0"></omgdi:waypoint>
+        <omgdi:waypoint x="505.0" y="113.0"></omgdi:waypoint>
+        <omgdi:waypoint x="505.0" y="142.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="flow12" id="BPMNEdge_flow12">
-        <omgdi:waypoint x="515.0" y="240.0"></omgdi:waypoint>
-        <omgdi:waypoint x="515.0" y="265.0"></omgdi:waypoint>
+      <bpmndi:BPMNEdge bpmnElement="flow13" id="BPMNEdge_flow13">
+        <omgdi:waypoint x="505.0" y="197.0"></omgdi:waypoint>
+        <omgdi:waypoint x="505.0" y="230.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow14" id="BPMNEdge_flow14">
+        <omgdi:waypoint x="505.0" y="285.0"></omgdi:waypoint>
+        <omgdi:waypoint x="505.0" y="310.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

@@ -3922,6 +3922,7 @@ public class CoreServiceBean implements CoreService {
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void systemCreateMetadata(String key, String name, String hash, String filename) throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException,
             BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# create metadata for key [" + key + "]");
         if (!name.startsWith("system-")) {
             throw new CoreServiceException("only system metadata can be added this way.");
         }
@@ -3986,11 +3987,6 @@ public class CoreServiceBean implements CoreService {
 
         ((MetadataSource) object).addMetadata(new MetadataElement(name, meta.getKey()));
         em.merge(object);
-        try {
-            registry.update(key);
-        } catch (KeyLockedException e) {
-            LOGGER.log(Level.FINEST, "Key is locked, not updating last modification date");
-        }
     }
 
     /* ### Internal operations ### */
@@ -4428,7 +4424,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     private boolean applyReadOnly(String caller, List<String> subjects, Workspace workspace) {
-        if ( !caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && workspace.isReadOnly() ) {
+        if (!caller.equals(MembershipService.SUPERUSER_IDENTIFIER) && !subjects.contains(MembershipService.MODERATORS_GROUP_KEY) && workspace.isReadOnly()) {
             return true;
         }
         return false;

@@ -36,50 +36,46 @@ package fr.ortolang.diffusion.extraction;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangJob;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.core.MetadataFormatException;
-import fr.ortolang.diffusion.core.entity.DataObject;
-import fr.ortolang.diffusion.core.entity.MetadataFormat;
-import fr.ortolang.diffusion.extraction.parser.OrtolangXMLParser;
-import fr.ortolang.diffusion.indexing.IndexingServiceException;
-import fr.ortolang.diffusion.jobs.JobService;
-import fr.ortolang.diffusion.jobs.entity.Job;
-import fr.ortolang.diffusion.registry.*;
-import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-import fr.ortolang.diffusion.store.binary.BinaryStoreService;
-import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
-import fr.ortolang.diffusion.store.binary.DataCollisionException;
-import fr.ortolang.diffusion.store.binary.DataNotFoundException;
-import org.apache.tika.exception.TikaException;
-import org.apache.tika.metadata.Metadata;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
-import org.jboss.ejb3.annotation.SecurityDomain;
-import org.xml.sax.SAXException;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RunAs;
-import javax.ejb.*;
-import javax.enterprise.concurrent.ManagedThreadFactory;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TransactionRequiredException;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RunAs;
+import javax.ejb.EJB;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.concurrent.ManagedThreadFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TransactionRequiredException;
+
+import org.apache.tika.metadata.Metadata;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONObject;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import fr.ortolang.diffusion.OrtolangJob;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
+import fr.ortolang.diffusion.extraction.parser.OrtolangXMLParser;
+import fr.ortolang.diffusion.jobs.JobService;
+import fr.ortolang.diffusion.jobs.entity.Job;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 
 @Startup
 @Singleton(name = ExtractionServiceWorker.WORKER_NAME)
@@ -112,7 +108,6 @@ public class ExtractionServiceWorkerBean implements ExtractionServiceWorker {
     private EntityManager em;
 
     @Resource
-    @SuppressWarnings("EjbEnvironmentInspection")
     private ManagedThreadFactory managedThreadFactory;
 
     private ExtractionWorkerThread worker;
@@ -292,10 +287,10 @@ public class ExtractionServiceWorkerBean implements ExtractionServiceWorker {
                             LOGGER.log(Level.WARNING, "unknown job action: " + job.getAction());
                         }
                         jobService.remove(job.getId());
-                    } catch (MetadataFormatException | BinaryStoreServiceException | DataCollisionException | KeyNotFoundException | CoreServiceException | IdentifierAlreadyRegisteredException | RegistryServiceException | KeyAlreadyExistsException | DataNotFoundException | IOException | TikaException | JSONException | IndexingServiceException | AuthorisationServiceException | SAXException e) {
+                    } catch (Exception e) {
                         LOGGER.log(Level.WARNING, "unable to extract metadata for data object with key " + key, e);
                         jobService.updateFailingJob(job, e);
-                    }
+                    } 
 
                 } catch (InterruptedException e) {
                     LOGGER.log(Level.SEVERE, "interrupted while trying to take next job", e);

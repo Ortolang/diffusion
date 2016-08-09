@@ -316,7 +316,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
                     LOGGER.log(Level.FINE, "Task executed");
                 } catch (RuntimeEngineTaskException e) {
                     LOGGER.log(Level.INFO, "RuntimeEngineException: " + e.getMessage() + " , need to rollback.");
-                    LOGGER.log(Level.FINE, "Rollback transaction for task " + this.getTaskName());
+                    LOGGER.log(Level.FINE, "Set transaction rollback only !!");
                     getUserTransaction().setRollbackOnly();
                     throw e;
                 }
@@ -332,7 +332,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessActivityCompleteEvent(bkey, getTaskName(), "SERVICE TASK " + aname + " COMPLETED"));
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Unexpected runtime task exception", e);
-            throw new BpmnError("Unexpected RuntimeTaskExecutionError", e.getMessage());
+            throw new BpmnError("RuntimeTaskExecutionError", e.getMessage());
         }
     }
 
