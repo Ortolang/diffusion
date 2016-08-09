@@ -74,11 +74,11 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 /**
  * @resourceDescription Operations on Referentials
  */
-@Path("/referentialentities")
+@Path("/referential")
 @Produces({ MediaType.APPLICATION_JSON })
-public class ReferentialEntityResource {
+public class ReferentialResource {
 
-    private static final Logger LOGGER = Logger.getLogger(ReferentialEntityResource.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ReferentialResource.class.getName());
 
     @EJB
     private ReferentialService referential;
@@ -86,9 +86,9 @@ public class ReferentialEntityResource {
     @GET
     @GZIP
     public Response list(@QueryParam(value = "type") String type, @QueryParam(value = "term") String term,@DefaultValue(value= "FR") @QueryParam(value = "lang") String lang) throws ReferentialServiceException {
-        LOGGER.log(Level.INFO, "GET /referentialentities?type=" + type + "&term=" + term + "&lang=" + lang);
+        LOGGER.log(Level.INFO, "GET /referential?type=" + type + "&term=" + term + "&lang=" + lang);
 
-        GenericCollectionRepresentation<ReferentialEntityRepresentation> representation = new GenericCollectionRepresentation<ReferentialEntityRepresentation> ();
+        GenericCollectionRepresentation<ReferentialEntityRepresentation> representation = new GenericCollectionRepresentation<> ();
         if(type!=null) {
 	        ReferentialEntityType entityType = getEntityType(type);
 	        
@@ -118,7 +118,7 @@ public class ReferentialEntityResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @GZIP
     public Response create(@FormParam(value = "name") String name, @FormParam("type") String type, @FormParam("content") String content) throws ReferentialServiceException, AccessDeniedException, KeyAlreadyExistsException, IllegalArgumentException, UriBuilderException, URISyntaxException {
-    	LOGGER.log(Level.INFO, "POST(application/json) /referentialentities");
+    	LOGGER.log(Level.INFO, "POST /referential");
     	if (name == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'name' is mandatory").build();
         }
@@ -132,7 +132,7 @@ public class ReferentialEntityResource {
     	} else {
     		return Response.status(Response.Status.BAD_REQUEST).entity("representation does not contains a valid type").build();
     	}
-    	URI location = ApiUriBuilder.getApiUriBuilder().path(ReferentialEntityResource.class).path(entity.getKey()).build();
+    	URI location = ApiUriBuilder.getApiUriBuilder().path(ReferentialResource.class).path(entity.getKey()).build();
     	ReferentialEntityRepresentation entityRepresentation = ReferentialEntityRepresentation.fromReferentialEntity(entity);
     	return Response.created(location).entity(entityRepresentation).build();
     }
@@ -142,7 +142,7 @@ public class ReferentialEntityResource {
     @Path("/{name}")
     @GZIP
     public Response get(@PathParam(value = "name") String name) throws ReferentialServiceException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "GET /referentialentities/" + name);
+        LOGGER.log(Level.INFO, "GET /referential/" + name);
 
         ReferentialEntity entity = referential.readEntity(name);
         ReferentialEntityRepresentation representation = ReferentialEntityRepresentation.fromReferentialEntity(entity);
@@ -151,17 +151,17 @@ public class ReferentialEntityResource {
     }
 
     @GET
-    @Path("/entitytypes")
+    @Path("/types")
     @GZIP
     public Response listEntityTypes() {
-        LOGGER.log(Level.INFO, "GET /referentialentities/entitytypes");
+        LOGGER.log(Level.INFO, "GET /referential/types");
         return Response.ok(ReferentialEntityType.values()).build();
     }
 
     @PUT
     @Path("/{name}")
     public Response update(@PathParam(value = "name") String name, ReferentialEntityRepresentation entity) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException {
-    	LOGGER.log(Level.INFO, "PUT /referentialentities/" + name);
+    	LOGGER.log(Level.INFO, "PUT /referential/" + name);
 
     	ReferentialEntityType entityType = getEntityType(entity.getType());
     	if(entityType!=null) {
@@ -175,7 +175,7 @@ public class ReferentialEntityResource {
     @DELETE
     @Path("/{name}")
     public Response delete(@PathParam(value = "name") String name) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "DELETE /referentialentities/" + name);
+        LOGGER.log(Level.INFO, "DELETE /referential/" + name);
         if (name == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'name' is mandatory").build();
         }
