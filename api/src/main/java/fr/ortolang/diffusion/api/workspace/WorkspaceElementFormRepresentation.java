@@ -43,126 +43,126 @@ import java.io.InputStream;
 
 public class WorkspaceElementFormRepresentation {
 
-	@FormParam("path")
-	@PartType("text/plain")
-	private String path = null;
-	
-	@FormParam("type")
-	@PartType("text/plain")
-	private String type = null;
+    @FormParam("path")
+    @PartType("text/plain")
+    private String path = null;
 
-	@FormParam("name")
-	@PartType("text/plain")
-	private String name = "";
+    @FormParam("type")
+    @PartType("text/plain")
+    private String type = null;
 
-	@FormParam("description")
-	@PartType("text/plain")
-	private String description = "";
+    @FormParam("name")
+    @PartType("text/plain")
+    private String name = "";
 
-	@FormParam("format")
-	@PartType("text/plain")
-	private String format = "";
+    @FormParam("description")
+    @PartType("text/plain")
+    private String description = "";
 
-	@FormParam("target")
-	@PartType("text/plain")
-	private String target = "";
+    @FormParam("format")
+    @PartType("text/plain")
+    private String format = "";
 
-	@FormParam("preview")
-	@PartType("application/octet-stream")
-	private InputStream preview = null;
-	private String previewHash = "";
+    @FormParam("target")
+    @PartType("text/plain")
+    private String target = "";
 
-	@FormParam("stream")
-	@PartType("application/octet-stream")
-	private InputStream stream = null;
-	private String streamHash = "";
+    @FormParam("preview")
+    @PartType("application/octet-stream")
+    private InputStream preview = null;
+    private String previewHash = "";
+
+    @FormParam("stream")
+    @PartType("application/octet-stream")
+    private InputStream stream = null;
+    private String streamHash = "";
 
     @FormParam("streamFilename")
     @PartType("text/plain")
     private String streamFilename = null;
 
-	public WorkspaceElementFormRepresentation() {
-	}
-	
-	public String getPath() {
-		return path;
-	}
+    public WorkspaceElementFormRepresentation() {
+    }
 
-	public void setPath(String path) {
-		this.path = path;
-	}
+    public String getPath() {
+        return path;
+    }
 
-	public String getType() {
-		return type;
-	}
+    public void setPath(String path) {
+        this.path = path;
+    }
 
-	public void setType(String type) {
-		this.type = type;
-	}
+    public String getType() {
+        return type;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public void setType(String type) {
+        this.type = type;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public String getDescription() {
+        return description;
+    }
 
-	public String getFormat() {
-		return format;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	public void setFormat(String format) {
-		this.format = format;
-	}
+    public String getFormat() {
+        return format;
+    }
 
-	public String getTarget() {
-		return target;
-	}
+    public void setFormat(String format) {
+        this.format = format;
+    }
 
-	public void setTarget(String target) {
-		this.target = target;
-	}
+    public String getTarget() {
+        return target;
+    }
 
-	public InputStream getPreview() {
-		return preview;
-	}
+    public void setTarget(String target) {
+        this.target = target;
+    }
 
-	public void setPreview(InputStream preview) {
-		this.preview = preview;
-	}
+    public InputStream getPreview() {
+        return preview;
+    }
 
-	public InputStream getStream() {
-		return stream;
-	}
+    public void setPreview(InputStream preview) {
+        this.preview = preview;
+    }
 
-	public void setStream(InputStream stream) {
-		this.stream = stream;
-	}
+    public InputStream getStream() {
+        return stream;
+    }
 
-	public String getPreviewHash() {
-		return previewHash;
-	}
+    public void setStream(InputStream stream) {
+        this.stream = stream;
+    }
 
-	public void setPreviewHash(String previewHash) {
-		this.previewHash = previewHash;
-	}
+    public String getPreviewHash() {
+        return previewHash;
+    }
 
-	public String getStreamHash() {
-		return streamHash;
-	}
+    public void setPreviewHash(String previewHash) {
+        this.previewHash = previewHash;
+    }
 
-	public void setStreamHash(String streamHash) {
-		this.streamHash = streamHash;
-	}
+    public String getStreamHash() {
+        return streamHash;
+    }
+
+    public void setStreamHash(String streamHash) {
+        this.streamHash = streamHash;
+    }
 
     public String getStreamFilename() {
         return streamFilename;

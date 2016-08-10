@@ -46,5 +46,6 @@ public enum ProfileDataType {
     MULTI_VALUE,
     ENUM,
     RADIO,
-    URL
+    URL,
+    REFERENTIAL
 }
