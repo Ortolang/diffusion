@@ -36,25 +36,46 @@ package fr.ortolang.diffusion.api.content;
  * #L%
  */
 
-import fr.ortolang.diffusion.*;
-import fr.ortolang.diffusion.api.ApiHelper;
-import fr.ortolang.diffusion.api.auth.AuthResource;
-import fr.ortolang.diffusion.browser.BrowserService;
-import fr.ortolang.diffusion.browser.BrowserServiceException;
-import fr.ortolang.diffusion.core.*;
-import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.*;
-import fr.ortolang.diffusion.core.entity.Link;
-import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.security.SecurityService;
-import fr.ortolang.diffusion.security.SecurityServiceException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.store.binary.BinaryStoreService;
-import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
-import fr.ortolang.diffusion.store.binary.DataNotFoundException;
-import fr.ortolang.diffusion.template.TemplateEngine;
-import fr.ortolang.diffusion.template.TemplateEngineException;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ejb.EJB;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.NewCookie;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveOutputStream;
@@ -65,21 +86,39 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.io.IOUtils;
 
-import javax.ejb.EJB;
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectInfos;
+import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.api.ApiHelper;
+import fr.ortolang.diffusion.api.auth.AuthResource;
+import fr.ortolang.diffusion.browser.BrowserService;
+import fr.ortolang.diffusion.browser.BrowserServiceException;
+import fr.ortolang.diffusion.core.AliasNotFoundException;
+import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.InvalidPathException;
+import fr.ortolang.diffusion.core.PathBuilder;
+import fr.ortolang.diffusion.core.PathNotFoundException;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.CollectionElement;
+import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.Link;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
+import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.TagElement;
+import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.SecurityService;
+import fr.ortolang.diffusion.security.SecurityServiceException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.store.binary.BinaryStoreService;
+import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
+import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import fr.ortolang.diffusion.template.TemplateEngine;
+import fr.ortolang.diffusion.template.TemplateEngineException;
 
 @Path("/content")
 @Produces({ MediaType.TEXT_HTML })
@@ -321,9 +360,9 @@ public class ContentResource {
             CacheControl cc = new CacheControl();
             cc.setPrivate(true);
             ApiHelper.setCacheControlFromState(state, cc);
-            Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+            Date lmd = new Date(state.getLastRefresh() / 1000 * 1000);
             ResponseBuilder builder = null;
-            if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+            if (System.currentTimeMillis() - state.getLastRefresh() > 1000) {
                 builder = request.evaluatePreconditions(lmd);
             }
             if (builder == null) {
@@ -427,9 +466,9 @@ public class ContentResource {
             CacheControl cc = new CacheControl();
             cc.setPrivate(true);
             ApiHelper.setCacheControlFromState(state, cc);
-            Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+            Date lmd = new Date(state.getLastRefresh() / 1000 * 1000);
             ResponseBuilder builder = null;
-            if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+            if (System.currentTimeMillis() - state.getLastRefresh() > 1000) {
                 builder = request.evaluatePreconditions(lmd);
             }
             if (builder == null) {
@@ -514,9 +553,9 @@ public class ContentResource {
                 cc.setMaxAge(0);
                 cc.setMustRevalidate(true);
             }
-            Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+            Date lmd = new Date(state.getLastRefresh() / 1000 * 1000);
             ResponseBuilder builder = null;
-            if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+            if (System.currentTimeMillis() - state.getLastRefresh() > 1000) {
                 builder = request.evaluatePreconditions(lmd);
             }
             if (builder == null) {
@@ -584,9 +623,9 @@ public class ContentResource {
                 cc.setMaxAge(0);
                 cc.setMustRevalidate(true);
             }
-            Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+            Date lmd = new Date(state.getLastRefresh() / 1000 * 1000);
             ResponseBuilder builder = null;
-            if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+            if (System.currentTimeMillis() - state.getLastRefresh() > 1000) {
                 builder = request.evaluatePreconditions(lmd);
             }
             if (builder == null) {

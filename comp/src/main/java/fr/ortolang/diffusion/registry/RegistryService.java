@@ -80,6 +80,10 @@ public interface RegistryService extends OrtolangService {
 	
 	long getLastModificationDate(String key) throws RegistryServiceException, KeyNotFoundException;
 	
+	void refresh(String key);
+    
+    long getLastRefreshDate(String key);
+	
 	String getAuthor(String key) throws RegistryServiceException, KeyNotFoundException;
 	
 	void hide(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;

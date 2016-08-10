@@ -2683,7 +2683,6 @@ public class CoreServiceBean implements CoreService {
             }
             em.merge(meta);
 
-            registry.update(tkey);
             indexing.index(tkey);
 
             ws.setChanged(true);
@@ -2938,7 +2937,6 @@ public class CoreServiceBean implements CoreService {
                 em.merge(meta);
 
                 registry.update(mdelement.getKey());
-                registry.update(tkey);
                 indexing.index(tkey);
 
                 if (collection != null && purgeChildren) {
@@ -3115,7 +3113,7 @@ public class CoreServiceBean implements CoreService {
 
             registry.delete(mdelement.getKey());
             indexing.remove(mdelement.getKey());
-            registry.update(tkey);
+            
             indexing.index(tkey);
 
             ws.setChanged(true);
@@ -3920,13 +3918,13 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void systemCreateMetadata(String key, String name, String hash, String filename) throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException,
+    public void systemCreateMetadata(String tkey, String name, String hash, String filename) throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException,
             BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
-        LOGGER.log(Level.FINE, "#SYSTEM# create metadata for key [" + key + "]");
+        LOGGER.log(Level.FINE, "#SYSTEM# create metadata for key [" + tkey + "]");
         if (!name.startsWith("system-")) {
             throw new CoreServiceException("only system metadata can be added this way.");
         }
-        OrtolangObjectIdentifier identifier = registry.lookup(key);
+        OrtolangObjectIdentifier identifier = registry.lookup(tkey);
         if (!identifier.getService().equals(SERVICE_NAME)) {
             throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
         }
@@ -3976,14 +3974,15 @@ public class CoreServiceBean implements CoreService {
         }
 
         meta.setFormat(format.getId());
-        meta.setTarget(key);
+        meta.setTarget(tkey);
         meta.setKey(UUID.randomUUID().toString());
         em.persist(meta);
 
         registry.register(meta.getKey(), meta.getObjectIdentifier(), "system");
 
-        indexing.index(key);
-        authorisation.clonePolicy(meta.getKey(), key);
+        registry.refresh(tkey);
+        indexing.index(tkey);
+        authorisation.clonePolicy(meta.getKey(), tkey);
 
         ((MetadataSource) object).addMetadata(new MetadataElement(name, meta.getKey()));
         em.merge(object);

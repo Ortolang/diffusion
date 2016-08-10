@@ -45,15 +45,17 @@ public class OrtolangObjectState implements Serializable {
 	private String lock;
 	private String status;
 	private long lastModification;
+	private long lastRefresh;
 
 	public OrtolangObjectState() {
 	}
 	
-	public OrtolangObjectState(boolean hidden, String lock, String status, long lastModification) {
+	public OrtolangObjectState(boolean hidden, String lock, String status, long lastModification, long lastRefresh) {
 		this.hidden = hidden;
 		this.lock = lock;
 		this.status = status;
 		this.lastModification = lastModification;
+		this.lastRefresh = lastRefresh;
 	}
 
 	public boolean isHidden() {
@@ -91,8 +93,16 @@ public class OrtolangObjectState implements Serializable {
 	public void setLastModification(long lastModification) {
 		this.lastModification = lastModification;
 	}
+	
+	public long getLastRefresh() {
+        return lastRefresh;
+    }
 
-	@Override
+    public void setLastRefresh(long lastRefresh) {
+        this.lastRefresh = lastRefresh;
+    }
+
+    @Override
 	public String toString() {
 		StringBuilder buffer = new StringBuilder();
 		if ( isLocked() ) {

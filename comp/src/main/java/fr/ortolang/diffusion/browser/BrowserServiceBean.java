@@ -233,7 +233,8 @@ public class BrowserServiceBean implements BrowserService {
             String lock = registry.getLock(key);
             String status = registry.getPublicationStatus(key);
             long lastModification = registry.getLastModificationDate(key);
-            return new OrtolangObjectState(hidden, lock, status, lastModification);
+            long lastRefresh = registry.getLastRefreshDate(key);
+            return new OrtolangObjectState(hidden, lock, status, lastModification, lastRefresh);
         } catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
             throw new BrowserServiceException("error during getting state", e);
         }

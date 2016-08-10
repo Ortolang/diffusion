@@ -140,9 +140,9 @@ public class ObjectResource {
         CacheControl cc = new CacheControl();
         cc.setPrivate(true);
         ApiHelper.setCacheControlFromState(state, cc);
-        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        Date lmd = new Date(state.getLastRefresh() / 1000 * 1000);
         ResponseBuilder builder = null;
-        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+        if (System.currentTimeMillis() - state.getLastRefresh() > 1000) {
             builder = request.evaluatePreconditions(lmd);
         }
 
@@ -187,9 +187,9 @@ public class ObjectResource {
         CacheControl cc = new CacheControl();
         cc.setPrivate(true);
         ApiHelper.setCacheControlFromState(state, cc);
-        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        Date lmd = new Date(state.getLastRefresh() / 1000 * 1000);
         ResponseBuilder builder = null;
-        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+        if (System.currentTimeMillis() - state.getLastRefresh() > 1000) {
             builder = request.evaluatePreconditions(lmd);
         }
 
@@ -212,9 +212,9 @@ public class ObjectResource {
         CacheControl cc = new CacheControl();
         cc.setPrivate(true);
         ApiHelper.setCacheControlFromState(state, cc);
-        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        Date lmd = new Date(state.getLastRefresh() / 1000 * 1000);
         ResponseBuilder builder = null;
-        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+        if (System.currentTimeMillis() - state.getLastRefresh() > 1000) {
             builder = request.evaluatePreconditions(lmd);
         }
 
@@ -237,9 +237,9 @@ public class ObjectResource {
         CacheControl cc = new CacheControl();
         cc.setPrivate(true);
         ApiHelper.setCacheControlFromState(state, cc);
-        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        Date lmd = new Date(state.getLastRefresh() / 1000 * 1000);
         ResponseBuilder builder = null;
-        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+        if (System.currentTimeMillis() - state.getLastRefresh() > 1000) {
             builder = request.evaluatePreconditions(lmd);
         }
 
@@ -263,9 +263,9 @@ public class ObjectResource {
         CacheControl cc = new CacheControl();
         cc.setPrivate(true);
         ApiHelper.setCacheControlFromState(state, cc);
-        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        Date lmd = new Date(state.getLastRefresh() / 1000 * 1000);
         ResponseBuilder builder = null;
-        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+        if (System.currentTimeMillis() - state.getLastRefresh() > 1000) {
             builder = request.evaluatePreconditions(lmd);
         }
 

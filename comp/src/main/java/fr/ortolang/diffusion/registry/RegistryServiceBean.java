@@ -78,6 +78,9 @@ public class RegistryServiceBean implements RegistryService {
 
     private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    
+    private static Map<String, Long> cacheDates = new HashMap<String, Long> ();
+    private static long baseCacheDate = System.currentTimeMillis();
 
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
@@ -220,7 +223,9 @@ public class RegistryServiceBean implements RegistryService {
             throw new KeyLockedException("Key [" + key + "] is locked and cannot be updated");
         }
         try {
-            entry.setLastModificationDate(System.currentTimeMillis());
+            long lmd = System.currentTimeMillis();
+            entry.setLastModificationDate(lmd);
+            refresh(key);
             em.merge(entry);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -244,6 +249,23 @@ public class RegistryServiceBean implements RegistryService {
         RegistryEntry entry = findEntryByKey(key);
         return entry.getLastModificationDate();
     }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public long getLastRefreshDate(String key) {
+        LOGGER.log(Level.FINE, "getting cache date for key [" + key + "]");
+        if (cacheDates.containsKey(key) ) {
+            return cacheDates.get(key);
+        }
+        return baseCacheDate;
+    }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void refresh(String key) {
+        LOGGER.log(Level.FINE, "setting cache date for key [" + key + "]");
+        cacheDates.put(key, System.currentTimeMillis());
+    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -263,6 +285,7 @@ public class RegistryServiceBean implements RegistryService {
         }
         try {
             entry.setHidden(true);
+            refresh(key);
             em.merge(entry);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -281,6 +304,7 @@ public class RegistryServiceBean implements RegistryService {
         }
         try {
             entry.setHidden(false);
+            refresh(key);
             em.merge(entry);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -315,6 +339,7 @@ public class RegistryServiceBean implements RegistryService {
         }
         try {
             entry.setLock(owner);
+            refresh(key);
             em.merge(entry);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -333,6 +358,7 @@ public class RegistryServiceBean implements RegistryService {
         }
         try {
             entry.setLock("");
+            refresh(key);
             em.merge(entry);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -359,6 +385,7 @@ public class RegistryServiceBean implements RegistryService {
         }
         try {
             entry.setPublicationStatus(state);
+            refresh(key);
             em.merge(entry);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -474,6 +501,7 @@ public class RegistryServiceBean implements RegistryService {
         }
         try {
             entry.setProperty(name, value);
+            refresh(key);
             em.merge(entry);
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);

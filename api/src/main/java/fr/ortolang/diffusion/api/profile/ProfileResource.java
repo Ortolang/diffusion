@@ -135,9 +135,9 @@ public class ProfileResource {
         cc.setPrivate(true);
         cc.setMaxAge(0);
         cc.setMustRevalidate(true);
-        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        Date lmd = new Date(state.getLastRefresh() / 1000 * 1000);
         ResponseBuilder builder = null;
-        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+        if (System.currentTimeMillis() - state.getLastRefresh() > 1000) {
             builder = request.evaluatePreconditions(lmd);
         }
 
@@ -174,9 +174,9 @@ public class ProfileResource {
         cc.setPrivate(true);
         cc.setMaxAge(600);
         cc.setMustRevalidate(true);
-        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        Date lmd = new Date(state.getLastRefresh() / 1000 * 1000);
         ResponseBuilder builder = null;
-        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+        if (System.currentTimeMillis() - state.getLastRefresh() > 1000) {
             builder = request.evaluatePreconditions(lmd);
         }
 
@@ -229,9 +229,9 @@ public class ProfileResource {
         cc.setPrivate(true);
         cc.setMaxAge(0);
         cc.setMustRevalidate(true);
-        Date lmd = new Date(state.getLastModification() / 1000 * 1000);
+        Date lmd = new Date(state.getLastRefresh() / 1000 * 1000);
         ResponseBuilder builder = null;
-        if (System.currentTimeMillis() - state.getLastModification() > 1000) {
+        if (System.currentTimeMillis() - state.getLastRefresh() > 1000) {
             builder = request.evaluatePreconditions(lmd);
         }
 
