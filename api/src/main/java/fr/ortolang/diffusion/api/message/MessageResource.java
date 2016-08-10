@@ -44,7 +44,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -159,8 +158,8 @@ public class MessageResource {
     public Response updateThread(@PathParam(value = "key") String key, ThreadRepresentation representation) throws MessageServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "PUT /threads/" + key);
         service.updateThread(key, representation.getTitle());
-        Thread feed = service.readThread(key);
-        ThreadRepresentation newrepresentation = ThreadRepresentation.fromThread(feed);
+        Thread thread = service.readThread(key);
+        ThreadRepresentation newrepresentation = ThreadRepresentation.fromThread(thread);
         return Response.ok(newrepresentation).build();
     }
 
@@ -175,37 +174,23 @@ public class MessageResource {
     @GET
     @Path("/{key}/messages")
     @GZIP
-    public Response browseThread(@PathParam(value = "key") String key, @QueryParam(value = "fromdate") Date from, @QueryParam(value = "o") @DefaultValue(value = "0") int offset,
-            @QueryParam(value = "l") @DefaultValue(value = "10") int limit) throws KeyNotFoundException, MessageServiceException, OrtolangException, BrowserServiceException, URISyntaxException {
+    public Response browseThread(@PathParam(value = "key") String key) throws KeyNotFoundException, MessageServiceException, OrtolangException, BrowserServiceException, URISyntaxException {
         LOGGER.log(Level.INFO, "GET /threads/" + key + "/messages");
-        GenericCollectionRepresentation<MessageRepresentation> representation = new GenericCollectionRepresentation<MessageRepresentation>();
-        UriBuilder content = ApiUriBuilder.getApiUriBuilder().path(MessageResource.class).path(key).path("messages");
-        List<Message> msgs;
-        if (from == null) {
-            msgs = service.browseThread(key, offset, limit);
-            long size = service.getSize(key).getSize();
-            representation.setOffset((offset < 0) ? 0 : offset);
-            representation.setLimit(limit);
-            representation.setSize(size);
-            representation.setFirst(content.clone().queryParam("key", key).queryParam("o", 0).queryParam("l", limit).build());
-            representation.setPrevious(content.clone().queryParam("key", key).queryParam("o", Math.max(0, offset - limit)).queryParam("l", limit).build());
-            representation.setSelf(content.clone().queryParam("key", key).queryParam("o", offset).queryParam("l", limit).build());
-            representation.setNext(content.clone().queryParam("key", key).queryParam("o", size > offset + limit ? offset + limit : offset).queryParam("l", limit).build());
-            representation.setLast(content.clone().queryParam("key", key).queryParam("o", ((size - 1) / limit) * limit).queryParam("l", limit).build());
-        } else {
-            msgs = service.browseThreadSinceDate(key, from);
-            representation.setSize(msgs.size());
-            representation.setOffset(0);
-            representation.setLimit(msgs.size());
-
-        }
+        Thread thread = service.readThread(key);
+        List<Message> msgs = service.browseThread(key);
         List<MessageRepresentation> msgsrep = new ArrayList<MessageRepresentation>();
         for (Message message : msgs) {
             OrtolangObjectInfos infos = browser.getInfos(message.getKey());
-            msgsrep.add(MessageRepresentation.fromMessageAndInfos(message, infos));
+            MessageRepresentation msgrep = MessageRepresentation.fromMessageAndInfos(message, infos);
+            if ( thread.getQuestion().equals(message.getKey()) ) {
+                msgrep.setQuestion(true);
+            }
+            if ( thread.getAnswer() != null && thread.getAnswer().equals(message.getKey()) ) {
+                msgrep.setAnswer(true);
+            }
+            msgsrep.add(msgrep);
         }
-        representation.setEntries(msgsrep);
-        return Response.ok(representation).build();
+        return Response.ok(msgsrep).build();
     }
 
     @POST

@@ -60,10 +60,14 @@ public class MessageRepresentation {
     private String thread;
     private String parent;
     private String author;
+    private boolean question;
+    private boolean answer;
     private Set<MessageAttachment> attachments;
 
     public MessageRepresentation() {
         attachments = Collections.emptySet();
+        question = false;
+        answer = false;
     }
 
     public String getKey() {
@@ -120,6 +124,22 @@ public class MessageRepresentation {
 
     public void setAttachments(Set<MessageAttachment> attachments) {
         this.attachments = attachments;
+    }
+    
+    public boolean isQuestion() {
+        return question;
+    }
+
+    public void setQuestion(boolean question) {
+        this.question = question;
+    }
+
+    public boolean isAnswer() {
+        return answer;
+    }
+
+    public void setAnswer(boolean answer) {
+        this.answer = answer;
     }
 
     public static MessageRepresentation fromMessage(Message message) {

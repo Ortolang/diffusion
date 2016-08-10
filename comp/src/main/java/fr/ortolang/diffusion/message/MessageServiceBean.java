@@ -334,7 +334,7 @@ public class MessageServiceBean implements MessageService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<Message> browseThread(String key, int offset, int limit) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
+    public List<Message> browseThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "browsing messages for thread: " + key);
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
@@ -343,7 +343,7 @@ public class MessageServiceBean implements MessageService {
             checkObjectType(identifier, Thread.OBJECT_TYPE);
             authorisation.checkPermission(key, subjects, "read");
 
-            TypedQuery<Message> query = em.createNamedQuery("findThreadMessages", Message.class).setParameter("thread", key).setFirstResult(offset).setMaxResults(limit);
+            TypedQuery<Message> query = em.createNamedQuery("findThreadMessages", Message.class).setParameter("thread", key);
             List<Message> msgs = query.getResultList();
             loadKeyFromRegistry(msgs);
             return msgs;

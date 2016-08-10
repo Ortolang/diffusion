@@ -213,7 +213,7 @@ public class MessageServiceTest {
             List<String> mfs = message.findThreadsForWorkspace("WSK1");
             assertTrue(mfs.contains("K1"));
             
-            List<Message> messages = message.browseThread("K1", 0, 25);
+            List<Message> messages = message.browseThread("K1");
             assertEquals(0, messages.size());
             
             message.postMessage("K1", "MK1", "", "This is only a test message in order to ask for a question based on a logical answer that will produce some text using anything else than simple words...");
@@ -229,7 +229,7 @@ public class MessageServiceTest {
             assertEquals("MK2", msg.getKey());
             assertTrue(msg.getBody().contains("filling"));
             
-            messages = message.browseThread("K1", 0, 25);
+            messages = message.browseThread("K1");
             assertEquals(3, messages.size());
             
             message.postMessage("K1", "MK4", "MK3", "et hop !");
@@ -243,12 +243,12 @@ public class MessageServiceTest {
             msg = message.readMessage("MK4");
             assertEquals(1, msg.getAttachments().size());
             
-            messages = message.browseThread("K1", 0, 25);
+            messages = message.browseThread("K1");
             assertEquals(4, messages.size());
             
             message.deleteMessage("MK4");
             
-            messages = message.browseThread("K1", 0, 25);
+            messages = message.browseThread("K1");
             assertEquals(3, messages.size());
             
             message.deleteThread("K1");

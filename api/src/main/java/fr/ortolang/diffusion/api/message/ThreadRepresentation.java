@@ -55,8 +55,10 @@ public class ThreadRepresentation {
     private long creation;
     private long lastActivity;
     private String workspace;
+    private boolean answered;
 
     public ThreadRepresentation() {
+        answered = false;
     }
 
     public String getKey() {
@@ -107,12 +109,23 @@ public class ThreadRepresentation {
         this.creation = creation;
     }
 
+    public boolean isAnswered() {
+        return answered;
+    }
+
+    public void setAnswered(boolean answered) {
+        this.answered = answered;
+    }
+
     public static ThreadRepresentation fromThread(Thread thread) {
         ThreadRepresentation representation = new ThreadRepresentation();
         representation.setKey(thread.getKey());
         representation.setTitle(thread.getTitle());
         representation.setLastActivity(thread.getLastActivity().getTime());
         representation.setWorkspace(thread.getWorkspace());
+        if ( thread.getAnswer() != null && thread.getAnswer().length() > 0 ) {
+            representation.setAnswered(true);
+        }
         return representation;
     }
 

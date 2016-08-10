@@ -65,7 +65,7 @@ public interface MessageService extends OrtolangService, OrtolangBinaryService, 
     
     List<String> findThreadsForWorkspace(String wskey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
-    List<Message> browseThread(String key, int offset, int limit) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    List<Message> browseThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     List<Message> browseThreadSinceDate(String key, Date from) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
