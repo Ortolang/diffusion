@@ -219,35 +219,32 @@ public class MessageServiceBean implements MessageService {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkAuthentified(subjects);
 
-            String mid = UUID.randomUUID().toString();
             String mkey = UUID.randomUUID().toString();
-            Message question = new Message();
-            question.setId(mid);
-            question.setBody(body);
-            question.setThread(key);
-            question.setDate(new Date());
-            question.setKey(mkey);
-            em.persist(question);
             
-            registry.register(key, question.getObjectIdentifier(), caller);
-            
-            String id = UUID.randomUUID().toString();
             Thread thread = new Thread();
-            thread.setId(id);
+            thread.setId(UUID.randomUUID().toString());
             thread.setKey(key);
             thread.setTitle(title);
             thread.setWorkspace(wskey);
             thread.setQuestion(mkey);
             thread.setLastActivity(new Date());
             em.persist(thread);
-            
             registry.register(key, thread.getObjectIdentifier(), caller);
+            
+            Message question = new Message();
+            question.setId(UUID.randomUUID().toString());
+            question.setBody(body);
+            question.setThread(key);
+            question.setDate(new Date());
+            question.setKey(mkey);
+            em.persist(question);
+            registry.register(mkey, question.getObjectIdentifier(), caller);
             
             Workspace ws = core.readWorkspace(wskey);
             Map<String, List<String>> trules = new HashMap<String, List<String>>();
             if (!restricted) {
-                trules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "update", "delete", "post"));
                 trules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList("read", "post"));
+                trules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "update", "delete", "post"));
             } else {
                 trules.put(ws.getMembers(), Arrays.asList("read", "post"));
                 trules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "update", "delete", "post"));
@@ -259,7 +256,6 @@ public class MessageServiceBean implements MessageService {
             
             authorisation.createPolicy(mkey, caller);
             authorisation.setPolicyRules(mkey, trules);
-
 
             indexing.index(key);
             indexing.index(mkey);

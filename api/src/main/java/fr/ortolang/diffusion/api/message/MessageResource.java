@@ -52,7 +52,6 @@ import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -66,7 +65,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.StreamingOutput;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.jboss.resteasy.annotations.GZIP;
@@ -77,8 +75,6 @@ import com.google.common.io.Files;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObjectInfos;
-import fr.ortolang.diffusion.api.ApiUriBuilder;
-import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.message.MessageService;
@@ -118,27 +114,15 @@ public class MessageResource {
 
     @GET
     @GZIP
-    public Response listThreads(@QueryParam(value = "wskey") String wskey, @QueryParam(value = "o") @DefaultValue(value = "0") int offset,
-            @QueryParam(value = "l") @DefaultValue(value = "10") int limit) throws KeyNotFoundException, AccessDeniedException, MessageServiceException, BrowserServiceException, URISyntaxException {
+    public Response listThreads(@QueryParam(value = "wskey") String wskey) throws KeyNotFoundException, AccessDeniedException, MessageServiceException, BrowserServiceException, URISyntaxException {
         LOGGER.log(Level.INFO, "GET /threads?wskey=" + wskey);
-        List<String> wsfeeds = service.findThreadsForWorkspace(wskey);
-        GenericCollectionRepresentation<ThreadRepresentation> representation = new GenericCollectionRepresentation<ThreadRepresentation>();
-        for (int i = offset; i < limit; i++) {
-            if (i < wsfeeds.size()) {
-                OrtolangObjectInfos infos = browser.getInfos(wsfeeds.get(i));
-                representation.addEntry(ThreadRepresentation.fromThreadAndInfos(service.readThread(wsfeeds.get(i)), infos));
-            }
+        List<String> wsthreads = service.findThreadsForWorkspace(wskey);
+        List<ThreadRepresentation> threads = new ArrayList<ThreadRepresentation> ();
+        for (String tkey: wsthreads) {
+            OrtolangObjectInfos infos = browser.getInfos(tkey);
+            threads.add(ThreadRepresentation.fromThreadAndInfos(service.readThread(tkey), infos));
         }
-        UriBuilder messages = ApiUriBuilder.getApiUriBuilder().path(MessageResource.class);
-        representation.setOffset((offset < 0) ? 0 : offset);
-        representation.setLimit(limit);
-        representation.setSize(wsfeeds.size());
-        representation.setFirst(messages.clone().queryParam("wskey", wskey).queryParam("o", 0).queryParam("l", limit).build());
-        representation.setPrevious(messages.clone().queryParam("wskey", wskey).queryParam("o", Math.max(0, offset - limit)).queryParam("l", limit).build());
-        representation.setSelf(messages.clone().queryParam("wskey", wskey).queryParam("o", offset).queryParam("l", limit).build());
-        representation.setNext(messages.clone().queryParam("wskey", wskey).queryParam("o", (wsfeeds.size() > offset + limit) ? (offset + limit) : offset).queryParam("l", limit).build());
-        representation.setLast(messages.clone().queryParam("wskey", wskey).queryParam("o", ((wsfeeds.size() - 1) / limit) * limit).queryParam("l", limit).build());
-        return Response.ok(representation).build();
+        return Response.ok(threads).build();
     }
 
     @GET
@@ -182,10 +166,10 @@ public class MessageResource {
         for (Message message : msgs) {
             OrtolangObjectInfos infos = browser.getInfos(message.getKey());
             MessageRepresentation msgrep = MessageRepresentation.fromMessageAndInfos(message, infos);
-            if ( thread.getQuestion().equals(message.getKey()) ) {
+            if (thread.getQuestion().equals(message.getKey())) {
                 msgrep.setQuestion(true);
             }
-            if ( thread.getAnswer() != null && thread.getAnswer().equals(message.getKey()) ) {
+            if (thread.getAnswer() != null && thread.getAnswer().equals(message.getKey())) {
                 msgrep.setAnswer(true);
             }
             msgsrep.add(msgrep);
@@ -196,12 +180,12 @@ public class MessageResource {
     @POST
     @Path("/{key}/messages")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response postMessage(@PathParam(value = "key") String key, @FormParam("parent") String parent, @FormParam("body") String body) throws AccessDeniedException, MessageServiceException,
+    public Response postMessage(@PathParam(value = "tkey") String tkey, @FormParam("parent") String parent, @FormParam("body") String body) throws AccessDeniedException, MessageServiceException,
             KeyNotFoundException {
-        LOGGER.log(Level.INFO, "POST /threads/" + key + "/messages");
+        LOGGER.log(Level.INFO, "POST /threads/" + tkey + "/messages");
         String mkey = UUID.randomUUID().toString();
-        service.postMessage(key, mkey, parent, body);
-        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
+        service.postMessage(tkey, mkey, parent, body);
+        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(tkey).build();
         return Response.created(location).build();
     }
 
