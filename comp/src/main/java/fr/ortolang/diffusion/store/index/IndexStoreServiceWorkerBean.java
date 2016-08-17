@@ -222,7 +222,7 @@ public class IndexStoreServiceWorkerBean implements IndexStoreServiceWorker {
                         }
                         jobService.remove(job.getId());
                     } catch ( IndexStoreServiceException | OrtolangException e ) {
-                        LOGGER.log(Level.WARNING, "unable to perform job action " + job.getAction() + " for target " + job.getTarget(), e);
+                        LOGGER.log(Level.WARNING, "unable to perform job action " + job.getAction() + " for target " + job.getTarget() + ": " + e.getMessage());
                         jobService.updateFailingJob(job, e);
                     }
                 } catch ( InterruptedException e ) {

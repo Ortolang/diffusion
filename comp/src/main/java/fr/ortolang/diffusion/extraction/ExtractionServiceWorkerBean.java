@@ -288,7 +288,7 @@ public class ExtractionServiceWorkerBean implements ExtractionServiceWorker {
                         }
                         jobService.remove(job.getId());
                     } catch (Exception e) {
-                        LOGGER.log(Level.WARNING, "unable to extract metadata for data object with key " + key, e);
+                        LOGGER.log(Level.WARNING, "unable to extract metadata for data object with key " + key + ": " + e.getMessage());
                         jobService.updateFailingJob(job, e);
                     } 
 
