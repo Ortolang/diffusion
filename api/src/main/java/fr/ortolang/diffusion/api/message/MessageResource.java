@@ -180,12 +180,12 @@ public class MessageResource {
     @POST
     @Path("/{key}/messages")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response postMessage(@PathParam(value = "tkey") String tkey, @FormParam("parent") String parent, @FormParam("body") String body) throws AccessDeniedException, MessageServiceException,
+    public Response postMessage(@PathParam(value = "key") String key, @FormParam("parent") String parent, @FormParam("body") String body) throws AccessDeniedException, MessageServiceException,
             KeyNotFoundException {
-        LOGGER.log(Level.INFO, "POST /threads/" + tkey + "/messages");
+        LOGGER.log(Level.INFO, "POST /threads/" + key + "/messages");
         String mkey = UUID.randomUUID().toString();
-        service.postMessage(tkey, mkey, parent, body);
-        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(tkey).build();
+        service.postMessage(key, mkey, parent, body);
+        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
         return Response.created(location).build();
     }
 
