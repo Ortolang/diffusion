@@ -781,7 +781,9 @@ public class MessageServiceBean implements MessageService {
                 builder.add("key", key);
                 builder.add("body", message.getBody());
                 builder.add("thread", message.getThread());
-                builder.add("parent", message.getParent());
+                if (message.getParent() != null) {
+                    builder.add("parent", message.getParent());
+                }
                 JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
                 for (MessageAttachment attachment : message.getAttachments()) {
                     arrayBuilder.add(attachment.getName());
