@@ -543,7 +543,7 @@ public class MessageServiceBean implements MessageService {
 
             indexing.index(key);
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(5).addArgument("key", key).addArgument("body", body);
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder().addArgument("key", key).addArgument("body", body).addArgument("thread-title", thread.getTitle());
             if (parent != null && parent.length() > 0) {
                 argsBuilder.addArgument("parent", parent);
             }
