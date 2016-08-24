@@ -444,7 +444,7 @@ public class MessageServiceBean implements MessageService {
                     LOGGER.log(Level.FINE, "found message that does not exists in registry for identifier [" + msg.getObjectIdentifier() + "]");
                 }
             }
-            em.createNamedQuery("deleteThreadMessages", Message.class).setParameter("thread", key).executeUpdate();
+            em.createNamedQuery("deleteThreadMessages").setParameter("thread", key).executeUpdate();
 
             notification.throwEvent(key, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "delete"));
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("title", thread.getTitle());
