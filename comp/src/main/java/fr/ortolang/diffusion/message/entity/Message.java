@@ -82,6 +82,8 @@ public class Message extends OrtolangObject {
     private String key;
     @Temporal(TemporalType.TIMESTAMP)
     private Date date;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date edit;
     @Lob
     @Type(type = "org.hibernate.type.TextType")
     private String body;
@@ -148,6 +150,14 @@ public class Message extends OrtolangObject {
 
     public void setDate(Date date) {
         this.date = date;
+    }
+
+    public Date getEdit() {
+        return edit;
+    }
+
+    public void setEdit(Date edit) {
+        this.edit = edit;
     }
 
     public Set<MessageAttachment> getAttachments() {

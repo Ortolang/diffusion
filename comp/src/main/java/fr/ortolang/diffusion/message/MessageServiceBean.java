@@ -598,6 +598,7 @@ public class MessageServiceBean implements MessageService {
                 throw new MessageServiceException("unable to find a message for id " + identifier.getId());
             }
             message.setBody(body);
+            message.setEdit(new Date());
             em.merge(message);
 
             registry.update(key);

@@ -57,6 +57,7 @@ public class MessageRepresentation {
     private String key;
     private String body;
     private Date date;
+    private Date edit;
     private String thread;
     private String parent;
     private String author;
@@ -92,6 +93,14 @@ public class MessageRepresentation {
 
     public void setDate(Date date) {
         this.date = date;
+    }
+
+    public Date getEdit() {
+        return edit;
+    }
+
+    public void setEdit(Date edit) {
+        this.edit = edit;
     }
 
     public String getThread() {
@@ -148,6 +157,7 @@ public class MessageRepresentation {
         representation.setThread(message.getThread());
         representation.setBody(message.getBody());
         representation.setDate(message.getDate());
+        representation.setEdit(message.getEdit());
         representation.setParent(message.getParent());
         representation.setAttachments(message.getAttachments());
         return representation;
