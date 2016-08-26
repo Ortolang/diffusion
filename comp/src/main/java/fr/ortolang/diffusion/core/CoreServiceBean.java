@@ -657,6 +657,44 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public Workspace archiveWorkspace(String wskey, Boolean archive) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceReadOnlyException {
+        LOGGER.log(Level.FINE, "archiving workspace [" + wskey + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+
+            if (!MembershipService.SUPERUSER_IDENTIFIER.equals(caller)) {
+                throw new CoreServiceException("only " + MembershipService.SUPERUSER_IDENTIFIER + " can archive workspace");
+            }
+
+            OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+            checkObjectType(identifier, Workspace.OBJECT_TYPE);
+            authorisation.checkPermission(wskey, subjects, "update");
+
+            Workspace workspace = em.find(Workspace.class, identifier.getId());
+            if (workspace == null) {
+                throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+            }
+            workspace.setArchive(archive);
+            workspace.setKey(wskey);
+            em.merge(workspace);
+
+            registry.update(wskey);
+            indexing.index(wskey);
+
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("ws-alias", workspace.getAlias()).addArgument("archive", archive.toString());
+            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "archive"), argsBuilder.build());
+            
+            return workspace;
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | IndexingServiceException e) {
+            ctx.setRollbackOnly();
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while archiving workspace", e);
+            throw new CoreServiceException("unable to archive workspace with key [" + wskey + "]", e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void deleteWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceReadOnlyException {
         deleteWorkspace(wskey, false);
     }
@@ -3735,6 +3773,7 @@ public class CoreServiceBean implements CoreService {
                     JsonObjectBuilder builder = Json.createObjectBuilder();
                     builder.add("wskey", key);
                     builder.add("wsalias", workspace.getAlias());
+                    builder.add("archive", workspace.isArchive());
                     JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
                     JsonObjectBuilder objectBuilder;
                     for (TagElement tagElement : workspace.getTags()) {

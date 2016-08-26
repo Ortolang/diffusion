@@ -78,6 +78,7 @@ public class Workspace extends OrtolangObject {
     private boolean readOnly;
     private String members;
     private String privileged;
+    private boolean archive;
     @Lob
     @Type(type = "org.hibernate.type.TextType")
     private String snapshotsContent = "";
@@ -91,6 +92,7 @@ public class Workspace extends OrtolangObject {
         readOnly = false;
         alias = "";
         privileged = "";
+        archive = false;
     }
 
     public String getId() {
@@ -357,6 +359,14 @@ public class Workspace extends OrtolangObject {
 
     public void setPrivileged(String privileged) {
         this.privileged = privileged;
+    }
+
+    public boolean isArchive() {
+        return archive;
+    }
+
+    public void setArchive(boolean archive) {
+        this.archive = archive;
     }
 
     @Override

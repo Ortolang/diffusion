@@ -559,6 +559,18 @@ public class WorkspaceResource {
         return Response.ok().build();
     }
 
+    @POST
+    @Path("/{wskey}/archive")
+    public Response archiveWorkspace(@PathParam(value = "wskey") String wskey, @QueryParam("archive") @DefaultValue("true") boolean archive)
+            throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceReadOnlyException, WorkspaceUnchangedException, BrowserServiceException {
+        LOGGER.log(Level.INFO, "POST /workspaces/" + wskey + "/archive?archive="+archive);
+        Workspace workspace = core.archiveWorkspace(wskey, archive);
+        OrtolangObjectInfos infos = browser.getInfos(wskey);
+        WorkspaceRepresentation representation = WorkspaceRepresentation.fromWorkspace(workspace, infos);
+        
+        return Response.ok(representation).build();
+    }
+
     @GET
     @Path("/{wskey}/elements/publication")
     public Response getPublicationPolicy(@PathParam(value = "wskey") String wskey, @QueryParam("path") String path)

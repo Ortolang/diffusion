@@ -65,6 +65,7 @@ public class WorkspaceRepresentation {
     private String head;
     private boolean changed;
     private boolean readOnly;
+    private boolean archive;
     private Set<SnapshotElement> snapshots;
     private Set<TagElement> tags;
     private Map<String,String> metadatas;
@@ -194,6 +195,14 @@ public class WorkspaceRepresentation {
         this.readOnly = readOnly;
     }
 
+    public boolean isArchive() {
+        return archive;
+    }
+
+    public void setArchive(boolean archive) {
+        this.archive = archive;
+    }
+
     public Map<String, String> getMetadatas() {
         return metadatas;
     }
@@ -213,6 +222,7 @@ public class WorkspaceRepresentation {
         representation.setMembers(workspace.getMembers());
         representation.setChanged(workspace.hasChanged());
         representation.setReadOnly(workspace.isReadOnly());
+        representation.setArchive(workspace.isArchive());
         representation.setSnapshots(workspace.getSnapshots());
         representation.setTags(workspace.getTags());
         representation.setAuthor(infos.getAuthor());
