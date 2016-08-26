@@ -211,6 +211,15 @@ public class MessageResource {
         return Response.ok(MessageRepresentation.fromMessage(msg)).build();
     }
 
+    @DELETE
+    @Path("/{key}/messages/{mkey}")
+    public Response deleteMessage(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey) throws AccessDeniedException, MessageServiceException,
+            KeyNotFoundException {
+        LOGGER.log(Level.INFO, "DELETE /threads/" + key + "/messages/" + mkey);
+        service.deleteMessage(mkey);
+        return Response.ok().build();
+    }
+
     @GET
     @Path("/{key}/messages/{mkey}/attachments")
     public Response listAttachments(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey) throws AccessDeniedException, MessageServiceException, KeyNotFoundException {
