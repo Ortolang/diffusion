@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import fr.ortolang.diffusion.OrtolangBinaryService;
 import fr.ortolang.diffusion.OrtolangIndexableService;
@@ -76,7 +77,9 @@ public interface MessageService extends OrtolangService, OrtolangBinaryService, 
     void markThreadAsAnswered(String tkey, String akey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     Message postMessage(String tkey, String key, String parent, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
-    
+
+    Message postMessage(String tkey, String key, String parent, String body, Map<String, InputStream> attachments) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+
     Message readMessage(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     void updateMessage(String key, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;

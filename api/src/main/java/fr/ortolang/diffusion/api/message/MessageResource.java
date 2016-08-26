@@ -43,9 +43,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -60,12 +58,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.StreamingOutput;
-import javax.ws.rs.core.UriInfo;
 
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -189,6 +183,35 @@ public class MessageResource {
         return Response.created(location).build();
     }
 
+    @POST
+    @Path("/{key}/messages")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response postMessageData(@PathParam(value = "key") String key, MultipartFormDataInput input) throws AccessDeniedException, MessageServiceException, KeyNotFoundException, IOException {
+        LOGGER.log(Level.INFO, "POST /threads/" + key + "/messages");
+        Map<String, List<InputPart>> form = input.getFormDataMap();
+        String mkey = UUID.randomUUID().toString();
+        String parent = null;
+        String body = null;
+        Map<String, InputStream> attachments = new HashMap<>();
+        for (Map.Entry<String, List<InputPart>> entry : form.entrySet()) {
+            InputPart inputPart = entry.getValue().get(0);
+            switch (entry.getKey()) {
+            case "parent":
+                parent = inputPart.getBody(String.class, null);
+                break;
+            case "body":
+                body = inputPart.getBody(String.class, null);
+                break;
+            default:
+                InputStream inputStream = inputPart.getBody(InputStream.class, null);
+                attachments.put(getFileName(inputPart.getHeaders()), inputStream);
+            }
+        }
+        service.postMessage(key, mkey, parent, body, attachments);
+        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
+        return Response.created(location).build();
+    }
+
     @GET
     @Path("/{key}/messages/{mkey}")
     @GZIP
@@ -277,4 +300,19 @@ public class MessageResource {
         return Response.ok().build();
     }
 
+    private String getFileName(MultivaluedMap<String, String> header) {
+
+        String[] contentDisposition = header.getFirst("Content-Disposition").split(";");
+
+        for (String filename : contentDisposition) {
+            if ((filename.trim().startsWith("filename"))) {
+
+                String[] name = filename.split("=");
+
+                String finalFileName = name[1].trim().replaceAll("\"", "");
+                return finalFileName;
+            }
+        }
+        return "unknown";
+    }
 }

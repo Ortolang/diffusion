@@ -220,7 +220,7 @@ public class MessageServiceBean implements MessageService {
             authorisation.checkAuthentified(subjects);
 
             String mkey = UUID.randomUUID().toString();
-            
+
             Thread thread = new Thread();
             thread.setId(UUID.randomUUID().toString());
             thread.setKey(key);
@@ -230,7 +230,7 @@ public class MessageServiceBean implements MessageService {
             thread.setLastActivity(new Date());
             em.persist(thread);
             registry.register(key, thread.getObjectIdentifier(), caller);
-            
+
             Message question = new Message();
             question.setId(UUID.randomUUID().toString());
             question.setBody(body);
@@ -239,7 +239,7 @@ public class MessageServiceBean implements MessageService {
             question.setKey(mkey);
             em.persist(question);
             registry.register(mkey, question.getObjectIdentifier(), caller);
-            
+
             Workspace ws = core.readWorkspace(wskey);
             Map<String, List<String>> trules = new HashMap<String, List<String>>();
             if (!restricted) {
@@ -253,7 +253,7 @@ public class MessageServiceBean implements MessageService {
             }
             authorisation.createPolicy(key, caller);
             authorisation.setPolicyRules(key, trules);
-            
+
             authorisation.createPolicy(mkey, caller);
             authorisation.setPolicyRules(mkey, trules);
 
@@ -455,7 +455,7 @@ public class MessageServiceBean implements MessageService {
             throw new MessageServiceException("unable to delete thread with key [" + key + "]", e);
         }
     }
-    
+
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void markThreadAsAnswered(String tkey, String mkey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
@@ -471,21 +471,21 @@ public class MessageServiceBean implements MessageService {
             if (thread == null) {
                 throw new MessageServiceException("unable to find a thread for id " + identifier.getId());
             }
-            
+
             OrtolangObjectIdentifier midentifier = registry.lookup(mkey);
             checkObjectType(midentifier, Message.OBJECT_TYPE);
             Message message = em.find(Message.class, midentifier.getId());
             if (message == null) {
                 throw new MessageServiceException("unable to find a message for id " + midentifier.getId());
             }
-            
+
             thread.setAnswer(mkey);
             thread.setLastActivity(new Date());
             em.merge(thread);
-            
+
             registry.update(tkey);
             indexing.index(tkey);
-            
+
             notification.throwEvent(tkey, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "answered"));
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("tkey", tkey).addArgument("title", thread.getTitle());
             notification.throwEvent(thread.getWorkspace(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "answered"), argsBuilder.build());
@@ -502,6 +502,12 @@ public class MessageServiceBean implements MessageService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Message postMessage(String tkey, String key, String parent, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
+        return postMessage(tkey, key, parent, body, null);
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public Message postMessage(String tkey, String key, String parent, String body, Map<String, InputStream> attachments) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "posting message into thread with key [" + tkey + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -533,6 +539,16 @@ public class MessageServiceBean implements MessageService {
                 message.setParent(parent);
             }
             message.setBody(body);
+
+            if (attachments != null) {
+                for (Map.Entry<String, InputStream> entry : attachments.entrySet()) {
+                    String hash = binarystore.put(entry.getValue());
+                    String type = binarystore.type(hash, entry.getKey());
+                    long size = binarystore.size(hash);
+                    message.addAttachments(new MessageAttachment(entry.getKey(), type, size, hash));
+                }
+            }
+
             em.persist(message);
 
             registry.register(key, message.getObjectIdentifier(), caller);
@@ -553,7 +569,7 @@ public class MessageServiceBean implements MessageService {
 
             return message;
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyAlreadyExistsException
-                | IdentifierAlreadyRegisteredException | IndexingServiceException e) {
+                | IdentifierAlreadyRegisteredException | IndexingServiceException | DataNotFoundException | BinaryStoreServiceException | DataCollisionException e) {
             ctx.setRollbackOnly();
             throw new MessageServiceException("unable to post message in thread with key [" + tkey + "]", e);
         }
