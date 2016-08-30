@@ -110,6 +110,10 @@ import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.message.MessageService;
+import fr.ortolang.diffusion.message.MessageServiceException;
+import fr.ortolang.diffusion.message.entity.Message;
+import fr.ortolang.diffusion.message.entity.MessageAttachment;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
@@ -130,6 +134,8 @@ public class ContentResource {
 
     @EJB
     private CoreService core;
+    @EJB
+    private MessageService message;
     @EJB
     private BrowserService browser;
     @EJB
@@ -345,6 +351,24 @@ public class ContentResource {
             }
             break;
         }
+    }
+    
+    @GET
+    @Path("/attachments/{mkey}/{name}")
+    public Response attachment(@PathParam(value = "mkey") String mkey, @PathParam(value = "name") String name) throws AccessDeniedException,
+            MessageServiceException, KeyNotFoundException, DataNotFoundException, UnsupportedEncodingException, BinaryStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /attachments/" + mkey + "/" + name);
+        Message msg = message.readMessage(mkey);
+        MessageAttachment attachment = msg.findAttachmentByName(name);
+        if ( attachment == null ) {
+            throw new DataNotFoundException("unable to find attachement");
+        }
+        ResponseBuilder builder = Response.ok(store.getFile(attachment.getHash()));
+        builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(attachment.getName(), "utf-8"));
+        builder.header("Content-Lenght", attachment.getSize());
+        builder.type(attachment.getType());
+        builder.header("Accept-Ranges", "bytes");
+        return builder.build();
     }
 
     @GET

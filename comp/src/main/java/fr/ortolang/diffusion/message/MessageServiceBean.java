@@ -748,7 +748,6 @@ public class MessageServiceBean implements MessageService {
     public File getMessageAttachment(String key, String name) throws MessageServiceException, AccessDeniedException, KeyNotFoundException, DataNotFoundException {
         LOGGER.log(Level.FINE, "getting attachment of message with key [" + key + "]");
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkPermission(key, subjects, "read");
 
@@ -762,9 +761,8 @@ public class MessageServiceBean implements MessageService {
                 throw new MessageServiceException("no attachment found with name [" + name + "] for message with key: " + key);
             }
 
-            notification.throwEvent(key, caller, Message.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Message.OBJECT_TYPE, "download-attachment"));
             return binarystore.getFile(message.findAttachmentByName(name).getHash());
-        } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | BinaryStoreServiceException e) {
+        } catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | BinaryStoreServiceException e) {
             throw new MessageServiceException("unable to get attachment from message with key [" + key + "]", e);
         }
     }
