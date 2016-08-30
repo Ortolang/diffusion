@@ -796,7 +796,9 @@ public class MessageServiceBean implements MessageService {
                 }
                 JsonObjectBuilder builder = Json.createObjectBuilder();
                 builder.add("key", key);
-                builder.add("body", message.getBody());
+                if (message.getBody() != null) {
+                    builder.add("body", message.getBody());
+                }
                 builder.add("thread", message.getThread());
                 if (message.getParent() != null) {
                     builder.add("parent", message.getParent());
