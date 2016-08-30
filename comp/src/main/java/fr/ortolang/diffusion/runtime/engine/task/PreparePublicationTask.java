@@ -96,6 +96,9 @@ public class PreparePublicationTask extends RuntimeEngineTask {
                 execution.setVariable(WORKSPACE_ALIAS_PARAM_NAME, wskey);
             }
 
+            //TODO Externaliser cette tâche à un autre moment et utiliser un type de méta donnée system dédié.
+            LOGGER.log(Level.FINE, "Updating publicationDate and datasize fields in item metadata");
+            updateMetadata(wskey, workspace.getHead(), execution.getVariable(INITIER_PARAM_NAME, String.class));
             
             LOGGER.log(Level.FINE, "Fixing snapshot name");
             String snapshotName;
@@ -119,10 +122,6 @@ public class PreparePublicationTask extends RuntimeEngineTask {
                 throw new RuntimeEngineTaskException("unable to find a snapshot with name " + snapshotName + " in workspace " + wskey);
             }
             String rootCollection = snapshot.getKey();
-            
-            //TODO Externaliser cette tâche à un autre moment et utiliser un type de méta donnée system dédié.
-            LOGGER.log(Level.FINE, "Updating publicationDate and datasize fields in item metadata");
-            updateMetadata(wskey, workspace.getHead(), execution.getVariable(INITIER_PARAM_NAME, String.class));
             
             LOGGER.log(Level.FINE, "Checking root collection publication status");
             String publicationStatus = getRegistryService().getPublicationStatus(rootCollection);
@@ -156,7 +155,7 @@ public class PreparePublicationTask extends RuntimeEngineTask {
  
     private void updateMetadata(String wskey, String wshead, String initier) throws Exception {
         MetadataElement ortolangItemMetadata = getCoreService().readCollection(wshead).findMetadataByName(MetadataFormat.ITEM);
-        if (ortolangItemMetadata != null || initier.equals(MembershipService.SUPERUSER_IDENTIFIER)) {
+        if (ortolangItemMetadata != null) {
             InputStream metadataInputStream = core.download(ortolangItemMetadata.getKey());
             String json = new BufferedReader(new InputStreamReader(metadataInputStream)).lines().collect(Collectors.joining("\n"));
             metadataInputStream.close();
