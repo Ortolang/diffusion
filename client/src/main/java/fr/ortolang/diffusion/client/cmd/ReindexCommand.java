@@ -58,6 +58,7 @@ public class ReindexCommand extends Command {
         options.addOption("P", "password", true, "password for login");
         options.addOption("s", "service", true, "service of the object to index");
         options.addOption("t", "type", true, "type of the object to index");
+        options.addOption("a", "status", true, "status of the object to index");
         options.addOption("F", "fake", false, "fake mode");
     }
 
@@ -77,6 +78,7 @@ public class ReindexCommand extends Command {
 
             String type = cmd.getOptionValue("t");
             String service = cmd.getOptionValue("s");
+            String status = cmd.getOptionValue("a", "PUBLISHED");
             boolean fakeMode = cmd.hasOption("F");
 
             if(type != null && service != null) {
@@ -87,19 +89,19 @@ public class ReindexCommand extends Command {
                     client.login(username);
                 }
                 System.out.println("Connected as user: " + client.connectedProfile());
-                System.out.println("Retrieving for published objects from service "+service+" and with type "+type+" ...");
+                System.out.println("Retrieving for published objects from service "+service+", with type "+type+" and with status "+status+" ...");
 
                 List<String> objectKeys = new ArrayList<>();
 
                 int offset = 0;
                 int limit = 100;
-                JsonObject listOfObjects = client.listObjects(service, type, "PUBLISHED", offset, limit);
+                JsonObject listOfObjects = client.listObjects(service, type, status, offset, limit);
                 JsonArray keys = listOfObjects.getJsonArray("entries");
 
                 while(!keys.isEmpty()) {
                     objectKeys.addAll(keys.getValuesAs(JsonString.class).stream().map(JsonString::getString).collect(Collectors.toList()));
                     offset += limit;
-                    listOfObjects = client.listObjects(service, type, "PUBLISHED", offset, limit);
+                    listOfObjects = client.listObjects(service, type, status, offset, limit);
                     keys = listOfObjects.getJsonArray("entries");
                 }
                 System.out.println("Reindex keys ("+objectKeys.size()+") : "+objectKeys);
