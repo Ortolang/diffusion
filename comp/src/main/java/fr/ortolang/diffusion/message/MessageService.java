@@ -83,7 +83,9 @@ public interface MessageService extends OrtolangService, OrtolangBinaryService, 
     Message readMessage(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     void updateMessage(String key, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
-    
+
+    void updateMessage(String key, String body, Map<String, InputStream> attachments, String[] removedAttachments) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+
     void deleteMessage(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     void addMessageAttachment(String key, String name, InputStream data) throws MessageServiceException, AccessDeniedException, KeyNotFoundException, DataCollisionException;

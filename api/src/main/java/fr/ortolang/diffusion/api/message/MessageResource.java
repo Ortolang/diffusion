@@ -173,20 +173,8 @@ public class MessageResource {
 
     @POST
     @Path("/{key}/messages")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response postMessage(@PathParam(value = "key") String key, @FormParam("parent") String parent, @FormParam("body") String body) throws AccessDeniedException, MessageServiceException,
-            KeyNotFoundException {
-        LOGGER.log(Level.INFO, "POST /threads/" + key + "/messages");
-        String mkey = UUID.randomUUID().toString();
-        service.postMessage(key, mkey, parent, body);
-        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
-        return Response.created(location).build();
-    }
-
-    @POST
-    @Path("/{key}/messages")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response postMessageData(@PathParam(value = "key") String key, MultipartFormDataInput input) throws AccessDeniedException, MessageServiceException, KeyNotFoundException, IOException {
+    public Response postMessage(@PathParam(value = "key") String key, MultipartFormDataInput input) throws AccessDeniedException, MessageServiceException, KeyNotFoundException, IOException {
         LOGGER.log(Level.INFO, "POST /threads/" + key + "/messages");
         Map<String, List<InputPart>> form = input.getFormDataMap();
         String mkey = UUID.randomUUID().toString();
@@ -225,11 +213,29 @@ public class MessageResource {
 
     @PUT
     @Path("/{key}/messages/{mkey}")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response updateMessage(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey, @FormParam("body") String body) throws AccessDeniedException, MessageServiceException,
-            KeyNotFoundException {
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response updateMessage(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey, MultipartFormDataInput input)
+            throws AccessDeniedException, MessageServiceException, KeyNotFoundException, IOException, DataCollisionException {
         LOGGER.log(Level.INFO, "PUT /threads/" + key + "/messages/" + mkey);
-        service.updateMessage(mkey, body);
+        Map<String, List<InputPart>> form = input.getFormDataMap();
+        String body = null;
+        String[] removedAttachments = null;
+        Map<String, InputStream> attachments = new HashMap<>();
+        for (Map.Entry<String, List<InputPart>> entry : form.entrySet()) {
+            InputPart inputPart = entry.getValue().get(0);
+            switch (entry.getKey()) {
+            case "body":
+                body = inputPart.getBody(String.class, null);
+                break;
+            case "removed-attachments":
+                removedAttachments = inputPart.getBody(String.class, null).split(",");
+                break;
+            default:
+                InputStream inputStream = inputPart.getBody(InputStream.class, null);
+                attachments.put(getFileName(inputPart.getHeaders()), inputStream);
+            }
+        }
+        service.updateMessage(mkey, body, attachments, removedAttachments);
         Message msg = service.readMessage(mkey);
         return Response.ok(MessageRepresentation.fromMessage(msg)).build();
     }
@@ -289,15 +295,6 @@ public class MessageResource {
         StreamingOutput stream = output -> Files.copy(file, output);
         builder.entity(stream);
         return builder.build();
-    }
-
-    @DELETE
-    @Path("/{key}/messages/{mkey}/attachments/{name}")
-    public Response deleteAttachment(@PathParam(value = "key") String key, @PathParam(value = "mkey") String mkey, @PathParam(value = "name") String name) throws AccessDeniedException,
-            MessageServiceException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "DELETE /threads/" + key + "/messages/" + mkey + "/attachments/" + name);
-        service.removeMessageAttachment(mkey, name);
-        return Response.ok().build();
     }
 
     private String getFileName(MultivaluedMap<String, String> header) {

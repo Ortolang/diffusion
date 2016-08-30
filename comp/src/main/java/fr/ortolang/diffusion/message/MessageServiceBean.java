@@ -601,6 +601,10 @@ public class MessageServiceBean implements MessageService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void updateMessage(String key, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
+        updateMessage(key, body, null, null);
+    }
+
+    public void updateMessage(String key, String body, Map<String, InputStream> attachments, String[] removedAttachments) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "updating message for key [" + key + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -613,15 +617,38 @@ public class MessageServiceBean implements MessageService {
             if (message == null) {
                 throw new MessageServiceException("unable to find a message for id " + identifier.getId());
             }
-            message.setBody(body);
+            if (body != null) {
+                message.setBody(body);
+            }
+
+            if (attachments != null) {
+                for (Map.Entry<String, InputStream> entry : attachments.entrySet()) {
+                    String hash = binarystore.put(entry.getValue());
+                    String type = binarystore.type(hash, entry.getKey());
+                    long size = binarystore.size(hash);
+                    message.addAttachments(new MessageAttachment(entry.getKey(), type, size, hash));
+                }
+            }
+
+            if (removedAttachments != null) {
+                for (String name : removedAttachments) {
+                    if (!message.containsAttachmentName(name)) {
+                        ctx.setRollbackOnly();
+                        throw new MessageServiceException("no attachment found with name [" + name + "] for message with key [" + key + "]");
+                    }
+                    message.removeAttachment(name);
+                }
+            }
+
             message.setEdit(new Date());
+
             em.merge(message);
 
             registry.update(key);
             indexing.index(key);
 
             notification.throwEvent(key, caller, Message.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Message.OBJECT_TYPE, "update"));
-        } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException | IndexingServiceException e) {
+        } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException | IndexingServiceException | DataNotFoundException | BinaryStoreServiceException | DataCollisionException e) {
             ctx.setRollbackOnly();
             throw new MessageServiceException("unable to update message with key [" + key + "]", e);
         }
@@ -703,6 +730,8 @@ public class MessageServiceBean implements MessageService {
                 throw new MessageServiceException("no attachment found with name [" + name + "] for message with key [" + key + "]");
             }
             message.removeAttachment(name);
+            message.setEdit(new Date());
+
             em.merge(message);
 
             registry.update(key);
