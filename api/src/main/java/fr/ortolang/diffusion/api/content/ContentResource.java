@@ -354,21 +354,25 @@ public class ContentResource {
     }
     
     @GET
-    @Path("/attachments/{mkey}/{name}")
-    public Response attachment(@PathParam(value = "mkey") String mkey, @PathParam(value = "name") String name) throws AccessDeniedException,
-            MessageServiceException, KeyNotFoundException, DataNotFoundException, UnsupportedEncodingException, BinaryStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /attachments/" + mkey + "/" + name);
-        Message msg = message.readMessage(mkey);
-        MessageAttachment attachment = msg.findAttachmentByName(name);
-        if ( attachment == null ) {
-            throw new DataNotFoundException("unable to find attachement");
+    @Path("/attachments/{mkey}/{hash}")
+    @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
+    public Response attachment(@PathParam(value = "mkey") String mkey, @PathParam(value = "hash") String hash, @Context SecurityContext securityContext) throws MessageServiceException, KeyNotFoundException, DataNotFoundException, UnsupportedEncodingException, BinaryStoreServiceException {
+        LOGGER.log(Level.INFO, "GET /attachments/" + mkey + "/" + hash);
+        try {
+            Message msg = message.readMessage(mkey);
+            MessageAttachment attachment = msg.findAttachmentByHash(hash);
+            if ( attachment == null ) {
+                throw new DataNotFoundException("unable to find attachment");
+            }
+            ResponseBuilder builder = Response.ok(store.getFile(attachment.getHash()));
+            builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(attachment.getName(), "utf-8"));
+            builder.header("Content-Length", attachment.getSize());
+            builder.type(attachment.getType());
+            builder.header("Accept-Ranges", "bytes");
+            return builder.build();
+        } catch (AccessDeniedException e) {
+            return redirectToAuth("/content/attachments/" + mkey + "/" + hash, true, Collections.emptyMap(), securityContext);
         }
-        ResponseBuilder builder = Response.ok(store.getFile(attachment.getHash()));
-        builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(attachment.getName(), "utf-8"));
-        builder.header("Content-Lenght", attachment.getSize());
-        builder.type(attachment.getType());
-        builder.header("Accept-Ranges", "bytes");
-        return builder.build();
     }
 
     @GET

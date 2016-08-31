@@ -62,7 +62,7 @@ public class AuthResource {
 
     @GET
     public Response authenticate(@CookieParam(REDIRECT_PATH_PARAM_NAME) String cookieRedirect, @QueryParam(REDIRECT_PATH_PARAM_NAME) String queryRedirect) throws UnsupportedEncodingException {
-        LOGGER.log(Level.INFO, "GET /content/auth");
+        LOGGER.log(Level.INFO, "GET /auth");
         URI redirect = null;
         if (cookieRedirect != null && !cookieRedirect.isEmpty()) {
             LOGGER.log(Level.FINE, "redirecting to path found in cookie : " + cookieRedirect);

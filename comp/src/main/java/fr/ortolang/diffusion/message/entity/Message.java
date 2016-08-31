@@ -181,26 +181,25 @@ public class Message extends OrtolangObject {
     }
 
     public boolean containsAttachmentName(String name) {
-        for (MessageAttachment attachment : attachments) {
-            if (attachment.getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
+        return findAttachmentByName(name) != null;
     }
 
     public boolean containsAttachmentHash(String hash) {
-        for (MessageAttachment attachment : attachments) {
-            if (attachment.getHash().equals(hash)) {
-                return true;
-            }
-        }
-        return false;
+        return findAttachmentByHash(hash) != null;
     }
 
     public MessageAttachment findAttachmentByName(String name) {
         for (MessageAttachment attachment : attachments) {
             if (attachment.getName().equals(name)) {
+                return attachment;
+            }
+        }
+        return null;
+    }
+
+    public MessageAttachment findAttachmentByHash(String hash) {
+        for (MessageAttachment attachment : attachments) {
+            if (attachment.getHash().equals(hash)) {
                 return attachment;
             }
         }
