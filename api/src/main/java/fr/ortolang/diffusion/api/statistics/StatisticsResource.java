@@ -36,7 +36,10 @@ package fr.ortolang.diffusion.api.statistics;
  * #L%
  */
 
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,7 +50,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.*;
 
 import fr.ortolang.diffusion.statistics.StatisticNameNotFoundException;
 import fr.ortolang.diffusion.statistics.StatisticsService;
@@ -57,29 +60,40 @@ import org.jboss.resteasy.annotations.GZIP;
 @Path("/stats")
 @Produces({ MediaType.APPLICATION_JSON })
 public class StatisticsResource {
-    
+
     private static final Logger LOGGER = Logger.getLogger(StatisticsResource.class.getName());
-    
+
     @EJB
     private StatisticsService stats;
-    
+
     @GET
     @GZIP
     public List<String> getNames() throws StatisticsServiceException {
         LOGGER.log(Level.INFO, "GET /stats");
         return stats.list();
     }
-    
+
     @GET
-    @Path("/{name}")
+    @Path("/{names}")
     @GZIP
-    public StatisticsRepresentation getValue(@PathParam("name") String name, @QueryParam("from") @DefaultValue("0") String from, @QueryParam("to") @DefaultValue("5000000000000") String to)
+    public Response getValue(@PathParam("names") String names, @QueryParam("from") @DefaultValue("0") String from, @QueryParam("to") @DefaultValue("5000000000000") String to, @QueryParam("cc") @DefaultValue("true") boolean cache, @Context Request request)
             throws NumberFormatException, StatisticsServiceException, StatisticNameNotFoundException {
-        LOGGER.log(Level.INFO, "GET /stats/" + name);
-        StatisticsRepresentation representation = new StatisticsRepresentation();
-        representation.setKey(name);
-        representation.setValues(stats.history(name, Long.parseLong(from), Long.parseLong(to)));
-        return representation;
+        LOGGER.log(Level.INFO, "GET /stats/" + names);
+        Map<String, StatisticsRepresentation> representations = new HashMap<>();
+        for (String name : names.split(",")) {
+            StatisticsRepresentation representation = new StatisticsRepresentation();
+            representation.setKey(name);
+            representation.setValues(stats.history(name, Long.parseLong(from), Long.parseLong(to)));
+            representations.put(name, representation);
+        }
+        Response.ResponseBuilder builder = Response.ok(representations);
+        if (cache) {
+            CacheControl cc = new CacheControl();
+            cc.setPrivate(true);
+            cc.setMaxAge(3600);
+            builder.cacheControl(cc);
+        }
+        return builder.build();
     }
 
 }
