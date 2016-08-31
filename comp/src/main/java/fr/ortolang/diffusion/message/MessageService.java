@@ -60,7 +60,7 @@ public interface MessageService extends OrtolangService, OrtolangBinaryService, 
     String INFO_MESSAGE_FEED_ALL = "threads.all";
     String INFO_MESSAGE_ALL = "messages.all";
     
-    Thread createThread(String key, String wskey, String title, String body, boolean restricted) throws MessageServiceException, AccessDeniedException, KeyAlreadyExistsException;
+    Thread createThread(String key, String wskey, String title, String body, boolean restricted, Map<String, InputStream> attachments) throws MessageServiceException, AccessDeniedException, KeyAlreadyExistsException;
     
     Thread readThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
@@ -70,7 +70,7 @@ public interface MessageService extends OrtolangService, OrtolangBinaryService, 
     
     List<Message> browseThreadSinceDate(String key, Date from) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
-    void updateThread(String key, String title) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    void updateThread(String key, String title, String answer) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     void deleteThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     

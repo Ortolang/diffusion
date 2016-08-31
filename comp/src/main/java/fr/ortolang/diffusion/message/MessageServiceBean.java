@@ -211,7 +211,7 @@ public class MessageServiceBean implements MessageService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public Thread createThread(String key, String wskey, String title, String body, boolean restricted) throws MessageServiceException, AccessDeniedException,
+    public Thread createThread(String key, String wskey, String title, String body, boolean restricted, Map<String, InputStream> attachments) throws MessageServiceException, AccessDeniedException,
             KeyAlreadyExistsException {
         LOGGER.log(Level.FINE, "creating thread [" + key + "]");
         try {
@@ -237,6 +237,7 @@ public class MessageServiceBean implements MessageService {
             question.setThread(key);
             question.setDate(new Date());
             question.setKey(mkey);
+            addAttachments(question, attachments);
             em.persist(question);
             registry.register(mkey, question.getObjectIdentifier(), caller);
 
@@ -271,7 +272,7 @@ public class MessageServiceBean implements MessageService {
             ctx.setRollbackOnly();
             throw e;
         } catch (KeyNotFoundException | AuthorisationServiceException | MembershipServiceException | NotificationServiceException | IndexingServiceException | RegistryServiceException
-                | IdentifierAlreadyRegisteredException | CoreServiceException e) {
+                | IdentifierAlreadyRegisteredException | CoreServiceException | DataNotFoundException | BinaryStoreServiceException | DataCollisionException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred while creating thread", e);
             throw new MessageServiceException("unable to create thread with key [" + key + "]", e);
@@ -384,7 +385,7 @@ public class MessageServiceBean implements MessageService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateThread(String key, String title) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
+    public void updateThread(String key, String title, String answer) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "updating thread for key [" + key + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -398,6 +399,9 @@ public class MessageServiceBean implements MessageService {
                 throw new MessageServiceException("unable to find a thread for id " + identifier.getId());
             }
             thread.setTitle(title);
+            if (answer != null) {
+                thread.setAnswer(answer);
+            }
             thread.setLastActivity(new Date());
             em.merge(thread);
 
@@ -539,15 +543,7 @@ public class MessageServiceBean implements MessageService {
                 message.setParent(parent);
             }
             message.setBody(body);
-
-            if (attachments != null) {
-                for (Map.Entry<String, InputStream> entry : attachments.entrySet()) {
-                    String hash = binarystore.put(entry.getValue());
-                    String type = binarystore.type(hash, entry.getKey());
-                    long size = binarystore.size(hash);
-                    message.addAttachments(new MessageAttachment(entry.getKey(), type, size, hash));
-                }
-            }
+            addAttachments(message, attachments);
 
             em.persist(message);
 
@@ -620,15 +616,7 @@ public class MessageServiceBean implements MessageService {
             if (body != null) {
                 message.setBody(body);
             }
-
-            if (attachments != null) {
-                for (Map.Entry<String, InputStream> entry : attachments.entrySet()) {
-                    String hash = binarystore.put(entry.getValue());
-                    String type = binarystore.type(hash, entry.getKey());
-                    long size = binarystore.size(hash);
-                    message.addAttachments(new MessageAttachment(entry.getKey(), type, size, hash));
-                }
-            }
+            addAttachments(message, attachments);
 
             if (removedAttachments != null) {
                 for (String name : removedAttachments) {
@@ -961,6 +949,17 @@ public class MessageServiceBean implements MessageService {
         } catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException | AccessDeniedException | KeyNotFoundException e) {
             LOGGER.log(Level.SEVERE, "unexpected error while calculating object size", e);
             throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
+        }
+    }
+
+    private void addAttachments(Message message, Map<String, InputStream> attachments) throws DataNotFoundException, BinaryStoreServiceException, DataCollisionException {
+        if (attachments != null) {
+            for (Map.Entry<String, InputStream> entry : attachments.entrySet()) {
+                String hash = binarystore.put(entry.getValue());
+                String type = binarystore.type(hash, entry.getKey());
+                long size = binarystore.size(hash);
+                message.addAttachments(new MessageAttachment(entry.getKey(), type, size, hash));
+            }
         }
     }
 

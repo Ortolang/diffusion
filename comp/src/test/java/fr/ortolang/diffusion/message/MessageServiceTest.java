@@ -36,10 +36,6 @@ package fr.ortolang.diffusion.message;
  * #L%
  */
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.logging.Level;
@@ -76,6 +72,8 @@ import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
+
+import static org.junit.Assert.*;
 
 @RunWith(Arquillian.class)
 public class MessageServiceTest {
@@ -180,7 +178,7 @@ public class MessageServiceTest {
         } catch (ProfileAlreadyExistsException e) {
             LOGGER.log(Level.INFO, "Profile anonymous already exists !!");
         }
-        message.createThread("K1", "WSK1", "TestThread", "Blabla", false);
+        message.createThread("K1", "WSK1", "TestThread", "Blabla", false, null);
         fail("Should have raised an AccessDeniedException");
     }
 
@@ -198,18 +196,21 @@ public class MessageServiceTest {
             
             core.createWorkspace("WSK1", "wsone", "WorkspaceOne", WorkspaceType.USER.toString());
             
-            message.createThread("K1", "WSK1", "What is the color of the moon ?", "Hi everybody, I don't have any idea of this fucking question... Do you ?", false);
+            message.createThread("K1", "WSK1", "What is the color of the moon ?", "Hi everybody, I don't have any idea of this fucking question... Do you ?", false, null);
             Thread thread = message.readThread("K1");
             assertEquals("What is the color of the moon ?", thread.getTitle());
             assertEquals("K1", thread.getKey());
             assertEquals("WSK1", thread.getWorkspace());
             
-            message.updateThread("K1", "What is the color of the mOOn ?");
+            message.updateThread("K1", "What is the color of the mOOn ?", null);
             thread = message.readThread("K1");
             assertEquals("What is the color of the mOOn ?", thread.getTitle());
             assertEquals("K1", thread.getKey());
             assertEquals("WSK1", thread.getWorkspace());
-            
+            assertNull(thread.getAnswer());
+            message.updateThread("K1", "What is the color of the mOOn ?", "A1");
+            assertEquals("A1", thread.getAnswer());
+
             List<String> mfs = message.findThreadsForWorkspace("WSK1");
             assertTrue(mfs.contains("K1"));
             

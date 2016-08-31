@@ -101,7 +101,40 @@ public class MessageResource {
             AccessDeniedException, KeyAlreadyExistsException {
         LOGGER.log(Level.INFO, "POST /threads");
         String key = UUID.randomUUID().toString();
-        service.createThread(key, wskey, title, body, true);
+        service.createThread(key, wskey, title, body, true, null);
+        URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
+        return Response.created(location).build();
+    }
+
+    @POST
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response createThreadWithAttachments(MultipartFormDataInput input)
+            throws MessageServiceException, KeyNotFoundException, AccessDeniedException, KeyAlreadyExistsException, IOException {
+        LOGGER.log(Level.INFO, "POST /threads");
+        String key = UUID.randomUUID().toString();
+        Map<String, List<InputPart>> form = input.getFormDataMap();
+        String body = null;
+        String title = null;
+        String wskey = null;
+        Map<String, InputStream> attachments = new HashMap<>();
+        for (Map.Entry<String, List<InputPart>> entry : form.entrySet()) {
+            InputPart inputPart = entry.getValue().get(0);
+            switch (entry.getKey()) {
+            case "wskey":
+                wskey = inputPart.getBody(String.class, null);
+                break;
+            case "title":
+                title = inputPart.getBody(String.class, null);
+                break;
+            case "body":
+                body = inputPart.getBody(String.class, null);
+                break;
+            default:
+                InputStream inputStream = inputPart.getBody(InputStream.class, null);
+                attachments.put(getFileName(inputPart.getHeaders()), inputStream);
+            }
+        }
+        service.createThread(key, wskey, title, body, true, attachments);
         URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
         return Response.created(location).build();
     }
@@ -135,7 +168,7 @@ public class MessageResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateThread(@PathParam(value = "key") String key, ThreadRepresentation representation) throws MessageServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "PUT /threads/" + key);
-        service.updateThread(key, representation.getTitle());
+        service.updateThread(key, representation.getTitle(), representation.getAnswer());
         Thread thread = service.readThread(key);
         ThreadRepresentation newrepresentation = ThreadRepresentation.fromThread(thread);
         return Response.ok(newrepresentation).build();
