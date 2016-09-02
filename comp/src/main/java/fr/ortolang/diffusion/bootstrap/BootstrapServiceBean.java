@@ -303,10 +303,10 @@ public class BootstrapServiceBean implements BootstrapService {
             is.close();
 
             LOGGER.log(Level.FINE, "import metadataformat schemas");
-            InputStream schemaItemInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.15-with-object-language-copy.json");
+            InputStream schemaItemInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.16-with-parts.json");
             String schemaItemHash = core.put(schemaItemInputStream);
-            core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site.",
-                    schemaItemHash, "ortolang-item-form", true, true);
+            core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site. Nouvelle fonctionnalité : les sous-parties.", 
+            		schemaItemHash, "ortolang-item-form", true, true);
 
             InputStream schemaInputStream2 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-acl-schema.json");
             String schemaHash2 = core.put(schemaInputStream2);
