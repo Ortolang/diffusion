@@ -618,8 +618,17 @@ public class RuntimeServiceBean implements RuntimeService {
         LOGGER.log(Level.INFO, "Listing candidate tasks");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
+<<<<<<< HEAD
             List<String> groups = membership.getProfileGroups(caller);
             return engine.listCandidateTasks(caller, groups);
+=======
+            if (caller.equals(MembershipService.SUPERUSER_IDENTIFIER) ) { 
+                return engine.listAllUnassignedTasks();
+            } else {
+                List<String> groups = membership.getProfileGroups(caller);
+                return engine.listCandidateTasks(caller, groups);
+            }
+>>>>>>> 1a75ae5... Allows SuperUser to see all taks as candidate tasks
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while listing candidate tasks", e);
             throw new RuntimeServiceException("unable to list candidate tasks", e);
