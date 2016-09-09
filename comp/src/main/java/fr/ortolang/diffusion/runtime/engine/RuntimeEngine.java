@@ -74,6 +74,8 @@ public interface RuntimeEngine {
 	List<HumanTask> listCandidateTasks(String user, List<String> groups) throws RuntimeEngineException;
 	
 	boolean isAssigned(String id, String user) throws RuntimeEngineException;
+	
+	List<HumanTask> listAllUnassignedTasks() throws RuntimeEngineException;
 
 	List<HumanTask> listAssignedTasks(String user) throws RuntimeEngineException;
 	

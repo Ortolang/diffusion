@@ -619,7 +619,7 @@ public class RuntimeServiceBean implements RuntimeService {
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
             if (caller.equals(MembershipService.SUPERUSER_IDENTIFIER) ) { 
-                return engine.listAllTasks();
+                return engine.listAllUnassignedTasks();
             } else {
                 List<String> groups = membership.getProfileGroups(caller);
                 return engine.listCandidateTasks(caller, groups);

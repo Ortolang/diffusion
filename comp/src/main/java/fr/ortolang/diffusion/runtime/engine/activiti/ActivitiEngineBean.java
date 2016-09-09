@@ -293,6 +293,24 @@ public class ActivitiEngineBean implements RuntimeEngine, ActivitiEventListener 
 	
 	@Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<HumanTask> listAllUnassignedTasks() throws RuntimeEngineException {
+        try {
+            List<HumanTask> tasks = new ArrayList<HumanTask>();
+
+            List<Task> utasks = engine.getTaskService().createTaskQuery().taskUnassigned().includeProcessVariables().includeTaskLocalVariables().list();
+            for (Task task : utasks) {
+                String form = engine.getFormService().getTaskFormKey(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
+                tasks.add(toHumanTask(task, form));
+            }
+            
+            return tasks;
+        } catch (ActivitiException e) {
+            throw new RuntimeEngineException("unexpected error while listing all tasks", e);
+        }
+    }
+	
+	@Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public boolean isCandidate(String taskid, String user, List<String> groups) throws RuntimeEngineException {
         try {
             Task t1 = engine.getTaskService().createTaskQuery().taskId(taskid).taskCandidateUser(user).singleResult();
