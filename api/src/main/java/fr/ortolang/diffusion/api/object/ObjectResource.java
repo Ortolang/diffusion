@@ -79,6 +79,7 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathNotFoundException;
+import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
@@ -133,7 +134,7 @@ public class ObjectResource {
     @Path("/{key}")
     @GZIP
     public Response get(@PathParam(value = "key") String key, @Context Request request) throws BrowserServiceException, KeyNotFoundException, SecurityServiceException,
-            OrtolangException {
+            OrtolangException, CoreServiceException {
         LOGGER.log(Level.INFO, "GET /objects/" + key);
 
         OrtolangObjectState state = browser.getState(key);
@@ -147,8 +148,11 @@ public class ObjectResource {
         }
 
         if (builder == null) {
+        	
+        	
             OrtolangObject object = browser.findObject(key);
             OrtolangObjectInfos infos = browser.getInfos(key);
+            LOGGER.log(Level.INFO, "Infos ++++  : " + infos.getParent() + " " + infos.getChildren());
             String owner = security.getOwner(key);
 
             ObjectRepresentation representation = new ObjectRepresentation();
@@ -168,7 +172,12 @@ public class ObjectResource {
             representation.setAuthor(infos.getAuthor());
             representation.setCreationDate(infos.getCreationDate() + "");
             representation.setLastModificationDate(infos.getLastModificationDate() + "");
-
+        
+            LOGGER.log(Level.INFO, "Infos : " + infos.getParent() + " " + infos.getChildren());
+            representation.setParent(infos.getParent());
+            representation.setChildren(infos.getChildren());
+            
+            
             builder = Response.ok(representation);
             builder.lastModified(lmd);
         }
