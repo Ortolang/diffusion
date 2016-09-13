@@ -56,6 +56,11 @@ public class ObjectRepresentation {
 	private String creationDate;
 	private String lastModificationDate;
 	private String owner;
+	
+	private String parent;
+	private String children;
+	
+	
 	private OrtolangObject object;
 
 	public ObjectRepresentation() {
@@ -157,4 +162,20 @@ public class ObjectRepresentation {
 		this.lastModificationDate = lastModificationDate;
 	}
 
+	public String getParent() {
+		return parent;
+	}
+
+	public void setParent(String parent) {
+		this.parent = parent;
+	}
+
+	public String getChildren() {
+		return children;
+	}
+
+	public void setChildren(String children) {
+		this.children = children;
+	}
+	
 }

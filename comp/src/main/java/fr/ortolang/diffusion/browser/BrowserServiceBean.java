@@ -251,7 +251,7 @@ public class BrowserServiceBean implements BrowserService {
             long creationDate = registry.getCreationDate(key);
             long lastModificationDate = registry.getLastModificationDate(key);
             String parent = registry.getParent(key);
-            String children = registry.getParent(key);
+            String children = registry.getChildren(key);
             return new OrtolangObjectInfos(author, creationDate, lastModificationDate, parent, children);
         } catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
             throw new BrowserServiceException("error during getting infos", e);

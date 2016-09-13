@@ -62,6 +62,7 @@ import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.binary.*;
+import fr.ortolang.diffusion.store.handle.HandleNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 import fr.ortolang.diffusion.store.handle.entity.Handle;
@@ -82,6 +83,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -312,6 +314,45 @@ public class AdminResource {
             handles = handle.findHandlesByValue(offset, limit, filter);
         }
         return Response.ok(handles).build();
+    }
+    
+    @POST
+    @Path("/store/handle")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @GZIP
+    public Response createHandle(Handle hdl) throws HandleStoreServiceException, UnsupportedEncodingException {
+        LOGGER.log(Level.INFO, "POST /admin/store/handle");
+        handle.recordHandle(hdl.getHandleString(), hdl.getKey(), hdl.getDataString());
+        return Response.ok().build();
+    }
+    
+    @GET
+    @Path("/store/handle/{id}")
+    @GZIP
+    public Response readHandle(@PathParam("id") String id) throws HandleStoreServiceException, HandleNotFoundException {
+        LOGGER.log(Level.INFO, "GET /admin/store/handle/" + id);
+        Handle hdl = handle.readHandle(id);
+        return Response.ok(hdl).build();
+    }
+    
+    @PUT
+    @Path("/store/handle/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @GZIP
+    public Response updateHandle(@PathParam("id") String id, Handle hdl) throws HandleStoreServiceException, UnsupportedEncodingException {
+        LOGGER.log(Level.INFO, "PUT /admin/store/handle/" + id);
+        handle.dropHandle(id);
+        handle.recordHandle(id, hdl.getKey(), hdl.getDataString());
+        return Response.ok(hdl).build();
+    }
+    
+    @DELETE
+    @Path("/store/handle/{id}")
+    @GZIP
+    public Response deleteHandle(@PathParam("id") String id) throws HandleStoreServiceException {
+        LOGGER.log(Level.INFO, "DELETE /admin/store/handle/" + id);
+        handle.dropHandle(id);
+        return Response.ok().build();
     }
 
     @GET

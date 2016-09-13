@@ -51,6 +51,7 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
@@ -89,6 +90,19 @@ public class HandleStoreServiceBean implements HandleStoreService {
         }
         return admin;
     }
+    
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public Handle readHandle(String handle) throws HandleStoreServiceException, HandleNotFoundException {
+		String name = handle.toUpperCase(Locale.ENGLISH);
+        LOGGER.log(Level.FINE, "reading handle : " + handle);
+        try {
+	        Handle hdl = em.createNamedQuery("findHandleByName", Handle.class).setParameter("name", name.getBytes()).getSingleResult();
+	        return hdl;
+        } catch (NoResultException e) {
+        	throw new HandleNotFoundException("unable to find a handle with name: " + name);
+        }
+	}
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
