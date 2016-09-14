@@ -159,4 +159,26 @@ public class HandleStoreServiceTest {
 		}
 	}
 	
+	@Test
+	public void testDeleteHandle() throws LoginException {
+		try {
+			service.recordHandle("11403/111", "K1", "http://www.free.fr");
+			service.recordHandle("11403/222", "K1", "http://www.google.com");
+			service.recordHandle("11403/333", "K2", "http://www.atilf.fr");
+			service.recordHandle("11403/444", "K2", "http://www.cnrs.fr");
+			service.recordHandle("11403/555", "K3", "http://www.facebook.com");
+			List<String> namesK1 = service.listHandlesForKey("K1");
+			assertEquals(2, namesK1.size());
+			assertTrue(namesK1.contains("11403/111"));
+			assertTrue(namesK1.contains("11403/222"));
+			
+			service.dropHandle("11403/222");
+			namesK1 = service.listHandlesForKey("K1");
+			assertEquals(1, namesK1.size());
+			assertFalse(namesK1.contains("11403/222"));
+		} catch (HandleStoreServiceException e) {
+			fail(e.getMessage());
+		}
+	}
+	
 }
