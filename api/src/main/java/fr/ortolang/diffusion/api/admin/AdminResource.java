@@ -404,6 +404,7 @@ public class AdminResource {
     @Path("/jobs")
     @GZIP
     public Response getJobs(@QueryParam("type") String type, @QueryParam("o") Integer offset, @QueryParam("l") Integer limit, @DefaultValue("false") @QueryParam("failed") boolean failed, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed) {
+        LOGGER.log(Level.INFO, "GET /admin/jobs");
         List<Job> jobs;
         if (failed) {
             jobs = jobService.getFailedJobsOfType(type, offset, limit);
@@ -423,6 +424,7 @@ public class AdminResource {
     @Path("/jobs/{id}")
     @GZIP
     public Response getJob(@PathParam(value = "id") Long id) {
+        LOGGER.log(Level.INFO, "GET /admin/jobs/" + id);
         Job job = jobService.read(id);
         return Response.ok().entity(job).build();
     }
@@ -430,13 +432,34 @@ public class AdminResource {
     @DELETE
     @Path("/jobs/{id}")
     public Response removeJob(@PathParam(value = "id") Long id) {
+        LOGGER.log(Level.INFO, "DELETE /admin/jobs/" + id);
         jobService.remove(id);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("/jobs/retry")
+    public Response restoreJobs(@QueryParam("e") String exception) throws OrtolangException {
+        LOGGER.log(Level.INFO, "GET /admin/jobs/retry");
+        if (exception == null) {
+            for (OrtolangWorker worker : workerService.getWorkers()) {
+                worker.retryAll(false);
+            }
+        } else {
+            List<Job> failedJobs = jobService.getFailedJobs();
+            for (Job failedJob : failedJobs) {
+                if (exception.equals(failedJob.getParameter("failedCausedBy"))) {
+                    workerService.getWorkerForJobType(failedJob.getType()).retry(failedJob.getId());
+                }
+            }
+        }
         return Response.ok().build();
     }
 
     @GET
     @Path("/jobs/{id}/retry")
     public Response retryJob(@PathParam(value = "id") Long id) throws OrtolangException {
+        LOGGER.log(Level.INFO, "GET /admin/jobs/" + id + "/retry");
         Job job = jobService.read(id);
         OrtolangWorker worker = workerService.getWorkerForJobType(job.getType());
         worker.retry(id);
@@ -446,6 +469,7 @@ public class AdminResource {
     @GET
     @Path("/jobs/count")
     public Response countJobs(@QueryParam("type") String type, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed, @DefaultValue("false") @QueryParam("failed") boolean failed) throws CoreServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/jobs/count");
         Map<String, Long> map = new HashMap<>(1);
         if (failed) {
             map.put("count", jobService.countFailedJobs());
@@ -464,6 +488,7 @@ public class AdminResource {
     @GET
     @Path("/jobs/workers")
     public Response getWorkersState() throws OrtolangException {
+        LOGGER.log(Level.INFO, "GET /admin/jobs/workers");
         Map<String, String> workersState = new HashMap<>();
         for (OrtolangWorker worker : workerService.getWorkers()) {
             if (worker != null) {
@@ -476,6 +501,7 @@ public class AdminResource {
     @GET
     @Path("/jobs/workers/{id}/start")
     public Response restartWorker(@PathParam("id") String id) throws OrtolangException {
+        LOGGER.log(Level.INFO, "GET /admin/jobs/workers/" + id + "/start");
         workerService.startWorker(id);
         return Response.ok().build();
     }
@@ -483,6 +509,7 @@ public class AdminResource {
     @GET
     @Path("/jobs/workers/queue")
     public Response getQueues() throws OrtolangException {
+        LOGGER.log(Level.INFO, "GET /admin/jobs/workers/queue");
         List<OrtolangJob> queue = new ArrayList<>();
         for (OrtolangWorker worker : workerService.getWorkers()) {
              queue.addAll(worker.getQueue());
@@ -493,6 +520,7 @@ public class AdminResource {
     @GET
     @Path("/jobs/workers/{id}/queue")
     public Response getWorkerQueue(@PathParam("id") String id) throws OrtolangException {
+        LOGGER.log(Level.INFO, "GET /admin/jobs/workers/" + id + "/queue");
         List<OrtolangJob> queue = workerService.getQueue(id);
         return Response.ok(queue).build();
     }

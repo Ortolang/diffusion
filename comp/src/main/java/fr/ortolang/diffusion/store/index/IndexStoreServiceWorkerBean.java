@@ -146,11 +146,12 @@ public class IndexStoreServiceWorkerBean implements IndexStoreServiceWorker {
             queue.clear();
         }
         List<Job> jobs = jobService.getUnprocessedJobsOfType(JOB_TYPE);
+        LOGGER.log(Level.INFO, "Restoring " + jobs.size() + " indexing jobs in queue");
         if (failed) {
             List<Job> failedJobs = jobService.getFailedJobsOfType(JOB_TYPE);
+            LOGGER.log(Level.INFO, "Retrying " + failedJobs.size() + " failed indexing jobs");
             jobs.addAll(failedJobs);
         }
-        LOGGER.log(Level.INFO, "Put " + jobs.size() + " indexing jobs in queue");
         queue.addAll(jobs);
     }
 

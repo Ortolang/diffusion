@@ -70,6 +70,8 @@ public interface JobService extends OrtolangService {
 
     List<Job> getUnprocessedJobsOfType(String type, Integer offset, Integer limit);
 
+    List<Job> getFailedJobs();
+
     List<Job> getFailedJobsOfType(String type);
 
     List<Job> getFailedJobsOfType(String type, Integer offset, Integer limit);

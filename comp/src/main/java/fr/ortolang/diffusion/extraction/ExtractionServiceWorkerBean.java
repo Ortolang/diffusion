@@ -137,9 +137,7 @@ public class ExtractionServiceWorkerBean implements ExtractionServiceWorker {
             start();
         };
         workerThread.setUncaughtExceptionHandler(h);
-        List<Job> extractionJobs = jobService.getUnprocessedJobsOfType(JOB_TYPE);
-        LOGGER.log(Level.INFO, "Restoring " + extractionJobs.size() + " extraction jobs in queue");
-        queue.addAll(extractionJobs);
+        retryAll(false);
     }
 
     @Override
@@ -183,11 +181,12 @@ public class ExtractionServiceWorkerBean implements ExtractionServiceWorker {
             queue.clear();
         }
         List<Job> jobs = jobService.getUnprocessedJobsOfType(JOB_TYPE);
+        LOGGER.log(Level.INFO, "Restoring " + jobs.size() + " extraction jobs in queue");
         if (failed) {
             List<Job> failedJobs = jobService.getFailedJobsOfType(JOB_TYPE);
+            LOGGER.log(Level.INFO, "Retrying " + failedJobs.size() + " failed extraction jobs");
             jobs.addAll(failedJobs);
         }
-        LOGGER.log(Level.INFO, "Put " + jobs.size() + " extraction jobs in queue");
         queue.addAll(jobs);
     }
 
