@@ -430,6 +430,18 @@ public class AdminResource {
     }
 
     @DELETE
+    @Path("/jobs")
+    public Response removeJobs(@QueryParam(value = "e") String exception) {
+        LOGGER.log(Level.INFO, "DELETE /admin/jobs");
+        for (Job job : jobService.getFailedJobs()) {
+            if (exception == null || exception.equals(job.getParameter("failedCausedBy"))) {
+                jobService.remove(job.getId());
+            }
+        }
+        return Response.ok().build();
+    }
+
+    @DELETE
     @Path("/jobs/{id}")
     public Response removeJob(@PathParam(value = "id") Long id) {
         LOGGER.log(Level.INFO, "DELETE /admin/jobs/" + id);
