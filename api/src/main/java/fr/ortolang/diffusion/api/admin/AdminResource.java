@@ -1,5 +1,37 @@
 package fr.ortolang.diffusion.api.admin;
 
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import org.jboss.resteasy.annotations.GZIP;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
+
 /*
  * #%L
  * ORTOLANG
@@ -35,8 +67,12 @@ package fr.ortolang.diffusion.api.admin;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangJob;
+import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.OrtolangWorker;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.Secured;
@@ -54,14 +90,23 @@ import fr.ortolang.diffusion.jobs.JobService;
 import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
-import fr.ortolang.diffusion.registry.*;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyLockedException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-import fr.ortolang.diffusion.store.binary.*;
+import fr.ortolang.diffusion.store.binary.BinaryStoreContent;
+import fr.ortolang.diffusion.store.binary.BinaryStoreService;
+import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
+import fr.ortolang.diffusion.store.binary.DataCollisionException;
+import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
@@ -73,23 +118,6 @@ import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
 import fr.ortolang.diffusion.worker.WorkerService;
-import org.jboss.resteasy.annotations.GZIP;
-import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
-
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -97,403 +125,437 @@ import java.util.stream.Collectors;
 @RolesAllowed("admin")
 public class AdminResource {
 
-    private static final Logger LOGGER = Logger.getLogger(AdminResource.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(AdminResource.class.getName());
 
-    @EJB
-    private JsonStoreService json;
-    @EJB
-    private IndexStoreService index;
-    @EJB
-    private HandleStoreService handle;
-    @EJB
-    private BinaryStoreService binary;
-    @EJB
-    private RegistryService registry;
-    @EJB
-    private CoreService core;
-    @EJB
-    private RuntimeService runtime;
-    @EJB
-    private EventService event;
-    @EJB
-    private SubscriptionService subscription;
-    @EJB
-    private MembershipService membership;
-    @EJB
-    private JobService jobService;
-    @EJB
-    private WorkerService workerService;
+	@EJB
+	private JsonStoreService json;
+	@EJB
+	private IndexStoreService index;
+	@EJB
+	private HandleStoreService handle;
+	@EJB
+	private BinaryStoreService binary;
+	@EJB
+	private RegistryService registry;
+	@EJB
+	private CoreService core;
+	@EJB
+	private RuntimeService runtime;
+	@EJB
+	private EventService event;
+	@EJB
+	private SubscriptionService subscription;
+	@EJB
+	private MembershipService membership;
+	@EJB
+	private JobService jobService;
+	@EJB
+	private WorkerService workerService;
 
-    @GET
-    @Path("/infos/{service}")
-    @GZIP
-    public Response getRegistryInfos(@PathParam(value = "service") String serviceName) throws OrtolangException {
-        LOGGER.log(Level.INFO, "GET /admin/infos/" + serviceName);
-        OrtolangService service = OrtolangServiceLocator.findService(serviceName);
-        Map<String, String> infos = service.getServiceInfos();
-        return Response.ok(infos).build();
-    }
+	@GET
+	@Path("/infos/{service}")
+	@GZIP
+	public Response getRegistryInfos(@PathParam(value = "service") String serviceName) throws OrtolangException {
+		LOGGER.log(Level.INFO, "GET /admin/infos/" + serviceName);
+		OrtolangService service = OrtolangServiceLocator.findService(serviceName);
+		Map<String, String> infos = service.getServiceInfos();
+		return Response.ok(infos).build();
+	}
 
-    @GET
-    @Path("/registry/entries")
-    @GZIP
-    public Response listEntries(@QueryParam("kfilter") String kfilter, @QueryParam("ifilter") String ifilter) throws RegistryServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/registry/entries?kfilter=" + kfilter + "&ifilter=" + ifilter);
-        List<RegistryEntry> entries = registry.systemListEntries(kfilter, ifilter);
-        return Response.ok(entries).build();
-    }
+	@GET
+	@Path("/registry/entries")
+	@GZIP
+	public Response listEntries(@QueryParam("kfilter") String kfilter, @QueryParam("ifilter") String ifilter) throws RegistryServiceException {
+		LOGGER.log(Level.INFO, "GET /admin/registry/entries?kfilter=" + kfilter + "&ifilter=" + ifilter);
+		List<RegistryEntry> entries = registry.systemListEntries(kfilter, ifilter);
+		return Response.ok(entries).build();
+	}
 
-    @GET
-    @Path("/registry/entries/{key}")
-    @GZIP
-    public Response readEntry(@PathParam("key") String key) throws RegistryServiceException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "GET /admin/registry/entries/" + key);
-        RegistryEntry entry = registry.systemReadEntry(key);
-        return Response.ok(entry).build();
-    }
+	@GET
+	@Path("/registry/entries/{key}")
+	@GZIP
+	public Response readEntry(@PathParam("key") String key) throws RegistryServiceException, KeyNotFoundException {
+		LOGGER.log(Level.INFO, "GET /admin/registry/entries/" + key);
+		RegistryEntry entry = registry.systemReadEntry(key);
+		return Response.ok(entry).build();
+	}
 
-    @PUT
-    @Path("/registry/entries/{key}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @GZIP
-    public Response updateEntry(@PathParam("key") String key, RegistryEntry entry) throws RegistryServiceException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "PUT /admin/registry/entries/" + key);
-        // TODO compare what changes in order to update state...
-        return Response.serverError().entity("NOT IMPLEMENTED").build();
-    }
+	@PUT
+	@Path("/registry/entries/{key}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@GZIP
+	public Response updateEntry(@PathParam("key") String key, RegistryEntry entry) throws RegistryServiceException, KeyNotFoundException {
+		LOGGER.log(Level.INFO, "PUT /admin/registry/entries/" + key);
+		// TODO compare what changes in order to update state...
+		return Response.serverError().entity("NOT IMPLEMENTED").build();
+	}
 
-    @DELETE
-    @Path("/registry/entries/{key}")
-    public Response deleteEntry(@PathParam("key") String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-        LOGGER.log(Level.INFO, "DELETE /admin/registry/entries/" + key);
-        registry.delete(key, true);
-        return Response.ok().build();
-    }
+	@DELETE
+	@Path("/registry/entries/{key}")
+	public Response deleteEntry(@PathParam("key") String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
+		LOGGER.log(Level.INFO, "DELETE /admin/registry/entries/" + key);
+		registry.delete(key, true);
+		return Response.ok().build();
+	}
 
+	@POST
+	@Path("/core/metadata")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@GZIP
+	public Response createMetadata(@MultipartForm MetadataObjectFormRepresentation form)
+			throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException,
+			KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
+		LOGGER.log(Level.INFO, "POST /admin/core/metadata");
+		try {
+			if (form.getKey() == null) {
+				return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
+			}
+			if (form.getName() == null) {
+				return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'name' is mandatory").build();
+			}
+			if (form.getStream() != null) {
+				form.setStreamHash(core.put(form.getStream()));
+			}
 
-    @POST
-    @Path("/core/metadata")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @GZIP
-    public Response createMetadata(@MultipartForm MetadataObjectFormRepresentation form) throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
-        LOGGER.log(Level.INFO, "POST /admin/core/metadata");
-        try {
-            if (form.getKey() == null) {
-                return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
-            }
-            if (form.getName() == null) {
-                return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'name' is mandatory").build();
-            }
-            if (form.getStream() != null) {
-                form.setStreamHash(core.put(form.getStream()));
-            }
+			core.systemCreateMetadata(form.getKey(), form.getName(), form.getStreamHash(), form.getFilename());
+			// TODO return with the metadata key
+			URI location = ApiUriBuilder.getApiUriBuilder().path(ObjectResource.class).path(form.getKey()).build();
+			return Response.created(location).build();
+		} catch (DataCollisionException | URISyntaxException e) {
+			LOGGER.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
+			return Response.serverError().entity(e.getMessage()).build();
+		}
+	}
 
-            core.systemCreateMetadata(form.getKey(), form.getName(), form.getStreamHash(), form.getFilename());
-            //TODO return with the metadata key
-            URI location = ApiUriBuilder.getApiUriBuilder().path(ObjectResource.class).path(form.getKey()).build();
-            return Response.created(location).build();
-        } catch (DataCollisionException | URISyntaxException e) {
-            LOGGER.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
-            return Response.serverError().entity(e.getMessage()).build();
-        }
-    }
+	@DELETE
+	@Path("/membership/profiles/{key}")
+	public Response deleteProfile(@PathParam("key") String key) throws KeyNotFoundException, AccessDeniedException, MembershipServiceException {
+		LOGGER.log(Level.INFO, "DELETE /admin/membership/profiles/" + key);
+		membership.deleteProfile(key);
+		return Response.ok().build();
+	}
 
-    @DELETE
-    @Path("/membership/profiles/{key}")
-    public Response deleteProfile(@PathParam("key") String key) throws KeyNotFoundException, AccessDeniedException, MembershipServiceException {
-        LOGGER.log(Level.INFO, "DELETE /admin/membership/profiles/" + key);
-        membership.deleteProfile(key);
-        return Response.ok().build();
-    }
+	@GET
+	@Path("/runtime/types")
+	@GZIP
+	public Response listDefinitions() throws RuntimeServiceException {
+		LOGGER.log(Level.INFO, "GET /admin/runtime/types");
+		List<ProcessTypeRepresentation> types = runtime.listProcessTypes(false).stream().map(ProcessTypeRepresentation::fromProcessType)
+				.collect(Collectors.toCollection(ArrayList::new));
+		return Response.ok(types).build();
+	}
 
-    @GET
-    @Path("/runtime/types")
-    @GZIP
-    public Response listDefinitions() throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/runtime/types");
-        List<ProcessTypeRepresentation> types = runtime.listProcessTypes(false).stream().map(ProcessTypeRepresentation::fromProcessType).collect(Collectors.toCollection(ArrayList::new));
-        return Response.ok(types).build();
-    }
+	@GET
+	@Path("/runtime/processes")
+	@GZIP
+	public Response listProcesses(@QueryParam("state") String state) throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
+		LOGGER.log(Level.INFO, "GET /admin/runtime/processes?state=" + state);
+		State estate = null;
+		if (state != null && state.length() > 0) {
+			try {
+				estate = State.valueOf(state);
+			} catch (IllegalArgumentException e) {
+				return Response.status(Status.BAD_REQUEST).entity("unknown state: " + e.getMessage()).build();
+			}
+		}
+		List<ProcessRepresentation> entries = runtime.systemListProcesses(estate).stream().map(ProcessRepresentation::fromProcess).collect(Collectors.toCollection(ArrayList::new));
+		return Response.ok(entries).build();
+	}
 
-    @GET
-    @Path("/runtime/processes")
-    @GZIP
-    public Response listProcesses(@QueryParam("state") String state) throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "GET /admin/runtime/processes?state=" + state);
-        State estate = null;
-        if (state != null && state.length() > 0) {
-            try {
-                estate = State.valueOf(state);
-            } catch (IllegalArgumentException e) {
-                return Response.status(Status.BAD_REQUEST).entity("unknown state: " + e.getMessage()).build();
-            }
-        }
-        List<ProcessRepresentation> entries = runtime.systemListProcesses(estate).stream().map(ProcessRepresentation::fromProcess).collect(Collectors.toCollection(ArrayList::new));
-        return Response.ok(entries).build();
-    }
+	@GET
+	@Path("/runtime/tasks")
+	@GZIP
+	public Response listTasks() throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
+		LOGGER.log(Level.INFO, "GET /admin/runtime/tasks");
+		List<HumanTaskRepresentation> entries = runtime.systemListTasks().stream().map(HumanTaskRepresentation::fromHumanTask).collect(Collectors.toCollection(ArrayList::new));
+		return Response.ok(entries).build();
+	}
 
-    @GET
-    @Path("/runtime/tasks")
-    @GZIP
-    public Response listTasks() throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "GET /admin/runtime/tasks");
-        List<HumanTaskRepresentation> entries = runtime.systemListTasks().stream().map(HumanTaskRepresentation::fromHumanTask).collect(Collectors.toCollection(ArrayList::new));
-        return Response.ok(entries).build();
-    }
+	@GET
+	@Path("/store/binary")
+	@GZIP
+	public Response browseBinaryStoreRoot() throws BinaryStoreServiceException {
+		LOGGER.log(Level.INFO, "GET /admin/store/binary");
+		List<BinaryStoreContent> infos = binary.systemBrowse(null, null);
+		return Response.ok(infos).build();
+	}
 
-    @GET
-    @Path("/store/binary")
-    @GZIP
-    public Response browseBinaryStoreRoot() throws BinaryStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/binary");
-        List<BinaryStoreContent> infos = binary.systemBrowse(null, null);
-        return Response.ok(infos).build();
-    }
+	@GET
+	@Path("/store/binary/{name}")
+	@GZIP
+	public Response browseBinaryStoreVolume(@PathParam("name") String name) throws BinaryStoreServiceException {
+		LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name);
+		List<BinaryStoreContent> infos = binary.systemBrowse(name, null);
+		return Response.ok(infos).build();
+	}
 
-    @GET
-    @Path("/store/binary/{name}")
-    @GZIP
-    public Response browseBinaryStoreVolume(@PathParam("name") String name) throws BinaryStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name);
-        List<BinaryStoreContent> infos = binary.systemBrowse(name, null);
-        return Response.ok(infos).build();
-    }
+	@GET
+	@Path("/store/binary/{name}/{prefix}")
+	@GZIP
+	public Response browseBinaryStorePrefix(@PathParam("name") String name, @PathParam("prefix") String prefix) throws BinaryStoreServiceException {
+		LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name + "/" + prefix);
+		List<BinaryStoreContent> infos = binary.systemBrowse(name, prefix);
+		return Response.ok(infos).build();
+	}
 
-    @GET
-    @Path("/store/binary/{name}/{prefix}")
-    @GZIP
-    public Response browseBinaryStorePrefix(@PathParam("name") String name, @PathParam("prefix") String prefix) throws BinaryStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name + "/" + prefix);
-        List<BinaryStoreContent> infos = binary.systemBrowse(name, prefix);
-        return Response.ok(infos).build();
-    }
+	@GET
+	@Path("/store/binary/{name}/{prefix}/{hash}")
+	@GZIP
+	public Response getBinaryStoreContent(@PathParam("name") String name, @PathParam("prefix") String prefix, @PathParam("hash") String hash)
+			throws BinaryStoreServiceException, DataNotFoundException {
+		LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name + "/" + prefix + "/" + hash);
+		File content = binary.getFile(hash);
+		return Response.ok(content).build();
+	}
 
-    @GET
-    @Path("/store/binary/{name}/{prefix}/{hash}")
-    @GZIP
-    public Response getBinaryStoreContent(@PathParam("name") String name, @PathParam("prefix") String prefix, @PathParam("hash") String hash) throws BinaryStoreServiceException, DataNotFoundException {
-        LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name + "/" + prefix + "/" + hash);
-        File content = binary.getFile(hash);
-        return Response.ok(content).build();
-    }
+	@GET
+	@Path("/store/events")
+	@GZIP
+	@SuppressWarnings("unchecked")
+	public Response searchEvents(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("2000") @QueryParam("l") int limit, @QueryParam("ofrom") String ofrom,
+			@QueryParam("otype") String otype, @QueryParam("etype") String etype, @QueryParam("throwed") String throwed, @DefaultValue("0") @QueryParam("after") long after)
+			throws EventServiceException {
+		LOGGER.log(Level.INFO, "GET /admin/store/events");
+		long nbresults = event.systemCountEvents(etype, ofrom, otype, throwed, after);
+		List<OrtolangEvent> events = (List<OrtolangEvent>) event.systemFindEvents(etype, ofrom, otype, throwed, after, offset, limit);
 
-    @GET
-    @Path("/store/events")
-    @GZIP
-    @SuppressWarnings("unchecked")
-    public Response searchEvents(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("2000") @QueryParam("l") int limit, @QueryParam("ofrom") String ofrom, @QueryParam("otype") String otype,
-            @QueryParam("etype") String etype, @QueryParam("throwed") String throwed, @DefaultValue("0") @QueryParam("after") long after) throws EventServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/events");
-        long nbresults = event.systemCountEvents(etype, ofrom, otype, throwed, after);
-        List<OrtolangEvent> events = (List<OrtolangEvent>) event.systemFindEvents(etype, ofrom, otype, throwed, after, offset, limit);
+		// UriBuilder objects =
+		// ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
+		GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>();
+		representation.setEntries(events);
+		representation.setOffset((offset <= 0) ? 1 : offset);
+		representation.setSize(nbresults);
+		representation.setLimit(events.size());
+		// representation.setFirst(objects.clone().queryParam("o",
+		// 0).queryParam("l", limit).queryParam("ofrom",
+		// ofrom).queryParam("otype", otype).queryParam("etype",
+		// etype).queryParam("throwed", throwed).queryParam("after",
+		// after).build());
+		// representation.setPrevious(objects.clone().queryParam("o",
+		// Math.max(0, (offset - limit))).queryParam("l",
+		// limit).queryParam("ofrom", ofrom).queryParam("otype",
+		// otype).queryParam("etype", etype).queryParam("throwed",
+		// throwed).queryParam("after", after).build());
+		// representation.setSelf(objects.clone().queryParam("o",
+		// offset).queryParam("l", limit).queryParam("ofrom",
+		// ofrom).queryParam("otype", otype).queryParam("etype",
+		// etype).queryParam("throwed", throwed).queryParam("after",
+		// after).build());
+		// representation.setNext(objects.clone().queryParam("o", (nbresults >
+		// (offset + limit)) ? (offset + limit) : offset).queryParam("l",
+		// limit).queryParam("ofrom", ofrom).queryParam("otype",
+		// otype).queryParam("etype", etype).queryParam("throwed",
+		// throwed).queryParam("after", after).build());
+		// representation.setLast(objects.clone().queryParam("o", ((nbresults -
+		// 1) / limit) * limit).queryParam("l", limit).queryParam("ofrom",
+		// ofrom).queryParam("otype", otype).queryParam("etype",
+		// etype).queryParam("throwed", throwed).queryParam("after",
+		// after).build());
+		return Response.ok(representation).build();
+	}
 
-        //        UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
-        GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>();
-        representation.setEntries(events);
-        representation.setOffset((offset <= 0) ? 1 : offset);
-        representation.setSize(nbresults);
-        representation.setLimit(events.size());
-        //        representation.setFirst(objects.clone().queryParam("o", 0).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        //        representation.setPrevious(objects.clone().queryParam("o", Math.max(0, (offset - limit))).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        //        representation.setSelf(objects.clone().queryParam("o", offset).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        //        representation.setNext(objects.clone().queryParam("o", (nbresults > (offset + limit)) ? (offset + limit) : offset).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        //        representation.setLast(objects.clone().queryParam("o", ((nbresults - 1) / limit) * limit).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        return Response.ok(representation).build();
-    }
+	@GET
+	@Path("/store/handle")
+	@GZIP
+	public Response searchHandles(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("10000") @QueryParam("l") int limit, @QueryParam("filter") String filter,
+			@DefaultValue("name") @QueryParam("type") String type) throws HandleStoreServiceException {
+		LOGGER.log(Level.INFO, "GET /admin/store/handle");
+		List<Handle> handles = Collections.emptyList();
+		if (type != null && "name".equals(type)) {
+			handles = handle.findHandlesByName(filter);
+		}
+		if (type != null && "value".equals(type)) {
+			handles = handle.findHandlesByValue(filter);
+		}
+		List<HandleRepresentation> handlesRepresentations = new ArrayList<>();
+		for (Handle handle : handles) {
+			HandleRepresentation handleRepresentation = HandleRepresentation.fromHandle(handle);
+			handlesRepresentations.add(handleRepresentation);
+		}
+		return Response.ok(handlesRepresentations).build();
+	}
 
-    @GET
-    @Path("/store/handle")
-    @GZIP
-    public Response searchHandles(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("10000") @QueryParam("l") int limit, @QueryParam("filter") String filter, @DefaultValue("name") @QueryParam("type") String type) throws HandleStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/handle");
-        List<Handle> handles = Collections.emptyList();
-        if ( type != null && "name".equals(type)) {
-            handles = handle.findHandlesByName(offset, limit, filter);
-        }
-        if ( type != null && "value".equals(type)) {
-            handles = handle.findHandlesByValue(offset, limit, filter);
-        }
-        return Response.ok(handles).build();
-    }
-    
-    @POST
-    @Path("/store/handle")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @GZIP
-    public Response createHandle(Handle hdl) throws HandleStoreServiceException, UnsupportedEncodingException {
-        LOGGER.log(Level.INFO, "POST /admin/store/handle");
-        handle.recordHandle(hdl.getHandleString(), hdl.getKey(), hdl.getDataString());
-        return Response.ok().build();
-    }
-    
-    @GET
-    @Path("/store/handle/{id}")
-    @GZIP
-    public Response readHandle(@PathParam("id") String id) throws HandleStoreServiceException, HandleNotFoundException {
-        LOGGER.log(Level.INFO, "GET /admin/store/handle/" + id);
-        Handle hdl = handle.readHandle(id);
-        return Response.ok(hdl).build();
-    }
-    
-    @PUT
-    @Path("/store/handle/{id}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @GZIP
-    public Response updateHandle(@PathParam("id") String id, Handle hdl) throws HandleStoreServiceException, UnsupportedEncodingException {
-        LOGGER.log(Level.INFO, "PUT /admin/store/handle/" + id);
-        handle.dropHandle(id);
-        handle.recordHandle(id, hdl.getKey(), hdl.getDataString());
-        return Response.ok(hdl).build();
-    }
-    
-    @DELETE
-    @Path("/store/handle/{id}")
-    @GZIP
-    public Response deleteHandle(@PathParam("id") String id) throws HandleStoreServiceException {
-        LOGGER.log(Level.INFO, "DELETE /admin/store/handle/" + id);
-        handle.dropHandle(id);
-        return Response.ok().build();
-    }
+	@POST
+	@Path("/store/handle")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@GZIP
+	public Response createHandle(HandleRepresentation hdl) throws HandleStoreServiceException, UnsupportedEncodingException {
+		LOGGER.log(Level.INFO, "POST /admin/store/handle");
+		handle.recordHandle(hdl.getHandle(), hdl.getKey(), hdl.getUrl());
+		return Response.ok().build();
+	}
 
-    @GET
-    @Path("/store/json/documents/{key}")
-    @GZIP
-    public Response getJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/json/" + key);
-        String document = json.systemGetDocument(key);
-        return Response.ok(document).build();
-    }
+	@GET
+	@Path("/store/handle/{id:.*}")
+	@GZIP
+	public Response readHandle(@PathParam("id") String id) throws HandleStoreServiceException, HandleNotFoundException {
+		LOGGER.log(Level.INFO, "GET /admin/store/handle/" + id);
+		Handle hdl = handle.readHandle(id);
+		HandleRepresentation handleRepresentation = HandleRepresentation.fromHandle(hdl);
+		return Response.ok(handleRepresentation).build();
+	}
 
-    @DELETE
-    @Path("/store/json/documents/{key}")
-    @GZIP
-    public Response deleteJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
-        LOGGER.log(Level.INFO, "DELETE /admin/store/json/" + key);
-        json.remove(key);
-        return Response.ok().build();
-    }
+	@PUT
+	@Path("/store/handle/{id:.*}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@GZIP
+	public Response updateHandle(@PathParam("id") String id, HandleRepresentation hdl) throws HandleStoreServiceException, UnsupportedEncodingException {
+		LOGGER.log(Level.INFO, "PUT /admin/store/handle/" + id);
+		handle.dropHandle(hdl.getHandle());
+		handle.recordHandle(hdl.getHandle(), hdl.getKey(), hdl.getUrl());
+		return Response.ok(hdl).build();
+	}
 
-    @GET
-    @Path("/store/json/search")
-    @GZIP
-    public Response searchInJsonStore(@QueryParam(value = "query") String query) throws JsonStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/json/search?query=" + query);
-        List<String> documents = json.search(query);
-        return Response.ok(documents).build();
-    }
+	@DELETE
+	@Path("/store/handle/{id:.*}")
+	@GZIP
+	public Response deleteHandle(@PathParam("id") String id) throws HandleStoreServiceException {
+		LOGGER.log(Level.INFO, "DELETE /admin/store/handle/" + id);
+		handle.dropHandle(id);
+		return Response.ok().build();
+	}
 
-    @GET
-    @Path("/store/index/documents/{key}")
-    @GZIP
-    public Response getIndexDocumentForKey(@PathParam(value = "key") String key) throws IndexStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/index/" + key);
-        String document = index.systemGetDocument(key);
-        return Response.ok(document).build();
-    }
+	@GET
+	@Path("/store/json/documents/{key}")
+	@GZIP
+	public Response getJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
+		LOGGER.log(Level.INFO, "GET /admin/store/json/" + key);
+		String document = json.systemGetDocument(key);
+		return Response.ok(document).build();
+	}
 
-    @GET
-    @Path("/subscription")
-    @GZIP
-    public Response addSubscriptionFilters() throws SubscriptionServiceException {
-        LOGGER.log(Level.INFO, "GET /subscription");
-        subscription.addAdminFilters();
-        return Response.ok().build();
-    }
+	@DELETE
+	@Path("/store/json/documents/{key}")
+	@GZIP
+	public Response deleteJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
+		LOGGER.log(Level.INFO, "DELETE /admin/store/json/" + key);
+		json.remove(key);
+		return Response.ok().build();
+	}
 
-    @GET
-    @Path("/jobs")
-    @GZIP
-    public Response getJobs(@QueryParam("type") String type, @QueryParam("o") Integer offset, @QueryParam("l") Integer limit, @DefaultValue("false") @QueryParam("failed") boolean failed, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed) {
-        List<Job> jobs;
-        if (failed) {
-            jobs = jobService.getFailedJobsOfType(type, offset, limit);
-        } else if (unprocessed) {
-            jobs = jobService.getUnprocessedJobsOfType(type, offset, limit);
-        } else {
-            if (type != null) {
-                jobs = jobService.getJobsOfType(type, offset, limit);
-            } else {
-                jobs = jobService.getJobs(offset, limit);
-            }
-        }
-        return Response.ok().entity(jobs).build();
-    }
+	@GET
+	@Path("/store/json/search")
+	@GZIP
+	public Response searchInJsonStore(@QueryParam(value = "query") String query) throws JsonStoreServiceException {
+		LOGGER.log(Level.INFO, "GET /admin/store/json/search?query=" + query);
+		List<String> documents = json.search(query);
+		return Response.ok(documents).build();
+	}
 
-    @GET
-    @Path("/jobs/{id}")
-    @GZIP
-    public Response getJob(@PathParam(value = "id") Long id) {
-        Job job = jobService.read(id);
-        return Response.ok().entity(job).build();
-    }
+	@GET
+	@Path("/store/index/documents/{key}")
+	@GZIP
+	public Response getIndexDocumentForKey(@PathParam(value = "key") String key) throws IndexStoreServiceException {
+		LOGGER.log(Level.INFO, "GET /admin/store/index/" + key);
+		String document = index.systemGetDocument(key);
+		return Response.ok(document).build();
+	}
 
-    @DELETE
-    @Path("/jobs/{id}")
-    public Response removeJob(@PathParam(value = "id") Long id) {
-        jobService.remove(id);
-        return Response.ok().build();
-    }
+	@GET
+	@Path("/subscription")
+	@GZIP
+	public Response addSubscriptionFilters() throws SubscriptionServiceException {
+		LOGGER.log(Level.INFO, "GET /subscription");
+		subscription.addAdminFilters();
+		return Response.ok().build();
+	}
 
-    @GET
-    @Path("/jobs/{id}/retry")
-    public Response retryJob(@PathParam(value = "id") Long id) throws OrtolangException {
-        Job job = jobService.read(id);
-        OrtolangWorker worker = workerService.getWorkerForJobType(job.getType());
-        worker.retry(id);
-        return Response.ok().build();
-    }
+	@GET
+	@Path("/jobs")
+	@GZIP
+	public Response getJobs(@QueryParam("type") String type, @QueryParam("o") Integer offset, @QueryParam("l") Integer limit,
+			@DefaultValue("false") @QueryParam("failed") boolean failed, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed) {
+		List<Job> jobs;
+		if (failed) {
+			jobs = jobService.getFailedJobsOfType(type, offset, limit);
+		} else if (unprocessed) {
+			jobs = jobService.getUnprocessedJobsOfType(type, offset, limit);
+		} else {
+			if (type != null) {
+				jobs = jobService.getJobsOfType(type, offset, limit);
+			} else {
+				jobs = jobService.getJobs(offset, limit);
+			}
+		}
+		return Response.ok().entity(jobs).build();
+	}
 
-    @GET
-    @Path("/jobs/count")
-    public Response countJobs(@QueryParam("type") String type, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed, @DefaultValue("false") @QueryParam("failed") boolean failed) throws CoreServiceException {
-        Map<String, Long> map = new HashMap<>(1);
-        if (failed) {
-            map.put("count", jobService.countFailedJobs());
-        } else if (unprocessed) {
-            map.put("count", jobService.countUnprocessedJobs());
-        } else {
-            if (type != null) {
-                map.put("count", jobService.countJobsOfType(type));
-            } else {
-                map.put("count", jobService.countJobs());
-            }
-        }
-        return Response.ok().entity(map).build();
-    }
+	@GET
+	@Path("/jobs/{id}")
+	@GZIP
+	public Response getJob(@PathParam(value = "id") Long id) {
+		Job job = jobService.read(id);
+		return Response.ok().entity(job).build();
+	}
 
-    @GET
-    @Path("/jobs/workers")
-    public Response getWorkersState() throws OrtolangException {
-        Map<String, String> workersState = new HashMap<>();
-        for (OrtolangWorker worker : workerService.getWorkers()) {
-            if (worker != null) {
-                workersState.put(worker.getName(), worker.getState());
-            }
-        }
-        return Response.ok().entity(workersState).build();
-    }
+	@DELETE
+	@Path("/jobs/{id}")
+	public Response removeJob(@PathParam(value = "id") Long id) {
+		jobService.remove(id);
+		return Response.ok().build();
+	}
 
-    @GET
-    @Path("/jobs/workers/{id}/start")
-    public Response restartWorker(@PathParam("id") String id) throws OrtolangException {
-        workerService.startWorker(id);
-        return Response.ok().build();
-    }
+	@GET
+	@Path("/jobs/{id}/retry")
+	public Response retryJob(@PathParam(value = "id") Long id) throws OrtolangException {
+		Job job = jobService.read(id);
+		OrtolangWorker worker = workerService.getWorkerForJobType(job.getType());
+		worker.retry(id);
+		return Response.ok().build();
+	}
 
-    @GET
-    @Path("/jobs/workers/queue")
-    public Response getQueues() throws OrtolangException {
-        List<OrtolangJob> queue = new ArrayList<>();
-        for (OrtolangWorker worker : workerService.getWorkers()) {
-             queue.addAll(worker.getQueue());
-        }
-        return Response.ok(queue).build();
-    }
+	@GET
+	@Path("/jobs/count")
+	public Response countJobs(@QueryParam("type") String type, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed,
+			@DefaultValue("false") @QueryParam("failed") boolean failed) throws CoreServiceException {
+		Map<String, Long> map = new HashMap<>(1);
+		if (failed) {
+			map.put("count", jobService.countFailedJobs());
+		} else if (unprocessed) {
+			map.put("count", jobService.countUnprocessedJobs());
+		} else {
+			if (type != null) {
+				map.put("count", jobService.countJobsOfType(type));
+			} else {
+				map.put("count", jobService.countJobs());
+			}
+		}
+		return Response.ok().entity(map).build();
+	}
 
-    @GET
-    @Path("/jobs/workers/{id}/queue")
-    public Response getWorkerQueue(@PathParam("id") String id) throws OrtolangException {
-        List<OrtolangJob> queue = workerService.getQueue(id);
-        return Response.ok(queue).build();
-    }
+	@GET
+	@Path("/jobs/workers")
+	public Response getWorkersState() throws OrtolangException {
+		Map<String, String> workersState = new HashMap<>();
+		for (OrtolangWorker worker : workerService.getWorkers()) {
+			if (worker != null) {
+				workersState.put(worker.getName(), worker.getState());
+			}
+		}
+		return Response.ok().entity(workersState).build();
+	}
+
+	@GET
+	@Path("/jobs/workers/{id}/start")
+	public Response restartWorker(@PathParam("id") String id) throws OrtolangException {
+		workerService.startWorker(id);
+		return Response.ok().build();
+	}
+
+	@GET
+	@Path("/jobs/workers/queue")
+	public Response getQueues() throws OrtolangException {
+		List<OrtolangJob> queue = new ArrayList<>();
+		for (OrtolangWorker worker : workerService.getWorkers()) {
+			queue.addAll(worker.getQueue());
+		}
+		return Response.ok(queue).build();
+	}
+
+	@GET
+	@Path("/jobs/workers/{id}/queue")
+	public Response getWorkerQueue(@PathParam("id") String id) throws OrtolangException {
+		List<OrtolangJob> queue = workerService.getQueue(id);
+		return Response.ok(queue).build();
+	}
 }
