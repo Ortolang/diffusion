@@ -36,11 +36,13 @@ package fr.ortolang.diffusion.message.entity;
  * #L%
  */
 
+import java.util.Arrays;
 import java.util.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Index;
+import javax.persistence.Lob;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -48,6 +50,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.persistence.Version;
+
+import org.hibernate.annotations.Type;
 
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
@@ -59,6 +63,7 @@ import fr.ortolang.diffusion.message.MessageService;
 @SuppressWarnings("serial")
 public class Thread extends OrtolangObject {
 
+    private static final String[] EMPTY_STRING_ARRAY = new String[0];
     public static final String OBJECT_TYPE = "thread";
 
     @Id
@@ -73,8 +78,12 @@ public class Thread extends OrtolangObject {
     private String question;
     private String answer;
     private String workspace;
+    @Lob
+    @Type(type = "org.hibernate.type.TextType")
+    private String observersList;
 
     public Thread() {
+        observersList = "";
     }
 
     public String getId() {
@@ -139,6 +148,45 @@ public class Thread extends OrtolangObject {
 
     public void setAnswer(String answer) {
         this.answer = answer;
+    }
+    
+    public String getObserversList() {
+        return observersList;
+    }
+
+    public void setObserversList(String observersList) {
+        this.observersList = observersList;
+    }
+
+    public boolean isObserver(String observer) {
+        return Arrays.asList(observersList.split(",")).contains(observer);
+    }
+
+    public void addObserver(String observer) {
+        if (!isObserver(observer)) {
+            if (observersList.length() > 0) {
+                observersList += ("," + observer);
+            } else {
+                observersList += observer;
+            }
+        }
+    }
+
+    public void removeObserver(String observer) {
+        if (isObserver(observer)) {
+            observersList = observersList.replaceAll("(" + observer + "),?", "");
+        }
+        if ( observersList.endsWith(",") ) {
+            observersList = observersList.substring(0, observersList.length()-1);
+        }
+    }
+
+    public String[] getObservers() {
+        if (observersList.isEmpty()) {
+            return EMPTY_STRING_ARRAY;
+        }
+
+        return observersList.split(",");
     }
 
     @Override

@@ -116,6 +116,8 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	
+	Group systemReadGroup(String key) throws MembershipServiceException, KeyNotFoundException;
+	
     boolean systemValidateTOTP(String identifier, String totp) throws MembershipServiceException, KeyNotFoundException;
     
     String systemReadProfileSecret(String identifier) throws MembershipServiceException, KeyNotFoundException;

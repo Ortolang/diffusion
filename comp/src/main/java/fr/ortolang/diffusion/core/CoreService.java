@@ -243,4 +243,6 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
             throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
             IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException;
 
+    Workspace systemReadWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException;
+
 }

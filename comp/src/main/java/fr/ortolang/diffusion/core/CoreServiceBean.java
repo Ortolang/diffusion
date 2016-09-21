@@ -56,6 +56,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -3821,6 +3822,27 @@ public class CoreServiceBean implements CoreService {
     }
 
     // System operations
+    @Override
+    @RolesAllowed({"admin", "system"})
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public Workspace systemReadWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "#SYSTEM# reading workspace for key [" + wskey + "]");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+            checkObjectType(identifier, Workspace.OBJECT_TYPE);
+            Workspace workspace = em.find(Workspace.class, identifier.getId());
+            if (workspace == null) {
+                throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+            }
+            workspace.setKey(wskey);
+            
+            return workspace;
+        } catch (RegistryServiceException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while reading workspace", e);
+            throw new CoreServiceException("unable to read workspace with key [" + wskey + "]", e);
+        }
+    }
+    
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Set<String> systemListWorkspaceKeys(String wskey) throws CoreServiceException, KeyNotFoundException {

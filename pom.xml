@@ -5,14 +5,14 @@
     <groupId>fr.ortolang.diffusion</groupId>
     <artifactId>ortolang-diffusion</artifactId>
     <name>Ortolang Diffusion Server Parent</name>
-    <version>4.7.0-SNAPSHOT</version>
+    <version>5.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <url>http://www.ortolang.fr</url>
 
     <parent>
         <groupId>fr.ortolang</groupId>
         <artifactId>ortolang</artifactId>
-        <version>8</version>
+        <version>9-SNAPSHOT</version>
     </parent>
 
     <scm>
@@ -32,15 +32,15 @@
     <properties>
         <version.ear.plugin>2.10.1</version.ear.plugin>
         <version.ejb.plugin>2.5.1</version.ejb.plugin>
-        <version.wildfly.maven.plugin>1.1.0.Alpha10</version.wildfly.maven.plugin>
-        <version.wildfly>9.0.1.Final</version.wildfly>
+        <version.wildfly.maven.plugin>1.1.0.Alpha11</version.wildfly.maven.plugin>
+        <version.wildfly>10.1.0.Final</version.wildfly>
         <slf4j.version>1.6.4</slf4j.version>
         <version.apache.tika>1.13</version.apache.tika>
         <version.apache.velocity>1.7</version.apache.velocity>
         <version.apache.velocity-tools>2.0</version.apache.velocity-tools>
         <version.javax.javaee>7.0</version.javax.javaee>
         <version.jboss.resteasy>3.0.19.Final</version.jboss.resteasy>
-        <version.keycloak>1.7.0.Final</version.keycloak>
+        <version.keycloak>2.1.0.Final</version.keycloak>
         <version.shrinkwrap>1.2.6</version.shrinkwrap>
         <version.shrinkwrap-resolver>2.2.2</version.shrinkwrap-resolver>
         <version.arquillian>1.1.11.Final</version.arquillian>
@@ -62,7 +62,7 @@
         <version.common-compress>1.12</version.common-compress>
         <version.hdlnet>7.3.1</version.hdlnet>
         <version.bagit>4.9.0</version.bagit>
-        <version.hibernate-core>4.3.5.Final</version.hibernate-core>
+        <version.hibernate-core>5.0.10.Final</version.hibernate-core>
         <version.activiti-engine>5.21.0</version.activiti-engine>
         <version.json-schema-validator>2.2.6</version.json-schema-validator>
         <version.javacv>1.2</version.javacv>

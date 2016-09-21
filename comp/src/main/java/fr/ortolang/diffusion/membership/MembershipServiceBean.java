@@ -635,7 +635,7 @@ public class MembershipServiceBean implements MembershipService {
     }
 
     @Override
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public ProfileData systemGetProfileInfo(String identifier, String name) throws MembershipServiceException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "#SYSTEM# get profile info [" + name + "] for identifier [" + identifier + "]");
         try {
@@ -707,6 +707,25 @@ public class MembershipServiceBean implements MembershipService {
             return group;
         } catch (RegistryServiceException | AuthorisationServiceException e) {
             throw new MembershipServiceException("unable to read the group with key [" + key + "]", e);
+        }
+    }
+    
+    @Override
+    @RolesAllowed({"admin", "system"})
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public Group systemReadGroup(String key) throws MembershipServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "#SYSTEM# reading group for key [" + key + "]");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, Group.OBJECT_TYPE);
+            Group group = em.find(Group.class, identifier.getId());
+            if (group == null) {
+                throw new MembershipServiceException("unable to find a group for id " + identifier.getId());
+            }
+            group.setKey(key);
+            return group;
+        } catch (RegistryServiceException e) {
+            throw new MembershipServiceException("unable to read group for key: " + key, e);
         }
     }
 

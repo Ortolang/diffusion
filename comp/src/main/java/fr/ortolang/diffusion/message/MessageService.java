@@ -76,6 +76,10 @@ public interface MessageService extends OrtolangService, OrtolangBinaryService, 
     
     void markThreadAsAnswered(String tkey, String akey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
+    void startObservingThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    
+    void stopObservingThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    
     Message postMessage(String tkey, String key, String parent, String body) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
 
     Message postMessage(String tkey, String key, String parent, String body, Map<String, InputStream> attachments) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
@@ -93,5 +97,7 @@ public interface MessageService extends OrtolangService, OrtolangBinaryService, 
     void removeMessageAttachment(String key, String name) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     File getMessageAttachment(String key, String name) throws MessageServiceException, AccessDeniedException, KeyNotFoundException, DataNotFoundException;
+    
+    Thread systemReadThread(String key) throws MessageServiceException, KeyNotFoundException;
     
 }
