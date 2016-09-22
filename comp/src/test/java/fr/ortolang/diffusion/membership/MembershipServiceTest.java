@@ -233,7 +233,31 @@ public class MembershipServiceTest {
 
             loginContextUser2.logout();
 
-        } catch ( MembershipServiceException | KeyNotFoundException e) {
+            LoginContext loginContextUser3 = UsernamePasswordLoginContextFactory.createLoginContext("user3", "tagada");
+            loginContextUser3.login();
+
+            LOGGER.log(Level.INFO, "TEST7 : user3 should be able to create his own profile.");
+            membership.createProfile("user3", "User", "Three", "user3@ortolang.fr", ProfileStatus.ACTIVE);
+
+            LOGGER.log(Level.INFO, "TEST8 : user3 should not be able to create user4 profile.");
+            try {
+                membership.createProfile("user4", "User", "Four", "user4@ortolang.fr", ProfileStatus.ACTIVE);
+                fail("Should have raise an AccessDeniedException");
+            } catch (AccessDeniedException e) {
+                LOGGER.log(Level.INFO, "AccessDeniedException");
+            }
+
+            LOGGER.log(Level.INFO, "TEST9 : user3 should not be able to create user3 profile again.");
+            try {
+                membership.createProfile("user3", "User", "Three", "user3@ortolang.fr", ProfileStatus.ACTIVE);
+                fail("Should have raise a ProfileAlreadyExistsException");
+            } catch (ProfileAlreadyExistsException e) {
+                LOGGER.log(Level.INFO, "ProfileAlreadyExistsException");
+            }
+
+            loginContextUser3.logout();
+
+        } catch ( MembershipServiceException | KeyNotFoundException | ProfileAlreadyExistsException e) {
             fail(e.getMessage());
         }
     }

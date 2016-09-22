@@ -75,7 +75,7 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
     
 	List<String> getConnectedIdentifierSubjects() throws MembershipServiceException, KeyNotFoundException;
 
-	void createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
+	Profile createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
 	
 	Profile createProfile(String givenName, String familyName, String email) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
 
