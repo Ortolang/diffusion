@@ -271,6 +271,10 @@ public class Profile extends OrtolangObject {
         this.infos = infos;
     }
 
+    public ProfileData getInfo(String name) {
+        return infos.get(name);
+    }
+
     public void setInfo(String name, ProfileData info) {
         this.infos.put(name, info);
     }

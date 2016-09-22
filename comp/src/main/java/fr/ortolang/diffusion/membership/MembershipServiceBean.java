@@ -387,7 +387,7 @@ public class MembershipServiceBean implements MembershipService {
             indexing.index(key);
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("name", name);
-            notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "add-info"), argumentsBuilder.build());
+            notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update-infos"), argumentsBuilder.build());
         } catch (RegistryServiceException | NotificationServiceException | AuthorisationServiceException | KeyLockedException | IndexingServiceException e) {
             throw new MembershipServiceException("unable to set profile info for profile with key [" + key + "]", e);
         }
@@ -549,21 +549,16 @@ public class MembershipServiceBean implements MembershipService {
             if (profile == null) {
                 throw new MembershipServiceException("unable to find a profile for id " + oid.getId());
             }
-            if (profile.getSecret() == null || profile.getSecret().length() <= 0) {
-                return false;
-            } else {
-                return TOTPHelper.checkCode(profile.getSecret(), Long.parseLong(totp));
-            }
+            return profile.getSecret() != null && profile.getSecret().length() > 0 && TOTPHelper.checkCode(profile.getSecret(), Long.parseLong(totp));
         } catch (RegistryServiceException e) {
             throw new MembershipServiceException("unable to validate TOTP for identifier: " + identifier, e);
         }
     }
 
     @Override
-    @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public String systemReadProfileSecret(String identifier) throws MembershipServiceException, KeyNotFoundException {
-        LOGGER.log(Level.FINE, "#SYSTEM# validating TOTP for identifier");
+    public Profile systemReadProfile(String identifier) throws MembershipServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "#SYSTEM# reading profile");
         try {
             String key = getProfileKeyForIdentifier(identifier);
             OrtolangObjectIdentifier oid = registry.lookup(key);
@@ -572,46 +567,9 @@ public class MembershipServiceBean implements MembershipService {
             if (profile == null) {
                 throw new MembershipServiceException("unable to find a profile for id " + oid.getId());
             }
-            return profile.getSecret();
-        } catch (RegistryServiceException e) {
-            throw new MembershipServiceException("unable to read profile secret for identifier: " + identifier, e);
-        }
-    }
-
-    @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public String systemReadProfileEmail(String identifier) throws MembershipServiceException, KeyNotFoundException {
-        LOGGER.log(Level.FINE, "#SYSTEM# reading profile Email");
-        try {
-            String key = getProfileKeyForIdentifier(identifier);
-            OrtolangObjectIdentifier oid = registry.lookup(key);
-            checkObjectType(oid, Profile.OBJECT_TYPE);
-            Profile profile = em.find(Profile.class, oid.getId());
-            if (profile == null) {
-                throw new MembershipServiceException("unable to find a profile for id " + oid.getId());
-            }
-            return profile.getEmail();
+            return profile;
         } catch (RegistryServiceException e) {
             throw new MembershipServiceException("unable to read profile email for identifier: " + identifier, e);
-        }
-    }
-
-    @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public ProfileData systemGetProfileInfo(String identifier, String name) throws MembershipServiceException, KeyNotFoundException {
-        LOGGER.log(Level.FINE, "#SYSTEM# get profile info [" + name + "] for identifier [" + identifier + "]");
-        try {
-            String key = getProfileKeyForIdentifier(identifier);
-            OrtolangObjectIdentifier oid = registry.lookup(key);
-            checkObjectType(oid, Profile.OBJECT_TYPE);
-            Profile profile = em.find(Profile.class, key);
-            if (profile == null) {
-                throw new MembershipServiceException("unable to find a profile for id " + oid.getId());
-            }
-
-            return profile.getInfos().get(name);
-        } catch (RegistryServiceException e) {
-            throw new MembershipServiceException("unable to get profile info [" + name + "] for identifier [" + identifier + "]", e);
         }
     }
 

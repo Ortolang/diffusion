@@ -120,10 +120,6 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	
     boolean systemValidateTOTP(String identifier, String totp) throws MembershipServiceException, KeyNotFoundException;
     
-    String systemReadProfileSecret(String identifier) throws MembershipServiceException, KeyNotFoundException;
+    Profile systemReadProfile(String identifier) throws MembershipServiceException, KeyNotFoundException;
     
-    String systemReadProfileEmail(String identifier) throws MembershipServiceException, KeyNotFoundException;
-    
-    ProfileData systemGetProfileInfo(String identifier, String name) throws MembershipServiceException, KeyNotFoundException;
-
 }

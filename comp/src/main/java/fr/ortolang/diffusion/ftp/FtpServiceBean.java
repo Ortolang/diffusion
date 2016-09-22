@@ -176,7 +176,7 @@ public class FtpServiceBean implements FtpService {
     @Override
     public String getInternalAuthenticationPassword(String username) throws FtpServiceException {
         try {
-            return membership.systemReadProfileSecret(username);
+            return membership.systemReadProfile(username).getSecret();
         } catch (MembershipServiceException | KeyNotFoundException e) {
             throw new FtpServiceException("unable to get internal user password", e);
         }

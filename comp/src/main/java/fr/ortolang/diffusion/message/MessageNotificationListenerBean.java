@@ -164,13 +164,13 @@ public class MessageNotificationListenerBean implements MessageListener {
 
         for (String profile : profiles) {
             try {
-                String recipient = membership.systemReadProfileEmail(profile);
+                String recipient = membership.systemReadProfile(profile).getEmail();
                 if (recipient == null || recipient.length() == 0) {
                     LOGGER.log(Level.INFO, "No email found for profile: " + profile + ", unable to notify");
                     continue;
                 }
                 Locale locale = DEFAULT_LOCALE;
-                ProfileData recipientLanguageData = membership.systemGetProfileInfo(profile, "language");
+                ProfileData recipientLanguageData = membership.systemReadProfile(profile).getInfo("language");
                 if (recipientLanguageData != null) {
                     locale = new Locale(recipientLanguageData.getValue());
                 }
