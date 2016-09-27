@@ -51,6 +51,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -60,6 +61,7 @@ import javax.ejb.TransactionAttributeType;
 import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
+import javax.mail.Session;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
@@ -129,6 +131,8 @@ public class MessageServiceBean implements MessageService {
     private NotificationService notification;
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
+    @Resource(name = "java:jboss/mail/Default")
+    private Session mailSession;
     @Resource
     private SessionContext ctx;
 
@@ -228,6 +232,7 @@ public class MessageServiceBean implements MessageService {
             thread.setWorkspace(wskey);
             thread.setQuestion(mkey);
             thread.setLastActivity(new Date());
+            thread.addObserver(caller);
             em.persist(thread);
             registry.register(key, thread.getObjectIdentifier(), caller);
 
@@ -264,9 +269,6 @@ public class MessageServiceBean implements MessageService {
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("wskey", wskey).addArgument("title", title);
             notification.throwEvent(key, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "create"), argsBuilder.build());
 
-            argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("title", title);
-            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "create"), argsBuilder.build());
-
             return thread;
         } catch (KeyAlreadyExistsException e) {
             ctx.setRollbackOnly();
@@ -298,6 +300,27 @@ public class MessageServiceBean implements MessageService {
             return thread;
         } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while reading thread", e);
+            throw new MessageServiceException("unable to read thread with key [" + key + "]", e);
+        }
+    }
+    
+    @Override
+    @RolesAllowed({"admin", "system"})
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public Thread systemReadThread(String key) throws MessageServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "#SYSTEM# reading thread [" + key + "]");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, Thread.OBJECT_TYPE);
+            
+            Thread thread = em.find(Thread.class, identifier.getId());
+            if (thread == null) {
+                throw new MessageServiceException("unable to load thread with id [" + identifier.getId() + "] from storage");
+            }
+            thread.setKey(key);
+            return thread;
+        } catch (RegistryServiceException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while performing system read thread", e);
             throw new MessageServiceException("unable to read thread with key [" + key + "]", e);
         }
     }
@@ -371,13 +394,13 @@ public class MessageServiceBean implements MessageService {
 
     private void loadKeyFromRegistry(List<Message> msgs) throws RegistryServiceException {
         ListIterator<Message> iter = msgs.listIterator();
-        while(iter.hasNext()){
+        while (iter.hasNext()) {
             Message msg = iter.next();
             try {
                 String mkey = registry.lookup(msg.getObjectIdentifier());
                 msg.setKey(mkey);
-            } catch ( IdentifierNotRegisteredException e ) {
-                LOGGER.log(Level.WARNING, "found a message that is not bound in registry, maybe orphean, should clean it !!, identifier: " + msg.getObjectIdentifier() );
+            } catch (IdentifierNotRegisteredException e) {
+                LOGGER.log(Level.WARNING, "found a message that is not bound in registry, maybe orphean, should clean it !!, identifier: " + msg.getObjectIdentifier());
                 iter.remove();
             }
         }
@@ -408,11 +431,11 @@ public class MessageServiceBean implements MessageService {
             registry.update(key);
             indexing.index(key);
 
-            notification.throwEvent(key, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "update"));
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("title", title);
-            notification.throwEvent(thread.getWorkspace(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "update"), argsBuilder.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("wskey", thread.getWorkspace()).addArgument("title", title);
+            notification.throwEvent(key, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "update"), argsBuilder.build());
 
-        } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException | IndexingServiceException e) {
+        } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException
+                | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MessageServiceException("unable to update thread with key [" + key + "]", e);
         }
@@ -438,21 +461,20 @@ public class MessageServiceBean implements MessageService {
             indexing.remove(key);
 
             List<Message> msgs = em.createNamedQuery("findThreadMessages", Message.class).setParameter("thread", key).getResultList();
-            for ( Message msg : msgs ) {
+            for (Message msg : msgs) {
                 try {
                     String mkey = registry.lookup(msg.getObjectIdentifier());
                     registry.delete(mkey);
                     indexing.remove(mkey);
                     notification.throwEvent(mkey, caller, Message.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Message.OBJECT_TYPE, "delete"));
-                } catch ( IdentifierNotRegisteredException e ) {
+                } catch (IdentifierNotRegisteredException e) {
                     LOGGER.log(Level.FINE, "found message that does not exists in registry for identifier [" + msg.getObjectIdentifier() + "]");
                 }
             }
             em.createNamedQuery("deleteThreadMessages").setParameter("thread", key).executeUpdate();
 
-            notification.throwEvent(key, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "delete"));
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("key", key).addArgument("title", thread.getTitle());
-            notification.throwEvent(thread.getWorkspace(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "delete"), argsBuilder.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("wskey", thread.getWorkspace()).addArgument("title", thread.getTitle());
+            notification.throwEvent(key, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "delete"), argsBuilder.build());
 
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
@@ -490,9 +512,8 @@ public class MessageServiceBean implements MessageService {
             registry.update(tkey);
             indexing.index(tkey);
 
-            notification.throwEvent(tkey, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "answered"));
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("tkey", tkey).addArgument("title", thread.getTitle());
-            notification.throwEvent(thread.getWorkspace(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "answered"), argsBuilder.build());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("wskey", thread.getWorkspace()).addArgument("title", thread.getTitle()).addArgument("boy", message.getBody());
+            notification.throwEvent(tkey, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "answered"), argsBuilder.build());
 
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
@@ -500,6 +521,53 @@ public class MessageServiceBean implements MessageService {
         }
     }
 
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void startObservingThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "starting observing thread with key [" + key + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(key, subjects, "read");
+
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, Thread.OBJECT_TYPE);
+            Thread thread = em.find(Thread.class, identifier.getId());
+            if (thread == null) {
+                throw new MessageServiceException("unable to find a thread for id " + identifier.getId());
+            }
+            thread.addObserver(caller);
+            em.merge(thread);
+
+        } catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+            ctx.setRollbackOnly();
+            throw new MessageServiceException("unable to start observing thread with key [" + key + "]", e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void stopObservingThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "stopping observing thread with key [" + key + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            authorisation.checkPermission(key, subjects, "read");
+
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, Thread.OBJECT_TYPE);
+            Thread thread = em.find(Thread.class, identifier.getId());
+            if (thread == null) {
+                throw new MessageServiceException("unable to find a thread for id " + identifier.getId());
+            }
+            thread.removeObserver(caller);
+            em.merge(thread);
+
+        } catch (RegistryServiceException | AuthorisationServiceException | MembershipServiceException e) {
+            ctx.setRollbackOnly();
+            throw new MessageServiceException("unable to stop observing thread with key [" + key + "]", e);
+        }
+    }
 
     /* Message */
 
@@ -525,6 +593,7 @@ public class MessageServiceBean implements MessageService {
             }
             authorisation.checkPermission(tkey, subjects, "post");
             thread.setLastActivity(new Date());
+            thread.addObserver(caller);
             em.merge(thread);
             registry.update(tkey);
 
@@ -555,13 +624,11 @@ public class MessageServiceBean implements MessageService {
 
             indexing.index(key);
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder().addArgument("key", key).addArgument("body", body).addArgument("thread-title", thread.getTitle()).addArgument("thread-key", tkey);
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder().addArgument("wskey", thread.getWorkspace()).addArgument("title", thread.getTitle()).addArgument("key", key).addArgument("body", body);
             if (parent != null && parent.length() > 0) {
                 argsBuilder.addArgument("parent", parent);
             }
             notification.throwEvent(tkey, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "post"), argsBuilder.build());
-            notification.throwEvent(thread.getWorkspace(), caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "post"), argsBuilder.build());
-            notification.throwEvent(key, caller, Message.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Message.OBJECT_TYPE, "create"), null);
 
             return message;
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyAlreadyExistsException
@@ -636,7 +703,8 @@ public class MessageServiceBean implements MessageService {
             indexing.index(key);
 
             notification.throwEvent(key, caller, Message.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Message.OBJECT_TYPE, "update"));
-        } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException | IndexingServiceException | DataNotFoundException | BinaryStoreServiceException | DataCollisionException e) {
+        } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException
+                | IndexingServiceException | DataNotFoundException | BinaryStoreServiceException | DataCollisionException e) {
             ctx.setRollbackOnly();
             throw new MessageServiceException("unable to update message with key [" + key + "]", e);
         }
@@ -692,7 +760,8 @@ public class MessageServiceBean implements MessageService {
             registry.update(key);
             indexing.index(key);
             notification.throwEvent(key, caller, Message.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Message.OBJECT_TYPE, "add-attachment"));
-        } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException | BinaryStoreServiceException | IndexingServiceException | DataNotFoundException e) {
+        } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException
+                | BinaryStoreServiceException | IndexingServiceException | DataNotFoundException e) {
             ctx.setRollbackOnly();
             throw new MessageServiceException("unable to add attachment to message with key [" + key + "]", e);
         }
@@ -713,7 +782,7 @@ public class MessageServiceBean implements MessageService {
             if (message == null) {
                 throw new MessageServiceException("unable to find a message for id " + identifier.getId());
             }
-            if ( !message.containsAttachmentName(name) ) {
+            if (!message.containsAttachmentName(name)) {
                 ctx.setRollbackOnly();
                 throw new MessageServiceException("no attachment found with name [" + name + "] for message with key [" + key + "]");
             }
@@ -725,7 +794,8 @@ public class MessageServiceBean implements MessageService {
             registry.update(key);
             indexing.index(key);
             notification.throwEvent(key, caller, Message.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Message.OBJECT_TYPE, "remove-attachment"));
-        } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException | IndexingServiceException e) {
+        } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException
+                | IndexingServiceException e) {
             ctx.setRollbackOnly();
             throw new MessageServiceException("unable to remove attachment from message with key [" + key + "]", e);
         }
@@ -745,7 +815,7 @@ public class MessageServiceBean implements MessageService {
             if (message == null) {
                 throw new MessageServiceException("unable to find a message for id " + identifier.getId());
             }
-            if ( !message.containsAttachmentName(name) ) {
+            if (!message.containsAttachmentName(name)) {
                 throw new MessageServiceException("no attachment found with name [" + name + "] for message with key: " + key);
             }
 
@@ -886,15 +956,15 @@ public class MessageServiceBean implements MessageService {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
 
-            if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
+            if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
                 throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
             }
 
             switch (identifier.getType()) {
-            case Thread.OBJECT_TYPE:
-                return readThread(key);
-            case Message.OBJECT_TYPE:
-                return readMessage(key);
+                case Thread.OBJECT_TYPE:
+                    return readThread(key);
+                case Message.OBJECT_TYPE:
+                    return readMessage(key);
             }
 
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());

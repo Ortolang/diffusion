@@ -150,11 +150,12 @@ public class JsonStoreServiceWorkerBean implements JsonStoreServiceWorker {
             queue.clear();
         }
         List<Job> jobs = jobService.getUnprocessedJobsOfType(JOB_TYPE);
+        LOGGER.log(Level.INFO, "Restoring "+ jobs.size() + " json-indexing jobs in queue");
         if (failed) {
             List<Job> failedJobs = jobService.getFailedJobsOfType(JOB_TYPE);
+            LOGGER.log(Level.INFO, "Retrying " + failedJobs.size() + " failed json-indexing jobs");
             jobs.addAll(failedJobs);
         }
-        LOGGER.log(Level.INFO, "Put " + jobs.size() + " json-indexing jobs in queue");
         queue.addAll(jobs);
     }
 

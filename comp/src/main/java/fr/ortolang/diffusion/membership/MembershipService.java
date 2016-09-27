@@ -75,7 +75,7 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
     
 	List<String> getConnectedIdentifierSubjects() throws MembershipServiceException, KeyNotFoundException;
 
-	void createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
+	Profile createProfile(String identifier, String givenName, String familyName, String email, ProfileStatus status) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
 	
 	Profile createProfile(String givenName, String familyName, String email) throws MembershipServiceException, ProfileAlreadyExistsException, AccessDeniedException;
 
@@ -116,12 +116,10 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 	boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 	
 	
+	Group systemReadGroup(String key) throws MembershipServiceException, KeyNotFoundException;
+	
     boolean systemValidateTOTP(String identifier, String totp) throws MembershipServiceException, KeyNotFoundException;
     
-    String systemReadProfileSecret(String identifier) throws MembershipServiceException, KeyNotFoundException;
+    Profile systemReadProfile(String identifier) throws MembershipServiceException, KeyNotFoundException;
     
-    String systemReadProfileEmail(String identifier) throws MembershipServiceException, KeyNotFoundException;
-    
-    ProfileData systemGetProfileInfo(String identifier, String name) throws MembershipServiceException, KeyNotFoundException;
-
 }

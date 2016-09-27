@@ -86,11 +86,12 @@ public class Profile extends OrtolangObject {
     private Set<ProfileKey> keys;
     @ElementCollection(fetch = FetchType.LAZY)
     private Map<String, ProfileData> infos;
+    private String referentialId;
 
     public Profile() {
         groupsList = "";
-        keys = new HashSet<ProfileKey>();
-        infos = new HashMap<String, ProfileData>();
+        keys = new HashSet<>();
+        infos = new HashMap<>();
         emailVisibility = ProfileDataVisibility.EVERYBODY;
     }
 
@@ -270,8 +271,20 @@ public class Profile extends OrtolangObject {
         this.infos = infos;
     }
 
+    public ProfileData getInfo(String name) {
+        return infos.get(name);
+    }
+
     public void setInfo(String name, ProfileData info) {
         this.infos.put(name, info);
+    }
+
+    public String getReferentialId() {
+        return referentialId;
+    }
+
+    public void setReferentialId(String referentialId) {
+        this.referentialId = referentialId;
     }
 
     @Override

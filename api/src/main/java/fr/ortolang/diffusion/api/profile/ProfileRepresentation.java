@@ -47,125 +47,135 @@ import javax.xml.bind.annotation.XmlRootElement;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ProfileRepresentation {
 
-	@XmlAttribute(name = "key")
-	private String key;
-	private String givenName;
-	private String familyName;
-	private String email;
-	private String emailHash;
-	private ProfileDataVisibility emailVisibility;
-	private boolean emailVerified;
-	private String status;
-	private String[] groups;
-	private boolean complete;
-	private String friends;
-	
-	public ProfileRepresentation() {
-		groups = new String[0];
-	}
+    @XmlAttribute(name = "key")
+    private String key;
+    private String givenName;
+    private String familyName;
+    private String email;
+    private String emailHash;
+    private ProfileDataVisibility emailVisibility;
+    private boolean emailVerified;
+    private String status;
+    private String[] groups;
+    private boolean complete;
+    private String friends;
+    private String referentialId;
 
-	public String getKey() {
-		return key;
-	}
+    public ProfileRepresentation() {
+        groups = new String[0];
+    }
 
-	public void setKey(String key) {
-		this.key = key;
-	}
+    public String getKey() {
+        return key;
+    }
 
-	public String getGivenName() {
-		return givenName;
-	}
+    public void setKey(String key) {
+        this.key = key;
+    }
 
-	public void setGivenName(String givenName) {
-		this.givenName = givenName;
-	}
+    public String getGivenName() {
+        return givenName;
+    }
 
-	public String getFamilyName() {
-		return familyName;
-	}
+    public void setGivenName(String givenName) {
+        this.givenName = givenName;
+    }
 
-	public void setFamilyName(String familyName) {
-		this.familyName = familyName;
-	}
+    public String getFamilyName() {
+        return familyName;
+    }
 
-	public String getEmail() {
-		return email;
-	}
+    public void setFamilyName(String familyName) {
+        this.familyName = familyName;
+    }
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    public String getEmail() {
+        return email;
+    }
 
-	public String getEmailHash() {
-		return emailHash;
-	}
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-	public void setEmailHash(String emailHash) {
-		this.emailHash = emailHash;
-	}
+    public String getEmailHash() {
+        return emailHash;
+    }
 
-	public ProfileDataVisibility getEmailVisibility() {
-		return emailVisibility;
-	}
+    public void setEmailHash(String emailHash) {
+        this.emailHash = emailHash;
+    }
 
-	public void setEmailVisibility(ProfileDataVisibility emailVisibility) {
-		this.emailVisibility = emailVisibility;
-	}
+    public ProfileDataVisibility getEmailVisibility() {
+        return emailVisibility;
+    }
 
-	public boolean isEmailVerified() {
-		return emailVerified;
-	}
+    public void setEmailVisibility(ProfileDataVisibility emailVisibility) {
+        this.emailVisibility = emailVisibility;
+    }
 
-	public void setEmailVerified(boolean emailVerified) {
-		this.emailVerified = emailVerified;
-	}
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
 
-	public String getStatus() {
-		return status;
-	}
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
 
-	public void setStatus(String status) {
-		this.status = status;
-	}
+    public String getStatus() {
+        return status;
+    }
 
-	public String[] getGroups() {
-		return groups;
-	}
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
-	public void setGroups(String[] groups) {
-		this.groups = groups;
-	}	
+    public String[] getGroups() {
+        return groups;
+    }
 
-	public String getFriends() {
-		return friends;
-	}
-	
-	public void setFriends(String friends) {
-		this.friends = friends;		
-	}
-	
-	public boolean isComplete() {
-		return complete;
-	}
+    public void setGroups(String[] groups) {
+        this.groups = groups;
+    }
 
-	public void setComplete(boolean complete) {
-		this.complete = complete;
-	}
-	
-	public static ProfileRepresentation fromProfile(Profile profile) {
-		ProfileRepresentation representation = new ProfileRepresentation();
-		representation.setKey(profile.getKey());
-		representation.setEmail(profile.getEmail());
-		representation.setEmailHash(profile.getEmailHash());
-		representation.setEmailVisibility(profile.getEmailVisibility());
-		representation.setEmailVerified(profile.isEmailVerified());
-		representation.setGivenName(profile.getGivenName());
-		representation.setFamilyName(profile.getFamilyName());
-		representation.setStatus(profile.getStatus().name());
-		representation.setGroups(profile.getGroups());
-		representation.setComplete(profile.isComplete());
-		representation.setFriends(profile.getFriends());
-		return representation;
-	}
+    public String getFriends() {
+        return friends;
+    }
+
+    public void setFriends(String friends) {
+        this.friends = friends;
+    }
+
+    public boolean isComplete() {
+        return complete;
+    }
+
+    public void setComplete(boolean complete) {
+        this.complete = complete;
+    }
+
+    public String getReferentialId() {
+        return referentialId;
+    }
+
+    public void setReferentialId(String referentialId) {
+        this.referentialId = referentialId;
+    }
+
+    public static ProfileRepresentation fromProfile(Profile profile) {
+        ProfileRepresentation representation = new ProfileRepresentation();
+        representation.setKey(profile.getKey());
+        representation.setEmail(profile.getEmail());
+        representation.setEmailHash(profile.getEmailHash());
+        representation.setEmailVisibility(profile.getEmailVisibility());
+        representation.setEmailVerified(profile.isEmailVerified());
+        representation.setGivenName(profile.getGivenName());
+        representation.setFamilyName(profile.getFamilyName());
+        representation.setStatus(profile.getStatus().name());
+        representation.setGroups(profile.getGroups());
+        representation.setComplete(profile.isComplete());
+        representation.setFriends(profile.getFriends());
+        representation.setReferentialId(profile.getReferentialId());
+        return representation;
+    }
 
 }

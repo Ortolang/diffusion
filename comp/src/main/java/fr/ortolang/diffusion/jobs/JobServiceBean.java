@@ -204,6 +204,11 @@ public class JobServiceBean implements JobService {
     }
 
     @Override
+    public List<Job> getFailedJobs() {
+        return getFailedJobsOfType(null, null, null);
+    }
+
+    @Override
     public List<Job> getFailedJobsOfType(String type) {
         return getFailedJobsOfType(type, null, null);
     }

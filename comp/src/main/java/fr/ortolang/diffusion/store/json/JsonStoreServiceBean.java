@@ -51,6 +51,7 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.*;
 
+import com.orientechnologies.orient.core.Orient;
 import com.orientechnologies.orient.core.db.ODatabaseRecordThreadLocal;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -102,6 +103,7 @@ public class JsonStoreServiceBean implements JsonStoreService {
         LOGGER.log(Level.INFO, "Initializing service with base folder: " + base);
         try {
             Files.createDirectories(base);
+            System.setProperty(Orient.ORIENTDB_HOME, base.toString());
             server = OServerMain.create();
             server.startup(Files.newInputStream(OrtolangConfig.getInstance().getOrientdbConfigPath()));
             server.activate();

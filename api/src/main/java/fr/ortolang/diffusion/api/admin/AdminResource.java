@@ -319,38 +319,22 @@ public class AdminResource {
 		long nbresults = event.systemCountEvents(etype, ofrom, otype, throwed, after);
 		List<OrtolangEvent> events = (List<OrtolangEvent>) event.systemFindEvents(etype, ofrom, otype, throwed, after, offset, limit);
 
-		// UriBuilder objects =
-		// ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
+		// UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
 		GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>();
 		representation.setEntries(events);
 		representation.setOffset((offset <= 0) ? 1 : offset);
 		representation.setSize(nbresults);
 		representation.setLimit(events.size());
-		// representation.setFirst(objects.clone().queryParam("o",
-		// 0).queryParam("l", limit).queryParam("ofrom",
-		// ofrom).queryParam("otype", otype).queryParam("etype",
-		// etype).queryParam("throwed", throwed).queryParam("after",
-		// after).build());
-		// representation.setPrevious(objects.clone().queryParam("o",
-		// Math.max(0, (offset - limit))).queryParam("l",
-		// limit).queryParam("ofrom", ofrom).queryParam("otype",
-		// otype).queryParam("etype", etype).queryParam("throwed",
-		// throwed).queryParam("after", after).build());
-		// representation.setSelf(objects.clone().queryParam("o",
-		// offset).queryParam("l", limit).queryParam("ofrom",
-		// ofrom).queryParam("otype", otype).queryParam("etype",
-		// etype).queryParam("throwed", throwed).queryParam("after",
-		// after).build());
-		// representation.setNext(objects.clone().queryParam("o", (nbresults >
-		// (offset + limit)) ? (offset + limit) : offset).queryParam("l",
-		// limit).queryParam("ofrom", ofrom).queryParam("otype",
-		// otype).queryParam("etype", etype).queryParam("throwed",
-		// throwed).queryParam("after", after).build());
-		// representation.setLast(objects.clone().queryParam("o", ((nbresults -
-		// 1) / limit) * limit).queryParam("l", limit).queryParam("ofrom",
-		// ofrom).queryParam("otype", otype).queryParam("etype",
-		// etype).queryParam("throwed", throwed).queryParam("after",
-		// after).build());
+		// representation.setFirst(objects.clone().queryParam("o", 0).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype",
+		// etype).queryParam("throwed", throwed).queryParam("after", after).build());
+		// representation.setPrevious(objects.clone().queryParam("o", Math.max(0, (offset - limit))).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype",
+		// otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
+		// representation.setSelf(objects.clone().queryParam("o", offset).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype",
+		// etype).queryParam("throwed", throwed).queryParam("after", after).build());
+		// representation.setNext(objects.clone().queryParam("o", (nbresults > (offset + limit)) ? (offset + limit) : offset).queryParam("l", limit).queryParam("ofrom",
+		// ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
+		// representation.setLast(objects.clone().queryParam("o", ((nbresults - 1) / limit) * limit).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype",
+		// otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
 		return Response.ok(representation).build();
 	}
 
@@ -465,6 +449,7 @@ public class AdminResource {
 	@GZIP
 	public Response getJobs(@QueryParam("type") String type, @QueryParam("o") Integer offset, @QueryParam("l") Integer limit,
 			@DefaultValue("false") @QueryParam("failed") boolean failed, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed) {
+		LOGGER.log(Level.INFO, "GET /admin/jobs");
 		List<Job> jobs;
 		if (failed) {
 			jobs = jobService.getFailedJobsOfType(type, offset, limit);
@@ -484,20 +469,54 @@ public class AdminResource {
 	@Path("/jobs/{id}")
 	@GZIP
 	public Response getJob(@PathParam(value = "id") Long id) {
+		LOGGER.log(Level.INFO, "GET /admin/jobs/" + id);
 		Job job = jobService.read(id);
 		return Response.ok().entity(job).build();
 	}
 
 	@DELETE
+	@Path("/jobs")
+	public Response removeJobs(@QueryParam(value = "e") String exception) {
+		LOGGER.log(Level.INFO, "DELETE /admin/jobs");
+		for (Job job : jobService.getFailedJobs()) {
+			if (exception == null || exception.equals(job.getParameter("failedCausedBy"))) {
+				jobService.remove(job.getId());
+			}
+		}
+		return Response.ok().build();
+	}
+
+	@DELETE
 	@Path("/jobs/{id}")
 	public Response removeJob(@PathParam(value = "id") Long id) {
+		LOGGER.log(Level.INFO, "DELETE /admin/jobs/" + id);
 		jobService.remove(id);
+		return Response.ok().build();
+	}
+
+	@GET
+	@Path("/jobs/retry")
+	public Response restoreJobs(@QueryParam("e") String exception) throws OrtolangException {
+		LOGGER.log(Level.INFO, "GET /admin/jobs/retry");
+		if (exception == null) {
+			for (OrtolangWorker worker : workerService.getWorkers()) {
+				worker.retryAll(false);
+			}
+		} else {
+			List<Job> failedJobs = jobService.getFailedJobs();
+			for (Job failedJob : failedJobs) {
+				if (exception.equals(failedJob.getParameter("failedCausedBy"))) {
+					workerService.getWorkerForJobType(failedJob.getType()).retry(failedJob.getId());
+				}
+			}
+		}
 		return Response.ok().build();
 	}
 
 	@GET
 	@Path("/jobs/{id}/retry")
 	public Response retryJob(@PathParam(value = "id") Long id) throws OrtolangException {
+		LOGGER.log(Level.INFO, "GET /admin/jobs/" + id + "/retry");
 		Job job = jobService.read(id);
 		OrtolangWorker worker = workerService.getWorkerForJobType(job.getType());
 		worker.retry(id);
@@ -508,6 +527,7 @@ public class AdminResource {
 	@Path("/jobs/count")
 	public Response countJobs(@QueryParam("type") String type, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed,
 			@DefaultValue("false") @QueryParam("failed") boolean failed) throws CoreServiceException {
+		LOGGER.log(Level.INFO, "GET /admin/jobs/count");
 		Map<String, Long> map = new HashMap<>(1);
 		if (failed) {
 			map.put("count", jobService.countFailedJobs());
@@ -526,6 +546,7 @@ public class AdminResource {
 	@GET
 	@Path("/jobs/workers")
 	public Response getWorkersState() throws OrtolangException {
+		LOGGER.log(Level.INFO, "GET /admin/jobs/workers");
 		Map<String, String> workersState = new HashMap<>();
 		for (OrtolangWorker worker : workerService.getWorkers()) {
 			if (worker != null) {
@@ -538,6 +559,7 @@ public class AdminResource {
 	@GET
 	@Path("/jobs/workers/{id}/start")
 	public Response restartWorker(@PathParam("id") String id) throws OrtolangException {
+		LOGGER.log(Level.INFO, "GET /admin/jobs/workers/" + id + "/start");
 		workerService.startWorker(id);
 		return Response.ok().build();
 	}
@@ -545,6 +567,7 @@ public class AdminResource {
 	@GET
 	@Path("/jobs/workers/queue")
 	public Response getQueues() throws OrtolangException {
+		LOGGER.log(Level.INFO, "GET /admin/jobs/workers/queue");
 		List<OrtolangJob> queue = new ArrayList<>();
 		for (OrtolangWorker worker : workerService.getWorkers()) {
 			queue.addAll(worker.getQueue());
@@ -555,6 +578,7 @@ public class AdminResource {
 	@GET
 	@Path("/jobs/workers/{id}/queue")
 	public Response getWorkerQueue(@PathParam("id") String id) throws OrtolangException {
+		LOGGER.log(Level.INFO, "GET /admin/jobs/workers/" + id + "/queue");
 		List<OrtolangJob> queue = workerService.getQueue(id);
 		return Response.ok(queue).build();
 	}

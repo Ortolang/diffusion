@@ -76,8 +76,8 @@ public class NotifyTask extends RuntimeEngineTask {
     public static final Locale DEFAULT_LOCALE = Locale.FRANCE;
     public static final String NAME = "Notify";
 
-    private Expression userid;
-    private Expression groupid;
+    private Expression userId;
+    private Expression groupId;
     private Expression keyName;
     private Expression keyType;
 
@@ -85,19 +85,19 @@ public class NotifyTask extends RuntimeEngineTask {
     }
 
     public Expression getUserId() {
-        return userid;
+        return userId;
     }
 
     public void setUserId(Expression userid) {
-        this.userid = userid;
+        this.userId = userid;
     }
 
     public Expression getGroupId() {
-        return groupid;
+        return groupId;
     }
 
     public void setGroupId(Expression groupid) {
-        this.groupid = groupid;
+        this.groupId = groupid;
     }
 
     public Expression getKeyType() {
@@ -126,34 +126,34 @@ public class NotifyTask extends RuntimeEngineTask {
             String senderEmail = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SMTP_SENDER_EMAIL);
 
             Map<String, String> recipients = new HashMap<String, String>();
-            if (userid != null && ((String) userid.getValue(execution)).length() > 0) {
-                String user = (String) userid.getValue(execution);
+            if (userId != null && ((String) userId.getValue(execution)).length() > 0) {
+                String user = (String) userId.getValue(execution);
                 LOGGER.log(Level.FINE, "Searching email for user: " + user);
                 try {
-                    String useremail = getMembershipService().systemReadProfileEmail(user);
-                    if (useremail == null || useremail.length() == 0) {
+                    String userEmail = getMembershipService().systemReadProfile(user).getEmail();
+                    if (userEmail == null || userEmail.length() == 0) {
                         LOGGER.log(Level.INFO, "No email found for user: " + user + ", unable to notify");
                     } else {
                         LOGGER.log(Level.FINE, "Email found for user: " + user + ", adding to recipients list");
-                        recipients.put(user, useremail);
+                        recipients.put(user, userEmail);
                     }
                 } catch (MembershipServiceException | KeyNotFoundException e) {
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "error while trying to load email for user: " + user));
                     throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "error while trying to load email for user: " + user, e));
                 }
             }
-            if (groupid != null && ((String) groupid.getValue(execution)).length() > 0) {
-                String group = (String) groupid.getValue(execution);
+            if (groupId != null && ((String) groupId.getValue(execution)).length() > 0) {
+                String group = (String) groupId.getValue(execution);
                 LOGGER.log(Level.FINE, "Loading Group with group: " + group);
                 try {
                     Group g = getMembershipService().readGroup(group);
                     for (String member : g.getMembers()) {
-                        String memberemail = getMembershipService().systemReadProfileEmail(member);
-                        if (memberemail == null || memberemail.length() == 0) {
+                        String memberEmail = getMembershipService().systemReadProfile(member).getEmail();
+                        if (memberEmail == null || memberEmail.length() == 0) {
                             LOGGER.log(Level.INFO, "No email found for group member: " + member + ", unable to notify");
                         } else {
                             LOGGER.log(Level.FINE, "Email found for group member: " + member + ", adding to recipients list");
-                            recipients.put(member, memberemail);
+                            recipients.put(member, memberEmail);
                         }
                     }
                 } catch (MembershipServiceException | KeyNotFoundException | AccessDeniedException e) {
@@ -168,13 +168,13 @@ public class NotifyTask extends RuntimeEngineTask {
                     Map<String, Object> model = new HashMap<>(execution.getVariables());
                     Object[] args = new Object[] { marketUrl, wsalias, senderName, model.get("reason") };
                     model.put("userType", getKeyType().getValue(execution));
-                    model.put("title", getBunbleKey(execution, "title"));
-                    model.put("body", getBunbleKey(execution, "body"));
+                    model.put("title", getBundleKey(execution, "title"));
+                    model.put("body", getBundleKey(execution, "body"));
                     model.put("msg", new MessageResolverMethod(locale));
                     model.put("marketUrl", marketUrl);
                     model.put("wsalias", wsalias);
                     model.put("args", args);
-                    String subject = getMessage(getBunbleKey(execution, "subject"), locale, args);
+                    String subject = getMessage(getBundleKey(execution, "subject"), locale, args);
                     String message = TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("notification", model);
                     notify(senderName, senderEmail, recipients.get(recipient), subject, message);
                 } catch (UnsupportedEncodingException | MessagingException | TemplateEngineException | MembershipServiceException | KeyNotFoundException e) {
@@ -190,8 +190,8 @@ public class NotifyTask extends RuntimeEngineTask {
 
     }
 
-    private Locale getUserLocale(String userid) throws MembershipServiceException, KeyNotFoundException, RuntimeEngineTaskException {
-        ProfileData recipientLanguageData = getMembershipService().systemGetProfileInfo(userid, "language");
+    private Locale getUserLocale(String userId) throws MembershipServiceException, KeyNotFoundException, RuntimeEngineTaskException {
+        ProfileData recipientLanguageData = getMembershipService().systemReadProfile(userId).getInfo("language");
         if (recipientLanguageData != null) {
             return new Locale(recipientLanguageData.getValue());
         } else {
@@ -199,7 +199,7 @@ public class NotifyTask extends RuntimeEngineTask {
         }
     }
 
-    private String getBunbleKey(DelegateExecution execution, String part) {
+    private String getBundleKey(DelegateExecution execution, String part) {
         StringBuilder builder = new StringBuilder();
         builder.append(getKeyName().getValue(execution)).append(".").append(part);
         if (getKeyType().getValue(execution) != null && ((String) getKeyType().getValue(execution)).length() > 0) {
