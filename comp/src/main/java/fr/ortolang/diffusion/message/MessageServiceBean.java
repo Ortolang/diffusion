@@ -956,15 +956,15 @@ public class MessageServiceBean implements MessageService {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
 
-            if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
+            if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
                 throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
             }
 
             switch (identifier.getType()) {
-            case Thread.OBJECT_TYPE:
-                return readThread(key);
-            case Message.OBJECT_TYPE:
-                return readMessage(key);
+                case Thread.OBJECT_TYPE:
+                    return readThread(key);
+                case Message.OBJECT_TYPE:
+                    return readMessage(key);
             }
 
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
