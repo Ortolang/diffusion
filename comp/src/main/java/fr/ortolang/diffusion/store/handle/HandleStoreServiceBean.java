@@ -131,29 +131,31 @@ public class HandleStoreServiceBean implements HandleStoreService {
     public void dropHandle(String handle) throws HandleStoreServiceException {
         String name = handle.toUpperCase(Locale.ENGLISH);
         LOGGER.log(Level.FINE, "dropping handle : " + handle);
-        List<Handle> handles;
-        TypedQuery<Handle> query = em.createNamedQuery("findHandleByName", Handle.class).setParameter("name", name.getBytes());
-        handles = query.getResultList();
-        if ( handles != null && !handles.isEmpty()) {
-            for ( Handle hdl : handles ) {
-                em.remove(hdl);
+        try {
+            List<Handle> oldHandles = listHandleValues(name);
+            for ( Handle old : oldHandles ) {
+                LOGGER.log(Level.FINE, "deleting handle for this name: " + old);
+                em.remove(old);
+                em.flush();
             }
+        } catch (HandleNotFoundException e) {
+            //
         }
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<Handle> findHandlesByName(int offset, int limit, String filter) throws HandleStoreServiceException {
+    public List<Handle> findHandlesByName(String filter) throws HandleStoreServiceException {
         String name = "%" + filter.toUpperCase(Locale.ENGLISH) + "%";
-        TypedQuery<Handle> query = em.createNamedQuery("searchHandleByName", Handle.class).setFirstResult(offset).setMaxResults(limit).setParameter("name", name.getBytes());
+        TypedQuery<Handle> query = em.createNamedQuery("searchHandleByName", Handle.class).setParameter("name", name.getBytes());
         return query.getResultList();
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<Handle> findHandlesByValue(int offset, int limit, String filter) throws HandleStoreServiceException {
+    public List<Handle> findHandlesByValue(String filter) throws HandleStoreServiceException {
         String value = "%" + filter + "%";
-        TypedQuery<Handle> query = em.createNamedQuery("searchHandleByValue", Handle.class).setFirstResult(offset).setMaxResults(limit).setParameter("value", value.getBytes());
+        TypedQuery<Handle> query = em.createNamedQuery("searchHandleByValue", Handle.class).setParameter("value", value.getBytes());
         return query.getResultList();
     }
 
@@ -229,5 +231,7 @@ public class HandleStoreServiceBean implements HandleStoreService {
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         throw new OrtolangException("this service does not managed any object");
     }
+
+
 
 }

@@ -58,8 +58,11 @@ public interface HandleStoreService extends OrtolangService {
 	
 	List<String> listHandlesForKey(String key) throws HandleStoreServiceException;
 	
-	List<Handle> findHandlesByName(int offset, int limit, String handleFilter) throws HandleStoreServiceException;
+	List<Handle> findHandlesByName(String handleFilter) throws HandleStoreServiceException;
+	
+    List<Handle> findHandlesByValue(String valueFilter) throws HandleStoreServiceException;
     
-    List<Handle> findHandlesByValue(int offset, int limit, String valueFilter) throws HandleStoreServiceException;
+  
+    
     
 }
