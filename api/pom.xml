@@ -76,11 +76,11 @@
             <artifactId>commons-compress</artifactId>
             <version>${version.common-compress}</version>
         </dependency>
-       <!--  <dependency>
+        <dependency>
             <groupId>net.bull.javamelody</groupId>
             <artifactId>javamelody-core</artifactId>
             <version>${version.javamelody}</version>
-        </dependency> -->
+        </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
