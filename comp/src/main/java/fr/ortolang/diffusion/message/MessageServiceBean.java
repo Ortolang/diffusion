@@ -869,7 +869,7 @@ public class MessageServiceBean implements MessageService {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
 
-            if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
+            if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
                 throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
             }
 
