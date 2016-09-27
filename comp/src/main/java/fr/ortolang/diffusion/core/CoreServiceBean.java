@@ -996,68 +996,72 @@ public class CoreServiceBean implements CoreService {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void buildHandleList(String wsalias, String tag, String key, Set<OrtolangObjectPid> pids, PathBuilder path, String apiUrlBase, String marketUrlBase) throws CoreServiceException,
             KeyNotFoundException, OrtolangException, InvalidPathException {
-        OrtolangObject object = findObject(key);
-        LOGGER.log(Level.FINE, "Generating pid for key: " + key);
-        String target = ((path.isRoot()) ? marketUrlBase : apiUrlBase) + "/" + wsalias + "/" + tag + ((path.isRoot()) ? "" : path.build());
-        String dynHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + ((path.isRoot()) ? "" : path.build());
-        String staticHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + "/" + tag + ((path.isRoot()) ? "" : path.build());
-        OrtolangObjectPid dpid = new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, dynHandle, key, target, false);
-        boolean adddpid = true;
-        for (OrtolangObjectPid pid : pids) {
-            if (pid.getName().equals(dpid.getName()) && pid.isUserbased()) {
-                adddpid = false;
-                break;
-            }
-        }
-        if (adddpid) {
-            pids.add(dpid);
-        }
-        OrtolangObjectPid spid = new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, staticHandle, key, target, false);
-        boolean addspid = true;
-        for (OrtolangObjectPid pid : pids) {
-            if (pid.getName().equals(spid.getName()) && pid.isUserbased()) {
-                addspid = false;
-                break;
-            }
-        }
-        if (addspid) {
-            pids.add(spid);
-        }
-        if (object instanceof MetadataSource) {
-            MetadataElement mde = ((MetadataSource) object).findMetadataByName(MetadataFormat.PID);
-            if (mde != null) {
-                LOGGER.log(Level.FINE, "PID metadata found, load json and generate corresponding pids");
-                MetadataObject md = readMetadataObject(mde.getKey());
-                try {
-                    JsonReader reader = Json.createReader(binarystore.get(md.getStream()));
-                    JsonObject json = reader.readObject();
-                    if (json.containsKey("pids")) {
-                        JsonArray jpids = json.getJsonArray("pids");
-                        for (int i = 0; i < jpids.size(); i++) {
-                            JsonObject jpid = jpids.getJsonObject(i);
-                            LOGGER.log(Level.FINE, "Generating metadata based pid for key: " + key);
-                            String ctarget = ((path.isRoot()) ? marketUrlBase : apiUrlBase) + "/" + wsalias + "/" + tag + ((path.isRoot()) ? "" : path.build());
-                            OrtolangObjectPid upid = new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, jpid.getString("value"), key, ctarget, true);
-                            Iterator<OrtolangObjectPid> iter = pids.iterator();
-                            while (iter.hasNext()) {
-                                OrtolangObjectPid pid = iter.next();
-                                if (pid.getName().equals(upid.getName())) {
-                                    iter.remove();
-                                }
-                            }
-                            pids.add(upid);
-                        }
-                    }
-                    reader.close();
-                } catch (BinaryStoreServiceException | DataNotFoundException e) {
-                    LOGGER.log(Level.SEVERE, "unable to read pid metadata", e);
+        try {
+            OrtolangObject object = findObject(key);
+            LOGGER.log(Level.FINE, "Generating pid for key: " + key);
+            String target = ((path.isRoot()) ? marketUrlBase : apiUrlBase) + "/" + wsalias + "/" + tag + ((path.isRoot()) ? "" : path.build());
+            String dynHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + ((path.isRoot()) ? "" : path.build());
+            String staticHandle = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias + "/" + tag + ((path.isRoot()) ? "" : path.build());
+            OrtolangObjectPid dpid = new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, dynHandle, key, target, false);
+            boolean adddpid = true;
+            for (OrtolangObjectPid pid : pids) {
+                if (pid.getName().equals(dpid.getName()) && pid.isUserbased()) {
+                    adddpid = false;
+                    break;
                 }
             }
-        }
-        if (object instanceof Collection) {
-            for (CollectionElement element : ((Collection) object).getElements()) {
-                buildHandleList(wsalias, tag, element.getKey(), pids, path.clone().path(element.getName()), apiUrlBase, marketUrlBase);
+            if (adddpid) {
+                pids.add(dpid);
             }
+            OrtolangObjectPid spid = new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, staticHandle, key, target, false);
+            boolean addspid = true;
+            for (OrtolangObjectPid pid : pids) {
+                if (pid.getName().equals(spid.getName()) && pid.isUserbased()) {
+                    addspid = false;
+                    break;
+                }
+            }
+            if (addspid) {
+                pids.add(spid);
+            }
+            if (object instanceof MetadataSource) {
+                MetadataElement mde = ((MetadataSource) object).findMetadataByName(MetadataFormat.PID);
+                if (mde != null) {
+                    LOGGER.log(Level.FINE, "PID metadata found, load json and generate corresponding pids");
+                    MetadataObject md = readMetadataObject(mde.getKey());
+                    try {
+                        JsonReader reader = Json.createReader(binarystore.get(md.getStream()));
+                        JsonObject json = reader.readObject();
+                        if (json.containsKey("pids")) {
+                            JsonArray jpids = json.getJsonArray("pids");
+                            for (int i = 0; i < jpids.size(); i++) {
+                                JsonObject jpid = jpids.getJsonObject(i);
+                                LOGGER.log(Level.FINE, "Generating metadata based pid for key: " + key);
+                                String ctarget = ((path.isRoot()) ? marketUrlBase : apiUrlBase) + "/" + wsalias + "/" + tag + ((path.isRoot()) ? "" : path.build());
+                                OrtolangObjectPid upid = new OrtolangObjectPid(OrtolangObjectPid.Type.HANDLE, jpid.getString("value"), key, ctarget, true);
+                                Iterator<OrtolangObjectPid> iter = pids.iterator();
+                                while (iter.hasNext()) {
+                                    OrtolangObjectPid pid = iter.next();
+                                    if (pid.getName().equals(upid.getName())) {
+                                        iter.remove();
+                                    }
+                                }
+                                pids.add(upid);
+                            }
+                        }
+                        reader.close();
+                    } catch (BinaryStoreServiceException | DataNotFoundException e) {
+                        LOGGER.log(Level.SEVERE, "unable to read pid metadata", e);
+                    }
+                }
+            }
+            if (object instanceof Collection) {
+                for (CollectionElement element : ((Collection) object).getElements()) {
+                    buildHandleList(wsalias, tag, element.getKey(), pids, path.clone().path(element.getName()), apiUrlBase, marketUrlBase);
+                }
+            }
+        } catch ( AccessDeniedException e ) {
+            LOGGER.log(Level.INFO, "Unable to generate a PID for an object that has been set private.");
         }
     }
 
