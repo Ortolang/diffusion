@@ -28,11 +28,11 @@
 			<artifactId>spring-context</artifactId>
 			<version>${version.springframework.spring-context}</version>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>net.bull.javamelody</groupId>
 			<artifactId>javamelody-core</artifactId>
 			<version>${version.javamelody}</version>
-		</dependency>
+		</dependency> -->
 	</dependencies>
 
 	<build>
