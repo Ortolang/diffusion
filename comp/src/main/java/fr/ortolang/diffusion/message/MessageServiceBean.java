@@ -914,6 +914,12 @@ public class MessageServiceBean implements MessageService {
     }
 
     @Override
+    public Map<String, Object> getElasticSearchContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException {
+        // TODO
+        return null;
+    }
+
+    @Override
     public String getServiceName() {
         return SERVICE_NAME;
     }

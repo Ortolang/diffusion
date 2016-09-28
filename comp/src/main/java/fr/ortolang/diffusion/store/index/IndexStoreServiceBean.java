@@ -102,7 +102,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
 
     private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
+
     private Path base;
     private Analyzer analyzer;
     private Directory directory;
@@ -180,12 +180,12 @@ public class IndexStoreServiceBean implements IndexStoreService {
             IndexSearcher searcher = new IndexSearcher(reader);
             QueryParser parser = new QueryParser(IndexStoreDocumentBuilder.CONTENT_FIELD, analyzer);
             Query query = parser.parse(queryString);
-            
+
             FunctionQuery boostQuery = new FunctionQuery(new LongFieldSource(IndexStoreDocumentBuilder.BOOST_FIELD));
             Query q = new CustomScoreQuery(query, boostQuery);
 
             TopDocs docs = searcher.search(q, 100);
-            List<OrtolangSearchResult> results = new ArrayList<OrtolangSearchResult>(docs.totalHits);
+            List<OrtolangSearchResult> results = new ArrayList<>(docs.totalHits);
             SimpleHTMLFormatter formatter = new SimpleHTMLFormatter("<span class='highlighted'>", "</span>");
             QueryScorer scorer = new QueryScorer(query);
             Highlighter highlighter = new Highlighter(formatter, scorer);
@@ -194,16 +194,16 @@ public class IndexStoreServiceBean implements IndexStoreService {
                 Document doc = searcher.doc(docs.scoreDocs[i].doc);
                 float score = docs.scoreDocs[i].score;
                 String identifier = doc.get(IndexStoreDocumentBuilder.IDENTIFIER_FIELD);
-                String higlightedText = highlighter.getBestFragment(analyzer, IndexStoreDocumentBuilder.CONTENT_FIELD, doc.get(IndexStoreDocumentBuilder.CONTENT_FIELD));
+                String highlightedText = highlighter.getBestFragment(analyzer, IndexStoreDocumentBuilder.CONTENT_FIELD, doc.get(IndexStoreDocumentBuilder.CONTENT_FIELD));
                 String name = doc.get(IndexStoreDocumentBuilder.NAME_FIELD);
                 String service = doc.get(IndexStoreDocumentBuilder.SERVICE_FIELD);
                 String type = doc.get(IndexStoreDocumentBuilder.TYPE_FIELD);
                 String key = doc.get(IndexStoreDocumentBuilder.KEY_FIELD);
-                Map<String, String> properties = new HashMap<String,String>();
+                Map<String, String> properties = new HashMap<>();
                 for(IndexableField field : doc.getFields()) {
-                	if(field.name().startsWith(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX)) {
-                		properties.put(field.name(), field.stringValue());
-                	}
+                    if(field.name().startsWith(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX)) {
+                        properties.put(field.name().replace(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX, "").toLowerCase(), field.stringValue());
+                    }
                 }
                 OrtolangSearchResult result = new OrtolangSearchResult();
                 result.setScore(score);
@@ -212,7 +212,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
                 result.setService(service);
                 result.setType(type);
                 result.setKey(key);
-                result.setExplain(higlightedText);
+                result.setExplain(highlightedText);
                 result.setProperties(properties);
                 results.add(result);
             }
@@ -222,7 +222,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
             throw new IndexStoreServiceException("Can't search in index using '" + queryString + "'\n", e);
         }
     }
-    
+
     @Override
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -240,21 +240,21 @@ public class IndexStoreServiceBean implements IndexStoreService {
             }
             if ( docs.scoreDocs.length == 0 ) {
                 throw new IndexStoreServiceException("unable to find a document for this key: " + key);
-            } 
+            }
             return searcher.doc(docs.scoreDocs[0].doc).toString();
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "unable to get document for key " + key, e);
             throw new IndexStoreServiceException("Can't get document from index for key '" + key + "'\n", e);
         }
     }
-    
+
     //Service methods
-    
+
     @Override
     public String getServiceName() {
         return IndexStoreService.SERVICE_NAME;
     }
-    
+
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {

@@ -80,7 +80,7 @@ import fr.ortolang.diffusion.OrtolangObjectSize;
 public class JsonStoreServiceBean implements JsonStoreService {
 
     private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceBean.class.getName());
-    public static final String DEFAULT_JSON_HOME = "/databases/json-store";
+    private static final String DEFAULT_JSON_HOME = "/databases/json-store";
 
     private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };

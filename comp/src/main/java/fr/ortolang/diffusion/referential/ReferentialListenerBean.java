@@ -60,7 +60,7 @@ import java.util.logging.Logger;
 @MessageDriven(name = "ReferentialMDB", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/notification"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge"),
-        @ActivationConfigProperty(propertyName = "messageSelector", propertyValue="eventtype = 'membership.profile.create' OR eventtype = 'membership.profile.update' OR eventtype = 'membership.profile.update-infos'")})
+        @ActivationConfigProperty(propertyName = "messageSelector", propertyValue="eventtype LIKE 'membership.profile.%'")})
 @SecurityDomain("ortolang")
 @RunAs("system")
 public class ReferentialListenerBean implements MessageListener {
@@ -79,6 +79,25 @@ public class ReferentialListenerBean implements MessageListener {
             OrtolangEvent event = new Event();
             event.fromJMSMessage(message);
             Profile profile = membership.systemReadProfile(event.getFromObject());
+//            if ("membership.profile.create".equals(event.getType()) && profile.isComplete()) {
+//                String refEntityName = (StringUtils.stripAccents(profile.getGivenName()) + "_" + StringUtils.stripAccents(profile.getFamilyName())).toLowerCase();
+//                JsonObjectBuilder builder = Json.createObjectBuilder();
+//                builder.add("schema", "http://www.ortolang.fr/schema/person/02#");
+//                builder.add("type", "Person");
+//                builder.add("id", refEntityName);
+//                builder.add("fullname", profile.getFullName());
+//                builder.add("firstname", profile.getGivenName());
+//                builder.add("lastname", profile.getFamilyName());
+//                builder.add("username", "${" + profile.getId() + "}");
+//                builder.add("title", profile.getInfo("civility") == null ? "" : profile.getInfo("civility").getValue());
+//                builder.add("organization", profile.getInfo("organisation") == null ? "" : profile.getInfo("organisation").getValue());
+//                try {
+//                    ReferentialEntity entity = referential.systemCreateEntity(refEntityName, ReferentialEntityType.PERSON, builder.build().toString(), profile.getId());
+//                    membership.systemSetProfileReferentialId(profile.getId(), entity.getKey());
+//                } catch (ReferentialServiceException | KeyAlreadyExistsException e) {
+//                    LOGGER.log(Level.SEVERE, "Unable to create referential entity", e);
+//                }
+//            }
             if (profile.getReferentialId() != null) {
                 indexing.index(profile.getReferentialId());
             }

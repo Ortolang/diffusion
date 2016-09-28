@@ -121,5 +121,7 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
     boolean systemValidateTOTP(String identifier, String totp) throws MembershipServiceException, KeyNotFoundException;
     
     Profile systemReadProfile(String identifier) throws MembershipServiceException, KeyNotFoundException;
-    
+
+    void systemSetProfileReferentialId(String identifier, String referentialId) throws MembershipServiceException, KeyNotFoundException;
+
 }

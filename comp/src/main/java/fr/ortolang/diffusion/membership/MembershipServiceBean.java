@@ -37,6 +37,7 @@ package fr.ortolang.diffusion.membership;
  */
 
 import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
+import static org.bouncycastle.crypto.tls.ConnectionEnd.client;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
@@ -60,6 +61,8 @@ import javax.json.JsonObjectBuilder;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
@@ -567,9 +570,27 @@ public class MembershipServiceBean implements MembershipService {
             if (profile == null) {
                 throw new MembershipServiceException("unable to find a profile for id " + oid.getId());
             }
+            profile.setKey(key);
             return profile;
         } catch (RegistryServiceException e) {
-            throw new MembershipServiceException("unable to read profile email for identifier: " + identifier, e);
+            throw new MembershipServiceException("unable to read profile for identifier: " + identifier, e);
+        }
+    }
+
+    @Override
+    @RolesAllowed({"admin", "system"})
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void systemSetProfileReferentialId(String identifier, String referentialId) throws MembershipServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "#SYSTEM# set profile referential ID");
+        try {
+            Profile profile = systemReadProfile(identifier);
+            profile.setReferentialId(referentialId);
+            em.merge(profile);
+            registry.update(profile.getKey());
+
+            notification.throwEvent(profile.getKey(), "system", Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update"));
+        } catch (RegistryServiceException | NotificationServiceException | KeyLockedException e) {
+            throw new MembershipServiceException("unable to set profile referential ID for identifier: " + identifier, e);
         }
     }
 
@@ -1074,16 +1095,16 @@ public class MembershipServiceBean implements MembershipService {
                 }
                 if (profile.getFullName() != null) {
                     content.setName(profile.getFullName());
-                    content.addContentPart(profile.getFullName());
+                    content.addContentPart("fullname", profile.getFullName(), TextField.TYPE_STORED);
                 }
                 if (profile.getEmail() != null && profile.getEmail().length() > 0) {
                     if (profile.getEmailVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
-                        content.addContentPart(profile.getEmail());
+                        content.addContentPart("email", profile.getEmail(), StringField.TYPE_STORED);
                     }
                 }
                 for (ProfileData info : profile.getInfos().values()) {
                     if (info.getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
-                        content.addContentPart(info.getValue());
+                        content.addContentPart(info.getName(), info.getValue());
                     }
                 }
             }
@@ -1157,6 +1178,42 @@ public class MembershipServiceBean implements MembershipService {
         } catch (KeyNotFoundException | RegistryServiceException e) {
             throw new OrtolangException("unable to find an object for key " + key);
         }
+    }
+
+    @Override
+    public Map<String, Object> getElasticSearchContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException {
+        OrtolangObjectIdentifier identifier = registry.lookup(key);
+
+        if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+            throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+        }
+
+        Map<String, Object> map = new HashMap<>();
+
+        switch (identifier.getType()) {
+        case Profile.OBJECT_TYPE:
+            Profile profile = em.find(Profile.class, identifier.getId());
+            map.put("key", key);
+            map.put("givenName", profile.getGivenName());
+            map.put("familyName", profile.getFamilyName());
+            map.put("emailHash", profile.getEmailHash());
+            if (profile.getEmailVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
+                map.put("email", profile.getEmail());
+            }
+            map.put("groups", profile.getGroups());
+            Map<String, Object> infos = new HashMap<>();
+            for (Map.Entry<String, ProfileData> info : profile.getInfos().entrySet()) {
+                if (info.getValue().getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
+                    infos.put(info.getKey(), info.getValue().getValue());
+                }
+            }
+            map.put("infos", infos);
+            break;
+        case Group.OBJECT_TYPE:
+            break;
+        }
+        return map;
+
     }
 
     @Override

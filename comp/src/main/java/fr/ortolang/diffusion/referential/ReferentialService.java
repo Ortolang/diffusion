@@ -48,19 +48,21 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface ReferentialService extends OrtolangService, OrtolangIndexableService {
 
-	String SERVICE_NAME = "referential";
-	
-	List<ReferentialEntity> listEntities(ReferentialEntityType type) throws ReferentialServiceException;
-	
-	public ReferentialEntity createEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyAlreadyExistsException, AccessDeniedException;
-	
-	ReferentialEntity readEntity(String name) throws ReferentialServiceException, KeyNotFoundException;
-	
-	void updateEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
+    String SERVICE_NAME = "referential";
 
-	void updateEntity(String name, ReferentialEntityType type, String content, Long boost) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
-	
-	void deleteEntity(String name) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
+    List<ReferentialEntity> listEntities(ReferentialEntityType type) throws ReferentialServiceException;
 
-	List<ReferentialEntity> findEntitiesByTerm(ReferentialEntityType type, String term, String lang) throws ReferentialServiceException;
+    ReferentialEntity createEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyAlreadyExistsException, AccessDeniedException;
+
+    ReferentialEntity systemCreateEntity(String name, ReferentialEntityType type, String content, String caller) throws ReferentialServiceException, KeyAlreadyExistsException, AccessDeniedException;
+
+    ReferentialEntity readEntity(String name) throws ReferentialServiceException, KeyNotFoundException;
+
+    void updateEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
+
+    void updateEntity(String name, ReferentialEntityType type, String content, Long boost) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
+
+    void deleteEntity(String name) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
+
+    List<ReferentialEntity> findEntitiesByTerm(ReferentialEntityType type, String term, String lang) throws ReferentialServiceException;
 }

@@ -1,8 +1,12 @@
 package fr.ortolang.diffusion;
 
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
+
+import java.util.Map;
 
 /*
  * #%L
@@ -41,9 +45,11 @@ import fr.ortolang.diffusion.store.json.IndexableJsonContent;
  */
 
 public interface OrtolangIndexableService {
-	
-	IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException;
-	
-	IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException, NotIndexableContentException;
-	
+
+    IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException;
+
+    IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException, NotIndexableContentException;
+
+    Map<String, Object> getElasticSearchContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException;
+
 }

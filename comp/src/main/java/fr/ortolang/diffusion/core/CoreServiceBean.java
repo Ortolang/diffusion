@@ -3803,6 +3803,12 @@ public class CoreServiceBean implements CoreService {
         }
     }
 
+    @Override
+    public Map<String, Object> getElasticSearchContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException {
+        // TODO
+        return null;
+    }
+
     private String getContent(InputStream is) throws IOException {
         String content = null;
         try {

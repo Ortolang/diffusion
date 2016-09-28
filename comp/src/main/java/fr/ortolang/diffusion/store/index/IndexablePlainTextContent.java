@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.store.index;
 
+import org.apache.lucene.document.FieldType;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,22 +42,22 @@ import java.util.List;
  */
 
 public class IndexablePlainTextContent {
-	
+
     private String name = "";
-	private StringBuilder sb;
-	private List<IndexablePlainTextContentProperty> properties;
-	private long boost;
+    private StringBuilder sb;
+    private List<IndexablePlainTextContentProperty> properties;
+    private long boost;
 
     public IndexablePlainTextContent() {
         sb = new StringBuilder();
-        properties = new ArrayList<IndexablePlainTextContentProperty>();
+        properties = new ArrayList<>();
         boost = 1L;
     }
-    
+
     public String getName() {
         return name;
     }
-    
+
     public void setName(String name) {
         this.name = name;
     }
@@ -63,24 +65,38 @@ public class IndexablePlainTextContent {
     public void addContentPart(String content) {
         sb.append(content).append(" ");
     }
-    
-    public List<IndexablePlainTextContentProperty> getProperties() {
-    	return properties;
+
+    public void addContentPart(String name, String value) {
+        sb.append(value).append(" ");
+        addProperty(name, value);
     }
-    
-    public void addProperties(IndexablePlainTextContentProperty property) {
-    	properties.add(property);
+
+    public void addContentPart(String name, String value, FieldType fieldType) {
+        sb.append(value).append(" ");
+        addProperty(name, value, fieldType);
+    }
+
+    public List<IndexablePlainTextContentProperty> getProperties() {
+        return properties;
+    }
+
+    public void addProperty(String name, String value) {
+        properties.add(new IndexablePlainTextContentProperty(name, value));
+    }
+
+    public void addProperty(String name, String value, FieldType fieldType) {
+        properties.add(new IndexablePlainTextContentProperty(name, value, fieldType));
     }
 
     public long getBoost() {
-		return boost;
-	}
+        return boost;
+    }
 
-	public void setBoost(long boost) {
-		this.boost = boost;
-	}
+    public void setBoost(long boost) {
+        this.boost = boost;
+    }
 
-	@Override
+    @Override
     public String toString() {
         return sb.toString();
     }
