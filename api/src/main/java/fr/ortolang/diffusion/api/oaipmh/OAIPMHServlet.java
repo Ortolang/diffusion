@@ -94,7 +94,8 @@ public class OAIPMHServlet {
             , @QueryParam("identifier") String identifier
             , @QueryParam("metadataPrefix") String metadataPrefix
             , @QueryParam("from") String from
-            , @QueryParam("until") String until) throws URISyntaxException {
+            , @QueryParam("until") String until
+            , @QueryParam("resumptionToken") String resumptionToken) throws URISyntaxException {
 
         Context context = new Context();
         context.withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
@@ -145,6 +146,7 @@ public class OAIPMHServlet {
         OAIPMHServlet.putParameter("metadataPrefix", metadataPrefix, reqParam);
         OAIPMHServlet.putParameter("from", from, reqParam);
         OAIPMHServlet.putParameter("until", until, reqParam);
+        OAIPMHServlet.putParameter("resumptionToken", resumptionToken, reqParam);
 
         OAIRequest oaiRequest = new OAIRequest(reqParam);
 
