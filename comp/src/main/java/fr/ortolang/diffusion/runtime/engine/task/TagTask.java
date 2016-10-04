@@ -92,7 +92,7 @@ public class TagTask extends RuntimeEngineTask {
 
         try {
             LOGGER.log(Level.FINE, "tagging workspace snapshot...");
-            getCoreService().tagWorkspace(wskey, tag, snapshot);
+            getCoreService().systemTagWorkspace(wskey, tag, snapshot);
             LOGGER.log(Level.FINE, "workspace snapshot [" + snapshot + "] tagged as [" + tag + "]");
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "Workspace Snapshot [" + snapshot + "] tagged as [" + tag + "]"));
         } catch (Exception e) {

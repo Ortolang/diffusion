@@ -289,7 +289,7 @@ public class CoreServiceBean implements CoreService {
 
             Map<String, List<String>> rules = new HashMap<String, List<String>>();
             rules.put(members, Arrays.asList("read", "create", "update", "delete", "download"));
-            rules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "download"));
+            rules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "update", "download"));
             rules.put(MembershipService.PUBLISHERS_GROUP_KEY, Arrays.asList("read", "download"));
             rules.put(MembershipService.REVIEWERS_GROUP_KEY, Arrays.asList("read", "download"));
             authorisation.createPolicy(head, members);
@@ -564,22 +564,17 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void tagWorkspace(String wskey, String tag, String snapshot) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceReadOnlyException {
-        LOGGER.log(Level.FINE, "tagging workspace [" + wskey + "] and snapshot [" + snapshot + "]");
+    public void systemTagWorkspace(String wskey, String tag, String snapshot) throws CoreServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "#SYSTEM# tagging workspace [" + wskey + "] and snapshot [" + snapshot + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
-            List<String> subjects = membership.getConnectedIdentifierSubjects();
 
             OrtolangObjectIdentifier identifier = registry.lookup(wskey);
             checkObjectType(identifier, Workspace.OBJECT_TYPE);
-            authorisation.checkPermission(wskey, subjects, "update");
-
+            
             Workspace workspace = em.find(Workspace.class, identifier.getId());
             if (workspace == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
-            }
-            if (applyReadOnly(caller, subjects, workspace)) {
-                throw new WorkspaceReadOnlyException("unable to tag workspace with key [" + wskey + "] because it is read only");
             }
             workspace.setKey(wskey);
 
@@ -614,7 +609,7 @@ public class CoreServiceBean implements CoreService {
                 throw new CoreServiceException("tag name is invalid: " + tag);
             }
 
-        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | IndexingServiceException e) {
+        } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred while tagging workspace snapshot", e);
             throw new CoreServiceException("unable to tag workspace with key [" + wskey + "]", e);

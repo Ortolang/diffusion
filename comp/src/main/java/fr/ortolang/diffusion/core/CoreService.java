@@ -90,8 +90,6 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
     String getLatestSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
-    void tagWorkspace(String wskey, String tag, String snapshot) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
-
     void deleteWorkspace(String wskey) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
 
     void deleteWorkspace(String wskey, boolean force) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
@@ -238,6 +236,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     void systemSetWorkspaceReadOnly(String wskey, boolean readonly) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;
     
     void systemUpdateWorkspace(String wskey, String alias, boolean changed, String head, String members, String privileged, boolean readOnly, String type) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;
+    
+    void systemTagWorkspace(String wskey, String tag, String snapshot) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
 
     void systemCreateMetadata(String key, String name, String hash, String filename)
             throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
