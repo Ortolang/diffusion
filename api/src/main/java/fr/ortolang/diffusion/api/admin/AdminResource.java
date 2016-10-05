@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -31,6 +32,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
+
 
 /*
  * #%L
@@ -85,6 +87,9 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
+import fr.ortolang.diffusion.ftp.FtpService;
+import fr.ortolang.diffusion.ftp.FtpServiceException;
+import fr.ortolang.diffusion.ftp.FtpSession;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.jobs.JobService;
 import fr.ortolang.diffusion.jobs.entity.Job;
@@ -151,6 +156,8 @@ public class AdminResource {
 	private JobService jobService;
 	@EJB
 	private WorkerService workerService;
+	@EJB
+    private FtpService ftpService;
 
 	@GET
 	@Path("/infos/{service}")
@@ -582,4 +589,12 @@ public class AdminResource {
 		List<OrtolangJob> queue = workerService.getQueue(id);
 		return Response.ok(queue).build();
 	}
+	
+	@GET
+    @Path("/ftp/sessions")
+    public Response getActiveFtpSessions() throws FtpServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/ftp/sessions");
+        Set<FtpSession> sessions = ftpService.getActiveSessions();
+        return Response.ok(sessions).build();
+    }
 }
