@@ -76,22 +76,11 @@ public class OLAC extends OAI_DC {
     	fields.add(XMLElement.createDcElement(name, value).withAttribute("xsi:type", xsitype).withAttribute("olac:code", olaccode).withAttribute("xml:lang", lang));
     }
 
-    public static OLAC valueOf(JsonObject doc, JsonObject workspaceDoc) {
+    public static OLAC valueOf(JsonObject doc) {
     	OLAC olac = new OLAC();
 
         // Identifier
-        JsonObject workspace = doc.getJsonObject("meta_ortolang-workspace-json");
-//        String snapshotName = workspace.getString("snapshotName");
-//        JsonObject workspaceMeta = workspaceDoc.getJsonObject("meta_ortolang-workspace-json");
-//        JsonArray tags = workspaceMeta.getJsonArray("tags");
-//        if(tags!=null) {
-//        	for(JsonObject tag : tags.getValuesAs(JsonObject.class)) {
-//        		if(tag.getString("snapshot").equals(snapshotName)) {
-//        			olac.addDctermsField("identifier", "dcterms:URI", identifier(workspace.getString("wsalias"),  tag.getString("name")));
-//        		}
-//        	}
-//        }
-        olac.addDctermsField("identifier", "dcterms:URI", identifier(workspace.getString("wsalias")));
+        olac.addDctermsField("identifier", "dcterms:URI", identifier(doc.getJsonObject("meta_ortolang-workspace-json").getString("wsalias")));
         
         try {
         	JsonObject meta = doc.getJsonObject("meta_ortolang-item-json");

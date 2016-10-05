@@ -104,21 +104,10 @@ public class OAI_DC {
         return buffer.toString();
     }
 
-    public static OAI_DC valueOf(JsonObject doc, JsonObject workspaceDoc) {
+    public static OAI_DC valueOf(JsonObject doc) {
         OAI_DC oaiDc = new OAI_DC();
 
-        JsonObject workspace = doc.getJsonObject("meta_ortolang-workspace-json");
-        //        String snapshotName = workspace.getString("snapshotName");
-        //        JsonObject workspaceMeta = workspaceDoc.getJsonObject("meta_ortolang-workspace-json");
-        //        JsonArray tags = workspaceMeta.getJsonArray("tags");
-        //        if(tags!=null) {
-        //        	for(JsonObject tag : tags.getValuesAs(JsonObject.class)) {
-        //        		if(tag.getString("snapshot").equals(snapshotName)) {
-        //        			oaiDc.addDcField("identifier", identifier(workspace.getString("wsalias"), tag.getString("name")));
-        //        		}
-        //        	}
-        //        }
-        oaiDc.addDcField("identifier", identifier(workspace.getString("wsalias")));
+        oaiDc.addDcField("identifier", identifier(doc.getJsonObject("meta_ortolang-workspace-json").getString("wsalias")));
 
         JsonObject meta = doc.getJsonObject("meta_ortolang-item-json");
 
