@@ -179,6 +179,17 @@
 			<artifactId>Saxon-HE</artifactId>
 			<version>${version.saxon}</version>
 		</dependency>
+        <dependency>
+            <groupId>org.piwik.java.tracking</groupId>
+            <artifactId>piwik-java-tracker</artifactId>
+            <version>${version.piwik}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javaee</groupId>
+                    <artifactId>javaee-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
 		<dependency>
 			<groupId>com.sleepycat</groupId>
 			<artifactId>je</artifactId>

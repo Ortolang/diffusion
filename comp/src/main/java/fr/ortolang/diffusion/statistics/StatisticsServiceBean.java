@@ -4,7 +4,7 @@ package fr.ortolang.diffusion.statistics;
  * #%L
  * ORTOLANG
  * A online network structure for hosting language resources and tools.
- * 
+ *
  * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
  * Etienne Petitjean / ATILF UMR 7118 - CNRS
  * Jérôme Blanchard / ATILF UMR 7118 - CNRS
@@ -14,7 +14,7 @@ package fr.ortolang.diffusion.statistics;
  * Ulrike Fleury / ATILF UMR 7118 - CNRS
  * Frédéric Pierre / ATILF UMR 7118 - CNRS
  * Céline Moro / ATILF UMR 7118 - CNRS
- *  
+ *
  * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
  * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
  * %%
@@ -24,56 +24,52 @@ package fr.ortolang.diffusion.statistics;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.Local;
-import javax.ejb.Schedule;
-import javax.ejb.SessionContext;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.statistics.entity.StatisticValue;
+import fr.ortolang.diffusion.statistics.entity.WorkspaceStatisticValue;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.thumbnail.ThumbnailService;
+import org.apache.http.HttpResponse;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+import org.jboss.ejb3.annotation.SecurityDomain;
+import org.piwik.java.tracking.PiwikRequest;
+import org.piwik.java.tracking.PiwikTracker;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.*;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Startup
 @Local(StatisticsService.class)
@@ -146,7 +142,6 @@ public class StatisticsServiceBean implements StatisticsService {
 
     @Override
     @Schedule(hour="23")
-    //@Schedule(minute="*/5", hour="*")
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void probe() throws StatisticsServiceException {
         LOGGER.log(Level.FINEST, "probing stat for fresh values");
@@ -171,6 +166,165 @@ public class StatisticsServiceBean implements StatisticsService {
             } catch ( OrtolangException e ) {
                 LOGGER.log(Level.WARNING, "unable to probe some stats", e);
             }
+        }
+    }
+
+    @Override
+    @Schedule(hour="2")
+    public void probePiwik() throws StatisticsServiceException {
+        LOGGER.log(Level.FINEST, "Probing Piwik stats for fresh values");
+        try {
+            Integer siteId = Integer.parseInt(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID));
+            String host = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_HOST);
+            String authToken = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_AUTH_TOKEN);
+            PiwikTracker tracker = new PiwikTracker(host + "index.php");
+
+            List<String> aliasList = (List<String>) em.createNamedQuery("listAllWorkspaceAlias").getResultList();
+            TypedQuery<Long> countWorkspaceValues = em.createNamedQuery("countWorkspaceValues", Long.class);
+            if (countWorkspaceValues.getSingleResult() == 0L) {
+                getPreviousStatistics(siteId, authToken, aliasList, tracker);
+                return;
+            }
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DATE, -1);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM");
+            String range = dateFormat.format(calendar.getTime()) + "-01,yesterday";
+            SimpleDateFormat monthFormat = new SimpleDateFormat("yyyyMM");
+            long timestamp = Long.parseLong(monthFormat.format(new Date()));
+
+            for (String alias : aliasList) {
+                // Views
+                PiwikRequest request = makePiwikRequestForViews(siteId, authToken, alias, range);
+                HttpResponse viewsResponse = tracker.sendRequest(request);
+                // Downloads
+                request = makePiwikRequestForDownloads(siteId, authToken, alias, range);
+                HttpResponse downloadsResponse = tracker.sendRequest(request);
+                // Single Downloads
+                request = makePiwikRequestForSingleDownloads(siteId, authToken, alias, range);
+                HttpResponse singleDownloadsResponse = tracker.sendRequest(request);
+                compileResults(alias, timestamp, viewsResponse, downloadsResponse, singleDownloadsResponse);
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            throw new StatisticsServiceException("Could not probe Piwik stats", e);
+        }
+    }
+
+
+    private PiwikRequest makePiwikRequestForDownloads(Integer siteId, String authToken, String alias, String range) {
+        return makePiwikRequest(siteId, authToken, alias, range, true, false);
+    }
+
+    private PiwikRequest makePiwikRequestForSingleDownloads(Integer siteId, String authToken, String alias, String range) {
+        return makePiwikRequest(siteId, authToken, alias, range, true, true);
+    }
+
+    private PiwikRequest makePiwikRequestForViews(Integer siteId, String authToken, String alias, String range) {
+        return makePiwikRequest(siteId, authToken, alias, range, false, null);
+    }
+
+    private PiwikRequest makePiwikRequest(Integer siteId, String authToken, String alias, String range, boolean downloads, Boolean single) {
+        PiwikRequest request = new PiwikRequest(siteId, null);
+        request.setCustomTrackingParameter("module", "API");
+        request.setCustomTrackingParameter("idSite", siteId);
+        if (downloads) {
+            request.setCustomTrackingParameter("method", "Actions.getDownloads");
+        } else {
+            request.setCustomTrackingParameter("method", "Actions.getPageUrls");
+        }
+        if (range != null) {
+            request.setCustomTrackingParameter("date", range);
+            request.setCustomTrackingParameter("period", "range");
+        } else {
+            request.setCustomTrackingParameter("date", "yesterday");
+            request.setCustomTrackingParameter("period", "day");
+        }
+        request.setCustomTrackingParameter("format", "JSON");
+        request.setCustomTrackingParameter("expanded", "1");
+        request.setCustomTrackingParameter("flat", "1");
+        if (downloads) {
+            request.setCustomTrackingParameter("filter_pattern_recursive", "api/content/" + (single ? "" : "export/") + alias + "/");
+        } else {
+            // Get stats for all the different versions and not if url /market/item/.*
+            request.setCustomTrackingParameter("filter_pattern_recursive", "^market/(?!item)\\w*/" + alias + "($|/.*$)");
+        }
+        request.setAuthToken(authToken);
+        return request;
+    }
+
+    private void compileResults(String alias, long timestamp, HttpResponse viewsResponse, HttpResponse downloadsResponse, HttpResponse singleDownloadsResponse) throws IOException {
+        try {
+            WorkspaceStatisticValue lastStatisticValue;
+            WorkspaceStatisticValue statisticValue;
+            try {
+                lastStatisticValue = readWorkspaceValue(alias);
+            } catch (StatisticNameNotFoundException e) {
+                lastStatisticValue = null;
+            }
+            boolean alreadyExist = lastStatisticValue != null && lastStatisticValue.getTimestamp() == timestamp;
+            if (alreadyExist) {
+                statisticValue = lastStatisticValue;
+            } else {
+                statisticValue = new WorkspaceStatisticValue(alias, timestamp);
+            }
+            // Views
+            BufferedReader viewsReader = new BufferedReader(new InputStreamReader(viewsResponse.getEntity().getContent()));
+            String viewsContent = viewsReader.readLine();
+            JSONArray viewsResults = new JSONArray(viewsContent);
+            for (int i = 0; i < viewsResults.length(); i++) {
+                JSONObject result = viewsResults.getJSONObject(i);
+                if (!result.has("url")) {
+                    continue;
+                }
+                if (result.has("nb_visits")) {
+                    statisticValue.addVisits(result.getLong("nb_visits"));
+                }
+                if (result.has("nb_uniq_visitors")) {
+                    statisticValue.addUniqueVisitors(result.getLong("nb_uniq_visitors"));
+                }
+                if (result.has("nb_hits")) {
+                    statisticValue.addHits(result.getLong("nb_hits"));
+                }
+            }
+            // Downloads
+            BufferedReader downloadsReader = new BufferedReader(new InputStreamReader(downloadsResponse.getEntity().getContent()));
+            String downloadsContent = downloadsReader.readLine();
+            JSONArray downloadsResults = new JSONArray(downloadsContent);
+            for (int i = 0; i < downloadsResults.length(); i++) {
+                JSONObject result = downloadsResults.getJSONObject(i);
+                if (!result.has("url")) {
+                    continue;
+                }
+                if (result.has("nb_hits")) {
+                    statisticValue.addDownloads(result.getLong("nb_hits"));
+                }
+            }
+            // Single Downloads
+            BufferedReader singleDownloadsReader = new BufferedReader(new InputStreamReader(singleDownloadsResponse.getEntity().getContent()));
+            String singleDownloadsContent = singleDownloadsReader.readLine();
+            JSONArray singleDownloadsResults = new JSONArray(singleDownloadsContent);
+            for (int i = 0; i < singleDownloadsResults.length(); i++) {
+                JSONObject result = singleDownloadsResults.getJSONObject(i);
+                if (!result.has("url")) {
+                    continue;
+                }
+                if (result.has("nb_hits")) {
+                    statisticValue.addSingleDownloads(result.getLong("nb_hits"));
+                }
+            }
+
+            if (!statisticValue.isEmpty() && !alreadyExist) {
+                em.persist(statisticValue);
+            }
+            try {
+                viewsReader.close();
+                downloadsReader.close();
+                singleDownloadsReader.close();
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Could not close buffered reader while compiling piwik results: " + e.getMessage(), e);
+            }
+        } catch (JSONException e) {
+            LOGGER.log(Level.WARNING, "Cannot read Piwik stats for workspace '" + alias + "' : " + e.getMessage());
         }
     }
 
@@ -210,6 +364,68 @@ public class StatisticsServiceBean implements StatisticsService {
         }
     }
 
+    @Override
+    public WorkspaceStatisticValue readWorkspaceValue(String alias) throws StatisticNameNotFoundException {
+        TypedQuery<WorkspaceStatisticValue> query = em.createNamedQuery("findWorkspaceValues", WorkspaceStatisticValue.class).setParameter("name", alias).setMaxResults(1);
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            throw new StatisticNameNotFoundException("unable to find a value for workspace stat with alias: " + alias);
+        }
+    }
+
+    @Override
+    public List<WorkspaceStatisticValue> workspaceHistory(String alias, long from, long to) throws StatisticNameNotFoundException {
+        TypedQuery<WorkspaceStatisticValue> query = em.createNamedQuery("findWorkspaceValuesFromTo", WorkspaceStatisticValue.class).setParameter("name", alias).setParameter("from", from).setParameter("to", to);
+        try {
+            return query.getResultList();
+        } catch (NoResultException e) {
+            throw new StatisticNameNotFoundException("unable to find a value for workspace stat with alias: " + alias);
+        }
+    }
+
+    @Override
+    public WorkspaceStatisticValue sumWorkspaceHistory(String alias, long from, long to) throws StatisticNameNotFoundException {
+        TypedQuery<WorkspaceStatisticValue> query = em.createNamedQuery("sumWorkspaceValuesFromTo", WorkspaceStatisticValue.class).setParameter("name", alias).setParameter("from", from).setParameter("to", to);
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            throw new StatisticNameNotFoundException("unable to find a value for workspace stat with alias: " + alias);
+        }
+    }
+
+    private void getPreviousStatistics(Integer siteId, String authToken, List<String> aliasList, PiwikTracker tracker) throws IOException {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        int currentYear = calendar.get(Calendar.YEAR);
+        int currentMonth = calendar.get(Calendar.MONTH);
+        for (int year = 2015; year <= currentYear; year++) {
+            for (int month = 0; year == currentYear ? month <= currentMonth: month <= 11; month++) {
+                calendar.set(year, month, 1);
+                String start = dateFormat.format(calendar.getTime());
+                calendar.add(Calendar.MONTH, 1);
+                calendar.add(Calendar.DATE, -1);
+                String end = dateFormat.format(calendar.getTime());
+                String range = start + "," + end;
+                SimpleDateFormat timestampFormat = new SimpleDateFormat("yyyyMM");
+                long timestamp = Long.parseLong(timestampFormat.format(calendar.getTime()));
+                for (String alias : aliasList) {
+                    LOGGER.log(Level.INFO, alias + ":" + start + "," + end + " [" + timestamp + "]");
+                    // Views
+                    PiwikRequest request = makePiwikRequestForViews(siteId, authToken, alias, range);
+                    HttpResponse viewsResponse = tracker.sendRequest(request);
+                    // Downloads
+                    request = makePiwikRequestForDownloads(siteId, authToken, alias, range);
+                    HttpResponse downloadsResponse = tracker.sendRequest(request);
+                    // Single Downloads
+                    request = makePiwikRequestForSingleDownloads(siteId, authToken, alias, range);
+                    HttpResponse singleDownloadsResponse = tracker.sendRequest(request);
+                    compileResults(alias, timestamp, viewsResponse, downloadsResponse, singleDownloadsResponse);
+                }
+            }
+        }
+    }
+
     //Service methods
 
     @Override
@@ -243,4 +459,3 @@ public class StatisticsServiceBean implements StatisticsService {
     }
 
 }
- 

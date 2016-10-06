@@ -75,6 +75,7 @@
         <version.freemarker>2.3.25-incubating</version.freemarker>
         <version.sigar>1.6.4</version.sigar>
         <version.saxon>9.7.0-7</version.saxon>
+        <version.piwik>1.2</version.piwik>
         <version.javers>2.1.1</version.javers>
         <additionalparam>-Xdoclint:none</additionalparam>
         <maven.javadoc.failOnError>false</maven.javadoc.failOnError>

@@ -36,21 +36,29 @@ package fr.ortolang.diffusion.statistics;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.statistics.entity.WorkspaceStatisticValue;
+
 import java.util.List;
 
-import fr.ortolang.diffusion.OrtolangService;
-
 public interface StatisticsService extends OrtolangService {
-    
+
     String SERVICE_NAME = "statistics";
-    
+
     List<String> list() throws StatisticsServiceException;
-    
+
     void probe() throws StatisticsServiceException;
-    
+
     long[] read(String name) throws StatisticsServiceException, StatisticNameNotFoundException;
-    
+
     long[][] history(String name, long from, long to) throws StatisticsServiceException, StatisticNameNotFoundException;
-    
+
+    void probePiwik() throws StatisticsServiceException;
+
+    WorkspaceStatisticValue readWorkspaceValue(String alias) throws StatisticNameNotFoundException;
+
+    List<WorkspaceStatisticValue> workspaceHistory(String alias, long from, long to) throws StatisticNameNotFoundException;
+
+    WorkspaceStatisticValue sumWorkspaceHistory(String alias, long from, long to) throws StatisticNameNotFoundException;
 
 }
