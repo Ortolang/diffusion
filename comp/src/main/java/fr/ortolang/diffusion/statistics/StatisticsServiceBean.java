@@ -36,7 +36,56 @@ package fr.ortolang.diffusion.statistics;
  * #L%
  */
 
-import fr.ortolang.diffusion.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.Local;
+import javax.ejb.Schedule;
+import javax.ejb.SessionContext;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.SystemException;
+import javax.transaction.UserTransaction;
+
+import org.apache.http.HttpResponse;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+import org.jboss.ejb3.annotation.SecurityDomain;
+import org.piwik.java.tracking.PiwikRequest;
+import org.piwik.java.tracking.PiwikTracker;
+
+import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -46,30 +95,6 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.thumbnail.ThumbnailService;
-import org.apache.http.HttpResponse;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
-import org.jboss.ejb3.annotation.SecurityDomain;
-import org.piwik.java.tracking.PiwikRequest;
-import org.piwik.java.tracking.PiwikTracker;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.*;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Startup
 @Local(StatisticsService.class)
@@ -89,6 +114,8 @@ public class StatisticsServiceBean implements StatisticsService {
     private EntityManager em;
     @Resource
     private SessionContext ctx;
+    @Resource
+    private UserTransaction userCtx;
 
     public StatisticsServiceBean() {
     }
@@ -171,10 +198,13 @@ public class StatisticsServiceBean implements StatisticsService {
 
     @Override
     @Schedule(hour="2")
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    @TransactionAttribute(TransactionAttributeType.NEVER)
     public void probePiwik() throws StatisticsServiceException {
         LOGGER.log(Level.INFO, "Probing Piwik stats for fresh values");
         try {
+            userCtx.setTransactionTimeout(1200);
+            userCtx.begin();
+            
             String siteIdString = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID);
             String host = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_HOST_FULL);
             String authToken = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_AUTH_TOKEN);
@@ -201,13 +231,14 @@ public class StatisticsServiceBean implements StatisticsService {
             for (String alias : aliasList) {
                 probeWorkspaceStats(siteId, authToken, alias, range, timestamp, tracker);
             }
-        } catch (IOException e) {
+            
+            userCtx.commit();
+        } catch (SystemException | IOException | NotSupportedException | SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             throw new StatisticsServiceException("Could not probe Piwik stats", e);
         }
     }
 
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void probeWorkspaceStats(Integer siteId, String authToken, String alias, String range, long timestamp, PiwikTracker tracker) {
         try {
             // Views
@@ -267,7 +298,6 @@ public class StatisticsServiceBean implements StatisticsService {
         return request;
     }
 
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     private void compileResults(String alias, long timestamp, HttpResponse viewsResponse, HttpResponse downloadsResponse, HttpResponse singleDownloadsResponse) throws IOException {
         try {
             if (viewsResponse.getStatusLine().getStatusCode() != 200 || downloadsResponse.getStatusLine().getStatusCode() != 200 || singleDownloadsResponse.getStatusLine().getStatusCode() != 200) {
@@ -345,7 +375,6 @@ public class StatisticsServiceBean implements StatisticsService {
             }
         } catch (JSONException e) {
             LOGGER.log(Level.WARNING, "Cannot read Piwik stats for workspace '" + alias + "' : " + e.getMessage());
-            ctx.setRollbackOnly();
         }
     }
 
@@ -415,7 +444,7 @@ public class StatisticsServiceBean implements StatisticsService {
         }
     }
 
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     private void getPreviousStatistics(Integer siteId, String authToken, List<String> aliasList, PiwikTracker tracker) throws IOException {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");

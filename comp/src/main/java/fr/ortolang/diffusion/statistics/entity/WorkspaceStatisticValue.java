@@ -47,7 +47,7 @@ import java.io.Serializable;
     @NamedQuery(name = "countWorkspaceValues", query = "SELECT count(v) FROM WorkspaceStatisticValue v"),
     @NamedQuery(name = "findWorkspaceValues", query = "SELECT v FROM WorkspaceStatisticValue v WHERE v.name = :name ORDER BY v.timestamp DESC"),
     @NamedQuery(name = "findWorkspaceValuesFromTo", query = "SELECT v FROM WorkspaceStatisticValue v WHERE v.name = :name AND v.timestamp > :from AND v.timestamp < :to ORDER BY v.timestamp ASC"),
-    @NamedQuery(name = "sumWorkspaceValuesFromTo", query = "SELECT NEW WorkspaceStatisticValue(v.name, 0L, sum(v.visits), sum(v.uniqueVisitors), sum(v.hits), sum(v.downloads), sum(v.singleDownloads)) FROM WorkspaceStatisticValue v WHERE v.name = :name AND v.timestamp > :from AND v.timestamp < :to GROUP BY v.name")
+    @NamedQuery(name = "sumWorkspaceValuesFromTo", query = "SELECT NEW WorkspaceStatisticValue (v.name, 0L, sum(v.visits), sum(v.uniqueVisitors), sum(v.hits), sum(v.downloads), sum(v.singleDownloads)) FROM WorkspaceStatisticValue v WHERE v.name = :name AND v.timestamp > :from AND v.timestamp < :to GROUP BY v.name")
 })
 @SuppressWarnings("serial")
 public class WorkspaceStatisticValue implements Serializable {
