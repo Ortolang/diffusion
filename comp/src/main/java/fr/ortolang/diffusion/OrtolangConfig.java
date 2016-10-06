@@ -143,6 +143,7 @@ public class OrtolangConfig {
         FTP_SERVER_SSL("ftp.server.ssl"),
 
         PIWIK_HOST("piwik.host"),
+        PIWIK_HOST_FULL("piwik.host.full"),
         PIWIK_SITE_ID("piwik.site.id"),
         PIWIK_AUTH_TOKEN("piwik.auth.token"),
 

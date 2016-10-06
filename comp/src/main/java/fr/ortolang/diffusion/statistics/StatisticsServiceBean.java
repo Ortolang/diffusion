@@ -175,7 +175,7 @@ public class StatisticsServiceBean implements StatisticsService {
         LOGGER.log(Level.INFO, "Probing Piwik stats for fresh values");
         try {
             String siteIdString = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID);
-            String host = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_HOST);
+            String host = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_HOST_FULL);
             String authToken = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_AUTH_TOKEN);
             if (siteIdString == null || siteIdString.isEmpty() || host == null || host.isEmpty() || authToken == null || authToken.isEmpty()) {
                 LOGGER.log(Level.INFO, "Do not attempt to probe Piwik stats, missing configuration values");
