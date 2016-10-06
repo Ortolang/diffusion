@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.statistics;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.statistics.entity.WorkspaceStatisticValue;
 
@@ -53,7 +54,9 @@ public interface StatisticsService extends OrtolangService {
 
     long[][] history(String name, long from, long to) throws StatisticsServiceException, StatisticNameNotFoundException;
 
-    void probePiwik() throws StatisticsServiceException;
+    void probePiwik() throws StatisticsServiceException, OrtolangException;
+
+    void storeWorkspaceStatisticValue(WorkspaceStatisticValue value) throws StatisticsServiceException;
 
     WorkspaceStatisticValue readWorkspaceValue(String alias) throws StatisticNameNotFoundException;
 

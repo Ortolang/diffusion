@@ -604,7 +604,7 @@ public class AdminResource {
 
     @GET
     @Path("/statistics/piwik")
-    public Response probePiwik() throws StatisticsServiceException {
+    public Response probePiwik() throws StatisticsServiceException, OrtolangException {
         LOGGER.log(Level.INFO, "GET /statistics/piwik");
         statistics.probePiwik();
         return Response.ok().build();

@@ -36,52 +36,7 @@ package fr.ortolang.diffusion.statistics;
  * #L%
  */
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.Local;
-import javax.ejb.Schedule;
-import javax.ejb.SessionContext;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-
-import org.apache.http.HttpResponse;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
-import org.jboss.ejb3.annotation.SecurityDomain;
-import org.jboss.ejb3.annotation.TransactionTimeout;
-import org.piwik.java.tracking.PiwikRequest;
-import org.piwik.java.tracking.PiwikTracker;
-
-import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -91,6 +46,21 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.thumbnail.ThumbnailService;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.*;
+import javax.enterprise.concurrent.ManagedThreadFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Startup
 @Local(StatisticsService.class)
@@ -110,7 +80,13 @@ public class StatisticsServiceBean implements StatisticsService {
     private EntityManager em;
     @Resource
     private SessionContext ctx;
-    
+    @Resource
+    private ManagedThreadFactory managedThreadFactory;
+
+    private Thread piwikAllCollectorThread;
+
+    private Thread piwikLatestCollectorThread;
+
     public StatisticsServiceBean() {
     }
 
@@ -192,179 +168,50 @@ public class StatisticsServiceBean implements StatisticsService {
 
     @Override
     @Schedule(hour="2")
-    @TransactionTimeout(value = 1, unit = TimeUnit.HOURS)
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void probePiwik() throws StatisticsServiceException {
+    public void probePiwik() throws StatisticsServiceException, OrtolangException {
         LOGGER.log(Level.INFO, "Probing Piwik stats for fresh values");
-        try {
-            String siteIdString = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID);
-            String host = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_HOST_FULL);
-            String authToken = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_AUTH_TOKEN);
-            if (siteIdString == null || siteIdString.isEmpty() || host == null || host.isEmpty() || authToken == null || authToken.isEmpty()) {
-                LOGGER.log(Level.INFO, "Do not attempt to probe Piwik stats, missing configuration values");
+        List<String> workspaces = em.createNamedQuery("listAllWorkspaceAlias", String.class).getResultList();
+        TypedQuery<Long> countWorkspaceValues = em.createNamedQuery("countWorkspaceValues", Long.class);
+        if (countWorkspaceValues.getSingleResult() == 0L) {
+            if (piwikAllCollectorThread != null && piwikAllCollectorThread.isAlive()) {
+                LOGGER.log(Level.WARNING, "Already collecting all Piwik statistics");
                 return;
             }
-            Integer siteId = Integer.parseInt(siteIdString);
-            PiwikTracker tracker = new PiwikTracker(host + "index.php");
-
-            List<String> aliasList = (List<String>) em.createNamedQuery("listAllWorkspaceAlias").getResultList();
-            TypedQuery<Long> countWorkspaceValues = em.createNamedQuery("countWorkspaceValues", Long.class);
-            if (countWorkspaceValues.getSingleResult() == 0L) {
-                getPreviousStatistics(siteId, authToken, aliasList, tracker);
+            LOGGER.log(Level.INFO, "Starting to collect all Piwik statistics");
+            PiwikAllCollector piwikAllCollector = new PiwikAllCollector(workspaces);
+            piwikAllCollectorThread = managedThreadFactory.newThread(piwikAllCollector);
+            piwikAllCollectorThread.setName("All Piwik Statistics Collector Thread");
+            piwikAllCollectorThread.start();
+        } else {
+            if (piwikLatestCollectorThread != null && piwikLatestCollectorThread.isAlive()) {
+                LOGGER.log(Level.WARNING, "Already collecting latest Piwik statistics");
                 return;
             }
-            Calendar calendar = Calendar.getInstance();
-            calendar.add(Calendar.DATE, -1);
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM");
-            String range = dateFormat.format(calendar.getTime()) + "-01,yesterday";
-            SimpleDateFormat monthFormat = new SimpleDateFormat("yyyyMM");
-            long timestamp = Long.parseLong(monthFormat.format(new Date()));
-
-            for (String alias : aliasList) {
-                probeWorkspaceStats(siteId, authToken, alias, range, timestamp, tracker);
-            }
-        } catch (IOException  e) {
-            LOGGER.log(Level.SEVERE, e.getMessage(), e);
-            throw new StatisticsServiceException("Could not probe Piwik stats", e);
+            LOGGER.log(Level.INFO, "Starting to collect latest Piwik statistics");
+            PiwikLatestCollector piwikLatestCollector = new PiwikLatestCollector(workspaces);
+            piwikLatestCollectorThread = managedThreadFactory.newThread(piwikLatestCollector);
+            piwikLatestCollectorThread.setName("Latest Piwik Statistics Collector Thread");
+            piwikLatestCollectorThread.start();
         }
     }
 
-    private void probeWorkspaceStats(Integer siteId, String authToken, String alias, String range, long timestamp, PiwikTracker tracker) {
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void storeWorkspaceStatisticValue(WorkspaceStatisticValue value) throws StatisticsServiceException {
+        boolean alreadyExist;
+        WorkspaceStatisticValue latestStoredValue = null;
         try {
-            // Views
-            PiwikRequest request = makePiwikRequestForViews(siteId, authToken, alias, range);
-            HttpResponse viewsResponse = tracker.sendRequest(request);
-            // Downloads
-            request = makePiwikRequestForDownloads(siteId, authToken, alias, range);
-            HttpResponse downloadsResponse = tracker.sendRequest(request);
-            // Single Downloads
-            request = makePiwikRequestForSingleDownloads(siteId, authToken, alias, range);
-            HttpResponse singleDownloadsResponse = tracker.sendRequest(request);
-            compileResults(alias, timestamp, viewsResponse, downloadsResponse, singleDownloadsResponse);
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Could not probe Piwik stats for workspace with alias ["  + alias + "]: " + e.getMessage(), e);
+            latestStoredValue = readWorkspaceValue(value.getName());
+            alreadyExist = latestStoredValue.getTimestamp() == value.getTimestamp();
+        } catch (StatisticNameNotFoundException e) {
+            alreadyExist = false;
         }
-    }
-
-
-    private PiwikRequest makePiwikRequestForDownloads(Integer siteId, String authToken, String alias, String range) {
-        return makePiwikRequest(siteId, authToken, alias, range, true, false);
-    }
-
-    private PiwikRequest makePiwikRequestForSingleDownloads(Integer siteId, String authToken, String alias, String range) {
-        return makePiwikRequest(siteId, authToken, alias, range, true, true);
-    }
-
-    private PiwikRequest makePiwikRequestForViews(Integer siteId, String authToken, String alias, String range) {
-        return makePiwikRequest(siteId, authToken, alias, range, false, null);
-    }
-
-    private PiwikRequest makePiwikRequest(Integer siteId, String authToken, String alias, String range, boolean downloads, Boolean single) {
-        PiwikRequest request = new PiwikRequest(siteId, null);
-        request.setCustomTrackingParameter("module", "API");
-        request.setCustomTrackingParameter("idSite", siteId);
-        if (downloads) {
-            request.setCustomTrackingParameter("method", "Actions.getDownloads");
-        } else {
-            request.setCustomTrackingParameter("method", "Actions.getPageUrls");
-        }
-        if (range != null) {
-            request.setCustomTrackingParameter("date", range);
-            request.setCustomTrackingParameter("period", "range");
-        } else {
-            request.setCustomTrackingParameter("date", "yesterday");
-            request.setCustomTrackingParameter("period", "day");
-        }
-        request.setCustomTrackingParameter("format", "JSON");
-        request.setCustomTrackingParameter("expanded", "1");
-        request.setCustomTrackingParameter("flat", "1");
-        if (downloads) {
-            request.setCustomTrackingParameter("filter_pattern_recursive", "api/content/" + (single ? "" : "export/") + alias + "/");
-        } else {
-            // Get stats for all the different versions and not if url /market/item/.*
-            request.setCustomTrackingParameter("filter_pattern_recursive", "^market/(?!item)\\w*/" + alias + "($|/.*$)");
-        }
-        request.setAuthToken(authToken);
-        return request;
-    }
-
-    private void compileResults(String alias, long timestamp, HttpResponse viewsResponse, HttpResponse downloadsResponse, HttpResponse singleDownloadsResponse) throws IOException {
-        try {
-            if (viewsResponse.getStatusLine().getStatusCode() != 200 || downloadsResponse.getStatusLine().getStatusCode() != 200 || singleDownloadsResponse.getStatusLine().getStatusCode() != 200) {
-                LOGGER.log(Level.SEVERE, "Piwik response status code not OK: " + viewsResponse.getStatusLine().getReasonPhrase() + ", " + downloadsResponse.getStatusLine().getReasonPhrase() + ", " + singleDownloadsResponse.getStatusLine().getReasonPhrase());
-                return;
-            }
-            WorkspaceStatisticValue lastStatisticValue;
-            WorkspaceStatisticValue statisticValue;
-            try {
-                lastStatisticValue = readWorkspaceValue(alias);
-            } catch (StatisticNameNotFoundException e) {
-                lastStatisticValue = null;
-            }
-            boolean alreadyExist = lastStatisticValue != null && lastStatisticValue.getTimestamp() == timestamp;
-            if (alreadyExist) {
-                statisticValue = lastStatisticValue;
-            } else {
-                statisticValue = new WorkspaceStatisticValue(alias, timestamp);
-            }
-            // Views
-            BufferedReader viewsReader = new BufferedReader(new InputStreamReader(viewsResponse.getEntity().getContent()));
-            String viewsContent = viewsReader.readLine();
-            JSONArray viewsResults = new JSONArray(viewsContent);
-            for (int i = 0; i < viewsResults.length(); i++) {
-                JSONObject result = viewsResults.getJSONObject(i);
-                if (!result.has("url")) {
-                    continue;
-                }
-                if (result.has("nb_visits")) {
-                    statisticValue.addVisits(result.getLong("nb_visits"));
-                }
-                if (result.has("nb_uniq_visitors")) {
-                    statisticValue.addUniqueVisitors(result.getLong("nb_uniq_visitors"));
-                }
-                if (result.has("nb_hits")) {
-                    statisticValue.addHits(result.getLong("nb_hits"));
-                }
-            }
-            // Downloads
-            BufferedReader downloadsReader = new BufferedReader(new InputStreamReader(downloadsResponse.getEntity().getContent()));
-            String downloadsContent = downloadsReader.readLine();
-            JSONArray downloadsResults = new JSONArray(downloadsContent);
-            for (int i = 0; i < downloadsResults.length(); i++) {
-                JSONObject result = downloadsResults.getJSONObject(i);
-                if (!result.has("url")) {
-                    continue;
-                }
-                if (result.has("nb_hits")) {
-                    statisticValue.addDownloads(result.getLong("nb_hits"));
-                }
-            }
-            // Single Downloads
-            BufferedReader singleDownloadsReader = new BufferedReader(new InputStreamReader(singleDownloadsResponse.getEntity().getContent()));
-            String singleDownloadsContent = singleDownloadsReader.readLine();
-            JSONArray singleDownloadsResults = new JSONArray(singleDownloadsContent);
-            for (int i = 0; i < singleDownloadsResults.length(); i++) {
-                JSONObject result = singleDownloadsResults.getJSONObject(i);
-                if (!result.has("url")) {
-                    continue;
-                }
-                if (result.has("nb_hits")) {
-                    statisticValue.addSingleDownloads(result.getLong("nb_hits"));
-                }
-            }
-
-            if (!statisticValue.isEmpty() && !alreadyExist) {
-                em.persist(statisticValue);
-            }
-            try {
-                viewsReader.close();
-                downloadsReader.close();
-                singleDownloadsReader.close();
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "Could not close buffered reader while compiling piwik results: " + e.getMessage(), e);
-            }
-        } catch (JSONException e) {
-            LOGGER.log(Level.WARNING, "Cannot read Piwik stats for workspace '" + alias + "' : " + e.getMessage());
+        if (alreadyExist) {
+            latestStoredValue.copy(latestStoredValue);
+            em.merge(latestStoredValue);
+        } else if (latestStoredValue != null || !value.isEmpty()) {
+            em.persist(value);
         }
     }
 
@@ -431,39 +278,6 @@ public class StatisticsServiceBean implements StatisticsService {
             return query.getSingleResult();
         } catch (NoResultException e) {
             throw new StatisticNameNotFoundException("unable to find a value for workspace stat with alias: " + alias);
-        }
-    }
-
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    private void getPreviousStatistics(Integer siteId, String authToken, List<String> aliasList, PiwikTracker tracker) throws IOException {
-        Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        int currentYear = calendar.get(Calendar.YEAR);
-        int currentMonth = calendar.get(Calendar.MONTH);
-        for (int year = 2015; year <= currentYear; year++) {
-            for (int month = 0; year == currentYear ? month <= currentMonth: month <= 11; month++) {
-                calendar.set(year, month, 1);
-                String start = dateFormat.format(calendar.getTime());
-                calendar.add(Calendar.MONTH, 1);
-                calendar.add(Calendar.DATE, -1);
-                String end = dateFormat.format(calendar.getTime());
-                String range = start + "," + end;
-                SimpleDateFormat timestampFormat = new SimpleDateFormat("yyyyMM");
-                long timestamp = Long.parseLong(timestampFormat.format(calendar.getTime()));
-                for (String alias : aliasList) {
-                    LOGGER.log(Level.INFO, alias + ":" + start + "," + end + " [" + timestamp + "]");
-                    // Views
-                    PiwikRequest request = makePiwikRequestForViews(siteId, authToken, alias, range);
-                    HttpResponse viewsResponse = tracker.sendRequest(request);
-                    // Downloads
-                    request = makePiwikRequestForDownloads(siteId, authToken, alias, range);
-                    HttpResponse downloadsResponse = tracker.sendRequest(request);
-                    // Single Downloads
-                    request = makePiwikRequestForSingleDownloads(siteId, authToken, alias, range);
-                    HttpResponse singleDownloadsResponse = tracker.sendRequest(request);
-                    compileResults(alias, timestamp, viewsResponse, downloadsResponse, singleDownloadsResponse);
-                }
-            }
         }
     }
 

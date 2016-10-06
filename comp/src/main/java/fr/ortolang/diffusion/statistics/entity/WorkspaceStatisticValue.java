@@ -165,4 +165,14 @@ public class WorkspaceStatisticValue implements Serializable {
     public boolean isEmpty() {
         return visits == 0L && uniqueVisitors == 0L && hits  == 0L && downloads == 0L && singleDownloads == 0L;
     }
+
+    public void copy(WorkspaceStatisticValue value) {
+        this.name = value.getName();
+        this.timestamp = value.getTimestamp();
+        this.visits = value.getVisits();
+        this.uniqueVisitors = value.getHits();
+        this.hits = value.getHits();
+        this.downloads = value.getDownloads();
+        this.singleDownloads = value.getSingleDownloads();
+    }
 }
