@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,18 +66,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
-import javax.transaction.SystemException;
-import javax.transaction.UserTransaction;
 
 import org.apache.http.HttpResponse;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.jboss.ejb3.annotation.SecurityDomain;
+import org.jboss.ejb3.annotation.TransactionTimeout;
 import org.piwik.java.tracking.PiwikRequest;
 import org.piwik.java.tracking.PiwikTracker;
 
@@ -114,9 +110,7 @@ public class StatisticsServiceBean implements StatisticsService {
     private EntityManager em;
     @Resource
     private SessionContext ctx;
-    @Resource
-    private UserTransaction userCtx;
-
+    
     public StatisticsServiceBean() {
     }
 
@@ -198,13 +192,11 @@ public class StatisticsServiceBean implements StatisticsService {
 
     @Override
     @Schedule(hour="2")
-    @TransactionAttribute(TransactionAttributeType.NEVER)
+    @TransactionTimeout(value = 1, unit = TimeUnit.HOURS)
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void probePiwik() throws StatisticsServiceException {
         LOGGER.log(Level.INFO, "Probing Piwik stats for fresh values");
         try {
-            userCtx.setTransactionTimeout(1200);
-            userCtx.begin();
-            
             String siteIdString = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID);
             String host = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_HOST_FULL);
             String authToken = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_AUTH_TOKEN);
@@ -231,9 +223,7 @@ public class StatisticsServiceBean implements StatisticsService {
             for (String alias : aliasList) {
                 probeWorkspaceStats(siteId, authToken, alias, range, timestamp, tracker);
             }
-            
-            userCtx.commit();
-        } catch (SystemException | IOException | NotSupportedException | SecurityException | IllegalStateException | RollbackException | HeuristicMixedException | HeuristicRollbackException e) {
+        } catch (IOException  e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             throw new StatisticsServiceException("Could not probe Piwik stats", e);
         }
