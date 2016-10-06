@@ -207,7 +207,7 @@ public class StatisticsServiceBean implements StatisticsService {
         }
     }
 
-    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void probeWorkspaceStats(Integer siteId, String authToken, String alias, String range, long timestamp, PiwikTracker tracker) {
         try {
             // Views
@@ -222,7 +222,6 @@ public class StatisticsServiceBean implements StatisticsService {
             compileResults(alias, timestamp, viewsResponse, downloadsResponse, singleDownloadsResponse);
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Could not probe Piwik stats for workspace with alias ["  + alias + "]: " + e.getMessage(), e);
-            ctx.setRollbackOnly();
         }
     }
 
@@ -268,6 +267,7 @@ public class StatisticsServiceBean implements StatisticsService {
         return request;
     }
 
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     private void compileResults(String alias, long timestamp, HttpResponse viewsResponse, HttpResponse downloadsResponse, HttpResponse singleDownloadsResponse) throws IOException {
         try {
             if (viewsResponse.getStatusLine().getStatusCode() != 200 || downloadsResponse.getStatusLine().getStatusCode() != 200 || singleDownloadsResponse.getStatusLine().getStatusCode() != 200) {
@@ -345,6 +345,7 @@ public class StatisticsServiceBean implements StatisticsService {
             }
         } catch (JSONException e) {
             LOGGER.log(Level.WARNING, "Cannot read Piwik stats for workspace '" + alias + "' : " + e.getMessage());
+            ctx.setRollbackOnly();
         }
     }
 
