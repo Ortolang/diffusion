@@ -415,6 +415,7 @@ public class StatisticsServiceBean implements StatisticsService {
         }
     }
 
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private void getPreviousStatistics(Integer siteId, String authToken, List<String> aliasList, PiwikTracker tracker) throws IOException {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
