@@ -171,7 +171,7 @@ public class StatisticsServiceBean implements StatisticsService {
 
     @Override
     @Schedule(hour="2")
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void probePiwik() throws StatisticsServiceException {
         LOGGER.log(Level.INFO, "Probing Piwik stats for fresh values");
         try {
@@ -207,7 +207,7 @@ public class StatisticsServiceBean implements StatisticsService {
         }
     }
 
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     private void probeWorkspaceStats(Integer siteId, String authToken, String alias, String range, long timestamp, PiwikTracker tracker) {
         try {
             // Views
@@ -415,7 +415,7 @@ public class StatisticsServiceBean implements StatisticsService {
         }
     }
 
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     private void getPreviousStatistics(Integer siteId, String authToken, List<String> aliasList, PiwikTracker tracker) throws IOException {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
