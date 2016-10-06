@@ -171,6 +171,7 @@ public class StatisticsServiceBean implements StatisticsService {
 
     @Override
     @Schedule(hour="2")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void probePiwik() throws StatisticsServiceException {
         LOGGER.log(Level.INFO, "Probing Piwik stats for fresh values");
         try {
@@ -198,20 +199,30 @@ public class StatisticsServiceBean implements StatisticsService {
             long timestamp = Long.parseLong(monthFormat.format(new Date()));
 
             for (String alias : aliasList) {
-                // Views
-                PiwikRequest request = makePiwikRequestForViews(siteId, authToken, alias, range);
-                HttpResponse viewsResponse = tracker.sendRequest(request);
-                // Downloads
-                request = makePiwikRequestForDownloads(siteId, authToken, alias, range);
-                HttpResponse downloadsResponse = tracker.sendRequest(request);
-                // Single Downloads
-                request = makePiwikRequestForSingleDownloads(siteId, authToken, alias, range);
-                HttpResponse singleDownloadsResponse = tracker.sendRequest(request);
-                compileResults(alias, timestamp, viewsResponse, downloadsResponse, singleDownloadsResponse);
+                probeWorkspaceStats(siteId, authToken, alias, range, timestamp, tracker);
             }
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
             throw new StatisticsServiceException("Could not probe Piwik stats", e);
+        }
+    }
+
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    private void probeWorkspaceStats(Integer siteId, String authToken, String alias, String range, long timestamp, PiwikTracker tracker) {
+        try {
+            // Views
+            PiwikRequest request = makePiwikRequestForViews(siteId, authToken, alias, range);
+            HttpResponse viewsResponse = tracker.sendRequest(request);
+            // Downloads
+            request = makePiwikRequestForDownloads(siteId, authToken, alias, range);
+            HttpResponse downloadsResponse = tracker.sendRequest(request);
+            // Single Downloads
+            request = makePiwikRequestForSingleDownloads(siteId, authToken, alias, range);
+            HttpResponse singleDownloadsResponse = tracker.sendRequest(request);
+            compileResults(alias, timestamp, viewsResponse, downloadsResponse, singleDownloadsResponse);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Could not probe Piwik stats for workspace with alias ["  + alias + "]: " + e.getMessage(), e);
+            ctx.setRollbackOnly();
         }
     }
 
@@ -259,6 +270,10 @@ public class StatisticsServiceBean implements StatisticsService {
 
     private void compileResults(String alias, long timestamp, HttpResponse viewsResponse, HttpResponse downloadsResponse, HttpResponse singleDownloadsResponse) throws IOException {
         try {
+            if (viewsResponse.getStatusLine().getStatusCode() != 200 || downloadsResponse.getStatusLine().getStatusCode() != 200 || singleDownloadsResponse.getStatusLine().getStatusCode() != 200) {
+                LOGGER.log(Level.SEVERE, "Piwik response status code not OK: " + viewsResponse.getStatusLine().getReasonPhrase() + ", " + downloadsResponse.getStatusLine().getReasonPhrase() + ", " + singleDownloadsResponse.getStatusLine().getReasonPhrase());
+                return;
+            }
             WorkspaceStatisticValue lastStatisticValue;
             WorkspaceStatisticValue statisticValue;
             try {
