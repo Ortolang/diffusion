@@ -172,11 +172,16 @@ public class StatisticsServiceBean implements StatisticsService {
     @Override
     @Schedule(hour="2")
     public void probePiwik() throws StatisticsServiceException {
-        LOGGER.log(Level.FINEST, "Probing Piwik stats for fresh values");
+        LOGGER.log(Level.INFO, "Probing Piwik stats for fresh values");
         try {
-            Integer siteId = Integer.parseInt(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID));
+            String siteIdString = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID);
             String host = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_HOST);
             String authToken = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_AUTH_TOKEN);
+            if (siteIdString == null || siteIdString.isEmpty() || host == null || host.isEmpty() || authToken == null || authToken.isEmpty()) {
+                LOGGER.log(Level.INFO, "Do not attempt to probe Piwik stats, missing configuration values");
+                return;
+            }
+            Integer siteId = Integer.parseInt(siteIdString);
             PiwikTracker tracker = new PiwikTracker(host + "index.php");
 
             List<String> aliasList = (List<String>) em.createNamedQuery("listAllWorkspaceAlias").getResultList();
