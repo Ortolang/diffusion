@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.statistics;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.statistics.entity.WorkspaceStatisticValue;
 import org.apache.http.HttpResponse;
 import org.codehaus.jettison.json.JSONArray;
@@ -65,14 +66,19 @@ abstract class PiwikCollector implements Runnable {
 
     List<String> workspaces;
 
-    @EJB
     private StatisticsService statistics;
 
     PiwikCollector(List<String> workspaces) throws OrtolangException {
+        try {
+            statistics = (StatisticsService) OrtolangServiceLocator.findService(StatisticsService.SERVICE_NAME);
+        } catch (Exception e) {
+            throw new OrtolangException(e);
+        }
+
         this.workspaces = workspaces;
         String siteIdString = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID);
         host = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_HOST_FULL);
-        String authToken = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_AUTH_TOKEN);
+        authToken = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_AUTH_TOKEN);
         if (siteIdString == null || siteIdString.isEmpty() || host == null || host.isEmpty() || authToken == null || authToken.isEmpty()) {
             throw new OrtolangException("Missing configuration values for collecting Piwik Statistics");
         }

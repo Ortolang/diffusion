@@ -44,6 +44,7 @@ import org.piwik.java.tracking.PiwikTracker;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,37 +61,26 @@ class PiwikLatestCollector extends PiwikCollector {
     public void run() {
         PiwikTracker tracker = new PiwikTracker(host + "index.php");
         Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        int currentYear = calendar.get(Calendar.YEAR);
-        int currentMonth = calendar.get(Calendar.MONTH);
-        for (int year = 2015; year <= currentYear; year++) {
-            for (int month = 0; year == currentYear ? month <= currentMonth: month <= 11; month++) {
-                calendar.set(year, month, 1);
-                String start = dateFormat.format(calendar.getTime());
-                calendar.add(Calendar.MONTH, 1);
-                calendar.add(Calendar.DATE, -1);
-                String end = dateFormat.format(calendar.getTime());
-                String range = start + "," + end;
-                SimpleDateFormat timestampFormat = new SimpleDateFormat("yyyyMM");
-                long timestamp = Long.parseLong(timestampFormat.format(calendar.getTime()));
-                for (String alias : workspaces) {
-                    try {
-                        LOGGER.log(Level.INFO, alias + ":" + start + "," + end + " [" + timestamp + "]");
-                        // Views
-                        PiwikRequest request = makePiwikRequestForViews(siteId, authToken, alias, range);
-                        HttpResponse viewsResponse = null;
-                        viewsResponse = tracker.sendRequest(request);
-                        // Downloads
-                        request = makePiwikRequestForDownloads(siteId, authToken, alias, range);
-                        HttpResponse downloadsResponse = tracker.sendRequest(request);
-                        // Single Downloads
-                        request = makePiwikRequestForSingleDownloads(siteId, authToken, alias, range);
-                        HttpResponse singleDownloadsResponse = tracker.sendRequest(request);
-                        compileResults(alias, timestamp, viewsResponse, downloadsResponse, singleDownloadsResponse);
-                    } catch (IOException e) {
-                        LOGGER.log(Level.SEVERE, "Could not probe Piwik stats for workspace with alias ["  + alias + "]: " + e.getMessage(), e);
-                    }
-                }
+        calendar.add(Calendar.DATE, -1);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM");
+        String range = dateFormat.format(calendar.getTime()) + "-01,yesterday";
+        SimpleDateFormat monthFormat = new SimpleDateFormat("yyyyMM");
+        long timestamp = Long.parseLong(monthFormat.format(new Date()));
+
+        for (String alias : workspaces) {
+            try {
+                // Views
+                PiwikRequest request = makePiwikRequestForViews(siteId, authToken, alias, range);
+                HttpResponse viewsResponse = tracker.sendRequest(request);
+                // Downloads
+                request = makePiwikRequestForDownloads(siteId, authToken, alias, range);
+                HttpResponse downloadsResponse = tracker.sendRequest(request);
+                // Single Downloads
+                request = makePiwikRequestForSingleDownloads(siteId, authToken, alias, range);
+                HttpResponse singleDownloadsResponse = tracker.sendRequest(request);
+                compileResults(alias, timestamp, viewsResponse, downloadsResponse, singleDownloadsResponse);
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, "Could not probe Piwik stats for workspace with alias ["  + alias + "]: " + e.getMessage(), e);
             }
         }
     }
