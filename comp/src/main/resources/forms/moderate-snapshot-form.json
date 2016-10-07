@@ -22,7 +22,7 @@
     "type": "textarea",
     "templateOptions": {
       "required": true,
-      "label": "Raison de votre choix",
+      "label": "Quels sont les raisons de votre choix ?",
       "default": ""
     }
   }
