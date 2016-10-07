@@ -69,6 +69,7 @@ class PiwikLatestCollector extends PiwikCollector {
 
         for (String alias : workspaces) {
             try {
+                LOGGER.log(Level.INFO, "Collect stats for workspace with alias [" + alias + "] (range: " + range + ")");
                 // Views
                 PiwikRequest request = makePiwikRequestForViews(siteId, authToken, alias, range);
                 HttpResponse viewsResponse = tracker.sendRequest(request);

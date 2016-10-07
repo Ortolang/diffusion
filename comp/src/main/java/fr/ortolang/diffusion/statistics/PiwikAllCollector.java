@@ -75,7 +75,7 @@ class PiwikAllCollector extends PiwikCollector {
                 long timestamp = Long.parseLong(timestampFormat.format(calendar.getTime()));
                 for (String alias : workspaces) {
                     try {
-                        LOGGER.log(Level.INFO, alias + ":" + start + "," + end + " [" + timestamp + "]");
+                        LOGGER.log(Level.INFO, "Collect stats for workspace with alias [" + alias + "] (range: " + start + "," + end + " [" + timestamp + "])");
                         // Views
                         PiwikRequest request = makePiwikRequestForViews(siteId, authToken, alias, range);
                         HttpResponse viewsResponse = tracker.sendRequest(request);
