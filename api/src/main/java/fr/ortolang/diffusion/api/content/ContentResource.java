@@ -236,6 +236,9 @@ public class ContentResource {
                             LOGGER.log(Level.FINEST, "invalid path during export to zip", e);
                         } catch (PathNotFoundException e) {
                             LOGGER.log(Level.FINEST, "path not found during export to zip", e);
+                        } catch (ExportToArchiveIOException e) {
+                            LOGGER.log(Level.SEVERE, "unexpected IO error during export to archive, stopping export", e);
+                            break;
                         }
                     }
                 }
@@ -270,6 +273,9 @@ public class ContentResource {
                             LOGGER.log(Level.FINEST, "invalid path during export to tar", e);
                         } catch (PathNotFoundException e) {
                             LOGGER.log(Level.FINEST, "path not found during export to tar", e);
+                        } catch (ExportToArchiveIOException e) {
+                            LOGGER.log(Level.SEVERE, "unexpected IO error during export to archive, stopping export", e);
+                            break;
                         }
                     }
                 }
@@ -299,9 +305,8 @@ public class ContentResource {
         return core.resolveWorkspacePath(wskey, pparts[1], pbuilder.relativize(2).build());
     }
 
-    // TODO in case of following symlink, add cyclic detection
     private void exportToArchive(String key, ArchiveOutputStream aos, ArchiveEntryFactory factory, PathBuilder path, boolean followsymlink) throws OrtolangException, KeyNotFoundException,
-            BrowserServiceException {
+            BrowserServiceException, ExportToArchiveIOException {
         OrtolangObject object;
         try {
             object = browser.findObject(key);
@@ -316,38 +321,55 @@ public class ContentResource {
             try {
                 Set<CollectionElement> elements = ((Collection) object).getElements();
                 ArchiveEntry centry = factory.createArchiveEntry(path.build() + "/", infos.getLastModificationDate(), 0L);
-                aos.putArchiveEntry(centry);
-                aos.closeArchiveEntry();
-                for (CollectionElement element : elements) {
-                    try {
-                        PathBuilder pelement = path.clone().path(element.getName());
-                        exportToArchive(element.getKey(), aos, factory, pelement, followsymlink);
-                    } catch (InvalidPathException e) {
-                        LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e);
+                try {
+                    aos.putArchiveEntry(centry);
+                    for (CollectionElement element : elements) {
+                        try {
+                            PathBuilder pelement = path.clone().path(element.getName());
+                            exportToArchive(element.getKey(), aos, factory, pelement, followsymlink);
+                        } catch (InvalidPathException e) {
+                            LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e);
+                        }
                     }
+                } catch ( IOException e ) {
+                    throw new ExportToArchiveIOException("unable to put archive entry for collection at path: " + path.build(), e);
                 }
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "IOException during exportToArchive: " + e.getMessage());
+            } finally {
+                try {
+                    aos.closeArchiveEntry();
+                } catch ( IOException e ) {
+                    throw new ExportToArchiveIOException("unable to close archive entry for collection at path: " + path.build(), e);
+                }
             }
             break;
         case DataObject.OBJECT_TYPE:
             try (InputStream input = core.download(object.getObjectKey())) {
                 DataObject dataObject = (DataObject) object;
                 ArchiveEntry oentry = factory.createArchiveEntry(path.build(), infos.getLastModificationDate(), dataObject.getSize());
-                aos.putArchiveEntry(oentry);
-                IOUtils.copy(input, aos);
-                aos.closeArchiveEntry();
+                try {
+                    aos.putArchiveEntry(oentry);
+                    IOUtils.copy(input, aos);
+                } catch (IOException e) {
+                    throw new ExportToArchiveIOException("unable to export dataobject at path: " + path.build(), e);
+                } finally {
+                    try {
+                        aos.closeArchiveEntry();
+                    } catch ( IOException e ) {
+                        throw new ExportToArchiveIOException("unable to close archive entry for collection at path: " + path.build(), e);
+                    }
+                }
             } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "IOException during exportToArchive: " + e.getMessage());
+                throw new ExportToArchiveIOException("unable to get input stream for dataobject at path: " + path.build(), e);
             } catch (AccessDeniedException e) {
                 return;
             } catch (CoreServiceException | DataNotFoundException e) {
-                LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e);
-            }
+                LOGGER.log(Level.SEVERE, "unexpected error during export to zip", e);
+            } 
             break;
         case Link.OBJECT_TYPE:
             if (followsymlink) {
                 LOGGER.log(Level.SEVERE, "link export is not managed yet");
+                // TODO in case of following symlink, add cyclic detection
             }
             break;
         }
