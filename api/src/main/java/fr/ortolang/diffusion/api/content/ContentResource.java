@@ -132,6 +132,8 @@ public class ContentResource {
 
     private static final ClassLoader TEMPLATE_ENGINE_CL = ContentResource.class.getClassLoader();
 
+    private static final String anonymousBase64;
+
     @EJB
     private CoreService core;
     @EJB
@@ -149,6 +151,7 @@ public class ContentResource {
 
     static  {
         exportations = new HashMap<>();
+        anonymousBase64 = Base64.getEncoder().encodeToString("anonymous".getBytes());
     }
 
     @GET
@@ -170,7 +173,7 @@ public class ContentResource {
     public Response exportPost(final @QueryParam("scope") @DefaultValue("") String scope, final @FormParam("followsymlink") @DefaultValue("false") String followSymlink, @FormParam("filename") @DefaultValue("download") String filename,
             @FormParam("format") @DefaultValue("zip") String format, final @FormParam("path") List<String> paths, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "POST /export");
-        return export(!scope.isEmpty(), followSymlink, filename, format, paths, securityContext);
+        return export(!scope.startsWith(anonymousBase64), followSymlink, filename, format, paths, securityContext);
     }
 
     @GET
@@ -179,7 +182,7 @@ public class ContentResource {
     public Response exportGet(final @QueryParam("scope") @DefaultValue("") String scope, final @QueryParam("followsymlink") @DefaultValue("false") String followSymlink, @QueryParam("filename") @DefaultValue("download") String filename,
             @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "GET /export");
-        return export(!scope.isEmpty(), followSymlink, filename, format, paths, securityContext);
+        return export(!scope.startsWith(anonymousBase64), followSymlink, filename, format, paths, securityContext);
     }
 
     private Response export(boolean connected, String followSymlink, String filename, String format, List<String> paths, SecurityContext securityContext) throws UnsupportedEncodingException {
