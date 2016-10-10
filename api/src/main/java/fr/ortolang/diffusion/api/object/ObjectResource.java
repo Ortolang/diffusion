@@ -60,8 +60,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriBuilder;
 
-import fr.ortolang.diffusion.api.ApiHelper;
-import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 import org.jboss.resteasy.annotations.GZIP;
 
 import fr.ortolang.diffusion.OrtolangException;
@@ -71,6 +69,7 @@ import fr.ortolang.diffusion.OrtolangObjectProperty;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.OrtolangObjectVersion;
+import fr.ortolang.diffusion.api.ApiHelper;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
@@ -79,12 +78,12 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.InvalidPathException;
 import fr.ortolang.diffusion.core.PathNotFoundException;
-import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
+import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 
 @Path("/objects")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -148,11 +147,8 @@ public class ObjectResource {
         }
 
         if (builder == null) {
-        	
-        	
             OrtolangObject object = browser.findObject(key);
             OrtolangObjectInfos infos = browser.getInfos(key);
-            LOGGER.log(Level.INFO, "Infos ++++  : " + infos.getParent() + " " + infos.getChildren());
             String owner = security.getOwner(key);
 
             ObjectRepresentation representation = new ObjectRepresentation();
@@ -172,11 +168,8 @@ public class ObjectResource {
             representation.setAuthor(infos.getAuthor());
             representation.setCreationDate(infos.getCreationDate() + "");
             representation.setLastModificationDate(infos.getLastModificationDate() + "");
-        
-            LOGGER.log(Level.INFO, "Infos : " + infos.getParent() + " " + infos.getChildren());
             representation.setParent(infos.getParent());
             representation.setChildren(infos.getChildren());
-            
             
             builder = Response.ok(representation);
             builder.lastModified(lmd);
