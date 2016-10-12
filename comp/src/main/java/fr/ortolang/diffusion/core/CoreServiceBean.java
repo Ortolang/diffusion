@@ -762,6 +762,52 @@ public class CoreServiceBean implements CoreService {
             throw new CoreServiceException("unable to change owner of workspace with key [" + wskey + "]", e);
         }
     }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void notifyWorkspaceOwner(String wskey, String email, String message) throws CoreServiceException {
+        LOGGER.log(Level.FINE, "notify owner of workspace [" + wskey + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            
+            OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+            checkObjectType(identifier, Workspace.OBJECT_TYPE);
+            Workspace workspace = em.find(Workspace.class, identifier.getId());
+            if (workspace == null) {
+                throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+            }
+            
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("email", email).addArgument("message", message);
+            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "notify-owner"), argsBuilder.build());
+        } catch (RegistryServiceException | KeyNotFoundException | NotificationServiceException e) {
+            ctx.setRollbackOnly();
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while trying to notify workspace owner", e);
+            throw new CoreServiceException("unable to notify owner of workspace with key [" + wskey + "]", e);
+        } 
+    }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public void notifyWorkspaceMembers(String wskey, String email, String message) throws CoreServiceException {
+        LOGGER.log(Level.FINE, "notify members of workspace [" + wskey + "]");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            
+            OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+            checkObjectType(identifier, Workspace.OBJECT_TYPE);
+            Workspace workspace = em.find(Workspace.class, identifier.getId());
+            if (workspace == null) {
+                throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+            }
+            
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("email", email).addArgument("message", message);
+            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "notify-members"), argsBuilder.build());
+        } catch (RegistryServiceException | KeyNotFoundException | NotificationServiceException e) {
+            ctx.setRollbackOnly();
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while trying to notify workspace members", e);
+            throw new CoreServiceException("unable to notify members of workspace with key [" + wskey + "]", e);
+        } 
+    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)

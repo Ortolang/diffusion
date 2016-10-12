@@ -702,6 +702,26 @@ public class WorkspaceResource {
         core.changeWorkspaceOwner(wskey, newowner);
         return Response.ok().build();
     }
+    
+    @POST
+    @Path("/{wskey}/owner/message")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response postMessageToWorkspaceOwner(@PathParam(value = "wskey") String wskey, @FormParam(value = "subject") String subject, @FormParam(value = "email") String email, @FormParam(value = "message") String message)
+            throws AccessDeniedException, SecurityServiceException, KeyNotFoundException, CoreServiceException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/owner/message");
+        core.notifyWorkspaceOwner(wskey, email, "[" + subject  + "] <br/>" + message);
+        return Response.ok().build();
+    }
+    
+    @POST
+    @Path("/{wskey}/members/message")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response postMessageToWorkspaceMembers(@PathParam(value = "wskey") String wskey, @FormParam(value = "subject") String subject, @FormParam(value = "email") String email, @FormParam(value = "message") String message)
+            throws AccessDeniedException, SecurityServiceException, KeyNotFoundException, CoreServiceException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/members/message");
+        core.notifyWorkspaceMembers(wskey, email, "[" + subject  + "] <br/>" + message);
+        return Response.ok().build();
+    }
 
     private WorkspaceElementRepresentation makeRepresentation(OrtolangObject object, String wskey, PathBuilder path) throws KeyNotFoundException, AccessDeniedException, BrowserServiceException {
         WorkspaceElementRepresentation representation = WorkspaceElementRepresentation.fromOrtolangObject(object);
