@@ -89,7 +89,7 @@ public class Profile extends OrtolangObject {
         groupsList = "";
         keys = new HashSet<>();
         infos = new HashMap<>();
-        emailVisibility = ProfileDataVisibility.EVERYBODY;
+        emailVisibility = ProfileDataVisibility.FRIENDS;
     }
 
     public String getId() {
@@ -259,6 +259,7 @@ public class Profile extends OrtolangObject {
         return groupsList.split(",");
     }
 
+    @JsonIgnore
     public Map<String, ProfileData> getInfos() {
         return infos;
     }
