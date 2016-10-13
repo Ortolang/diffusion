@@ -42,13 +42,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Transient;
-import javax.persistence.Version;
+import javax.persistence.*;
 
 import org.hibernate.annotations.Type;
 
@@ -59,6 +53,9 @@ import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.membership.MembershipService;
 
 @Entity
+@NamedQueries({
+        @NamedQuery(name = "listAllProfiles", query = "SELECT p FROM Profile p"),
+})
 @SuppressWarnings("serial")
 public class Profile extends OrtolangObject {
 

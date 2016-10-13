@@ -30,6 +30,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import fr.ortolang.diffusion.api.profile.ProfileRepresentation;
+import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.statistics.StatisticsService;
 import fr.ortolang.diffusion.statistics.StatisticsServiceException;
 import org.jboss.resteasy.annotations.GZIP;
@@ -244,6 +246,18 @@ public class AdminResource {
         LOGGER.log(Level.INFO, "DELETE /admin/membership/profiles/" + key);
         membership.deleteProfile(key);
         return Response.ok().build();
+    }
+
+    @GET
+    @Path("/membership/profiles")
+    public Response listProfiles() throws MembershipServiceException {
+        LOGGER.log(Level.INFO, "GET /admin/membership/profiles");
+        List<Profile> profiles = membership.systemListProfiles();
+        List<ProfileRepresentation> representations = new ArrayList<>(profiles.size());
+        for (Profile profile : profiles) {
+            representations.add(ProfileRepresentation.fromProfile(profile));
+        }
+        return Response.ok().entity(representations).build();
     }
 
     @GET

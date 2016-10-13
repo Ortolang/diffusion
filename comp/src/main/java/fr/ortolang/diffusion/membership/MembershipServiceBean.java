@@ -965,6 +965,13 @@ public class MembershipServiceBean implements MembershipService {
     }
 
     @Override
+    @RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Profile> systemListProfiles() throws MembershipServiceException {
+        return em.createNamedQuery("listAllProfiles", Profile.class).getResultList();
+    }
+
+    @Override
     public String getServiceName() {
         return SERVICE_NAME;
     }
