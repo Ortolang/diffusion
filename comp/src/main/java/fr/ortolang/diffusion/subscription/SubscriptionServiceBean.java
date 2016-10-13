@@ -44,13 +44,13 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.*;
 
+import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
 
 import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.Broadcaster;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangException;
@@ -74,37 +74,36 @@ public class SubscriptionServiceBean implements SubscriptionService {
     private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
 
+    private static final String PROCESS_CREATE_TYPE = "runtime.process.create";
+    private static final String MEMBERSHIP_GROUP_ADD_MEMBER_TYPE = "membership.group.add-member";
+    private static final String WORKSPACE_CREATE_TYPE = "core.workspace.create";
+
     @EJB
     private MembershipService membership;
     @EJB
     private RuntimeService runtime;
     @EJB
     private CoreService core;
-    private Map<String, Subscription> subscriptionRegistry = new HashMap<>();
+    private Map<String, Subscription> registry = new HashMap<>();
 
     public SubscriptionServiceBean() {
-        LOGGER.log(Level.INFO, "Instantiating service");
-    }
-
-    @Override
-    public Broadcaster getBroadcaster(String username) {
-        return subscriptionRegistry.get(username).getBroadcaster();
+        LOGGER.log(Level.INFO, "Instantiating Subscription service");
     }
 
     @Override
     public void registerBroadcaster(String username, AtmosphereResource atmosphereResource) {
         LOGGER.log(Level.INFO, "Registering a broadcaster for user " + username);
-        if (!subscriptionRegistry.containsKey(username)) {
-            subscriptionRegistry.put(username, new Subscription(atmosphereResource.getBroadcaster()));
+        if (!registry.containsKey(username)) {
+            registry.put(username, new Subscription(atmosphereResource.getBroadcaster()));
         }
     }
 
     @Override
     public void addFilter(String username, Filter filter) throws SubscriptionServiceException {
-        if (!subscriptionRegistry.containsKey(username)) {
+        if (!registry.containsKey(username)) {
             throw new SubscriptionServiceException("Could not find subscription for user [" + username + "]");
         }
-        if (!subscriptionRegistry.get(username).addFilter(filter)) {
+        if (!registry.get(username).addFilter(filter)) {
             LOGGER.log(Level.FINE, "Filter already present for user " + username + " " + filter);
         } else {
             LOGGER.log(Level.FINE, "Filter added to user " + username + " subscription " + filter);
@@ -112,10 +111,55 @@ public class SubscriptionServiceBean implements SubscriptionService {
     }
 
     @Override
-    public void removeFilter(String username, Filter filter) {
-        LOGGER.log(Level.INFO, "Removing filter from the subscription of user " + username);
-        if (subscriptionRegistry.get(username).removeFilter(filter)) {
-            LOGGER.log(Level.FINE, "Filter removed from user " + username + " subscription " + filter);
+    public void processEvent(Event event) throws SubscriptionServiceException {
+        switch (event.getType()) {
+        case PROCESS_CREATE_TYPE:
+            if (registry.containsKey(event.getThrowedBy())) {
+                LOGGER.log(Level.FINE, "Process created by user " + event.getThrowedBy() + "; adding filter to follow process events");
+                addFilter(event.getThrowedBy(), new Filter(SubscriptionService.RUNTIME_PROCESS_PATTERN, event.getFromObject(), null));
+            }
+            break;
+        case MEMBERSHIP_GROUP_ADD_MEMBER_TYPE:
+            Map<String, String> arguments = event.getArguments();
+            if (arguments.containsKey("member") && registry.containsKey(arguments.get("member"))) {
+                LOGGER.log(Level.FINE, "User " + arguments.get("member") + " added to group " + event.getFromObject() + "; adding filter to follow group events");
+                addFilter(arguments.get("member"), new Filter(SubscriptionService.MEMBERSHIP_GROUP_ALL_PATTERN, event.getFromObject(), null));
+            }
+            break;
+        case WORKSPACE_CREATE_TYPE:
+            if (registry.containsKey(event.getThrowedBy())) {
+                LOGGER.log(Level.FINE, "Workspace created by user " + event.getThrowedBy() + "; adding filter to follow workspace events");
+                addFilter(event.getThrowedBy(), new Filter(null, event.getFromObject(), null));
+            }
+            break;
+        }
+
+        Map<String, Filter> toRemove = new HashMap<>();
+        for (Map.Entry<String, Subscription> entry : registry.entrySet()) {
+            entry.getValue().getFilters().stream().filter(filter -> filter.matches(event)).forEach(filter -> {
+
+                LOGGER.log(Level.FINE, "Matching filter " + filter);
+                LOGGER.log(Level.FINE, "Sending atmosphere message to " + entry.getKey());
+                entry.getValue().broadcast(event);
+
+                // Check if filter needs to be removed
+                if (event.getType().equals("runtime.process.change-state")) {
+                    if (event.getArguments().containsKey("state") && event.getArguments().get("state").equals(Process.State.COMPLETED.name())) {
+                        toRemove.put(entry.getKey(), filter);
+                    }
+                } else if (event.getType().equals("core.workspace.delete")) {
+                    // if from pattern equals null then the filter matches any workspace key
+                    // and thus is not specific to the deleted workspace
+                    if (filter.getFromPattern() != null) {
+                        toRemove.put(entry.getKey(), filter);
+                    }
+                }
+            });
+        }
+
+        for (Map.Entry<String, Filter> entry : toRemove.entrySet()) {
+            LOGGER.log(Level.INFO, "Removing filter from " + entry.getKey() + " subscription");
+            registry.get(entry.getKey()).removeFilter(entry.getValue());
         }
     }
 
@@ -189,19 +233,13 @@ public class SubscriptionServiceBean implements SubscriptionService {
         }
     }
 
-    @Override
-    public Map<String, Subscription> getSubscriptions() {
-        return subscriptionRegistry;
-    }
-
     @Schedule(hour = "5")
     private void cleanupSubscriptions() {
-        LOGGER.log(Level.INFO, "Starting to cleanup subscriptions (registry size: " + subscriptionRegistry.size() + ")");
+        LOGGER.log(Level.INFO, "Starting to cleanup subscriptions (registry size: " + registry.size() + ")");
         Set<String> subscriptionsToBeRemoved = new HashSet<>();
-        subscriptionRegistry.entrySet().stream().filter(subscriptionRegistryEntry -> subscriptionRegistryEntry.getValue().getBroadcaster().getAtmosphereResources().isEmpty())
+        registry.entrySet().stream().filter(subscriptionRegistryEntry -> !subscriptionRegistryEntry.getValue().hasAtmosphereResources())
                 .forEach(subscriptionRegistryEntry -> {
                     LOGGER.log(Level.INFO, "No more resources associated to " + subscriptionRegistryEntry.getKey() + " broadcaster; destroying broadcaster");
-                    subscriptionRegistryEntry.getValue().getBroadcaster().destroy();
                     subscriptionsToBeRemoved.add(subscriptionRegistryEntry.getKey());
                 });
         if (subscriptionsToBeRemoved.isEmpty()) {
@@ -209,9 +247,10 @@ public class SubscriptionServiceBean implements SubscriptionService {
         } else {
             for (String key : subscriptionsToBeRemoved) {
                 LOGGER.log(Level.FINE, "Removing subscription of user " + key);
-                subscriptionRegistry.remove(key);
+                registry.get(key).destroy();
+                registry.remove(key);
             }
-            LOGGER.log(Level.INFO, subscriptionsToBeRemoved.size() + " subscription(s) removed from subscription registry (registry new size: " + subscriptionRegistry.size() + ")");
+            LOGGER.log(Level.INFO, subscriptionsToBeRemoved.size() + " subscription(s) removed from subscription registry (registry new size: " + registry.size() + ")");
         }
     }
 
@@ -225,7 +264,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {
-        return new HashMap<String, String> ();
+        return new HashMap<>();
     }
 
     @Override

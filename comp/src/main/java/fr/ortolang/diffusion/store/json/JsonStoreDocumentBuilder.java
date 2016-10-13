@@ -55,10 +55,10 @@ public class JsonStoreDocumentBuilder {
 
     private static final Logger LOGGER = Logger.getLogger(JsonStoreDocumentBuilder.class.getName());
 
-    public static final String KEY_PROPERTY = "key";
-    public static final String STATUS_PROPERTY = "status";
-    public static final String META_PROPERTY = "meta";
-    public static final String LAST_MODIFICATION_DATE_PROPERTY = "lastModificationDate";
+    private static final String KEY_PROPERTY = "key";
+    private static final String STATUS_PROPERTY = "status";
+    private static final String META_PROPERTY = "meta";
+    private static final String LAST_MODIFICATION_DATE_PROPERTY = "lastModificationDate";
 
     public static String buildDocument(OrtolangIndexableObject<IndexableJsonContent> object) {
 

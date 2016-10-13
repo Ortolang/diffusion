@@ -65,7 +65,7 @@ public class OrtolangXMLParser extends CompositeParser {
 
     public static final String XML_TYPE_KEY = "XML-Type";
 
-    public enum XMLType {
+    enum XMLType {
         TEI,
         TRANS
     }
@@ -137,19 +137,15 @@ public class OrtolangXMLParser extends CompositeParser {
         }
     }
 
-    public class OrtolangContext {
+    private class OrtolangContext {
         private XMLType type;
 
-        public OrtolangContext(XMLType type) {
+        OrtolangContext(XMLType type) {
             this.type = type;
         }
 
         public XMLType getType() {
             return type;
-        }
-
-        public void setType(XMLType type) {
-            this.type = type;
         }
     }
 }

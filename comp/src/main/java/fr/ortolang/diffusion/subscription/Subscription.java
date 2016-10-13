@@ -42,30 +42,38 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Subscription {
+class Subscription {
 
     private Broadcaster broadcaster;
 
     private Set<Filter> filters;
 
-    public Subscription(Broadcaster broadcaster) {
+    Subscription(Broadcaster broadcaster) {
         this.broadcaster = broadcaster;
         filters = new HashSet<>();
     }
 
-    public Broadcaster getBroadcaster() {
-        return broadcaster;
+    void broadcast(Object o) {
+        broadcaster.broadcast(o);
     }
 
-    public Collection<Filter> getFilters() {
+    void destroy() {
+        broadcaster.destroy();
+    }
+
+    boolean hasAtmosphereResources() {
+        return !broadcaster.getAtmosphereResources().isEmpty();
+    }
+
+    Collection<Filter> getFilters() {
         return filters;
     }
 
-    public boolean addFilter(Filter filter) {
+    boolean addFilter(Filter filter) {
         return filters.add(filter);
     }
 
-    public boolean removeFilter(Filter filter) {
+    boolean removeFilter(Filter filter) {
         return filters.remove(filter);
     }
 

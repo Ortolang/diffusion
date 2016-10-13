@@ -74,12 +74,10 @@ public class StatisticsServiceBean implements StatisticsService {
     private static final String[] OBJECT_TYPE_LIST = new String[] { };
     private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
     private static final String SEPARATOR = ".";
-    private static final Map<String, List<String>> STATS_NAMES = new HashMap<String, List<String>> ();
+    private static final Map<String, List<String>> STATS_NAMES = new HashMap<>();
 
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
-    @Resource
-    private SessionContext ctx;
     @Resource
     private ManagedThreadFactory managedThreadFactory;
 
@@ -88,22 +86,6 @@ public class StatisticsServiceBean implements StatisticsService {
     private Thread piwikLatestCollectorThread;
 
     public StatisticsServiceBean() {
-    }
-
-    public void setEntityManager(EntityManager em) {
-        this.em = em;
-    }
-
-    public EntityManager getEntityManager() {
-        return this.em;
-    }
-
-    public void setSessionContext(SessionContext ctx) {
-        this.ctx = ctx;
-    }
-
-    public SessionContext getSessionContext() {
-        return this.ctx;
     }
 
     @PostConstruct
@@ -128,7 +110,7 @@ public class StatisticsServiceBean implements StatisticsService {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<String> list() throws StatisticsServiceException {
         LOGGER.log(Level.FINEST, "listing all stats names");
-        List<String> names = new ArrayList<String> ();
+        List<String> names = new ArrayList<> ();
         for ( Entry<String, List<String>> stat : STATS_NAMES.entrySet() ) {
             for ( String info : stat.getValue() ) {
                 names.add(stat.getKey() + SEPARATOR + info);
@@ -290,7 +272,7 @@ public class StatisticsServiceBean implements StatisticsService {
 
     @Override
     public Map<String, String> getServiceInfos() {
-        return new HashMap<String, String> ();
+        return new HashMap<>();
     }
 
     @Override

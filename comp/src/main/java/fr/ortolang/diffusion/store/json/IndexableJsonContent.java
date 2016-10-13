@@ -40,19 +40,19 @@ import java.util.Map;
  */
 
 public class IndexableJsonContent {
-	
-	private Map<String, String> stream;
+
+    private Map<String, String> stream;
 
     public IndexableJsonContent() {
         this.stream = new HashMap<String, String>();
     }
 
-     public void put(String name, String stream) {
+    public void put(String name, String stream) {
         this.stream.put(name, stream);
     }
 
-	public Map<String, String> getStream() {
-		return stream;
-	}
-    
+    public Map<String, String> getStream() {
+        return stream;
+    }
+
 }

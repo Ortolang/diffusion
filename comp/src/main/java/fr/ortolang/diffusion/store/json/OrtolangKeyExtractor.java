@@ -51,7 +51,7 @@ public class OrtolangKeyExtractor {
     private OrtolangKeyExtractor() {
     }
 
-    public static final Pattern ORTOLANG_KEY_MATCHER = Pattern.compile("\\$\\{([\\w\\d:\\.\\-_]*)\\}");
+    private static final Pattern ORTOLANG_KEY_MATCHER = Pattern.compile("\\$\\{([\\w\\d:\\.\\-_]*)\\}");
 
     public static String getMarker(String ortolangKey) {
         return "${"+ortolangKey+"}";
@@ -77,7 +77,7 @@ public class OrtolangKeyExtractor {
         return json.replace("\""+OrtolangKeyExtractor.getMarker(ortolangKey)+"\"", jsonContent);
     }
 
-    public static String jsonContent(String key) throws NotIndexableContentException, OrtolangException {
+    private static String jsonContent(String key) throws NotIndexableContentException, OrtolangException {
         OrtolangIndexableObject<IndexableJsonContent> object = OrtolangIndexableObjectFactory.buildJsonIndexableObject(key);
         return JsonStoreDocumentBuilder.buildDocument(object);
     }

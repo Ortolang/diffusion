@@ -42,7 +42,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-public class Filter {
+class Filter {
 
     private Pattern typePattern;
 
@@ -52,14 +52,7 @@ public class Filter {
 
     private Map<String, Pattern> argumentsPatterns;
 
-    public Filter() {
-        typePattern = null;
-        fromPattern = null;
-        throwedByPattern = null;
-        argumentsPatterns = null;
-    }
-
-    public Filter(String typePatternRegEx, String fromPatternRegEx, String throwedByPatternRegEx, String... argumentsPatternsRegEx) {
+    Filter(String typePatternRegEx, String fromPatternRegEx, String throwedByPatternRegEx, String... argumentsPatternsRegEx) {
         super();
         if (typePatternRegEx != null && typePatternRegEx.length() > 0) {
             this.typePattern = Pattern.compile(typePatternRegEx);
@@ -100,44 +93,8 @@ public class Filter {
         return true;
     }
 
-    public Pattern getTypePattern() {
-        return typePattern;
-    }
-
-    public void setTypePattern(Pattern typePattern) {
-        this.typePattern = typePattern;
-    }
-
-    public Pattern getFromPattern() {
+    Pattern getFromPattern() {
         return fromPattern;
-    }
-
-    public void setFromPattern(Pattern fromPattern) {
-        this.fromPattern = fromPattern;
-    }
-
-    public Pattern getThrowedByPattern() {
-        return throwedByPattern;
-    }
-
-    public void setThrowedByPattern(Pattern throwedByPattern) {
-        this.throwedByPattern = throwedByPattern;
-    }
-
-    public Map<String, Pattern> getArgumentsPatterns() {
-        return argumentsPatterns;
-    }
-
-    public void setArgumentsPatterns(Map<String, Pattern> argumentsPatterns) {
-        this.argumentsPatterns = argumentsPatterns;
-    }
-
-    /**
-     * For privacy reasons you should not be able to have a filter consisting only in a typePattern
-     * @return true if the filter is conform
-     */
-    public boolean isConform() {
-        return fromPattern != null || throwedByPattern != null || argumentsPatterns != null;
     }
 
     @Override

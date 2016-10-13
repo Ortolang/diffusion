@@ -39,19 +39,19 @@ package fr.ortolang.diffusion.statistics;
 @SuppressWarnings("serial")
 public class StatisticNameNotFoundException extends Exception {
 
-    public StatisticNameNotFoundException() {
+    StatisticNameNotFoundException() {
         super();
     }
 
-    public StatisticNameNotFoundException(String message, Throwable cause) {
+    StatisticNameNotFoundException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public StatisticNameNotFoundException(String message) {
+    StatisticNameNotFoundException(String message) {
         super(message);
     }
 
-    public StatisticNameNotFoundException(Throwable cause) {
+    StatisticNameNotFoundException(Throwable cause) {
         super(cause);
     }
 
