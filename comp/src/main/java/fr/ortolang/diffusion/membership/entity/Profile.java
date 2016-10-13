@@ -259,7 +259,6 @@ public class Profile extends OrtolangObject {
         return groupsList.split(",");
     }
 
-    @JsonIgnore
     public Map<String, ProfileData> getInfos() {
         return infos;
     }
