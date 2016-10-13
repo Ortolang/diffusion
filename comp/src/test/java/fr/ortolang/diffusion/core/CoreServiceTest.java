@@ -116,6 +116,7 @@ public class CoreServiceTest {
         jar.addPackage("fr.ortolang.diffusion.indexing");
         jar.addPackage("fr.ortolang.diffusion.membership");
         jar.addPackage("fr.ortolang.diffusion.membership.entity");
+        jar.addPackage("fr.ortolang.diffusion.message");
         jar.addPackage("fr.ortolang.diffusion.notification");
         jar.addPackage("fr.ortolang.diffusion.registry");
         jar.addPackage("fr.ortolang.diffusion.registry.entity");

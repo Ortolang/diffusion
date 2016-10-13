@@ -91,6 +91,7 @@ public class MembershipServiceTest {
         JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "diffusion-server-ejb.jar");
         jar.addPackage("fr.ortolang.diffusion");
         jar.addPackage("fr.ortolang.diffusion.browser");
+        jar.addPackage("fr.ortolang.diffusion.core");
         jar.addPackage("fr.ortolang.diffusion.event");
         jar.addPackage("fr.ortolang.diffusion.event.entity");
         jar.addPackage("fr.ortolang.diffusion.indexing");
