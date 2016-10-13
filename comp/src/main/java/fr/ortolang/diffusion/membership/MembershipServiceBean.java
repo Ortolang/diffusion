@@ -968,6 +968,7 @@ public class MembershipServiceBean implements MembershipService {
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Profile> systemListProfiles() throws MembershipServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# listing profiles");
         return em.createNamedQuery("listAllProfiles", Profile.class).getResultList();
     }
 
