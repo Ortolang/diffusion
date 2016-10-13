@@ -385,6 +385,9 @@ public class MembershipServiceBean implements MembershipService {
             em.merge(profile);
             registry.update(key);
             indexing.index(key);
+            if (profile.getReferentialId() != null && !profile.getReferentialId().isEmpty()) {
+                indexing.index(profile.getReferentialId());
+            }
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("name", name);
             notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update-infos"), argumentsBuilder.build());
@@ -420,6 +423,9 @@ public class MembershipServiceBean implements MembershipService {
 
             registry.update(key);
             indexing.index(key);
+            if (profile.getReferentialId() != null && profile.getReferentialId().isEmpty()) {
+                indexing.index(profile.getReferentialId());
+            }
 
             notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update"));
             return profile;
