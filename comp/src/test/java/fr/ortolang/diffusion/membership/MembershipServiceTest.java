@@ -92,6 +92,7 @@ public class MembershipServiceTest {
         jar.addPackage("fr.ortolang.diffusion");
         jar.addPackage("fr.ortolang.diffusion.browser");
         jar.addPackage("fr.ortolang.diffusion.core");
+        jar.addPackage("fr.ortolang.diffusion.core.entity");
         jar.addPackage("fr.ortolang.diffusion.event");
         jar.addPackage("fr.ortolang.diffusion.event.entity");
         jar.addPackage("fr.ortolang.diffusion.indexing");
