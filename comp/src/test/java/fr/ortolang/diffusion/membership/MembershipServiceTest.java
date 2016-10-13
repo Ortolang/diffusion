@@ -93,11 +93,17 @@ public class MembershipServiceTest {
         jar.addPackage("fr.ortolang.diffusion.browser");
         jar.addPackage("fr.ortolang.diffusion.core");
         jar.addPackage("fr.ortolang.diffusion.core.entity");
+        jar.addPackage("fr.ortolang.diffusion.core.wrapper");
         jar.addPackage("fr.ortolang.diffusion.event");
         jar.addPackage("fr.ortolang.diffusion.event.entity");
+        jar.addPackage("fr.ortolang.diffusion.extraction");
         jar.addPackage("fr.ortolang.diffusion.indexing");
+        jar.addPackage("fr.ortolang.diffusion.jobs");
+        jar.addPackage("fr.ortolang.diffusion.jobs.entity");
         jar.addPackage("fr.ortolang.diffusion.membership");
         jar.addPackage("fr.ortolang.diffusion.membership.entity");
+        jar.addPackage("fr.ortolang.diffusion.message");
+        jar.addPackage("fr.ortolang.diffusion.message.entity");
         jar.addPackage("fr.ortolang.diffusion.notification");
         jar.addPackage("fr.ortolang.diffusion.registry");
         jar.addPackage("fr.ortolang.diffusion.registry.entity");
@@ -111,6 +117,7 @@ public class MembershipServiceTest {
         jar.addPackage("fr.ortolang.diffusion.store.handle.entity");
         jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
         jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
+        jar.addPackage("fr.ortolang.diffusion.template");
         jar.addAsResource("config.properties");
         jar.addAsManifestResource("test-persistence.xml", "persistence.xml");
         LOGGER.log(Level.INFO, "Created JAR for test : " + jar.toString(true));

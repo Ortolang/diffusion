@@ -131,6 +131,7 @@ public class CoreServiceTest {
         jar.addPackage("fr.ortolang.diffusion.store.handle.entity");
         jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
         jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
+        jar.addPackage("fr.ortolang.diffusion.template");
         jar.addAsResource("config.properties");
         jar.addAsResource("schema/ortolang-item-schema.json");
         jar.addAsResource("schema/ortolang-workspace-schema.json");
