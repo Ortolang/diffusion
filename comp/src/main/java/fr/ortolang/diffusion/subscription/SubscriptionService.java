@@ -42,6 +42,8 @@ import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import org.atmosphere.cpr.AtmosphereResource;
 
+import java.util.List;
+
 public interface SubscriptionService extends OrtolangService {
 
     String SERVICE_NAME = "subscription";
@@ -61,5 +63,7 @@ public interface SubscriptionService extends OrtolangService {
     void addWorkspacesFilters();
 
     void addAdminFilters() throws SubscriptionServiceException;
+
+    List<String> getConnectedUsers();
 
 }

@@ -253,7 +253,15 @@ public class AdminResource {
     public Response listProfiles() throws MembershipServiceException {
         LOGGER.log(Level.INFO, "GET /admin/membership/profiles");
         List<Profile> profiles = membership.systemListProfiles();
-        return Response.ok().entity(profiles).build();
+        List<ProfileRepresentation> representations = new ArrayList<>(profiles.size());
+        List<String> connectedUsers = subscription.getConnectedUsers();
+        for (Profile profile : profiles) {
+            ProfileRepresentation representation = ProfileRepresentation.fromProfile(profile);
+            representation.setKey(profile.getId());
+            representation.setConnected(connectedUsers.contains(representation.getKey()));
+            representations.add(representation);
+        }
+        return Response.ok().entity(representations).build();
     }
 
     @GET

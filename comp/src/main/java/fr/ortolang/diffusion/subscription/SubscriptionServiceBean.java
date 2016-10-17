@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.subscription;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
@@ -94,7 +95,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
     public void registerBroadcaster(String username, AtmosphereResource atmosphereResource) {
         LOGGER.log(Level.INFO, "Registering a broadcaster for user " + username);
         if (!registry.containsKey(username)) {
-            registry.put(username, new Subscription(atmosphereResource.getBroadcaster()));
+            registry.put(username, new Subscription(username, atmosphereResource.getBroadcaster()));
         }
     }
 
@@ -134,32 +135,30 @@ public class SubscriptionServiceBean implements SubscriptionService {
             break;
         }
 
-        Map<String, Filter> toRemove = new HashMap<>();
-        for (Map.Entry<String, Subscription> entry : registry.entrySet()) {
-            entry.getValue().getFilters().stream().filter(filter -> filter.matches(event)).forEach(filter -> {
+        for (Subscription subscription : registry.values()) {
+            for (Iterator<Filter> iterator = subscription.getFilters().iterator(); iterator.hasNext(); ) {
+                Filter filter = iterator.next();
+                if (filter.matches(event)) {
+                    LOGGER.log(Level.FINE, "Matching filter " + filter);
+                    LOGGER.log(Level.FINE, "Sending atmosphere message to " + subscription.getUsername());
+                    subscription.broadcast(event);
 
-                LOGGER.log(Level.FINE, "Matching filter " + filter);
-                LOGGER.log(Level.FINE, "Sending atmosphere message to " + entry.getKey());
-                entry.getValue().broadcast(event);
-
-                // Check if filter needs to be removed
-                if (event.getType().equals("runtime.process.change-state")) {
-                    if (event.getArguments().containsKey("state") && event.getArguments().get("state").equals(Process.State.COMPLETED.name())) {
-                        toRemove.put(entry.getKey(), filter);
-                    }
-                } else if (event.getType().equals("core.workspace.delete")) {
-                    // if from pattern equals null then the filter matches any workspace key
-                    // and thus is not specific to the deleted workspace
-                    if (filter.getFromPattern() != null) {
-                        toRemove.put(entry.getKey(), filter);
+                    // Check if filter needs to be removed
+                    if (event.getType().equals("runtime.process.change-state")) {
+                        if (event.getArguments().containsKey("state") && event.getArguments().get("state").equals(Process.State.COMPLETED.name())) {
+                            LOGGER.log(Level.INFO, "Removing filter from " + subscription.getUsername() + " subscription");
+                            iterator.remove();
+                        }
+                    } else if (event.getType().equals("core.workspace.delete")) {
+                        // if from pattern equals null then the filter matches any workspace key
+                        // and thus is not specific to the deleted workspace
+                        if (filter.getFromPattern() != null) {
+                            LOGGER.log(Level.INFO, "Removing filter from " + subscription.getUsername() + " subscription");
+                            iterator.remove();
+                        }
                     }
                 }
-            });
-        }
-
-        for (Map.Entry<String, Filter> entry : toRemove.entrySet()) {
-            LOGGER.log(Level.INFO, "Removing filter from " + entry.getKey() + " subscription");
-            registry.get(entry.getKey()).removeFilter(entry.getValue());
+            }
         }
     }
 
@@ -233,25 +232,23 @@ public class SubscriptionServiceBean implements SubscriptionService {
         }
     }
 
+    @Override
+    public List<String> getConnectedUsers() {
+        return registry.values().stream().filter(Subscription::isConnected).map(Subscription::getUsername)
+                .collect(Collectors.toList());
+    }
+
     @Schedule(hour = "5")
     private void cleanupSubscriptions() {
         LOGGER.log(Level.INFO, "Starting to cleanup subscriptions (registry size: " + registry.size() + ")");
-        Set<String> subscriptionsToBeRemoved = new HashSet<>();
-        registry.entrySet().stream().filter(subscriptionRegistryEntry -> !subscriptionRegistryEntry.getValue().hasAtmosphereResources())
-                .forEach(subscriptionRegistryEntry -> {
-                    LOGGER.log(Level.INFO, "No more resources associated to " + subscriptionRegistryEntry.getKey() + " broadcaster; destroying broadcaster");
-                    subscriptionsToBeRemoved.add(subscriptionRegistryEntry.getKey());
-                });
-        if (subscriptionsToBeRemoved.isEmpty()) {
-            LOGGER.log(Level.INFO, "No subscription removed from subscription registry");
-        } else {
-            for (String key : subscriptionsToBeRemoved) {
-                LOGGER.log(Level.FINE, "Removing subscription of user " + key);
-                registry.get(key).destroy();
-                registry.remove(key);
+        for (Iterator<Subscription> iterator = registry.values().iterator(); iterator.hasNext(); ) {
+            Subscription subscription = iterator.next();
+            if (!subscription.hasAtmosphereResources()) {
+                LOGGER.log(Level.INFO, "No more resources associated to " + subscription.getUsername() + " broadcaster; destroying broadcaster");
+                iterator.remove();
             }
-            LOGGER.log(Level.INFO, subscriptionsToBeRemoved.size() + " subscription(s) removed from subscription registry (registry new size: " + registry.size() + ")");
         }
+        LOGGER.log(Level.INFO, "Finishing to cleanup subscriptions (new registry size: " + registry.size() + ")");
     }
 
     //Service methods

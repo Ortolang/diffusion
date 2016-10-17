@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
+import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 
 import java.util.Collection;
@@ -44,13 +45,20 @@ import java.util.Set;
 
 class Subscription {
 
+    private String username;
+
     private Broadcaster broadcaster;
 
     private Set<Filter> filters;
 
-    Subscription(Broadcaster broadcaster) {
+    Subscription(String username, Broadcaster broadcaster) {
+        this.username = username;
         this.broadcaster = broadcaster;
         filters = new HashSet<>();
+    }
+
+    String getUsername() {
+        return username;
     }
 
     void broadcast(Object o) {
@@ -63,6 +71,16 @@ class Subscription {
 
     boolean hasAtmosphereResources() {
         return !broadcaster.getAtmosphereResources().isEmpty();
+    }
+
+    boolean isConnected() {
+        boolean closed = true;
+        for (AtmosphereResource atmosphereResource : broadcaster.getAtmosphereResources()) {
+            if (!atmosphereResource.transport().equals(AtmosphereResource.TRANSPORT.CLOSE)) {
+                closed = false;
+            }
+        }
+        return !closed;
     }
 
     Collection<Filter> getFilters() {
