@@ -81,7 +81,6 @@ import fr.ortolang.diffusion.api.seo.SeoResource;
 import fr.ortolang.diffusion.api.statistics.StatisticsResource;
 import fr.ortolang.diffusion.api.thumbnail.ThumbnailResource;
 import fr.ortolang.diffusion.api.workspace.WorkspaceResource;
-import fr.ortolang.diffusion.subscription.SubscriptionResource;
 
 @ApplicationPath("/*")
 public class ApiApplication extends Application {
@@ -102,7 +101,6 @@ public class ApiApplication extends Application {
         classes.add(ContentResource.class);
         classes.add(ThumbnailResource.class);
         classes.add(ConfigResource.class);
-        classes.add(SubscriptionResource.class);
         classes.add(StatisticsResource.class);
         classes.add(SearchResource.class);
         classes.add(OAIPMHServlet.class);

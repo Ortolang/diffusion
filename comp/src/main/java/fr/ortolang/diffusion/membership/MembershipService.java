@@ -115,6 +115,7 @@ public interface MembershipService extends OrtolangService, OrtolangIndexableSer
 
     boolean isMember(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
+    /* System */
 
     Group systemReadGroup(String key) throws MembershipServiceException, KeyNotFoundException;
 

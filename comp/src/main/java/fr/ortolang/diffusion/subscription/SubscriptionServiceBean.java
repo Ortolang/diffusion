@@ -43,9 +43,11 @@ import java.util.stream.Collectors;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
+import javax.annotation.security.RunAs;
 import javax.ejb.*;
 
 import fr.ortolang.diffusion.event.entity.Event;
+import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.HumanTask;
@@ -62,12 +64,12 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 @Local(SubscriptionService.class)
 @Singleton(name = SubscriptionService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @PermitAll
+@RunAs("system")
 public class SubscriptionServiceBean implements SubscriptionService {
 
     private static final Logger LOGGER = Logger.getLogger(SubscriptionServiceBean.class.getName());
@@ -92,15 +94,15 @@ public class SubscriptionServiceBean implements SubscriptionService {
     }
 
     @Override
-    public void registerBroadcaster(String username, AtmosphereResource atmosphereResource) {
+    public void registerBroadcaster(String username, AtmosphereResource atmosphereResource) throws SubscriptionServiceException {
         LOGGER.log(Level.INFO, "Registering a broadcaster for user " + username);
         if (!registry.containsKey(username)) {
             registry.put(username, new Subscription(username, atmosphereResource.getBroadcaster()));
         }
+        addDefaultFilters(username);
     }
 
-    @Override
-    public void addFilter(String username, Filter filter) throws SubscriptionServiceException {
+    private void addFilter(String username, Filter filter) throws SubscriptionServiceException {
         if (!registry.containsKey(username)) {
             throw new SubscriptionServiceException("Could not find subscription for user [" + username + "]");
         }
@@ -163,42 +165,34 @@ public class SubscriptionServiceBean implements SubscriptionService {
         }
     }
 
-    @Override
-    public void addDefaultFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException {
-        String username = membership.getProfileKeyForConnectedIdentifier();
-        List<String> profileGroups = null;
+    private void addDefaultFilters(String username) throws SubscriptionServiceException {
+        LOGGER.log(Level.FINE, "Adding default filters to user " + username + " subscription");
         try {
-            profileGroups = membership.getProfileGroups(username);
-        } catch (MembershipServiceException | KeyNotFoundException | AccessDeniedException e) {
-            LOGGER.log(Level.SEVERE, "Cannot read " + username + " profile and thus cannot add filters for user groups", e);
-        }
-        if (username != null) {
-            LOGGER.log(Level.FINE, "Adding default filters to user " + username + " subscription");
+            Profile profile = membership.systemReadProfile(username);
+            List<String> profileGroups = Arrays.asList(profile.getGroups());
             // Runtime events
-            List<Process> processes = runtime.listCallerProcesses(null);
+            List<Process> processes = runtime.systemListUserProcesses(username, null);
             for (Process process : processes) {
                 if (!process.getState().equals(Process.State.ABORTED) && !process.getState().equals(Process.State.COMPLETED)) {
                     addFilter(username, new Filter(RUNTIME_PROCESS_PATTERN, process.getKey(), null));
                 }
             }
-            List<HumanTask> candidateTasks = runtime.listCandidateTasks();
+            List<HumanTask> candidateTasks = runtime.systemListUserCandidateTasks(username);
             for (HumanTask candidateTask : candidateTasks) {
                 addFilter(username, new Filter("runtime\\.task\\..*", candidateTask.getId(), null));
             }
             // User's workspaces related filters
             addWorkspacesFilters(username);
             // User's groups related filters
-            if (profileGroups != null) {
-                for (String profileGroup : profileGroups) {
-                    if (profileGroup != null && profileGroup.length() > 0) {
-                        addFilter(username, new Filter(MEMBERSHIP_GROUP_ALL_PATTERN, profileGroup, null));
-                        addFilter(username, new Filter("runtime\\.task\\..*", null, null, "group," + profileGroup));
-                    }
+            for (String profileGroup : profileGroups) {
+                if (profileGroup != null && profileGroup.length() > 0) {
+                    addFilter(username, new Filter(MEMBERSHIP_GROUP_ALL_PATTERN, profileGroup, null));
+                    addFilter(username, new Filter("runtime\\.task\\..*", null, null, "group," + profileGroup));
                 }
             }
             addFilter(username, new Filter("runtime\\.remote\\.create", null, username));
-        } else {
-            throw new SubscriptionServiceException("Cannot get profile key for connected identifier");
+        } catch (MembershipServiceException | KeyNotFoundException | RuntimeServiceException e) {
+            throw new SubscriptionServiceException("Cannot add default filters for user " + username, e);
         }
     }
 
@@ -207,11 +201,11 @@ public class SubscriptionServiceBean implements SubscriptionService {
             return;
         }
         try {
-            List<String> workspaces = core.findWorkspacesForProfile(username);
+            List<String> workspaces = core.systemFindWorkspacesForProfile(username);
             for (String workspace : workspaces) {
                 addFilter(username, new Filter(null, workspace, null));
             }
-        } catch (AccessDeniedException | CoreServiceException | SubscriptionServiceException e) {
+        } catch (CoreServiceException | SubscriptionServiceException e) {
             LOGGER.log(Level.SEVERE, "Cannot read " + username + " profile and thus cannot add filters for user groups", e);
         }
     }

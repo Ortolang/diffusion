@@ -383,33 +383,50 @@ public class CoreServiceBean implements CoreService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<String> findWorkspacesForProfile(String profile) throws CoreServiceException, AccessDeniedException {
-        LOGGER.log(Level.FINE, "finding workspace for profile");
+        LOGGER.log(Level.FINE, "finding workspaces for profile");
         try {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkAuthentified(subjects);
 
             List<String> groups = membership.getProfileGroups(profile);
-            if (groups.isEmpty()) {
-                return Collections.emptyList();
-            }
-
-            List<String> keys = new ArrayList<String>();
-            TypedQuery<Workspace> query = em.createNamedQuery("findWorkspaceByMember", Workspace.class).setParameter("groups", groups);
-            List<Workspace> workspaces = query.getResultList();
-            for (Workspace workspace : workspaces) {
-                OrtolangObjectIdentifier identifier = workspace.getObjectIdentifier();
-                try {
-                    keys.add(registry.lookup(identifier));
-                } catch (IdentifierNotRegisteredException e) {
-                    LOGGER.log(Level.SEVERE, "a workspace with an unregistered identifier has be found : " + identifier);
-                }
-            }
-
-            return keys;
+            return findWorkspacesForGroups(groups);
         } catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException | KeyNotFoundException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during finding workspaces for profile", e);
             throw new CoreServiceException("unable to find workspaces for profile", e);
         }
+    }
+
+    @Override
+    @RolesAllowed("system")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<String> systemFindWorkspacesForProfile(String profile) throws CoreServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# finding workspaces for profile");
+        try {
+            List<String> groups = Arrays.asList(membership.systemReadProfile(profile).getGroups());
+            return findWorkspacesForGroups(groups);
+        } catch (MembershipServiceException | RegistryServiceException | KeyNotFoundException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred during finding workspaces for profile", e);
+            throw new CoreServiceException("unable to find workspaces for profile", e);
+        }
+    }
+
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    private List<String> findWorkspacesForGroups(List<String> groups) throws RegistryServiceException {
+        if (groups.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> keys = new ArrayList<>();
+        TypedQuery<Workspace> query = em.createNamedQuery("findWorkspaceByMember", Workspace.class).setParameter("groups", groups);
+        List<Workspace> workspaces = query.getResultList();
+        for (Workspace workspace : workspaces) {
+            OrtolangObjectIdentifier identifier = workspace.getObjectIdentifier();
+            try {
+                keys.add(registry.lookup(identifier));
+            } catch (IdentifierNotRegisteredException e) {
+                LOGGER.log(Level.SEVERE, "a workspace with an unregistered identifier has be found : " + identifier);
+            }
+        }
+        return keys;
     }
 
     @Override

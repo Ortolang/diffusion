@@ -52,13 +52,9 @@ public interface SubscriptionService extends OrtolangService {
 
     String RUNTIME_PROCESS_PATTERN = "runtime\\.process\\.(?:change-state|update-activity)";
 
-    void registerBroadcaster(String username, AtmosphereResource atmosphereResource);
-
-    void addFilter(String username, Filter filter) throws SubscriptionServiceException;
+    void registerBroadcaster(String username, AtmosphereResource atmosphereResource) throws SubscriptionServiceException;
 
     void processEvent(Event event) throws SubscriptionServiceException;
-
-    void addDefaultFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException;
 
     void addAdminFilters() throws SubscriptionServiceException;
 

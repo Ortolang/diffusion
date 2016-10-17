@@ -249,4 +249,5 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
     Workspace systemReadWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException;
 
+    List<String> systemFindWorkspacesForProfile(String profile) throws CoreServiceException;
 }
