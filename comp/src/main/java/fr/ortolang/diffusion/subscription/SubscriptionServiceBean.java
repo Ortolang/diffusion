@@ -125,6 +125,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
             if (arguments.containsKey("member") && registry.containsKey(arguments.get("member"))) {
                 LOGGER.log(Level.FINE, "User " + arguments.get("member") + " added to group " + event.getFromObject() + "; adding filter to follow group events");
                 addFilter(arguments.get("member"), new Filter(SubscriptionService.MEMBERSHIP_GROUP_ALL_PATTERN, event.getFromObject(), null));
+                addWorkspacesFilters(arguments.get("member"));
             }
             break;
         case WORKSPACE_CREATE_TYPE:
@@ -185,7 +186,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
                 addFilter(username, new Filter("runtime\\.task\\..*", candidateTask.getId(), null));
             }
             // User's workspaces related filters
-            addWorkspacesFilters();
+            addWorkspacesFilters(username);
             // User's groups related filters
             if (profileGroups != null) {
                 for (String profileGroup : profileGroups) {
@@ -201,9 +202,10 @@ public class SubscriptionServiceBean implements SubscriptionService {
         }
     }
 
-    @Override
-    public void addWorkspacesFilters() {
-        String username = membership.getProfileKeyForConnectedIdentifier();
+    private void addWorkspacesFilters(String username) {
+        if (!registry.containsKey(username)) {
+            return;
+        }
         try {
             List<String> workspaces = core.findWorkspacesForProfile(username);
             for (String workspace : workspaces) {

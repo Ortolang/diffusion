@@ -60,8 +60,6 @@ public interface SubscriptionService extends OrtolangService {
 
     void addDefaultFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException;
 
-    void addWorkspacesFilters();
-
     void addAdminFilters() throws SubscriptionServiceException;
 
     List<String> getConnectedUsers();

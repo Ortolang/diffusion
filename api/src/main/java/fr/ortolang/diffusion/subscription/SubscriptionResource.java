@@ -66,12 +66,4 @@ public class SubscriptionResource {
         subscription.addDefaultFilters();
         return Response.ok().build();
     }
-
-    @GET
-    @Path("/workspaces")
-    public Response refreshWorkspacesFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "GET /subscription/workspaces");
-        subscription.addWorkspacesFilters();
-        return Response.ok().build();
-    }
 }
