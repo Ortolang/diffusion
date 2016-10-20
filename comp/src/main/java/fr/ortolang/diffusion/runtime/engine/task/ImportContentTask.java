@@ -101,97 +101,100 @@ public class ImportContentTask extends RuntimeEngineTask {
         purgeCache();
         getExtractionServiceWorker().stop();
         try {
-            String line;
-            boolean needcommit;
-            long tscommit = System.currentTimeMillis();
-            while ((line = reader.readLine()) != null) {
-                LOGGER.log(Level.FINE, "- executing operation: " + line);
-                needcommit = false;
-                String[] operation = line.split("\t", -1);
-                try {
-                    switch (operation[0]) {
-                    case "create-workspace":
-                        wskey = UUID.randomUUID().toString();
-                        createWorkspace(operation[1], operation[2], operation[3], operation[4], operation[5]);
-                        execution.setVariable(WORKSPACE_KEY_PARAM_NAME, wskey);
-                        needcommit = true;
-                        report.append("[DONE] ").append(line).append("\r\n");
-                        break;
-                    case "create-object":
-                        createObject(bag, operation[1], operation[2], operation[3]);
-                        report.append("[DONE] ").append(line).append("\r\n");
-                        break;
-                    case "update-object":
-                        updateObject(bag, operation[1], operation[2]);
-                        report.append("[DONE] ").append(line).append("\r\n");
-                        break;
-                    case "delete-object":
-                        deleteObject(operation[2]);
-                        report.append("[DONE] ").append(line).append("\r\n");
-                        break;
-                    case "create-metadata":
-                        createMetadata(bag, operation[1], operation[2], operation[3]);
-                        report.append("[DONE] ").append(line).append("\r\n");
-                        break;
-                    case "update-metadata":
-                        updateMetadata(bag, operation[1], operation[2], operation[3]);
-                        report.append("[DONE] ").append(line).append("\r\n");
-                        break;
-                    case "delete-metadata":
-                        deleteMetadata(operation[2], operation[3]);
-                        report.append("[DONE] ").append(line).append("\r\n");
-                        break;
-                    case "snapshot-workspace":
-                        snapshotWorkspace();
-                        purgeCache();
-                        needcommit = true;
-                        report.append("[DONE] ").append(line).append("\r\n");
-                        break;
-                    default:
+            try {
+                String line;
+                boolean needcommit;
+                long tscommit = System.currentTimeMillis();
+                while ((line = reader.readLine()) != null) {
+                    LOGGER.log(Level.FINE, "- executing operation: " + line);
+                    needcommit = false;
+                    String[] operation = line.split("\t", -1);
+                    try {
+                        switch (operation[0]) {
+                        case "create-workspace":
+                            wskey = UUID.randomUUID().toString();
+                            createWorkspace(operation[1], operation[2], operation[3], operation[4], operation[5]);
+                            execution.setVariable(WORKSPACE_KEY_PARAM_NAME, wskey);
+                            needcommit = true;
+                            report.append("[DONE] ").append(line).append("\r\n");
+                            break;
+                        case "create-object":
+                            createObject(bag, operation[1], operation[2], operation[3]);
+                            report.append("[DONE] ").append(line).append("\r\n");
+                            break;
+                        case "update-object":
+                            updateObject(bag, operation[1], operation[2]);
+                            report.append("[DONE] ").append(line).append("\r\n");
+                            break;
+                        case "delete-object":
+                            deleteObject(operation[2]);
+                            report.append("[DONE] ").append(line).append("\r\n");
+                            break;
+                        case "create-metadata":
+                            createMetadata(bag, operation[1], operation[2], operation[3]);
+                            report.append("[DONE] ").append(line).append("\r\n");
+                            break;
+                        case "update-metadata":
+                            updateMetadata(bag, operation[1], operation[2], operation[3]);
+                            report.append("[DONE] ").append(line).append("\r\n");
+                            break;
+                        case "delete-metadata":
+                            deleteMetadata(operation[2], operation[3]);
+                            report.append("[DONE] ").append(line).append("\r\n");
+                            break;
+                        case "snapshot-workspace":
+                            snapshotWorkspace();
+                            purgeCache();
+                            needcommit = true;
+                            report.append("[DONE] ").append(line).append("\r\n");
+                            break;
+                        default:
+                            partial = true;
+                            report.append("[ERROR] ").append(line).append(" \r\n\t -> Unknown operation\r\n");
+                        }
+                    } catch (Exception e) {
                         partial = true;
-                        report.append("[ERROR] ").append(line).append(" \r\n\t -> Unknown operation\r\n");
+                        report.append("[ERROR] ").append(line).append(" \r\n\t -> Message: ").append(e.getMessage()).append("\r\n");
+                        LOGGER.log(Level.FINE, "ImportContentTask exception raised", e);
                     }
-                } catch ( Exception e ) {
-                    partial = true;
-                    report.append("[ERROR] ").append(line).append(" \r\n\t -> Message: ").append(e.getMessage()).append("\r\n");
-                    LOGGER.log(Level.FINE, "ImportContentTask exception raised", e);
-                }
-                if ( System.currentTimeMillis() - tscommit > 30000 ) {
-                    LOGGER.log(Level.FINE, "current transaction exceed 30sec, need commit.");
-                    needcommit = true;
-                }
-                try {
-                    if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
-                        report.append("[COMMIT-TRAN]\r\n");
-                        LOGGER.log(Level.FINE, "committing active user transaction.");
-                        getUserTransaction().commit();
-                        tscommit = System.currentTimeMillis();
-                        getUserTransaction().begin();
-                        report.append("[BEGIN-TRAN]\r\n");
+                    if (System.currentTimeMillis() - tscommit > 30000) {
+                        LOGGER.log(Level.FINE, "current transaction exceed 30sec, need commit.");
+                        needcommit = true;
                     }
-                } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
+                    try {
+                        if (needcommit && getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
+                            report.append("[COMMIT-TRAN]\r\n");
+                            LOGGER.log(Level.FINE, "committing active user transaction.");
+                            getUserTransaction().commit();
+                            tscommit = System.currentTimeMillis();
+                            getUserTransaction().begin();
+                            report.append("[BEGIN-TRAN]\r\n");
+                        }
+                    } catch (Exception e) {
+                        LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
+                    }
+                    if (partial) {
+                        report.append("[ERROR] Stopping content import due to previous errors... \r\n");
+                        break;
+                    }
                 }
-                if ( partial ) {
-                    report.append("[ERROR] Stopping content import due to previous errors... \r\n");
-                    break;
-                }
+            } catch (IOException e) {
+                partial = true;
+                report.append("[ERROR] unable to read script \r\n\t -> Message: ").append(e.getMessage()).append("\r\n");
+                LOGGER.log(Level.SEVERE, "- unexpected error during reading operations script", e);
             }
-        } catch (IOException e) {
-            partial = true;
-            report.append("[ERROR] unable to read script \r\n\t -> Message: ").append(e.getMessage()).append("\r\n");
-            LOGGER.log(Level.SEVERE, "- unexpected error during reading operations script", e);
+            try {
+                LOGGER.log(Level.FINE, "committing active user transaction and starting new one.");
+                getUserTransaction().commit();
+                report.append("[COMMIT-TRAN]\r\n");
+                getUserTransaction().begin();
+                report.append("[BEGIN-TRAN]\r\n");
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
+            }
+        } finally {
+            getExtractionServiceWorker().start();
         }
-        try {
-            LOGGER.log(Level.FINE, "committing active user transaction and starting new one.");
-            getUserTransaction().commit();
-            report.append("[COMMIT-TRAN]\r\n");
-            getUserTransaction().begin();
-            report.append("[BEGIN-TRAN]\r\n");
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
-        }
-        getExtractionServiceWorker().start();
         try {
             bag.close();
         } catch ( IOException e ) {

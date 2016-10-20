@@ -123,7 +123,6 @@ public class ExtractionServiceWorkerBean implements ExtractionServiceWorker {
     @PostConstruct
     public void start() {
         if (workerThread != null && workerThread.isAlive()) {
-            worker.restart();
             LOGGER.log(Level.WARNING, "Extraction worker already started");
             return;
         }
@@ -204,11 +203,6 @@ public class ExtractionServiceWorkerBean implements ExtractionServiceWorker {
 
         void stop() {
             this.run = false;
-        }
-
-        void restart() {
-            this.run = true;
-            run();
         }
 
         @Override
