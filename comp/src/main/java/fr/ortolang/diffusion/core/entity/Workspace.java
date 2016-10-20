@@ -384,6 +384,4 @@ public class Workspace extends OrtolangObject {
         return new OrtolangObjectIdentifier(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, id);
     }
 
-
-
 }

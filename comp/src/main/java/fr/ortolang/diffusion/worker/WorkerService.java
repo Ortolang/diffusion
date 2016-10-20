@@ -36,12 +36,11 @@ package fr.ortolang.diffusion.worker;
  * #L%
  */
 
+import java.util.List;
+
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangJob;
 import fr.ortolang.diffusion.OrtolangWorker;
-
-import java.util.List;
-import java.util.Map;
 
 public interface WorkerService {
 

@@ -64,7 +64,6 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
@@ -93,9 +92,6 @@ import freemarker.template.TemplateExceptionHandler;
 public class RenderingServiceBean implements RenderingService {
 
     private static final Logger LOGGER = Logger.getLogger(RenderingServiceBean.class.getName());
-
-    private static final String[] OBJECT_TYPE_LIST = new String[] {};
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] {};
 
     public static final String DEFAULT_THUMBNAILS_HOME = "views";
     public static final int DISTINGUISH_SIZE = 2;
@@ -331,26 +327,6 @@ public class RenderingServiceBean implements RenderingService {
             LOGGER.log(Level.INFO, "unable to collect info: " + INFO_SIZE, e);
         }
         return infos;
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
     }
 
 }

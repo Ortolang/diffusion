@@ -41,6 +41,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -57,6 +58,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.xml.stream.XMLStreamWriter;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -537,6 +539,14 @@ public class EventServiceBean implements EventService {
         return query.getSingleResult();
     }
 
+    @Override
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    public List<? extends OrtolangEvent> systemListAllEventsForKey(String key) throws EventServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# listing all events for key " + key);
+        List<Event> events = em.createNamedQuery("listAllEventsFromObject", Event.class).setParameter("fromObject", key).setLockMode(LockModeType.NONE).getResultList();
+        return events;
+    }
+
     /* Service Methods */
 
     @Override
@@ -600,7 +610,7 @@ public class EventServiceBean implements EventService {
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         return null;
     }
-
+    
     private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws EventServiceException {
         if (!identifier.getService().equals(getServiceName())) {
             throw new EventServiceException("object identifier " + identifier + " does not refer to service " + getServiceName());
@@ -609,6 +619,16 @@ public class EventServiceBean implements EventService {
         if (!identifier.getType().equals(objectType)) {
             throw new EventServiceException("object identifier " + identifier + " does not refer to an object of type " + objectType);
         }
+    }
+    
+    @Override
+    public void dump(String key, XMLStreamWriter writer, Set<String> deps, Set<String> streams) throws OrtolangException {
+        //TODO Implement that
+    }
+
+    @Override
+    public void restore() throws OrtolangException {
+        throw new OrtolangException("NOT IMPLEMENTED");
     }
 
 }

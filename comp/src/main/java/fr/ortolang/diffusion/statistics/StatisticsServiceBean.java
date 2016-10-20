@@ -36,7 +36,35 @@ package fr.ortolang.diffusion.statistics;
  * #L%
  */
 
-import fr.ortolang.diffusion.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.Local;
+import javax.ejb.Schedule;
+import javax.ejb.Singleton;
+import javax.ejb.Startup;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.enterprise.concurrent.ManagedThreadFactory;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -46,21 +74,6 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.thumbnail.ThumbnailService;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.*;
-import javax.enterprise.concurrent.ManagedThreadFactory;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Startup
 @Local(StatisticsService.class)
@@ -71,8 +84,6 @@ public class StatisticsServiceBean implements StatisticsService {
 
     private static final Logger LOGGER = Logger.getLogger(StatisticsServiceBean.class.getName());
 
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
     private static final String SEPARATOR = ".";
     private static final Map<String, List<String>> STATS_NAMES = new HashMap<>();
 
@@ -273,26 +284,6 @@ public class StatisticsServiceBean implements StatisticsService {
     @Override
     public Map<String, String> getServiceInfos() {
         return new HashMap<>();
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
     }
 
 }

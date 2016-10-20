@@ -30,13 +30,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import fr.ortolang.diffusion.api.profile.ProfileRepresentation;
-import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.statistics.StatisticsService;
-import fr.ortolang.diffusion.statistics.StatisticsServiceException;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
-
 
 /*
  * #%L
@@ -99,6 +94,7 @@ import fr.ortolang.diffusion.jobs.JobService;
 import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyLockedException;
@@ -111,6 +107,8 @@ import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import fr.ortolang.diffusion.statistics.StatisticsService;
+import fr.ortolang.diffusion.statistics.StatisticsServiceException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreContent;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;

@@ -45,6 +45,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
@@ -57,10 +58,8 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangObjectProviderService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
@@ -80,9 +79,6 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 public class SecurityServiceBean implements SecurityService {
 
     private static final Logger LOGGER = Logger.getLogger(SecurityServiceBean.class.getName());
-
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
 
     @Resource
     private SessionContext ctx;
@@ -251,6 +247,7 @@ public class SecurityServiceBean implements SecurityService {
     }
     
     @Override
+    @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void systemSetRule(String key, String subject, List<String> permissions) throws SecurityServiceException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "{SYSTEM} setting rule for key [" + key + "] and subject [" + subject + "]");
@@ -286,7 +283,7 @@ public class SecurityServiceBean implements SecurityService {
             authorisation.checkPermission(key, subjects, "read");
 
             OrtolangObjectIdentifier keyid = registry.lookup(key);
-            OrtolangService service = OrtolangServiceLocator.findService(keyid.getService());
+            OrtolangObjectProviderService service = OrtolangServiceLocator.findObjectProviderService(keyid.getService());
             String[] permissions = service.getObjectPermissionsList(keyid.getType());
             return Arrays.asList(permissions);
         } catch (MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | OrtolangException e) {
@@ -327,26 +324,6 @@ public class SecurityServiceBean implements SecurityService {
     public Map<String, String> getServiceInfos() {
         //TODO provide infos about active connections, config, ports, etc...
         return Collections.emptyMap();
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not manage any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("This service does not manage any object");
     }
 
 }

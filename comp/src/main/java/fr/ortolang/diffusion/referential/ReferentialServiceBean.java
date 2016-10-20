@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,6 +61,7 @@ import javax.json.JsonReader;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.xml.stream.XMLStreamWriter;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -545,4 +547,15 @@ public class ReferentialServiceBean implements ReferentialService {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}
+
+	@Override
+    public void dump(String key, XMLStreamWriter writer, Set<String> deps, Set<String> streams) throws OrtolangException {
+        //TODO Implement that
+    }
+
+    @Override
+    public void restore() throws OrtolangException {
+        throw new OrtolangException("NOT IMPLEMENTED");
+    }
+
 }

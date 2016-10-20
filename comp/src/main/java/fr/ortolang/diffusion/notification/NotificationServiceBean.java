@@ -60,9 +60,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 
 @Local(NotificationService.class)
 @Stateless(name = NotificationService.SERVICE_NAME)
@@ -72,9 +69,6 @@ public class NotificationServiceBean implements NotificationService {
 	
 	private static final Logger LOGGER = Logger.getLogger(NotificationServiceBean.class.getName());
 	
-	private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
     @Resource(mappedName = "java:jboss/exported/jms/topic/notification")
 	private Topic notificationTopic;
 	@Inject
@@ -126,23 +120,4 @@ public class NotificationServiceBean implements NotificationService {
         return Collections.emptyMap();
     }
 
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
 }

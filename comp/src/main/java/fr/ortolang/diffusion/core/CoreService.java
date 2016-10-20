@@ -64,7 +64,7 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 import org.javers.core.diff.Change;
 
-public interface CoreService extends OrtolangService, OrtolangBinaryService, OrtolangIndexableService {
+public interface CoreService extends OrtolangObjectProviderService, OrtolangBinaryService, OrtolangIndexableService {
 
     String SERVICE_NAME = "core";
 

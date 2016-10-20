@@ -58,10 +58,10 @@ import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
+import fr.ortolang.diffusion.OrtolangObjectProviderService;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.OrtolangObjectVersion;
-import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
@@ -87,9 +87,6 @@ import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 public class BrowserServiceBean implements BrowserService {
 
     private static final Logger LOGGER = Logger.getLogger(BrowserServiceBean.class.getName());
-
-    private static final String[] OBJECT_TYPE_LIST = new String[] {};
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] {};
 
     @EJB
     private RegistryService registry;
@@ -314,6 +311,31 @@ public class BrowserServiceBean implements BrowserService {
             throw new BrowserServiceException("unable to index key " + key, e);
         }
     }
+    
+    @Override
+    public OrtolangObject findObject(String key) throws BrowserServiceException {
+        LOGGER.log(Level.FINE, "trying to find object for key [" + key + "]");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            OrtolangObjectProviderService service = OrtolangServiceLocator.findObjectProviderService(identifier.getService());
+            return service.findObject(key);
+        } catch (RegistryServiceException | KeyNotFoundException | OrtolangException e) {
+            throw new BrowserServiceException("unable to find object for key [" + key + "]", e);
+        }
+    }
+
+    @Override
+    public OrtolangObjectSize getSize(String key) throws BrowserServiceException {
+        LOGGER.log(Level.FINE, "trying to find object size for key [" + key + "]");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            OrtolangObjectProviderService service = OrtolangServiceLocator.findObjectProviderService(identifier.getService());
+            return service.getSize(key);
+        } catch (RegistryServiceException | KeyNotFoundException | OrtolangException e) {
+            throw new BrowserServiceException("unable to find object size for key [" + key + "]", e);
+        }
+    }
+
 
     @Override
     public String getServiceName() {
@@ -323,40 +345,6 @@ public class BrowserServiceBean implements BrowserService {
     @Override
     public Map<String, String> getServiceInfos() {
         return Collections.emptyMap();
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        LOGGER.log(Level.FINE, "trying to find object for key [" + key + "]");
-        try {
-            OrtolangObjectIdentifier identifier = registry.lookup(key);
-            OrtolangService service = OrtolangServiceLocator.findService(identifier.getService());
-            return service.findObject(key);
-        } catch (RegistryServiceException | KeyNotFoundException e) {
-            throw new OrtolangException("unable to find object for key [" + key + "]", e);
-        }
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        LOGGER.log(Level.FINE, "trying to find object size for key [" + key + "]");
-        try {
-            OrtolangObjectIdentifier identifier = registry.lookup(key);
-            OrtolangService service = OrtolangServiceLocator.findService(identifier.getService());
-            return service.getSize(key);
-        } catch (RegistryServiceException | KeyNotFoundException e) {
-            throw new OrtolangException("unable to find object size for key [" + key + "]", e);
-        }
     }
 
 }

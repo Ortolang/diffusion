@@ -73,6 +73,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.io.IOUtils;
 import org.javers.core.Javers;
@@ -110,6 +112,7 @@ import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
+import fr.ortolang.diffusion.core.entity.WorkspaceDumpHandler;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.core.wrapper.CollectionWrapper;
 import fr.ortolang.diffusion.core.wrapper.OrtolangObjectWrapper;
@@ -3864,6 +3867,64 @@ public class CoreServiceBean implements CoreService {
         if (!identifier.getType().equals(objectType)) {
             throw new CoreServiceException("object identifier " + identifier + " does not refer to an object of type " + objectType);
         }
+    }
+    
+    @Override
+    public void dump(String key, XMLStreamWriter writer, Set<String> deps, Set<String> streams) throws OrtolangException {
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+            
+            if (identifier.getType().equals(Workspace.OBJECT_TYPE)) {
+                Workspace workspace = em.find(Workspace.class, identifier.getId());
+                if (workspace == null) {
+                    throw new OrtolangException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+                }
+                WorkspaceDumpHandler.dump(workspace, writer, deps, streams);
+            }
+            
+            if (identifier.getType().equals(Collection.OBJECT_TYPE) ) {
+                Collection collection = em.find(Collection.class, identifier.getId());
+                if (collection == null) {
+                    throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
+                }
+                //TODO
+            }
+            
+            if (identifier.getType().equals(DataObject.OBJECT_TYPE) ) {
+                DataObject object = em.find(DataObject.class, identifier.getId());
+                if (object == null) {
+                    throw new OrtolangException("unable to load dataobject with id [" + identifier.getId() + "] from storage");
+                }
+                //TODO
+            }
+            
+            if (identifier.getType().equals(MetadataObject.OBJECT_TYPE) ) {
+                MetadataObject metadata = em.find(MetadataObject.class, identifier.getId());
+                if (metadata == null) {
+                    throw new OrtolangException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+                }
+                //TODO
+            }
+            
+            if (identifier.getType().equals(Link.OBJECT_TYPE) ) {
+                Link link = em.find(Link.class, identifier.getId());
+                if (link == null) {
+                    throw new OrtolangException("unable to load link with id [" + identifier.getId() + "] from storage");
+                }
+                //TODO
+            }
+
+        } catch (RegistryServiceException | KeyNotFoundException | XMLStreamException e) {
+            throw new OrtolangException("unable to dump key " + key);
+        }
+    }
+
+    @Override
+    public void restore() throws OrtolangException {
+        throw new OrtolangException("NOT IMPLEMENTED");
     }
 
     // System operations

@@ -60,11 +60,8 @@ import javax.persistence.TypedQuery;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 
@@ -76,9 +73,6 @@ public class RegistryServiceBean implements RegistryService {
 
     private static final  Logger LOGGER = Logger.getLogger(RegistryServiceBean.class.getName());
 
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
     private static Map<String, Long> cacheDates = new HashMap<String, Long> ();
     private static long baseCacheDate = System.currentTimeMillis();
 
@@ -547,7 +541,7 @@ public class RegistryServiceBean implements RegistryService {
     //Admin interface
 
     @Override
-    @RolesAllowed("admin")
+    @RolesAllowed({"admin", "system"})
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public long systemCountAllEntries(String identifierFilter) throws RegistryServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting all entries with identifierFilter:" + identifierFilter);
@@ -561,7 +555,7 @@ public class RegistryServiceBean implements RegistryService {
     }
 
     @Override
-    @RolesAllowed("admin")
+    @RolesAllowed({"admin", "system"})
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public long systemCountDeletedEntries(String identifierFilter) throws RegistryServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting deleted entries with identifierFilter:" + identifierFilter);
@@ -575,7 +569,7 @@ public class RegistryServiceBean implements RegistryService {
     }
 
     @Override
-    @RolesAllowed("admin")
+    @RolesAllowed({"admin", "system"})
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public long systemCountHiddenEntries(String identifierFilter) throws RegistryServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# counting hidden entries with identifierFilter:" + identifierFilter);
@@ -589,7 +583,7 @@ public class RegistryServiceBean implements RegistryService {
     }
 
     @Override
-    @RolesAllowed("admin")
+    @RolesAllowed({"admin", "system"})
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<RegistryEntry> systemListEntries(String keyFilter, String identifierFilter) throws RegistryServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# list entries for key filter [" + keyFilter + "] and identifierFilter [" + identifierFilter + "]");
@@ -604,11 +598,15 @@ public class RegistryServiceBean implements RegistryService {
     }
 
     @Override
-    @RolesAllowed("admin")
+    @RolesAllowed({"admin", "system"})
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public RegistryEntry systemReadEntry(String key) throws RegistryServiceException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "#SYSTEM# read entry for key [" + key + "]");
-        return em.find(RegistryEntry.class, key);
+        RegistryEntry entry = em.find(RegistryEntry.class, key); 
+        if ( entry !=null ) {
+            return entry;
+        }
+        throw new KeyNotFoundException("no entry found for key [" + key + "]");
     }
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -685,26 +683,6 @@ public class RegistryServiceBean implements RegistryService {
             LOGGER.log(Level.INFO, "unable to collect info: " + INFO_PUBLISHED, e);
         }
         return infos;
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
     }
 
 }

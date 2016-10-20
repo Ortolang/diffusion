@@ -44,7 +44,7 @@ import java.util.Map;
 
 import fr.ortolang.diffusion.OrtolangBinaryService;
 import fr.ortolang.diffusion.OrtolangIndexableService;
-import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangObjectProviderService;
 import fr.ortolang.diffusion.message.entity.Message;
 import fr.ortolang.diffusion.message.entity.Thread;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
@@ -53,7 +53,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
-public interface MessageService extends OrtolangService, OrtolangBinaryService, OrtolangIndexableService {
+public interface MessageService extends OrtolangObjectProviderService, OrtolangBinaryService, OrtolangIndexableService {
     
     String SERVICE_NAME = "message";
     

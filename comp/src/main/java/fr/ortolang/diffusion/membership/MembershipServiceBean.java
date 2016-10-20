@@ -59,6 +59,7 @@ import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.xml.stream.XMLStreamWriter;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -1190,6 +1191,16 @@ public class MembershipServiceBean implements MembershipService {
             //
         }
         return infos;
+    }
+
+    @Override
+    public void dump(String key, XMLStreamWriter writer, Set<String> deps, Set<String> streams) throws OrtolangException {
+        //TODO Implement that
+    }
+
+    @Override
+    public void restore() throws OrtolangException {
+        throw new OrtolangException("NOT IMPLEMENTED");
     }
 
     private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws MembershipServiceException {

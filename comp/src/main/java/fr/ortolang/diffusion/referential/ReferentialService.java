@@ -39,14 +39,14 @@ package fr.ortolang.diffusion.referential;
 import java.util.List;
 
 import fr.ortolang.diffusion.OrtolangIndexableService;
-import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangObjectProviderService;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntity;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
-public interface ReferentialService extends OrtolangService, OrtolangIndexableService {
+public interface ReferentialService extends OrtolangObjectProviderService, OrtolangIndexableService {
 
 	String SERVICE_NAME = "referential";
 	

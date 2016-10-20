@@ -43,7 +43,7 @@ import java.util.Set;
 
 import org.activiti.engine.task.IdentityLink;
 
-import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangObjectProviderService;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
@@ -53,7 +53,7 @@ import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.runtime.entity.ProcessType;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
-public interface RuntimeService extends OrtolangService {
+public interface RuntimeService extends OrtolangObjectProviderService {
 
 	String SERVICE_NAME = "runtime";
 	

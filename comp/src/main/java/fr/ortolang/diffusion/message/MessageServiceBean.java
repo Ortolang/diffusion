@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,6 +66,7 @@ import javax.mail.Session;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.xml.stream.XMLStreamWriter;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -1020,6 +1022,16 @@ public class MessageServiceBean implements MessageService {
             LOGGER.log(Level.SEVERE, "unexpected error while calculating object size", e);
             throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
         }
+    }
+
+    @Override
+    public void dump(String key, XMLStreamWriter writer, Set<String> deps, Set<String> streams) throws OrtolangException {
+        //TODO Implement that
+    }
+
+    @Override
+    public void restore() throws OrtolangException {
+        throw new OrtolangException("NOT IMPLEMENTED");
     }
 
     private void addAttachments(Message message, Map<String, InputStream> attachments) throws DataNotFoundException, BinaryStoreServiceException, DataCollisionException {

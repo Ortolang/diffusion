@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.extraction;
  * #L%
  */
 
+@SuppressWarnings("serial")
 public class ExtractionServiceException extends Exception {
 
     ExtractionServiceException() {

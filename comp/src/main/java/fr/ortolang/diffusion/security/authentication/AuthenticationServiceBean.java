@@ -49,10 +49,6 @@ import javax.ejb.Stateless;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-
 
 @Local(AuthenticationService.class)
 @Stateless(name = AuthenticationService.SERVICE_NAME)
@@ -62,9 +58,6 @@ public class AuthenticationServiceBean implements AuthenticationService {
 	
 	private static final Logger LOGGER = Logger.getLogger(AuthenticationServiceBean.class.getName());
 	
-	private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
     @Resource
 	private SessionContext ctx;
 
@@ -84,26 +77,6 @@ public class AuthenticationServiceBean implements AuthenticationService {
     @Override
     public Map<String, String> getServiceInfos() {
         return Collections.emptyMap();
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
     }
 
 }

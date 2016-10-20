@@ -55,11 +55,13 @@ import javax.ejb.*;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import javax.xml.stream.XMLStreamWriter;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -289,6 +291,16 @@ public class FormServiceBean implements FormService {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}
+	
+	@Override
+    public void dump(String key, XMLStreamWriter writer, Set<String> deps, Set<String> streams) throws OrtolangException {
+        //TODO Implement that
+    }
+
+    @Override
+    public void restore() throws OrtolangException {
+        throw new OrtolangException("NOT IMPLEMENTED");
+    }
 
     // @TODO implement getSize
     @Override
@@ -304,6 +316,6 @@ public class FormServiceBean implements FormService {
 		if (!identifier.getType().equals(objectType)) {
 			throw new FormServiceException("object identifier " + identifier + " does not refer to an object of type " + objectType);
 		}
-	}
+	}   
 
 }

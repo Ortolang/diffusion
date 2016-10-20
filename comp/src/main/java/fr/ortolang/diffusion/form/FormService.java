@@ -38,13 +38,13 @@ package fr.ortolang.diffusion.form;
 
 import java.util.List;
 
-import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangObjectProviderService;
 import fr.ortolang.diffusion.form.entity.Form;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
-public interface FormService extends OrtolangService {
+public interface FormService extends OrtolangObjectProviderService {
 	
 	String SERVICE_NAME = "form";
 	
