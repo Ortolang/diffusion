@@ -99,6 +99,7 @@ public class ImportContentTask extends RuntimeEngineTask {
         boolean partial = false;
         LOGGER.log(Level.FINE, "purge collection creation cache.");
         purgeCache();
+        getExtractionServiceWorker().stop();
         try {
             String line;
             boolean needcommit;
@@ -190,7 +191,7 @@ public class ImportContentTask extends RuntimeEngineTask {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "unable to commit active user transaction", e);
         }
-
+        getExtractionServiceWorker().start();
         try {
             bag.close();
         } catch ( IOException e ) {
@@ -205,7 +206,6 @@ public class ImportContentTask extends RuntimeEngineTask {
         } else {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All content imported successfully"));
         }
-
     }
 
     @Override

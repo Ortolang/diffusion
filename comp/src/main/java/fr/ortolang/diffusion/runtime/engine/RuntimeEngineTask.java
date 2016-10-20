@@ -43,6 +43,7 @@ import javax.mail.Session;
 import javax.naming.InitialContext;
 import javax.transaction.UserTransaction;
 
+import fr.ortolang.diffusion.extraction.ExtractionServiceWorker;
 import org.activiti.engine.delegate.BpmnError;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.JavaDelegate;
@@ -127,6 +128,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     protected PublicationService publication;
     protected NotificationService notification;
     protected IndexingService indexing;
+    private ExtractionServiceWorker extractionServiceWorker;
     protected ReferentialService referential;
 
     public Session getMailSession() throws RuntimeEngineTaskException {
@@ -151,7 +153,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
         }
     }
 
-    public BinaryStoreService getBinaryStore() throws RuntimeEngineTaskException {
+    protected BinaryStoreService getBinaryStore() throws RuntimeEngineTaskException {
         try {
             if (store == null) {
                 store = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
@@ -162,7 +164,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
         }
     }
 
-    public HandleStoreService getHandleStore() throws RuntimeEngineTaskException {
+    protected HandleStoreService getHandleStore() throws RuntimeEngineTaskException {
         try {
             if (hdlstore == null) {
                 hdlstore = (HandleStoreService) OrtolangServiceLocator.lookup(HandleStoreService.SERVICE_NAME, HandleStoreService.class);
@@ -217,7 +219,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
         }
     }
 
-    public SecurityService getSecurityService() throws RuntimeEngineTaskException {
+    protected SecurityService getSecurityService() throws RuntimeEngineTaskException {
         try {
             if (security == null) {
                 security = (SecurityService) OrtolangServiceLocator.findService(SecurityService.SERVICE_NAME);
@@ -228,7 +230,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
         }
     }
 
-    public PublicationService getPublicationService() throws RuntimeEngineTaskException {
+    protected PublicationService getPublicationService() throws RuntimeEngineTaskException {
         try {
             if (publication == null) {
                 publication = (PublicationService) OrtolangServiceLocator.findService(PublicationService.SERVICE_NAME);
@@ -250,7 +252,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
         }
     }
 
-    public IndexingService getIndexingService() throws RuntimeEngineTaskException {
+    protected IndexingService getIndexingService() throws RuntimeEngineTaskException {
         try {
             if (indexing == null) {
                 indexing = (IndexingService) OrtolangServiceLocator.lookup(IndexingService.SERVICE_NAME, IndexingService.class);
@@ -261,7 +263,18 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
         }
     }
 
-    public ReferentialService getReferentialService() throws RuntimeEngineTaskException {
+    protected ExtractionServiceWorker getExtractionServiceWorker() throws RuntimeEngineTaskException {
+        try {
+            if (extractionServiceWorker == null) {
+                extractionServiceWorker = (ExtractionServiceWorker) OrtolangServiceLocator.lookup(ExtractionServiceWorker.WORKER_NAME, ExtractionServiceWorker.class);
+            }
+            return extractionServiceWorker;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
+
+    protected ReferentialService getReferentialService() throws RuntimeEngineTaskException {
         try {
             if (referential == null) {
                 referential = (ReferentialService) OrtolangServiceLocator.findService(ReferentialService.SERVICE_NAME);
@@ -272,7 +285,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
         }
     }
 
-    public UserTransaction getUserTransaction() throws RuntimeEngineTaskException {
+    protected UserTransaction getUserTransaction() throws RuntimeEngineTaskException {
         try {
             if (userTx == null) {
                 userTx = (UserTransaction) new InitialContext().lookup("java:jboss/UserTransaction");
