@@ -44,7 +44,6 @@ import com.lyncode.xoai.dataprovider.exceptions.InternalOAIException;
 import com.lyncode.xoai.dataprovider.exceptions.NoMatchesException;
 import com.lyncode.xoai.dataprovider.exceptions.OAIException;
 import com.lyncode.xoai.dataprovider.handlers.VerbHandler;
-import com.lyncode.xoai.dataprovider.handlers.helpers.ResumptionTokenHelper;
 import com.lyncode.xoai.dataprovider.handlers.results.ListItemIdentifiersResult;
 import com.lyncode.xoai.dataprovider.model.Context;
 import com.lyncode.xoai.dataprovider.model.ItemIdentifier;
@@ -57,6 +56,7 @@ import com.lyncode.xoai.model.oaipmh.ListIdentifiers;
 import com.lyncode.xoai.model.oaipmh.ResumptionToken;
 
 import fr.ortolang.diffusion.api.oaipmh.handlers.helpers.MultiMetadataItemRepositoryHelper;
+import fr.ortolang.diffusion.api.oaipmh.handlers.helpers.ResumptionTokenHelper;
 import fr.ortolang.diffusion.api.oaipmh.repository.MultiMetadataItemRepository;
 
 public class DiffusionListIdentifiersHandler extends VerbHandler<ListIdentifiers> {
@@ -127,7 +127,8 @@ public class DiffusionListIdentifiersHandler extends VerbHandler<ListIdentifiers
         }
 
         ResumptionTokenHelper resumptionTokenHelper = new ResumptionTokenHelper(currentResumptionToken,
-                getRepository().getConfiguration().getMaxListIdentifiers());
+                getRepository().getConfiguration().getMaxListIdentifiers()).withTotalResults(listItemIdentifiersResult.getTotal());
+        System.out.println();
         result.withResumptionToken(resumptionTokenHelper.resolve(listItemIdentifiersResult.hasMore()));
 
         return result;
