@@ -243,7 +243,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
         } catch (SearchServiceException e) {
             LOGGER.log(Level.SEVERE, "Unable to get item identifiers with metadataPrefix : " + metadataPrefix + " and from " + from + " until " + until);
         }
-        return new ListItemIdentifiersResult(offset + length < list.size(), new ArrayList<ItemIdentifier>(list.subList(offset, min(offset + length, list.size()))));
+        return new ListItemIdentifiersResult(offset + length < list.size(), new ArrayList<ItemIdentifier>(list.subList(offset, min(offset + length, list.size()))), list.size());
     }
 
     @Override
@@ -402,7 +402,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
         } catch (SearchServiceException | IOException e) {
             LOGGER.log(Level.SEVERE, "Unable to get item with metadataPrefix : " + metadataPrefix + " and from " + from + " until " + until, e);
         }
-        return new ListItemsResults(offset + length < list.size(), new ArrayList<Item>(list.subList(offset, min(offset + length, list.size()))));
+        return new ListItemsResults(offset + length < list.size(), new ArrayList<Item>(list.subList(offset, min(offset + length, list.size()))), list.size());
     }
 
     protected DiffusionItem diffusionItem(String doc, String metadataPrefix) throws IOException {
