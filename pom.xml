@@ -38,6 +38,7 @@
         <version.apache.tika>1.13</version.apache.tika>
         <version.apache.velocity>1.7</version.apache.velocity>
         <version.apache.velocity-tools>2.0</version.apache.velocity-tools>
+        <version.apache.httpcore>4.4.4</version.apache.httpcore>
         <version.javax.javaee>7.0</version.javax.javaee>
         <version.jboss.resteasy>3.0.19.Final</version.jboss.resteasy>
         <version.keycloak>2.2.1.Final</version.keycloak>
