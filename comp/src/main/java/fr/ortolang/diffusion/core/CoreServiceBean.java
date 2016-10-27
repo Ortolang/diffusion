@@ -73,8 +73,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.io.IOUtils;
 import org.javers.core.Javers;
@@ -96,11 +94,12 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectPid;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
-import fr.ortolang.diffusion.core.dump.WorkspaceDumpHandler;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
@@ -114,6 +113,11 @@ import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
+import fr.ortolang.diffusion.core.export.CollectionExportHandler;
+import fr.ortolang.diffusion.core.export.DataObjectExportHandler;
+import fr.ortolang.diffusion.core.export.LinkExportHandler;
+import fr.ortolang.diffusion.core.export.MetadataObjectExportHandler;
+import fr.ortolang.diffusion.core.export.WorkspaceExportHandler;
 import fr.ortolang.diffusion.core.wrapper.CollectionWrapper;
 import fr.ortolang.diffusion.core.wrapper.OrtolangObjectWrapper;
 import fr.ortolang.diffusion.event.EventService;
@@ -3870,7 +3874,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    public void dump(String key, XMLStreamWriter writer, Set<String> deps, Set<String> streams) throws OrtolangException {
+    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
@@ -3883,45 +3887,41 @@ public class CoreServiceBean implements CoreService {
                 if (workspace == null) {
                     throw new OrtolangException("unable to load workspace with id [" + identifier.getId() + "] from storage");
                 }
-                WorkspaceDumpHandler.dump(workspace, writer, deps, streams);
-                break;
+                return new WorkspaceExportHandler(workspace);
             case Collection.OBJECT_TYPE:
                 Collection collection = em.find(Collection.class, identifier.getId());
                 if (collection == null) {
                     throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
                 }
-                // TODO
-                break;
+                return new CollectionExportHandler(collection);
             case DataObject.OBJECT_TYPE:
                 DataObject object = em.find(DataObject.class, identifier.getId());
                 if (object == null) {
                     throw new OrtolangException("unable to load dataobject with id [" + identifier.getId() + "] from storage");
                 }
-                // TODO
-                break;
+                return new DataObjectExportHandler(object);
             case MetadataObject.OBJECT_TYPE:
                 MetadataObject metadata = em.find(MetadataObject.class, identifier.getId());
                 if (metadata == null) {
                     throw new OrtolangException("unable to load metadata with id [" + identifier.getId() + "] from storage");
                 }
-                // TODO
-                break;
+                return new MetadataObjectExportHandler(metadata);
             case Link.OBJECT_TYPE:
                 Link link = em.find(Link.class, identifier.getId());
                 if (link == null) {
                     throw new OrtolangException("unable to load link with id [" + identifier.getId() + "] from storage");
                 }
-                // TODO
-                break;
+                return new LinkExportHandler(link);
             }
 
-        } catch (RegistryServiceException | KeyNotFoundException | XMLStreamException e) {
-            throw new OrtolangException("unable to dump key " + key);
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to build object export handler " + key, e);
         }
+        throw new OrtolangException("unable to build object export handler " + key);
     }
 
     @Override
-    public void restore() throws OrtolangException {
+    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
         throw new OrtolangException("NOT IMPLEMENTED");
     }
 

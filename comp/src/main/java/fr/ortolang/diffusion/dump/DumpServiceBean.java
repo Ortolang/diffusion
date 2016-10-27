@@ -29,6 +29,8 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProviderService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
@@ -132,7 +134,7 @@ public class DumpServiceBean implements DumpService {
             attrs = new XmlDumpAttributes();
             attrs.put("name", propertyName);
             attrs.put("value", entry.getProperties().getProperty(propertyName));
-            XmlDumpHelper.outputEmptyElement("registry", "property", attrs, writer);
+            XmlDumpHelper.outputEmptyElement("entry", "property", attrs, writer);
         }
         XmlDumpHelper.endElement(writer);
         
@@ -141,12 +143,12 @@ public class DumpServiceBean implements DumpService {
         String owner = authorization.getPolicyOwner(key);
         attrs = new XmlDumpAttributes();
         attrs.put("owner", owner);
-        XmlDumpHelper.startElement("entry", "security", attrs, writer);
+        XmlDumpHelper.startElement("entry", "security-policy", attrs, writer);
         for ( Entry<String, List<String>> rule : authorization.getPolicyRules(key).entrySet() ) {
             attrs = new XmlDumpAttributes();
             attrs.put("subject", rule.getKey());
             attrs.put("permissions", String.join(",", rule.getValue()));
-            XmlDumpHelper.outputEmptyElement("security", "rule", attrs, writer);
+            XmlDumpHelper.outputEmptyElement("security-policy", "rule", attrs, writer);
         }
         XmlDumpHelper.endElement(writer);
         deps.add(owner);
@@ -163,7 +165,7 @@ public class DumpServiceBean implements DumpService {
             attrs.put("from-object", event.getFromObject());
             attrs.put("object-type", event.getObjectType());
             attrs.put("throwed-by", event.getThrowedBy());
-            XmlDumpHelper.startElement("events", "event", attrs, writer);
+            XmlDumpHelper.startElement("entry", "event", attrs, writer);
             for ( Entry<String, String> argument : event.getArguments().entrySet() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("name", argument.getKey());
@@ -187,7 +189,14 @@ public class DumpServiceBean implements DumpService {
             
             OrtolangObjectIdentifier identifier = OrtolangObjectIdentifier.deserialize(entry.getIdentifier());
             OrtolangObjectProviderService service = OrtolangServiceLocator.findObjectProviderService(identifier.getService());
-            service.dump(key, writer, deps, streams);
+            try {
+                OrtolangObjectExportHandler handler = service.getObjectExportHandler(key);
+                handler.dumpObject(writer);
+                deps.addAll(handler.getObjectDependencies());
+                streams.addAll(handler.getObjectBinaryStreams());
+            } catch ( OrtolangException e ) {
+                //TODO maybe avoid exception and use a generic handlers also
+            }
         }
         
         XmlDumpHelper.endElement(writer);

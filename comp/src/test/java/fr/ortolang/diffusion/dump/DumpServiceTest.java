@@ -57,7 +57,7 @@ public class DumpServiceTest {
         jar.addPackage("fr.ortolang.diffusion.browser");
         jar.addPackage("fr.ortolang.diffusion.core");
         jar.addPackage("fr.ortolang.diffusion.core.entity");
-        jar.addPackage("fr.ortolang.diffusion.core.dump");
+        jar.addPackage("fr.ortolang.diffusion.core.export");
         jar.addPackage("fr.ortolang.diffusion.core.wrapper");
         jar.addPackage("fr.ortolang.diffusion.event");
         jar.addPackage("fr.ortolang.diffusion.event.entity");

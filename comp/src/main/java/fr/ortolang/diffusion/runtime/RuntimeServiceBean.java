@@ -64,7 +64,6 @@ import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.xml.stream.XMLStreamWriter;
 
 import org.activiti.engine.task.IdentityLink;
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -74,7 +73,9 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
@@ -747,12 +748,14 @@ public class RuntimeServiceBean implements RuntimeService {
     }
 
     @Override
-    public void dump(String key, XMLStreamWriter writer, Set<String> deps, Set<String> streams) throws OrtolangException {
-        //TODO Implement that
+    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+        // TODO
+        throw new OrtolangException("NOT IMPLEMENTED");
     }
 
     @Override
-    public void restore() throws OrtolangException {
+    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+        // TODO
         throw new OrtolangException("NOT IMPLEMENTED");
     }
 

@@ -41,7 +41,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,14 +57,15 @@ import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
-import javax.xml.stream.XMLStreamWriter;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.event.entity.EventFeed;
@@ -610,7 +610,7 @@ public class EventServiceBean implements EventService {
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         return null;
     }
-    
+
     private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws EventServiceException {
         if (!identifier.getService().equals(getServiceName())) {
             throw new EventServiceException("object identifier " + identifier + " does not refer to service " + getServiceName());
@@ -620,14 +620,16 @@ public class EventServiceBean implements EventService {
             throw new EventServiceException("object identifier " + identifier + " does not refer to an object of type " + objectType);
         }
     }
-    
+
     @Override
-    public void dump(String key, XMLStreamWriter writer, Set<String> deps, Set<String> streams) throws OrtolangException {
-        //TODO Implement that
+    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+        // TODO
+        throw new OrtolangException("NOT IMPLEMENTED");
     }
 
     @Override
-    public void restore() throws OrtolangException {
+    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+        // TODO
         throw new OrtolangException("NOT IMPLEMENTED");
     }
 
