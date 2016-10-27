@@ -110,6 +110,11 @@ public class OrtolangConfig {
     public String getProperty(OrtolangConfig.Property property) {
         return props.getProperty(property.key());
     }
+    
+    public String getVersion() {
+        Package aPackage = OrtolangConfig.class.getPackage();
+        return aPackage.getImplementationVersion();
+    }
 
     public enum Property {
 

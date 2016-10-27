@@ -27,6 +27,7 @@ import javax.xml.stream.XMLStreamWriter;
 import org.activiti.bpmn.converter.IndentingXMLStreamWriter;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProviderService;
@@ -63,6 +64,7 @@ public class DumpServiceBean implements DumpService {
             
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("date", sdf.format(new Date()));
+            attrs.put("version", OrtolangConfig.getInstance().getVersion());
             XmlDumpHelper.startDocument("ortolang", "ortolang-dump", attrs, writer);
             
             Queue<String> queue = new LinkedList<String>();

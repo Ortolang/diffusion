@@ -100,6 +100,7 @@ import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectPid;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.core.dump.WorkspaceDumpHandler;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
@@ -112,7 +113,6 @@ import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
-import fr.ortolang.diffusion.core.entity.WorkspaceDumpHandler;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.core.wrapper.CollectionWrapper;
 import fr.ortolang.diffusion.core.wrapper.OrtolangObjectWrapper;
@@ -575,7 +575,7 @@ public class CoreServiceBean implements CoreService {
 
             OrtolangObjectIdentifier identifier = registry.lookup(wskey);
             checkObjectType(identifier, Workspace.OBJECT_TYPE);
-            
+
             Workspace workspace = em.find(Workspace.class, identifier.getId());
             if (workspace == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
@@ -683,7 +683,7 @@ public class CoreServiceBean implements CoreService {
 
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("ws-alias", workspace.getAlias()).addArgument("archive", archive.toString());
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "archive"), argsBuilder.build());
-            
+
             return workspace;
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | MembershipServiceException | AuthorisationServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
@@ -765,51 +765,51 @@ public class CoreServiceBean implements CoreService {
             throw new CoreServiceException("unable to change owner of workspace with key [" + wskey + "]", e);
         }
     }
-    
+
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void notifyWorkspaceOwner(String wskey, String email, String message) throws CoreServiceException {
         LOGGER.log(Level.FINE, "notify owner of workspace [" + wskey + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
-            
+
             OrtolangObjectIdentifier identifier = registry.lookup(wskey);
             checkObjectType(identifier, Workspace.OBJECT_TYPE);
             Workspace workspace = em.find(Workspace.class, identifier.getId());
             if (workspace == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
             }
-            
+
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("email", email).addArgument("message", message);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "notify-owner"), argsBuilder.build());
         } catch (RegistryServiceException | KeyNotFoundException | NotificationServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred while trying to notify workspace owner", e);
             throw new CoreServiceException("unable to notify owner of workspace with key [" + wskey + "]", e);
-        } 
+        }
     }
-    
+
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public void notifyWorkspaceMembers(String wskey, String email, String message) throws CoreServiceException {
         LOGGER.log(Level.FINE, "notify members of workspace [" + wskey + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
-            
+
             OrtolangObjectIdentifier identifier = registry.lookup(wskey);
             checkObjectType(identifier, Workspace.OBJECT_TYPE);
             Workspace workspace = em.find(Workspace.class, identifier.getId());
             if (workspace == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
             }
-            
+
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("email", email).addArgument("message", message);
             notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "notify-members"), argsBuilder.build());
         } catch (RegistryServiceException | KeyNotFoundException | NotificationServiceException e) {
             ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unexpected error occurred while trying to notify workspace members", e);
             throw new CoreServiceException("unable to notify members of workspace with key [" + wskey + "]", e);
-        } 
+        }
     }
 
     @Override
@@ -1104,7 +1104,7 @@ public class CoreServiceBean implements CoreService {
                     buildHandleList(wsalias, tag, element.getKey(), pids, path.clone().path(element.getName()), apiUrlBase, marketUrlBase);
                 }
             }
-        } catch ( AccessDeniedException e ) {
+        } catch (AccessDeniedException e) {
             LOGGER.log(Level.INFO, "Unable to generate a PID for an object that has been set private.");
         }
     }
@@ -3200,7 +3200,7 @@ public class CoreServiceBean implements CoreService {
 
             registry.delete(mdelement.getKey());
             indexing.remove(mdelement.getKey());
-            
+
             indexing.index(tkey);
 
             ws.setChanged(true);
@@ -3868,7 +3868,7 @@ public class CoreServiceBean implements CoreService {
             throw new CoreServiceException("object identifier " + identifier + " does not refer to an object of type " + objectType);
         }
     }
-    
+
     @Override
     public void dump(String key, XMLStreamWriter writer, Set<String> deps, Set<String> streams) throws OrtolangException {
         try {
@@ -3876,45 +3876,43 @@ public class CoreServiceBean implements CoreService {
             if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
                 throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
             }
-            
-            if (identifier.getType().equals(Workspace.OBJECT_TYPE)) {
+
+            switch (identifier.getType()) {
+            case Workspace.OBJECT_TYPE:
                 Workspace workspace = em.find(Workspace.class, identifier.getId());
                 if (workspace == null) {
                     throw new OrtolangException("unable to load workspace with id [" + identifier.getId() + "] from storage");
                 }
                 WorkspaceDumpHandler.dump(workspace, writer, deps, streams);
-            }
-            
-            if (identifier.getType().equals(Collection.OBJECT_TYPE) ) {
+                break;
+            case Collection.OBJECT_TYPE:
                 Collection collection = em.find(Collection.class, identifier.getId());
                 if (collection == null) {
                     throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
                 }
-                //TODO
-            }
-            
-            if (identifier.getType().equals(DataObject.OBJECT_TYPE) ) {
+                // TODO
+                break;
+            case DataObject.OBJECT_TYPE:
                 DataObject object = em.find(DataObject.class, identifier.getId());
                 if (object == null) {
                     throw new OrtolangException("unable to load dataobject with id [" + identifier.getId() + "] from storage");
                 }
-                //TODO
-            }
-            
-            if (identifier.getType().equals(MetadataObject.OBJECT_TYPE) ) {
+                // TODO
+                break;
+            case MetadataObject.OBJECT_TYPE:
                 MetadataObject metadata = em.find(MetadataObject.class, identifier.getId());
                 if (metadata == null) {
                     throw new OrtolangException("unable to load metadata with id [" + identifier.getId() + "] from storage");
                 }
-                //TODO
-            }
-            
-            if (identifier.getType().equals(Link.OBJECT_TYPE) ) {
+                // TODO
+                break;
+            case Link.OBJECT_TYPE:
                 Link link = em.find(Link.class, identifier.getId());
                 if (link == null) {
                     throw new OrtolangException("unable to load link with id [" + identifier.getId() + "] from storage");
                 }
-                //TODO
+                // TODO
+                break;
             }
 
         } catch (RegistryServiceException | KeyNotFoundException | XMLStreamException e) {
@@ -3929,7 +3927,7 @@ public class CoreServiceBean implements CoreService {
 
     // System operations
     @Override
-    @RolesAllowed({"admin", "system"})
+    @RolesAllowed({ "admin", "system" })
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Workspace systemReadWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "#SYSTEM# reading workspace for key [" + wskey + "]");
@@ -3941,14 +3939,14 @@ public class CoreServiceBean implements CoreService {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
             }
             workspace.setKey(wskey);
-            
+
             return workspace;
         } catch (RegistryServiceException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while reading workspace", e);
             throw new CoreServiceException("unable to read workspace with key [" + wskey + "]", e);
         }
     }
-    
+
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Set<String> systemListWorkspaceKeys(String wskey) throws CoreServiceException, KeyNotFoundException {

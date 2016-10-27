@@ -1,10 +1,13 @@
-package fr.ortolang.diffusion.core.entity;
+package fr.ortolang.diffusion.core.dump;
 
 import java.util.Set;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
+import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.TagElement;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.dump.XmlDumpAttributes;
 import fr.ortolang.diffusion.dump.XmlDumpHelper;
 
