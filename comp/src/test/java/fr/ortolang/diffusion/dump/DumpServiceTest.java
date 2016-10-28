@@ -61,6 +61,7 @@ public class DumpServiceTest {
         jar.addPackage("fr.ortolang.diffusion.core.wrapper");
         jar.addPackage("fr.ortolang.diffusion.event");
         jar.addPackage("fr.ortolang.diffusion.event.entity");
+        jar.addPackage("fr.ortolang.diffusion.event.export");
         jar.addPackage("fr.ortolang.diffusion.dump");
         jar.addClass("fr.ortolang.diffusion.extraction.ExtractionService");
         jar.addClass("fr.ortolang.diffusion.extraction.ExtractionServiceBean");
@@ -68,8 +69,10 @@ public class DumpServiceTest {
         jar.addPackage("fr.ortolang.diffusion.indexing");
         jar.addPackage("fr.ortolang.diffusion.membership");
         jar.addPackage("fr.ortolang.diffusion.membership.entity");
+        jar.addPackage("fr.ortolang.diffusion.membership.export");
         jar.addPackage("fr.ortolang.diffusion.message");
         jar.addPackage("fr.ortolang.diffusion.message.entity");
+        jar.addPackage("fr.ortolang.diffusion.message.export");
         jar.addPackage("fr.ortolang.diffusion.notification");
         jar.addPackage("fr.ortolang.diffusion.registry");
         jar.addPackage("fr.ortolang.diffusion.registry.entity");

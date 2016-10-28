@@ -60,6 +60,7 @@ import org.hibernate.annotations.Type;
         @NamedQuery(name = "findHandleByName", query = "SELECT h FROM Handle h WHERE h.handle = :name"),
         @NamedQuery(name = "searchHandleByName", query = "SELECT h FROM Handle h WHERE h.handle LIKE :name AND h.index = 1"),
         @NamedQuery(name = "searchHandleByValue", query = "SELECT h FROM Handle h WHERE h.data LIKE :value AND h.index = 1"),
+        @NamedQuery(name = "findHandleForKey", query = "SELECT h FROM Handle h WHERE h.key = :key"),
         @NamedQuery(name = "findHandleNameForKey", query = "SELECT DISTINCT(h.handle) FROM Handle h WHERE h.key = :key"),
         @NamedQuery(name = "countHandles", query = "SELECT COUNT(h) FROM Handle h GROUP BY h.handle")})
 @SuppressWarnings("serial")
@@ -198,11 +199,11 @@ public class Handle implements Serializable {
         this.adminRead = adminRead;
     }
 
-    public boolean isAdminXrite() {
+    public boolean isAdminWrite() {
         return adminWrite;
     }
 
-    public void setAdminXrite(boolean adminXrite) {
+    public void setAdminWrite(boolean adminXrite) {
         this.adminWrite = adminXrite;
     }
 
@@ -228,6 +229,10 @@ public class Handle implements Serializable {
 
     public void setKey(String key) {
         this.key = key;
+    }
+    
+    public String getPermissionsString() {
+        return Boolean.toString(isAdminRead()) + Boolean.toString(isAdminWrite()) + Boolean.toString(isPubRead()) + Boolean.toString(isPubWrite());
     }
 
     @Override

@@ -66,6 +66,7 @@ import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.form.entity.Form;
+import fr.ortolang.diffusion.form.export.FormExportHandler;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -309,8 +310,25 @@ public class FormServiceBean implements FormService {
 	
     @Override
     public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
-        // TODO
-        throw new OrtolangException("NOT IMPLEMENTED");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(FormService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+
+            switch (identifier.getType()) {
+            case Form.OBJECT_TYPE:
+                Form form = em.find(Form.class, identifier.getId());
+                if (form == null) {
+                    throw new OrtolangException("unable to load form with id [" + identifier.getId() + "] from storage");
+                }
+                return new FormExportHandler(form);
+            }
+
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to build object export handler " + key, e);
+        }
+        throw new OrtolangException("unable to build object export handler for key " + key);
     }
 
     @Override

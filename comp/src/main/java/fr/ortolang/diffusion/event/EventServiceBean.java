@@ -70,6 +70,7 @@ import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.event.entity.EventFeed;
 import fr.ortolang.diffusion.event.entity.EventFeedFilter;
+import fr.ortolang.diffusion.event.export.EventFeedExportHandler;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -623,8 +624,24 @@ public class EventServiceBean implements EventService {
 
     @Override
     public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
-        // TODO
-        throw new OrtolangException("NOT IMPLEMENTED");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(EventService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+
+            switch (identifier.getType()) {
+            case EventFeed.OBJECT_TYPE:
+                EventFeed feed = em.find(EventFeed.class, identifier.getId());
+                if (feed == null) {
+                    throw new OrtolangException("unable to load event feed with id [" + identifier.getId() + "] from storage");
+                }
+                return new EventFeedExportHandler(feed);
+            }
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to build object export handler " + key, e);
+        }
+        throw new OrtolangException("unable to build object export handler for key " + key);
     }
 
     @Override

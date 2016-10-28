@@ -152,7 +152,7 @@ public class HandleStoreServiceBean implements HandleStoreService {
         TypedQuery<Handle> query = em.createNamedQuery("searchHandleByValue", Handle.class).setParameter("value", value.getBytes());
         return query.getResultList();
     }
-
+    
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Handle> listHandleValues(String handle) throws HandleStoreServiceException, HandleNotFoundException {
@@ -180,6 +180,13 @@ public class HandleStoreServiceBean implements HandleStoreService {
             throw new HandleStoreServiceException("unable to decode name", e);
         }
         return names;
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Handle> listHandlesValuesForKey(String key) throws HandleStoreServiceException {
+        TypedQuery<Handle> query = em.createNamedQuery("findHandleForKey", Handle.class).setParameter("key", key);
+        return query.getResultList();
     }
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)

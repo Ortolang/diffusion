@@ -87,6 +87,8 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.message.entity.Message;
 import fr.ortolang.diffusion.message.entity.MessageAttachment;
 import fr.ortolang.diffusion.message.entity.Thread;
+import fr.ortolang.diffusion.message.export.MessageExportHandler;
+import fr.ortolang.diffusion.message.export.ThreadExportHandler;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
@@ -1026,8 +1028,31 @@ public class MessageServiceBean implements MessageService {
 
     @Override
     public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
-        // TODO
-        throw new OrtolangException("NOT IMPLEMENTED");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+
+            switch (identifier.getType()) {
+            case Thread.OBJECT_TYPE:
+                Thread thread = em.find(Thread.class, identifier.getId());
+                if (thread == null) {
+                    throw new OrtolangException("unable to load thread with id [" + identifier.getId() + "] from storage");
+                }
+                return new ThreadExportHandler(thread);
+            case Message.OBJECT_TYPE:
+                Message message = em.find(Message.class, identifier.getId());
+                if (message == null) {
+                    throw new OrtolangException("unable to load message with id [" + identifier.getId() + "] from storage");
+                }
+                return new MessageExportHandler(message);
+            }
+
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to build object export handler " + key, e);
+        }
+        throw new OrtolangException("unable to build object export handler for key " + key);
     }
 
     @Override

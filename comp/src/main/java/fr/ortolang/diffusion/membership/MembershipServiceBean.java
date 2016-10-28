@@ -84,6 +84,8 @@ import fr.ortolang.diffusion.membership.entity.ProfileData;
 import fr.ortolang.diffusion.membership.entity.ProfileDataType;
 import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
 import fr.ortolang.diffusion.membership.entity.ProfileStatus;
+import fr.ortolang.diffusion.membership.export.GroupExportHandler;
+import fr.ortolang.diffusion.membership.export.ProfileExportHandler;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
@@ -1202,8 +1204,31 @@ public class MembershipServiceBean implements MembershipService {
 
     @Override
     public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
-        // TODO
-        throw new OrtolangException("NOT IMPLEMENTED");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+
+            switch (identifier.getType()) {
+            case Group.OBJECT_TYPE:
+                Group group = em.find(Group.class, identifier.getId());
+                if (group == null) {
+                    throw new OrtolangException("unable to load group with id [" + identifier.getId() + "] from storage");
+                }
+                return new GroupExportHandler(group);
+            case Profile.OBJECT_TYPE:
+                Profile profile = em.find(Profile.class, identifier.getId());
+                if (profile == null) {
+                    throw new OrtolangException("unable to load profile with id [" + identifier.getId() + "] from storage");
+                }
+                return new ProfileExportHandler(profile);
+            }
+
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to build object export handler " + key, e);
+        }
+        throw new OrtolangException("unable to build object export handler for key " + key);
     }
 
     @Override

@@ -3917,7 +3917,7 @@ public class CoreServiceBean implements CoreService {
         } catch (RegistryServiceException | KeyNotFoundException e) {
             throw new OrtolangException("unable to build object export handler " + key, e);
         }
-        throw new OrtolangException("unable to build object export handler " + key);
+        throw new OrtolangException("unable to build object export handler for key " + key);
     }
 
     @Override

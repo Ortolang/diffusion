@@ -1,6 +1,7 @@
 package fr.ortolang.diffusion;
 
 
+
 public interface OrtolangObjectProviderService extends OrtolangService {
     
     String[] getObjectTypeList();

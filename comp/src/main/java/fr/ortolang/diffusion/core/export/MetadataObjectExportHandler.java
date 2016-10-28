@@ -42,6 +42,7 @@ public class MetadataObjectExportHandler implements OrtolangObjectExportHandler 
     public Set<String> getObjectDependencies() throws OrtolangException {
         Set<String> deps = new HashSet<String> ();
         deps.add(metadata.getTarget());
+        //TODO parse metadata content in order to detect in binary content deps
         return deps;
     }
 

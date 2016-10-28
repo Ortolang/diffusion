@@ -38,6 +38,8 @@ import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
+import fr.ortolang.diffusion.store.handle.HandleStoreService;
+import fr.ortolang.diffusion.store.handle.entity.Handle;
 
 @Local(DumpService.class)
 @Stateless(name = DumpService.SERVICE_NAME)
@@ -54,9 +56,11 @@ public class DumpServiceBean implements DumpService {
     private AuthorisationService authorization;
     @EJB
     private EventService event;
+    @EJB
+    private HandleStoreService handle;
 
     @Override
-    public void dump(String key, OutputStream output, boolean single) throws DumpServiceException {
+    public Set<String> dump(String key, OutputStream output, boolean single) throws DumpServiceException {
         LOGGER.log(Level.INFO, "Starting dump of key : " + key);
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yy hh:mm:ss");
@@ -94,6 +98,8 @@ public class DumpServiceBean implements DumpService {
             XmlDumpHelper.endDocument(writer);
             writer.flush();
             writer.close();
+            
+            return streams;
         } catch (Exception e) {
             throw new DumpServiceException("Problem during dump of key: " + key, e);
         }
@@ -176,6 +182,26 @@ public class DumpServiceBean implements DumpService {
             deps.add(event.getThrowedBy());
         }
         XmlDumpHelper.endElement(writer);
+        
+        //Handles
+        LOGGER.log(Level.FINEST, "dumping entry handles");
+        XmlDumpHelper.startElement("entry", "handles", null, writer);
+        for ( Handle hdl : handle.listHandlesValuesForKey(key) ) {
+            attrs = new XmlDumpAttributes();
+            attrs.put("key", hdl.getKey());
+            attrs.put("handle", hdl.getHandleString());
+            attrs.put("type", hdl.getTypeString());
+            attrs.put("data", hdl.getDataString());
+            attrs.put("ttl", Integer.toString(hdl.getTtl()));
+            attrs.put("ttl-type", Short.toString(hdl.getTtlType()));
+            attrs.put("timestamp", Integer.toString(hdl.getTimestamp()));
+            attrs.put("refs", hdl.getRefs());
+            attrs.put("index", Integer.toString(hdl.getIndex()));
+            attrs.put("permissions", hdl.getPermissionsString());
+            XmlDumpHelper.outputEmptyElement("entry", "handle", attrs, writer);
+        }
+        XmlDumpHelper.endElement(writer);
+        
         deps.add(entry.getAuthor());
         if ( entry.getParent() != null && entry.getParent().length() > 0 ) {
             deps.add(entry.getParent());
@@ -195,7 +221,7 @@ public class DumpServiceBean implements DumpService {
                 deps.addAll(handler.getObjectDependencies());
                 streams.addAll(handler.getObjectBinaryStreams());
             } catch ( OrtolangException e ) {
-                //TODO maybe avoid exception and use a generic handlers also
+                //TODO log this lake of export to ImportExportLogger
             }
         }
         
