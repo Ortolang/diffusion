@@ -81,12 +81,13 @@ public class WorkspaceExportHandler implements OrtolangObjectExportHandler {
         for ( SnapshotElement snapshot : workspace.getSnapshots() ) {
             deps.add(snapshot.getKey());
         }
-        MessageService mservice = (MessageService) OrtolangServiceLocator.findService(MessageService.SERVICE_NAME);
-        try {
-            deps.addAll(mservice.findThreadsForWorkspace(workspace.getKey()));
-        } catch (MessageServiceException | KeyNotFoundException e) {
-            //TODO maybe include error in a ImportExportLogger
-        }
+//        MessageService mservice = (MessageService) OrtolangServiceLocator.findService(MessageService.SERVICE_NAME);
+//        try {
+//            //TODO add a system operation to avoid problem
+//            deps.addAll(mservice.findThreadsForWorkspace(workspace.getKey()));
+//        } catch (MessageServiceException | KeyNotFoundException e) {
+//            //TODO maybe include error in a ImportExportLogger
+//        }
         return deps;
     }
 

@@ -26,6 +26,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.activiti.bpmn.converter.IndentingXMLStreamWriter;
 import org.jboss.ejb3.annotation.SecurityDomain;
+import org.jboss.security.Base64Encoder;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangEvent;
@@ -191,13 +192,14 @@ public class DumpServiceBean implements DumpService {
             attrs.put("key", hdl.getKey());
             attrs.put("handle", hdl.getHandleString());
             attrs.put("type", hdl.getTypeString());
-            attrs.put("data", hdl.getDataString());
             attrs.put("ttl", Integer.toString(hdl.getTtl()));
             attrs.put("ttl-type", Short.toString(hdl.getTtlType()));
             attrs.put("timestamp", Integer.toString(hdl.getTimestamp()));
             attrs.put("refs", hdl.getRefs());
             attrs.put("index", Integer.toString(hdl.getIndex()));
             attrs.put("permissions", hdl.getPermissionsString());
+            attrs.put("data", Base64Encoder.encode(hdl.getData()));
+            //TODO Try to avoid exporting HS_ADMIN handles
             XmlDumpHelper.outputEmptyElement("entry", "handle", attrs, writer);
         }
         XmlDumpHelper.endElement(writer);

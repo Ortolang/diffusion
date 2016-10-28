@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,7 +41,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.CountingOutputStream;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
@@ -228,58 +226,67 @@ public class AdminResource {
 
     @GET
     @Path("/registry/entries/{key}/dump")
-    public ResponseBuilder dumpEntry(@PathParam("key") String key) throws DumpServiceException, IOException {
+    @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
+    public Response dumpEntry(@PathParam("key") String key) throws DumpServiceException, IOException {
         LOGGER.log(Level.INFO, "GET /admin/registry/entries/" + key + "/dump");
         ResponseBuilder builder;
         LOGGER.log(Level.FINE, "exporting using format tar");
         builder = Response.ok();
-        builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(key, "utf-8") + ".dump.tgz");
+        builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(key, "utf-8") + "-dump.tar.gz");
         builder.type("application/x-gzip");
 
         java.nio.file.Path dump = Files.createTempFile("ortolang-dump", ".xml");
-        Set<String> bstreams = new HashSet<String>();
         try (OutputStream os = Files.newOutputStream(dump)) {
-            bstreams = dumpService.dump(key, os, false);
+            Set<String> bstreams = dumpService.dump(key, os, false);
+            StreamingOutput stream = output -> {
+                try (GzipCompressorOutputStream gout = new GzipCompressorOutputStream(output); TarArchiveOutputStream out = new TarArchiveOutputStream(gout)) {
+                    try {
+                        TarArchiveEntry entry = new TarArchiveEntry(key + "-dump.xml");
+                        entry.setModTime(System.currentTimeMillis());
+                        entry.setSize(Files.size(dump));
+                        try (InputStream isdump = Files.newInputStream(dump)) {
+                            out.putArchiveEntry(entry);
+                            IOUtils.copy(isdump, out);
+                        } catch (IOException e) {
+                            throw new DumpServiceException("unable to add dump to archive", e);
+                        } finally {
+                            try {
+                                out.closeArchiveEntry();
+                            } catch (IOException e) {
+                                throw new DumpServiceException("unable to close archive entry for xml dump", e);
+                            }
+                        }
+                        
+                        for (String bstream : bstreams) {
+                            try (InputStream input = binary.get(bstream)) {
+                                TarArchiveEntry sentry = new TarArchiveEntry(bstream);
+                                sentry.setModTime(System.currentTimeMillis());
+                                sentry.setSize(binary.size(bstream));
+                                try {
+                                    out.putArchiveEntry(sentry);
+                                    IOUtils.copy(input, out);
+                                } catch (IOException e) {
+                                    throw new DumpServiceException("unable to dump binary stream for hash: " + bstream, e);
+                                } finally {
+                                    try {
+                                        out.closeArchiveEntry();
+                                    } catch (IOException e) {
+                                        throw new DumpServiceException("unable to close archive entry for binary stream with hash: " + bstream, e);
+                                    }
+                                }
+                            } catch (DataNotFoundException | IOException | BinaryStoreServiceException e) {
+                                throw new DumpServiceException(e);
+                            }
+                        }
+                    } catch (DumpServiceException e) {
+                        e.printStackTrace();
+                    } 
+                }
+            };
+            builder.entity(stream);
         }
 
-        StreamingOutput stream = output -> {
-            try (GzipCompressorOutputStream gout = new GzipCompressorOutputStream(output); TarArchiveOutputStream out = new TarArchiveOutputStream(gout)) {
-                TarArchiveEntry entry = new TarArchiveEntry(key + "-dump.xml");
-                try {
-                    entry.setModTime(System.currentTimeMillis());
-                    entry.setSize(Files.size(dump));
-                    out.putArchiveEntry(entry);
-                    
-                    for (String bstream : bstreams) {
-                        try (InputStream input = binary.get(bstream)) {
-                            TarArchiveEntry sentry = new TarArchiveEntry(bstream);
-                            sentry.setModTime(System.currentTimeMillis());
-                            sentry.setSize(binary.size(bstream));
-                            try {
-                                out.putArchiveEntry(sentry);
-                                IOUtils.copy(input, out);
-                            } catch (IOException e) {
-                                throw new DumpServiceException("unable to export binary stream for hash: " + bstream, e);
-                            } finally {
-                                try {
-                                    out.closeArchiveEntry();
-                                } catch (IOException e) {
-                                    throw new DumpServiceException("unable to close archive entry for binary stream with hash: " + bstream, e);
-                                }
-                            }
-                        } catch (DataNotFoundException | IOException | BinaryStoreServiceException e) {
-                            throw new DumpServiceException(e);
-                        }
-                    }
-                } catch (DumpServiceException e) {
-                    e.printStackTrace();
-                } finally {
-                    out.closeArchiveEntry();
-                }
-            }
-        };
-        builder.entity(stream);
-        return builder;
+        return builder.build();
     }
 
     @POST

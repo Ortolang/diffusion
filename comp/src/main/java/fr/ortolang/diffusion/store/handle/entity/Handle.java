@@ -232,7 +232,7 @@ public class Handle implements Serializable {
     }
     
     public String getPermissionsString() {
-        return Boolean.toString(isAdminRead()) + Boolean.toString(isAdminWrite()) + Boolean.toString(isPubRead()) + Boolean.toString(isPubWrite());
+        return (isAdminRead()?"1":"0") + (isAdminWrite()?"1":"0") + (isPubRead()?"1":"0") + (isPubWrite()?"1":"0");
     }
 
     @Override
