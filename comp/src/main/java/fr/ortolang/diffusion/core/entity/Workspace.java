@@ -36,12 +36,6 @@ package fr.ortolang.diffusion.core.entity;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.core.CoreService;
-import org.hibernate.annotations.Type;
-
-import javax.persistence.*;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -49,12 +43,25 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Lob;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
+import javax.persistence.Transient;
+import javax.persistence.Version;
+
+import org.hibernate.annotations.Type;
+
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.core.CoreService;
+
 @Entity
-@NamedQueries(value= {
-        @NamedQuery(name="findWorkspaceByMember", query="select w from Workspace w where w.members in :groups"),
-        @NamedQuery(name="findWorkspaceByAlias", query="select w from Workspace w where w.alias = :alias"),
-        @NamedQuery(name="listAllWorkspaceAlias", query="select w.alias from Workspace w where w.alias not like ''")
-})
+@NamedQueries(value = { @NamedQuery(name = "findWorkspaceByMember", query = "select w from Workspace w where w.members in :groups"),
+        @NamedQuery(name = "findWorkspaceByAlias", query = "select w from Workspace w where w.alias = :alias"),
+        @NamedQuery(name = "listAllWorkspaceAlias", query = "select w.alias from Workspace w where w.alias not like ''") })
 @SuppressWarnings("serial")
 public class Workspace extends OrtolangObject {
 
@@ -68,7 +75,7 @@ public class Workspace extends OrtolangObject {
     private long version;
     @Transient
     private String key;
-    @Column(unique=true)
+    @Column(unique = true)
     private String alias;
     private String type;
     private String name;
@@ -177,8 +184,8 @@ public class Workspace extends OrtolangObject {
 
     public Set<SnapshotElement> getSnapshots() {
         Set<SnapshotElement> snapshots = new HashSet<SnapshotElement>();
-        if ( snapshotsContent != null && snapshotsContent.length() > 0 ) {
-            for ( String snapshot : Arrays.asList(snapshotsContent.split("\n")) ) {
+        if (snapshotsContent != null && snapshotsContent.length() > 0) {
+            for (String snapshot : Arrays.asList(snapshotsContent.split("\n"))) {
                 snapshots.add(SnapshotElement.deserialize(snapshot));
             }
         }
@@ -191,8 +198,8 @@ public class Workspace extends OrtolangObject {
 
     public void setSnapshots(Set<SnapshotElement> snapshots) {
         StringBuilder newsnapshots = new StringBuilder();
-        for ( SnapshotElement snapshot : snapshots ) {
-            if ( newsnapshots.length() > 0 ) {
+        for (SnapshotElement snapshot : snapshots) {
+            if (newsnapshots.length() > 0) {
                 newsnapshots.append("\n");
             }
             newsnapshots.append(snapshot.serialize());
@@ -201,8 +208,8 @@ public class Workspace extends OrtolangObject {
     }
 
     public boolean addSnapshot(SnapshotElement snapshot) {
-        if ( !containsSnapshot(snapshot) ) {
-            if ( snapshotsContent.length() > 0 ) {
+        if (!containsSnapshot(snapshot)) {
+            if (snapshotsContent.length() > 0) {
                 snapshotsContent += "\n" + snapshot.serialize();
             } else {
                 snapshotsContent = snapshot.serialize();
@@ -213,10 +220,10 @@ public class Workspace extends OrtolangObject {
     }
 
     public boolean removeSnapshot(SnapshotElement snapshot) {
-        if ( containsSnapshot(snapshot) ) {
+        if (containsSnapshot(snapshot)) {
             snapshotsContent = snapshotsContent.replaceAll("(?m)^(" + snapshot.serialize() + ")\n?", "");
-            if ( snapshotsContent.endsWith("\n") ) {
-                snapshotsContent = snapshotsContent.substring(0, snapshotsContent.length()-1);
+            if (snapshotsContent.endsWith("\n")) {
+                snapshotsContent = snapshotsContent.substring(0, snapshotsContent.length() - 1);
             }
             return true;
         } else {
@@ -239,7 +246,7 @@ public class Workspace extends OrtolangObject {
     public SnapshotElement findSnapshotByName(String name) {
         Pattern pattern = Pattern.compile("(?s).*(" + name + "/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})).*$");
         Matcher matcher = pattern.matcher(snapshotsContent);
-        if ( matcher.matches() ) {
+        if (matcher.matches()) {
             return SnapshotElement.deserialize(matcher.group(1));
         }
         return null;
@@ -247,9 +254,9 @@ public class Workspace extends OrtolangObject {
 
     public SnapshotElement findSnapshotByKey(String key) {
         StringTokenizer tok = new StringTokenizer(snapshotsContent, "\r\n");
-        while ( tok.hasMoreTokens() ) {
+        while (tok.hasMoreTokens()) {
             String line = tok.nextToken();
-            if ( line.endsWith("/" + key) ) {
+            if (line.endsWith("/" + key)) {
                 return SnapshotElement.deserialize(line);
             }
         }
@@ -266,8 +273,8 @@ public class Workspace extends OrtolangObject {
 
     public Set<TagElement> getTags() {
         Set<TagElement> tags = new HashSet<TagElement>();
-        if ( tagsContent != null && tagsContent.length() > 0 ) {
-            for ( String tag : Arrays.asList(tagsContent.split("\n")) ) {
+        if (tagsContent != null && tagsContent.length() > 0) {
+            for (String tag : Arrays.asList(tagsContent.split("\n"))) {
                 tags.add(TagElement.deserialize(tag));
             }
         }
@@ -276,8 +283,8 @@ public class Workspace extends OrtolangObject {
 
     public void setTags(Set<TagElement> tags) {
         StringBuilder newtags = new StringBuilder();
-        for ( TagElement tag : tags ) {
-            if ( newtags.length() > 0 ) {
+        for (TagElement tag : tags) {
+            if (newtags.length() > 0) {
                 newtags.append("\n");
             }
             newtags.append(tag.serialize());
@@ -286,8 +293,8 @@ public class Workspace extends OrtolangObject {
     }
 
     public boolean addTag(TagElement tag) {
-        if ( !containsTag(tag) ) {
-            if ( tagsContent.length() > 0 ) {
+        if (!containsTag(tag)) {
+            if (tagsContent.length() > 0) {
                 tagsContent += "\n" + tag.serialize();
             } else {
                 tagsContent = tag.serialize();
@@ -298,10 +305,10 @@ public class Workspace extends OrtolangObject {
     }
 
     public boolean removeTag(TagElement tag) {
-        if ( containsTag(tag) ) {
+        if (containsTag(tag)) {
             tagsContent = tagsContent.replaceAll("(?m)^(" + tag.serialize() + ")\n?", "");
-            if ( tagsContent.endsWith("\n") ) {
-                tagsContent = tagsContent.substring(0, tagsContent.length()-1);
+            if (tagsContent.endsWith("\n")) {
+                tagsContent = tagsContent.substring(0, tagsContent.length() - 1);
             }
             return true;
         } else {
@@ -324,9 +331,9 @@ public class Workspace extends OrtolangObject {
     public TagElement findTagByName(String name) {
         StringTokenizer tok = new StringTokenizer(tagsContent, "\r\n");
         String start = name + "/";
-        while ( tok.hasMoreTokens() ) {
+        while (tok.hasMoreTokens()) {
             String line = tok.nextToken();
-            if ( line.startsWith(start) ) {
+            if (line.startsWith(start)) {
                 return TagElement.deserialize(line);
             }
         }
@@ -336,9 +343,9 @@ public class Workspace extends OrtolangObject {
     public TagElement findTagBySnapshot(String snapshot) {
         StringTokenizer tok = new StringTokenizer(tagsContent, "\r\n");
         String end = "/" + snapshot;
-        while ( tok.hasMoreTokens() ) {
+        while (tok.hasMoreTokens()) {
             String line = tok.nextToken();
-            if ( line.endsWith(end) ) {
+            if (line.endsWith(end)) {
                 return TagElement.deserialize(line);
             }
         }
@@ -383,7 +390,5 @@ public class Workspace extends OrtolangObject {
     public OrtolangObjectIdentifier getObjectIdentifier() {
         return new OrtolangObjectIdentifier(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, id);
     }
-
-
 
 }

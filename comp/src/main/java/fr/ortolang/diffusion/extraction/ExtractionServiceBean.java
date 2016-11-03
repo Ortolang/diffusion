@@ -36,22 +36,23 @@ package fr.ortolang.diffusion.extraction;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.*;
-import javax.inject.Inject;
-import javax.jms.JMSContext;
-import javax.jms.Message;
-import javax.jms.Topic;
 import java.util.Collections;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.Local;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.inject.Inject;
+import javax.jms.JMSContext;
+import javax.jms.Message;
+import javax.jms.Topic;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
 
 @Local(ExtractionService.class)
 @Stateless(name = ExtractionService.SERVICE_NAME)
@@ -60,9 +61,6 @@ import java.util.logging.Logger;
 public class ExtractionServiceBean implements ExtractionService {
 
     private static final Logger LOGGER = Logger.getLogger(ExtractionServiceBean.class.getName());
-
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
 
     @Resource(mappedName = "java:jboss/exported/jms/topic/extraction")
     private Topic extractionQueue;
@@ -95,24 +93,5 @@ public class ExtractionServiceBean implements ExtractionService {
     public Map<String, String> getServiceInfos() {
         return Collections.emptyMap();
     }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
+    
 }

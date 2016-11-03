@@ -38,9 +38,11 @@ package fr.ortolang.diffusion.browser;
 
 import java.util.List;
 
+import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
+import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.OrtolangObjectVersion;
 import fr.ortolang.diffusion.OrtolangService;
@@ -76,5 +78,9 @@ public interface BrowserService extends OrtolangService {
 	List<String> listHandles(String key) throws BrowserServiceException;
 	
 	void index(String key) throws BrowserServiceException, AccessDeniedException;
+	
+	OrtolangObject findObject(String key) throws BrowserServiceException;
+	
+	OrtolangObjectSize getSize(String key) throws BrowserServiceException;
 	
 }

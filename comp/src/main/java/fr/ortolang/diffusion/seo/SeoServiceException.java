@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.seo;
  * #L%
  */
 
+@SuppressWarnings("serial")
 public class SeoServiceException extends Exception {
 
     public SeoServiceException() {

@@ -72,7 +72,9 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
@@ -85,6 +87,8 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.message.entity.Message;
 import fr.ortolang.diffusion.message.entity.MessageAttachment;
 import fr.ortolang.diffusion.message.entity.Thread;
+import fr.ortolang.diffusion.message.export.MessageExportHandler;
+import fr.ortolang.diffusion.message.export.ThreadExportHandler;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
@@ -348,6 +352,31 @@ public class MessageServiceBean implements MessageService {
             return keys;
         } catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException | KeyNotFoundException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during finding threads for workspace: " + wskey, e);
+            throw new MessageServiceException("unable to find threads for workspace: " + wskey, e);
+        }
+    }
+    
+    @Override
+    @RolesAllowed({"admin", "system"})
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<String> systemFindThreadsForWorkspace(String wskey) throws MessageServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# finding threads for workspace [" + wskey + "]");
+        try {
+            List<String> keys = new ArrayList<String>();
+            TypedQuery<Thread> query = em.createNamedQuery("findThreadsForWorkspace", Thread.class).setParameter("wskey", wskey);
+            List<Thread> threads = query.getResultList();
+            for (Thread thread : threads) {
+                OrtolangObjectIdentifier identifier = thread.getObjectIdentifier();
+                try {
+                    keys.add(registry.lookup(identifier));
+                } catch (IdentifierNotRegisteredException e) {
+                    LOGGER.log(Level.FINE, "a thread with an unregistered identifier has be found (probably deleted) : " + identifier);
+                }
+            }
+
+            return keys;
+        } catch (RegistryServiceException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred during system find threads for workspace: " + wskey, e);
             throw new MessageServiceException("unable to find threads for workspace: " + wskey, e);
         }
     }
@@ -1020,6 +1049,41 @@ public class MessageServiceBean implements MessageService {
             LOGGER.log(Level.SEVERE, "unexpected error while calculating object size", e);
             throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
         }
+    }
+
+    @Override
+    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+
+            switch (identifier.getType()) {
+            case Thread.OBJECT_TYPE:
+                Thread thread = em.find(Thread.class, identifier.getId());
+                if (thread == null) {
+                    throw new OrtolangException("unable to load thread with id [" + identifier.getId() + "] from storage");
+                }
+                return new ThreadExportHandler(thread);
+            case Message.OBJECT_TYPE:
+                Message message = em.find(Message.class, identifier.getId());
+                if (message == null) {
+                    throw new OrtolangException("unable to load message with id [" + identifier.getId() + "] from storage");
+                }
+                return new MessageExportHandler(message);
+            }
+
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to build object export handler " + key, e);
+        }
+        throw new OrtolangException("unable to build object export handler for key " + key);
+    }
+
+    @Override
+    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+        // TODO
+        throw new OrtolangException("NOT IMPLEMENTED");
     }
 
     private void addAttachments(Message message, Map<String, InputStream> attachments) throws DataNotFoundException, BinaryStoreServiceException, DataCollisionException {

@@ -66,7 +66,9 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.OrtolangSearchResult;
@@ -286,7 +288,6 @@ public class ReferentialServiceBean implements ReferentialService {
     		refEntity.setBoost(1L);
 
     		registry.register(key, refEntity.getObjectIdentifier(), caller);
-    		//TODO remove that
     		registry.setPublicationStatus(key, OrtolangObjectState.Status.PUBLISHED.value());
 
     		em.persist(refEntity);
@@ -545,4 +546,19 @@ public class ReferentialServiceBean implements ReferentialService {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}
+
+    @Override
+    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+        // TODO
+        throw new OrtolangException("NOT IMPLEMENTED");
+    }
+
+    @Override
+    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+        // TODO
+        throw new OrtolangException("NOT IMPLEMENTED");
+    }
+
+
+
 }

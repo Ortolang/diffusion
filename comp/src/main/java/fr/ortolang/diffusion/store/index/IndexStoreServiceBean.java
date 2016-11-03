@@ -82,10 +82,7 @@ import org.apache.lucene.store.FSDirectory;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangSearchResult;
 
 @Startup
@@ -100,9 +97,6 @@ public class IndexStoreServiceBean implements IndexStoreService {
 
     private static final Logger LOGGER = Logger.getLogger(IndexStoreServiceBean.class.getName());
 
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
     private Path base;
     private Analyzer analyzer;
     private Directory directory;
@@ -280,26 +274,6 @@ public class IndexStoreServiceBean implements IndexStoreService {
             LOGGER.log(Level.WARNING, "unable to gatter infos from index reader", e);
         }
         return infos;
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
     }
 
 }

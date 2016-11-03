@@ -584,7 +584,7 @@ public class WorkspaceResource {
     @Path("/{wskey}/elements/publication")
     public Response getPublicationPolicy(@PathParam(value = "wskey") String wskey, @QueryParam("path") String path)
             throws CoreServiceException, InvalidPathException, PathNotFoundException, KeyNotFoundException, OrtolangException, IOException, DataNotFoundException,
-            BinaryStoreServiceException, RegistryServiceException {
+            BinaryStoreServiceException, RegistryServiceException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/elements/publication");
         if (path == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();

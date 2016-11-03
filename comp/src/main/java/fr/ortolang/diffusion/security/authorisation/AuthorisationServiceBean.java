@@ -58,9 +58,6 @@ import javax.persistence.TypedQuery;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicy;
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
@@ -73,9 +70,6 @@ public class AuthorisationServiceBean implements AuthorisationService {
 
 	private static final Logger LOGGER = Logger.getLogger(AuthorisationServiceBean.class.getName());
 
-	private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
     @PersistenceContext(unitName = "ortolangPU")
 	private EntityManager em;
 	@Resource
@@ -365,23 +359,4 @@ public class AuthorisationServiceBean implements AuthorisationService {
         return Collections.emptyMap();
     }
 
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
 }

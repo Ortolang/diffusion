@@ -313,7 +313,7 @@ public class ContentResource {
         OrtolangObject object;
         try {
             object = browser.findObject(key);
-        } catch (AccessDeniedException e) {
+        } catch (BrowserServiceException e) {
             return;
         }
         OrtolangObjectInfos infos = browser.getInfos(key);

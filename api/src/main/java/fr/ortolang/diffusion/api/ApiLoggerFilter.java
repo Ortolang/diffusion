@@ -49,8 +49,11 @@ public class ApiLoggerFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext ctx) throws IOException {
-        //TODO retrieve source ip;
-        LOGGER.log(Level.INFO, ctx.getMethod() + " " + ctx.getUriInfo().getPath());
+        String remote = "";
+        if ( ctx.getHeaderString("X-Real-IP") != null ) {
+            remote = ctx.getHeaderString("X-Real-IP");
+        }
+        LOGGER.log(Level.INFO, "[" + remote + "]" + ctx.getMethod() + " " + ctx.getUriInfo().getPath());
     }
 
 }

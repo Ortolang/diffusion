@@ -39,7 +39,7 @@ package fr.ortolang.diffusion.membership;
 import java.util.List;
 
 import fr.ortolang.diffusion.OrtolangIndexableService;
-import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangObjectProviderService;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
@@ -50,7 +50,7 @@ import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
-public interface MembershipService extends OrtolangService, OrtolangIndexableService {
+public interface MembershipService extends OrtolangObjectProviderService, OrtolangIndexableService {
 
     String SERVICE_NAME = "membership";
 

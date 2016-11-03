@@ -58,9 +58,6 @@ import javax.json.JsonReader;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
@@ -80,9 +77,6 @@ import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 public class SearchServiceBean implements SearchService {
 
 	private static final Logger LOGGER = Logger.getLogger(SearchServiceBean.class.getName());
-	
-	private static final String[] OBJECT_TYPE_LIST = new String[] { };
-	private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
 	
 	@EJB
 	private MembershipService membership;
@@ -559,28 +553,7 @@ public class SearchServiceBean implements SearchService {
 
     @Override
     public Map<String, String> getServiceInfos() {
-        //TODO provide infos about active connections, config, ports, etc...
         return Collections.emptyMap();
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("This service does not manage any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("This service does not manage any object");
     }
 
 }

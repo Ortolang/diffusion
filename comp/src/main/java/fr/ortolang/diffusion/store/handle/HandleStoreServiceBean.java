@@ -63,9 +63,6 @@ import net.handle.hdllib.HandleValue;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.store.handle.entity.Handle;
 
 @Local(HandleStoreService.class)
@@ -76,9 +73,6 @@ public class HandleStoreServiceBean implements HandleStoreService {
 
     private static final Logger LOGGER = Logger.getLogger(HandleStoreServiceBean.class.getName());
     private static byte[] admin = null;
-
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
 
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
@@ -158,7 +152,7 @@ public class HandleStoreServiceBean implements HandleStoreService {
         TypedQuery<Handle> query = em.createNamedQuery("searchHandleByValue", Handle.class).setParameter("value", value.getBytes());
         return query.getResultList();
     }
-
+    
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Handle> listHandleValues(String handle) throws HandleStoreServiceException, HandleNotFoundException {
@@ -188,6 +182,13 @@ public class HandleStoreServiceBean implements HandleStoreService {
         return names;
     }
 
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Handle> listHandlesValuesForKey(String key) throws HandleStoreServiceException {
+        TypedQuery<Handle> query = em.createNamedQuery("findHandleForKey", Handle.class).setParameter("key", key);
+        return query.getResultList();
+    }
+
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public long countHandles() throws HandleStoreServiceException {
         TypedQuery<Long> query = em.createNamedQuery("countHandles", Long.class);
@@ -211,27 +212,5 @@ public class HandleStoreServiceBean implements HandleStoreService {
         }
         return infos;
     }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-
 
 }

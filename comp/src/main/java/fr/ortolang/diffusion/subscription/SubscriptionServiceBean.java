@@ -36,7 +36,11 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -44,26 +48,27 @@ import java.util.stream.Collectors;
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.annotation.security.RunAs;
-import javax.ejb.*;
-
-import fr.ortolang.diffusion.event.entity.Event;
-import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.runtime.RuntimeService;
-import fr.ortolang.diffusion.runtime.RuntimeServiceException;
-import fr.ortolang.diffusion.runtime.entity.HumanTask;
-import fr.ortolang.diffusion.runtime.entity.Process;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.Schedule;
+import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
 import org.atmosphere.cpr.AtmosphereResource;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.runtime.RuntimeService;
+import fr.ortolang.diffusion.runtime.RuntimeServiceException;
+import fr.ortolang.diffusion.runtime.entity.HumanTask;
+import fr.ortolang.diffusion.runtime.entity.Process;
 
 @Local(SubscriptionService.class)
 @Singleton(name = SubscriptionService.SERVICE_NAME)
@@ -73,9 +78,6 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 public class SubscriptionServiceBean implements SubscriptionService {
 
     private static final Logger LOGGER = Logger.getLogger(SubscriptionServiceBean.class.getName());
-
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
 
     private static final String PROCESS_CREATE_TYPE = "runtime.process.create";
     private static final String MEMBERSHIP_GROUP_ADD_MEMBER_TYPE = "membership.group.add-member";
@@ -258,26 +260,6 @@ public class SubscriptionServiceBean implements SubscriptionService {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {
         return new HashMap<>();
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
     }
 
 }

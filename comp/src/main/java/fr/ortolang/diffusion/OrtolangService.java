@@ -53,12 +53,4 @@ public interface OrtolangService {
 	
 	Map<String, String> getServiceInfos();
 
-	String[] getObjectTypeList();
-	
-	String[] getObjectPermissionsList(String type) throws OrtolangException;
-	
-	OrtolangObject findObject(String key) throws OrtolangException;
-
-	OrtolangObjectSize getSize(String key) throws OrtolangException;
-	
 }

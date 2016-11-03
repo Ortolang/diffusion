@@ -63,11 +63,14 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.event.entity.EventFeed;
 import fr.ortolang.diffusion.event.entity.EventFeedFilter;
+import fr.ortolang.diffusion.event.export.EventFeedExportHandler;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -537,6 +540,14 @@ public class EventServiceBean implements EventService {
         return query.getSingleResult();
     }
 
+    @Override
+    @TransactionAttribute(TransactionAttributeType.NOT_SUPPORTED)
+    public List<? extends OrtolangEvent> systemListAllEventsForKey(String key) throws EventServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# listing all events for key " + key);
+        List<Event> events = em.createNamedQuery("listAllEventsFromObject", Event.class).setParameter("fromObject", key).setLockMode(LockModeType.NONE).getResultList();
+        return events;
+    }
+
     /* Service Methods */
 
     @Override
@@ -595,7 +606,6 @@ public class EventServiceBean implements EventService {
         }
     }
 
-    // TODO implement get size
     @Override
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         return null;
@@ -609,6 +619,34 @@ public class EventServiceBean implements EventService {
         if (!identifier.getType().equals(objectType)) {
             throw new EventServiceException("object identifier " + identifier + " does not refer to an object of type " + objectType);
         }
+    }
+
+    @Override
+    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(EventService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+
+            switch (identifier.getType()) {
+            case EventFeed.OBJECT_TYPE:
+                EventFeed feed = em.find(EventFeed.class, identifier.getId());
+                if (feed == null) {
+                    throw new OrtolangException("unable to load event feed with id [" + identifier.getId() + "] from storage");
+                }
+                return new EventFeedExportHandler(feed);
+            }
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to build object export handler " + key, e);
+        }
+        throw new OrtolangException("unable to build object export handler for key " + key);
+    }
+
+    @Override
+    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+        // TODO
+        throw new OrtolangException("NOT IMPLEMENTED");
     }
 
 }

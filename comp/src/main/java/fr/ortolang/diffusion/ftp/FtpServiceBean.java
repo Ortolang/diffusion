@@ -64,10 +64,7 @@ import org.apache.ftpserver.ssl.SslConfigurationFactory;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.ftp.filesystem.OrtolangFileSystemFactory;
 import fr.ortolang.diffusion.ftp.user.OrtolangUserManager;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -87,9 +84,6 @@ public class FtpServiceBean implements FtpService {
 	
 	private static final Logger LOGGER = Logger.getLogger(FtpServiceBean.class.getName());
 	
-	private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-
     @EJB
     private MembershipService membership;
     @EJB
@@ -224,26 +218,6 @@ public class FtpServiceBean implements FtpService {
         infos.put(INFO_MAX_THREADS, Integer.toString(cFactory.getMaxThreads()));
         infos.put(INFO_ACTIVE_SESSIONS, Integer.toString(listener.getActiveSessions().size()));
         return infos;
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-    
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
     }
 
 }

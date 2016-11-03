@@ -64,15 +64,19 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 import org.javers.core.diff.Change;
 
-public interface CoreService extends OrtolangService, OrtolangBinaryService, OrtolangIndexableService {
+public interface CoreService extends OrtolangObjectProviderService, OrtolangBinaryService, OrtolangIndexableService {
 
     String SERVICE_NAME = "core";
 
     String INFO_WORKSPACES_ALL = "workspaces.all";
-    //TODO String INFO_WORKSPACES_PUBLISHED = "workspaces.published";
-    //TODO String INFO_WORKSPACES_DELETED = "workspaces.deleted";
+    String INFO_WORKSPACES_PUBLISHED = "workspaces.published";
+    //String INFO_WORKSPACES_DELETED = "workspaces.deleted";
     String INFO_COLLECTIONS_ALL = "collections.all";
+    String INFO_COLLECTIONS_PUBLISHED = "collections.published";
+    //String INFO_COLLECTIONS_DELETED = "collections.deleted";
     String INFO_OBJECTS_ALL = "objects.all";
+    String INFO_OBJECTS_PUBLISHED = "objects.published";
+    //String INFO_OBJECTS_DELETED = "objects.deleted";
 	
 	/* Workspace */
 

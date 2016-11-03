@@ -36,7 +36,26 @@ package fr.ortolang.diffusion.publication;
  * #L%
  */
 
-import fr.ortolang.diffusion.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
@@ -53,18 +72,6 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.*;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 @Local(PublicationService.class)
 @Stateless(name = PublicationService.SERVICE_NAME)
 @SecurityDomain("ortolang")
@@ -72,9 +79,6 @@ import java.util.logging.Logger;
 public class PublicationServiceBean implements PublicationService {
 
     private static final Logger LOGGER = Logger.getLogger(PublicationServiceBean.class.getName());
-
-    private static final String[] OBJECT_TYPE_LIST = new String[] {};
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] {};
 
     @EJB
     private RegistryService registry;
@@ -198,28 +202,8 @@ public class PublicationServiceBean implements PublicationService {
     }
 
     @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
     public Map<String, String> getServiceInfos() {
         return Collections.emptyMap();
     }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("This service does not manage any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("This service does not manage any object");
-    }
-
+   
 }
