@@ -44,6 +44,7 @@ import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
+
 /*
  * #%L
  * ORTOLANG
@@ -91,6 +92,7 @@ import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.Secured;
 import fr.ortolang.diffusion.api.object.ObjectResource;
+import fr.ortolang.diffusion.api.profile.ProfileRepresentation;
 import fr.ortolang.diffusion.api.runtime.HumanTaskRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessTypeRepresentation;
