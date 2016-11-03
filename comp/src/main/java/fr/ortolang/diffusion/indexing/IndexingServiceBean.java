@@ -105,7 +105,6 @@ public class IndexingServiceBean implements IndexingService {
     
     @Override
     public Map<String, String> getServiceInfos() {
-        //TODO provide infos about number of indexed document or maybe index queue status...
         return Collections.emptyMap();
     }
 

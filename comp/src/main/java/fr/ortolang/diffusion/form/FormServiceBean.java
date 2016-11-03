@@ -337,7 +337,6 @@ public class FormServiceBean implements FormService {
         throw new OrtolangException("NOT IMPLEMENTED");
     }
 
-    // @TODO implement getSize
     @Override
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         return null;

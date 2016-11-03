@@ -31,10 +31,12 @@ import org.jboss.security.Base64Encoder;
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangImportExportLogger;
 import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProviderService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.OrtolangImportExportLogger.LogType;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
@@ -61,7 +63,7 @@ public class DumpServiceBean implements DumpService {
     private HandleStoreService handle;
 
     @Override
-    public Set<String> dump(String key, OutputStream output, boolean single) throws DumpServiceException {
+    public Set<String> dump(String key, OutputStream output, OrtolangImportExportLogger logger, boolean single) throws DumpServiceException {
         LOGGER.log(Level.INFO, "Starting dump of key : " + key);
         try {
             SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yy hh:mm:ss");
@@ -79,7 +81,7 @@ public class DumpServiceBean implements DumpService {
             
             Set<String> deps = new HashSet<String>();
             Set<String> streams = new HashSet<String>();
-            dumpEntry(key, writer, deps, streams);
+            dumpEntry(key, writer, logger, deps, streams);
             treated.add(key);
             populateQueue(queue, treated, deps);
             
@@ -89,7 +91,7 @@ public class DumpServiceBean implements DumpService {
                 while ( (current = queue.poll()) != null ) {
                     LOGGER.log(Level.INFO, "Current queue key : " + current);
                     deps.clear();
-                    dumpEntry(current, writer, deps, streams);
+                    dumpEntry(current, writer, logger, deps, streams);
                     treated.add(current);
                     populateQueue(queue, treated, deps);
                 }
@@ -117,7 +119,7 @@ public class DumpServiceBean implements DumpService {
         LOGGER.log(Level.FINE, "Queue size : " + queue.size());
     }
     
-    private void dumpEntry(String key, XMLStreamWriter writer, Set<String> deps, Set<String> streams) throws Exception {
+    private void dumpEntry(String key, XMLStreamWriter writer, OrtolangImportExportLogger logger, Set<String> deps, Set<String> streams) throws Exception {
         LOGGER.log(Level.FINE, "dumping entry : " + key);
         RegistryEntry entry = registry.systemReadEntry(key);
         XmlDumpAttributes attrs = new XmlDumpAttributes();
@@ -199,7 +201,6 @@ public class DumpServiceBean implements DumpService {
             attrs.put("index", Integer.toString(hdl.getIndex()));
             attrs.put("permissions", hdl.getPermissionsString());
             attrs.put("data", Base64Encoder.encode(hdl.getData()));
-            //TODO Try to avoid exporting HS_ADMIN handles
             XmlDumpHelper.outputEmptyElement("entry", "handle", attrs, writer);
         }
         XmlDumpHelper.endElement(writer);
@@ -219,11 +220,11 @@ public class DumpServiceBean implements DumpService {
             OrtolangObjectProviderService service = OrtolangServiceLocator.findObjectProviderService(identifier.getService());
             try {
                 OrtolangObjectExportHandler handler = service.getObjectExportHandler(key);
-                handler.dumpObject(writer);
+                handler.dumpObject(writer, logger);
                 deps.addAll(handler.getObjectDependencies());
                 streams.addAll(handler.getObjectBinaryStreams());
             } catch ( OrtolangException e ) {
-                //TODO log this lake of export to ImportExportLogger
+                logger.log(LogType.ERROR, key + " " + e.getMessage());
             }
         }
         
@@ -231,8 +232,8 @@ public class DumpServiceBean implements DumpService {
     }
 
     @Override
-    public void restore(InputStream input) throws DumpServiceException {
-        // TODO Auto-generated method stub
+    public void restore(InputStream input, OrtolangImportExportLogger logger) throws DumpServiceException {
+        // TODO 
         throw new DumpServiceException("Problem during import: NOT IMPLEMENTED");
     }
 

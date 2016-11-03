@@ -8,6 +8,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangImportExportLogger;
 import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
@@ -17,7 +18,6 @@ import fr.ortolang.diffusion.dump.XmlDumpAttributes;
 import fr.ortolang.diffusion.dump.XmlDumpHelper;
 import fr.ortolang.diffusion.message.MessageService;
 import fr.ortolang.diffusion.message.MessageServiceException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
 
 public class WorkspaceExportHandler implements OrtolangObjectExportHandler {
     
@@ -28,7 +28,7 @@ public class WorkspaceExportHandler implements OrtolangObjectExportHandler {
    }
     
     @Override
-    public void dumpObject(XMLStreamWriter writer) throws OrtolangException {
+    public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
         try {
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("id", workspace.getId());
@@ -81,13 +81,12 @@ public class WorkspaceExportHandler implements OrtolangObjectExportHandler {
         for ( SnapshotElement snapshot : workspace.getSnapshots() ) {
             deps.add(snapshot.getKey());
         }
-//        MessageService mservice = (MessageService) OrtolangServiceLocator.findService(MessageService.SERVICE_NAME);
-//        try {
-//            //TODO add a system operation to avoid problem
-//            deps.addAll(mservice.findThreadsForWorkspace(workspace.getKey()));
-//        } catch (MessageServiceException | KeyNotFoundException e) {
-//            //TODO maybe include error in a ImportExportLogger
-//        }
+        MessageService mservice = (MessageService) OrtolangServiceLocator.findService(MessageService.SERVICE_NAME);
+        try {
+            deps.addAll(mservice.findThreadsForWorkspace(workspace.getKey()));
+        } catch (MessageServiceException e) {
+            throw new OrtolangException(e);
+        }
         return deps;
     }
 

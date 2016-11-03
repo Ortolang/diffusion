@@ -606,7 +606,6 @@ public class EventServiceBean implements EventService {
         }
     }
 
-    // TODO implement get size
     @Override
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         return null;

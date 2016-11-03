@@ -7,6 +7,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangImportExportLogger;
 import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.dump.XmlDumpAttributes;
@@ -21,13 +22,12 @@ public class MetadataObjectExportHandler implements OrtolangObjectExportHandler 
    }
     
     @Override
-    public void dumpObject(XMLStreamWriter writer) throws OrtolangException {
+    public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
         try {
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("id", metadata.getId());
             attrs.put("name", metadata.getName());
             attrs.put("target", metadata.getTarget());
-            //TODO find a way to export format...
             attrs.put("format", metadata.getFormat());
             attrs.put("stream", metadata.getStream());
             attrs.put("content-type", metadata.getContentType());
@@ -42,7 +42,6 @@ public class MetadataObjectExportHandler implements OrtolangObjectExportHandler 
     public Set<String> getObjectDependencies() throws OrtolangException {
         Set<String> deps = new HashSet<String> ();
         deps.add(metadata.getTarget());
-        //TODO parse metadata content in order to detect in binary content deps
         return deps;
     }
 

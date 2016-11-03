@@ -100,11 +100,8 @@ public class RenderingServiceBean implements RenderingService {
     private BinaryStoreService store;
     @EJB
     private BrowserService browser;
-
     private Path base;
-
     private Map<String, RenderEngine> engines = new HashMap<String, RenderEngine>();
-
     private Configuration config;
 
     public RenderingServiceBean() {

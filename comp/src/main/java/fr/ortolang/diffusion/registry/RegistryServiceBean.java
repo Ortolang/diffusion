@@ -567,6 +567,20 @@ public class RegistryServiceBean implements RegistryService {
         TypedQuery<Long> query = em.createNamedQuery("countDeletedEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
         return query.getSingleResult();
     }
+    
+    @Override
+    @RolesAllowed({"admin", "system"})
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public long systemCountPublishedEntries(String identifierFilter) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# counting published entries with identifierFilter:" + identifierFilter);
+        StringBuilder ifilter = new StringBuilder();
+        if ( identifierFilter !=  null && identifierFilter.length() > 0 ) {
+            ifilter.append(identifierFilter);
+        }
+        ifilter.append("%");
+        TypedQuery<Long> query = em.createNamedQuery("countPublishedEntries", Long.class).setParameter("identifierFilter", ifilter.toString());
+        return query.getSingleResult();
+    }
 
     @Override
     @RolesAllowed({"admin", "system"})

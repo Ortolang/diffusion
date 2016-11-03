@@ -26,6 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import fr.ortolang.diffusion.OrtolangImportExportLogger;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -160,7 +161,13 @@ public class DumpServiceTest {
             assertEquals(WORKSPACE_TYPE, wsu.getType());
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            dump.dump(WORKSPACE_KEY, baos, false);
+            OrtolangImportExportLogger logger = new OrtolangImportExportLogger() {
+                @Override
+                public void log(LogType type, String message) {
+                    System.out.println("[" + type + "] " + message);
+                }
+            };
+            dump.dump(WORKSPACE_KEY, baos, logger, false);
             
             LOGGER.log(Level.INFO, "Export output: \r\n" + baos.toString("UTF-8"));
 

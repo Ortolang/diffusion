@@ -355,6 +355,31 @@ public class MessageServiceBean implements MessageService {
             throw new MessageServiceException("unable to find threads for workspace: " + wskey, e);
         }
     }
+    
+    @Override
+    @RolesAllowed({"admin", "system"})
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<String> systemFindThreadsForWorkspace(String wskey) throws MessageServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# finding threads for workspace [" + wskey + "]");
+        try {
+            List<String> keys = new ArrayList<String>();
+            TypedQuery<Thread> query = em.createNamedQuery("findThreadsForWorkspace", Thread.class).setParameter("wskey", wskey);
+            List<Thread> threads = query.getResultList();
+            for (Thread thread : threads) {
+                OrtolangObjectIdentifier identifier = thread.getObjectIdentifier();
+                try {
+                    keys.add(registry.lookup(identifier));
+                } catch (IdentifierNotRegisteredException e) {
+                    LOGGER.log(Level.FINE, "a thread with an unregistered identifier has be found (probably deleted) : " + identifier);
+                }
+            }
+
+            return keys;
+        } catch (RegistryServiceException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred during system find threads for workspace: " + wskey, e);
+            throw new MessageServiceException("unable to find threads for workspace: " + wskey, e);
+        }
+    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)

@@ -81,7 +81,9 @@ import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
  */
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangImportExportLogger;
 import fr.ortolang.diffusion.OrtolangJob;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.OrtolangWorker;
@@ -95,6 +97,7 @@ import fr.ortolang.diffusion.api.runtime.ProcessTypeRepresentation;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.MetadataFormatException;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.dump.DumpService;
 import fr.ortolang.diffusion.dump.DumpServiceException;
 import fr.ortolang.diffusion.event.EventService;
@@ -225,65 +228,100 @@ public class AdminResource {
     }
 
     @GET
-    @Path("/registry/entries/{key}/dump")
+    @Path("/core/workspace/{key}/dump")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-    public Response dumpEntry(@PathParam("key") String key) throws DumpServiceException, IOException {
-        LOGGER.log(Level.INFO, "GET /admin/registry/entries/" + key + "/dump");
+    public Response dumpEntry(@PathParam("key") String key) throws DumpServiceException, IOException, RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "GET /admin/core/workspace/" + key + "/dump");
         ResponseBuilder builder;
-        LOGGER.log(Level.FINE, "exporting using format tar");
-        builder = Response.ok();
-        builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(key, "utf-8") + "-dump.tar.gz");
-        builder.type("application/x-gzip");
+        OrtolangObjectIdentifier identifier = registry.lookup(key);
+        if (!identifier.getService().equals(CoreService.SERVICE_NAME) || !identifier.getType().equals(Workspace.OBJECT_TYPE)) {
+            builder = Response.status(Status.BAD_REQUEST).entity("Object is not a " + Workspace.OBJECT_TYPE);
+        } else {
+            LOGGER.log(Level.FINE, "exporting workspace using format tar");
+            builder = Response.ok();
+            builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(key, "utf-8") + "-dump.tar.gz");
+            builder.type("application/x-gzip");
 
-        java.nio.file.Path dump = Files.createTempFile("ortolang-dump", ".xml");
-        try (OutputStream os = Files.newOutputStream(dump)) {
-            Set<String> bstreams = dumpService.dump(key, os, false);
-            StreamingOutput stream = output -> {
-                try (GzipCompressorOutputStream gout = new GzipCompressorOutputStream(output); TarArchiveOutputStream out = new TarArchiveOutputStream(gout)) {
-                    try {
-                        TarArchiveEntry entry = new TarArchiveEntry(key + "-dump.xml");
-                        entry.setModTime(System.currentTimeMillis());
-                        entry.setSize(Files.size(dump));
-                        try (InputStream isdump = Files.newInputStream(dump)) {
-                            out.putArchiveEntry(entry);
-                            IOUtils.copy(isdump, out);
+            java.nio.file.Path dump = Files.createTempFile("ortolang-dump", ".xml");
+            java.nio.file.Path log = Files.createTempFile("ortolang-dump", ".log");
+            try (OutputStream os = Files.newOutputStream(dump); OutputStream logos = Files.newOutputStream(log)) {
+                OrtolangImportExportLogger logger = new OrtolangImportExportLogger() {
+                    @Override
+                    public void log(LogType type, String message) {
+                        StringBuilder str = new StringBuilder();
+                        str.append("[").append(type).append("] ").append(message).append("\r\n");
+                        try {
+                            logos.write(str.toString().getBytes());
+                            logos.flush();
                         } catch (IOException e) {
-                            throw new DumpServiceException("unable to add dump to archive", e);
-                        } finally {
-                            try {
-                                out.closeArchiveEntry();
+                            //
+                        }
+                    }
+                };
+                Set<String> bstreams = dumpService.dump(key, os, logger, false);
+                StreamingOutput stream = output -> {
+                    try (GzipCompressorOutputStream gout = new GzipCompressorOutputStream(output); TarArchiveOutputStream out = new TarArchiveOutputStream(gout)) {
+                        try {
+                            TarArchiveEntry entry = new TarArchiveEntry(key + "-dump.xml");
+                            entry.setModTime(System.currentTimeMillis());
+                            entry.setSize(Files.size(dump));
+                            try (InputStream isdump = Files.newInputStream(dump)) {
+                                out.putArchiveEntry(entry);
+                                IOUtils.copy(isdump, out);
                             } catch (IOException e) {
-                                throw new DumpServiceException("unable to close archive entry for xml dump", e);
-                            }
-                        }
-                        
-                        for (String bstream : bstreams) {
-                            try (InputStream input = binary.get(bstream)) {
-                                TarArchiveEntry sentry = new TarArchiveEntry(bstream);
-                                sentry.setModTime(System.currentTimeMillis());
-                                sentry.setSize(binary.size(bstream));
+                                throw new DumpServiceException("unable to add dump to archive", e);
+                            } finally {
                                 try {
-                                    out.putArchiveEntry(sentry);
-                                    IOUtils.copy(input, out);
+                                    out.closeArchiveEntry();
                                 } catch (IOException e) {
-                                    throw new DumpServiceException("unable to dump binary stream for hash: " + bstream, e);
-                                } finally {
-                                    try {
-                                        out.closeArchiveEntry();
-                                    } catch (IOException e) {
-                                        throw new DumpServiceException("unable to close archive entry for binary stream with hash: " + bstream, e);
-                                    }
+                                    throw new DumpServiceException("unable to close archive entry for xml dump", e);
                                 }
-                            } catch (DataNotFoundException | IOException | BinaryStoreServiceException e) {
-                                throw new DumpServiceException(e);
                             }
+
+                            TarArchiveEntry logentry = new TarArchiveEntry(key + "-dump.log");
+                            logentry.setModTime(System.currentTimeMillis());
+                            logentry.setSize(Files.size(log));
+                            try (InputStream islog = Files.newInputStream(log)) {
+                                out.putArchiveEntry(logentry);
+                                IOUtils.copy(islog, out);
+                            } catch (IOException e) {
+                                throw new DumpServiceException("unable to add dumplog to archive", e);
+                            } finally {
+                                try {
+                                    out.closeArchiveEntry();
+                                } catch (IOException e) {
+                                    throw new DumpServiceException("unable to close archive entry for dump log", e);
+                                }
+                            }
+
+                            for (String bstream : bstreams) {
+                                try (InputStream input = binary.get(bstream)) {
+                                    TarArchiveEntry sentry = new TarArchiveEntry(bstream);
+                                    sentry.setModTime(System.currentTimeMillis());
+                                    sentry.setSize(binary.size(bstream));
+                                    try {
+                                        out.putArchiveEntry(sentry);
+                                        IOUtils.copy(input, out);
+                                    } catch (IOException e) {
+                                        throw new DumpServiceException("unable to dump binary stream for hash: " + bstream, e);
+                                    } finally {
+                                        try {
+                                            out.closeArchiveEntry();
+                                        } catch (IOException e) {
+                                            throw new DumpServiceException("unable to close archive entry for binary stream with hash: " + bstream, e);
+                                        }
+                                    }
+                                } catch (DataNotFoundException | IOException | BinaryStoreServiceException e) {
+                                    throw new DumpServiceException(e);
+                                }
+                            }
+                        } catch (DumpServiceException e) {
+                            e.printStackTrace();
                         }
-                    } catch (DumpServiceException e) {
-                        e.printStackTrace();
-                    } 
-                }
-            };
-            builder.entity(stream);
+                    }
+                };
+                builder.entity(stream);
+            }
         }
 
         return builder.build();
@@ -309,7 +347,6 @@ public class AdminResource {
             }
 
             core.systemCreateMetadata(form.getKey(), form.getName(), form.getStreamHash(), form.getFilename());
-            // TODO return with the metadata key
             URI location = ApiUriBuilder.getApiUriBuilder().path(ObjectResource.class).path(form.getKey()).build();
             return Response.created(location).build();
         } catch (DataCollisionException | URISyntaxException e) {

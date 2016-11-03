@@ -64,7 +64,7 @@ public interface MessageService extends OrtolangObjectProviderService, OrtolangB
     
     Thread readThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
-    List<String> findThreadsForWorkspace(String wskey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    List<String> findThreadsForWorkspace(String wskey) throws MessageServiceException, AccessDeniedException;
     
     List<Message> browseThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
@@ -99,5 +99,7 @@ public interface MessageService extends OrtolangObjectProviderService, OrtolangB
     File getMessageAttachment(String key, String name) throws MessageServiceException, AccessDeniedException, KeyNotFoundException, DataNotFoundException;
     
     Thread systemReadThread(String key) throws MessageServiceException, KeyNotFoundException;
+    
+    List<String> systemFindThreadsForWorkspace(String wskey) throws MessageServiceException;
     
 }

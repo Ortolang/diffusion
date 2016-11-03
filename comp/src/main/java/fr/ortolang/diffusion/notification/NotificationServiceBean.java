@@ -116,7 +116,6 @@ public class NotificationServiceBean implements NotificationService {
     
     @Override
     public Map<String, String> getServiceInfos() {
-        //TODO provide infos about queue statistics
         return Collections.emptyMap();
     }
 

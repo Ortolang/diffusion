@@ -100,6 +100,7 @@ import fr.ortolang.diffusion.OrtolangObjectImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectPid;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.OrtolangObjectState.Status;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
@@ -3535,6 +3536,21 @@ public class CoreServiceBean implements CoreService {
             infos.put(INFO_OBJECTS_ALL, Long.toString(registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE), null)));
         } catch (Exception e) {
             LOGGER.log(Level.INFO, "unable to collect info: " + INFO_OBJECTS_ALL, e);
+        }
+        try {
+            infos.put(INFO_WORKSPACES_PUBLISHED, Long.toString(registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE), Status.PUBLISHED)));
+        } catch (Exception e) {
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_WORKSPACES_PUBLISHED, e);
+        }
+        try {
+            infos.put(INFO_COLLECTIONS_PUBLISHED, Long.toString(registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(CoreService.SERVICE_NAME, Collection.OBJECT_TYPE), Status.PUBLISHED)));
+        } catch (Exception e) {
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_COLLECTIONS_PUBLISHED, e);
+        }
+        try {
+            infos.put(INFO_OBJECTS_PUBLISHED, Long.toString(registry.count(OrtolangObjectIdentifier.buildJPQLFilterPattern(CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE), Status.PUBLISHED)));
+        } catch (Exception e) {
+            LOGGER.log(Level.INFO, "unable to collect info: " + INFO_OBJECTS_PUBLISHED, e);
         }
         return infos;
     }

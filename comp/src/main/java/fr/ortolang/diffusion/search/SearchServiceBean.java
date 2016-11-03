@@ -553,7 +553,6 @@ public class SearchServiceBean implements SearchService {
 
     @Override
     public Map<String, String> getServiceInfos() {
-        //TODO provide infos about active connections, config, ports, etc...
         return Collections.emptyMap();
     }
 
