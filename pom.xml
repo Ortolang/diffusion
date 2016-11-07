@@ -5,7 +5,7 @@
     <groupId>fr.ortolang.diffusion</groupId>
     <artifactId>ortolang-diffusion</artifactId>
     <name>Ortolang Diffusion Server Parent</name>
-    <version>4.6.8</version>
+    <version>4.6.9-SNAPSHOT</version>
     <packaging>pom</packaging>
     <url>http://www.ortolang.fr</url>
 
@@ -19,7 +19,7 @@
         <connection>scm:git:git@gitlab.ortolang.fr:ortolang/ortolang-diffusion.git</connection>
         <developerConnection>scm:git:git@gitlab.ortolang.fr:ortolang/ortolang-diffusion.git</developerConnection>
         <url>https://gitlab.ortolang.fr/ortolang/ortolang-diffusion.git</url>
-        <tag>ortolang-diffusion-4.6.8</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <modules>
