@@ -57,6 +57,7 @@ public class MetadataFormat {
     public static final String PID = "ortolang-pid-json";
     public static final String THUMB = "ortolang-thumb";
     public static final String TEMPLATE = "ortolang-template-json";
+    public static final String JSON_DC = "json_dc";
     // System metadata
     public static final String TRUSTRANK = "system-trustrank-json";
     public static final String RATING = "system-rating-json";

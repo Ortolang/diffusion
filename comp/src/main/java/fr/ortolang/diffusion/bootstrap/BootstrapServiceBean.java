@@ -63,6 +63,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.form.FormService;
@@ -72,6 +73,7 @@ import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
+import fr.ortolang.diffusion.store.binary.DataCollisionException;
 
 @Startup
 @Singleton(name = BootstrapService.SERVICE_NAME)
@@ -359,6 +361,8 @@ public class BootstrapServiceBean implements BootstrapService {
             String schemaOfficeHash = core.put(schemaOfficeInputStream);
             core.createMetadataFormat(MetadataFormat.OFFICE, "Schema for ORTOLANG Office metadata", schemaOfficeHash, "", false, false);
 
+            loadMetadataFormat(MetadataFormat.JSON_DC, "Schema for Dublin Core elements in JSON format", "", true, true);
+            
             LOGGER.log(Level.INFO, "reimport process types");
             runtime.importProcessTypes();
 
@@ -367,6 +371,13 @@ public class BootstrapServiceBean implements BootstrapService {
             throw new BootstrapServiceException("error during bootstrap", e);
         }
 
+    }
+    
+    protected void loadMetadataFormat(String mf, String desc, String form, boolean validationNeed, boolean indexable) throws CoreServiceException, DataCollisionException {
+    	InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/" + mf + ".json");
+        String schemaHash = core.put(schemaInputStream);
+        core.createMetadataFormat(mf, desc, 
+        		schemaHash, form, validationNeed, indexable);
     }
 
     @Override

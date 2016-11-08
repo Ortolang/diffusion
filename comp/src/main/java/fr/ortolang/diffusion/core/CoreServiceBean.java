@@ -3826,27 +3826,16 @@ public class CoreServiceBean implements CoreService {
                     throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
                 }
 
-                if (collection.isRoot()) {
-                    for (MetadataElement mde : collection.getMetadatas()) {
-                        OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-                        MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
-                        if (metadata == null) {
-                            throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
-                        }
-                        MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
-                        if (format == null) {
-                            LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
-                            break;
-                        }
-                        try {
-                            if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
-                                content.put(metadata.getName(), getContent(binarystore.get(metadata.getStream())));
-                            }
-                        } catch (DataNotFoundException | BinaryStoreServiceException | IOException e) {
-                            LOGGER.log(Level.WARNING, "unable to extract json text for key : " + mde.getKey(), e);
-                        }
-                    }
+                putMetadataContent(collection, content);
+            }
+
+            if (identifier.getType().equals(DataObject.OBJECT_TYPE) && publicationStatus.equals(OrtolangObjectState.Status.PUBLISHED.value())) {
+                DataObject object = em.find(DataObject.class, identifier.getId());
+                if (object == null) {
+                    throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
                 }
+
+                putMetadataContent(object, content);
             }
 
             if (identifier.getType().equals(Workspace.OBJECT_TYPE)) {
@@ -3884,6 +3873,28 @@ public class CoreServiceBean implements CoreService {
         }
     }
 
+    private void putMetadataContent(MetadataSource source, IndexableJsonContent content) throws OrtolangException, RegistryServiceException, KeyNotFoundException {
+    	for (MetadataElement mde : source.getMetadatas()) {
+            OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
+            MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
+            if (metadata == null) {
+                throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
+            }
+            MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
+            if (format == null) {
+                LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
+                break;
+            }
+            try {
+                if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
+                    content.put(metadata.getName(), getContent(binarystore.get(metadata.getStream())));
+                }
+            } catch (DataNotFoundException | BinaryStoreServiceException | IOException e) {
+                LOGGER.log(Level.WARNING, "unable to extract json text for key : " + mde.getKey(), e);
+            }
+        }
+    }
+    
     private String getContent(InputStream is) throws IOException {
         String content = null;
         try {
