@@ -32,6 +32,12 @@ public class XmlDumpHelper {
         endElement(writer);
     }
     
+    public static void outputElementWithData(String prefix, String name, XmlDumpAttributes attrs, String data, XMLStreamWriter writer) throws XMLStreamException {
+        startElement(prefix, name, attrs, writer);
+        writer.writeCData(data);
+        endElement(writer);
+    }
+    
     public static void startElement(String prefix, String name, XmlDumpAttributes attrs, XMLStreamWriter writer) throws XMLStreamException {
         writer.writeStartElement(prefix, name, namespace);
         if ( attrs != null ) {

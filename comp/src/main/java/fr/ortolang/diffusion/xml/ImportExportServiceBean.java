@@ -40,7 +40,7 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
 import fr.ortolang.diffusion.OrtolangImportExportLogger.LogType;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProviderService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
@@ -277,7 +277,7 @@ public class ImportExportServiceBean implements ImportExportService {
             OrtolangObjectIdentifier identifier = OrtolangObjectIdentifier.deserialize(entry.getIdentifier());
             OrtolangObjectProviderService service = OrtolangServiceLocator.findObjectProviderService(identifier.getService());
             try {
-                OrtolangObjectExportHandler handler = service.getObjectExportHandler(key);
+                OrtolangObjectXmlExportHandler handler = service.getObjectXmlExportHandler(key);
                 handler.exportObject(writer, logger);
                 deps.addAll(handler.getObjectDependencies());
                 streams.addAll(handler.getObjectBinaryStreams());

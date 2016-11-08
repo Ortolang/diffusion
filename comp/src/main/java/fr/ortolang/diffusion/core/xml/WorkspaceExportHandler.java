@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core.export;
+package fr.ortolang.diffusion.core.xml;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,7 +9,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.TagElement;
@@ -19,7 +19,7 @@ import fr.ortolang.diffusion.message.MessageServiceException;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class WorkspaceExportHandler implements OrtolangObjectExportHandler {
+public class WorkspaceExportHandler implements OrtolangObjectXmlExportHandler {
     
     private Workspace workspace; 
     

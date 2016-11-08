@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.membership.export;
+package fr.ortolang.diffusion.membership.xml;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -10,14 +10,14 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
 import fr.ortolang.diffusion.membership.entity.ProfileKey;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class ProfileExportHandler implements OrtolangObjectExportHandler {
+public class ProfileExportHandler implements OrtolangObjectXmlExportHandler {
     
     private Profile profile; 
     

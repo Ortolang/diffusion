@@ -4,7 +4,7 @@ import java.util.Set;
 
 import javax.xml.stream.XMLStreamWriter;
 
-public interface OrtolangObjectExportHandler {
+public interface OrtolangObjectXmlExportHandler {
     
     void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException;
     

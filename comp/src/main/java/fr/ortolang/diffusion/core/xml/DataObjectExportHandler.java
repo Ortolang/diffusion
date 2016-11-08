@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core.export;
+package fr.ortolang.diffusion.core.xml;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -8,13 +8,13 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class DataObjectExportHandler implements OrtolangObjectExportHandler {
+public class DataObjectExportHandler implements OrtolangObjectXmlExportHandler {
     
     private DataObject object; 
     

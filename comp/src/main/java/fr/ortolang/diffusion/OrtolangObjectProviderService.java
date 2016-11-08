@@ -12,8 +12,8 @@ public interface OrtolangObjectProviderService extends OrtolangService {
 
     OrtolangObjectSize getSize(String key) throws OrtolangException;
     
-    OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException;
+    OrtolangObjectXmlExportHandler getObjectXmlExportHandler(String key) throws OrtolangException;
     
-    OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException;
+    OrtolangObjectXmlImportHandler getObjectXmlImportHandler() throws OrtolangException;
     
 }

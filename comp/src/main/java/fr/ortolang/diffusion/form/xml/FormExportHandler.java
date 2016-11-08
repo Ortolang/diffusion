@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.form.export;
+package fr.ortolang.diffusion.form.xml;
 
 import java.util.Collections;
 import java.util.Set;
@@ -8,12 +8,12 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.form.entity.Form;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class FormExportHandler implements OrtolangObjectExportHandler {
+public class FormExportHandler implements OrtolangObjectXmlExportHandler {
     
     private Form form; 
     

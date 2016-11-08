@@ -9,6 +9,7 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -103,6 +104,7 @@ import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyLockedException;
@@ -167,6 +169,8 @@ public class AdminResource {
     @EJB
     private JobService jobService;
     @EJB
+    private ReferentialService referentialService;
+    @EJB
     private WorkerService workerService;
     @EJB
     private FtpService ftpService;
@@ -222,9 +226,40 @@ public class AdminResource {
     }
 
     @GET
+    @Path("/referential/entities/export")
+    @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
+    public Response dumpEntry() throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "GET /admin/referential/entities/export");
+        LOGGER.log(Level.FINE, "exporting referentual entities");
+        ResponseBuilder builder = Response.ok();
+        builder.header("Content-Disposition", "attachment; filename*=UTF-8''ortolang-dump.tar.gz");
+        builder.type("application/x-gzip");
+        
+        Set<String> keys = new HashSet<String>(registry.list(0, 1000000, "/referential/entity", null));
+
+        StreamingOutput stream = output -> {
+            try {
+                export.dump(keys, output, new OrtolangImportExportLogger() {
+                    @Override
+                    public void log(LogType type, String message) {
+                        LOGGER.log(Level.FINE, type + " : " + message);
+                    }
+                }, true, true);
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, e.getMessage(), e);
+                // TODO maybe include a warning in the archive...
+            }
+        };
+        builder.entity(stream);
+
+        return builder.build();
+    }
+
+    @GET
     @Path("/core/workspace/{key}/export")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-    public Response dumpEntry(@PathParam("key") String key, @DefaultValue(value= "true") @QueryParam("deps") boolean withdeps, @DefaultValue(value= "true") @QueryParam("binary") boolean withbinary) throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
+    public Response dumpWorkspace(@PathParam("key") String key, @DefaultValue(value = "true") @QueryParam("deps") boolean withdeps,
+            @DefaultValue(value = "true") @QueryParam("binary") boolean withbinary) throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /admin/core/workspace/" + key + "/export");
         ResponseBuilder builder;
         OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -235,16 +270,18 @@ public class AdminResource {
             builder = Response.ok();
             builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(key, "utf-8") + "-dump.tar.gz");
             builder.type("application/x-gzip");
-            
+
             StreamingOutput stream = output -> {
                 try {
                     export.dump(Collections.singleton(key), output, new OrtolangImportExportLogger() {
                         @Override
                         public void log(LogType type, String message) {
+                            LOGGER.log(Level.FINE, type + " : " + message);
                         }
                     }, withdeps, withbinary);
                 } catch (Exception e) {
-                    //TODO something wrong happened
+                    LOGGER.log(Level.WARNING, e.getMessage(), e);
+                    // TODO maybe include a warning in the archive...
                 }
             };
             builder.entity(stream);
@@ -387,22 +424,11 @@ public class AdminResource {
         long nbresults = event.systemCountEvents(etype, ofrom, otype, throwed, after);
         List<OrtolangEvent> events = (List<OrtolangEvent>) event.systemFindEvents(etype, ofrom, otype, throwed, after, offset, limit);
 
-        // UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
         GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>();
         representation.setEntries(events);
         representation.setOffset((offset <= 0) ? 1 : offset);
         representation.setSize(nbresults);
         representation.setLimit(events.size());
-        // representation.setFirst(objects.clone().queryParam("o", 0).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype",
-        // etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        // representation.setPrevious(objects.clone().queryParam("o", Math.max(0, (offset - limit))).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype",
-        // otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        // representation.setSelf(objects.clone().queryParam("o", offset).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype",
-        // etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        // representation.setNext(objects.clone().queryParam("o", (nbresults > (offset + limit)) ? (offset + limit) : offset).queryParam("l", limit).queryParam("ofrom",
-        // ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        // representation.setLast(objects.clone().queryParam("o", ((nbresults - 1) / limit) * limit).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype",
-        // otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
         return Response.ok(representation).build();
     }
 

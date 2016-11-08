@@ -130,7 +130,7 @@ public class ImportExportServiceTest {
     }
 
     @Test
-    public void testLookup() throws Exception {
+    public void testDumpWorkspace() throws Exception {
         final String WORKSPACE_KEY = "WS1";
         final String WORKSPACE_NAME = "Workspace1";
         final String WORKSPACE_NAME_UPDATE = "Workspace1.update";

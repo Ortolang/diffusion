@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.event.export;
+package fr.ortolang.diffusion.event.xml;
 
 import java.util.Collections;
 import java.util.Set;
@@ -8,13 +8,13 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.event.entity.EventFeed;
 import fr.ortolang.diffusion.event.entity.EventFeedFilter;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class EventFeedExportHandler implements OrtolangObjectExportHandler {
+public class EventFeedExportHandler implements OrtolangObjectXmlExportHandler {
         
         private EventFeed feed; 
         
