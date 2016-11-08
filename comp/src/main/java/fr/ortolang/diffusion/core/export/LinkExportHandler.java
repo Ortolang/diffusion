@@ -12,8 +12,8 @@ import fr.ortolang.diffusion.OrtolangImportExportLogger;
 import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.dump.XmlDumpAttributes;
-import fr.ortolang.diffusion.dump.XmlDumpHelper;
+import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
 public class LinkExportHandler implements OrtolangObjectExportHandler {
     
@@ -24,7 +24,7 @@ public class LinkExportHandler implements OrtolangObjectExportHandler {
    }
     
     @Override
-    public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
+    public void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
         try {
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("id", link.getId());

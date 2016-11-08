@@ -1,9 +1,10 @@
-package fr.ortolang.diffusion.dump;
+package fr.ortolang.diffusion.xml;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,11 +33,12 @@ import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.ProfileAlreadyExistsException;
 import fr.ortolang.diffusion.security.authentication.UsernamePasswordLoginContextFactory;
+import fr.ortolang.diffusion.xml.ImportExportService;
 
 @RunWith(Arquillian.class)
-public class DumpServiceTest {
+public class ImportExportServiceTest {
     
-    private static final Logger LOGGER = Logger.getLogger(DumpServiceTest.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ImportExportServiceTest.class.getName());
 
     @PersistenceContext
     private EntityManager em;
@@ -49,7 +51,7 @@ public class DumpServiceTest {
     @EJB
     private MembershipService membership;
     @EJB
-    private DumpService dump;
+    private ImportExportService export;
     
     @Deployment
     public static EnterpriseArchive createDeployment() {
@@ -63,7 +65,7 @@ public class DumpServiceTest {
         jar.addPackage("fr.ortolang.diffusion.event");
         jar.addPackage("fr.ortolang.diffusion.event.entity");
         jar.addPackage("fr.ortolang.diffusion.event.export");
-        jar.addPackage("fr.ortolang.diffusion.dump");
+        jar.addPackage("fr.ortolang.diffusion.xml");
         jar.addClass("fr.ortolang.diffusion.extraction.ExtractionService");
         jar.addClass("fr.ortolang.diffusion.extraction.ExtractionServiceBean");
         jar.addClass("fr.ortolang.diffusion.extraction.ExtractionServiceException");
@@ -167,7 +169,7 @@ public class DumpServiceTest {
                     System.out.println("[" + type + "] " + message);
                 }
             };
-            dump.dump(WORKSPACE_KEY, baos, logger, false);
+            export.dump(Collections.singleton(WORKSPACE_KEY), baos, logger, true, true);
             
             LOGGER.log(Level.INFO, "Export output: \r\n" + baos.toString("UTF-8"));
 

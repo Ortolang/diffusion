@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.dump;
+package fr.ortolang.diffusion.xml;
 
 import java.util.LinkedHashMap;
 

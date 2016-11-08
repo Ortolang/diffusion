@@ -13,8 +13,8 @@ import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.dump.XmlDumpAttributes;
-import fr.ortolang.diffusion.dump.XmlDumpHelper;
+import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
 public class CollectionExportHandler implements OrtolangObjectExportHandler {
     
@@ -25,7 +25,7 @@ public class CollectionExportHandler implements OrtolangObjectExportHandler {
    }
     
     @Override
-    public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
+    public void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
         try {
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("id", collection.getId());

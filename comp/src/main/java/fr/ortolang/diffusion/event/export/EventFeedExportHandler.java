@@ -9,10 +9,10 @@ import javax.xml.stream.XMLStreamWriter;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
 import fr.ortolang.diffusion.OrtolangObjectExportHandler;
-import fr.ortolang.diffusion.dump.XmlDumpAttributes;
-import fr.ortolang.diffusion.dump.XmlDumpHelper;
 import fr.ortolang.diffusion.event.entity.EventFeed;
 import fr.ortolang.diffusion.event.entity.EventFeedFilter;
+import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
 public class EventFeedExportHandler implements OrtolangObjectExportHandler {
         
@@ -23,7 +23,7 @@ public class EventFeedExportHandler implements OrtolangObjectExportHandler {
        }
         
         @Override
-        public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
+        public void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
             try {
                 XmlDumpAttributes attrs = new XmlDumpAttributes();
                 attrs.put("id", feed.getId());

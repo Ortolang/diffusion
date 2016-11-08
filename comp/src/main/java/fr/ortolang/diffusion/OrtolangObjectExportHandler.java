@@ -6,7 +6,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 public interface OrtolangObjectExportHandler {
     
-    void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException;
+    void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException;
     
     Set<String> getObjectDependencies() throws OrtolangException;
     

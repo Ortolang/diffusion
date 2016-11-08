@@ -14,10 +14,10 @@ import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
-import fr.ortolang.diffusion.dump.XmlDumpAttributes;
-import fr.ortolang.diffusion.dump.XmlDumpHelper;
 import fr.ortolang.diffusion.message.MessageService;
 import fr.ortolang.diffusion.message.MessageServiceException;
+import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
 public class WorkspaceExportHandler implements OrtolangObjectExportHandler {
     
@@ -28,7 +28,7 @@ public class WorkspaceExportHandler implements OrtolangObjectExportHandler {
    }
     
     @Override
-    public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
+    public void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
         try {
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("id", workspace.getId());
