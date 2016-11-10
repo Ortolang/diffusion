@@ -48,6 +48,7 @@ import javax.json.JsonObject;
 import javax.json.JsonString;
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
 
 public class OAI_DC extends XMLWriter {
 
@@ -180,7 +181,7 @@ public class OAI_DC extends XMLWriter {
     
     private void fromCollection(JsonObject doc) {
 
-    	JsonObject meta = doc.getJsonObject("meta_json_dc");
+    	JsonObject meta = doc.getJsonObject("meta_oai_dc");
     	
     	addDCElement("identifier", meta);
     	addDCElement("title", meta);
@@ -218,9 +219,9 @@ public class OAI_DC extends XMLWriter {
         OAI_DC oaiDc = new OAI_DC();
 
         try {
-        	if (doc.containsKey("meta_ortolang-item-json")) {        		
+        	if (doc.containsKey("meta_"+MetadataFormat.ITEM)) {        		
         		oaiDc.fromWorkspace(doc);
-        	} else if (doc.containsKey("meta_json_dc")) {
+        	} else if (doc.containsKey("meta_"+MetadataFormat.OAI_DC)) {
         		oaiDc.fromCollection(doc);
         	}
 

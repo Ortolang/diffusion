@@ -135,14 +135,16 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 			if (until != null) {
 				query.append(" AND lastModificationDate<=").append(until.getTime() + 86400000);
 			}
-        	query.append(" ), $collection = (SELECT `lastModificationDate` AS lastModificationDate ,`meta_ortolang-workspace-json.wsalias` AS wsalias ,`key` AS key FROM Collection WHERE `meta_json_dc` IS NOT NULL");
+        	query.append(" ), $collection = (SELECT `lastModificationDate` AS lastModificationDate ,`meta_ortolang-workspace-json.wsalias` AS wsalias ,`key` AS key FROM Collection WHERE `meta_")
+        		.append(metadataPrefix).append("` IS NOT NULL");
         	if (from != null) {
 				query.append(" AND lastModificationDate>=").append(from.getTime());
 			}
 			if (until != null) {
 				query.append(" AND lastModificationDate<=").append(until.getTime() + 86400000);
 			}
-			query.append(" ), $dataobject = (SELECT `lastModificationDate` AS lastModificationDate ,`meta_ortolang-workspace-json.wsalias` AS wsalias ,`key` AS key FROM Object WHERE `meta_json_dc` IS NOT NULL");
+			query.append(" ), $dataobject = (SELECT `lastModificationDate` AS lastModificationDate ,`meta_ortolang-workspace-json.wsalias` AS wsalias ,`key` AS key FROM Object WHERE `meta_")
+				.append(metadataPrefix).append("` IS NOT NULL");
         	if (from != null) {
 				query.append(" AND lastModificationDate>=").append(from.getTime());
 			}
@@ -196,9 +198,9 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
         try {
         	StringBuilder query = new StringBuilder("select expand($all) let $item = (SELECT FROM Collection WHERE `meta_ortolang-item-json` IS NOT NULL ");
 			query.append(" AND `meta_ortolang-workspace-json.wsalias`='").append(key).append("'");
-        	query.append(" ), $collection = (SELECT FROM Collection WHERE `meta_json_dc` IS NOT NULL");
+        	query.append(" ), $collection = (SELECT FROM Collection WHERE `meta_").append(metadataPrefix).append("` IS NOT NULL");
         	query.append(" AND key='").append(key).append("'");
-        	query.append("), $object = (SELECT FROM Object WHERE `meta_json_dc` IS NOT NULL");
+        	query.append("), $object = (SELECT FROM Object WHERE `meta_").append(metadataPrefix).append("` IS NOT NULL");
         	query.append(" AND key='").append(key).append("'");
         	query.append(" ), $all = UNIONALL($item, $collection, $object)");
         	List<String> docs = search.jsonSearch(query.toString());
@@ -242,14 +244,14 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 			if (until != null) {
 				query.append(" AND lastModificationDate<=").append(until.getTime() + 86400000);
 			}
-        	query.append(" ), $collection = (SELECT FROM Collection WHERE `meta_json_dc` IS NOT NULL");
+        	query.append(" ), $collection = (SELECT FROM Collection WHERE `meta_").append(metadataPrefix).append("` IS NOT NULL");
         	if (from != null) {
 				query.append(" AND lastModificationDate>=").append(from.getTime());
 			}
 			if (until != null) {
 				query.append(" AND lastModificationDate<=").append(until.getTime() + 86400000);
 			}
-			query.append(" ), $object = (SELECT FROM Object WHERE `meta_json_dc` IS NOT NULL");
+			query.append(" ), $object = (SELECT FROM Object WHERE `meta_").append(metadataPrefix).append("` IS NOT NULL");
 			if (from != null) {
 				query.append(" AND lastModificationDate>=").append(from.getTime());
 			}
