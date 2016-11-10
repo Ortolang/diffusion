@@ -65,7 +65,7 @@ public class OrtolangIndexableObjectFactory {
             object.setContent(content);
             return object;
         } catch (RegistryServiceException | KeyNotFoundException e) {
-            throw new OrtolangException("unable to get plain text indexable content for object ", e);
+            throw new OrtolangException("unable to get plain text indexable content for object cause : " + e.getMessage(), e);
         }
     }
 
@@ -109,7 +109,7 @@ public class OrtolangIndexableObjectFactory {
             object.setContent(content);
             return object;
         } catch (RegistryServiceException | KeyNotFoundException e) {
-            throw new OrtolangException("unable to get json indexable content for object ", e);
+            throw new OrtolangException("unable to get json indexable content for object cause :  " + e.getMessage(), e);
         }
     }
 
@@ -127,7 +127,7 @@ public class OrtolangIndexableObjectFactory {
             object.setCreationDate(registry.getCreationDate(key));
             object.setLastModificationDate(registry.getLastModificationDate(key));
         } catch (Exception e) {
-            throw new OrtolangException("unable to get json indexable content for object ", e);
+            throw new OrtolangException("unable to get json indexable content for object cause : " + e.getMessage(), e);
         }
     }
 

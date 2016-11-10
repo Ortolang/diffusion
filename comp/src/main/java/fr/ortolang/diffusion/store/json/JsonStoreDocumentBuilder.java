@@ -77,7 +77,7 @@ public class JsonStoreDocumentBuilder {
                     JsonObject jsonObj = jsonReader.readObject();
                     builder.add(META_PROPERTY + "_" + entry.getKey(), jsonObj);
                 } catch(NullPointerException | ClassCastException e) {
-                    LOGGER.log(Level.WARNING, "Cannot add json object to document : " + e.getMessage(), e);
+                    LOGGER.log(Level.WARNING, "Cannot add json object to document", e);
                 } finally {
                     jsonReader.close();
                     reader.close();

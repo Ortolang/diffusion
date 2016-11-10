@@ -228,6 +228,7 @@ public class JsonStoreServiceWorkerBean implements JsonStoreServiceWorker {
                         jobService.remove(job.getId());
                     } catch (OException | JsonStoreServiceException | OrtolangException e) {
                         LOGGER.log(Level.WARNING, "unable to perform job action " + job.getAction() + " for key " + job.getTarget() + ": " + e.getMessage());
+                        LOGGER.log(Level.FINE, "", e);
                         jobService.updateFailingJob(job, e);
                     }
                 } catch (InterruptedException e) {

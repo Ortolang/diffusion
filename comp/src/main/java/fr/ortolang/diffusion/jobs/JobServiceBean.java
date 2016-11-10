@@ -122,6 +122,7 @@ public class JobServiceBean implements JobService {
     public void updateFailingJob(Job job, Exception e) {
         if (e instanceof KeyNotFoundException || (e.getCause() != null && e.getCause() instanceof KeyNotFoundException)) {
             LOGGER.log(Level.WARNING, "Key not found: removing job of type " + job.getType() + " (action: " + job.getAction() + ", target: " + job.getTarget() + ")");
+            LOGGER.log(Level.FINE, "", e);
             remove(job.getId());
             return;
         }
