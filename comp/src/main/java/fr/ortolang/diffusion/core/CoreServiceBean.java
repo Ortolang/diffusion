@@ -1146,10 +1146,15 @@ public class CoreServiceBean implements CoreService {
             if (workspace == null) {
                 throw new CoreServiceException("unable to load workspace with id [" + identifier.getId() + "] from storage");
             }
-            if (!workspace.containsSnapshotName(snapshot)) {
-                throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + snapshot);
+            String root;
+            if (Workspace.HEAD.equals(snapshot)) {
+                root = workspace.getHead();
+            } else {
+                if (!workspace.containsSnapshotName(snapshot)) {
+                    throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + snapshot);
+                }
+                root = workspace.findSnapshotByName(snapshot).getKey();
             }
-            String root = workspace.findSnapshotByName(snapshot).getKey();
 
             Map<String, String> map = new HashMap<String, String>();
             listContent(root, PathBuilder.newInstance(), map);
