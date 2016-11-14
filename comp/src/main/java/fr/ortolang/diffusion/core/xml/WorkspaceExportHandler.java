@@ -42,25 +42,25 @@ public class WorkspaceExportHandler implements OrtolangObjectXmlExportHandler {
             attrs.put("members", workspace.getMembers());
             attrs.put("privileged", workspace.getPrivileged());
             attrs.put("archive", Boolean.toString(workspace.isArchive()));
-            XmlDumpHelper.startElement("core", "workspace", attrs, writer);
+            XmlDumpHelper.startElement("workspace", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("workspace", "snapshots", attrs, writer);
+            XmlDumpHelper.startElement("snapshots", attrs, writer);
             for ( SnapshotElement snapshot : workspace.getSnapshots() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("name", snapshot.getName());
                 attrs.put("key", snapshot.getKey());
-                XmlDumpHelper.outputEmptyElement("workspace", "snapshot", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("snapshot", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("workspace", "tags", attrs, writer);
+            XmlDumpHelper.startElement("tags", attrs, writer);
             for ( TagElement tag : workspace.getTags() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("name", tag.getName());
                 attrs.put("snapshot", tag.getSnapshot());
-                XmlDumpHelper.outputEmptyElement("workspace", "tag", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("tag", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             
@@ -83,7 +83,7 @@ public class WorkspaceExportHandler implements OrtolangObjectXmlExportHandler {
         }
         MessageService mservice = (MessageService) OrtolangServiceLocator.findService(MessageService.SERVICE_NAME);
         try {
-            deps.addAll(mservice.findThreadsForWorkspace(workspace.getKey()));
+            deps.addAll(mservice.systemFindThreadsForWorkspace(workspace.getKey()));
         } catch (MessageServiceException e) {
             throw new OrtolangException(e);
         }

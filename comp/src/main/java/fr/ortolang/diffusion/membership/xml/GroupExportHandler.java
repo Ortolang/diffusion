@@ -29,14 +29,14 @@ public class GroupExportHandler implements OrtolangObjectXmlExportHandler {
             attrs.put("id", group.getId());
             attrs.put("name", group.getName());
             attrs.put("description", group.getDescription());
-            XmlDumpHelper.startElement("membership", "group", attrs, writer);
+            XmlDumpHelper.startElement("group", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("group", "members", attrs, writer);
+            XmlDumpHelper.startElement("group-members", attrs, writer);
             for ( String member : group.getMembers() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("key", member);
-                XmlDumpHelper.outputEmptyElement("group", "member", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("group-member", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             

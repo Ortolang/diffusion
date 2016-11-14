@@ -29,10 +29,10 @@ public class EventFeedExportHandler implements OrtolangObjectXmlExportHandler {
                 attrs.put("id", feed.getId());
                 attrs.put("name", feed.getName());
                 attrs.put("description", feed.getDescription());
-                XmlDumpHelper.startElement("event", "feed", attrs, writer);
+                XmlDumpHelper.startElement("feed", attrs, writer);
                 
                 attrs = new XmlDumpAttributes();
-                XmlDumpHelper.startElement("feed", "filters", attrs, writer);
+                XmlDumpHelper.startElement("feed-filters", attrs, writer);
                 for ( EventFeedFilter filter : feed.getFilters() ) {
                     attrs = new XmlDumpAttributes();
                     attrs.put("id", filter.getId());
@@ -40,7 +40,7 @@ public class EventFeedExportHandler implements OrtolangObjectXmlExportHandler {
                     attrs.put("from-object", filter.getFromObjectRE());
                     attrs.put("object-type", filter.getObjectTypeRE());
                     attrs.put("throwed-by", filter.getThrowedByRE());
-                    XmlDumpHelper.outputEmptyElement("feed", "filter", attrs, writer);
+                    XmlDumpHelper.outputEmptyElement("feed-filter", attrs, writer);
                 }
                 XmlDumpHelper.endElement(writer);
                 

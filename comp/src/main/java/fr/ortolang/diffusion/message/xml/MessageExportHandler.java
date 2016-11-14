@@ -35,20 +35,20 @@ public class MessageExportHandler implements OrtolangObjectXmlExportHandler {
             }
             attrs.put("date", Long.toString(message.getDate().getTime()));
             attrs.put("edit", Long.toString(message.getEdit().getTime()));
-            XmlDumpHelper.startElement("message", "message", attrs, writer);
+            XmlDumpHelper.startElement("message", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.outputElementWithContent("message", "content", attrs, message.getBody(), writer);
+            XmlDumpHelper.outputElementWithContent("message-content", attrs, message.getBody(), writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("message", "attachements", attrs, writer);
+            XmlDumpHelper.startElement("message-attachements", attrs, writer);
             for ( MessageAttachment attachment : message.getAttachments() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("name", attachment.getName());
                 attrs.put("type", attachment.getType());
                 attrs.put("hash", attachment.getHash());
                 attrs.put("size", Long.toString(attachment.getSize()));
-                XmlDumpHelper.outputEmptyElement("message", "attachment", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("message-attachment", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             

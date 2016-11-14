@@ -31,10 +31,10 @@ public class CollectionExportHandler implements OrtolangObjectXmlExportHandler {
             attrs.put("id", collection.getId());
             attrs.put("name", collection.getName());
             attrs.put("clock", Integer.toString(collection.getClock()));
-            XmlDumpHelper.startElement("core", "collection", attrs, writer);
+            XmlDumpHelper.startElement("collection", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("collection", "elements", attrs, writer);
+            XmlDumpHelper.startElement("elements", attrs, writer);
             for ( CollectionElement element : collection.getElements() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("name", element.getName());
@@ -43,17 +43,17 @@ public class CollectionExportHandler implements OrtolangObjectXmlExportHandler {
                 attrs.put("mime-type", element.getMimeType());
                 attrs.put("size", Long.toString(element.getSize()));
                 attrs.put("modification-timestamp", Long.toString(element.getModification()));
-                XmlDumpHelper.outputEmptyElement("collection", "element", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("element", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("collection", "metadatas", attrs, writer);
+            XmlDumpHelper.startElement("metadatas", attrs, writer);
             for ( MetadataElement element : collection.getMetadatas() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("name", element.getName());
                 attrs.put("key", element.getKey());
-                XmlDumpHelper.outputEmptyElement("collection", "metadata", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("metadata", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             

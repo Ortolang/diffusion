@@ -37,13 +37,13 @@ public class ProcessExportHandler implements OrtolangObjectXmlExportHandler {
             attrs.put("status", process.getStatus());
             attrs.put("progress", Integer.toString(process.getProgress()));
             attrs.put("state", process.getState().name());
-            XmlDumpHelper.startElement("runtime", "process", attrs, writer);
+            XmlDumpHelper.startElement("process", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.outputElementWithData("process", "log", attrs, process.getLog(), writer);
+            XmlDumpHelper.outputElementWithData("process-log", attrs, process.getLog(), writer);
 
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.outputElementWithData("process", "explanation", attrs, process.getExplanation(), writer);
+            XmlDumpHelper.outputElementWithData("process-explanation", attrs, process.getExplanation(), writer);
 
             XmlDumpHelper.endElement(writer);
         } catch ( XMLStreamException e ) {

@@ -28,10 +28,10 @@ public class ReferentialEntityExportHandler implements OrtolangObjectXmlExportHa
             attrs.put("id", entity.getId());
             attrs.put("type", entity.getType().name());
             attrs.put("boost", Long.toString(entity.getBoost()));
-            XmlDumpHelper.startElement("referential", "entity", attrs, writer);
+            XmlDumpHelper.startElement("referential-entity", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.outputElementWithContent("entity", "content", attrs, entity.getContent(), writer);
+            XmlDumpHelper.outputElementWithData("referential-entity-content", attrs, entity.getContent(), writer);
 
             XmlDumpHelper.endElement(writer);
         } catch ( XMLStreamException e ) {

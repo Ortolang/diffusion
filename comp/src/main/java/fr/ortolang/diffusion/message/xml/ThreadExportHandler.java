@@ -32,14 +32,14 @@ public class ThreadExportHandler implements OrtolangObjectXmlExportHandler {
             attrs.put("question", thread.getQuestion());
             attrs.put("answer", thread.getAnswer());
             attrs.put("last-activity", Long.toString(thread.getLastActivity().getTime()));
-            XmlDumpHelper.startElement("message", "thread", attrs, writer);
+            XmlDumpHelper.startElement("thread", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("thread", "observers", attrs, writer);
+            XmlDumpHelper.startElement("thread-observers", attrs, writer);
             for ( String observer : thread.getObservers() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("key", observer);
-                XmlDumpHelper.outputEmptyElement("thread", "observer", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("thread-observer", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             

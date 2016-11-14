@@ -32,15 +32,15 @@ public class DataObjectExportHandler implements OrtolangObjectXmlExportHandler {
             attrs.put("size", Long.toString(object.getSize()));
             attrs.put("stream", object.getStream());
             attrs.put("clock", Integer.toString(object.getClock()));
-            XmlDumpHelper.startElement("core", "object", attrs, writer);
+            XmlDumpHelper.startElement("dataobject", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("object", "metadatas", attrs, writer);
+            XmlDumpHelper.startElement("metadatas", attrs, writer);
             for ( MetadataElement element : object.getMetadatas() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("name", element.getName());
                 attrs.put("key", element.getKey());
-                XmlDumpHelper.outputEmptyElement("collection", "metadata", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("metadata", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             

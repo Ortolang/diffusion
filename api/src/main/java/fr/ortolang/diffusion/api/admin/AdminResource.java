@@ -38,6 +38,8 @@ import javax.ws.rs.core.StreamingOutput;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
+
+
 /*
  * #%L
  * ORTOLANG
@@ -81,6 +83,7 @@ import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.OrtolangWorker;
+import fr.ortolang.diffusion.OrtolangImportExportLogger.LogType;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.Secured;
@@ -228,7 +231,7 @@ public class AdminResource {
     @GET
     @Path("/referential/entities/export")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-    public Response dumpEntry() throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
+    public Response dumpReferentialEntities() throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /admin/referential/entities/export");
         LOGGER.log(Level.FINE, "exporting referentual entities");
         ResponseBuilder builder = Response.ok();
@@ -258,8 +261,7 @@ public class AdminResource {
     @GET
     @Path("/core/workspace/{key}/export")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-    public Response dumpWorkspace(@PathParam("key") String key, @DefaultValue(value = "true") @QueryParam("deps") boolean withdeps,
-            @DefaultValue(value = "true") @QueryParam("binary") boolean withbinary) throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
+    public Response dumpWorkspace(@PathParam("key") String key, @DefaultValue(value = "true") @QueryParam("binary") boolean withbinary) throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /admin/core/workspace/" + key + "/export");
         ResponseBuilder builder;
         OrtolangObjectIdentifier identifier = registry.lookup(key);
@@ -278,7 +280,7 @@ public class AdminResource {
                         public void log(LogType type, String message) {
                             LOGGER.log(Level.FINE, type + " : " + message);
                         }
-                    }, withdeps, withbinary);
+                    }, true, withbinary);
                 } catch (Exception e) {
                     LOGGER.log(Level.WARNING, e.getMessage(), e);
                     // TODO maybe include a warning in the archive...
@@ -287,6 +289,35 @@ public class AdminResource {
             builder.entity(stream);
         }
 
+        return builder.build();
+    }
+    
+    @POST
+    @Path("/core/workspace/import")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response restoreWorkspace(@MultipartForm ImportFormRepresentation form) throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "POST /admin/core/workspace/import");
+        ResponseBuilder builder;
+        if (form.getDump() == null) {
+            builder = Response.status(Status.BAD_REQUEST);
+            builder.entity("missing dump file");
+            return builder.build();
+        } 
+        builder = Response.ok();
+        builder.type("application/json");
+        StreamingOutput stream = output -> {
+            JsonImportLogger logger = new JsonImportLogger();
+            logger.setOutputStream(output);
+            logger.start();
+            try {
+                export.restore(form.getDump(), logger);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "error during restore workspace", e);
+                logger.log(LogType.ERROR, "CRITICAL ERROR : " + e.getMessage());
+            }
+            logger.finish();
+        };
+        builder.entity(stream);
         return builder.build();
     }
 

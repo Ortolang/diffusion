@@ -32,7 +32,7 @@ public class MetadataObjectExportHandler implements OrtolangObjectXmlExportHandl
             attrs.put("stream", metadata.getStream());
             attrs.put("content-type", metadata.getContentType());
             attrs.put("size", Long.toString(metadata.getSize()));
-            XmlDumpHelper.outputEmptyElement("collection", "metadata", attrs, writer);
+            XmlDumpHelper.outputEmptyElement("metadata", attrs, writer);
         } catch ( XMLStreamException e ) {
             throw new OrtolangException("error during dumping collection", e);
         }

@@ -28,7 +28,7 @@ public class FormExportHandler implements OrtolangObjectXmlExportHandler {
             attrs.put("id", form.getId());
             attrs.put("name", form.getName());
             attrs.put("definition", form.getDefinition());
-            XmlDumpHelper.outputEmptyElement("form", "form", attrs, writer);
+            XmlDumpHelper.outputEmptyElement("form", attrs, writer);
         } catch ( XMLStreamException e ) {
             throw new OrtolangException("error during dumping form", e);
         }

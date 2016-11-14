@@ -97,7 +97,7 @@ public class PublishTask extends RuntimeEngineTask {
             for (Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
                 try {
                     getPublicationService().publish(entry.getKey(), entry.getValue());
-                    report.append(entry.getKey()).append(" - OK\r\n");
+                    report.append(entry.getKey()).append(" - PUBLISHED\r\n");
                 } catch (Exception e) {
                     throw new RuntimeEngineTaskException("unexpected error during publish task execution", e);
                 }

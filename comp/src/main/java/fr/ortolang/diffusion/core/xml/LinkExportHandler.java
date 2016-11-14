@@ -31,15 +31,15 @@ public class LinkExportHandler implements OrtolangObjectXmlExportHandler {
             attrs.put("name", link.getName());
             attrs.put("target", link.getTarget());
             attrs.put("clock", Integer.toString(link.getClock()));
-            XmlDumpHelper.startElement("core", "link", attrs, writer);
+            XmlDumpHelper.startElement("link", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("link", "metadatas", attrs, writer);
+            XmlDumpHelper.startElement("metadatas", attrs, writer);
             for ( MetadataElement element : link.getMetadatas() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("name", element.getName());
                 attrs.put("key", element.getKey());
-                XmlDumpHelper.outputEmptyElement("link", "metadata", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("metadata", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             
