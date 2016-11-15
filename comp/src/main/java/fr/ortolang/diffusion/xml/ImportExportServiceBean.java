@@ -59,6 +59,7 @@ import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
+import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.entity.Handle;
@@ -71,7 +72,7 @@ import fr.ortolang.diffusion.store.handle.entity.Handle;
 public class ImportExportServiceBean implements ImportExportService {
 
     private static final Logger LOGGER = Logger.getLogger(ImportExportServiceBean.class.getName());
-    
+
     @EJB
     private RegistryService registry;
     @EJB
@@ -106,7 +107,7 @@ public class ImportExportServiceBean implements ImportExportService {
                 Set<String> deps = new HashSet<String>();
                 Set<String> streams = new HashSet<String>();
                 for (String key : keys) {
-                    dumpEntry(key, writer, logger, deps, streams);
+                    exportKey(key, writer, logger, deps, streams);
                     treated.add(key);
                     populateQueue(queue, treated, deps);
                     if (withdeps) {
@@ -115,7 +116,7 @@ public class ImportExportServiceBean implements ImportExportService {
                         while ((current = queue.poll()) != null) {
                             LOGGER.log(Level.FINE, "Dumping current queue key : " + current);
                             deps.clear();
-                            dumpEntry(current, writer, logger, deps, streams);
+                            exportKey(current, writer, logger, deps, streams);
                             treated.add(current);
                             populateQueue(queue, treated, deps);
                         }
@@ -175,6 +176,64 @@ public class ImportExportServiceBean implements ImportExportService {
         }
     }
 
+    @Override
+    public void restore(InputStream input, OrtolangImportExportLogger logger) throws ImportExportServiceException {
+        LOGGER.log(Level.INFO, "Restoring dump archive");
+        try {
+            Path dump = Files.createTempFile("ortolang-dump-", ".tmp");
+            boolean dumpfound = false;
+
+            try (GzipCompressorInputStream gin = new GzipCompressorInputStream(input); TarArchiveInputStream in = new TarArchiveInputStream(gin)) {
+                ArchiveEntry entry;
+                while ((entry = in.getNextEntry()) != null) {
+                    if (!entry.isDirectory()) {
+                        try (InputStream is = new BoundedInputStream(in, entry.getSize())) {
+                            if (entry.getName().equals("ortolang-dump.xml")) {
+                                Files.copy(is, dump, StandardCopyOption.REPLACE_EXISTING);
+                                dumpfound = true;
+                            } else {
+                                String filename = entry.getName();
+                                if (filename.matches("\b[0-9a-f]{40}\b")) {
+                                    String sha1 = binary.put(is);
+                                    if (!sha1.equals(filename)) {
+                                        logger.log(LogType.ERROR, "stream import error for : " + filename + ", sha1 found : " + sha1);
+                                        try {
+                                            binary.delete(sha1);
+                                        } catch (DataNotFoundException e) {
+                                        }
+                                        throw new ImportExportServiceException("Some binary content could not be imported, aborting restoration");
+                                    } else {
+                                        logger.log(LogType.APPEND, "stream imported : " + filename);
+                                    }
+                                } else {
+                                    logger.log(LogType.ERROR, "archive entry is not a sha1 base filename: " + filename);
+                                    throw new ImportExportServiceException("Archive content error or unsupported structure, aborting restoration");
+                                }
+                            }
+                        }
+                    } else {
+                        logger.log(LogType.ERROR, "archive content format error, directory not allowed : " + entry.getName());
+                        throw new ImportExportServiceException("Archive content error or unsupported structure, aborting restoration");
+                    }
+                }
+            }
+
+            if (!dumpfound) {
+                LOGGER.log(Level.WARNING, "no dmp file found in archive, nothing to import...");
+                logger.log(LogType.ERROR, "no dump file found in archive, unable to import somehting");
+            } else {
+                LOGGER.log(Level.FINE, "starting dump restore...");
+                logger.log(LogType.APPEND, "starting dump restore...");
+                restoreFile(dump, logger);
+                logger.log(LogType.APPEND, "restore complete.");
+            }
+
+        } catch (IOException | BinaryStoreServiceException | DataCollisionException e) {
+            throw new ImportExportServiceException("Problem during restore", e);
+        }
+
+    }
+
     private void populateQueue(Queue<String> queue, List<String> treated, Set<String> deps) {
         LOGGER.log(Level.FINE, "Populating queue with new dependencies");
         for (String dep : deps) {
@@ -186,7 +245,7 @@ public class ImportExportServiceBean implements ImportExportService {
         LOGGER.log(Level.FINE, "Queue size : " + queue.size());
     }
 
-    private void dumpEntry(String key, XMLStreamWriter writer, OrtolangImportExportLogger logger, Set<String> deps, Set<String> streams) throws Exception {
+    private void exportKey(String key, XMLStreamWriter writer, OrtolangImportExportLogger logger, Set<String> deps, Set<String> streams) throws Exception {
         LOGGER.log(Level.FINE, "dumping entry : " + key);
         RegistryEntry entry = registry.systemReadEntry(key);
         XmlDumpAttributes attrs = new XmlDumpAttributes();
@@ -285,12 +344,12 @@ public class ImportExportServiceBean implements ImportExportService {
 
             OrtolangObjectIdentifier identifier = OrtolangObjectIdentifier.deserialize(entry.getIdentifier());
             OrtolangObjectProviderService service = OrtolangServiceLocator.findObjectProviderService(identifier.getService());
-            
+
             attrs = new XmlDumpAttributes();
             attrs.put("service", identifier.getService());
             attrs.put("type", identifier.getType());
             XmlDumpHelper.startElement("ortolang-object", attrs, writer);
-            
+
             try {
                 OrtolangObjectXmlExportHandler handler = service.getObjectXmlExportHandler(key);
                 handler.exportObject(writer, logger);
@@ -299,61 +358,11 @@ public class ImportExportServiceBean implements ImportExportService {
             } catch (OrtolangException e) {
                 logger.log(LogType.ERROR, key + " " + e.getMessage());
             }
-            
+
             XmlDumpHelper.endElement(writer);
         }
 
         XmlDumpHelper.endElement(writer);
-    }
-
-    @Override
-    public void restore(InputStream input, OrtolangImportExportLogger logger) throws ImportExportServiceException {
-        LOGGER.log(Level.INFO, "Restoring dump archive");
-        try {
-            Path dump = Files.createTempFile("ortolang-dump-", ".tmp");
-            boolean dumpfound = false;
-
-            try (GzipCompressorInputStream gin = new GzipCompressorInputStream(input); TarArchiveInputStream in = new TarArchiveInputStream(gin)) {
-                // TODO if sha1, inport file directly in store, if dump, store it somewhere until sha one import is finished
-                ArchiveEntry entry;
-                while ((entry = in.getNextEntry()) != null) {
-                    if ( !entry.isDirectory() ) {
-                        InputStream is = new BoundedInputStream(in, entry.getSize());
-                        if (entry.getName().equals("ortolang-dump.xml")) {
-                            Files.copy(is, dump, StandardCopyOption.REPLACE_EXISTING);
-                            dumpfound = true;
-                        } else {
-                            String filename = entry.getName();
-                            //TODO check that filename matches a sha1..
-                            String sha1 = binary.put(is);
-                            if (!sha1.equals(filename)) {
-                                logger.log(LogType.ERROR, "stream import error for : " + filename + ", sha1 found : " + sha1);
-                            } else {
-                                logger.log(LogType.APPEND, "stream imported : " + filename);
-                            }
-                        }
-                        is.close();
-                    } else {
-                        LOGGER.log(Level.WARNING, "archive content format error, directory not allowed : " + entry.getName());
-                        logger.log(LogType.ERROR, "archive content format error, directory not allowed : " + entry.getName());
-                    }
-                }
-            }
-
-            if (!dumpfound) {
-                LOGGER.log(Level.WARNING, "no dmp file found in archive, nothing to import...");
-                logger.log(LogType.ERROR, "no dump file found in archive, unable to import somehting");
-            } else {
-                LOGGER.log(Level.FINE, "starting dump restore...");
-                logger.log(LogType.APPEND, "starting dump restore...");
-                restoreFile(dump, logger);
-                logger.log(LogType.APPEND, "restore complete.");
-            }
-
-        } catch (Exception e) {
-            throw new ImportExportServiceException("Problem during restore", e);
-        }
-
     }
 
     private void restoreFile(Path dump, OrtolangImportExportLogger logger) throws ImportExportServiceException {
