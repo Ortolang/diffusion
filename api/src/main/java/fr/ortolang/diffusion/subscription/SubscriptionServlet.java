@@ -118,7 +118,7 @@ public final class SubscriptionServlet {
             try {
                 subscription = (SubscriptionService) OrtolangServiceLocator.lookup(SubscriptionService.SERVICE_NAME, SubscriptionService.class);
             } catch (OrtolangException e) {
-                LOGGER.log(Level.SEVERE, "unable to inject SubscriptionService");
+                LOGGER.log(Level.SEVERE, "unable to inject SubscriptionService", e);
             }
         }
         return subscription;

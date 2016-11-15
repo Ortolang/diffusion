@@ -49,8 +49,7 @@ import javax.naming.NamingEnumeration;
 
 public class OrtolangServiceLocator {
 
-    //private static final String NAMESPACE = "java:global/diffusion/components";
-    private static final String NAMESPACE = "java:module";
+    private static final String NAMESPACE = "java:global/diffusion/components";
     private static final String SERVICE_SUFFIX = "Service";
     private static final String WORKER_SUFFIX = "Worker";
 
