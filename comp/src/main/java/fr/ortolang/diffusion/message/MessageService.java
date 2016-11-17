@@ -69,12 +69,12 @@ public interface MessageService extends OrtolangObjectProviderService, OrtolangB
     List<Message> browseThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     List<Message> browseThreadSinceDate(String key, Date from) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
-    
-    void updateThread(String key, String title, String answer) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+
+    Thread updateThread(String key, String title, String answer) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     void deleteThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
-    void markThreadAsAnswered(String tkey, String akey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    Thread markThreadAsAnswered(String tkey, String akey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     void startObservingThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     

@@ -168,8 +168,12 @@ public class MessageResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateThread(@PathParam(value = "key") String key, ThreadRepresentation representation) throws MessageServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.INFO, "PUT /threads/" + key);
-        service.updateThread(key, representation.getTitle(), representation.getAnswer());
         Thread thread = service.readThread(key);
+        if (thread.getTitle().equals(representation.getTitle())) {
+            thread = service.markThreadAsAnswered(key, representation.getAnswer());
+        } else {
+            thread = service.updateThread(key, representation.getTitle(), representation.getAnswer());
+        }
         ThreadRepresentation newrepresentation = ThreadRepresentation.fromThread(thread);
         return Response.ok(newrepresentation).build();
     }

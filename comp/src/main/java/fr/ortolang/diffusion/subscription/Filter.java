@@ -82,11 +82,12 @@ class Filter {
         if (argumentsPatterns != null) {
             for (Map.Entry<String, Pattern> argumentsPattern : argumentsPatterns.entrySet()) {
                 Object o = event.getArguments().get(argumentsPattern.getKey());
-                if (o != null) {
-                    String value = (String) o;
-                    if (!argumentsPattern.getValue().matcher(value).matches()) {
-                        return false;
-                    }
+                if (o == null) {
+                    return false;
+                }
+                String value = (String) o;
+                if (!argumentsPattern.getValue().matcher(value).matches()) {
+                    return false;
                 }
             }
         }
