@@ -201,7 +201,7 @@ public class StatisticsServiceBean implements StatisticsService {
             alreadyExist = false;
         }
         if (alreadyExist) {
-            latestStoredValue.copy(latestStoredValue);
+            latestStoredValue.copy(value);
             em.merge(latestStoredValue);
         } else if ((latestStoredValue != null && latestStoredValue.getTimestamp() < value.getTimestamp()) || !value.isEmpty()) {
             em.persist(value);
