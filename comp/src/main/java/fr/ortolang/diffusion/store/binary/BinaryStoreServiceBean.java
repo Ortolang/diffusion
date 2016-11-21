@@ -71,18 +71,15 @@ import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.jboss.ejb3.annotation.SecurityDomain;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.store.binary.BinaryStoreContent.Type;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStream;
 import fr.ortolang.diffusion.store.binary.hash.HashedFilterInputStreamFactory;
 import fr.ortolang.diffusion.store.binary.hash.SHA1FilterInputStreamFactory;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * Local FileSystem based implementation of the BinaryStoreService.<br>
@@ -104,9 +101,6 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
     public static final int DISTINGUISH_SIZE = 2;
 
     private static final Logger LOGGER = Logger.getLogger(BinaryStoreServiceBean.class.getName());
-
-    private static final String[] OBJECT_TYPE_LIST = new String[] {};
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] {};
 
     private static final String WORK = "work";
     private static final String COLLIDE = "collide";
@@ -477,23 +471,4 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
         return infos;
     }
 
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
 }

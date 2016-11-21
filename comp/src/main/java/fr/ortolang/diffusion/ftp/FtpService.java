@@ -36,6 +36,8 @@ package fr.ortolang.diffusion.ftp;
  * #L%
  */
 
+import java.util.Set;
+
 import fr.ortolang.diffusion.OrtolangService;
 
 public interface FtpService extends OrtolangService {
@@ -51,11 +53,14 @@ public interface FtpService extends OrtolangService {
     String INFO_MAX_LOGIN = "ftp.login.max";
     String INFO_MAX_THREADS = "ftp.threads.max";
     String INFO_ANON_LOGIN_ENABLES = "ftp.login.anon.enabled";
+    String INFO_ACTIVE_SESSIONS = "ftp.sessions.active";
     
 	
 	void suspend();
 	
 	void resume();
+	
+	Set<FtpSession> getActiveSessions() throws FtpServiceException;
 	
 	boolean checkUserExistence(String username) throws FtpServiceException;
 	

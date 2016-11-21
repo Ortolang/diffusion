@@ -66,6 +66,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import fr.ortolang.diffusion.membership.MembershipServiceException;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
@@ -285,11 +286,11 @@ public class RuntimeResource {
     @GET
     @Path("/tasks")
     @GZIP
-    public Response listCandidateTasks() throws RuntimeServiceException, AccessDeniedException {
+    public Response listCandidateTasks() throws RuntimeServiceException, AccessDeniedException, MembershipServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /runtime/tasks");
         List<HumanTask> ctasks = runtime.listCandidateTasks();
         List<HumanTask> atasks = runtime.listAssignedTasks();
-        GenericCollectionRepresentation<HumanTaskRepresentation> representation = new GenericCollectionRepresentation<HumanTaskRepresentation>();
+        GenericCollectionRepresentation<HumanTaskRepresentation> representation = new GenericCollectionRepresentation<>();
         for (HumanTask task : ctasks) {
             representation.addEntry(HumanTaskRepresentation.fromHumanTask(task));
         }

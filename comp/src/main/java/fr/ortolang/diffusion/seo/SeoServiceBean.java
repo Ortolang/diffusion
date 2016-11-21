@@ -73,9 +73,6 @@ import org.w3c.dom.NodeList;
 import com.orientechnologies.orient.core.record.impl.ODocument;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 
@@ -86,28 +83,18 @@ import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 @PermitAll
 public class SeoServiceBean implements SeoService {
 
-    @EJB
-    private JsonStoreService json;
-
     private static final Logger LOGGER = Logger.getLogger(SeoServiceBean.class.getName());
 
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-
     private static final String SITEMAP_NS_URI = "http://www.sitemaps.org/schemas/sitemap/0.9";
-
     private static final String ORTOLANG_USER_AGENT = "ortolangbot";
 
-    private Client client;
-
-    @SuppressWarnings("EjbEnvironmentInspection")
+    @EJB
+    private JsonStoreService json;
     @Resource
     private ManagedExecutorService executor;
-
     private final boolean prerenderingActivated;
-
     private final Map<String, String> marketTypes;
+    private Client client;
 
     public SeoServiceBean() {
         marketTypes = new HashMap<>();
@@ -272,26 +259,6 @@ public class SeoServiceBean implements SeoService {
             LOGGER.log(Level.INFO, "unable to collect info: " + INFO_SITEMAP_ENTRIES_ALL, e);
         }
         return infos;
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("This service does not manage any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("This service does not manage any object");
     }
 
     private Element buildSiteMapEntry(String loc, String lastmod, ChangeFrequency changefreq, String priority, Document doc) throws SeoServiceException {

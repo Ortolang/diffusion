@@ -55,7 +55,7 @@ public final class SubscriptionServlet {
 
     @PathParam("username")
     private String username;
-    
+
     private SubscriptionService subscription;
 
     /**
@@ -70,17 +70,26 @@ public final class SubscriptionServlet {
         if (t != null) {
             ticket = TicketHelper.decodeTicket(t);
         }
+        boolean close = false;
         if (ticket == null || !ticket.getUsername().equals(username)) {
+            LOGGER.log(Level.SEVERE, "Wrong ticket. Closing Atmosphere Resource");
+            close = true;
+        } else {
             try {
-                LOGGER.log(Level.SEVERE, "Wrong ticket. Closing Atmosphere Resource");
+                getSubscription().registerBroadcaster(username, atmosphereResource);
+                LOGGER.log(Level.INFO, "User " + username + " connected (browser UUID: " +  atmosphereResource.uuid() + ")");
+            } catch (SubscriptionServiceException e) {
+                LOGGER.log(Level.SEVERE, "An unexpected exception occurred while registering the broadcaster. Closing Atmosphere Resource", e);
+                close = true;
+            }
+        }
+        if (close) {
+            try {
                 atmosphereResource.close();
-                return;
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, "Could not close Atmosphere Resource", e);
             }
         }
-        getSubscription().registerBroadcaster(username, atmosphereResource);
-        LOGGER.log(Level.INFO, "User " + username + " connected (browser UUID: " +  atmosphereResource.uuid() + ")");
     }
 
     /**
@@ -109,7 +118,7 @@ public final class SubscriptionServlet {
             try {
                 subscription = (SubscriptionService) OrtolangServiceLocator.lookup(SubscriptionService.SERVICE_NAME, SubscriptionService.class);
             } catch (OrtolangException e) {
-                LOGGER.log(Level.SEVERE, "unable to inject SubscriptionService");
+                LOGGER.log(Level.SEVERE, "unable to inject SubscriptionService", e);
             }
         }
         return subscription;

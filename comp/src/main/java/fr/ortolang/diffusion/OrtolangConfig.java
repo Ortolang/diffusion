@@ -47,7 +47,7 @@ import java.util.logging.Logger;
 
 public class OrtolangConfig {
 
-    private static final String CURRENT_CONFIG_VERSION = "12";
+    private static final String CURRENT_CONFIG_VERSION = "13";
     private static final Logger LOGGER = Logger.getLogger(OrtolangConfig.class.getName());
     private static OrtolangConfig config;
     private Properties props;
@@ -110,6 +110,11 @@ public class OrtolangConfig {
     public String getProperty(OrtolangConfig.Property property) {
         return props.getProperty(property.key());
     }
+    
+    public String getVersion() {
+        Package aPackage = OrtolangConfig.class.getPackage();
+        return aPackage.getImplementationVersion();
+    }
 
     public enum Property {
 
@@ -143,7 +148,9 @@ public class OrtolangConfig {
         FTP_SERVER_SSL("ftp.server.ssl"),
 
         PIWIK_HOST("piwik.host"),
+        PIWIK_HOST_FULL("piwik.host.full"),
         PIWIK_SITE_ID("piwik.site.id"),
+        PIWIK_AUTH_TOKEN("piwik.auth.token"),
 
         ZIP_IGNORED_FILES("zip.ignored.files"),
 

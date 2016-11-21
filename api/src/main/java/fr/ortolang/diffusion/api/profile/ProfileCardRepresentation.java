@@ -51,6 +51,7 @@ public class ProfileCardRepresentation {
     private String fullName;
     private String email;
     private String emailHash;
+    private String referentialId;
 
     public ProfileCardRepresentation() {
     }
@@ -103,6 +104,14 @@ public class ProfileCardRepresentation {
         this.emailHash = emailHash;
     }
 
+    public String getReferentialId() {
+        return referentialId;
+    }
+
+    public void setReferentialId(String referentialId) {
+        this.referentialId = referentialId;
+    }
+
     public static ProfileCardRepresentation fromProfile(Profile profile) {
         ProfileCardRepresentation representation = new ProfileCardRepresentation();
         representation.setKey(profile.getKey());
@@ -111,6 +120,7 @@ public class ProfileCardRepresentation {
         representation.setGivenName(profile.getGivenName());
         representation.setFamilyName(profile.getFamilyName());
         representation.setFullName(profile.getGivenName() + ' ' + profile.getFamilyName());
+        representation.setReferentialId(profile.getReferentialId());
         return representation;
     }
 

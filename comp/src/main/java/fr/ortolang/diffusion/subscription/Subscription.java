@@ -36,36 +36,62 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
+import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Subscription {
+class Subscription {
+
+    private String username;
 
     private Broadcaster broadcaster;
 
     private Set<Filter> filters;
 
-    public Subscription(Broadcaster broadcaster) {
+    Subscription(String username, Broadcaster broadcaster) {
+        this.username = username;
         this.broadcaster = broadcaster;
         filters = new HashSet<>();
     }
 
-    public Broadcaster getBroadcaster() {
-        return broadcaster;
+    String getUsername() {
+        return username;
     }
 
-    public Collection<Filter> getFilters() {
+    void broadcast(Object o) {
+        broadcaster.broadcast(o);
+    }
+
+    void destroy() {
+        broadcaster.destroy();
+    }
+
+    boolean hasAtmosphereResources() {
+        return !broadcaster.getAtmosphereResources().isEmpty();
+    }
+
+    boolean isConnected() {
+        boolean closed = true;
+        for (AtmosphereResource atmosphereResource : broadcaster.getAtmosphereResources()) {
+            if (!atmosphereResource.transport().equals(AtmosphereResource.TRANSPORT.CLOSE)) {
+                closed = false;
+            }
+        }
+        return !closed;
+    }
+
+    Collection<Filter> getFilters() {
         return filters;
     }
 
-    public boolean addFilter(Filter filter) {
+    boolean addFilter(Filter filter) {
         return filters.add(filter);
     }
 
-    public boolean removeFilter(Filter filter) {
+    boolean removeFilter(Filter filter) {
         return filters.remove(filter);
     }
 

@@ -36,39 +36,28 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import java.util.Map;
-
+import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.Broadcaster;
 
-import fr.ortolang.diffusion.OrtolangService;
+import java.util.List;
 
 public interface SubscriptionService extends OrtolangService {
 
     String SERVICE_NAME = "subscription";
 
-    String MEMBERSHIP_GROUP_ADD_MEMBER_PATTERN = "membership\\.group\\.add-member";
-
     String MEMBERSHIP_GROUP_ALL_PATTERN = "membership\\.group\\..*";
 
     String RUNTIME_PROCESS_PATTERN = "runtime\\.process\\.(?:change-state|update-activity)";
 
-    Broadcaster getBroadcaster(String username);
+    void registerBroadcaster(String username, AtmosphereResource atmosphereResource) throws SubscriptionServiceException;
 
-    void registerBroadcaster(String username, AtmosphereResource atmosphereResource);
-
-    void addFilter(String username, Filter filter) throws SubscriptionServiceException;
-
-    void removeFilter(String username, Filter filter);
-
-    void addDefaultFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException;
-
-    void addWorkspacesFilters();
+    void processEvent(Event event) throws SubscriptionServiceException;
 
     void addAdminFilters() throws SubscriptionServiceException;
 
-    Map<String, Subscription> getSubscriptions();
+    List<String> getConnectedUsers();
 
 }

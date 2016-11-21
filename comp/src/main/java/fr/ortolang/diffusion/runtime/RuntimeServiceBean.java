@@ -42,13 +42,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -65,6 +59,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import fr.ortolang.diffusion.membership.entity.Profile;
 import org.activiti.engine.task.IdentityLink;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -73,7 +68,9 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
@@ -104,7 +101,7 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceExceptio
 public class RuntimeServiceBean implements RuntimeService {
 
     private static final Logger LOGGER = Logger.getLogger(RuntimeServiceBean.class.getName());
-    public static final String DEFAULT_RUNTIME_HOME = "/runtime";
+    private static final String DEFAULT_RUNTIME_HOME = "/runtime";
 
     private static final String TRACE_FILE_EXTENSION = ".log";
     private static final String[] OBJECT_TYPE_LIST = new String[] { Process.OBJECT_TYPE };
@@ -318,20 +315,32 @@ public class RuntimeServiceBean implements RuntimeService {
     }
 
     @Override
+    @RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<Process> listCallerProcesses(State state) throws RuntimeServiceException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "Listing caller processes in " + ((state != null) ? "state=" + state : "all states"));
-        try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
+    public List<Process> systemListUserProcesses(String username, State state) throws RuntimeServiceException {
+        LOGGER.log(Level.INFO, "#SYSTEM# Listing processes for user [" + username + "] in " + ((state != null) ? "state=" + state : "all states"));
+        return listUserProcesses(username, state);
+    }
 
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Process> listCallerProcesses(State state) throws RuntimeServiceException {
+        LOGGER.log(Level.INFO, "Listing caller processes in " + ((state != null) ? "state=" + state : "all states"));
+        String caller = membership.getProfileKeyForConnectedIdentifier();
+        return listUserProcesses(caller, state);
+    }
+
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    private List<Process> listUserProcesses(String username, State state) throws RuntimeServiceException {
+        try {
             TypedQuery<Process> query;
             if (state != null) {
-                query = em.createNamedQuery("findProcessByIniterAndState", Process.class).setParameter("state", state).setParameter("initier", caller);
+                query = em.createNamedQuery("findProcessByIniterAndState", Process.class).setParameter("state", state).setParameter("initier", username);
             } else {
-                query = em.createNamedQuery("findProcessByInitier", Process.class).setParameter("initier", caller);
+                query = em.createNamedQuery("findProcessByInitier", Process.class).setParameter("initier", username);
             }
 
-            List<Process> rprocesses = new ArrayList<Process>();
+            List<Process> rprocesses = new ArrayList<>();
             for (Process process : query.getResultList()) {
                 try {
                     String ikey = registry.lookup(process.getObjectIdentifier());
@@ -399,7 +408,7 @@ public class RuntimeServiceBean implements RuntimeService {
             throw new RuntimeServiceException("unable to read process", e);
         }
     }
-    
+
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, Object> listProcessVariables(String key) throws RuntimeServiceException, KeyNotFoundException, AccessDeniedException {
@@ -417,7 +426,7 @@ public class RuntimeServiceBean implements RuntimeService {
             if ( !instance.getState().equals(State.RUNNING) ) {
                 throw new RuntimeServiceException("listing process variables is only for process in state: " + State.RUNNING);
             }
-            
+
             return engine.listProcessVariables(instance.getId());
         } catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException | RuntimeEngineException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while listing process variables", e);
@@ -614,15 +623,37 @@ public class RuntimeServiceBean implements RuntimeService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<HumanTask> listCandidateTasks() throws RuntimeServiceException {
+    public List<HumanTask> listCandidateTasks() throws RuntimeServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "Listing candidate tasks");
+        String caller = membership.getProfileKeyForConnectedIdentifier();
         try {
-            String caller = membership.getProfileKeyForConnectedIdentifier();
-            if (caller.equals(MembershipService.SUPERUSER_IDENTIFIER) ) { 
+            List<String> groups = membership.getProfileGroups(caller);
+            return listUserCandidateTasks(caller, groups);
+        } catch (MembershipServiceException e) {
+            throw new RuntimeServiceException("unable to list user's groups", e);
+        }
+    }
+
+    @Override
+    @RolesAllowed("system")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<HumanTask> systemListUserCandidateTasks(String username) throws RuntimeServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "#SYSTEM# Listing candidate tasks");
+        try {
+            Profile profile = membership.systemReadProfile(username);
+            return listUserCandidateTasks(username, Arrays.asList(profile.getGroups()));
+        } catch (MembershipServiceException e) {
+            throw new RuntimeServiceException("unable to list user's groups", e);
+        }
+    }
+
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    private List<HumanTask> listUserCandidateTasks(String username, List<String> groups) throws RuntimeServiceException {
+        try {
+            if (username.equals(MembershipService.SUPERUSER_IDENTIFIER) ) {
                 return engine.listAllUnassignedTasks();
             } else {
-                List<String> groups = membership.getProfileGroups(caller);
-                return engine.listCandidateTasks(caller, groups);
+                return engine.listCandidateTasks(username, groups);
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred while listing candidate tasks", e);
@@ -743,6 +774,18 @@ public class RuntimeServiceBean implements RuntimeService {
     @Override
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         return null;
+    }
+
+    @Override
+    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+        // TODO
+        throw new OrtolangException("NOT IMPLEMENTED");
+    }
+
+    @Override
+    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+        // TODO
+        throw new OrtolangException("NOT IMPLEMENTED");
     }
 
     private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws RuntimeServiceException {

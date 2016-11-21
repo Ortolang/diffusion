@@ -62,12 +62,6 @@ public class AtmosphereListenerBean implements MessageListener {
 
     private static final Logger LOGGER = Logger.getLogger(AtmosphereListenerBean.class.getName());
 
-    private static final String PROCESS_CHANGE_STATE_TYPE = "runtime.process.change-state";
-    private static final String PROCESS_CREATE_TYPE = "runtime.process.create";
-    private static final String MEMBERSHIP_GROUP_ADD_MEMBER_TYPE = "membership.group.add-member";
-    private static final String WORKSPACE_CREATE_TYPE = "core.workspace.create";
-    private static final String WORKSPACE_DELETE_TYPE = "core.workspace.delete";
-
     @EJB
     SubscriptionService subscription;
 
@@ -77,58 +71,9 @@ public class AtmosphereListenerBean implements MessageListener {
         try {
             Event event = new Event();
             event.fromJMSMessage(message);
-
-            switch (event.getType()) {
-            case PROCESS_CREATE_TYPE:
-                if (subscription.getSubscriptions().containsKey(event.getThrowedBy())) {
-                    LOGGER.log(Level.FINE, "Process created by user " + event.getThrowedBy() + "; adding filter to follow process events");
-                    subscription.getSubscriptions().get(event.getThrowedBy()).addFilter(new Filter(SubscriptionService.RUNTIME_PROCESS_PATTERN, event.getFromObject(), null));
-                }
-                break;
-            case MEMBERSHIP_GROUP_ADD_MEMBER_TYPE:
-                Map<String, String> arguments = event.getArguments();
-                if (arguments.containsKey("member") && subscription.getSubscriptions().containsKey(arguments.get("member"))) {
-                    LOGGER.log(Level.FINE, "User " + arguments.get("member") + " added to group " + event.getFromObject() + "; adding filter to follow group events");
-                    subscription.getSubscriptions().get(arguments.get("member")).addFilter(new Filter(SubscriptionService.MEMBERSHIP_GROUP_ALL_PATTERN, event.getFromObject(), null));
-                }
-                break;
-            case WORKSPACE_CREATE_TYPE:
-                if (subscription.getSubscriptions().containsKey(event.getThrowedBy())) {
-                    LOGGER.log(Level.FINE, "Workspace created by user " + event.getThrowedBy() + "; adding filter to follow workspace events");
-                    subscription.getSubscriptions().get(event.getThrowedBy()).addFilter(new Filter(null, event.getFromObject(), null));
-                }
-                break;
-            }
-
-            for (Map.Entry<String, Subscription> subscriptionRegistryEntry : subscription.getSubscriptions().entrySet()) {
-                Set<Filter> filters = new HashSet<>(subscriptionRegistryEntry.getValue().getFilters());
-                filters.stream().filter(filter -> filter.matches(event)).forEach(filter -> {
-                    LOGGER.log(Level.FINE, "Matching filter " + filter);
-                    LOGGER.log(Level.FINE, "Sending atmosphere message to " + subscriptionRegistryEntry.getKey());
-                    subscriptionRegistryEntry.getValue().getBroadcaster().broadcast(event);
-                    if (hasToBeRemoved(filter, event)) {
-                        LOGGER.log(Level.INFO, "Removing filter from " + subscriptionRegistryEntry.getKey() + " subscription");
-                        subscriptionRegistryEntry.getValue().removeFilter(filter);
-                    }
-                });
-            }
-        } catch (OrtolangException e) {
+            subscription.processEvent(event);
+        } catch (OrtolangException | SubscriptionServiceException e) {
             LOGGER.log(Level.WARNING, "unable to process event", e);
         }
-    }
-
-    private boolean hasToBeRemoved(Filter filter, Event event) {
-        if (event.getType().equals(PROCESS_CHANGE_STATE_TYPE)) {
-            if (event.getArguments().containsKey("state") && event.getArguments().get("state").equals(Process.State.COMPLETED.name())) {
-                return true;
-            }
-        } else if (event.getType().equals(WORKSPACE_DELETE_TYPE)) {
-            // if from pattern equals null then the filter matches any workspace key
-            // and thus is not specific to the deleted workspace
-            if (filter.getFromPattern() != null) {
-                return true;
-            }
-        }
-        return false;
     }
 }

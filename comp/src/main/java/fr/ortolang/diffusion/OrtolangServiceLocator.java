@@ -59,6 +59,7 @@ public class OrtolangServiceLocator {
     private static Map<String, OrtolangService> services = new HashMap<String, OrtolangService> ();
     private static Map<String, OrtolangWorker> workers = new HashMap<> ();
     private static Map<String, OrtolangIndexableService> indexableServices = new HashMap<String, OrtolangIndexableService> ();
+    private static Map<String, OrtolangObjectProviderService> providersServices = new HashMap<String, OrtolangObjectProviderService> ();
 
     private OrtolangServiceLocator() {
     }
@@ -151,6 +152,25 @@ public class OrtolangServiceLocator {
                 objects.put(name, getJndiContext().lookup(NAMESPACE + "/" + name + "!" + clazz.getCanonicalName()));
             }
             return objects.get(name);
+        } catch (Exception e) {
+            throw new OrtolangException(e);
+        }
+    }
+    
+    public static OrtolangObjectProviderService findObjectProviderService(String serviceName) throws OrtolangException {
+        try {
+            if ( !providersServices.containsKey(serviceName) ) {
+                NamingEnumeration<NameClassPair> enumeration = getJndiContext().list(NAMESPACE + "/");
+                while (enumeration.hasMoreElements()) {
+                    String name = enumeration.next().getName();
+                    if (name.endsWith(SERVICE_SUFFIX) && name.substring(0, name.indexOf("!")).equals(serviceName)) {
+                        providersServices.put(serviceName, (OrtolangObjectProviderService) getJndiContext().lookup(NAMESPACE + "/" + name));
+                        return providersServices.get(serviceName);
+                    }
+                }
+                throw new OrtolangException("service not found: " + serviceName);
+            }
+            return providersServices.get(serviceName);
         } catch (Exception e) {
             throw new OrtolangException(e);
         }

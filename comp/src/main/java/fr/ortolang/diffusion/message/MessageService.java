@@ -44,7 +44,7 @@ import java.util.Map;
 
 import fr.ortolang.diffusion.OrtolangBinaryService;
 import fr.ortolang.diffusion.OrtolangIndexableService;
-import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangObjectProviderService;
 import fr.ortolang.diffusion.message.entity.Message;
 import fr.ortolang.diffusion.message.entity.Thread;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
@@ -53,7 +53,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
-public interface MessageService extends OrtolangService, OrtolangBinaryService, OrtolangIndexableService {
+public interface MessageService extends OrtolangObjectProviderService, OrtolangBinaryService, OrtolangIndexableService {
     
     String SERVICE_NAME = "message";
     
@@ -64,17 +64,17 @@ public interface MessageService extends OrtolangService, OrtolangBinaryService, 
     
     Thread readThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
-    List<String> findThreadsForWorkspace(String wskey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    List<String> findThreadsForWorkspace(String wskey) throws MessageServiceException, AccessDeniedException;
     
     List<Message> browseThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     List<Message> browseThreadSinceDate(String key, Date from) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
-    
-    void updateThread(String key, String title, String answer) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+
+    Thread updateThread(String key, String title, String answer) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     void deleteThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
-    void markThreadAsAnswered(String tkey, String akey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
+    Thread markThreadAsAnswered(String tkey, String akey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
     void startObservingThread(String key) throws MessageServiceException, AccessDeniedException, KeyNotFoundException;
     
@@ -99,5 +99,7 @@ public interface MessageService extends OrtolangService, OrtolangBinaryService, 
     File getMessageAttachment(String key, String name) throws MessageServiceException, AccessDeniedException, KeyNotFoundException, DataNotFoundException;
     
     Thread systemReadThread(String key) throws MessageServiceException, KeyNotFoundException;
+    
+    List<String> systemFindThreadsForWorkspace(String wskey) throws MessageServiceException;
     
 }

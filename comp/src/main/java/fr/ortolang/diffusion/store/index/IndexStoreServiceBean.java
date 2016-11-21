@@ -82,10 +82,7 @@ import org.apache.lucene.store.FSDirectory;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangSearchResult;
 
 @Startup
@@ -99,9 +96,6 @@ public class IndexStoreServiceBean implements IndexStoreService {
     public static final String DEFAULT_INDEX_HOME = "/index-store";
 
     private static final Logger LOGGER = Logger.getLogger(IndexStoreServiceBean.class.getName());
-
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
 
     private Path base;
     private Analyzer analyzer;
@@ -180,12 +174,12 @@ public class IndexStoreServiceBean implements IndexStoreService {
             IndexSearcher searcher = new IndexSearcher(reader);
             QueryParser parser = new QueryParser(IndexStoreDocumentBuilder.CONTENT_FIELD, analyzer);
             Query query = parser.parse(queryString);
-
+            
             FunctionQuery boostQuery = new FunctionQuery(new LongFieldSource(IndexStoreDocumentBuilder.BOOST_FIELD));
             Query q = new CustomScoreQuery(query, boostQuery);
 
             TopDocs docs = searcher.search(q, 100);
-            List<OrtolangSearchResult> results = new ArrayList<>(docs.totalHits);
+            List<OrtolangSearchResult> results = new ArrayList<OrtolangSearchResult>(docs.totalHits);
             SimpleHTMLFormatter formatter = new SimpleHTMLFormatter("<span class='highlighted'>", "</span>");
             QueryScorer scorer = new QueryScorer(query);
             Highlighter highlighter = new Highlighter(formatter, scorer);
@@ -194,16 +188,16 @@ public class IndexStoreServiceBean implements IndexStoreService {
                 Document doc = searcher.doc(docs.scoreDocs[i].doc);
                 float score = docs.scoreDocs[i].score;
                 String identifier = doc.get(IndexStoreDocumentBuilder.IDENTIFIER_FIELD);
-                String highlightedText = highlighter.getBestFragment(analyzer, IndexStoreDocumentBuilder.CONTENT_FIELD, doc.get(IndexStoreDocumentBuilder.CONTENT_FIELD));
+                String higlightedText = highlighter.getBestFragment(analyzer, IndexStoreDocumentBuilder.CONTENT_FIELD, doc.get(IndexStoreDocumentBuilder.CONTENT_FIELD));
                 String name = doc.get(IndexStoreDocumentBuilder.NAME_FIELD);
                 String service = doc.get(IndexStoreDocumentBuilder.SERVICE_FIELD);
                 String type = doc.get(IndexStoreDocumentBuilder.TYPE_FIELD);
                 String key = doc.get(IndexStoreDocumentBuilder.KEY_FIELD);
-                Map<String, String> properties = new HashMap<>();
+                Map<String, String> properties = new HashMap<String,String>();
                 for(IndexableField field : doc.getFields()) {
-                    if(field.name().startsWith(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX)) {
-                        properties.put(field.name().replace(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX, "").toLowerCase(), field.stringValue());
-                    }
+                	if(field.name().startsWith(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX)) {
+                		properties.put(field.name(), field.stringValue());
+                	}
                 }
                 OrtolangSearchResult result = new OrtolangSearchResult();
                 result.setScore(score);
@@ -212,7 +206,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
                 result.setService(service);
                 result.setType(type);
                 result.setKey(key);
-                result.setExplain(highlightedText);
+                result.setExplain(higlightedText);
                 result.setProperties(properties);
                 results.add(result);
             }
@@ -222,7 +216,7 @@ public class IndexStoreServiceBean implements IndexStoreService {
             throw new IndexStoreServiceException("Can't search in index using '" + queryString + "'\n", e);
         }
     }
-
+    
     @Override
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
@@ -240,21 +234,21 @@ public class IndexStoreServiceBean implements IndexStoreService {
             }
             if ( docs.scoreDocs.length == 0 ) {
                 throw new IndexStoreServiceException("unable to find a document for this key: " + key);
-            }
+            } 
             return searcher.doc(docs.scoreDocs[0].doc).toString();
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "unable to get document for key " + key, e);
             throw new IndexStoreServiceException("Can't get document from index for key '" + key + "'\n", e);
         }
     }
-
+    
     //Service methods
-
+    
     @Override
     public String getServiceName() {
         return IndexStoreService.SERVICE_NAME;
     }
-
+    
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {
@@ -280,26 +274,6 @@ public class IndexStoreServiceBean implements IndexStoreService {
             LOGGER.log(Level.WARNING, "unable to gatter infos from index reader", e);
         }
         return infos;
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
     }
 
 }

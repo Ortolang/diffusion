@@ -42,7 +42,13 @@ import static org.bouncycastle.crypto.tls.ConnectionEnd.client;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -68,7 +74,9 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
@@ -79,6 +87,8 @@ import fr.ortolang.diffusion.membership.entity.ProfileData;
 import fr.ortolang.diffusion.membership.entity.ProfileDataType;
 import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
 import fr.ortolang.diffusion.membership.entity.ProfileStatus;
+import fr.ortolang.diffusion.membership.export.GroupExportHandler;
+import fr.ortolang.diffusion.membership.export.ProfileExportHandler;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
@@ -388,6 +398,9 @@ public class MembershipServiceBean implements MembershipService {
             em.merge(profile);
             registry.update(key);
             indexing.index(key);
+            if (profile.getReferentialId() != null && !profile.getReferentialId().isEmpty()) {
+                indexing.index(profile.getReferentialId());
+            }
 
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("name", name);
             notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update-infos"), argumentsBuilder.build());
@@ -423,6 +436,9 @@ public class MembershipServiceBean implements MembershipService {
 
             registry.update(key);
             indexing.index(key);
+            if (profile.getReferentialId() != null && profile.getReferentialId().isEmpty()) {
+                indexing.index(profile.getReferentialId());
+            }
 
             notification.throwEvent(key, caller, Profile.OBJECT_TYPE, buildEventType(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, "update"));
             return profile;
@@ -986,6 +1002,14 @@ public class MembershipServiceBean implements MembershipService {
     }
 
     @Override
+    @RolesAllowed("admin")
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Profile> systemListProfiles() throws MembershipServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# listing profiles");
+        return em.createNamedQuery("listAllProfiles", Profile.class).getResultList();
+    }
+
+    @Override
     public String getServiceName() {
         return SERVICE_NAME;
     }
@@ -1233,6 +1257,41 @@ public class MembershipServiceBean implements MembershipService {
             //
         }
         return infos;
+    }
+
+    @Override
+    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+
+            switch (identifier.getType()) {
+            case Group.OBJECT_TYPE:
+                Group group = em.find(Group.class, identifier.getId());
+                if (group == null) {
+                    throw new OrtolangException("unable to load group with id [" + identifier.getId() + "] from storage");
+                }
+                return new GroupExportHandler(group);
+            case Profile.OBJECT_TYPE:
+                Profile profile = em.find(Profile.class, identifier.getId());
+                if (profile == null) {
+                    throw new OrtolangException("unable to load profile with id [" + identifier.getId() + "] from storage");
+                }
+                return new ProfileExportHandler(profile);
+            }
+
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to build object export handler " + key, e);
+        }
+        throw new OrtolangException("unable to build object export handler for key " + key);
+    }
+
+    @Override
+    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+        // TODO
+        throw new OrtolangException("NOT IMPLEMENTED");
     }
 
     private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws MembershipServiceException {

@@ -72,7 +72,9 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
@@ -85,6 +87,8 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.message.entity.Message;
 import fr.ortolang.diffusion.message.entity.MessageAttachment;
 import fr.ortolang.diffusion.message.entity.Thread;
+import fr.ortolang.diffusion.message.export.MessageExportHandler;
+import fr.ortolang.diffusion.message.export.ThreadExportHandler;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
@@ -333,23 +337,40 @@ public class MessageServiceBean implements MessageService {
             List<String> subjects = membership.getConnectedIdentifierSubjects();
             authorisation.checkAuthentified(subjects);
 
-            List<String> keys = new ArrayList<String>();
-            TypedQuery<Thread> query = em.createNamedQuery("findThreadsForWorkspace", Thread.class).setParameter("wskey", wskey);
-            List<Thread> threads = query.getResultList();
-            for (Thread thread : threads) {
-                OrtolangObjectIdentifier identifier = thread.getObjectIdentifier();
-                try {
-                    keys.add(registry.lookup(identifier));
-                } catch (IdentifierNotRegisteredException e) {
-                    LOGGER.log(Level.FINE, "a thread with an unregistered identifier has be found (probably deleted) : " + identifier);
-                }
-            }
-
-            return keys;
+            return findThreadsForWorkspaceHelper(wskey);
         } catch (MembershipServiceException | AuthorisationServiceException | RegistryServiceException | KeyNotFoundException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during finding threads for workspace: " + wskey, e);
             throw new MessageServiceException("unable to find threads for workspace: " + wskey, e);
         }
+    }
+    
+    @Override
+    @RolesAllowed({"admin", "system"})
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<String> systemFindThreadsForWorkspace(String wskey) throws MessageServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# finding threads for workspace [" + wskey + "]");
+        try {
+            return findThreadsForWorkspaceHelper(wskey);
+        } catch (RegistryServiceException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred during system find threads for workspace: " + wskey, e);
+            throw new MessageServiceException("unable to find threads for workspace: " + wskey, e);
+        }
+    }
+
+    private List<String> findThreadsForWorkspaceHelper(String wskey) throws RegistryServiceException {
+        List<String> keys = new ArrayList<>();
+        TypedQuery<Thread> query = em.createNamedQuery("findThreadsForWorkspace", Thread.class).setParameter("wskey", wskey);
+        List<Thread> threads = query.getResultList();
+        for (Thread thread : threads) {
+            OrtolangObjectIdentifier identifier = thread.getObjectIdentifier();
+            try {
+                keys.add(registry.lookup(identifier));
+            } catch (IdentifierNotRegisteredException e) {
+                LOGGER.log(Level.FINE, "a thread with an unregistered identifier has be found (probably deleted) : " + identifier);
+            }
+        }
+
+        return keys;
     }
 
     @Override
@@ -408,7 +429,7 @@ public class MessageServiceBean implements MessageService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateThread(String key, String title, String answer) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
+    public Thread updateThread(String key, String title, String answer) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "updating thread for key [" + key + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -433,6 +454,8 @@ public class MessageServiceBean implements MessageService {
 
             ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("wskey", thread.getWorkspace()).addArgument("title", title);
             notification.throwEvent(key, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "update"), argsBuilder.build());
+
+            return thread;
 
         } catch (NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | KeyNotFoundException | KeyLockedException
                 | IndexingServiceException e) {
@@ -484,7 +507,7 @@ public class MessageServiceBean implements MessageService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void markThreadAsAnswered(String tkey, String mkey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
+    public Thread markThreadAsAnswered(String tkey, String mkey) throws MessageServiceException, AccessDeniedException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "marking thread as answered for key [" + tkey + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -512,8 +535,10 @@ public class MessageServiceBean implements MessageService {
             registry.update(tkey);
             indexing.index(tkey);
 
-            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("wskey", thread.getWorkspace()).addArgument("title", thread.getTitle()).addArgument("boy", message.getBody());
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(3).addArgument("wskey", thread.getWorkspace()).addArgument("title", thread.getTitle()).addArgument("body", message.getBody());
             notification.throwEvent(tkey, caller, Thread.OBJECT_TYPE, OrtolangEvent.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "answered"), argsBuilder.build());
+
+            return thread;
 
         } catch (KeyLockedException | NotificationServiceException | RegistryServiceException | AuthorisationServiceException | MembershipServiceException | IndexingServiceException e) {
             ctx.setRollbackOnly();
@@ -1026,6 +1051,41 @@ public class MessageServiceBean implements MessageService {
             LOGGER.log(Level.SEVERE, "unexpected error while calculating object size", e);
             throw new OrtolangException("unable to calculate size for object with key [" + key + "]", e);
         }
+    }
+
+    @Override
+    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+
+            switch (identifier.getType()) {
+            case Thread.OBJECT_TYPE:
+                Thread thread = em.find(Thread.class, identifier.getId());
+                if (thread == null) {
+                    throw new OrtolangException("unable to load thread with id [" + identifier.getId() + "] from storage");
+                }
+                return new ThreadExportHandler(thread);
+            case Message.OBJECT_TYPE:
+                Message message = em.find(Message.class, identifier.getId());
+                if (message == null) {
+                    throw new OrtolangException("unable to load message with id [" + identifier.getId() + "] from storage");
+                }
+                return new MessageExportHandler(message);
+            }
+
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to build object export handler " + key, e);
+        }
+        throw new OrtolangException("unable to build object export handler for key " + key);
+    }
+
+    @Override
+    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+        // TODO
+        throw new OrtolangException("NOT IMPLEMENTED");
     }
 
     private void addAttachments(Message message, Map<String, InputStream> attachments) throws DataNotFoundException, BinaryStoreServiceException, DataCollisionException {

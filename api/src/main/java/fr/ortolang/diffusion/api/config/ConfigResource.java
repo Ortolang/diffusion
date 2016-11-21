@@ -144,6 +144,7 @@ public class ConfigResource {
         builder.append("OrtolangConfig.piwikSiteId='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID)).append("';\r\n");
         builder.append("OrtolangConfig.keycloakConfigLocation ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("/config/admin/auth").append("';\r\n");
         builder.append("OrtolangConfig.staticSiteVersion ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.STATIC_SITE_VERSION)).append("';\r\n");
+        builder.append("OrtolangConfig.marketServerUrl ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL)).append("';\r\n");
         return Response.ok(builder.toString()).build();
     }
 

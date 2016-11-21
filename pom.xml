@@ -5,14 +5,14 @@
     <groupId>fr.ortolang.diffusion</groupId>
     <artifactId>ortolang-diffusion</artifactId>
     <name>Ortolang Diffusion Server Parent</name>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>5.0.7-SNAPSHOT</version>
     <packaging>pom</packaging>
     <url>http://www.ortolang.fr</url>
 
     <parent>
         <groupId>fr.ortolang</groupId>
         <artifactId>ortolang</artifactId>
-        <version>9-SNAPSHOT</version>
+        <version>9</version>
     </parent>
 
     <scm>
@@ -38,6 +38,7 @@
         <version.apache.tika>1.13</version.apache.tika>
         <version.apache.velocity>1.7</version.apache.velocity>
         <version.apache.velocity-tools>2.0</version.apache.velocity-tools>
+        <version.apache.httpcore>4.4.4</version.apache.httpcore>
         <version.javax.javaee>7.0</version.javax.javaee>
         <version.jboss.resteasy>3.0.19.Final</version.jboss.resteasy>
         <version.keycloak>2.2.1.Final</version.keycloak>
@@ -55,9 +56,8 @@
         <version.base64>2.3.9</version.base64>
         <version.commons-cli>1.3.1</version.commons-cli>
         <version.javamelody>1.60.0</version.javamelody>
-        <version.atmopshere>2.4.7</version.atmopshere>
-        <version.elasticsearch>2.4.0</version.elasticsearch>
-        <version.apache.lucene>5.5.3</version.apache.lucene>
+        <version.atmopshere>2.4.6</version.atmopshere>
+        <version.apache.lucene>6.1.0</version.apache.lucene>
         <version.openrdf.sesame>2.8.3</version.openrdf.sesame>
         <version.orientechnologies.orientdb>2.2.10</version.orientechnologies.orientdb>
         <version.common-compress>1.12</version.common-compress>
@@ -76,6 +76,7 @@
         <version.freemarker>2.3.25-incubating</version.freemarker>
         <version.sigar>1.6.4</version.sigar>
         <version.saxon>9.7.0-7</version.saxon>
+        <version.piwik>1.2</version.piwik>
         <version.javers>2.1.1</version.javers>
         <additionalparam>-Xdoclint:none</additionalparam>
         <maven.javadoc.failOnError>false</maven.javadoc.failOnError>

@@ -39,19 +39,19 @@ package fr.ortolang.diffusion.statistics;
 @SuppressWarnings("serial")
 public class StatisticsServiceException extends Exception {
 
-    public StatisticsServiceException() {
+    StatisticsServiceException() {
         super();
     }
 
-    public StatisticsServiceException(String message, Throwable cause) {
+    StatisticsServiceException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public StatisticsServiceException(String message) {
+    StatisticsServiceException(String message) {
         super(message);
     }
 
-    public StatisticsServiceException(Throwable cause) {
+    StatisticsServiceException(Throwable cause) {
         super(cause);
     }
 

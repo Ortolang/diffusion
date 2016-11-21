@@ -139,6 +139,8 @@ public interface RegistryService extends OrtolangService {
     
     long systemCountDeletedEntries(String identifierFilter) throws RegistryServiceException;
     
+    long systemCountPublishedEntries(String identifierFilter) throws RegistryServiceException;
+    
     long systemCountHiddenEntries(String identifierFilter) throws RegistryServiceException;
     	
 }

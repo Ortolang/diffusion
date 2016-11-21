@@ -66,6 +66,7 @@ public class JsonStoreServiceTest {
 
 	private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceTest.class.getName());
 	private static JsonStoreServiceBean service;
+	public boolean threadInError = false;
 
 	@BeforeClass
 	public static void setup() {
@@ -110,31 +111,22 @@ public class JsonStoreServiceTest {
 			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
 	}
-	
+
 	@Test
 	public void testInsert() {
 		OrtolangIndexableObject<IndexableJsonContent> object = getOrtolangIndexableObject();
 		try {
 
-			System.out.println(" =========");
-			System.out.println(" = Index =");
-			System.out.println(" =========");
-			
+			LOGGER.log(Level.INFO, " Indexing ");
+
 			service.index(object);
 
-			System.out.println(" =========");
-			
 			String query = "SELECT FROM type WHERE meta_format1.title = 'Dede'";
 			List<String> results = service.search(query);
-			for(String r : results) {
-				System.out.println(r);
-			}
 			assertEquals(1, results.size());
-			
-			System.out.println(" =========");
-			System.out.println(" = ReIndex =");
-			System.out.println(" =========");
-			
+
+			LOGGER.log(Level.INFO, " Re-indexing ");
+
 			// Changes a little bit
 			IndexableJsonContent jsonContent = object.getContent();
 			try {
@@ -152,52 +144,81 @@ public class JsonStoreServiceTest {
 				e.printStackTrace();
 				fail(e.getMessage());
 			}
-			
+
 			service.index(object);
-			System.out.println(" =========");
-			
+
 			String querySampleV2 = "SELECT FROM type WHERE meta_format1.title = 'Dede2'";
 			List<String> resultsSampleV2 = service.search(querySampleV2);
-			for(String r : resultsSampleV2) {
-				System.out.println(r);
-			}
 			assertEquals(1, resultsSampleV2.size());
 
-			System.out.println(" =========");
-			System.out.println(" = Remove =");
-			System.out.println(" =========");
-			
+			LOGGER.log(Level.INFO, " Removing ");
+
 			service.remove(object.getKey());
-			System.out.println(" =========");
-			
+
 			List<String> resultsAfterRemove = service.search(querySampleV2);
-			for(String r : resultsAfterRemove) {
-				System.out.println(r);
-			}
 			assertEquals(0, resultsAfterRemove.size());
-			
-			
-			
+
 		} catch (JsonStoreServiceException e) {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
 	}
-	
+
 	@Test
-    public void testSystemRead() {
-	    String key = "K1";
-	    try {
-	        OrtolangIndexableObject<IndexableJsonContent> object = getOrtolangIndexableObject();
-	        service.index(object);
-	        String document = service.systemGetDocument(key);
-	        System.out.println("DOC: " + document);
-	        assertTrue(document.contains("K1"));
-	    } catch (JsonStoreServiceException e) {
-	        fail("unable to admin document: " + e.getMessage());
-	    }
+	public void testSystemRead() {
+		String key = "K1";
+		try {
+			OrtolangIndexableObject<IndexableJsonContent> object = getOrtolangIndexableObject();
+			service.index(object);
+			String document = service.systemGetDocument(key);
+			assertTrue(document.contains("K1"));
+		} catch (JsonStoreServiceException e) {
+			fail("unable to admin document: " + e.getMessage());
+		}
 	}
-	
+
+	@Test
+	public void testSearch() {
+		LOGGER.log(Level.INFO, " Searching ");
+		int countThreads = 300;
+		Thread[] searcherThreads = new Thread[countThreads];
+		for (int i = 0; i < countThreads; i++) {
+			Thread searcherThread = new Thread(new Runnable() {
+				public void run() {
+					try {
+						long timestamp1 = System.currentTimeMillis();
+						service.search("SELECT FROM type");
+						service.search("SELECT FROM type");
+						LOGGER.log(Level.FINE, "     Performed json search in : "+(System.currentTimeMillis()-timestamp1));
+					} catch (JsonStoreServiceException e) {
+						LOGGER.log(Level.SEVERE, "unable to search a document - " + Thread.currentThread(), e);
+						threadInError = true;
+					}
+				}
+			});
+			searcherThread.setName("Json Store Searcher Thread " + i);
+			searcherThreads[i] = searcherThread;
+		}
+
+		for (Thread searcherThread : searcherThreads) {
+			try {
+				searcherThread.start();
+			} catch(Exception e) {
+				fail("unable to search a document");
+			}
+		}
+
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			fail("unable to sleep " + e.getMessage());
+		}
+		
+		if (threadInError) {
+			fail("test search failed");
+		}
+	}
+
 	private OrtolangIndexableObject<IndexableJsonContent> getOrtolangIndexableObject() {
 		IndexableJsonContent jsonContent = new IndexableJsonContent();
 		try {
@@ -226,9 +247,10 @@ public class JsonStoreServiceTest {
 		object.setAuthor("jayblanc");
 		object.setCreationDate(System.currentTimeMillis());
 		object.setLastModificationDate(System.currentTimeMillis());
-		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("foo", "bar")} ));
+		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] { new OrtolangObjectProperty("foo", "bar") }));
 		object.setContent(jsonContent);
-		
+
 		return object;
 	}
+
 }

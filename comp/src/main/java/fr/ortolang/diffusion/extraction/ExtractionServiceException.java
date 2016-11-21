@@ -36,25 +36,26 @@ package fr.ortolang.diffusion.extraction;
  * #L%
  */
 
+@SuppressWarnings("serial")
 public class ExtractionServiceException extends Exception {
 
-    public ExtractionServiceException() {
+    ExtractionServiceException() {
         super();
     }
 
-    public ExtractionServiceException(String message) {
+    ExtractionServiceException(String message) {
         super(message);
     }
 
-    public ExtractionServiceException(Throwable cause) {
+    ExtractionServiceException(Throwable cause) {
         super(cause);
     }
 
-    public ExtractionServiceException(String message, Throwable cause) {
+    ExtractionServiceException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public ExtractionServiceException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    ExtractionServiceException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

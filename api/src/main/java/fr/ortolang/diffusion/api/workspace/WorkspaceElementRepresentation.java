@@ -58,6 +58,7 @@ public class WorkspaceElementRepresentation {
     private String workspace;
     private String name;
     private String author;
+    private Boolean root;
     private int clock;
     private long size;
     private String description;
@@ -133,6 +134,14 @@ public class WorkspaceElementRepresentation {
 
     public void setAuthor(String author) {
         this.author = author;
+    }
+
+    public Boolean isRoot() {
+        return root;
+    }
+
+    public void setRoot(Boolean root) {
+        this.root = root;
     }
 
     public long getSize() {
@@ -250,6 +259,7 @@ public class WorkspaceElementRepresentation {
     public static WorkspaceElementRepresentation fromCollection(Collection collection) {
         WorkspaceElementRepresentation representation = new WorkspaceElementRepresentation();
         representation.setKey(collection.getKey());
+        representation.setRoot(collection.isRoot());
         representation.setClock(collection.getClock());
         representation.setName(collection.getName());
         representation.setSize(collection.getElements().size());

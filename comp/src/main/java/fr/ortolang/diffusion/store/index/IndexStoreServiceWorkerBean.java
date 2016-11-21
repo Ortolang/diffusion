@@ -66,23 +66,17 @@ public class IndexStoreServiceWorkerBean implements IndexStoreServiceWorker {
     private static final Logger LOGGER = Logger.getLogger(IndexStoreServiceWorkerBean.class.getName());
 
     private static final long DEFAULT_INDEXATION_DELAY = 15000;
-
     private static final String JOB_TYPE = "indexing";
 
     @EJB
     private IndexStoreService store;
-
     @EJB
     private JobService jobService;
-
     @SuppressWarnings("EjbEnvironmentInspection")
     @Resource
     private ManagedThreadFactory managedThreadFactory;
-
     private IndexStoreWorkerThread worker;
-
     private Thread workerThread;
-
     private DelayQueue<Job> queue;
 
     public IndexStoreServiceWorkerBean() {

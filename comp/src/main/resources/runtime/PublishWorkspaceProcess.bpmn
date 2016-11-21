@@ -8,7 +8,7 @@
       <startEvent id="startevent4" name="Start"></startEvent>
       <serviceTask id="servicetaskR1" name="Notify Reviewer" activiti:class="fr.ortolang.diffusion.runtime.engine.task.NotifyTask">
         <extensionElements>
-          <activiti:field name="userid">
+          <activiti:field name="userId">
             <activiti:expression><![CDATA[${reviewer}]]></activiti:expression>
           </activiti:field>
           <activiti:field name="keyType">
@@ -25,7 +25,7 @@
           <activiti:field name="keyType">
             <activiti:string><![CDATA[publisher]]></activiti:string>
           </activiti:field>
-          <activiti:field name="groupid">
+          <activiti:field name="groupId">
             <activiti:string><![CDATA[publishers]]></activiti:string>
           </activiti:field>
           <activiti:field name="keyName">
@@ -47,7 +47,7 @@
           <activiti:field name="keyName">
             <activiti:string><![CDATA[remind]]></activiti:string>
           </activiti:field>
-          <activiti:field name="userid">
+          <activiti:field name="userId">
             <activiti:expression><![CDATA[${reviewer}]]></activiti:expression>
           </activiti:field>
         </extensionElements>
@@ -95,7 +95,7 @@
     <exclusiveGateway id="isSuperUser" name="is Super User"></exclusiveGateway>
     <serviceTask id="servicetask4" name="Notify Moderators" activiti:class="fr.ortolang.diffusion.runtime.engine.task.NotifyTask">
       <extensionElements>
-        <activiti:field name="groupid">
+        <activiti:field name="groupId">
           <activiti:string><![CDATA[moderators]]></activiti:string>
         </activiti:field>
         <activiti:field name="keyName">
@@ -124,7 +124,7 @@
     </boundaryEvent>
     <serviceTask id="servicetask50" name="Remind Moderators" activiti:class="fr.ortolang.diffusion.runtime.engine.task.NotifyTask">
       <extensionElements>
-        <activiti:field name="groupid">
+        <activiti:field name="groupId">
           <activiti:string><![CDATA[moderators]]></activiti:string>
         </activiti:field>
         <activiti:field name="keyName">
@@ -137,7 +137,7 @@
     </serviceTask>
     <serviceTask id="servicetask52" name="Notify Initier" activiti:class="fr.ortolang.diffusion.runtime.engine.task.NotifyTask">
       <extensionElements>
-        <activiti:field name="userid">
+        <activiti:field name="userId">
           <activiti:expression><![CDATA[${initier}]]></activiti:expression>
         </activiti:field>
         <activiti:field name="keyType">
@@ -160,7 +160,7 @@
     </serviceTask>
     <serviceTask id="servicetask7" name="Notify Publishers" activiti:class="fr.ortolang.diffusion.runtime.engine.task.NotifyTask">
       <extensionElements>
-        <activiti:field name="groupid">
+        <activiti:field name="groupId">
           <activiti:string><![CDATA[publishers]]></activiti:string>
         </activiti:field>
         <activiti:field name="keyType">
@@ -230,7 +230,7 @@
     </serviceTask>
     <serviceTask id="servicetask13" name="Notify Initier" activiti:class="fr.ortolang.diffusion.runtime.engine.task.NotifyTask">
       <extensionElements>
-        <activiti:field name="userid">
+        <activiti:field name="userId">
           <activiti:expression><![CDATA[${initier}]]></activiti:expression>
         </activiti:field>
         <activiti:field name="keyType">
@@ -261,7 +261,7 @@
     </serviceTask>
     <serviceTask id="servicetask2" name="Notify Initier" activiti:class="fr.ortolang.diffusion.runtime.engine.task.NotifyTask">
       <extensionElements>
-        <activiti:field name="userid">
+        <activiti:field name="userId">
           <activiti:expression><![CDATA[${initier}]]></activiti:expression>
         </activiti:field>
         <activiti:field name="keyName">
@@ -315,7 +315,7 @@
     </boundaryEvent>
     <serviceTask id="servicetask54" name="Remind Publishers" activiti:class="fr.ortolang.diffusion.runtime.engine.task.NotifyTask">
       <extensionElements>
-        <activiti:field name="groupid">
+        <activiti:field name="groupId">
           <activiti:string><![CDATA[publishers]]></activiti:string>
         </activiti:field>
         <activiti:field name="keyType">

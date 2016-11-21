@@ -36,27 +36,30 @@ package fr.ortolang.diffusion.jobs;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.jobs.entity.Job;
-import fr.ortolang.diffusion.notification.NotificationService;
-import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.*;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.SessionContext;
+import javax.ejb.Startup;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import fr.ortolang.diffusion.jobs.entity.Job;
+import fr.ortolang.diffusion.notification.NotificationService;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
 
 @Startup
 @Local(JobService.class)
@@ -66,9 +69,6 @@ import java.util.logging.Logger;
 public class JobServiceBean implements JobService {
 
     private static final Logger LOGGER = Logger.getLogger(JobServiceBean.class.getName());
-
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
 
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
@@ -122,6 +122,7 @@ public class JobServiceBean implements JobService {
     public void updateFailingJob(Job job, Exception e) {
         if (e instanceof KeyNotFoundException || (e.getCause() != null && e.getCause() instanceof KeyNotFoundException)) {
             LOGGER.log(Level.WARNING, "Key not found: removing job of type " + job.getType() + " (action: " + job.getAction() + ", target: " + job.getTarget() + ")");
+            LOGGER.log(Level.FINE, "", e);
             remove(job.getId());
             return;
         }
@@ -261,23 +262,4 @@ public class JobServiceBean implements JobService {
         return infos;
     }
 
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
 }

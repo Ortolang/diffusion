@@ -36,26 +36,6 @@ package fr.ortolang.diffusion.form;
  * #L%
  */
 
-import fr.ortolang.diffusion.*;
-import fr.ortolang.diffusion.form.entity.Form;
-import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.membership.MembershipServiceException;
-import fr.ortolang.diffusion.notification.NotificationService;
-import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.registry.*;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
-import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.ejb.*;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -63,6 +43,44 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectImportHandler;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.form.entity.Form;
+import fr.ortolang.diffusion.form.export.FormExportHandler;
+import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.notification.NotificationService;
+import fr.ortolang.diffusion.notification.NotificationServiceException;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyLockedException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 
 @Local(FormService.class)
 @Stateless(name = FormService.SERVICE_NAME)
@@ -289,8 +307,36 @@ public class FormServiceBean implements FormService {
 			throw new OrtolangException("unable to find an object for key " + key);
 		}
 	}
+	
+    @Override
+    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(FormService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
 
-    // @TODO implement getSize
+            switch (identifier.getType()) {
+            case Form.OBJECT_TYPE:
+                Form form = em.find(Form.class, identifier.getId());
+                if (form == null) {
+                    throw new OrtolangException("unable to load form with id [" + identifier.getId() + "] from storage");
+                }
+                return new FormExportHandler(form);
+            }
+
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to build object export handler " + key, e);
+        }
+        throw new OrtolangException("unable to build object export handler for key " + key);
+    }
+
+    @Override
+    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+        // TODO
+        throw new OrtolangException("NOT IMPLEMENTED");
+    }
+
     @Override
     public OrtolangObjectSize getSize(String key) throws OrtolangException {
         return null;
@@ -304,6 +350,6 @@ public class FormServiceBean implements FormService {
 		if (!identifier.getType().equals(objectType)) {
 			throw new FormServiceException("object identifier " + identifier + " does not refer to an object of type " + objectType);
 		}
-	}
+	}   
 
 }

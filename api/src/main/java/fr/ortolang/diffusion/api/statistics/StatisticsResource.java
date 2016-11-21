@@ -36,10 +36,7 @@ package fr.ortolang.diffusion.api.statistics;
  * #L%
  */
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,6 +52,7 @@ import javax.ws.rs.core.*;
 import fr.ortolang.diffusion.statistics.StatisticNameNotFoundException;
 import fr.ortolang.diffusion.statistics.StatisticsService;
 import fr.ortolang.diffusion.statistics.StatisticsServiceException;
+import fr.ortolang.diffusion.statistics.entity.WorkspaceStatisticValue;
 import org.jboss.resteasy.annotations.GZIP;
 
 @Path("/stats")
@@ -96,4 +94,21 @@ public class StatisticsResource {
         return builder.build();
     }
 
+    @GET
+    @Path("/workspaces/{alias}")
+    @GZIP
+    public Response getWorkspaceValue(@PathParam("alias") String alias, @QueryParam("from") @DefaultValue("0")String from, @QueryParam("to") @DefaultValue("5000000000000") String to, @QueryParam("cc") @DefaultValue("true") boolean cache, @Context Request request)
+            throws NumberFormatException, StatisticsServiceException, StatisticNameNotFoundException {
+        LOGGER.log(Level.INFO, "GET /stats/workspaces/" + alias);
+        List<WorkspaceStatisticValue> values = stats.workspaceHistory(alias, Long.parseLong(from), Long.parseLong(to));
+        Response.ResponseBuilder builder = Response.ok(values);
+        if (cache) {
+            CacheControl cc = new CacheControl();
+            cc.setPrivate(true);
+            // 1 day
+            cc.setMaxAge(86400);
+            builder.cacheControl(cc);
+        }
+        return builder.build();
+    }
 }

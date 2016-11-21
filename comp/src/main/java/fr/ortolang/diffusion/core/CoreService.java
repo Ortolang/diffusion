@@ -64,15 +64,19 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 import org.javers.core.diff.Change;
 
-public interface CoreService extends OrtolangService, OrtolangBinaryService, OrtolangIndexableService {
+public interface CoreService extends OrtolangObjectProviderService, OrtolangBinaryService, OrtolangIndexableService {
 
     String SERVICE_NAME = "core";
 
     String INFO_WORKSPACES_ALL = "workspaces.all";
-    //TODO String INFO_WORKSPACES_PUBLISHED = "workspaces.published";
-    //TODO String INFO_WORKSPACES_DELETED = "workspaces.deleted";
+    String INFO_WORKSPACES_PUBLISHED = "workspaces.published";
+    //String INFO_WORKSPACES_DELETED = "workspaces.deleted";
     String INFO_COLLECTIONS_ALL = "collections.all";
+    String INFO_COLLECTIONS_PUBLISHED = "collections.published";
+    //String INFO_COLLECTIONS_DELETED = "collections.deleted";
     String INFO_OBJECTS_ALL = "objects.all";
+    String INFO_OBJECTS_PUBLISHED = "objects.published";
+    //String INFO_OBJECTS_DELETED = "objects.deleted";
 	
 	/* Workspace */
 
@@ -89,8 +93,6 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     String snapshotWorkspace(String wskey) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException, WorkspaceUnchangedException;
 
     String getLatestSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
-
-    void tagWorkspace(String wskey, String tag, String snapshot) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
 
     void deleteWorkspace(String wskey) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
 
@@ -121,6 +123,10 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException;
     
     void changeWorkspaceOwner(String wskey, String newOwner) throws CoreServiceException;
+    
+    void notifyWorkspaceOwner(String wskey, String sender, String message) throws CoreServiceException;
+    
+    void notifyWorkspaceMembers(String wskey, String sender, String message) throws CoreServiceException;
 
     void moveElements(String wskey, List<String> sources, String destination)
             throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException, RegistryServiceException, WorkspaceReadOnlyException,
@@ -238,6 +244,8 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
     void systemSetWorkspaceReadOnly(String wskey, boolean readonly) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;
     
     void systemUpdateWorkspace(String wskey, String alias, boolean changed, String head, String members, String privileged, boolean readOnly, String type) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;
+    
+    void systemTagWorkspace(String wskey, String tag, String snapshot) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
 
     void systemCreateMetadata(String key, String name, String hash, String filename)
             throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
@@ -245,4 +253,5 @@ public interface CoreService extends OrtolangService, OrtolangBinaryService, Ort
 
     Workspace systemReadWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException;
 
+    List<String> systemFindWorkspacesForProfile(String profile) throws CoreServiceException;
 }

@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.message;
+package fr.ortolang.diffusion.notification;
 
 import java.io.UnsupportedEncodingException;
 import java.text.MessageFormat;
@@ -41,28 +41,35 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
+import fr.ortolang.diffusion.message.MessageService;
+import fr.ortolang.diffusion.message.MessageServiceException;
 import fr.ortolang.diffusion.message.entity.Thread;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.template.MessageResolverMethod;
 import fr.ortolang.diffusion.template.TemplateEngine;
 import fr.ortolang.diffusion.template.TemplateEngineException;
 
-@MessageDriven(name = "MessageNotificationListener", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
+@MessageDriven(name = "NotificationListener", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
         @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/notification"),
         @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
 @SecurityDomain("ortolang")
 @RunAs("system")
-public class MessageNotificationListenerBean implements MessageListener {
+public class SMTPNotificationListenerBean implements MessageListener {
 
     private static final Locale DEFAULT_LOCALE = Locale.FRANCE;
-    private static final Logger LOGGER = Logger.getLogger(MessageNotificationListenerBean.class.getName());
-    private static final ClassLoader TEMPLATE_ENGINE_CL = MessageNotificationListenerBean.class.getClassLoader();
+    private static final Logger LOGGER = Logger.getLogger(SMTPNotificationListenerBean.class.getName());
+    private static final ClassLoader TEMPLATE_ENGINE_CL = SMTPNotificationListenerBean.class.getClassLoader();
 
     private static final String EVENT_CREATE_THREAD = Event.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "create");
     private static final String EVENT_UPDATE_THREAD = Event.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "update");
     private static final String EVENT_DELETE_THREAD = Event.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "delete");
     private static final String EVENT_ANSWERED_THREAD = Event.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "answered");
     private static final String EVENT_POST_THREAD = Event.buildEventType(MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, "post");
+    
+    private static final String NOTIFY_WORKSPACE_OWNER = Event.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "notify-owner");
+    private static final String NOTIFY_WORKSPACE_MEMBERS = Event.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "notify-members");
 
     @EJB
     private MessageService service;
@@ -70,6 +77,8 @@ public class MessageNotificationListenerBean implements MessageListener {
     private MembershipService membership;
     @EJB
     private CoreService core;
+    @EJB
+    private AuthorisationService authorisation;
     @Resource(name = "java:jboss/mail/Default")
     private Session session;
 
@@ -146,22 +155,63 @@ public class MessageNotificationListenerBean implements MessageListener {
 
                 notify(wsalias, "thread.post", event.getFromObject(), body, receivers);
             }
+            if (event.getType().equals(NOTIFY_WORKSPACE_OWNER)) {
+                LOGGER.log(Level.FINE, "received notify workspace owner, starting notification");
+                String wskey = event.getFromObject();
+                String email = event.getArguments().get("email");
+                String body = event.getArguments().get("message");
+                
+                String wsalias = core.systemReadWorkspace(wskey).getAlias();
+                String owner = authorisation.getPolicyOwner(wskey);
+                
+                Set<String> receivers = new HashSet<String>();
+                receivers.add(owner);
+                
+                String senderName = "";
+                if ( !event.getThrowedBy().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+                    senderName = membership.systemReadProfile(event.getThrowedBy()).getFullName();
+                }
+                
+                notify(senderName, email, wsalias, "workspace.notify", event.getFromObject(), body, receivers);
+            }
+            if (event.getType().equals(NOTIFY_WORKSPACE_MEMBERS)) {
+                LOGGER.log(Level.FINE, "received notify workspace members, starting notification");
+                String wskey = event.getFromObject();
+                String email = event.getArguments().get("email");
+                String body = event.getArguments().get("message");
+                
+                Workspace ws = core.systemReadWorkspace(wskey);
+                Set<String> receivers = new HashSet<String>();
+                receivers.addAll(getGroupMembers(ws.getMembers()));
+                
+                String senderName = "";
+                if ( !event.getThrowedBy().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+                    senderName = membership.systemReadProfile(event.getThrowedBy()).getFullName();
+                }
+                
+                notify(senderName, email, ws.getAlias(), "workspace.notify", event.getFromObject(), body, receivers);
+            }
 
-        } catch (OrtolangException | MembershipServiceException | KeyNotFoundException | CoreServiceException | MessageServiceException e) {
+        } catch (OrtolangException | MembershipServiceException | KeyNotFoundException | CoreServiceException | MessageServiceException | AuthorisationServiceException e) {
             LOGGER.log(Level.WARNING, "unable to handle notification message", e);
-        }
+        } 
     }
 
     private List<String> getGroupMembers(String gkey) throws MembershipServiceException, KeyNotFoundException {
         Group group = membership.systemReadGroup(gkey);
         return Arrays.asList(group.getMembers());
     }
-
+    
+    
     private void notify(String wsalias, String type, String key, String title, Set<String> profiles) {
-        String marketUrl = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL);
         String senderName = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SMTP_SENDER_NAME);
         String senderEmail = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.SMTP_SENDER_EMAIL);
+        this.notify(senderName, senderEmail, wsalias, type, key, title, profiles);
+    }
 
+    private void notify(String senderName, String senderEmail, String wsalias, String type, String key, String title, Set<String> profiles) {
+        String marketUrl = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL);
+        
         for (String profile : profiles) {
             try {
                 String recipient = membership.systemReadProfile(profile).getEmail();
@@ -188,7 +238,11 @@ public class MessageNotificationListenerBean implements MessageListener {
                 MimeMessage msg = new MimeMessage(session);
                 msg.setSubject(subject);
                 msg.setRecipient(RecipientType.TO, new InternetAddress(recipient));
-                msg.setFrom(new InternetAddress(senderEmail, senderName));
+                if ( senderName.length() > 0 ) {
+                    msg.setFrom(new InternetAddress(senderEmail, senderName));
+                } else {
+                    msg.setFrom(new InternetAddress(senderEmail));
+                }
                 msg.setContent(message, "text/html; charset=\"UTF-8\"");
                 Transport.send(msg);
             } catch (UnsupportedEncodingException | MessagingException | TemplateEngineException | MembershipServiceException | KeyNotFoundException e) {

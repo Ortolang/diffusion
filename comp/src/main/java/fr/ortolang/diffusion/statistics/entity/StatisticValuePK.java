@@ -39,7 +39,7 @@ package fr.ortolang.diffusion.statistics.entity;
 import java.io.Serializable;
 
 @SuppressWarnings("serial")
-public class StatisticValuePK implements Serializable {
+class StatisticValuePK implements Serializable {
 
     private String name;
     private long timestamp;

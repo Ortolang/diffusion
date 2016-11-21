@@ -201,7 +201,7 @@ public class ExtractionServiceWorkerBean implements ExtractionServiceWorker {
 
         private boolean run = true;
 
-        public void stop() {
+        void stop() {
             this.run = false;
         }
 

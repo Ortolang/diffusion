@@ -4,7 +4,7 @@ package fr.ortolang.diffusion.statistics;
  * #%L
  * ORTOLANG
  * A online network structure for hosting language resources and tools.
- * 
+ *
  * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
  * Etienne Petitjean / ATILF UMR 7118 - CNRS
  * Jérôme Blanchard / ATILF UMR 7118 - CNRS
@@ -14,7 +14,7 @@ package fr.ortolang.diffusion.statistics;
  * Ulrike Fleury / ATILF UMR 7118 - CNRS
  * Frédéric Pierre / ATILF UMR 7118 - CNRS
  * Céline Moro / ATILF UMR 7118 - CNRS
- *  
+ *
  * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
  * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
  * %%
@@ -24,12 +24,12 @@ package fr.ortolang.diffusion.statistics;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -50,26 +50,26 @@ import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.ejb.Local;
 import javax.ejb.Schedule;
-import javax.ejb.SessionContext;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
+import javax.enterprise.concurrent.ManagedThreadFactory;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.statistics.entity.StatisticValue;
+import fr.ortolang.diffusion.statistics.entity.WorkspaceStatisticValue;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
@@ -84,33 +84,19 @@ public class StatisticsServiceBean implements StatisticsService {
 
     private static final Logger LOGGER = Logger.getLogger(StatisticsServiceBean.class.getName());
 
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
     private static final String SEPARATOR = ".";
-    private static final Map<String, List<String>> STATS_NAMES = new HashMap<String, List<String>> ();
+    private static final Map<String, List<String>> STATS_NAMES = new HashMap<>();
 
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
     @Resource
-    private SessionContext ctx;
+    private ManagedThreadFactory managedThreadFactory;
+
+    private Thread piwikAllCollectorThread;
+
+    private Thread piwikLatestCollectorThread;
 
     public StatisticsServiceBean() {
-    }
-
-    public void setEntityManager(EntityManager em) {
-        this.em = em;
-    }
-
-    public EntityManager getEntityManager() {
-        return this.em;
-    }
-
-    public void setSessionContext(SessionContext ctx) {
-        this.ctx = ctx;
-    }
-
-    public SessionContext getSessionContext() {
-        return this.ctx;
     }
 
     @PostConstruct
@@ -135,7 +121,7 @@ public class StatisticsServiceBean implements StatisticsService {
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<String> list() throws StatisticsServiceException {
         LOGGER.log(Level.FINEST, "listing all stats names");
-        List<String> names = new ArrayList<String> ();
+        List<String> names = new ArrayList<> ();
         for ( Entry<String, List<String>> stat : STATS_NAMES.entrySet() ) {
             for ( String info : stat.getValue() ) {
                 names.add(stat.getKey() + SEPARATOR + info);
@@ -146,7 +132,6 @@ public class StatisticsServiceBean implements StatisticsService {
 
     @Override
     @Schedule(hour="23")
-    //@Schedule(minute="*/5", hour="*")
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void probe() throws StatisticsServiceException {
         LOGGER.log(Level.FINEST, "probing stat for fresh values");
@@ -171,6 +156,55 @@ public class StatisticsServiceBean implements StatisticsService {
             } catch ( OrtolangException e ) {
                 LOGGER.log(Level.WARNING, "unable to probe some stats", e);
             }
+        }
+    }
+
+    @Override
+    @Schedule(hour="2")
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void probePiwik() throws StatisticsServiceException, OrtolangException {
+        LOGGER.log(Level.INFO, "Probing Piwik stats for fresh values");
+        List<String> workspaces = em.createNamedQuery("listAllWorkspaceAlias", String.class).getResultList();
+        TypedQuery<Long> countWorkspaceValues = em.createNamedQuery("countWorkspaceValues", Long.class);
+        if (countWorkspaceValues.getSingleResult() == 0L) {
+            if (piwikAllCollectorThread != null && piwikAllCollectorThread.isAlive()) {
+                LOGGER.log(Level.WARNING, "Already collecting all Piwik statistics");
+                return;
+            }
+            LOGGER.log(Level.INFO, "Starting to collect all Piwik statistics");
+            PiwikAllCollector piwikAllCollector = new PiwikAllCollector(workspaces);
+            piwikAllCollectorThread = managedThreadFactory.newThread(piwikAllCollector);
+            piwikAllCollectorThread.setName("All Piwik Statistics Collector Thread");
+            piwikAllCollectorThread.start();
+        } else {
+            if (piwikLatestCollectorThread != null && piwikLatestCollectorThread.isAlive()) {
+                LOGGER.log(Level.WARNING, "Already collecting latest Piwik statistics");
+                return;
+            }
+            LOGGER.log(Level.INFO, "Starting to collect latest Piwik statistics");
+            PiwikLatestCollector piwikLatestCollector = new PiwikLatestCollector(workspaces);
+            piwikLatestCollectorThread = managedThreadFactory.newThread(piwikLatestCollector);
+            piwikLatestCollectorThread.setName("Latest Piwik Statistics Collector Thread");
+            piwikLatestCollectorThread.start();
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
+    public void storeWorkspaceStatisticValue(WorkspaceStatisticValue value) throws StatisticsServiceException {
+        boolean alreadyExist;
+        WorkspaceStatisticValue latestStoredValue = null;
+        try {
+            latestStoredValue = readWorkspaceValue(value.getName());
+            alreadyExist = latestStoredValue.getTimestamp() == value.getTimestamp();
+        } catch (StatisticNameNotFoundException e) {
+            alreadyExist = false;
+        }
+        if (alreadyExist) {
+            latestStoredValue.copy(value);
+            em.merge(latestStoredValue);
+        } else if ((latestStoredValue != null && latestStoredValue.getTimestamp() < value.getTimestamp()) || !value.isEmpty()) {
+            em.persist(value);
         }
     }
 
@@ -210,6 +244,36 @@ public class StatisticsServiceBean implements StatisticsService {
         }
     }
 
+    @Override
+    public WorkspaceStatisticValue readWorkspaceValue(String alias) throws StatisticNameNotFoundException {
+        TypedQuery<WorkspaceStatisticValue> query = em.createNamedQuery("findWorkspaceValues", WorkspaceStatisticValue.class).setParameter("name", alias).setMaxResults(1);
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            throw new StatisticNameNotFoundException("unable to find a value for workspace stat with alias: " + alias);
+        }
+    }
+
+    @Override
+    public List<WorkspaceStatisticValue> workspaceHistory(String alias, long from, long to) throws StatisticNameNotFoundException {
+        TypedQuery<WorkspaceStatisticValue> query = em.createNamedQuery("findWorkspaceValuesFromTo", WorkspaceStatisticValue.class).setParameter("name", alias).setParameter("from", from).setParameter("to", to);
+        try {
+            return query.getResultList();
+        } catch (NoResultException e) {
+            throw new StatisticNameNotFoundException("unable to find a value for workspace stat with alias: " + alias);
+        }
+    }
+
+    @Override
+    public WorkspaceStatisticValue sumWorkspaceHistory(String alias, long from, long to) throws StatisticNameNotFoundException {
+        TypedQuery<WorkspaceStatisticValue> query = em.createNamedQuery("sumWorkspaceValuesFromTo", WorkspaceStatisticValue.class).setParameter("name", alias).setParameter("from", from).setParameter("to", to);
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            throw new StatisticNameNotFoundException("unable to find a value for workspace stat with alias: " + alias);
+        }
+    }
+
     //Service methods
 
     @Override
@@ -219,28 +283,7 @@ public class StatisticsServiceBean implements StatisticsService {
 
     @Override
     public Map<String, String> getServiceInfos() {
-        return new HashMap<String, String> ();
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
+        return new HashMap<>();
     }
 
 }
- 

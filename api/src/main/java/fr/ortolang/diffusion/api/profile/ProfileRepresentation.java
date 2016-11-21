@@ -60,6 +60,7 @@ public class ProfileRepresentation {
     private boolean complete;
     private String friends;
     private String referentialId;
+    private boolean connected;
 
     public ProfileRepresentation() {
         groups = new String[0];
@@ -159,6 +160,14 @@ public class ProfileRepresentation {
 
     public void setReferentialId(String referentialId) {
         this.referentialId = referentialId;
+    }
+
+    public boolean isConnected() {
+        return connected;
+    }
+
+    public void setConnected(boolean connected) {
+        this.connected = connected;
     }
 
     public static ProfileRepresentation fromProfile(Profile profile) {

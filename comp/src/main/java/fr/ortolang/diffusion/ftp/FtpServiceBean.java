@@ -38,7 +38,9 @@ package fr.ortolang.diffusion.ftp;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,15 +57,14 @@ import org.apache.ftpserver.DataConnectionConfigurationFactory;
 import org.apache.ftpserver.FtpServer;
 import org.apache.ftpserver.FtpServerFactory;
 import org.apache.ftpserver.ftplet.FtpException;
+import org.apache.ftpserver.impl.FtpIoSession;
+import org.apache.ftpserver.listener.Listener;
 import org.apache.ftpserver.listener.ListenerFactory;
 import org.apache.ftpserver.ssl.SslConfigurationFactory;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.ftp.filesystem.OrtolangFileSystemFactory;
 import fr.ortolang.diffusion.ftp.user.OrtolangUserManager;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -83,15 +84,13 @@ public class FtpServiceBean implements FtpService {
 	
 	private static final Logger LOGGER = Logger.getLogger(FtpServiceBean.class.getName());
 	
-	private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
-    
     @EJB
     private MembershipService membership;
     @EJB
     private RegistryService registry;
 
     private ListenerFactory lFactory;
+    private Listener listener;
     private ConnectionConfigFactory cFactory;
 	private FtpServer server;
 
@@ -115,7 +114,8 @@ public class FtpServiceBean implements FtpService {
             lFactory.setSslConfiguration(sslcFactory.createSslConfiguration());
             lFactory.setImplicitSsl(true);
         }
-    	serverFactory.addListener("default", lFactory.createListener());
+        listener = lFactory.createListener();
+    	serverFactory.addListener("default", listener);
         OrtolangFileSystemFactory fsFactory = new OrtolangFileSystemFactory();
 		serverFactory.setFileSystem(fsFactory);
 		cFactory = new ConnectionConfigFactory();
@@ -150,6 +150,15 @@ public class FtpServiceBean implements FtpService {
 	public void resume() {
 		server.resume();
 	}
+	
+	@Override
+    public Set<FtpSession> getActiveSessions() throws FtpServiceException {
+        Set<FtpSession> sessions = new HashSet<FtpSession> ();
+        for ( FtpIoSession ios : listener.getActiveSessions() ) {
+            sessions.add(FtpSession.fromFtpIoSession(ios));
+        }
+        return sessions;
+    }
 	
 	@Override
     public boolean checkUserExistence(String username) throws FtpServiceException {
@@ -207,27 +216,8 @@ public class FtpServiceBean implements FtpService {
         infos.put(INFO_MAX_LOGIN, Integer.toString(cFactory.getMaxLogins()));
         infos.put(INFO_MAX_LOGIN_FAILURES, Integer.toString(cFactory.getMaxLoginFailures()));
         infos.put(INFO_MAX_THREADS, Integer.toString(cFactory.getMaxThreads()));
+        infos.put(INFO_ACTIVE_SESSIONS, Integer.toString(listener.getActiveSessions().size()));
         return infos;
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-    
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
     }
 
 }

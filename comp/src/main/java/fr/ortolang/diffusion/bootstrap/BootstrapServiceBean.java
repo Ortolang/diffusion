@@ -62,10 +62,8 @@ import org.jboss.ejb3.annotation.RunAsPrincipal;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
 import fr.ortolang.diffusion.form.FormService;
@@ -75,6 +73,7 @@ import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
+import fr.ortolang.diffusion.store.binary.DataCollisionException;
 
 @Startup
 @Singleton(name = BootstrapService.SERVICE_NAME)
@@ -85,9 +84,6 @@ import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTe
 public class BootstrapServiceBean implements BootstrapService {
 
     private static final Logger LOGGER = Logger.getLogger(BootstrapServiceBean.class.getName());
-
-    private static final String[] OBJECT_TYPE_LIST = new String[] {};
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] {};
 
     @EJB
     private RegistryService registry;
@@ -365,6 +361,9 @@ public class BootstrapServiceBean implements BootstrapService {
             String schemaOfficeHash = core.put(schemaOfficeInputStream);
             core.createMetadataFormat(MetadataFormat.OFFICE, "Schema for ORTOLANG Office metadata", schemaOfficeHash, "", false, false);
 
+            loadMetadataFormat(MetadataFormat.OAI_DC, "Schema for Dublin Core elements in JSON format", "", true, true);
+            loadMetadataFormat(MetadataFormat.OLAC, "Schema for OLAC elements in JSON format", "", true, true);
+            
             LOGGER.log(Level.INFO, "reimport process types");
             runtime.importProcessTypes();
 
@@ -373,6 +372,13 @@ public class BootstrapServiceBean implements BootstrapService {
             throw new BootstrapServiceException("error during bootstrap", e);
         }
 
+    }
+    
+    protected void loadMetadataFormat(String mf, String desc, String form, boolean validationNeed, boolean indexable) throws CoreServiceException, DataCollisionException {
+    	InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/" + mf + ".json");
+        String schemaHash = core.put(schemaInputStream);
+        core.createMetadataFormat(mf, desc, 
+        		schemaHash, form, validationNeed, indexable);
     }
 
     @Override
@@ -383,26 +389,6 @@ public class BootstrapServiceBean implements BootstrapService {
     @Override
     public Map<String, String> getServiceInfos() {
         return Collections.emptyMap();
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
     }
 
 }

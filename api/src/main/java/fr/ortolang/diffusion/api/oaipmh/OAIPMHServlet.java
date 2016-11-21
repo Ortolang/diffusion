@@ -78,6 +78,7 @@ import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.oaipmh.dataprovider.DiffusionDataProvider;
 import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionItemRepository;
 import fr.ortolang.diffusion.search.SearchService;
+import fr.ortolang.diffusion.store.handle.HandleStoreService;
 
 @Path("/oai")
 @Produces({ MediaType.APPLICATION_XML })
@@ -85,6 +86,8 @@ public class OAIPMHServlet {
 
     @EJB
     private static SearchService search;
+    @EJB
+    private static HandleStoreService handleStore;
 
     private static final Logger LOGGER = Logger.getLogger(OAIPMHServlet.class.getName());
 
@@ -94,7 +97,8 @@ public class OAIPMHServlet {
             , @QueryParam("identifier") String identifier
             , @QueryParam("metadataPrefix") String metadataPrefix
             , @QueryParam("from") String from
-            , @QueryParam("until") String until) throws URISyntaxException {
+            , @QueryParam("until") String until
+            , @QueryParam("resumptionToken") String resumptionToken) throws URISyntaxException {
 
         Context context = new Context();
         context.withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
@@ -102,7 +106,7 @@ public class OAIPMHServlet {
 
         InMemorySetRepository setRepository = new InMemorySetRepository();
         setRepository.doesNotSupportSets();
-        DiffusionItemRepository itemRepository = new DiffusionItemRepository(search);
+        DiffusionItemRepository itemRepository = new DiffusionItemRepository(search, handleStore);
 
         UTCDateProvider dateProvider = new UTCDateProvider();
         String earliestDateStr = "2014-08-12";
@@ -145,6 +149,7 @@ public class OAIPMHServlet {
         OAIPMHServlet.putParameter("metadataPrefix", metadataPrefix, reqParam);
         OAIPMHServlet.putParameter("from", from, reqParam);
         OAIPMHServlet.putParameter("until", until, reqParam);
+        OAIPMHServlet.putParameter("resumptionToken", resumptionToken, reqParam);
 
         OAIRequest oaiRequest = new OAIRequest(reqParam);
 

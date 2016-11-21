@@ -40,14 +40,14 @@ import java.util.Date;
 import java.util.List;
 
 import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangObjectProviderService;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.event.entity.EventFeed;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
-public interface EventService extends OrtolangService {
+public interface EventService extends OrtolangObjectProviderService {
 
     String SERVICE_NAME = "event";
     
@@ -79,5 +79,7 @@ public interface EventService extends OrtolangService {
     List<? extends OrtolangEvent> systemFindEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long afterTimestamp, int offset, int limit) throws EventServiceException;
     
     long systemCountEvents(String eventTypeFilter, String fromResourceFilter, String resourceTypeFilter, String throwedByFilter, long afterTimestamp) throws EventServiceException;
+    
+    List<? extends OrtolangEvent> systemListAllEventsForKey(String key) throws EventServiceException;
     
 }

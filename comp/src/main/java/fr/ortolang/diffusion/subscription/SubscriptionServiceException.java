@@ -39,23 +39,23 @@ package fr.ortolang.diffusion.subscription;
 @SuppressWarnings("serial")
 public class SubscriptionServiceException extends Exception {
 
-    public SubscriptionServiceException() {
+    SubscriptionServiceException() {
         super();
     }
 
-    public SubscriptionServiceException(String message) {
+    SubscriptionServiceException(String message) {
         super(message);
     }
 
-    public SubscriptionServiceException(String message, Throwable cause) {
+    SubscriptionServiceException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public SubscriptionServiceException(Throwable cause) {
+    SubscriptionServiceException(Throwable cause) {
         super(cause);
     }
 
-    protected SubscriptionServiceException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    SubscriptionServiceException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 }

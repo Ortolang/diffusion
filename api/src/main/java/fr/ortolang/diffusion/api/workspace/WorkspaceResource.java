@@ -584,7 +584,7 @@ public class WorkspaceResource {
     @Path("/{wskey}/elements/publication")
     public Response getPublicationPolicy(@PathParam(value = "wskey") String wskey, @QueryParam("path") String path)
             throws CoreServiceException, InvalidPathException, PathNotFoundException, KeyNotFoundException, OrtolangException, IOException, DataNotFoundException,
-            BinaryStoreServiceException, RegistryServiceException {
+            BinaryStoreServiceException, RegistryServiceException, BrowserServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/elements/publication");
         if (path == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'path' is mandatory").build();
@@ -700,6 +700,26 @@ public class WorkspaceResource {
             throws AccessDeniedException, SecurityServiceException, KeyNotFoundException, CoreServiceException {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/owner");
         core.changeWorkspaceOwner(wskey, newowner);
+        return Response.ok().build();
+    }
+    
+    @POST
+    @Path("/{wskey}/owner/message")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response postMessageToWorkspaceOwner(@PathParam(value = "wskey") String wskey, @FormParam(value = "subject") String subject, @FormParam(value = "email") String email, @FormParam(value = "message") String message)
+            throws AccessDeniedException, SecurityServiceException, KeyNotFoundException, CoreServiceException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/owner/message");
+        core.notifyWorkspaceOwner(wskey, email, "[" + subject  + "] <br/>" + message);
+        return Response.ok().build();
+    }
+    
+    @POST
+    @Path("/{wskey}/members/message")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response postMessageToWorkspaceMembers(@PathParam(value = "wskey") String wskey, @FormParam(value = "subject") String subject, @FormParam(value = "email") String email, @FormParam(value = "message") String message)
+            throws AccessDeniedException, SecurityServiceException, KeyNotFoundException, CoreServiceException {
+        LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/members/message");
+        core.notifyWorkspaceMembers(wskey, email, "[" + subject  + "] <br/>" + message);
         return Response.ok().build();
     }
 

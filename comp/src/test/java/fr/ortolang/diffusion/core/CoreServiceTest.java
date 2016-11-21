@@ -116,6 +116,8 @@ public class CoreServiceTest {
         jar.addPackage("fr.ortolang.diffusion.indexing");
         jar.addPackage("fr.ortolang.diffusion.membership");
         jar.addPackage("fr.ortolang.diffusion.membership.entity");
+        jar.addPackage("fr.ortolang.diffusion.message");
+        jar.addPackage("fr.ortolang.diffusion.message.entity");
         jar.addPackage("fr.ortolang.diffusion.notification");
         jar.addPackage("fr.ortolang.diffusion.registry");
         jar.addPackage("fr.ortolang.diffusion.registry.entity");
@@ -129,7 +131,9 @@ public class CoreServiceTest {
         jar.addPackage("fr.ortolang.diffusion.store.handle.entity");
         jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
         jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
+        jar.addPackage("fr.ortolang.diffusion.template");
         jar.addAsResource("config.properties");
+        jar.addAsResource("orientdb-config.xml");
         jar.addAsResource("schema/ortolang-item-schema.json");
         jar.addAsResource("schema/ortolang-workspace-schema.json");
         jar.addAsResource("json/meta.json");

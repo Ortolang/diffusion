@@ -67,6 +67,12 @@
 
         /* ANDROID CENTER FIX */
         div[style*="margin: 16px 0;"] { margin: 0 !important; }
+
+        .blockquote {
+            padding: 10px 20px;
+            margin: 0 0 20px;
+            border-left: 5px solid #eee;
+        }
     </style>
 </head>
 <body style="background-color: #f4f4f4; margin: 0 !important; padding: 0 !important;">

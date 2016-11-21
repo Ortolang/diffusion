@@ -36,43 +36,52 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
-import javax.ejb.*;
+import javax.annotation.security.RunAs;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.Schedule;
+import javax.ejb.Singleton;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 
+import org.atmosphere.cpr.AtmosphereResource;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.event.entity.Event;
+import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
 
-import org.atmosphere.cpr.AtmosphereResource;
-import org.atmosphere.cpr.Broadcaster;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.core.CoreService;
-import fr.ortolang.diffusion.core.CoreServiceException;
-import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.membership.MembershipServiceException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-
 @Local(SubscriptionService.class)
 @Singleton(name = SubscriptionService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @PermitAll
+@RunAs("system")
 public class SubscriptionServiceBean implements SubscriptionService {
 
     private static final Logger LOGGER = Logger.getLogger(SubscriptionServiceBean.class.getName());
 
-    private static final String[] OBJECT_TYPE_LIST = new String[] { };
-    private static final String[] OBJECT_PERMISSIONS_LIST = new String[] { };
+    private static final String PROCESS_CREATE_TYPE = "runtime.process.create";
+    private static final String MEMBERSHIP_GROUP_ADD_MEMBER_TYPE = "membership.group.add-member";
+    private static final String WORKSPACE_CREATE_TYPE = "core.workspace.create";
 
     @EJB
     private MembershipService membership;
@@ -80,31 +89,26 @@ public class SubscriptionServiceBean implements SubscriptionService {
     private RuntimeService runtime;
     @EJB
     private CoreService core;
-    private Map<String, Subscription> subscriptionRegistry = new HashMap<>();
+    private Map<String, Subscription> registry = new HashMap<>();
 
     public SubscriptionServiceBean() {
-        LOGGER.log(Level.INFO, "Instantiating service");
+        LOGGER.log(Level.INFO, "Instantiating Subscription service");
     }
 
     @Override
-    public Broadcaster getBroadcaster(String username) {
-        return subscriptionRegistry.get(username).getBroadcaster();
-    }
-
-    @Override
-    public void registerBroadcaster(String username, AtmosphereResource atmosphereResource) {
+    public void registerBroadcaster(String username, AtmosphereResource atmosphereResource) throws SubscriptionServiceException {
         LOGGER.log(Level.INFO, "Registering a broadcaster for user " + username);
-        if (!subscriptionRegistry.containsKey(username)) {
-            subscriptionRegistry.put(username, new Subscription(atmosphereResource.getBroadcaster()));
+        if (!registry.containsKey(username)) {
+            registry.put(username, new Subscription(username, atmosphereResource.getBroadcaster()));
         }
+        addDefaultFilters(username);
     }
 
-    @Override
-    public void addFilter(String username, Filter filter) throws SubscriptionServiceException {
-        if (!subscriptionRegistry.containsKey(username)) {
+    private void addFilter(String username, Filter filter) throws SubscriptionServiceException {
+        if (!registry.containsKey(username)) {
             throw new SubscriptionServiceException("Could not find subscription for user [" + username + "]");
         }
-        if (!subscriptionRegistry.get(username).addFilter(filter)) {
+        if (!registry.get(username).addFilter(filter)) {
             LOGGER.log(Level.FINE, "Filter already present for user " + username + " " + filter);
         } else {
             LOGGER.log(Level.FINE, "Filter added to user " + username + " subscription " + filter);
@@ -112,61 +116,99 @@ public class SubscriptionServiceBean implements SubscriptionService {
     }
 
     @Override
-    public void removeFilter(String username, Filter filter) {
-        LOGGER.log(Level.INFO, "Removing filter from the subscription of user " + username);
-        if (subscriptionRegistry.get(username).removeFilter(filter)) {
-            LOGGER.log(Level.FINE, "Filter removed from user " + username + " subscription " + filter);
+    public void processEvent(Event event) throws SubscriptionServiceException {
+        switch (event.getType()) {
+        case PROCESS_CREATE_TYPE:
+            if (registry.containsKey(event.getThrowedBy())) {
+                LOGGER.log(Level.FINE, "Process created by user " + event.getThrowedBy() + "; adding filter to follow process events");
+                addFilter(event.getThrowedBy(), new Filter(SubscriptionService.RUNTIME_PROCESS_PATTERN, event.getFromObject(), null));
+            }
+            break;
+        case MEMBERSHIP_GROUP_ADD_MEMBER_TYPE:
+            Map<String, String> arguments = event.getArguments();
+            if (arguments.containsKey("member") && registry.containsKey(arguments.get("member"))) {
+                LOGGER.log(Level.FINE, "User " + arguments.get("member") + " added to group " + event.getFromObject() + "; adding filter to follow group events");
+                addFilter(arguments.get("member"), new Filter(SubscriptionService.MEMBERSHIP_GROUP_ALL_PATTERN, event.getFromObject(), null));
+                addWorkspacesFilters(arguments.get("member"));
+            }
+            break;
+        case WORKSPACE_CREATE_TYPE:
+            if (registry.containsKey(event.getThrowedBy())) {
+                LOGGER.log(Level.FINE, "Workspace created by user " + event.getThrowedBy() + "; adding filter to follow workspace events");
+                addFilter(event.getThrowedBy(), new Filter(null, event.getFromObject(), null));
+            }
+            break;
+        }
+
+        for (Subscription subscription : registry.values()) {
+            for (Iterator<Filter> iterator = subscription.getFilters().iterator(); iterator.hasNext(); ) {
+                Filter filter = iterator.next();
+                if (filter.matches(event)) {
+                    LOGGER.log(Level.FINE, "Matching filter " + filter);
+                    LOGGER.log(Level.FINE, "Sending atmosphere message to " + subscription.getUsername());
+                    subscription.broadcast(event);
+
+                    // Check if filter needs to be removed
+                    if (event.getType().equals("runtime.process.change-state")) {
+                        if (event.getArguments().containsKey("state") && event.getArguments().get("state").equals(Process.State.COMPLETED.name())) {
+                            LOGGER.log(Level.INFO, "Removing filter from " + subscription.getUsername() + " subscription");
+                            iterator.remove();
+                        }
+                    } else if (event.getType().equals("core.workspace.delete")) {
+                        // if from pattern equals null then the filter matches any workspace key
+                        // and thus is not specific to the deleted workspace
+                        if (filter.getFromPattern() != null) {
+                            LOGGER.log(Level.INFO, "Removing filter from " + subscription.getUsername() + " subscription");
+                            iterator.remove();
+                        }
+                    }
+                }
+            }
         }
     }
 
-    @Override
-    public void addDefaultFilters() throws SubscriptionServiceException, RuntimeServiceException, AccessDeniedException {
-        String username = membership.getProfileKeyForConnectedIdentifier();
-        List<String> profileGroups = null;
+    private void addDefaultFilters(String username) throws SubscriptionServiceException {
+        LOGGER.log(Level.FINE, "Adding default filters to user " + username + " subscription");
         try {
-            profileGroups = membership.getProfileGroups(username);
-        } catch (MembershipServiceException | KeyNotFoundException | AccessDeniedException e) {
-            LOGGER.log(Level.SEVERE, "Cannot read " + username + " profile and thus cannot add filters for user groups", e);
-        }
-        if (username != null) {
-            LOGGER.log(Level.FINE, "Adding default filters to user " + username + " subscription");
+            Profile profile = membership.systemReadProfile(username);
+            List<String> profileGroups = Arrays.asList(profile.getGroups());
             // Runtime events
-            List<Process> processes = runtime.listCallerProcesses(null);
+            List<Process> processes = runtime.systemListUserProcesses(username, null);
             for (Process process : processes) {
                 if (!process.getState().equals(Process.State.ABORTED) && !process.getState().equals(Process.State.COMPLETED)) {
                     addFilter(username, new Filter(RUNTIME_PROCESS_PATTERN, process.getKey(), null));
                 }
             }
-            List<HumanTask> candidateTasks = runtime.listCandidateTasks();
+            List<HumanTask> candidateTasks = runtime.systemListUserCandidateTasks(username);
             for (HumanTask candidateTask : candidateTasks) {
                 addFilter(username, new Filter("runtime\\.task\\..*", candidateTask.getId(), null));
             }
             // User's workspaces related filters
-            addWorkspacesFilters();
+            addWorkspacesFilters(username);
             // User's groups related filters
-            if (profileGroups != null) {
-                for (String profileGroup : profileGroups) {
-                    if (profileGroup != null && profileGroup.length() > 0) {
-                        addFilter(username, new Filter(MEMBERSHIP_GROUP_ALL_PATTERN, profileGroup, null));
-                        addFilter(username, new Filter("runtime\\.task\\..*", null, null, "group," + profileGroup));
-                    }
+            for (String profileGroup : profileGroups) {
+                if (profileGroup != null && profileGroup.length() > 0) {
+                    addFilter(username, new Filter(MEMBERSHIP_GROUP_ALL_PATTERN, profileGroup, null));
+                    addFilter(username, new Filter("runtime\\.task\\..*", null, null, "group," + profileGroup));
                 }
             }
             addFilter(username, new Filter("runtime\\.remote\\.create", null, username));
-        } else {
-            throw new SubscriptionServiceException("Cannot get profile key for connected identifier");
+        } catch (MembershipServiceException | KeyNotFoundException | RuntimeServiceException e) {
+            throw new SubscriptionServiceException("Cannot add default filters for user " + username, e);
         }
     }
 
-    @Override
-    public void addWorkspacesFilters() {
-        String username = membership.getProfileKeyForConnectedIdentifier();
+    private void addWorkspacesFilters(String username) {
+        if (!registry.containsKey(username)) {
+            return;
+        }
         try {
-            List<String> workspaces = core.findWorkspacesForProfile(username);
+            List<String> workspaces = core.systemFindWorkspacesForProfile(username);
             for (String workspace : workspaces) {
                 addFilter(username, new Filter(null, workspace, null));
+                addFilter(username, new Filter("message\\..*", null, null, "wskey," + workspace));
             }
-        } catch (AccessDeniedException | CoreServiceException | SubscriptionServiceException e) {
+        } catch (CoreServiceException | SubscriptionServiceException e) {
             LOGGER.log(Level.SEVERE, "Cannot read " + username + " profile and thus cannot add filters for user groups", e);
         }
     }
@@ -190,29 +232,22 @@ public class SubscriptionServiceBean implements SubscriptionService {
     }
 
     @Override
-    public Map<String, Subscription> getSubscriptions() {
-        return subscriptionRegistry;
+    public List<String> getConnectedUsers() {
+        return registry.values().stream().filter(Subscription::isConnected).map(Subscription::getUsername)
+                .collect(Collectors.toList());
     }
 
     @Schedule(hour = "5")
     private void cleanupSubscriptions() {
-        LOGGER.log(Level.INFO, "Starting to cleanup subscriptions (registry size: " + subscriptionRegistry.size() + ")");
-        Set<String> subscriptionsToBeRemoved = new HashSet<>();
-        subscriptionRegistry.entrySet().stream().filter(subscriptionRegistryEntry -> subscriptionRegistryEntry.getValue().getBroadcaster().getAtmosphereResources().isEmpty())
-                .forEach(subscriptionRegistryEntry -> {
-                    LOGGER.log(Level.INFO, "No more resources associated to " + subscriptionRegistryEntry.getKey() + " broadcaster; destroying broadcaster");
-                    subscriptionRegistryEntry.getValue().getBroadcaster().destroy();
-                    subscriptionsToBeRemoved.add(subscriptionRegistryEntry.getKey());
-                });
-        if (subscriptionsToBeRemoved.isEmpty()) {
-            LOGGER.log(Level.INFO, "No subscription removed from subscription registry");
-        } else {
-            for (String key : subscriptionsToBeRemoved) {
-                LOGGER.log(Level.FINE, "Removing subscription of user " + key);
-                subscriptionRegistry.remove(key);
+        LOGGER.log(Level.INFO, "Starting to cleanup subscriptions (registry size: " + registry.size() + ")");
+        for (Iterator<Subscription> iterator = registry.values().iterator(); iterator.hasNext(); ) {
+            Subscription subscription = iterator.next();
+            if (!subscription.hasAtmosphereResources()) {
+                LOGGER.log(Level.INFO, "No more resources associated to " + subscription.getUsername() + " broadcaster; destroying broadcaster");
+                iterator.remove();
             }
-            LOGGER.log(Level.INFO, subscriptionsToBeRemoved.size() + " subscription(s) removed from subscription registry (registry new size: " + subscriptionRegistry.size() + ")");
         }
+        LOGGER.log(Level.INFO, "Finishing to cleanup subscriptions (new registry size: " + registry.size() + ")");
     }
 
     //Service methods
@@ -225,27 +260,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public Map<String, String> getServiceInfos() {
-        return new HashMap<String, String> ();
-    }
-
-    @Override
-    public String[] getObjectTypeList() {
-        return OBJECT_TYPE_LIST;
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return OBJECT_PERMISSIONS_LIST;
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
+        return new HashMap<>();
     }
 
 }

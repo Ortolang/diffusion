@@ -4,7 +4,7 @@
     "type": "select",
     "templateOptions": {
       "required": true,
-      "label": "Grade à attribuer au contenu publié ?",
+      "label": "Quel grade voulez vous attribuer à cette publication ?",
       "options": [
         {
           "name": "A",
@@ -34,7 +34,7 @@
     "type": "textarea",
     "templateOptions": {
       "required": true,
-      "label": "Raison de votre choix ?",
+      "label": "Quels sont les raisons de votre choix ?",
       "default": ""
     }
   }
