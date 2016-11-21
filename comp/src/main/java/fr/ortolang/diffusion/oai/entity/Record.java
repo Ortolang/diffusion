@@ -11,17 +11,19 @@ import org.hibernate.annotations.Type;
 
 @Entity
 @NamedQueries({
-	@NamedQuery(name = "findAllRecordsByMetadataPrefix", query = "SELECT r FROM Record r WHERE r.metadataPrefix = :metadataPrefix"),
-	@NamedQuery(name = "findRecordBykey", query = "SELECT r FROM Record r WHERE r.key = :key")
+    @NamedQuery(name = "findRecordsByIdentifier", query = "SELECT r FROM Record r WHERE r.identifier = :identifier"),
+	@NamedQuery(name = "findRecordsByMetadataPrefix", query = "SELECT r FROM Record r WHERE r.metadataPrefix = :metadataPrefix"),
+	@NamedQuery(name = "findRecordsByIdentifierAndMetadataPrefix", query = "SELECT r FROM Record r WHERE r.identifier = :identifier AND r.metadataPrefix = :metadataPrefix")
 }
 )
 public class Record {
 
 	@Id
-	private String key;
+	private String id;
 	@Version
 	private long version;
 	
+	private String identifier;
 	private String metadataPrefix;
 	private long lastModificationDate;
 	@Lob
@@ -31,18 +33,27 @@ public class Record {
 	public Record() {
 	}
 	
-	public Record(String key, String metadataPrefix, long lastModificationDate, String xml) {
-		this.key = key;
+	public Record(String id, String identifier, String metadataPrefix, long lastModificationDate, String xml) {
+		this.id = id;
+		this.identifier = identifier;
 		this.metadataPrefix = metadataPrefix;
 		this.lastModificationDate = lastModificationDate;
 		this.xml = xml;
 	}
 	
-	public String getKey() {
-		return key;
+	public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getIdentifier() {
+		return identifier;
 	}
-	public void setKey(String key) {
-		this.key = key;
+	public void setIdentifier(String identifier) {
+		this.identifier = identifier;
 	}
 	public String getMetadataPrefix() {
 		return metadataPrefix;

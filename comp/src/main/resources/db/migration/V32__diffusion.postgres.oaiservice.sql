@@ -1,11 +1,12 @@
 
     create table Record (
-        key varchar(255) not null,
+        id varchar(255) not null,
+        identifier varchar(255) not null,
         metadataPrefix varchar(255),
         lastModificationDate int8 not null,
         xml text,
         version int8 not null,
-        primary key (key)
+        primary key (id)
     );
 
     create table Set (

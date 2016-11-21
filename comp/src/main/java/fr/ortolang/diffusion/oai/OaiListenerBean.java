@@ -4,7 +4,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.security.PermitAll;
-import javax.annotation.security.RunAs;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.EJB;
 import javax.ejb.MessageDriven;
@@ -21,7 +20,6 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.oai.format.OAI_DC;
-import fr.ortolang.diffusion.oai.format.XMLWriter;
 import fr.ortolang.diffusion.publication.PublicationService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;

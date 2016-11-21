@@ -36,8 +36,10 @@ package fr.ortolang.diffusion.api.oaipmh.repository;
  * #L%
  */
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -48,6 +50,7 @@ import com.lyncode.xoai.model.oaipmh.About;
 import com.lyncode.xoai.model.oaipmh.Metadata;
 
 import fr.ortolang.diffusion.api.oaipmh.model.DiffusionMetadata;
+import fr.ortolang.diffusion.oai.entity.Record;
 
 public class DiffusionItem implements Item {
 
@@ -105,5 +108,9 @@ public class DiffusionItem implements Item {
 		return this.metadata;
 	}
 
-
+	public static DiffusionItem fromRecord(Record rec) throws IOException {
+	    return DiffusionItem.item().withIdentifier(DiffusionItemRepository.PREFIX_IDENTIFIER + rec.getIdentifier())
+	            .withDatestamp(new Date(rec.getLastModificationDate()))
+	            .withMetadata(new ByteArrayInputStream(rec.getXml().getBytes(StandardCharsets.UTF_8)));
+	}
 }

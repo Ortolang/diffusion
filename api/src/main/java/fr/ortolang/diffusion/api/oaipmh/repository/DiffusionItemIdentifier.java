@@ -43,6 +43,7 @@ import java.util.List;
 import com.lyncode.xoai.dataprovider.model.ItemIdentifier;
 import com.lyncode.xoai.dataprovider.model.Set;
 
+import fr.ortolang.diffusion.oai.entity.Record;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
 public class DiffusionItemIdentifier implements ItemIdentifier {
@@ -90,6 +91,11 @@ public class DiffusionItemIdentifier implements ItemIdentifier {
 	public boolean isDeleted() {
 		// No deleted status
 		return false;
+	}
+	
+	public static DiffusionItemIdentifier fromRecord(Record rec) {
+	    return DiffusionItemIdentifier.item().withIdentifier(DiffusionItemRepository.PREFIX_IDENTIFIER + rec.getIdentifier())
+	            .withDatestamp(new Date(rec.getLastModificationDate()));
 	}
 
 }

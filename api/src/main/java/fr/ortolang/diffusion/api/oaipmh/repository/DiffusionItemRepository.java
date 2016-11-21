@@ -65,6 +65,7 @@ import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.api.oaipmh.format.OAI_DC;
 import fr.ortolang.diffusion.api.oaipmh.format.OLAC;
 import fr.ortolang.diffusion.oai.OaiService;
+import fr.ortolang.diffusion.oai.OaiServiceException;
 import fr.ortolang.diffusion.oai.RecordNotFoundException;
 import fr.ortolang.diffusion.oai.entity.Record;
 import fr.ortolang.diffusion.search.SearchService;
@@ -101,14 +102,14 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
             throw new IdDoesNotExistException();
         }
         
-        String key = identifier.replaceFirst(DiffusionItemRepository.PREFIX_IDENTIFIER, "");
+        identifier = identifier.replaceFirst(DiffusionItemRepository.PREFIX_IDENTIFIER, "");
         List<String> metadataFormat = new ArrayList<String>();
         try {
-			Record record = oaiService.readRecord(key);
-			metadataFormat.add("oai_dc");
-			metadataFormat.add("olac");
+			List<Record> records = oaiService.listRecordsByIdentifier(identifier);
+			for(Record r : records) {
+			    metadataFormat.add(r.getMetadataPrefix());
+			}
 		} catch (RecordNotFoundException e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
 		}
         if (metadataFormat.isEmpty())
             throw new NoMetadataFormatsException();
@@ -126,63 +127,22 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
      * @return a list of identifiers
      */
     protected ListItemIdentifiersResult getItemIdentifiersFromQuery(String metadataPrefix, Date from, Date until, int offset, int length) {
-
         List<DiffusionItemIdentifier> list = new ArrayList<>();
-
-//        try {
-//        	StringBuilder query = new StringBuilder("select expand($all) let $item = (SELECT `lastModificationDate` AS lastModificationDate ,`meta_ortolang-workspace-json.wsalias` AS wsalias ,`key` AS key FROM Collection WHERE `meta_ortolang-item-json` IS NOT NULL ");
-//			if (from != null) {
-//				query.append(" AND lastModificationDate>=").append(from.getTime());
-//			}
-//			if (until != null) {
-//				query.append(" AND lastModificationDate<=").append(until.getTime() + 86400000);
-//			}
-//        	query.append(" ), $collection = (SELECT `lastModificationDate` AS lastModificationDate ,`meta_ortolang-workspace-json.wsalias` AS wsalias ,`key` AS key FROM Collection WHERE `meta_")
-//        		.append(metadataPrefix).append("` IS NOT NULL");
-//        	if (from != null) {
-//				query.append(" AND lastModificationDate>=").append(from.getTime());
-//			}
-//			if (until != null) {
-//				query.append(" AND lastModificationDate<=").append(until.getTime() + 86400000);
-//			}
-//			query.append(" ), $dataobject = (SELECT `lastModificationDate` AS lastModificationDate ,`meta_ortolang-workspace-json.wsalias` AS wsalias ,`key` AS key FROM Object WHERE `meta_")
-//				.append(metadataPrefix).append("` IS NOT NULL");
-//        	if (from != null) {
-//				query.append(" AND lastModificationDate>=").append(from.getTime());
-//			}
-//			if (until != null) {
-//				query.append(" AND lastModificationDate<=").append(until.getTime() + 86400000);
-//			}
-//        	query.append(" ), $all = UNIONALL($item, $collection, $dataobject)");
-//        	List<String> docs = search.jsonSearch(query.toString());
-//            Map<String, DiffusionItemIdentifier> registerMap = new HashMap<>();
-//            for (String doc : docs) {
-//                StringReader reader = new StringReader(doc);
-//                JsonReader jsonReader = Json.createReader(reader);
-//                JsonObject jsonObj = jsonReader.readObject();
-//                try {
-//                    String key = jsonObj.containsKey("wsalias") ? jsonObj.getString("wsalias") : jsonObj.getString("key");
-//                    JsonNumber lastModificationDate = jsonObj.getJsonNumber("lastModificationDate");
-//                    Long longTimestamp = lastModificationDate.longValue();
-//                    Date datestamp = new Date(longTimestamp);
-//                    DiffusionItemIdentifier itemIdentifier = new DiffusionItemIdentifier().withIdentifier(PREFIX_IDENTIFIER + key).withDatestamp(datestamp);
-//
-//                    if (registerMap.containsKey(itemIdentifier.getIdentifier()) && registerMap.get(itemIdentifier.getIdentifier()).getDatestamp().before(itemIdentifier.getDatestamp())) {
-//                        list.set(list.indexOf(registerMap.get(itemIdentifier.getIdentifier())), itemIdentifier);
-//                    } else {
-//                        list.add(itemIdentifier);
-//                    }
-//                    registerMap.put(itemIdentifier.getIdentifier(), itemIdentifier);
-//                } catch (NullPointerException | ClassCastException | NumberFormatException e) {
-//                    LOGGER.log(Level.WARNING, "No property 'key' or lastModificationDate in json object", e);
-//                } finally {
-//                    jsonReader.close();
-//                    reader.close();
-//                }
-//            }
-//        } catch (SearchServiceException e) {
-//            LOGGER.log(Level.SEVERE, "Unable to get item identifiers with metadataPrefix : " + metadataPrefix + " and from " + from + " until " + until);
-//        }
+        Long fromTime = null;
+        Long untilTime = null;
+        try {
+            if (from != null)
+                fromTime = from.getTime();
+            if (until != null)
+                untilTime = until.getTime() + 86400000;
+            List<Record> records = oaiService.listRecordsByMetadataPrefix(metadataPrefix, fromTime, untilTime);
+            for(Record rec : records) {
+                list.add(DiffusionItemIdentifier.fromRecord(rec));
+            }
+        } catch (RecordNotFoundException e) {
+        } catch (OaiServiceException e) {
+            LOGGER.log(Level.SEVERE, "Unable to list identifiers with metadataPrefix : " + metadataPrefix + " and from " + from + " until " + until, e);
+        }
         return new ListItemIdentifiersResult(offset + length < list.size(), new ArrayList<ItemIdentifier>(list.subList(offset, min(offset + length, list.size()))), list.size());
     }
 
@@ -196,35 +156,12 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
     public Item getItem(String identifier, String metadataPrefix) throws IdDoesNotExistException, OAIException {
         if (!identifier.startsWith(DiffusionItemRepository.PREFIX_IDENTIFIER))
             throw new IdDoesNotExistException();
-//        String key = identifier.replaceFirst(DiffusionItemRepository.PREFIX_IDENTIFIER, "");
-//        try {
-//        	StringBuilder query = new StringBuilder("select expand($all) let $item = (SELECT FROM Collection WHERE `meta_ortolang-item-json` IS NOT NULL ");
-//			query.append(" AND `meta_ortolang-workspace-json.wsalias`='").append(key).append("'");
-//        	query.append(" ), $collection = (SELECT FROM Collection WHERE `meta_").append(metadataPrefix).append("` IS NOT NULL");
-//        	query.append(" AND key='").append(key).append("'");
-//        	query.append("), $object = (SELECT FROM Object WHERE `meta_").append(metadataPrefix).append("` IS NOT NULL");
-//        	query.append(" AND key='").append(key).append("'");
-//        	query.append(" ), $all = UNIONALL($item, $collection, $object)");
-//        	List<String> docs = search.jsonSearch(query.toString());
-//        	
-//            DiffusionItem lastItem = null;
-//            for (String doc : docs) {
-//                DiffusionItem item = diffusionItem(doc, metadataPrefix);
-//                if (lastItem == null) {
-//                    lastItem = item;
-//                } else if (lastItem.getDatestamp().before(item.getDatestamp())) {
-//                    lastItem = item;
-//                }
-//            }
-//            if (lastItem != null) {
-//                return lastItem;
-//            } else {
-//                throw new OAIException("There is no record for this identifier " + identifier);
-//            }
-//        } catch (SearchServiceException | IOException e) {
-//            LOGGER.log(Level.SEVERE, "Unable to get item with key : " + identifier, e);
-//        }
-        throw new IdDoesNotExistException();
+        identifier = identifier.replaceFirst(DiffusionItemRepository.PREFIX_IDENTIFIER, "");
+        try {
+            return DiffusionItem.fromRecord(oaiService.findRecord(identifier, metadataPrefix));
+        } catch (RecordNotFoundException | IOException e) {
+            throw new IdDoesNotExistException();
+        }
     }
 
     /**
@@ -238,48 +175,21 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
      */
     public ListItemsResults getItemsFromQuery(String metadataPrefix, Date from, Date until, int offset, int length) {
         List<DiffusionItem> list = new ArrayList<>();
-//        try {
-//        	StringBuilder query = new StringBuilder("select expand($all) let $item = (SELECT FROM Collection WHERE `meta_ortolang-item-json` IS NOT NULL ");
-//			if (from != null) {
-//				query.append(" AND lastModificationDate>=").append(from.getTime());
-//			}
-//			if (until != null) {
-//				query.append(" AND lastModificationDate<=").append(until.getTime() + 86400000);
-//			}
-//        	query.append(" ), $collection = (SELECT FROM Collection WHERE `meta_").append(metadataPrefix).append("` IS NOT NULL");
-//        	if (from != null) {
-//				query.append(" AND lastModificationDate>=").append(from.getTime());
-//			}
-//			if (until != null) {
-//				query.append(" AND lastModificationDate<=").append(until.getTime() + 86400000);
-//			}
-//			query.append(" ), $object = (SELECT FROM Object WHERE `meta_").append(metadataPrefix).append("` IS NOT NULL");
-//			if (from != null) {
-//				query.append(" AND lastModificationDate>=").append(from.getTime());
-//			}
-//			if (until != null) {
-//				query.append(" AND lastModificationDate<=").append(until.getTime() + 86400000);
-//			}
-//        	query.append(" ), $all = UNIONALL($item, $collection, $object)");
-//        	List<String> docs = search.jsonSearch(query.toString());
-//            if (!docs.isEmpty()) {
-//                Map<String, DiffusionItem> registerMap = new HashMap<>();
-//
-//                for (String doc : docs) {
-//                    DiffusionItem item = diffusionItem(doc, metadataPrefix);
-//                    if (item != null) {
-//                        if (registerMap.containsKey(item.getIdentifier()) && registerMap.get(item.getIdentifier()).getDatestamp().before(item.getDatestamp())) {
-//                            list.set(list.indexOf(registerMap.get(item.getIdentifier())), item);
-//                        } else {
-//                            list.add(item);
-//                        }
-//                        registerMap.put(item.getIdentifier(), item);
-//                    }
-//                }
-//            }
-//        } catch (SearchServiceException | IOException e) {
-//            LOGGER.log(Level.SEVERE, "Unable to get item with metadataPrefix : " + metadataPrefix + " and from " + from + " until " + until, e);
-//        }
+        Long fromTime = null;
+        Long untilTime = null;
+        try {
+            if (from != null)
+                fromTime = from.getTime();
+            if (until != null)
+                untilTime = until.getTime() + 86400000;
+            List<Record> records = oaiService.listRecordsByMetadataPrefix(metadataPrefix, fromTime, untilTime);
+            for(Record rec : records) {
+                list.add(DiffusionItem.fromRecord(rec));
+            }
+        } catch (RecordNotFoundException e) {
+        } catch (IOException | OaiServiceException e) {
+            LOGGER.log(Level.SEVERE, "Unable to list records with metadataPrefix : " + metadataPrefix + " and from " + from + " until " + until, e);
+        }
         return new ListItemsResults(offset + length < list.size(), new ArrayList<Item>(list.subList(offset, min(offset + length, list.size()))), list.size());
     }
 
@@ -312,7 +222,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
             if (metadata != null) {
                 item = DiffusionItem.item();
-                item.withIdentifier(PREFIX_IDENTIFIER + key);
+                item.withIdentifier(DiffusionItemRepository.PREFIX_IDENTIFIER + key);
                 item.withDatestamp(datestamp);
                 item.withMetadata(metadata);
             }
