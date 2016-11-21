@@ -972,10 +972,12 @@ public class CoreServiceBean implements CoreService {
             String root = workspace.findSnapshotByName(snapshot).getKey();
 
             Map<String, Map<String, List<String>>> map = new HashMap<String, Map<String, List<String>>>();
+            
             AuthorisationPolicyTemplate defaultTemplate = authorisation.getPolicyTemplate(AuthorisationPolicyTemplate.DEFAULT);
             Map<String, String> aclParams = new HashMap<String, String>();
             aclParams.put("${workspace.members}", workspace.getMembers());
             aclParams.put("${workspace.privileged}", workspace.getPrivileged());
+            builtPublicationMap(wskey, map, authorisation.getPolicyRules(defaultTemplate.getTemplate()), aclParams);
             builtPublicationMap(root, map, authorisation.getPolicyRules(defaultTemplate.getTemplate()), aclParams);
             return map;
         } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException e) {

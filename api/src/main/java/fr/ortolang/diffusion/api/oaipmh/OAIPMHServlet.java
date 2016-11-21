@@ -77,6 +77,7 @@ import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.oaipmh.dataprovider.DiffusionDataProvider;
 import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionItemRepository;
+import fr.ortolang.diffusion.oai.OaiService;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 
@@ -85,7 +86,7 @@ import fr.ortolang.diffusion.store.handle.HandleStoreService;
 public class OAIPMHServlet {
 
     @EJB
-    private static SearchService search;
+    private static OaiService oai;
     @EJB
     private static HandleStoreService handleStore;
 
@@ -106,7 +107,7 @@ public class OAIPMHServlet {
 
         InMemorySetRepository setRepository = new InMemorySetRepository();
         setRepository.doesNotSupportSets();
-        DiffusionItemRepository itemRepository = new DiffusionItemRepository(search, handleStore);
+        DiffusionItemRepository itemRepository = new DiffusionItemRepository(oai, handleStore);
 
         UTCDateProvider dateProvider = new UTCDateProvider();
         String earliestDateStr = "2014-08-12";
