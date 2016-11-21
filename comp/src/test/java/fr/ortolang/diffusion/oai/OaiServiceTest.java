@@ -40,7 +40,7 @@ public class OaiServiceTest {
 	
 	@Deployment
     public static EnterpriseArchive createDeployment() {
-		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "registry.jar");
+		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "diffusion-server-ejb.jar");
 		jar.addPackage("fr.ortolang.diffusion");
 		jar.addPackage("fr.ortolang.diffusion.oai");
 		jar.addPackage("fr.ortolang.diffusion.oai.entity");
@@ -78,7 +78,7 @@ public class OaiServiceTest {
 		Record record1 = oai.createRecord(key, metadataPrefix, lastModificationDate, xml);
 		try {
 			Record recordRead1 = oai.readRecord(key);
-			assertTrue(record1.equals(recordRead1));
+			assertTrue(record1.getKey().equals(recordRead1.getKey()));
 		} catch (RecordNotFoundException e) {
 			fail(e.getMessage());
 		}

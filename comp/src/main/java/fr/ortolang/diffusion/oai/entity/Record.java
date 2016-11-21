@@ -22,12 +22,6 @@ public class Record {
 	@Version
 	private long version;
 	
-	public long getVersion() {
-		return version;
-	}
-	public void setVersion(long version) {
-		this.version = version;
-	}
 	private String metadataPrefix;
 	private long lastModificationDate;
 	@Lob
@@ -68,5 +62,11 @@ public class Record {
 	public void setXml(String xml) {
 		this.xml = xml;
 	}
-	
+
+    public long getVersion() {
+        return version;
+    }
+    public void setVersion(long version) {
+        this.version = version;
+    }
 }

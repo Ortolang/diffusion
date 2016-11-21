@@ -50,7 +50,7 @@ public class OaiServiceBean implements OaiService {
 	public Record readRecord(String key) throws RecordNotFoundException {
         LOGGER.log(Level.FINE, "reading record : " + key);
         try {
-	        return em.createNamedQuery("findRecordBykey", Record.class).setParameter("key", key.getBytes()).getSingleResult();
+	        return em.createNamedQuery("findRecordBykey", Record.class).setParameter("key", key).getSingleResult();
         } catch (NoResultException e) {
         	throw new RecordNotFoundException("unable to find a record with key: " + key);
         }
