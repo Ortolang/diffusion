@@ -80,6 +80,11 @@
 			<artifactId>lucene-queryparser</artifactId>
 			<version>${version.apache.lucene}</version>
 		</dependency>
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>transport</artifactId>
+            <version>${version.elasticsearch}</version>
+        </dependency>
 		<dependency>
 			<groupId>org.wildfly</groupId>
 			<artifactId>wildfly-ejb3</artifactId>
@@ -116,7 +121,7 @@
 			<groupId>gov.loc</groupId>
 			<artifactId>bagit</artifactId>
 			<version>${version.bagit}</version>
-			<exclusions> 
+			<exclusions>
         		    <exclusion>
       			          <groupId>dom4j</groupId>
               			  <artifactId>dom4j</artifactId>
@@ -311,7 +316,7 @@
 		</plugins>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
+				<!--This plugin's configuration is used to store Eclipse m2e settings
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
