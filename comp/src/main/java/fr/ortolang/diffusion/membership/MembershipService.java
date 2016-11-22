@@ -123,6 +123,8 @@ public interface MembershipService extends OrtolangObjectProviderService, Ortola
 
     Profile systemReadProfile(String identifier) throws MembershipServiceException, KeyNotFoundException;
 
+    void systemSetProfileReferentialId(String identifier, String referentialId) throws MembershipServiceException, KeyNotFoundException;
+
     List<Profile> systemListProfiles() throws MembershipServiceException;
 
 }

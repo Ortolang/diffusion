@@ -36,67 +36,17 @@ package fr.ortolang.diffusion.membership;
  * #L%
  */
 
-import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
-import static org.bouncycastle.crypto.tls.ConnectionEnd.client;
-
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ejb.Local;
-import javax.ejb.SessionContext;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectImportHandler;
-import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
-import fr.ortolang.diffusion.membership.entity.Group;
-import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.membership.entity.ProfileData;
-import fr.ortolang.diffusion.membership.entity.ProfileDataType;
-import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
-import fr.ortolang.diffusion.membership.entity.ProfileStatus;
+import fr.ortolang.diffusion.membership.entity.*;
 import fr.ortolang.diffusion.membership.export.GroupExportHandler;
 import fr.ortolang.diffusion.membership.export.ProfileExportHandler;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
-import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
-import fr.ortolang.diffusion.registry.KeyLockedException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryService;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.registry.*;
 import fr.ortolang.diffusion.security.authentication.AuthenticationService;
 import fr.ortolang.diffusion.security.authentication.TOTPHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -104,6 +54,25 @@ import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.*;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static fr.ortolang.diffusion.OrtolangEvent.buildEventType;
 
 @Local(MembershipService.class)
 @Stateless(name = MembershipService.SERVICE_NAME)
@@ -1119,16 +1088,16 @@ public class MembershipServiceBean implements MembershipService {
                 }
                 if (profile.getFullName() != null) {
                     content.setName(profile.getFullName());
-                    content.addContentPart("fullname", profile.getFullName(), TextField.TYPE_STORED);
+                    content.addContentPart(profile.getFullName());
                 }
                 if (profile.getEmail() != null && profile.getEmail().length() > 0) {
                     if (profile.getEmailVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
-                        content.addContentPart("email", profile.getEmail(), StringField.TYPE_STORED);
+                        content.addContentPart(profile.getEmail());
                     }
                 }
                 for (ProfileData info : profile.getInfos().values()) {
                     if (info.getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
-                        content.addContentPart(info.getName(), info.getValue());
+                        content.addContentPart(info.getValue());
                     }
                 }
             }

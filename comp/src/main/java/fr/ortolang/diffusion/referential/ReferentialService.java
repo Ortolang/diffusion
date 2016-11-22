@@ -54,8 +54,6 @@ public interface ReferentialService extends OrtolangObjectProviderService, Ortol
 
     ReferentialEntity createEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyAlreadyExistsException, AccessDeniedException;
 
-    ReferentialEntity systemCreateEntity(String name, ReferentialEntityType type, String content, String caller) throws ReferentialServiceException, KeyAlreadyExistsException, AccessDeniedException;
-
     ReferentialEntity readEntity(String name) throws ReferentialServiceException, KeyNotFoundException;
 
     void updateEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;

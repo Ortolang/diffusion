@@ -58,7 +58,7 @@
         <version.javamelody>1.60.0</version.javamelody>
         <version.atmopshere>2.4.6</version.atmopshere>
         <version.apache.lucene>6.2.0</version.apache.lucene>
-        <version.elasticsearch>5.1.0</version.elasticsearch>
+        <version.elasticsearch>5.0.1</version.elasticsearch>
         <version.openrdf.sesame>2.8.3</version.openrdf.sesame>
         <version.orientechnologies.orientdb>2.2.10</version.orientechnologies.orientdb>
         <version.common-compress>1.12</version.common-compress>

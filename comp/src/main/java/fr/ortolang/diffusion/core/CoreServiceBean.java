@@ -3878,6 +3878,11 @@ public class CoreServiceBean implements CoreService {
         }
     }
 
+    @Override
+    public Map<String, Object> getElasticSearchContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException {
+        return null;
+    }
+
     private void putMetadataContent(MetadataSource source, IndexableJsonContent content) throws OrtolangException, RegistryServiceException, KeyNotFoundException {
     	for (MetadataElement mde : source.getMetadatas()) {
             OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());

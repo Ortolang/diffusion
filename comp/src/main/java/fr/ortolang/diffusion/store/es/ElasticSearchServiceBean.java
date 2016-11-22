@@ -36,19 +36,18 @@ package fr.ortolang.diffusion.store.es;
  * #L%
  */
 
-import fr.ortolang.diffusion.*;
-import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.membership.MembershipServiceException;
-import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangIndexableService;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
-import net.didion.jwnl.data.Exc;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.PostConstruct;
@@ -58,12 +57,9 @@ import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -79,8 +75,6 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
 
     @EJB
     private RegistryService registry;
-    @PersistenceContext(unitName = "ortolangPU")
-    private EntityManager em;
 
     private TransportClient client;
 
@@ -92,10 +86,8 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
     public void init() {
         LOGGER.log(Level.INFO, "Initializing Elastic Search Service");
         try {
-            client = TransportClient.builder().build()
-                    .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300))
-                    .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9301))
-                    .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9302));
+            client = new PreBuiltTransportClient(Settings.EMPTY)
+                    .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
         } catch (UnknownHostException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
@@ -128,23 +120,4 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
         return Collections.emptyMap();
     }
 
-    @Override
-    public String[] getObjectTypeList() {
-        return new String[0];
-    }
-
-    @Override
-    public String[] getObjectPermissionsList(String type) throws OrtolangException {
-        return new String[0];
-    }
-
-    @Override
-    public OrtolangObject findObject(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
-
-    @Override
-    public OrtolangObjectSize getSize(String key) throws OrtolangException {
-        throw new OrtolangException("this service does not managed any object");
-    }
 }
