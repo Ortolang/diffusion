@@ -38,19 +38,10 @@ package fr.ortolang.diffusion.api.oaipmh.repository;
 
 import static java.lang.Math.min;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.json.Json;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 
 import com.lyncode.xoai.dataprovider.exceptions.IdDoesNotExistException;
 import com.lyncode.xoai.dataprovider.exceptions.NoMetadataFormatsException;
@@ -61,17 +52,10 @@ import com.lyncode.xoai.dataprovider.handlers.results.ListItemsResults;
 import com.lyncode.xoai.dataprovider.model.Item;
 import com.lyncode.xoai.dataprovider.model.ItemIdentifier;
 
-import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.api.oaipmh.format.OAI_DC;
-import fr.ortolang.diffusion.api.oaipmh.format.OLAC;
 import fr.ortolang.diffusion.oai.OaiService;
 import fr.ortolang.diffusion.oai.OaiServiceException;
 import fr.ortolang.diffusion.oai.RecordNotFoundException;
 import fr.ortolang.diffusion.oai.entity.Record;
-import fr.ortolang.diffusion.search.SearchService;
-import fr.ortolang.diffusion.search.SearchServiceException;
-import fr.ortolang.diffusion.store.handle.HandleStoreService;
-import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 
 public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
@@ -84,11 +68,9 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
     }
 
     private OaiService oaiService;
-    private HandleStoreService handleStore;
 
-    public DiffusionItemRepository(OaiService oaiService, HandleStoreService handleStore) {
+    public DiffusionItemRepository(OaiService oaiService) {
         this.oaiService = oaiService;
-        this.handleStore = handleStore;
     }
 
     /**
@@ -193,80 +175,6 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
         return new ListItemsResults(offset + length < list.size(), new ArrayList<Item>(list.subList(offset, min(offset + length, list.size()))), list.size());
     }
 
-    /**
-     * Creates a record answering to GetRecord or ListRecords request.
-     * @param doc a JSON document containing all informations about the record
-     * @param metadataPrefix specify the metadataPrefix value
-     * @return a record
-     * @throws IOException
-     */
-    protected DiffusionItem diffusionItem(String doc, String metadataPrefix) throws IOException {
-        DiffusionItem item = null;
-        StringReader reader = new StringReader(doc);
-        JsonReader jsonReader = Json.createReader(reader);
-        JsonObject jsonDoc = jsonReader.readObject();
-        try {
-        	String key = (jsonDoc.containsKey("meta_ortolang-workspace-json")) ? 
-        			jsonDoc.getJsonObject("meta_ortolang-workspace-json").getString("wsalias") :
-        			jsonDoc.getString("key");
-        	JsonNumber lastModificationDate = jsonDoc.getJsonNumber("lastModificationDate");
-        	Long longTimestamp = lastModificationDate.longValue();
-        	Date datestamp = new Date(longTimestamp);
-        	InputStream metadata = null;
-        	
-        	if ("oai_dc".equals(metadataPrefix)) {
-        		metadata = transformToOaiDC(jsonDoc);
-        	} else if ("olac".equals(metadataPrefix)) {
-        		metadata = transformToOLAC(jsonDoc);
-        	}
-
-            if (metadata != null) {
-                item = DiffusionItem.item();
-                item.withIdentifier(DiffusionItemRepository.PREFIX_IDENTIFIER + key);
-                item.withDatestamp(datestamp);
-                item.withMetadata(metadata);
-            }
-
-        } catch (NullPointerException | ClassCastException | NumberFormatException e) {
-            LOGGER.log(Level.WARNING, "No property 'key' or lastModificationDate in json object", e);
-        } finally {
-            jsonReader.close();
-            reader.close();
-        }
-
-        return item;
-    }
-
-    /**
-     * Converts JSON document (String representation) to XML OAI_DC
-     *
-     */
-    protected InputStream transformToOaiDC(JsonObject jsonDoc) {
-        OAI_DC oaiDc = OAI_DC.valueOf(jsonDoc);
-        List<String> handles;
-		try {
-			handles = handleStore.listHandlesForKey(jsonDoc.getString("key"));
-			for(String handle : handles) {        	
-				oaiDc.addDcField("identifier", 
-						"http://hdl.handle.net/"+OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX)
-		                + "/" +handle);
-			}
-		} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
-			LOGGER.log(Level.WARNING, "No handle for key " + jsonDoc.getString("key"), e);
-		}
-        
-        return new ByteArrayInputStream(oaiDc.toString().getBytes(StandardCharsets.UTF_8));
-    }
-
-    /**
-     * Converts JSON document (String representation) to XML OLAC
-     *
-     */
-    protected InputStream transformToOLAC(JsonObject jsonDoc) {
-        OLAC olac = OLAC.valueOf(jsonDoc);
-        return new ByteArrayInputStream(olac.toString().getBytes(StandardCharsets.UTF_8));
-    }
-    
     @Override
     public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, int offset, int length) throws OAIException {
         return getItemIdentifiers(filters, "oai_dc", offset, length);

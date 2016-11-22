@@ -977,7 +977,6 @@ public class CoreServiceBean implements CoreService {
             Map<String, String> aclParams = new HashMap<String, String>();
             aclParams.put("${workspace.members}", workspace.getMembers());
             aclParams.put("${workspace.privileged}", workspace.getPrivileged());
-            builtPublicationMap(wskey, map, authorisation.getPolicyRules(defaultTemplate.getTemplate()), aclParams);
             builtPublicationMap(root, map, authorisation.getPolicyRules(defaultTemplate.getTemplate()), aclParams);
             return map;
         } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException e) {

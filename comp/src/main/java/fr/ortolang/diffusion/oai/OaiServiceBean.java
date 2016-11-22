@@ -22,11 +22,9 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.Criteria;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.oai.entity.Record;
-import fr.ortolang.diffusion.referential.entity.ReferentialEntity;
 
 @Local(OaiService.class)
 @Stateless(name = OaiService.SERVICE_NAME)
