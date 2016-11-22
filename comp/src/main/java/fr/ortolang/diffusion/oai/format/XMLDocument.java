@@ -1,19 +1,20 @@
 package fr.ortolang.diffusion.oai.format;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public abstract class XMLWriter {
+public abstract class XMLDocument {
 
+    protected static final SimpleDateFormat w3cdtf = new SimpleDateFormat("yyyy-MM-dd");
+    
     protected String header;
     protected String footer;
     protected List<XMLElement> fields;
 
-    public XMLWriter() {
-        header = "<oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd http://purl.org/dc/elements/1.1/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd\">";
-        footer = "</oai_dc:dc>";
-        fields = new ArrayList<XMLElement>();
+    public XMLDocument() {
+    	fields = new ArrayList<XMLElement>();
     }
 
     public void addDcField(String name, String value) {
@@ -24,7 +25,7 @@ public abstract class XMLWriter {
         fields.add(XMLElement.createDcElement(name, value).withAttribute("xml:lang", lang));
     }
 
-    protected static void writeField(StringBuilder buffer, XMLElement elem) {
+    protected void writeField(StringBuilder buffer, XMLElement elem) {
 
         buffer.append("<").append(elem.getPrefixNamespace()).append(":").append(elem.getName());
 
@@ -56,4 +57,7 @@ public abstract class XMLWriter {
         return buffer.toString();
     }
 
+    public static String removeHTMLTag(String str) {
+        return str.replaceAll("\\<.*?>","").replaceAll("\\&nbsp;"," ").replaceAll("\\&","");
+    }
 }

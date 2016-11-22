@@ -47,13 +47,11 @@ import javax.json.JsonString;
 
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 
-public class OLAC extends OAI_DC {
+public class OLAC extends XMLDocument {
 
     private static final Logger LOGGER = Logger.getLogger(OLAC.class.getName());
 
     public OLAC() {
-        super();
-        
         header = "<olac:olac xmlns:olac=\"http://www.language-archives.org/OLAC/1.1/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dcterms=\"http://purl.org/dc/terms/\"  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.language-archives.org/OLAC/1.1/ http://www.language-archives.org/OLAC/1.1/olac.xsd http://purl.org/dc/elements/1.1/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd http://purl.org/dc/terms/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dcterms.xsd\">";
         footer = "</olac:olac>";
     }
@@ -139,10 +137,10 @@ public class OLAC extends OAI_DC {
                 	JsonObject metaRole = role.getJsonObject("meta_ortolang-referential-json");
 					String roleId = metaRole.getString("id");
                     
-                    this.addOlacField("contributor", "olac:role", roleId, person(contributor));
+                    this.addOlacField("contributor", "olac:role", roleId, OAI_DC.person(contributor));
                     
                     if("author".equals(roleId)) {
-                    	this.addDcField("creator", person(contributor));
+                    	this.addDcField("creator", OAI_DC.person(contributor));
                     }
                 }
             }
