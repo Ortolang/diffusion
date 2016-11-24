@@ -44,6 +44,8 @@ import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.membership.entity.*;
 import fr.ortolang.diffusion.membership.export.GroupExportHandler;
 import fr.ortolang.diffusion.membership.export.ProfileExportHandler;
+import fr.ortolang.diffusion.membership.indexing.GroupIndexableContent;
+import fr.ortolang.diffusion.membership.indexing.ProfileIndexableContent;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.*;
@@ -52,6 +54,7 @@ import fr.ortolang.diffusion.security.authentication.TOTPHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
+import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -1174,39 +1177,24 @@ public class MembershipServiceBean implements MembershipService {
     }
 
     @Override
-    public Map<String, Object> getElasticSearchContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException {
+    public OrtolangIndexableContent getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, NotIndexableContentException {
         OrtolangObjectIdentifier identifier = registry.lookup(key);
 
         if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
         }
 
-        Map<String, Object> map = new HashMap<>();
-
         switch (identifier.getType()) {
         case Profile.OBJECT_TYPE:
             Profile profile = em.find(Profile.class, identifier.getId());
-            map.put("key", key);
-            map.put("givenName", profile.getGivenName());
-            map.put("familyName", profile.getFamilyName());
-            map.put("emailHash", profile.getEmailHash());
-            if (profile.getEmailVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
-                map.put("email", profile.getEmail());
-            }
-            map.put("groups", profile.getGroups());
-            Map<String, Object> infos = new HashMap<>();
-            for (Map.Entry<String, ProfileData> info : profile.getInfos().entrySet()) {
-                if (info.getValue().getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
-                    infos.put(info.getKey(), info.getValue().getValue());
-                }
-            }
-            map.put("infos", infos);
-            break;
+            profile.setKey(key);
+            return new ProfileIndexableContent(profile);
         case Group.OBJECT_TYPE:
-            break;
+            Group group = em.find(Group.class, identifier.getId());
+            group.setKey(key);
+            return new GroupIndexableContent(group);
         }
-        return map;
-
+        return null;
     }
 
     @Override

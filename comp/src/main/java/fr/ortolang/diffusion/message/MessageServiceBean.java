@@ -66,6 +66,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangEvent;
@@ -939,7 +940,7 @@ public class MessageServiceBean implements MessageService {
     }
 
     @Override
-    public Map<String, Object> getElasticSearchContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException {
+    public OrtolangIndexableContent getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException {
         // TODO
         return null;
     }

@@ -70,40 +70,40 @@ public class OrtolangIndexableObjectFactory {
     }
 
     public static OrtolangIndexableObject<IndexableJsonContent> buildJsonIndexableObject(String key) throws OrtolangException, NotIndexableContentException {
-    	return buildJsonIndexableObject(key, new ArrayList<String>());
+        return buildJsonIndexableObject(key, new ArrayList<String>());
     }
 
     private static OrtolangIndexableObject<IndexableJsonContent> buildJsonIndexableObject(String key, List<String> keys) throws OrtolangException, NotIndexableContentException {
-    	try {
-    		if(keys.contains(key)) {
-    			throw new OrtolangException("Key "+key+" is already been injected in json content (Cycle detection)");
-    		} else {
-    			keys.add(key);
-    		}
-    		
+        try {
+            if(keys.contains(key)) {
+                throw new OrtolangException("Key "+key+" is already been injected in json content (Cycle detection)");
+            } else {
+                keys.add(key);
+            }
+
             RegistryService registry = (RegistryService)OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
-            
+
             IndexableJsonContent content = service.getIndexableJsonContent(key);
-            
+
             for(Map.Entry<String, String> entry : content.getStream().entrySet()) {
-            	String json = entry.getValue();
-            	List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(json);
-    			for(String ortolangKey : ortolangKeys) {
-    				List<String> newKeys = new ArrayList<String>(keys);
-    				
-    				String jsonContent = JsonStoreDocumentBuilder.buildDocument(buildJsonIndexableObject(ortolangKey, newKeys));
-    				
-    				if(jsonContent!=null) {
-    					json = json.replace("\""+OrtolangKeyExtractor.getMarker(ortolangKey)+"\"", jsonContent);
-    				} else {
-    					throw new OrtolangException("cannot found ortolang key : " + ortolangKey);
-    				}
-    			}
-    			entry.setValue(json);
+                String json = entry.getValue();
+                List<String> ortolangKeys = OrtolangKeyExtractor.extractOrtolangKeys(json);
+                for(String ortolangKey : ortolangKeys) {
+                    List<String> newKeys = new ArrayList<String>(keys);
+
+                    String jsonContent = JsonStoreDocumentBuilder.buildDocument(buildJsonIndexableObject(ortolangKey, newKeys));
+
+                    if(jsonContent!=null) {
+                        json = json.replace("\""+OrtolangKeyExtractor.getMarker(ortolangKey)+"\"", jsonContent);
+                    } else {
+                        throw new OrtolangException("cannot found ortolang key : " + ortolangKey);
+                    }
+                }
+                entry.setValue(json);
             }
-            
+
             OrtolangIndexableObject<IndexableJsonContent> object = new OrtolangIndexableObject<IndexableJsonContent>();
             loadCommonIndexableObject(key, identifier, object);
             object.setContent(content);

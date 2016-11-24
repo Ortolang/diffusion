@@ -40,6 +40,7 @@ import com.orientechnologies.common.exception.OException;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangJob;
 import fr.ortolang.diffusion.indexing.IndexingService;
+import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.jobs.JobService;
 import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -219,7 +220,7 @@ public class ElasticSearchServiceWorkerBean implements ElasticSearchServiceWorke
                             LOGGER.log(Level.WARNING, "unknown job action: " + job.getAction());
                         }
                         jobService.remove(job.getId());
-                    } catch (OException | RegistryServiceException | KeyNotFoundException | OrtolangException e) {
+                    } catch (OException | RegistryServiceException | KeyNotFoundException | OrtolangException | NotIndexableContentException e) {
                         LOGGER.log(Level.WARNING, "unable to perform job action " + job.getAction() + " for key " + job.getTarget() + ": " + e.getMessage());
                         jobService.updateFailingJob(job, e);
                     }

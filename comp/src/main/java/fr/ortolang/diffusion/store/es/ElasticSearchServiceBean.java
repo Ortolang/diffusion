@@ -36,17 +36,17 @@ package fr.ortolang.diffusion.store.es;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangIndexableService;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
+import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -59,8 +59,7 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -78,6 +77,8 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
 
     private TransportClient client;
 
+    private Map<String, Set<String>> indices = new HashMap<>();
+
     public ElasticSearchServiceBean() {
         LOGGER.log(Level.FINE, "Instantiating Elastic Search Service");
     }
@@ -86,8 +87,22 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
     public void init() {
         LOGGER.log(Level.INFO, "Initializing Elastic Search Service");
         try {
-            client = new PreBuiltTransportClient(Settings.EMPTY)
-                    .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300));
+            if (OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.ELASTIC_SEARCH_HOST) == null || OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.ELASTIC_SEARCH_HOST).length() == 0) {
+                LOGGER.log(Level.INFO, "Elastic Search not configured, skipping initialization");
+                client = null;
+                return;
+            }
+            String[] hosts = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.ELASTIC_SEARCH_HOST).split(",");
+            String[] ports = OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.ELASTIC_SEARCH_PORT).split(",");
+
+            if (hosts.length != ports.length) {
+                throw new IllegalStateException("Elastic search configuration incorrect: host number and port number should be equal");
+            }
+            Settings settings = Settings.builder().put("cluster.name", "ortolang").build();
+            client = new PreBuiltTransportClient(settings);
+            for (int i = 0; i < hosts.length; i++) {
+                client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hosts[i]), Integer.parseInt(ports[i])));
+            }
         } catch (UnknownHostException e) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
         }
@@ -100,14 +115,57 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
     }
 
     @Override
-    public IndexResponse index(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException {
+    public void index(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, InterruptedException, NotIndexableContentException {
+        LOGGER.log(Level.FINE, "Indexing key [" + key + "]");
+        if (client == null || client.connectedNodes().isEmpty()) {
+            return;
+        }
         OrtolangObjectIdentifier identifier = registry.lookup(key);
         OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
-        Map<String, Object> source = service.getElasticSearchContent(key);
-        if (source != null && !source.isEmpty()) {
-            return client.prepareIndex(identifier.getService(), identifier.getType(), key).setSource(source).get();
+        OrtolangIndexableContent indexableContent = service.getIndexableContent(key);
+        if (!indexableContent.isEmpty()) {
+            try {
+                IndicesAdminClient adminClient = client.admin().indices();
+                if (!indices.containsKey(indexableContent.getIndex())) {
+                    // Check if index exists and create it if not
+                    if (adminClient.prepareExists(indexableContent.getIndex()).get().isExists()) {
+                        indices.put(indexableContent.getIndex(), new HashSet<>());
+                        checkType(indexableContent, adminClient);
+                    } else {
+                        LOGGER.log(Level.INFO, "Creating index [" + indexableContent.getIndex() + "] and add mapping for type [" + indexableContent.getType() + "]");
+                        CreateIndexRequestBuilder requestBuilder = adminClient.prepareCreate(indexableContent.getIndex());
+                        if (indexableContent.getMapping() != null) {
+                            requestBuilder.addMapping(indexableContent.getType(), indexableContent.getMapping());
+                        }
+                        requestBuilder.get();
+                        HashSet<String> types = new HashSet<>();
+                        types.add(indexableContent.getType());
+                        indices.put(indexableContent.getIndex(), types);
+                    }
+                } else {
+                    checkType(indexableContent, adminClient);
+                }
+                LOGGER.log(Level.FINE, "Indexing key [" + key + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
+                client.prepareIndex(indexableContent.getIndex(), indexableContent.getType(), key).setSource(indexableContent.getContent().getBytes()).get();
+            } catch (IndexNotFoundException e) {
+                LOGGER.log(Level.INFO, "Index not found: removing it from registry and re-trying to index key [" + key + "]");
+                indices.remove(indexableContent.getIndex());
+                index(key);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "An unexpected error happened while indexing key [" + key + "]", e);
+            }
         }
-        return null;
+    }
+
+    private void checkType(OrtolangIndexableContent indexableContent, IndicesAdminClient adminClient) {
+        if (!indices.get(indexableContent.getIndex()).contains(indexableContent.getType()) && indexableContent.getMapping() != null) {
+            LOGGER.log(Level.INFO, "Put mapping for type [" + indexableContent.getType() + "] in index [" + indexableContent.getIndex() + "]");
+            adminClient.preparePutMapping(indexableContent.getIndex())
+                    .setType(indexableContent.getType())
+                    .setSource(indexableContent.getMapping())
+                    .get();
+            indices.get(indexableContent.getIndex()).add(indexableContent.getType());
+        }
     }
 
     @Override

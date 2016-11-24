@@ -61,17 +61,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.referential.indexing.ReferentialEntityIndexableContent;
+import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectImportHandler;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.OrtolangObjectState;
-import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
@@ -548,7 +542,19 @@ public class ReferentialServiceBean implements ReferentialService {
     }
 
     @Override
-    public Map<String, Object> getElasticSearchContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException {
+    public OrtolangIndexableContent getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, NotIndexableContentException {
+        OrtolangObjectIdentifier identifier = registry.lookup(key);
+        if (!identifier.getService().equals(ReferentialService.SERVICE_NAME)) {
+            throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+        }
+        if (identifier.getType().equals(ReferentialEntity.OBJECT_TYPE)) {
+            ReferentialEntity referentialEntity = em.find(ReferentialEntity.class, identifier.getId());
+            if (referentialEntity == null) {
+                throw new OrtolangException("unable to load ReferentialEntity with id [" + identifier.getId() + "] from storage");
+            }
+            referentialEntity.setKey(key);
+            return new ReferentialEntityIndexableContent(referentialEntity);
+        }
         return null;
     }
 

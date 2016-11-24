@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.store.es;
+package fr.ortolang.diffusion.membership.indexing;
 
 /*
  * #%L
@@ -37,15 +37,46 @@ package fr.ortolang.diffusion.store.es;
  */
 
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
+import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import org.elasticsearch.action.index.IndexResponse;
+import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
 
-public interface ElasticSearchService extends OrtolangService {
+import java.util.HashMap;
+import java.util.Map;
 
-    String SERVICE_NAME = "es-store";
+public class GroupIndexableContent extends OrtolangIndexableContent {
 
-    void index(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, InterruptedException, NotIndexableContentException;
+    private static final Object[] MAPPING;
+
+    static {
+        MAPPING = new String[]{
+                "key",
+                "type=keyword",
+                "name",
+                "type=string,index=no",
+                "description",
+                "type=string,index=no",
+                "description",
+                "type=keyword"
+        };
+    }
+
+    public GroupIndexableContent(Group group) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
+        super(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE);
+        Map<String, Object> map = new HashMap<>();
+        map.put("key", group.getKey());
+        map.put("name", group.getName());
+        map.put("description", group.getDescription());
+        map.put("members", group.getMembers());
+        setContent(map);
+    }
+
+    @Override
+    public Object[] getMapping() {
+        return MAPPING;
+    }
+
 }

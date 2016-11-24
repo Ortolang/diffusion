@@ -37,15 +37,36 @@ package fr.ortolang.diffusion.store.es;
  */
 
 import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.OrtolangIndexableService;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import org.elasticsearch.action.index.IndexResponse;
 
-public interface ElasticSearchService extends OrtolangService {
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-    String SERVICE_NAME = "es-store";
+class OrtolangIndexableContentParser {
 
-    void index(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, InterruptedException, NotIndexableContentException;
+    private static final Pattern ORTOLANG_KEY_MATCHER = Pattern.compile("\"\\$\\{([\\w:.\\-]+)}\"");
+
+    public static String parse(String json) throws OrtolangException, KeyNotFoundException, RegistryServiceException, NotIndexableContentException {
+        RegistryService registry = (RegistryService) OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
+        Matcher matcher = ORTOLANG_KEY_MATCHER.matcher(json);
+        if (!matcher.matches()) {
+            return json;
+        }
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
+            OrtolangIndexableContent indexableContent = service.getIndexableContent(key);
+            matcher.appendReplacement(sb, indexableContent.getContent());
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
+    }
 }
