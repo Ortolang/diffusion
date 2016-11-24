@@ -34,6 +34,7 @@ import fr.ortolang.diffusion.oai.entity.Set;
 import fr.ortolang.diffusion.oai.entity.SetRecord;
 import fr.ortolang.diffusion.oai.format.DCXMLDocument;
 import fr.ortolang.diffusion.oai.format.OAI_DCFactory;
+import fr.ortolang.diffusion.oai.format.OLACFactory;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
@@ -95,9 +96,15 @@ public class OaiListenerBean implements MessageListener {
 					// Creating a Record for each element with OAI_DC metadata object of the workspace
 					Map<String, Map<String, List<String>>> map = core.buildWorkspacePublicationMap(wskey, snapshot);
 		            for(String key : map.keySet()) {
-		            	String xml = buildXMLFromOrtolangObject(key, MetadataFormat.OAI_DC);
-		            	if (xml!=null) {
-		            		Record rec = oai.createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), xml);
+		            	String oai_dc = buildXMLFromOrtolangObject(key, MetadataFormat.OAI_DC);
+		            	if (oai_dc!=null) {
+		            		Record rec = oai.createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), oai_dc);
+		            		// Linking the Record with the set of the workspace
+		            		oai.createSetRecord(wskey, rec.getId());
+		            	}
+		            	String olac = buildXMLFromOrtolangObject(key, MetadataFormat.OLAC);
+		            	if (olac!=null) {
+		            		Record rec = oai.createRecord(key, MetadataFormat.OLAC, registry.getLastModificationDate(key), olac);
 		            		// Linking the Record with the set of the workspace
 		            		oai.createSetRecord(wskey, rec.getId());
 		            	}
@@ -123,9 +130,15 @@ public class OaiListenerBean implements MessageListener {
 					// Creating a Record for each element with a OAI_DC metadata object 
 					Map<String, Map<String, List<String>>> map = core.buildWorkspacePublicationMap(wskey, snapshot);
 		            for(String key : map.keySet()) {
-		            	String xml = buildXMLFromOrtolangObject(key, MetadataFormat.OAI_DC);
-		            	if (xml!=null) {
-		            		Record rec = oai.createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), xml);
+		            	String oai_dc = buildXMLFromOrtolangObject(key, MetadataFormat.OAI_DC);
+		            	if (oai_dc!=null) {
+		            		Record rec = oai.createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), oai_dc);
+		            		// Linking the Record with the set of the workspace
+		            		oai.createSetRecord(wskey, rec.getId());
+		            	}
+		            	String olac = buildXMLFromOrtolangObject(key, MetadataFormat.OLAC);
+		            	if (olac!=null) {
+		            		Record rec = oai.createRecord(key, MetadataFormat.OLAC, registry.getLastModificationDate(key), olac);
 		            		// Linking the Record with the set of the workspace
 		            		oai.createSetRecord(wskey, rec.getId());
 		            	}
@@ -150,8 +163,9 @@ public class OaiListenerBean implements MessageListener {
 			DCXMLDocument xml = null;
 			if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
 				xml = OAI_DCFactory.buildFromItem(item);
+			} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
+				xml = OLACFactory.buildFromItem(item);
 			}
-			//TODO olac
 			
 			// Automatically adds handles to 'identifier' XML element
 			List<String> handles;
@@ -186,7 +200,11 @@ public class OaiListenerBean implements MessageListener {
 			if (!mdKeys.isEmpty()) {
 				String mdKey = mdKeys.get(0);
 				MetadataObject md = core.readMetadataObject(mdKey);
-				xml = OAI_DCFactory.buildFromJson(getContent(binaryStore.get(md.getStream())));
+				if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
+					xml = OAI_DCFactory.buildFromItem(getContent(binaryStore.get(md.getStream())));
+				} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
+					xml = OLACFactory.buildFromItem(getContent(binaryStore.get(md.getStream())));
+				}
 			} else {
 				return null;
 			}

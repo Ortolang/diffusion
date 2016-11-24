@@ -36,45 +36,19 @@ package fr.ortolang.diffusion.oai.format;
  * #L%
  */
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.core.entity.MetadataFormat;
 
 public class OAI_DC extends DCXMLDocument {
-
-    private static final Logger LOGGER = Logger.getLogger(OAI_DC.class.getName());
 
     public OAI_DC() {
     	header = "<oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd http://purl.org/dc/elements/1.1/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd\">";
         footer = "</oai_dc:dc>";
     }
 
-    public OAI_DC addDCElement(String elementName, JsonObject meta) {
-    	if (meta.containsKey(elementName)) {
-    		JsonArray titleArray = meta.getJsonArray(elementName);
-            for(JsonObject title : titleArray.getValuesAs(JsonObject.class)) {
-            	if (title.containsKey("lang")) {
-            		this.addDcMultilingualField(elementName, 
-                		title.getString("lang"), 
-                		XMLDocument.removeHTMLTag(title.getString("value")));
-            	} else {
-            		this.addDcField(elementName, XMLDocument.removeHTMLTag(title.getString("value")));
-            	}
-            }
-    	}
-    	return this;
-    }
-    
     public static String identifier(String wsalias) {
         return identifier(wsalias, null);
     }
