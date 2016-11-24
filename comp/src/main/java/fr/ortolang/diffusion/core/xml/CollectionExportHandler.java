@@ -34,7 +34,7 @@ public class CollectionExportHandler implements OrtolangObjectXmlExportHandler {
             XmlDumpHelper.startElement("collection", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("elements", attrs, writer);
+            XmlDumpHelper.startElement("collection-elements", attrs, writer);
             for ( CollectionElement element : collection.getElements() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("name", element.getName());
@@ -43,7 +43,7 @@ public class CollectionExportHandler implements OrtolangObjectXmlExportHandler {
                 attrs.put("mime-type", element.getMimeType());
                 attrs.put("size", Long.toString(element.getSize()));
                 attrs.put("modification-timestamp", Long.toString(element.getModification()));
-                XmlDumpHelper.outputEmptyElement("element", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("collection-element", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             

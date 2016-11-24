@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Set;
 
 import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicy;
 import fr.ortolang.diffusion.security.authorisation.entity.AuthorisationPolicyTemplate;
 
 public interface AuthorisationService extends OrtolangService {
@@ -78,5 +79,7 @@ public interface AuthorisationService extends OrtolangService {
 	void checkAuthentified(List<String> subjects) throws AuthorisationServiceException, AccessDeniedException;
 	
 	void checkSuperUser(String identifier) throws AuthorisationServiceException, AccessDeniedException;
+	
+	void systemRestorePolicy(AuthorisationPolicy policy, boolean override) throws AuthorisationServiceException;
 	
 }

@@ -52,6 +52,10 @@ public class ApiLoggerFilter implements ContainerRequestFilter {
         String remote = "";
         if ( ctx.getHeaderString("X-Real-IP") != null ) {
             remote = ctx.getHeaderString("X-Real-IP");
+        } else if ( ctx.getHeaderString("REMOTE_ADDR") != null ) {
+            remote = ctx.getHeaderString("REMOTE_ADDR");
+        } else {
+            remote = "UNKNOWN_IP";
         }
         LOGGER.log(Level.INFO, "[" + remote + "]" + ctx.getMethod() + " " + ctx.getUriInfo().getPath());
     }

@@ -53,7 +53,7 @@ public abstract class OrtolangObject implements Serializable {
 	
 	@Override
     public String toString() {
-    	return "{identifier:" + getObjectIdentifier() + "; name:" + getObjectName() + "}";
+	    return "{identifier:" + getObjectIdentifier() + "; name:" + getObjectName() + "}";
     }
 	
 }

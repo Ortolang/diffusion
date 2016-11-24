@@ -70,7 +70,7 @@ import fr.ortolang.diffusion.OrtolangObjectState;
 		@NamedQuery(name = "findEntryByKey", query = "SELECT e FROM RegistryEntry e WHERE e.key LIKE :keyFilter"),
 		@NamedQuery(name = "findEntryByKeyAndIdentifier", query = "SELECT e FROM RegistryEntry e WHERE e.key LIKE :keyFilter AND e.identifier LIKE :identifierFilter")})        
 @SuppressWarnings("serial")
-public class RegistryEntry implements Serializable {
+public class RegistryEntry implements Serializable, Comparable<RegistryEntry> {
 
 	@Id
 	private String key;
@@ -233,8 +233,94 @@ public class RegistryEntry implements Serializable {
 			propertiesContent = output.toString();
 		}
 	}
+	
+	
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((author == null) ? 0 : author.hashCode());
+        result = prime * result + ((children == null) ? 0 : children.hashCode());
+        result = prime * result + (int) (creationDate ^ (creationDate >>> 32));
+        result = prime * result + (deleted ? 1231 : 1237);
+        result = prime * result + (hidden ? 1231 : 1237);
+        result = prime * result + ((identifier == null) ? 0 : identifier.hashCode());
+        result = prime * result + ((key == null) ? 0 : key.hashCode());
+        result = prime * result + (int) (lastModificationDate ^ (lastModificationDate >>> 32));
+        result = prime * result + ((lock == null) ? 0 : lock.hashCode());
+        result = prime * result + ((parent == null) ? 0 : parent.hashCode());
+        result = prime * result + ((properties == null) ? 0 : properties.hashCode());
+        result = prime * result + ((publicationStatus == null) ? 0 : publicationStatus.hashCode());
+        return result;
+    }
 
-	@Override
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RegistryEntry other = (RegistryEntry) obj;
+        if (author == null) {
+            if (other.author != null)
+                return false;
+        } else if (!author.equals(other.author))
+            return false;
+        if (children == null) {
+            if (other.children != null)
+                return false;
+        } else if (!children.equals(other.children))
+            return false;
+        if (creationDate != other.creationDate)
+            return false;
+        if (deleted != other.deleted)
+            return false;
+        if (hidden != other.hidden)
+            return false;
+        if (identifier == null) {
+            if (other.identifier != null)
+                return false;
+        } else if (!identifier.equals(other.identifier))
+            return false;
+        if (key == null) {
+            if (other.key != null)
+                return false;
+        } else if (!key.equals(other.key))
+            return false;
+        if (lastModificationDate != other.lastModificationDate)
+            return false;
+        if (lock == null) {
+            if (other.lock != null)
+                return false;
+        } else if (!lock.equals(other.lock))
+            return false;
+        if (parent == null) {
+            if (other.parent != null)
+                return false;
+        } else if (!parent.equals(other.parent))
+            return false;
+        if (properties == null) {
+            if (other.properties != null)
+                return false;
+        } else if (!properties.equals(other.properties))
+            return false;
+        if (publicationStatus == null) {
+            if (other.publicationStatus != null)
+                return false;
+        } else if (!publicationStatus.equals(other.publicationStatus))
+            return false;
+        return true;
+    }
+
+    @Override
+    public int compareTo(RegistryEntry o) {
+        return (int) (lastModificationDate - o.getLastModificationDate());
+    }
+
+    @Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append("{key:").append(getKey());

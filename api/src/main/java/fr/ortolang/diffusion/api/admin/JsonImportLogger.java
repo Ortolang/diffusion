@@ -40,7 +40,7 @@ public class JsonImportLogger implements OrtolangImportExportLogger {
                 builder.append(",\r\n");
             }
             firstline = false;
-            builder.append("\t{\"type\":\"").append(type.name()).append("\",\"message\":").append(message).append("\"}");
+            builder.append("\t{\"type\":\"").append(type.name()).append("\",\"message\":\"").append(message).append("\"}");
             out.write(builder.toString().getBytes());
         } catch ( IOException e ) { //
         }

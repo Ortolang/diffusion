@@ -3954,7 +3954,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    public OrtolangObjectXmlImportHandler getObjectXmlImportHandler() throws OrtolangException {
+    public OrtolangObjectXmlImportHandler getObjectXmlImportHandler(String type) throws OrtolangException {
         throw new OrtolangException("NOT IMPLEMENTED");
     }
 

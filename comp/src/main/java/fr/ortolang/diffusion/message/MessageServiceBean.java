@@ -1081,7 +1081,7 @@ public class MessageServiceBean implements MessageService {
     }
 
     @Override
-    public OrtolangObjectXmlImportHandler getObjectXmlImportHandler() throws OrtolangException {
+    public OrtolangObjectXmlImportHandler getObjectXmlImportHandler(String type) throws OrtolangException {
         // TODO
         throw new OrtolangException("NOT IMPLEMENTED");
     }
