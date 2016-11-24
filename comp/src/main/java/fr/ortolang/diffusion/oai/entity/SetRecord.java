@@ -8,7 +8,7 @@ import javax.persistence.Version;
 
 @Entity
 @NamedQueries({
-	@NamedQuery(name = "findAllSetRecordsBySet", query = "SELECT r FROM SetRecord r WHERE r.keySet = :keySet") 
+	@NamedQuery(name = "findAllSetRecordsBySetSpec", query = "SELECT r FROM SetRecord r WHERE r.setSpec = :setSpec") 
 })
 public class SetRecord {
 
@@ -17,9 +17,18 @@ public class SetRecord {
 	@Version
 	private long version;
 
-	private String keySet;
-	private String record;
+	private String setSpec;
+	private String recordId;
 	
+	public SetRecord(String id, String setSpec, String recordId) {
+		super();
+		this.id = id;
+		this.setSpec = setSpec;
+		this.setRecordId(recordId);
+	}
+	public SetRecord() {
+		super();
+	}
 	public String getId() {
 		return id;
 	}
@@ -32,16 +41,16 @@ public class SetRecord {
 	public void setVersion(long version) {
 		this.version = version;
 	}
-	public String getKeySet() {
-		return keySet;
+	public String getSetSpec() {
+		return setSpec;
 	}
-	public void setKeySet(String keyset) {
-		this.keySet = keyset;
+	public void setSetSpec(String setSpec) {
+		this.setSpec = setSpec;
 	}
-	public String getRecord() {
-		return record;
+	public String getRecordId() {
+		return recordId;
 	}
-	public void setRecord(String record) {
-		this.record = record;
+	public void setRecordId(String recordId) {
+		this.recordId = recordId;
 	}
 }

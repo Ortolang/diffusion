@@ -145,4 +145,38 @@ public class OAI_DCFactory {
         
         return oai_dc;
 	}
+	
+
+	public static OAI_DC buildFromJson(String json) {
+		OAI_DC oai_dc = new OAI_DC();
+		StringReader reader = new StringReader(json);
+        JsonReader jsonReader = Json.createReader(reader);
+        
+        try {
+        	JsonObject jsonDoc = jsonReader.readObject();
+	    	oai_dc.addDCElement("identifier", jsonDoc)
+	    		.addDCElement("title", jsonDoc)
+		    	.addDCElement("creator", jsonDoc)
+		    	.addDCElement("subject", jsonDoc)
+		    	.addDCElement("description", jsonDoc)
+		    	.addDCElement("publisher", jsonDoc)
+		    	.addDCElement("contributor", jsonDoc)
+		    	.addDCElement("date", jsonDoc)
+		    	.addDCElement("type", jsonDoc)
+		    	.addDCElement("format", jsonDoc)
+		    	.addDCElement("source", jsonDoc)
+		    	.addDCElement("language", jsonDoc)
+		    	.addDCElement("relation", jsonDoc)
+		    	.addDCElement("coverage", jsonDoc)
+		    	.addDCElement("rights", jsonDoc);
+        } catch(Exception e) {
+        	LOGGER.log(Level.SEVERE, "unable to build OAI_DC from json", e);
+        } finally {
+            jsonReader.close();
+            reader.close();
+        }
+        
+        return oai_dc;
+    }
+
 }

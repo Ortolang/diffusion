@@ -8,23 +8,24 @@ import javax.persistence.Version;
 
 @Entity
 @NamedQueries({
-	@NamedQuery(name = "listAllSets", query = "SELECT r FROM Record r") }
-)
+	@NamedQuery(name = "listAllSets", query = "SELECT s FROM Set s"),
+	@NamedQuery(name = "listAllSetsWithSpec", query = "SELECT s FROM Set s WHERE s.spec = :spec")
+})
 public class Set {
 
 	@Id
-	private String id;
+	private String spec;
 	@Version
 	private long version;
 
 	private String name;
 	
-	public String getId() {
-		return id;
+	public Set() {
 	}
-
-	public void setId(String id) {
-		this.id = id;
+	
+	public Set(String spec, String name) {
+		this.spec = spec;
+		this.name = name;
 	}
 
 	public long getVersion() {
@@ -41,5 +42,13 @@ public class Set {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getSpec() {
+		return spec;
+	}
+
+	public void setSpec(String spec) {
+		this.spec = spec;
 	}
 }

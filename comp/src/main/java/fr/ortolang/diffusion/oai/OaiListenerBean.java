@@ -1,6 +1,9 @@
 package fr.ortolang.diffusion.oai;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -11,6 +14,7 @@ import javax.ejb.MessageDriven;
 import javax.jms.Message;
 import javax.jms.MessageListener;
 
+import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
@@ -18,20 +22,24 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangIndexableObject;
 import fr.ortolang.diffusion.OrtolangIndexableObjectFactory;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
-import fr.ortolang.diffusion.oai.format.OAI_DC;
+import fr.ortolang.diffusion.oai.entity.Record;
+import fr.ortolang.diffusion.oai.entity.Set;
+import fr.ortolang.diffusion.oai.entity.SetRecord;
+import fr.ortolang.diffusion.oai.format.DCXMLDocument;
 import fr.ortolang.diffusion.oai.format.OAI_DCFactory;
-import fr.ortolang.diffusion.publication.PublicationService;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.store.binary.BinaryStoreService;
+import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
+import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
@@ -47,9 +55,6 @@ public class OaiListenerBean implements MessageListener {
 
 	private static final Logger LOGGER = Logger.getLogger(OaiListenerBean.class.getName());
 
-	private static final String EVENT_PUBLISH = Event.buildEventType(PublicationService.SERVICE_NAME,
-			OrtolangObject.OBJECT_TYPE, "publish");
-
     @EJB
     private RegistryService registry;
 	@EJB
@@ -58,6 +63,8 @@ public class OaiListenerBean implements MessageListener {
 	private OaiService oai;
 	@EJB
 	private HandleStoreService handleStore;
+	@EJB
+	private BinaryStoreService binaryStore;
 
 	@Override
 	@PermitAll
@@ -65,48 +72,159 @@ public class OaiListenerBean implements MessageListener {
 		OrtolangEvent event = new Event();
 		try {
 			event.fromJMSMessage(message);
-//			if (event.getType().equals(EVENT_PUBLISH)) {
-				OrtolangObjectIdentifier identifier = registry.lookup(event.getFromObject());
-
-				if (identifier.getService().equals(CoreService.SERVICE_NAME) && identifier.getType().equals(Workspace.OBJECT_TYPE)) {
-					String wskey = event.getFromObject();
-					LOGGER.log(Level.FINE, "creating OAI record for workspace " + wskey);
-					oai.createRecord(wskey, MetadataFormat.OAI_DC, registry.getLastModificationDate(wskey), buildXMLFromWorkspace(wskey));
+			if (event.getArguments().containsKey("snapshot")) {
+				String wskey = event.getFromObject();
+				String snapshot = event.getArguments().get("snapshot");
+				
+				List<Record> records = null;
+				try {
+					records = oai.listRecordsByIdentifier(wskey);
+				} catch (RecordNotFoundException e) {
 				}
-//			}
-		} catch (OrtolangException | RegistryServiceException | KeyNotFoundException | OaiServiceException e) {
-			LOGGER.log(Level.WARNING, e.getMessage(), e);
+				
+				if (records==null) {
+					LOGGER.log(Level.FINE, "creating OAI record, set and setRecord for workspace " + wskey + " and snapshot " + snapshot);
+					// Creating a Set by workspace
+					oai.createSet(wskey, "Workspace "+wskey);
+					
+					// Creating a Record for the workspace
+					Record recWorkspace = oai.createRecord(wskey, MetadataFormat.OAI_DC, registry.getLastModificationDate(wskey), buildXMLFromWorkspace(wskey, snapshot, MetadataFormat.OAI_DC));
+		            // Linking Record and Set for the workspace
+					oai.createSetRecord(wskey, recWorkspace.getId());
+					
+					// Creating a Record for each element with OAI_DC metadata object of the workspace
+					Map<String, Map<String, List<String>>> map = core.buildWorkspacePublicationMap(wskey, snapshot);
+		            for(String key : map.keySet()) {
+		            	String xml = buildXMLFromOrtolangObject(key, MetadataFormat.OAI_DC);
+		            	if (xml!=null) {
+		            		Record rec = oai.createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), xml);
+		            		// Linking the Record with the set of the workspace
+		            		oai.createSetRecord(wskey, rec.getId());
+		            	}
+		            }
+				} else {
+					LOGGER.log(Level.FINE, "updating OAI record for workspace " + wskey + " and snapshot " + snapshot);
+					
+					// Deleting all setRecords and Records linking by workspace
+					List<SetRecord> setRecords = oai.listSetRecords(wskey);
+					setRecords.forEach(setRec -> {
+						try {
+							oai.deleteRecord(setRec.getRecordId());
+							oai.deleteSetRecord(setRec.getId());
+						} catch (SetRecordNotFoundException | RecordNotFoundException e) {
+						}
+					});
+
+					// Creating a Record for the workspace
+					Record recWorkspace = oai.createRecord(wskey, MetadataFormat.OAI_DC, registry.getLastModificationDate(wskey), buildXMLFromWorkspace(wskey, snapshot, MetadataFormat.OAI_DC));
+		            // Linking Record and Set for the workspace
+					oai.createSetRecord(wskey, recWorkspace.getId());
+					
+					// Creating a Record for each element with a OAI_DC metadata object 
+					Map<String, Map<String, List<String>>> map = core.buildWorkspacePublicationMap(wskey, snapshot);
+		            for(String key : map.keySet()) {
+		            	String xml = buildXMLFromOrtolangObject(key, MetadataFormat.OAI_DC);
+		            	if (xml!=null) {
+		            		Record rec = oai.createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), xml);
+		            		// Linking the Record with the set of the workspace
+		            		oai.createSetRecord(wskey, rec.getId());
+		            	}
+		            }
+				}
+			} else {
+				LOGGER.log(Level.SEVERE, "unable to create OAI record without specifying a snapshot");
+			}
+		} catch (OrtolangException | RegistryServiceException | KeyNotFoundException | OaiServiceException | SetAlreadyExistsException | CoreServiceException e) {
+			LOGGER.log(Level.SEVERE, "unable to create OAI record", e);
 		}
 	}
 	
-	private String buildXMLFromWorkspace(String wskey) throws OaiServiceException {
+	private String buildXMLFromWorkspace(String wskey, String snapshot, String metadataPrefix) throws OaiServiceException {
+		LOGGER.log(Level.FINE, "building XML for workspace " + wskey + " and snapshot " + snapshot + " and metadataPrefix " + metadataPrefix);
 		try {
 			Workspace workspace = core.readWorkspace(wskey);
-			String snpashot = core.findWorkspaceLatestPublishedSnapshot(wskey);
-			String root = workspace.findSnapshotByName(snpashot).getKey();
-			
+			String root = workspace.findSnapshotByName(snapshot).getKey();
 			OrtolangIndexableObject<IndexableJsonContent> indexableObject = OrtolangIndexableObjectFactory.buildJsonIndexableObject(root);
 			String item = indexableObject.getContent().getStream().get(MetadataFormat.ITEM);
+
+			DCXMLDocument xml = null;
+			if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
+				xml = OAI_DCFactory.buildFromItem(item);
+			}
+			//TODO olac
 			
-			LOGGER.log(Level.FINE, item);
-			
-			OAI_DC oai_dc = OAI_DCFactory.buildFromItem(item);
+			// Automatically adds handles to 'identifier' XML element
 			List<String> handles;
-	        try {
-	            handles = handleStore.listHandlesForKey(root);
-	            for(String handle : handles) {          
-	                oai_dc.addDcField("identifier", 
-	                        "http://hdl.handle.net/"+OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX)
-	                        + "/" +handle);
-	            }
-	        } catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
-	            LOGGER.log(Level.WARNING, "No handle for key " + root, e);
-	        }
-			return oai_dc.toString();
+			try {
+				handles = handleStore.listHandlesForKey(root);
+				for(String handle : handles) {          
+					xml.addDcField("identifier", 
+							"http://hdl.handle.net/"+OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX)
+							+ "/" +handle);
+				}
+			} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
+				LOGGER.log(Level.WARNING, "No handle for key " + root, e);
+			}
+			if (xml!=null) {				
+				return xml.toString();
+			} else {
+				//TODO throw MetadataPrefixUnknownException
+				throw new OaiServiceException("unable to build xml for oai record cause metadata prefix unknown " + metadataPrefix);
+			}
 		} catch (CoreServiceException | KeyNotFoundException | OrtolangException | NotIndexableContentException e) {
-			LOGGER.log(Level.SEVERE, "unable to build oai_dc from workspace  " + wskey, e);
+			LOGGER.log(Level.SEVERE, "unable to build oai_dc from workspace " + wskey, e);
+			throw new OaiServiceException("unable to build xml for oai record");
 		}
-		throw new OaiServiceException("unable to build oai_dc");
 	}
+	
+	private String buildXMLFromOrtolangObject(String key, String metadataPrefix) throws OaiServiceException {
+		LOGGER.log(Level.FINE, "creating OAI record for ortolang object " + key + " for metadataPrefix " + metadataPrefix);
+		try {
+			List<String> mdKeys = core.findMetadataObjectsForTargetAndName(key, metadataPrefix);
+			DCXMLDocument xml = null;
+
+			if (!mdKeys.isEmpty()) {
+				String mdKey = mdKeys.get(0);
+				MetadataObject md = core.readMetadataObject(mdKey);
+				xml = OAI_DCFactory.buildFromJson(getContent(binaryStore.get(md.getStream())));
+			} else {
+				return null;
+			}
+			
+			// Automatically adds handles to 'identifier' XML element
+			List<String> handles;
+			try {
+				handles = handleStore.listHandlesForKey(key);
+				for(String handle : handles) {          
+					xml.addDcField("identifier", 
+							"http://hdl.handle.net/"+OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX)
+							+ "/" +handle);
+				}
+			} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
+				LOGGER.log(Level.WARNING, "No handle for key " + key, e);
+			}
+			if (xml!=null) {				
+				return xml.toString();
+			} else {
+				//TODO throw MetadataPrefixUnknownException
+				throw new OaiServiceException("unable to build xml for oai record cause metadata prefix unknown " + metadataPrefix);
+			}
+		} catch (OrtolangException | KeyNotFoundException | CoreServiceException | IOException | BinaryStoreServiceException | DataNotFoundException e) {
+			LOGGER.log(Level.SEVERE, "unable to build oai_dc from ortolang object  " + key, e);
+			throw new OaiServiceException("unable to build xml for oai record");
+		}
+	}
+
+    private String getContent(InputStream is) throws IOException {
+        String content = null;
+        try {
+            content = IOUtils.toString(is, "UTF-8");
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "  unable to get content from stream", e);
+        } finally {
+            is.close();
+        }
+        return content;
+    }
 
 }

@@ -10,16 +10,16 @@
     );
 
     create table Set (
-        id varchar(255) not null,
+        spec varchar(255) not null,
         name varchar(255),
         version int8 not null,
-        primary key (id)
+        primary key (spec)
     );
 
     create table SetRecord (
         id varchar(255) not null,
-        keyset varchar(255),
-        record varchar(255),
+        setSpec varchar(255),
+        recordId varchar(255),
         version int8 not null,
         primary key (id)
     );

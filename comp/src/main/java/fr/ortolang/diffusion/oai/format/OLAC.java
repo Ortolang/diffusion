@@ -47,7 +47,7 @@ import javax.json.JsonString;
 
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 
-public class OLAC extends XMLDocument {
+public class OLAC extends DCXMLDocument {
 
     private static final Logger LOGGER = Logger.getLogger(OLAC.class.getName());
 

@@ -78,6 +78,7 @@ import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.oaipmh.dataprovider.DiffusionDataProvider;
 import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionItemRepository;
 import fr.ortolang.diffusion.oai.OaiService;
+import fr.ortolang.diffusion.oai.entity.Set;
 
 @Path("/oai")
 @Produces({ MediaType.APPLICATION_XML })
@@ -102,7 +103,10 @@ public class OAIPMHServlet {
         context.withMetadataFormat(MetadataFormat.metadataFormat("olac").withNamespace("http://www.language-archives.org/OLAC/1.1/").withSchemaLocation("http://www.language-archives.org/OLAC/1.1/olac.xsd"));
 
         InMemorySetRepository setRepository = new InMemorySetRepository();
-        setRepository.doesNotSupportSets();
+//        setRepository.doesNotSupportSets();
+        //TODO create DiffusionSetRepository with oaiService
+        List<Set> sets = oai.listSets();
+        sets.forEach(set -> setRepository.withSet(set.getName(), set.getSpec()));
         DiffusionItemRepository itemRepository = new DiffusionItemRepository(oai);
 
         UTCDateProvider dateProvider = new UTCDateProvider();
