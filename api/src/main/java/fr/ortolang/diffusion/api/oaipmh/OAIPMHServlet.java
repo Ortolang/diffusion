@@ -61,7 +61,6 @@ import com.lyncode.xoai.dataprovider.exceptions.OAIException;
 import com.lyncode.xoai.dataprovider.model.Context;
 import com.lyncode.xoai.dataprovider.model.MetadataFormat;
 import com.lyncode.xoai.dataprovider.parameters.OAIRequest;
-import com.lyncode.xoai.dataprovider.repository.InMemorySetRepository;
 import com.lyncode.xoai.dataprovider.repository.Repository;
 import com.lyncode.xoai.dataprovider.repository.RepositoryConfiguration;
 import com.lyncode.xoai.model.oaipmh.DeletedRecord;
@@ -79,7 +78,6 @@ import fr.ortolang.diffusion.api.oaipmh.dataprovider.DiffusionDataProvider;
 import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionItemRepository;
 import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionSetRepository;
 import fr.ortolang.diffusion.oai.OaiService;
-import fr.ortolang.diffusion.oai.entity.Set;
 
 @Path("/oai")
 @Produces({ MediaType.APPLICATION_XML })
@@ -104,9 +102,6 @@ public class OAIPMHServlet {
         context.withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
         context.withMetadataFormat(MetadataFormat.metadataFormat("olac").withNamespace("http://www.language-archives.org/OLAC/1.1/").withSchemaLocation("http://www.language-archives.org/OLAC/1.1/olac.xsd"));
 
-//        InMemorySetRepository setRepository = new InMemorySetRepository();
-//        List<Set> sets = oai.listSets();
-//        sets.forEach(set -> setRepository.withSet(set.getName(), set.getSpec()));
         DiffusionSetRepository setRepository = new DiffusionSetRepository(oai);
         DiffusionItemRepository itemRepository = new DiffusionItemRepository(oai);
 

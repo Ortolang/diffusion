@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.oai;
 
+@SuppressWarnings("serial")
 public class SetRecordNotFoundException extends Exception {
 
 	public SetRecordNotFoundException() {

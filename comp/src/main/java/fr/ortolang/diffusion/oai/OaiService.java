@@ -26,9 +26,5 @@ public interface OaiService extends OrtolangService {
     public Set readSet(String spec) throws SetNotFoundException;
     public Set updateSet(String spec, String name) throws SetNotFoundException;
     public void deleteSet(String spec) throws SetNotFoundException;
-//    public List<SetRecord> listSetRecords(String spec);
-//    public SetRecord createSetRecord(String setSpec, String recordId);
-//    public SetRecord readSetRecord(String id) throws SetRecordNotFoundException;
-//    public SetRecord updateSetRecord(String id, String setSpec) throws SetRecordNotFoundException;
-//    public void deleteSetRecord(String id) throws SetRecordNotFoundException;
+	public void buildRecordsForWorkspace(String wskey, String snapshot) throws OaiServiceException;
 }
