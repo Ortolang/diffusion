@@ -2,10 +2,14 @@ package fr.ortolang.diffusion.oai;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.security.PermitAll;
 import javax.ejb.ActivationConfigProperty;
@@ -30,8 +34,6 @@ import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.event.entity.Event;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.oai.entity.Record;
-import fr.ortolang.diffusion.oai.entity.Set;
-import fr.ortolang.diffusion.oai.entity.SetRecord;
 import fr.ortolang.diffusion.oai.format.DCXMLDocument;
 import fr.ortolang.diffusion.oai.format.OAI_DCFactory;
 import fr.ortolang.diffusion.oai.format.OLACFactory;
@@ -76,6 +78,7 @@ public class OaiListenerBean implements MessageListener {
 			if (event.getArguments().containsKey("snapshot")) {
 				String wskey = event.getFromObject();
 				String snapshot = event.getArguments().get("snapshot");
+				HashSet<String> setsWorkspace = new HashSet<String>(Arrays.asList(wskey));
 				
 				List<Record> records = null;
 				try {
@@ -85,74 +88,60 @@ public class OaiListenerBean implements MessageListener {
 				
 				if (records==null) {
 					LOGGER.log(Level.FINE, "creating OAI record, set and setRecord for workspace " + wskey + " and snapshot " + snapshot);
-					// Creating a Set by workspace
-					oai.createSet(wskey, "Workspace "+wskey);
-					
-					// Creating a Record for the workspace
-					Record recWorkspace = oai.createRecord(wskey, MetadataFormat.OAI_DC, registry.getLastModificationDate(wskey), buildXMLFromWorkspace(wskey, snapshot, MetadataFormat.OAI_DC));
-		            // Linking Record and Set for the workspace
-					oai.createSetRecord(wskey, recWorkspace.getId());
-					
-					// Creating a Record for each element with OAI_DC metadata object of the workspace
-					Map<String, Map<String, List<String>>> map = core.buildWorkspacePublicationMap(wskey, snapshot);
-		            for(String key : map.keySet()) {
-		            	String oai_dc = buildXMLFromOrtolangObject(key, MetadataFormat.OAI_DC);
-		            	if (oai_dc!=null) {
-		            		Record rec = oai.createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), oai_dc);
-		            		// Linking the Record with the set of the workspace
-		            		oai.createSetRecord(wskey, rec.getId());
-		            	}
-		            	String olac = buildXMLFromOrtolangObject(key, MetadataFormat.OLAC);
-		            	if (olac!=null) {
-		            		Record rec = oai.createRecord(key, MetadataFormat.OLAC, registry.getLastModificationDate(key), olac);
-		            		// Linking the Record with the set of the workspace
-		            		oai.createSetRecord(wskey, rec.getId());
-		            	}
-		            }
+					// Creating a Set for the workspace
+					try {
+						oai.createSet(wskey, "Workspace "+wskey);
+					} catch (SetAlreadyExistsException e) {
+						LOGGER.log(Level.WARNING, "unable to create a Set " + wskey, e);
+					}
+					createRecordsForWorkspace(wskey, snapshot, setsWorkspace);
 				} else {
 					LOGGER.log(Level.FINE, "updating OAI record for workspace " + wskey + " and snapshot " + snapshot);
-					
-					// Deleting all setRecords and Records linking by workspace
-					List<SetRecord> setRecords = oai.listSetRecords(wskey);
-					setRecords.forEach(setRec -> {
-						try {
-							oai.deleteRecord(setRec.getRecordId());
-							oai.deleteSetRecord(setRec.getId());
-						} catch (SetRecordNotFoundException | RecordNotFoundException e) {
-						}
-					});
-
-					// Creating a Record for the workspace
-					Record recWorkspace = oai.createRecord(wskey, MetadataFormat.OAI_DC, registry.getLastModificationDate(wskey), buildXMLFromWorkspace(wskey, snapshot, MetadataFormat.OAI_DC));
-		            // Linking Record and Set for the workspace
-					oai.createSetRecord(wskey, recWorkspace.getId());
-					
-					// Creating a Record for each element with a OAI_DC metadata object 
-					Map<String, Map<String, List<String>>> map = core.buildWorkspacePublicationMap(wskey, snapshot);
-		            for(String key : map.keySet()) {
-		            	String oai_dc = buildXMLFromOrtolangObject(key, MetadataFormat.OAI_DC);
-		            	if (oai_dc!=null) {
-		            		Record rec = oai.createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), oai_dc);
-		            		// Linking the Record with the set of the workspace
-		            		oai.createSetRecord(wskey, rec.getId());
-		            	}
-		            	String olac = buildXMLFromOrtolangObject(key, MetadataFormat.OLAC);
-		            	if (olac!=null) {
-		            		Record rec = oai.createRecord(key, MetadataFormat.OLAC, registry.getLastModificationDate(key), olac);
-		            		// Linking the Record with the set of the workspace
-		            		oai.createSetRecord(wskey, rec.getId());
-		            	}
-		            }
+					// Set is already created (see below), so just cleans and creates new records
+					// Deleting all Records linking of the workspace
+					List<Record> recordsOfWorkspace;
+					try {
+						recordsOfWorkspace = oai.listRecordsBySet(wskey);
+						recordsOfWorkspace.forEach(rec -> {
+							try {
+								oai.deleteRecord(rec.getId());
+							} catch (RecordNotFoundException e) {
+							}
+						});
+					} catch (RecordNotFoundException e1) {
+						// No record
+					}
+					createRecordsForWorkspace(wskey, snapshot, setsWorkspace);
 				}
 			} else {
 				LOGGER.log(Level.SEVERE, "unable to create OAI record without specifying a snapshot");
 			}
-		} catch (OrtolangException | RegistryServiceException | KeyNotFoundException | OaiServiceException | SetAlreadyExistsException | CoreServiceException e) {
+		} catch (OrtolangException | RegistryServiceException | KeyNotFoundException | OaiServiceException | CoreServiceException | MetadataPrefixUnknownException e) {
 			LOGGER.log(Level.SEVERE, "unable to create OAI record", e);
 		}
 	}
 	
-	private String buildXMLFromWorkspace(String wskey, String snapshot, String metadataPrefix) throws OaiServiceException {
+	private void createRecordsForWorkspace(String wskey, String snapshot, HashSet<String> setsWorkspace) throws RegistryServiceException, KeyNotFoundException, OaiServiceException, MetadataPrefixUnknownException, CoreServiceException {
+
+		// Creating a Record for the workspace
+		oai.createRecord(wskey, MetadataFormat.OAI_DC, registry.getLastModificationDate(wskey), buildXMLFromWorkspace(wskey, snapshot, MetadataFormat.OAI_DC), setsWorkspace);
+		oai.createRecord(wskey, MetadataFormat.OLAC, registry.getLastModificationDate(wskey), buildXMLFromWorkspace(wskey, snapshot, MetadataFormat.OLAC), setsWorkspace);
+		
+		// Creating a Record for each element with OAI_DC metadata object of the workspace
+		Map<String, Map<String, List<String>>> map = core.buildWorkspacePublicationMap(wskey, snapshot);
+        for(String key : map.keySet()) {
+        	String oai_dc = buildXMLFromOrtolangObject(key, MetadataFormat.OAI_DC);
+        	if (oai_dc!=null) {
+        		oai.createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), oai_dc, setsWorkspace);
+        	}
+        	String olac = buildXMLFromOrtolangObject(key, MetadataFormat.OLAC);
+        	if (olac!=null) {
+        		oai.createRecord(key, MetadataFormat.OLAC, registry.getLastModificationDate(key), olac, setsWorkspace);
+        	}
+        }
+	}
+	
+	private String buildXMLFromWorkspace(String wskey, String snapshot, String metadataPrefix) throws OaiServiceException, MetadataPrefixUnknownException {
 		LOGGER.log(Level.FINE, "building XML for workspace " + wskey + " and snapshot " + snapshot + " and metadataPrefix " + metadataPrefix);
 		try {
 			Workspace workspace = core.readWorkspace(wskey);
@@ -182,8 +171,7 @@ public class OaiListenerBean implements MessageListener {
 			if (xml!=null) {				
 				return xml.toString();
 			} else {
-				//TODO throw MetadataPrefixUnknownException
-				throw new OaiServiceException("unable to build xml for oai record cause metadata prefix unknown " + metadataPrefix);
+				throw new MetadataPrefixUnknownException("unable to build xml for oai record cause metadata prefix unknown " + metadataPrefix);
 			}
 		} catch (CoreServiceException | KeyNotFoundException | OrtolangException | NotIndexableContentException e) {
 			LOGGER.log(Level.SEVERE, "unable to build oai_dc from workspace " + wskey, e);
@@ -201,9 +189,9 @@ public class OaiListenerBean implements MessageListener {
 				String mdKey = mdKeys.get(0);
 				MetadataObject md = core.readMetadataObject(mdKey);
 				if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
-					xml = OAI_DCFactory.buildFromItem(getContent(binaryStore.get(md.getStream())));
+					xml = OAI_DCFactory.buildFromJson(getContent(binaryStore.get(md.getStream())));
 				} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
-					xml = OLACFactory.buildFromItem(getContent(binaryStore.get(md.getStream())));
+					xml = OLACFactory.buildFromJson(getContent(binaryStore.get(md.getStream())));
 				}
 			} else {
 				return null;
@@ -224,7 +212,6 @@ public class OaiListenerBean implements MessageListener {
 			if (xml!=null) {				
 				return xml.toString();
 			} else {
-				//TODO throw MetadataPrefixUnknownException
 				throw new OaiServiceException("unable to build xml for oai record cause metadata prefix unknown " + metadataPrefix);
 			}
 		} catch (OrtolangException | KeyNotFoundException | CoreServiceException | IOException | BinaryStoreServiceException | DataNotFoundException e) {

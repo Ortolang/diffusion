@@ -43,6 +43,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.lyncode.xoai.dataprovider.model.Item;
 import com.lyncode.xoai.dataprovider.model.Set;
@@ -61,7 +62,17 @@ public class DiffusionItem implements Item {
 	private Date datestamp;
 	private String identifier;
 	private Metadata metadata;
+	private List<Set> sets;
+	private boolean deleted;
 
+	public DiffusionItem() {
+		this.identifier = null;
+		this.datestamp = null;
+		this.metadata = null;
+		this.sets = new ArrayList<Set>();
+		this.deleted = false;
+	}
+	
 	public DiffusionItem withIdentifier(String id) {
 		this.identifier = id;
 		return this;
@@ -77,6 +88,11 @@ public class DiffusionItem implements Item {
 		return this;
 	}
 	
+	public DiffusionItem withSets(List<Set> sets) throws IOException {
+		this.sets = sets;
+		return this;
+	}
+	
 	@Override
 	public Date getDatestamp() {
 		return this.datestamp;
@@ -89,13 +105,12 @@ public class DiffusionItem implements Item {
 
 	@Override
 	public List<Set> getSets() {
-		// No Set
-		return new ArrayList<Set>();
+		return sets;
 	}
 
 	@Override
 	public boolean isDeleted() {
-		return false;
+		return deleted;
 	}
 
 	@Override
@@ -111,6 +126,7 @@ public class DiffusionItem implements Item {
 	public static DiffusionItem fromRecord(Record rec) throws IOException {
 	    return DiffusionItem.item().withIdentifier(DiffusionItemRepository.PREFIX_IDENTIFIER + rec.getIdentifier())
 	            .withDatestamp(new Date(rec.getLastModificationDate()))
-	            .withMetadata(new ByteArrayInputStream(rec.getXml().getBytes(StandardCharsets.UTF_8)));
+	            .withMetadata(new ByteArrayInputStream(rec.getXml().getBytes(StandardCharsets.UTF_8)))
+	            .withSets(rec.getSets().stream().map(spec -> Set.set(spec)).collect(Collectors.toList()));
 	}
 }

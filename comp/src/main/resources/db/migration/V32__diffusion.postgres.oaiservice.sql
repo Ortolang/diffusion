@@ -9,18 +9,14 @@
         primary key (id)
     );
 
+    create table Record_sets (
+        Record_id varchar(255) not null,
+        sets varchar(8000)
+    );
+
     create table Set (
         spec varchar(255) not null,
         name varchar(255),
         version int8 not null,
         primary key (spec)
     );
-
-    create table SetRecord (
-        id varchar(255) not null,
-        setSpec varchar(255),
-        recordId varchar(255),
-        version int8 not null,
-        primary key (id)
-    );
-

@@ -81,17 +81,16 @@ public class XMLElement {
 		this.value = value;
 	}
 
-	public static XMLElement createDcElement(String name, String value) {
+	public static XMLElement createElement(String namespace, String name) {
 		XMLElement elem = new XMLElement();
-		elem.setPrefixNamespace("dc");
+		elem.setPrefixNamespace(namespace);
 		elem.setName(name);
-		elem.setValue(value);
 		return elem;
 	}
 	
-	public static XMLElement createDctermsElement(String name, String value) {
+	public static XMLElement createElement(String namespace, String name, String value) {
 		XMLElement elem = new XMLElement();
-		elem.setPrefixNamespace("dcterms");
+		elem.setPrefixNamespace(namespace);
 		elem.setName(name);
 		elem.setValue(value);
 		return elem;

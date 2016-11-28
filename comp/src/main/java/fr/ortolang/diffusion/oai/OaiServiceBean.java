@@ -2,6 +2,7 @@ package fr.ortolang.diffusion.oai;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,7 +27,6 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.oai.entity.Record;
 import fr.ortolang.diffusion.oai.entity.Set;
-import fr.ortolang.diffusion.oai.entity.SetRecord;
 
 @Local(OaiService.class)
 @Stateless(name = OaiService.SERVICE_NAME)
@@ -57,11 +57,26 @@ public class OaiServiceBean implements OaiService {
         }
         return records;
     }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Record> listRecordsBySet(String set) throws RecordNotFoundException {
+    	TypedQuery<Record> query = em.createNamedQuery("listRecordsBySet", Record.class).setParameter("set", set);
+    	List<Record> records = query.getResultList();
+    	if (records == null || records.isEmpty()) {
+    		throw new RecordNotFoundException("unable to list records with set: " + set);
+    	}
+    	return records;
+    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Record> listRecordsByMetadataPrefix(String metadataPrefix, Long from, Long until) throws RecordNotFoundException, OaiServiceException {
-        CriteriaBuilder builder = em.getCriteriaBuilder();
+        return listRecordsByMetadataPrefixAndSetspec(metadataPrefix, null, from, until);
+    }
+    
+    public List<Record> listRecordsByMetadataPrefixAndSetspec(String metadataPrefix, String setSpec, Long from, Long until) throws RecordNotFoundException, OaiServiceException {
+    	CriteriaBuilder builder = em.getCriteriaBuilder();
         CriteriaQuery<Record> criteria = builder.createQuery(Record.class);
         Root<Record> customer = criteria.from(Record.class);
         List<Predicate> predicates = new ArrayList<Predicate>();
@@ -71,6 +86,9 @@ public class OaiServiceBean implements OaiService {
         }
         
         predicates.add(builder.equal(customer.get("metadataPrefix"), metadataPrefix));
+        if (setSpec != null) {
+        	predicates.add(builder.isMember(setSpec, customer.get("sets")));
+        }
         if (from != null) {            
             predicates.add(builder.greaterThanOrEqualTo(customer.get("lastModificationDate"), from));
         }
@@ -101,12 +119,19 @@ public class OaiServiceBean implements OaiService {
 	@Override
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Record createRecord(String identifier, String metadataPrefix, long lastModificationDate, String xml) {
-	    String id = UUID.randomUUID().toString();
-    	Record record = new Record(id, identifier, metadataPrefix, lastModificationDate, xml);
-    	em.persist(record);
-    	return record;
+	    return createRecord(identifier, metadataPrefix, lastModificationDate, xml, new HashSet<String>());
     }
     
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+	public Record createRecord(String identifier, String metadataPrefix, long lastModificationDate, String xml, java.util.Set<String> sets) {
+		String id = UUID.randomUUID().toString();
+		Record record = new Record(id, identifier, metadataPrefix, lastModificationDate, xml, sets);
+		em.persist(record);
+		return record;
+	}
+	
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Record readRecord(String id) throws RecordNotFoundException {
@@ -191,45 +216,45 @@ public class OaiServiceBean implements OaiService {
 		em.remove(set);
 	}
 
-    @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<SetRecord> listSetRecords(String spec) {
-        return em.createNamedQuery("findAllSetRecordsBySetSpec", SetRecord.class).setParameter("setSpec", spec).getResultList();
-    }
-    
-	@Override
-	@TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public SetRecord createSetRecord(String setSpec, String recordId) {
-	    String id = UUID.randomUUID().toString();
-    	SetRecord setRecord = new SetRecord(id, setSpec, recordId);
-    	em.persist(setRecord);
-    	return setRecord;
-    }
-
-	@Override
-	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	public SetRecord readSetRecord(String id) throws SetRecordNotFoundException {
-        try {
-	        return em.find(SetRecord.class, id);
-        } catch (NoResultException e) {
-        	throw new SetRecordNotFoundException("unable to find a setRecord with id : " + id);
-        }
-	}
-	
-	@Override
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public SetRecord updateSetRecord(String id, String setSpec) throws SetRecordNotFoundException {
-		SetRecord setRecord = readSetRecord(id);
-		setRecord.setSetSpec(setSpec);
-		return em.merge(setRecord);
-	}
-	
-	@Override
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-	public void deleteSetRecord(String id) throws SetRecordNotFoundException {
-		SetRecord setRecord = readSetRecord(id);
-		em.remove(setRecord);
-	}
+//    @Override
+//    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+//    public List<SetRecord> listSetRecords(String spec) {
+//        return em.createNamedQuery("findAllSetRecordsBySetSpec", SetRecord.class).setParameter("setSpec", spec).getResultList();
+//    }
+//    
+//	@Override
+//	@TransactionAttribute(TransactionAttributeType.REQUIRED)
+//    public SetRecord createSetRecord(String setSpec, String recordId) {
+//	    String id = UUID.randomUUID().toString();
+//    	SetRecord setRecord = new SetRecord(id, setSpec, recordId);
+//    	em.persist(setRecord);
+//    	return setRecord;
+//    }
+//
+//	@Override
+//	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+//	public SetRecord readSetRecord(String id) throws SetRecordNotFoundException {
+//        try {
+//	        return em.find(SetRecord.class, id);
+//        } catch (NoResultException e) {
+//        	throw new SetRecordNotFoundException("unable to find a setRecord with id : " + id);
+//        }
+//	}
+//	
+//	@Override
+//    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+//	public SetRecord updateSetRecord(String id, String setSpec) throws SetRecordNotFoundException {
+//		SetRecord setRecord = readSetRecord(id);
+//		setRecord.setSetSpec(setSpec);
+//		return em.merge(setRecord);
+//	}
+//	
+//	@Override
+//    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+//	public void deleteSetRecord(String id) throws SetRecordNotFoundException {
+//		SetRecord setRecord = readSetRecord(id);
+//		em.remove(setRecord);
+//	}
     
 	@Override
 	public String getServiceName() {

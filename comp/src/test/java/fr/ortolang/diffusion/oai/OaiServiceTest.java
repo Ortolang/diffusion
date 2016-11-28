@@ -77,7 +77,7 @@ public class OaiServiceTest {
 		String xml = "<oai_dc></oai_dc>";
 		Record record1 = oai.createRecord(key, metadataPrefix, lastModificationDate, xml);
 		try {
-			Record recordRead1 = oai.readRecord(key);
+			Record recordRead1 = oai.readRecord(record1.getId());
 			assertTrue(record1.getIdentifier().equals(recordRead1.getIdentifier()));
 		} catch (RecordNotFoundException e) {
 			fail(e.getMessage());

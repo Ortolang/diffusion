@@ -1,5 +1,11 @@
 package fr.ortolang.diffusion.oai.format;
 
+import java.util.Arrays;
+import java.util.List;
+
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+
 /*
  * #%L
  * ORTOLANG
@@ -38,17 +44,30 @@ package fr.ortolang.diffusion.oai.format;
 
 public class OLAC extends DCXMLDocument {
 
+	public static final String DCTERMS_NAMESPACE = "dcterms";
+	public static final String OLAC_NAMESPACE = "olac";
+	public static final List<String> DCTERMS_ELEMENTS = Arrays.asList("abstract", "accessRights", "accrualMethod", "accrualPeriodicity", "accrualPolicy",
+    		"alternative", "audience", "available", "bibliographicCitation", "conformsTo", "created", "dateAccepted", "dateCopyrighted",
+    		"dateSubmitted", "educationLevel", "extent", "hasFormat", "hasPart", "hasVersion", "instructionalMethod", "isFormatOf", 
+    		"isPartOf", "isReferencedBy", "isReplacedBy", "isRequiredBy", "issued", "isVersionOf", "license", "mediator", "medium",
+    		"modified", "provenance", "references", "replaces", "requires", "rightsHolder", "spatial", "tableOfContents", "temporal",
+    		"valid"); 
+    
     public OLAC() {
         header = "<olac:olac xmlns:olac=\"http://www.language-archives.org/OLAC/1.1/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dcterms=\"http://purl.org/dc/terms/\"  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.language-archives.org/OLAC/1.1/ http://www.language-archives.org/OLAC/1.1/olac.xsd http://purl.org/dc/elements/1.1/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd http://purl.org/dc/terms/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dcterms.xsd\">";
         footer = "</olac:olac>";
     }
 
+    public void addDctermsField(String name, String value) {
+    	fields.add(XMLElement.createElement(DCTERMS_NAMESPACE, name, value));
+    }
+
     public void addDctermsField(String name, String xsitype, String value) {
-    	fields.add(XMLElement.createDctermsElement(name, value).withAttribute("xsi:type", xsitype));
+    	fields.add(XMLElement.createElement(DCTERMS_NAMESPACE, name, value).withAttribute("xsi:type", xsitype));
     }
 
     public void addDctermsMultilingualField(String name, String lang, String value) {
-    	fields.add(XMLElement.createDctermsElement(name, value).withAttribute("xml:lang", lang));
+    	fields.add(XMLElement.createElement(DCTERMS_NAMESPACE, name, value).withAttribute("xml:lang", lang));
     }
     
     public void addOlacField(String name, String xsitype, String olaccode) {
@@ -56,10 +75,53 @@ public class OLAC extends DCXMLDocument {
     }
 
     public void addOlacField(String name, String xsitype, String olaccode, String value) {
-    	fields.add(XMLElement.createDcElement(name, value).withAttribute("xsi:type", xsitype).withAttribute("olac:code", olaccode));
+    	fields.add(XMLElement.createElement(OLAC_NAMESPACE, name, value).withAttribute("xsi:type", xsitype).withAttribute("olac:code", olaccode));
     }
 
     public void addOlacField(String name, String xsitype, String olaccode, String lang, String value) {
-    	fields.add(XMLElement.createDcElement(name, value).withAttribute("xsi:type", xsitype).withAttribute("olac:code", olaccode).withAttribute("xml:lang", lang));
+    	fields.add(XMLElement.createElement(OLAC_NAMESPACE, name, value).withAttribute("xsi:type", xsitype).withAttribute("olac:code", olaccode).withAttribute("xml:lang", lang));
     }
+
+    public OLAC addOlacElement(String elementName, JsonObject meta) {
+    	if (meta.containsKey(elementName)) {
+    		JsonArray elementArray = meta.getJsonArray(elementName);
+            for(JsonObject elementObject : elementArray.getValuesAs(JsonObject.class)) {
+            	XMLElement elementXml = XMLElement.createElement(DC_NAMESPACE, elementName);
+            	
+    			if (elementObject.containsKey("value")) {
+    				elementXml.setValue(XMLDocument.removeHTMLTag(elementObject.getString("value")));
+    			} 
+            	if (elementObject.containsKey("lang")) {
+            		elementXml.withAttribute("xml:lang", elementObject.getString("lang"));
+            	} 
+            	if (elementObject.containsKey("type")) {
+            		elementXml.withAttribute("xsi:type", elementObject.getString("type"));
+            	}
+            	if (elementObject.containsKey("code")) {
+            		elementXml.withAttribute("olac:code", elementObject.getString("code"));
+            	}
+            	fields.add(elementXml);
+            }
+    	}
+    	return this;
+    }
+    
+    public OLAC addDctermsElement(String elementName, JsonObject meta) {
+    	if (meta.containsKey(elementName)) {
+    		JsonArray elementArray = meta.getJsonArray(elementName);
+    		for(JsonObject elementObject : elementArray.getValuesAs(JsonObject.class)) {
+    			XMLElement elementXml = XMLElement.createElement(DCTERMS_NAMESPACE, elementName, XMLDocument.removeHTMLTag(elementObject.getString("value")));
+    			
+    			if (elementObject.containsKey("lang")) {
+    				elementXml.withAttribute("xml:lang", elementObject.getString("lang"));
+    			} 
+    			if (elementObject.containsKey("type")) {
+    				elementXml.withAttribute("xsi:type", elementObject.getString("type"));
+    			}
+    			fields.add(elementXml);
+    		}
+    	}
+    	return this;
+    }
+    
 }

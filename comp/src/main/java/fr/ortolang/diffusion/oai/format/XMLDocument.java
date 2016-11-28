@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public abstract class XMLDocument {
 
@@ -17,6 +18,10 @@ public abstract class XMLDocument {
     	fields = new ArrayList<XMLElement>();
     }
 
+    public List<XMLElement> listFields(String name) throws IllegalStateException {
+    	return fields.stream().filter(elm -> elm.getName().equals(name)).collect(Collectors.toList());
+    }
+    
     protected void writeField(StringBuilder buffer, XMLElement elem) {
 
         buffer.append("<").append(elem.getPrefixNamespace()).append(":").append(elem.getName());

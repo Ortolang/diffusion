@@ -1,6 +1,8 @@
 package fr.ortolang.diffusion.oai.format;
 
 import java.io.StringReader;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,7 +15,7 @@ import javax.json.JsonString;
 public class OLACFactory {
 
     private static final Logger LOGGER = Logger.getLogger(OLACFactory.class.getName());
-
+    
 	public static OLAC buildFromItem(String item) {
 		OLAC olac = new OLAC();
 		
@@ -171,7 +173,7 @@ public class OLACFactory {
 //	        Date datestamp = new Date(longTimestamp);
 //	        olac.addDctermsField("modified", "dcterms:W3CDTF", w3cdtf.format(datestamp));
 		} catch(Exception e) {
-        	LOGGER.log(Level.SEVERE, "unable to build OLAC", e);
+        	LOGGER.log(Level.SEVERE, "unable to build OLAC from item", e);
         } finally {
             jsonReader.close();
             reader.close();
@@ -181,34 +183,24 @@ public class OLACFactory {
 	}
 	
 	public static OLAC buildFromJson(String json) {
-		OLAC oai_dc = new OLAC();
+		OLAC olac = new OLAC();
 		StringReader reader = new StringReader(json);
         JsonReader jsonReader = Json.createReader(reader);
         
         try {
         	JsonObject jsonDoc = jsonReader.readObject();
-	    	oai_dc.addDCElement("identifier", jsonDoc)
-	    		.addDCElement("title", jsonDoc)
-		    	.addDCElement("creator", jsonDoc)
-		    	.addDCElement("subject", jsonDoc)
-		    	.addDCElement("description", jsonDoc)
-		    	.addDCElement("publisher", jsonDoc)
-		    	.addDCElement("contributor", jsonDoc)
-		    	.addDCElement("date", jsonDoc)
-		    	.addDCElement("type", jsonDoc)
-		    	.addDCElement("format", jsonDoc)
-		    	.addDCElement("source", jsonDoc)
-		    	.addDCElement("language", jsonDoc)
-		    	.addDCElement("relation", jsonDoc)
-		    	.addDCElement("coverage", jsonDoc)
-		    	.addDCElement("rights", jsonDoc);
+        	
+        	// DCTerms elements
+        	OLAC.DCTERMS_ELEMENTS.stream().forEach(elm -> olac.addDctermsElement(elm, jsonDoc));
+        	// Dublin Core elements with OLAC attributes
+        	DCXMLDocument.DC_ELEMENTS.stream().forEach(elm -> olac.addOlacElement(elm, jsonDoc));
         } catch(Exception e) {
-        	LOGGER.log(Level.SEVERE, "unable to build OAI_DC from json", e);
+        	LOGGER.log(Level.SEVERE, "unable to build OLAC from json", e);
         } finally {
             jsonReader.close();
             reader.close();
         }
         
-        return oai_dc;
+        return olac;
     }
 }

@@ -108,7 +108,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
      * @param length
      * @return a list of identifiers
      */
-    protected ListItemIdentifiersResult getItemIdentifiersFromQuery(String metadataPrefix, Date from, Date until, int offset, int length) {
+    protected ListItemIdentifiersResult getItemIdentifiersFromQuery(String metadataPrefix, Date from, Date until, int offset, int length, String setSpec) {
         List<DiffusionItemIdentifier> list = new ArrayList<>();
         Long fromTime = null;
         Long untilTime = null;
@@ -117,7 +117,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
                 fromTime = from.getTime();
             if (until != null)
                 untilTime = until.getTime() + 86400000;
-            List<Record> records = oaiService.listRecordsByMetadataPrefix(metadataPrefix, fromTime, untilTime);
+            List<Record> records = oaiService.listRecordsByMetadataPrefixAndSetspec(metadataPrefix, setSpec, fromTime, untilTime);
             for(Record rec : records) {
                 list.add(DiffusionItemIdentifier.fromRecord(rec));
             }
@@ -155,7 +155,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
      * @param length
      * @return a list of records
      */
-    public ListItemsResults getItemsFromQuery(String metadataPrefix, Date from, Date until, int offset, int length) {
+    public ListItemsResults getItemsFromQuery(String metadataPrefix, String setSpec, Date from, Date until, int offset, int length) {
         List<DiffusionItem> list = new ArrayList<>();
         Long fromTime = null;
         Long untilTime = null;
@@ -164,7 +164,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
                 fromTime = from.getTime();
             if (until != null)
                 untilTime = until.getTime() + 86400000;
-            List<Record> records = oaiService.listRecordsByMetadataPrefix(metadataPrefix, fromTime, untilTime);
+            List<Record> records = oaiService.listRecordsByMetadataPrefixAndSetspec(metadataPrefix, setSpec, fromTime, untilTime);
             for(Record rec : records) {
                 list.add(DiffusionItem.fromRecord(rec));
             }
@@ -182,7 +182,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length) throws OAIException {
-        return getItemIdentifiersFromQuery(metadataPrefix, null, null, offset, length);
+        return getItemIdentifiersFromQuery(metadataPrefix, null, null, offset, length, null);
     }
 
     @Override
@@ -192,7 +192,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from) throws OAIException {
-        return getItemIdentifiersFromQuery(metadataPrefix, from, null, offset, length);
+        return getItemIdentifiersFromQuery(metadataPrefix, from, null, offset, length, null);
     }
 
     @Override
@@ -202,8 +202,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec) throws OAIException {
-        //TODO filter on setSpec
-        return getItemIdentifiersFromQuery(metadataPrefix, null, null, offset, length);
+        return getItemIdentifiersFromQuery(metadataPrefix, null, null, offset, length, setSpec);
     }
 
     @Override
@@ -213,7 +212,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from, Date until) throws OAIException {
-        return getItemIdentifiersFromQuery(metadataPrefix, from, until, offset, length);
+        return getItemIdentifiersFromQuery(metadataPrefix, from, until, offset, length, null);
     }
 
     @Override
@@ -223,8 +222,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from) throws OAIException {
-        //TODO filter on setSpec
-        return getItemIdentifiersFromQuery(metadataPrefix, from, null, offset, length);
+        return getItemIdentifiersFromQuery(metadataPrefix, from, null, offset, length, setSpec);
     }
 
     @Override
@@ -234,8 +232,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemIdentifiersResult getItemIdentifiers(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from, Date until) throws OAIException {
-        //TODO filter on setSpec
-        return getItemIdentifiersFromQuery(metadataPrefix, from, until, offset, length);
+        return getItemIdentifiersFromQuery(metadataPrefix, from, until, offset, length, setSpec);
     }
 
     @Override
@@ -245,7 +242,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemIdentifiersResult getItemIdentifiersUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date until) throws OAIException {
-        return getItemIdentifiersFromQuery(metadataPrefix, null, until, offset, length);
+        return getItemIdentifiersFromQuery(metadataPrefix, null, until, offset, length, null);
     }
 
     @Override
@@ -255,8 +252,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemIdentifiersResult getItemIdentifiersUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date until) throws OAIException {
-        //TODO filter on setSpec
-        return getItemIdentifiersFromQuery(metadataPrefix, null, until, offset, length);
+        return getItemIdentifiersFromQuery(metadataPrefix, null, until, offset, length, setSpec);
     }
 
     @Override
@@ -271,7 +267,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length) throws OAIException {
-        return getItemsFromQuery(metadataPrefix, null, null, offset, length);
+        return getItemsFromQuery(metadataPrefix, null, null, null, offset, length);
     }
 
     @Override
@@ -281,7 +277,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from) throws OAIException {
-        return getItemsFromQuery(metadataPrefix, from, null, offset, length);
+        return getItemsFromQuery(metadataPrefix, null, from, null, offset, length);
     }
 
     @Override
@@ -291,8 +287,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec) throws OAIException {
-        //TODO filter by spec
-        return getItemsFromQuery(metadataPrefix, null, null, offset, length);
+        return getItemsFromQuery(metadataPrefix, setSpec, null, null, offset, length);
     }
 
     @Override
@@ -302,7 +297,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date from, Date until) throws OAIException {
-        return getItemsFromQuery(metadataPrefix, from, until, offset, length);
+        return getItemsFromQuery(metadataPrefix, null, from, until, offset, length);
     }
 
     @Override
@@ -312,8 +307,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from) throws OAIException {
-        // TODO Filter by set
-        return getItemsFromQuery(metadataPrefix, from, null, offset, length);
+        return getItemsFromQuery(metadataPrefix, setSpec, from, null, offset, length);
     }
 
     @Override
@@ -323,8 +317,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemsResults getItems(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date from, Date until) throws OAIException {
-        // TODO Filter by set
-        return getItemsFromQuery(metadataPrefix, from, until, offset, length);
+        return getItemsFromQuery(metadataPrefix, setSpec, from, until, offset, length);
     }
 
     @Override
@@ -334,7 +327,7 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemsResults getItemsUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, Date until) throws OAIException {
-        return getItemsFromQuery(metadataPrefix, null, until, offset, length);
+        return getItemsFromQuery(metadataPrefix, null, null, until, offset, length);
     }
 
     @Override
@@ -344,7 +337,6 @@ public class DiffusionItemRepository implements MultiMetadataItemRepository {
 
     @Override
     public ListItemsResults getItemsUntil(List<ScopedFilter> filters, String metadataPrefix, int offset, int length, String setSpec, Date until) throws OAIException {
-        // TODO Filter by set
-        return getItemsFromQuery(metadataPrefix, null, until, offset, length);
+        return getItemsFromQuery(metadataPrefix, setSpec, null, until, offset, length);
     }
 }

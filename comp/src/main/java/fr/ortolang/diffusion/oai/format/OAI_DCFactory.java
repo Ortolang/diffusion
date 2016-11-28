@@ -154,21 +154,9 @@ public class OAI_DCFactory {
         
         try {
         	JsonObject jsonDoc = jsonReader.readObject();
-	    	oai_dc.addDCElement("identifier", jsonDoc)
-	    		.addDCElement("title", jsonDoc)
-		    	.addDCElement("creator", jsonDoc)
-		    	.addDCElement("subject", jsonDoc)
-		    	.addDCElement("description", jsonDoc)
-		    	.addDCElement("publisher", jsonDoc)
-		    	.addDCElement("contributor", jsonDoc)
-		    	.addDCElement("date", jsonDoc)
-		    	.addDCElement("type", jsonDoc)
-		    	.addDCElement("format", jsonDoc)
-		    	.addDCElement("source", jsonDoc)
-		    	.addDCElement("language", jsonDoc)
-		    	.addDCElement("relation", jsonDoc)
-		    	.addDCElement("coverage", jsonDoc)
-		    	.addDCElement("rights", jsonDoc);
+        	for(String elm : DCXMLDocument.DC_ELEMENTS) {
+        		oai_dc.addDCElement(elm, jsonDoc);
+        	}
         } catch(Exception e) {
         	LOGGER.log(Level.SEVERE, "unable to build OAI_DC from json", e);
         } finally {

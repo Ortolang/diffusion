@@ -36,7 +36,6 @@ package fr.ortolang.diffusion.oai.format;
  * #L%
  */
 
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 

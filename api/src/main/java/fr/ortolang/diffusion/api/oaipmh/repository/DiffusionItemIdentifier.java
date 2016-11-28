@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.api.oaipmh.repository;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.lyncode.xoai.dataprovider.model.ItemIdentifier;
 import com.lyncode.xoai.dataprovider.model.Set;
@@ -60,6 +61,15 @@ public class DiffusionItemIdentifier implements ItemIdentifier {
 
 	private Date datestamp;
 	private String identifier;
+	private List<Set> sets;
+	private boolean deleted;
+	
+	public DiffusionItemIdentifier() {
+		this.datestamp = null;
+		this.identifier = null;
+		this.sets = new ArrayList<Set>();
+		this.deleted = false;
+	}
 	
 	public DiffusionItemIdentifier withIdentifier(String id) {
 		this.identifier = id;
@@ -68,6 +78,11 @@ public class DiffusionItemIdentifier implements ItemIdentifier {
 	
 	public DiffusionItemIdentifier withDatestamp(Date date) {
 		this.datestamp = date;
+		return this;
+	}
+
+	public DiffusionItemIdentifier withSets(List<Set> sets) {
+		this.sets = sets;
 		return this;
 	}
 	
@@ -83,19 +98,18 @@ public class DiffusionItemIdentifier implements ItemIdentifier {
 
 	@Override
 	public List<Set> getSets() {
-		// No Set
-		return new ArrayList<Set>();
+		return sets;
 	}
 
 	@Override
 	public boolean isDeleted() {
-		// No deleted status
-		return false;
+		return deleted;
 	}
 	
 	public static DiffusionItemIdentifier fromRecord(Record rec) {
 	    return DiffusionItemIdentifier.item().withIdentifier(DiffusionItemRepository.PREFIX_IDENTIFIER + rec.getIdentifier())
-	            .withDatestamp(new Date(rec.getLastModificationDate()));
+	            .withDatestamp(new Date(rec.getLastModificationDate()))
+	            .withSets(rec.getSets().stream().map(spec -> Set.set(spec)).collect(Collectors.toList()));
 	}
 
 }
