@@ -8,7 +8,7 @@ import com.lyncode.xoai.dataprovider.repository.SetRepository;
 import com.lyncode.xoai.dataprovider.model.Set;
 
 import fr.ortolang.diffusion.oai.OaiService;
-import fr.ortolang.diffusion.oai.SetNotFoundException;
+import fr.ortolang.diffusion.oai.exception.SetNotFoundException;
 
 public class DiffusionSetRepository implements SetRepository {
 

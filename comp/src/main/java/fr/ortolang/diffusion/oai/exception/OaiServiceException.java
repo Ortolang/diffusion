@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.oai;
+package fr.ortolang.diffusion.oai.exception;
 
 @SuppressWarnings("serial")
 public class OaiServiceException extends Exception {

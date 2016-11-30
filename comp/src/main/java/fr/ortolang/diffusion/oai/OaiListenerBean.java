@@ -16,6 +16,7 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.event.entity.Event;
+import fr.ortolang.diffusion.oai.exception.OaiServiceException;
 import fr.ortolang.diffusion.registry.RegistryService;
 
 @MessageDriven(name = "OaiListener", activationConfig = {
@@ -46,7 +47,7 @@ public class OaiListenerBean implements MessageListener {
 				String wskey = event.getFromObject();
 				String snapshot = event.getArguments().get("snapshot");
 				
-				oai.buildRecordsForWorkspace(wskey, snapshot);
+				oai.buildFromWorkspace(wskey, snapshot);
 			} else {
 				LOGGER.log(Level.SEVERE, "unable to create OAI record without specifying a snapshot");
 			}

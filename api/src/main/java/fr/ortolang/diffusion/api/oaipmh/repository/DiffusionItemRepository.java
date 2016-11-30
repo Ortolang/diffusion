@@ -53,9 +53,9 @@ import com.lyncode.xoai.dataprovider.model.Item;
 import com.lyncode.xoai.dataprovider.model.ItemIdentifier;
 
 import fr.ortolang.diffusion.oai.OaiService;
-import fr.ortolang.diffusion.oai.OaiServiceException;
-import fr.ortolang.diffusion.oai.RecordNotFoundException;
 import fr.ortolang.diffusion.oai.entity.Record;
+import fr.ortolang.diffusion.oai.exception.OaiServiceException;
+import fr.ortolang.diffusion.oai.exception.RecordNotFoundException;
 
 public class DiffusionItemRepository implements MultiMetadataItemRepository {
 

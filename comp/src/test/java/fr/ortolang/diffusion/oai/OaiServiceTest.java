@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import fr.ortolang.diffusion.oai.entity.Record;
+import fr.ortolang.diffusion.oai.exception.RecordNotFoundException;
 
 @RunWith(Arquillian.class)
 public class OaiServiceTest {

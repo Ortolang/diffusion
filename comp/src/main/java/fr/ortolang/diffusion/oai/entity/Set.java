@@ -9,7 +9,8 @@ import javax.persistence.Version;
 @Entity
 @NamedQueries({
 	@NamedQuery(name = "listAllSets", query = "SELECT s FROM Set s"),
-	@NamedQuery(name = "listAllSetsWithSpec", query = "SELECT s FROM Set s WHERE s.spec = :spec")
+	@NamedQuery(name = "listAllSetsWithSpec", query = "SELECT s FROM Set s WHERE s.spec = :spec"),
+	@NamedQuery(name = "countSets", query = "SELECT COUNT(s) FROM Set s")
 })
 public class Set {
 
