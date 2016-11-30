@@ -45,6 +45,7 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,8 +64,10 @@ class OrtolangIndexableContentParser {
             String key = matcher.group(1);
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
-            OrtolangIndexableContent indexableContent = service.getIndexableContent(key);
-            matcher.appendReplacement(sb, indexableContent.getContent());
+            List<OrtolangIndexableContent> indexableContents = service.getIndexableContent(key);
+            if (!indexableContents.isEmpty()) {
+                matcher.appendReplacement(sb, indexableContents.get(0).getContent());
+            }
         }
         matcher.appendTail(sb);
         return sb.toString();

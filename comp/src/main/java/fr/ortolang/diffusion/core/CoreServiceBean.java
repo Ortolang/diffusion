@@ -49,6 +49,7 @@ import fr.ortolang.diffusion.OrtolangObjectState.Status;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.*;
 import fr.ortolang.diffusion.core.export.*;
+import fr.ortolang.diffusion.core.indexing.*;
 import fr.ortolang.diffusion.core.wrapper.CollectionWrapper;
 import fr.ortolang.diffusion.core.wrapper.OrtolangObjectWrapper;
 import fr.ortolang.diffusion.event.EventService;
@@ -88,10 +89,7 @@ import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.*;
 import javax.json.*;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -115,6 +113,8 @@ public class CoreServiceBean implements CoreService {
 
     private static final String[] RESERVED_ALIASES = new String[] { "key", "auth", "export" };
     private static final String[] RESERVED_TAG_NAMES = new String[] { Workspace.HEAD, Workspace.LATEST };
+
+    private static final String WORKSPACE_REGISTRY_PROPERTY_KEY = "ws";
 
     @EJB
     private RegistryService registry;
@@ -242,7 +242,9 @@ public class CoreServiceBean implements CoreService {
             collection.setClock(1);
             em.persist(collection);
 
-            registry.register(head, collection.getObjectIdentifier(), caller);
+            Properties properties = new Properties();
+            properties.put(WORKSPACE_REGISTRY_PROPERTY_KEY, wskey);
+            registry.register(head, collection.getObjectIdentifier(), caller, properties);
             indexing.index(head);
 
             Map<String, List<String>> rules = new HashMap<String, List<String>>();
@@ -1100,27 +1102,40 @@ public class CoreServiceBean implements CoreService {
                 root = workspace.getHead();
             } else {
                 if (!workspace.containsSnapshotName(snapshot)) {
-                    throw new CoreServiceException("the workspace with key: " + wskey + " does not containt a snapshot with name: " + snapshot);
+                    throw new CoreServiceException("the workspace with key: " + wskey + " does not contain a snapshot with name: " + snapshot);
                 }
                 root = workspace.findSnapshotByName(snapshot).getKey();
             }
 
-            Map<String, String> map = new HashMap<String, String>();
-            listContent(root, PathBuilder.newInstance(), map);
-            return map;
-        } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException | InvalidPathException e) {
+            return listCollectionContent(root).getPaths();
+        } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during listing workspace content", e);
             throw new CoreServiceException("unexpected error while trying to list workspace content", e);
         }
     }
 
+    private CollectionContent listCollectionContent(String key) throws CoreServiceException {
+        try {
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, Collection.OBJECT_TYPE);
+            authorisation.checkPermission(key, subjects, "read");
+            CollectionContent collectionContent = new CollectionContent();
+            listContent(key, PathBuilder.newInstance(), collectionContent);
+            return collectionContent;
+        } catch (OrtolangException | MembershipServiceException | KeyNotFoundException | RegistryServiceException | AuthorisationServiceException | InvalidPathException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred during listing collection [" + key + "] content", e);
+            throw new CoreServiceException("unexpected error while trying to list collection [" + key + "] content", e);
+        }
+    }
+
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    private void listContent(String key, PathBuilder path, Map<String, String> map) throws OrtolangException, InvalidPathException {
-        Object object = findObject(key);
-        map.put(path.build(), key);
+    private void listContent(String key, PathBuilder path, CollectionContent helper) throws OrtolangException, InvalidPathException {
+        OrtolangObject object = findObject(key);
+        helper.put(key, path.build(), object.getObjectIdentifier().getType());
         if (object instanceof Collection) {
             for (CollectionElement element : ((Collection) object).getElements()) {
-                listContent(element.getKey(), path.clone().path(element.getName()), map);
+                listContent(element.getKey(), path.clone().path(element.getName()), helper);
             }
         }
     }
@@ -1307,7 +1322,9 @@ public class CoreServiceBean implements CoreService {
             em.persist(collection);
             LOGGER.log(Level.FINEST, "collection [" + key + "] created");
 
-            registry.register(key, collection.getObjectIdentifier(), caller);
+            Properties properties = new Properties();
+            properties.put(WORKSPACE_REGISTRY_PROPERTY_KEY, wskey);
+            registry.register(key, collection.getObjectIdentifier(), caller, properties);
             indexing.index(key);
 
             authorisation.clonePolicy(key, ws.getHead());
@@ -1745,7 +1762,9 @@ public class CoreServiceBean implements CoreService {
             em.persist(object);
             LOGGER.log(Level.FINEST, "object [" + key + "] created");
 
-            registry.register(key, object.getObjectIdentifier(), caller);
+            Properties properties = new Properties();
+            properties.put(WORKSPACE_REGISTRY_PROPERTY_KEY, wskey);
+            registry.register(key, object.getObjectIdentifier(), caller, properties);
             indexing.index(key);
 
             authorisation.clonePolicy(key, ws.getHead());
@@ -2173,7 +2192,9 @@ public class CoreServiceBean implements CoreService {
             link.setTarget(ntarget);
             em.persist(link);
 
-            registry.register(key, link.getObjectIdentifier(), caller);
+            Properties properties = new Properties();
+            properties.put(WORKSPACE_REGISTRY_PROPERTY_KEY, wskey);
+            registry.register(key, link.getObjectIdentifier(), caller, properties);
             indexing.index(key);
 
             authorisation.clonePolicy(key, ws.getHead());
@@ -2648,7 +2669,9 @@ public class CoreServiceBean implements CoreService {
             meta.setKey(key);
             em.persist(meta);
 
-            registry.register(key, meta.getObjectIdentifier(), caller);
+            Properties properties = new Properties();
+            properties.put(WORKSPACE_REGISTRY_PROPERTY_KEY, wskey);
+            registry.register(key, meta.getObjectIdentifier(), caller, properties);
 
             authorisation.clonePolicy(key, ws.getHead());
 
@@ -3828,12 +3851,90 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    public OrtolangIndexableContent getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException {
-        return null;
+    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, NotIndexableContentException {
+        OrtolangObjectIdentifier identifier = registry.lookup(key);
+        if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
+            throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+        }
+
+        List<OrtolangIndexableContent> indexableContents = new ArrayList<>();
+        OrtolangObject object = null;
+        switch (identifier.getType()) {
+        case DataObject.OBJECT_TYPE:
+            DataObject dataObject = em.find(DataObject.class, identifier.getId());
+            object = dataObject;
+            dataObject.setKey(key);
+            indexableContents.add(new DataObjectIndexableContent(dataObject));
+            break;
+        case Collection.OBJECT_TYPE:
+            Collection collection = em.find(Collection.class, identifier.getId());
+            object = collection;
+            collection.setKey(key);
+            indexableContents.add(new CollectionIndexableContent(collection));
+            if (collection.isRoot() && registry.isLocked(key)) {
+                try {
+                    TypedQuery<Workspace> query = em.createNamedQuery("findWorkspaceByRootCollection", Workspace.class).setParameter("root", "%" + collection.getKey() + "%");
+                    Workspace workspace = query.getSingleResult();
+                    String wskey = registry.lookup(workspace.getObjectIdentifier());
+                    workspace.setKey(wskey);
+                    CollectionContent collectionContent = listCollectionContent(collection.getKey());
+                    indexableContents.add(new RootCollectionIndexableContent(collection, collectionContent.getPaths()));
+                    for (Entry<String, String> entry : collectionContent.getTypes().entrySet()) {
+                        Map<String, String> params = new HashMap<>();
+                        params.put("alias", workspace.getAlias());
+                        params.put("key", workspace.getKey());
+                        params.put("root", collection.getKey());
+                        indexableContents.add(new OrtolangObjectScriptedUpdate(CoreService.SERVICE_NAME, entry.getValue(), entry.getKey(),
+                                "def workspace = ['alias': params.alias, 'key': params.key, 'root': [params.root]];"
+                                        + "if (ctx._source.workspaces == null) {"
+                                        + "  ctx._source.workspaces = [workspace];"
+                                        + "} else {"
+                                        + "  def already = false;"
+                                        + "  for (ws in ctx._source.workspaces) {"
+                                        + "    if (ws.alias == workspace.alias) {"
+                                        + "      ws.key = workspace.key;"
+                                        + "      if (!ws.root.contains(params.root)) {"
+                                        + "        ws.root.add(params.root);"
+                                        + "      }"
+                                        + "      already = true;"
+                                        + "      break;"
+                                        + "    }"
+                                        + "  }"
+                                        + "  if (!already) {"
+                                        + "    ctx._source.workspaces.add(workspace)"
+                                        + "  }"
+                                        + "}", params));
+                    }
+                } catch (IdentifierNotRegisteredException| CoreServiceException | NoResultException e) {
+                    throw new OrtolangException(e.getMessage(), e);
+                }
+            }
+            break;
+        case Workspace.OBJECT_TYPE:
+            Workspace workspace = em.find(Workspace.class, identifier.getId());
+            workspace.setKey(key);
+            return Collections.singletonList(new WorkspaceIndexableContent(workspace));
+        case MetadataObject.OBJECT_TYPE:
+            MetadataObject metadataObject = em.find(MetadataObject.class, identifier.getId());
+            metadataObject.setKey(key);
+            return Collections.singletonList(new MetadataObjectIndexableContent(metadataObject));
+        }
+        if (object != null) {
+            for (MetadataElement metadataElement : ((MetadataSource) object).getMetadatas()) {
+                // TODO index more type of md
+                if (metadataElement.getName().startsWith("system-x-")) {
+                    OrtolangObjectIdentifier mdIdentifier = registry.lookup(metadataElement.getKey());
+                    MetadataObject metadataObject = em.find(MetadataObject.class, mdIdentifier.getId());
+                    metadataObject.setKey(metadataElement.getKey());
+                    indexableContents.add(new MetadataObjectIndexableContent(metadataObject));
+                }
+            }
+        }
+        return indexableContents;
     }
 
     private void putMetadataContent(MetadataSource source, IndexableJsonContent content) throws OrtolangException, RegistryServiceException, KeyNotFoundException {
-    	for (MetadataElement mde : source.getMetadatas()) {
+        for (MetadataElement mde : source.getMetadatas()) {
             OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
             MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
             if (metadata == null) {
@@ -3853,7 +3954,7 @@ public class CoreServiceBean implements CoreService {
             }
         }
     }
-    
+
     private String getContent(InputStream is) throws IOException {
         String content = null;
         try {
@@ -4086,8 +4187,9 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void systemCreateMetadata(String tkey, String name, String hash, String filename) throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException,
-            BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
+    public void systemCreateMetadata(String tkey, String name, String hash, String filename)
+            throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
+            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException, PropertyNotFoundException {
         LOGGER.log(Level.FINE, "#SYSTEM# create metadata for key [" + tkey + "]");
         if (!name.startsWith("system-")) {
             throw new CoreServiceException("only system metadata can be added this way.");
@@ -4146,7 +4248,10 @@ public class CoreServiceBean implements CoreService {
         meta.setKey(UUID.randomUUID().toString());
         em.persist(meta);
 
-        registry.register(meta.getKey(), meta.getObjectIdentifier(), "system");
+        String wskey = registry.getProperty(tkey, WORKSPACE_REGISTRY_PROPERTY_KEY);
+        Properties properties = new Properties();
+        properties.put(WORKSPACE_REGISTRY_PROPERTY_KEY, wskey);
+        registry.register(meta.getKey(), meta.getObjectIdentifier(), "system", properties);
 
         registry.refresh(tkey);
         indexing.index(tkey);
@@ -4154,6 +4259,27 @@ public class CoreServiceBean implements CoreService {
 
         ((MetadataSource) object).addMetadata(new MetadataElement(name, meta.getKey()));
         em.merge(object);
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Collection> systemListCollections() throws CoreServiceException {
+        try {
+            TypedQuery<Collection> query = em.createNamedQuery("findCollections", Collection.class);
+            List<Collection> collections = query.getResultList();
+            for (Iterator<Collection> iterator = collections.iterator(); iterator.hasNext(); ) {
+                try {
+                    Collection collection = iterator.next();
+                    String key = registry.lookup(collection.getObjectIdentifier());
+                    collection.setKey(key);
+                } catch (IdentifierNotRegisteredException e) {
+                    iterator.remove();
+                }
+            }
+            return collections;
+        } catch (RegistryServiceException e) {
+            throw new CoreServiceException(e);
+        }
     }
 
     /* ### Internal operations ### */
@@ -4605,6 +4731,39 @@ public class CoreServiceBean implements CoreService {
             return template;
         }
 
+    }
+
+    private static class CollectionContent {
+
+        private Map<String, String> types;
+
+        private Map<String, String> paths;
+
+        private Map<String, String> keys;
+
+        CollectionContent() {
+            types = new HashMap<>();
+            paths = new HashMap<>();
+            keys = new HashMap<>();
+        }
+
+        public void put(String key, String path, String type) {
+            types.put(key, type);
+            paths.put(path, key);
+            keys.put(key, path);
+        }
+
+        public Map<String, String> getTypes() {
+            return types;
+        }
+
+        public Map<String, String> getPaths() {
+            return paths;
+        }
+
+        public Map<String, String> getKeys() {
+            return keys;
+        }
     }
 
 }

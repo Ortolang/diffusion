@@ -1177,7 +1177,7 @@ public class MembershipServiceBean implements MembershipService {
     }
 
     @Override
-    public OrtolangIndexableContent getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, NotIndexableContentException {
+    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, NotIndexableContentException {
         OrtolangObjectIdentifier identifier = registry.lookup(key);
 
         if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
@@ -1186,15 +1186,21 @@ public class MembershipServiceBean implements MembershipService {
 
         switch (identifier.getType()) {
         case Profile.OBJECT_TYPE:
+            if (UNAUTHENTIFIED_IDENTIFIER.equals(key)) {
+                break;
+            }
             Profile profile = em.find(Profile.class, identifier.getId());
             profile.setKey(key);
-            return new ProfileIndexableContent(profile);
+            return Collections.singletonList(new ProfileIndexableContent(profile));
         case Group.OBJECT_TYPE:
+            if (ALL_AUTHENTIFIED_GROUP_KEY.equals(key)) {
+                break;
+            }
             Group group = em.find(Group.class, identifier.getId());
             group.setKey(key);
-            return new GroupIndexableContent(group);
+            return Collections.singletonList(new GroupIndexableContent(group));
         }
-        return null;
+        return Collections.emptyList();
     }
 
     @Override

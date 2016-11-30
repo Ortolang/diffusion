@@ -1,10 +1,10 @@
-package fr.ortolang.diffusion.client.cmd;
+package fr.ortolang.diffusion.core.indexing;
 
 /*
  * #%L
  * ORTOLANG
  * A online network structure for hosting language resources and tools.
- * 
+ *
  * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
  * Etienne Petitjean / ATILF UMR 7118 - CNRS
  * Jérôme Blanchard / ATILF UMR 7118 - CNRS
@@ -14,7 +14,7 @@ package fr.ortolang.diffusion.client.cmd;
  * Ulrike Fleury / ATILF UMR 7118 - CNRS
  * Frédéric Pierre / ATILF UMR 7118 - CNRS
  * Céline Moro / ATILF UMR 7118 - CNRS
- *  
+ *
  * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
  * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
  * %%
@@ -24,44 +24,45 @@ package fr.ortolang.diffusion.client.cmd;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
 
-import fr.ortolang.diffusion.client.OrtolangClientException;
-import org.apache.commons.cli.CommandLine;
+import fr.ortolang.diffusion.core.entity.MetadataSource;
 
-import java.io.Console;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
-public abstract class Command {
+abstract class MetadataSourceIndexableContent extends OrtolangObjectIndexableContent {
 
-    public abstract void execute(String[] args);
+    static final String[] METADATA_SOURCE_MAPPING;
 
-    protected String[] getCredentials(CommandLine cmd) throws OrtolangClientException {
-        String username;
-        String password = null;
-        if (cmd.hasOption("U")) {
-            username = cmd.getOptionValue("U");
-            if (cmd.hasOption("P")) {
-                password = cmd.getOptionValue("P");
-            } else {
-                Console cons;
-                char[] passwd;
-                if ((cons = System.console()) != null && (passwd = cons.readPassword("[%s]", "Password:")) != null) {
-                    password = new String(passwd);
-                }
-            }
-            return new String[] { username, password };
-        }
-        throw new OrtolangClientException("Username and/or password missing");
+    static {
+        METADATA_SOURCE_MAPPING = Stream.concat(Arrays.stream(ORTOLANG_OBJECT_MAPPING),
+                Arrays.stream(new String[] {
+                        "version",
+                        "type=long,index=no",
+                        "clock",
+                        "type=integer,index=no",
+                        "metadata",
+                        "type=object",
+                        "workspaces",
+                        "type=nested"
+                }))
+                .toArray(String[]::new);
     }
 
+    MetadataSourceIndexableContent(MetadataSource object, String index, String type) {
+        super(object, index, type);
+        content.put("version", object.getVersion());
+        content.put("clock", object.getClock());
+    }
 }

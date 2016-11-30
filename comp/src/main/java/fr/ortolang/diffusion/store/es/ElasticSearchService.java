@@ -36,16 +36,9 @@ package fr.ortolang.diffusion.store.es;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
-import org.elasticsearch.action.index.IndexResponse;
+import fr.ortolang.diffusion.indexing.IndexingService;
 
-public interface ElasticSearchService extends OrtolangService {
+public interface ElasticSearchService extends IndexingService {
 
     String SERVICE_NAME = "es-store";
-
-    void index(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, InterruptedException, NotIndexableContentException;
 }

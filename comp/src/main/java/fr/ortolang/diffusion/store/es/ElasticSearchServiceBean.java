@@ -37,6 +37,7 @@ package fr.ortolang.diffusion.store.es;
  */
 
 import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -47,6 +48,9 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.IndexNotFoundException;
+import org.elasticsearch.index.engine.DocumentMissingException;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -62,6 +66,8 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static org.elasticsearch.script.Script.DEFAULT_SCRIPT_LANG;
 
 @Startup
 @Local(ElasticSearchService.class)
@@ -115,46 +121,72 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
     }
 
     @Override
-    public void index(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, InterruptedException, NotIndexableContentException {
-        LOGGER.log(Level.FINE, "Indexing key [" + key + "]");
-        if (client == null || client.connectedNodes().isEmpty()) {
-            return;
-        }
-        OrtolangObjectIdentifier identifier = registry.lookup(key);
-        OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
-        OrtolangIndexableContent indexableContent = service.getIndexableContent(key);
-        if (!indexableContent.isEmpty()) {
-            try {
-                IndicesAdminClient adminClient = client.admin().indices();
-                if (!indices.containsKey(indexableContent.getIndex())) {
-                    // Check if index exists and create it if not
-                    if (adminClient.prepareExists(indexableContent.getIndex()).get().isExists()) {
-                        indices.put(indexableContent.getIndex(), new HashSet<>());
-                        checkType(indexableContent, adminClient);
-                    } else {
-                        LOGGER.log(Level.INFO, "Creating index [" + indexableContent.getIndex() + "] and add mapping for type [" + indexableContent.getType() + "]");
-                        CreateIndexRequestBuilder requestBuilder = adminClient.prepareCreate(indexableContent.getIndex());
-                        if (indexableContent.getMapping() != null) {
-                            requestBuilder.addMapping(indexableContent.getType(), indexableContent.getMapping());
-                        }
-                        requestBuilder.get();
-                        HashSet<String> types = new HashSet<>();
-                        types.add(indexableContent.getType());
-                        indices.put(indexableContent.getIndex(), types);
-                    }
-                } else {
-                    checkType(indexableContent, adminClient);
-                }
-                LOGGER.log(Level.FINE, "Indexing key [" + key + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
-                client.prepareIndex(indexableContent.getIndex(), indexableContent.getType(), key).setSource(indexableContent.getContent().getBytes()).get();
-            } catch (IndexNotFoundException e) {
-                LOGGER.log(Level.INFO, "Index not found: removing it from registry and re-trying to index key [" + key + "]");
-                indices.remove(indexableContent.getIndex());
-                index(key);
-            } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "An unexpected error happened while indexing key [" + key + "]", e);
+    public void index(String key) throws IndexingServiceException {
+        try {
+            LOGGER.log(Level.FINE, "Indexing key [" + key + "]");
+            if (client == null || client.connectedNodes().isEmpty()) {
+                return;
             }
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
+            List<OrtolangIndexableContent> indexableContents = service.getIndexableContent(key);
+            for (OrtolangIndexableContent indexableContent : indexableContents) {
+                if (!indexableContent.isEmpty()) {
+                    try {
+                        IndicesAdminClient adminClient = client.admin().indices();
+                        if (!indices.containsKey(indexableContent.getIndex())) {
+                            // Check if index exists and create it if not
+                            if (adminClient.prepareExists(indexableContent.getIndex()).get().isExists()) {
+                                indices.put(indexableContent.getIndex(), new HashSet<>());
+                                checkType(indexableContent, adminClient);
+                            } else {
+                                LOGGER.log(Level.INFO, "Creating index [" + indexableContent.getIndex() + "] and add mapping for type [" + indexableContent.getType() + "]");
+                                CreateIndexRequestBuilder requestBuilder = adminClient.prepareCreate(indexableContent.getIndex());
+                                if (indexableContent.getMapping() != null) {
+                                    requestBuilder.addMapping(indexableContent.getType(), indexableContent.getMapping());
+                                }
+                                requestBuilder.get();
+                                HashSet<String> types = new HashSet<>();
+                                types.add(indexableContent.getType());
+                                indices.put(indexableContent.getIndex(), types);
+                            }
+                        } else {
+                            checkType(indexableContent, adminClient);
+                        }
+                        if (indexableContent.isUpdate()) {
+                            LOGGER.log(Level.FINE, "Updating key [" + indexableContent.getKey() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
+                            Script script = new Script(indexableContent.getScript(), ScriptService.ScriptType.INLINE,  DEFAULT_SCRIPT_LANG, indexableContent.getScriptParams());
+                            client.prepareUpdate(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getKey()).setScript(script).get();
+                        } else {
+                            LOGGER.log(Level.FINE, "Indexing key [" + indexableContent.getKey() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
+                            client.prepareIndex(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getKey()).setSource(indexableContent.getContent().getBytes()).get();
+                        }
+                    } catch (IndexNotFoundException e) {
+                        LOGGER.log(Level.INFO, "Index not found: removing it from registry and re-trying to index key [" + key + "]");
+                        indices.remove(indexableContent.getIndex());
+                        index(key);
+                        return;
+                    } catch (IllegalArgumentException e) {
+                        LOGGER.log(Level.WARNING, "IllegalArgumentException for key [" + indexableContent.getKey() + "] with type [" + indexableContent.getType() +
+                                "] in index [" + indexableContent.getIndex() + "] " + e.getMessage() + (e.getCause() != null ? " cause: " + e.getCause().getMessage() : ""));
+                        return;
+                    } catch (DocumentMissingException e) {
+                        LOGGER.log(Level.WARNING, "Document missing for key [" + indexableContent.getKey() + "] with type [" + indexableContent.getType() +
+                                "] in index [" + indexableContent.getIndex() + "]");
+                    } catch (Exception e) {
+                        LOGGER.log(Level.SEVERE, "An unexpected error happened while indexing key [" + indexableContent.getKey() + "]", e);
+                        return;
+                    }
+                }
+            }
+        } catch (KeyNotFoundException | NotIndexableContentException | OrtolangException | RegistryServiceException e) {
+            throw new ElasticSearchServiceException("An unexpected error happened while indexing key [" + key + "]", e);
         }
+    }
+
+    @Override
+    public void remove(String key) throws IndexingServiceException {
+        // TODO not implemented
     }
 
     private void checkType(OrtolangIndexableContent indexableContent, IndicesAdminClient adminClient) {

@@ -73,7 +73,7 @@ public class ProfileIndexableContent extends OrtolangIndexableContent {
     }
 
     public ProfileIndexableContent(Profile profile) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
-        super(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE);
+        super(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, profile.getObjectKey());
         Map<String, Object> map = new HashMap<>();
         map.put("key", profile.getKey());
         map.put("givenName", profile.getGivenName());

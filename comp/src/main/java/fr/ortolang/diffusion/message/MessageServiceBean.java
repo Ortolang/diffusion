@@ -38,14 +38,7 @@ package fr.ortolang.diffusion.message;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -940,9 +933,9 @@ public class MessageServiceBean implements MessageService {
     }
 
     @Override
-    public OrtolangIndexableContent getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException {
+    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException {
         // TODO
-        return null;
+        return Collections.emptyList();
     }
 
     @Override

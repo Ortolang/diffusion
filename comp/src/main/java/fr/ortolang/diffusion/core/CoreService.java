@@ -52,10 +52,7 @@ import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.extraction.ExtractionServiceException;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
-import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.registry.*;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
@@ -153,6 +150,8 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
     void deleteCollection(String wskey, String path, boolean force) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, CollectionNotEmptyException;
 
     String resolvePathFromCollection(String key, String path) throws KeyNotFoundException, CoreServiceException, AccessDeniedException, PathNotFoundException, InvalidPathException;
+
+    List<Collection> systemListCollections() throws CoreServiceException;
 	
 	/*DataObject*/
 
@@ -249,7 +248,7 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     void systemCreateMetadata(String key, String name, String hash, String filename)
             throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
-            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException;
+            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException, PropertyNotFoundException;
 
     Workspace systemReadWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException;
 

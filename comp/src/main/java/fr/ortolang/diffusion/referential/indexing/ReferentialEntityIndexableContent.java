@@ -117,7 +117,7 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
     }
 
     public ReferentialEntityIndexableContent(ReferentialEntity entity) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
-        super(ReferentialService.SERVICE_NAME, entity.getType().name());
+        super(ReferentialService.SERVICE_NAME, entity.getType().name(), entity.getObjectKey());
         entityType = entity.getType();
         setContent(entity.getContent());
     }

@@ -542,7 +542,7 @@ public class ReferentialServiceBean implements ReferentialService {
     }
 
     @Override
-    public OrtolangIndexableContent getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, NotIndexableContentException {
+    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, NotIndexableContentException {
         OrtolangObjectIdentifier identifier = registry.lookup(key);
         if (!identifier.getService().equals(ReferentialService.SERVICE_NAME)) {
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
@@ -553,9 +553,9 @@ public class ReferentialServiceBean implements ReferentialService {
                 throw new OrtolangException("unable to load ReferentialEntity with id [" + identifier.getId() + "] from storage");
             }
             referentialEntity.setKey(key);
-            return new ReferentialEntityIndexableContent(referentialEntity);
+            return Collections.singletonList(new ReferentialEntityIndexableContent(referentialEntity));
         }
-        return null;
+        return Collections.emptyList();
     }
 
     @Override

@@ -41,25 +41,19 @@ import fr.ortolang.diffusion.client.OrtolangClientException;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
 import org.apache.commons.cli.*;
 
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonString;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-public class ReindexCommand extends Command {
+public class IndexAllCommand extends Command {
 
     private final Options options = new Options();
 
-    public ReindexCommand() {
+    public IndexAllCommand() {
         options.addOption("h", "help", false, "show help.");
         options.addOption("U", "username", true, "username for login");
         options.addOption("P", "password", true, "password for login");
-        options.addOption("s", "service", true, "service of the object to index");
-        options.addOption("t", "type", true, "type of the object to index");
-        options.addOption("a", "status", true, "status of the object to index");
-        options.addOption("F", "fake", false, "fake mode");
+        options.addOption("t", "types", true, "[optional] list of object types to index (coma separated)");
     }
 
     @Override
@@ -76,46 +70,22 @@ public class ReindexCommand extends Command {
             String username = credentials[0];
             String password = credentials[1];
 
-            String type = cmd.getOptionValue("t");
-            String service = cmd.getOptionValue("s");
-            String status = cmd.getOptionValue("a", "PUBLISHED");
-            boolean fakeMode = cmd.hasOption("F");
+            String types = cmd.getOptionValue("t");
 
-            if (service != null) {
-
-                OrtolangClient client = OrtolangClient.getInstance();
-                if ( username.length() > 0 ) {
-                    client.getAccountManager().setCredentials(username, password);
-                    client.login(username);
-                }
-                System.out.println("Connected as user: " + client.connectedProfile());
-                System.out.println("Retrieving for published objects from service "+service+", with type "+type+" and with status "+status+" ...");
-
-                List<String> objectKeys = new ArrayList<>();
-
-                int offset = 0;
-                int limit = 100;
-                JsonObject listOfObjects = client.listObjects(service, type, status, offset, limit);
-                JsonArray keys = listOfObjects.getJsonArray("entries");
-
-                while(!keys.isEmpty()) {
-                    objectKeys.addAll(keys.getValuesAs(JsonString.class).stream().map(JsonString::getString).collect(Collectors.toList()));
-                    offset += limit;
-                    listOfObjects = client.listObjects(service, type, status, offset, limit);
-                    keys = listOfObjects.getJsonArray("entries");
-                }
-                System.out.println("Reindex keys ("+objectKeys.size()+") : "+objectKeys);
-                if(!fakeMode) {
-                    for(String key : objectKeys) {
-                        client.reindex(key);
-                    }
-                    System.out.println("All keys reindexed.");
-                }
-                client.logout();
-                client.close();
-            } else {
-                help();
+            Map<String, String> params = new HashMap<>();
+            params.put("indexingTypes", types);
+            OrtolangClient client = OrtolangClient.getInstance();
+            if ( username.length() > 0 ) {
+                client.getAccountManager().setCredentials(username, password);
+                client.login(username);
             }
+            System.out.println("Connected as user: " + client.connectedProfile());
+            String pkey = client.createProcess("index-all", "Index all " + (types != null ? "(" + types + ")" : "(all)"), params, Collections.emptyMap());
+            System.out.println("Index-All process created with key : " + pkey);
+
+            client.logout();
+            client.close();
+
         } catch (ParseException e) {
             System.out.println("Failed to parse command line properties " +  e.getMessage());
             help();
@@ -127,7 +97,7 @@ public class ReindexCommand extends Command {
 
     private void help() {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Reindex", options);
+        formatter.printHelp("Index All", options);
         System.exit(0);
     }
 

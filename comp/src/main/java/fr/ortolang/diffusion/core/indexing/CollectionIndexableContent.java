@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.membership.indexing;
+package fr.ortolang.diffusion.core.indexing;
 
 /*
  * #%L
@@ -37,46 +37,51 @@ package fr.ortolang.diffusion.membership.indexing;
  */
 
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.entity.Collection;
+import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
-import fr.ortolang.diffusion.membership.MembershipService;
-import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Stream;
 
-public class GroupIndexableContent extends OrtolangIndexableContent {
+public class CollectionIndexableContent extends MetadataSourceIndexableContent {
 
-    private static final Object[] MAPPING;
+    private static final String[] COLLECTION_MAPPING;
 
     static {
-        MAPPING = new String[]{
-                "key",
-                "type=keyword",
-                "name",
-                "type=string,index=no",
-                "description",
-                "type=string,index=no",
-                "description",
-                "type=keyword"
-        };
+        COLLECTION_MAPPING = Stream.concat(Arrays.stream(METADATA_SOURCE_MAPPING),
+                Arrays.stream(new String[] {
+                        "root",
+                        "type=boolean",
+                        "elements",
+                        "type=nested"
+                }))
+                .toArray(String[]::new);
     }
 
-    public GroupIndexableContent(Group group) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
-        super(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, group.getObjectKey());
-        Map<String, Object> map = new HashMap<>();
-        map.put("key", group.getKey());
-        map.put("name", group.getName());
-        map.put("description", group.getDescription());
-        map.put("members", group.getMembers());
-        setContent(map);
+    public CollectionIndexableContent(Collection collection) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
+        super(collection, CoreService.SERVICE_NAME, Collection.OBJECT_TYPE);
+        content.put("root", collection.isRoot());
+        Set<CollectionElement> collectionElements = collection.getElements();
+        Set<Map<String, Object>> elements = new HashSet<>(collectionElements.size());
+        for (CollectionElement collectionElement : collectionElements) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("key", collectionElement.getKey());
+            map.put("name", collectionElement.getName());
+            map.put("type", collectionElement.getType());
+            map.put("mimeType", collectionElement.getMimeType());
+            map.put("modification", collectionElement.getModification());
+            elements.add(map);
+        }
+        content.put("elements", elements);
+        setContent(content);
     }
 
     @Override
     public Object[] getMapping() {
-        return MAPPING;
+        return COLLECTION_MAPPING;
     }
-
 }

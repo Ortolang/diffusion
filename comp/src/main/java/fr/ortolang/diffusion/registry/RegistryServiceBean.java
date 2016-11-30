@@ -103,6 +103,13 @@ public class RegistryServiceBean implements RegistryService {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void register(String key, OrtolangObjectIdentifier identifier, String author) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException {
+        register(key, identifier, author, null);
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void register(String key, OrtolangObjectIdentifier identifier, String author, Properties properties)
+            throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException {
         LOGGER.log(Level.FINE, "creating key [" + key + "] for OOI [" + identifier + "]");
         try {
             findEntryByKey(key);
@@ -122,6 +129,9 @@ public class RegistryServiceBean implements RegistryService {
             entry.setAuthor(author);
             entry.setCreationDate(current);
             entry.setLastModificationDate(current);
+            if (properties != null) {
+                entry.setProperties(properties);
+            }
             em.persist(entry);
         } catch ( Exception e ) {
             LOGGER.log(Level.SEVERE, e.getMessage(), e);
@@ -438,6 +448,14 @@ public class RegistryServiceBean implements RegistryService {
         }
     }
 
+    /**
+     * @param offset
+     * @param limit the maximum result returned (-1 to get them all)
+     * @param identifierFilter
+     * @param statusFilter
+     * @return a list of results
+     * @throws RegistryServiceException when called with wrong parameters
+     */
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<String> list(int offset, int limit, String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException {
@@ -445,7 +463,7 @@ public class RegistryServiceBean implements RegistryService {
         if (offset < 0) {
             throw new RegistryServiceException("offset MUST be >= 0");
         }
-        if (limit < 1) {
+        if (limit < 1 && limit != -1) {
             throw new RegistryServiceException("limit MUST be >= 1");
         }
         StringBuilder ifilter = new StringBuilder();
@@ -461,7 +479,10 @@ public class RegistryServiceBean implements RegistryService {
         }
         TypedQuery<String> query;
         LOGGER.log(Level.FINE, "listing all keys only with identifierFilter: " + ifilter.toString() + " and statusFilter: " + sfilter.toString());
-        query = em.createNamedQuery("listVisibleKeys", String.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString()).setFirstResult(offset).setMaxResults(limit);
+        query = em.createNamedQuery("listVisibleKeys", String.class).setParameter("identifierFilter", ifilter.toString()).setParameter("statusFilter", sfilter.toString()).setFirstResult(offset);
+        if (limit != -1) {
+            query.setMaxResults(limit);
+        }
         return query.getResultList();
     }
 

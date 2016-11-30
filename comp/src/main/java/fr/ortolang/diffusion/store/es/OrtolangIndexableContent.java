@@ -42,6 +42,7 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import org.json.JSONObject;
 
+import java.util.Collections;
 import java.util.Map;
 
 public abstract class OrtolangIndexableContent {
@@ -50,11 +51,23 @@ public abstract class OrtolangIndexableContent {
 
     private final String type;
 
+    private final String key;
+
     private String content;
 
-    public OrtolangIndexableContent(String index, String type) {
+    private boolean update;
+
+    private String script;
+
+    private Map<String, String> scriptParams;
+
+    public OrtolangIndexableContent(String index, String type, String key) {
         this.index = index;
         this.type = type;
+        this.key = key;
+        this.update = false;
+        this.script = null;
+        this.scriptParams = Collections.emptyMap();
     }
 
     public String getIndex() {
@@ -63,6 +76,10 @@ public abstract class OrtolangIndexableContent {
 
     public String getType() {
         return type;
+    }
+
+    public String getKey() {
+        return key;
     }
 
     public String getContent() {
@@ -77,9 +94,34 @@ public abstract class OrtolangIndexableContent {
         this.content = OrtolangIndexableContentParser.parse(json);
     }
 
+    public boolean isUpdate() {
+        return update;
+    }
+
+    public void setUpdate(boolean update) {
+        this.update = update;
+    }
+
+    String getScript() {
+        return script;
+    }
+
+    protected void setScript(String script) {
+        update = true;
+        this.script = script;
+    }
+
+    Map<String, String> getScriptParams() {
+        return scriptParams;
+    }
+
+    protected void setScriptParams(Map<String, String> scriptParams) {
+        this.scriptParams = scriptParams;
+    }
+
     public abstract Object[] getMapping();
 
     public boolean isEmpty() {
-        return content.isEmpty();
+        return (script == null || script.isEmpty()) && (content == null || content.isEmpty());
     }
 }

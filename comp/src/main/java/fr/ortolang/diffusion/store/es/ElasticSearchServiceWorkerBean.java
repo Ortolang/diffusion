@@ -36,16 +36,12 @@ package fr.ortolang.diffusion.store.es;
  * #L%
  */
 
-import com.orientechnologies.common.exception.OException;
-import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangJob;
 import fr.ortolang.diffusion.indexing.IndexingService;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.jobs.JobService;
 import fr.ortolang.diffusion.jobs.entity.Job;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.PostConstruct;
@@ -213,14 +209,14 @@ public class ElasticSearchServiceWorkerBean implements ElasticSearchServiceWorke
                             LOGGER.log(Level.FINE, "key " + job.getTarget() + " added to Elastic Search");
                             break;
                         case IndexingService.REMOVE_ACTION:
-//                            elastic.remove(job.getTarget());
+                            elastic.remove(job.getTarget());
                             LOGGER.log(Level.FINE, "key " + job.getTarget() + " removed from Elastic Search");
                             break;
                         default:
                             LOGGER.log(Level.WARNING, "unknown job action: " + job.getAction());
                         }
                         jobService.remove(job.getId());
-                    } catch (OException | RegistryServiceException | KeyNotFoundException | OrtolangException | NotIndexableContentException e) {
+                    } catch (IndexingServiceException e) {
                         LOGGER.log(Level.WARNING, "unable to perform job action " + job.getAction() + " for key " + job.getTarget() + ": " + e.getMessage());
                         jobService.updateFailingJob(job, e);
                     }

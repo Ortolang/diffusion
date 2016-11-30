@@ -37,6 +37,7 @@ package fr.ortolang.diffusion.registry;
  */
 
 import java.util.List;
+import java.util.Properties;
 
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangObjectProperty;
@@ -57,90 +58,92 @@ import fr.ortolang.diffusion.registry.entity.RegistryEntry;
  * The name used for registry storage concerns the services that are using this registry. The registry is only here to 
  * avoid duplication of registered keys.
  * </p>
- * 
+ *
  * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
 public interface RegistryService extends OrtolangService {
-	
-	String SERVICE_NAME = "registry";
-	
-	String INFO_SIZE = "entries.all";
-	String INFO_DELETED = "entries.deleted";
-	String INFO_HIDDEN = "entries.hidden";
-	String INFO_PUBLISHED = "entries.published";
-    
-	void register(String key, OrtolangObjectIdentifier identifier, String author) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException;
-	
-	void register(String key, OrtolangObjectIdentifier identifier, String parent, boolean inherit) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, KeyNotFoundException;
-	
-	void update(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
-	
-	long getCreationDate(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	long getLastModificationDate(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	void refresh(String key);
-    
-    long getLastRefreshDate(String key);
-	
-	String getAuthor(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	void hide(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
-	
-	void show(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
-	
-	boolean isHidden(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	void delete(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
-	
-	void delete(String key, boolean force) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
-	
-	void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
-	
-	void unlock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
-	
-	boolean isLocked(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	String getLock(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	void setPublicationStatus(String key, String status) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
-	
-	String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	boolean hasChildren(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	String getChildren(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	String getParent(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
-	
-	String getProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException;
-	
-	List<OrtolangObjectProperty> getProperties(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	OrtolangObjectIdentifier lookup(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	String lookup(OrtolangObjectIdentifier identifier) throws RegistryServiceException, IdentifierNotRegisteredException;
-	
-	List<String> list(int offset, int limit, String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException;
-	
-	long count(String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException;
-	
-	boolean exists(String key) throws RegistryServiceException;
-	
 
-	List<RegistryEntry> systemListEntries(String keyFilter, String identifierFilter) throws RegistryServiceException;
-	
-	RegistryEntry systemReadEntry(String key) throws RegistryServiceException, KeyNotFoundException;
-	
-	long systemCountAllEntries(String identifierFilter) throws RegistryServiceException;
-    
+    String SERVICE_NAME = "registry";
+
+    String INFO_SIZE = "entries.all";
+    String INFO_DELETED = "entries.deleted";
+    String INFO_HIDDEN = "entries.hidden";
+    String INFO_PUBLISHED = "entries.published";
+
+    void register(String key, OrtolangObjectIdentifier identifier, String author) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException;
+
+    void register(String key, OrtolangObjectIdentifier identifier, String author, Properties properties) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException;
+
+    void register(String key, OrtolangObjectIdentifier identifier, String parent, boolean inherit) throws RegistryServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, KeyNotFoundException;
+
+    void update(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
+
+    long getCreationDate(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    long getLastModificationDate(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    void refresh(String key);
+
+    long getLastRefreshDate(String key);
+
+    String getAuthor(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    void hide(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
+
+    void show(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
+
+    boolean isHidden(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    void delete(String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
+
+    void delete(String key, boolean force) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
+
+    void lock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
+
+    void unlock(String key, String owner) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
+
+    boolean isLocked(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    String getLock(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    void setPublicationStatus(String key, String status) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
+
+    String getPublicationStatus(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    boolean hasChildren(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    String getChildren(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    String getParent(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
+
+    String getProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException;
+
+    List<OrtolangObjectProperty> getProperties(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    OrtolangObjectIdentifier lookup(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    String lookup(OrtolangObjectIdentifier identifier) throws RegistryServiceException, IdentifierNotRegisteredException;
+
+    List<String> list(int offset, int limit, String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException;
+
+    long count(String identifierFilter, OrtolangObjectState.Status statusFilter) throws RegistryServiceException;
+
+    boolean exists(String key) throws RegistryServiceException;
+
+
+    List<RegistryEntry> systemListEntries(String keyFilter, String identifierFilter) throws RegistryServiceException;
+
+    RegistryEntry systemReadEntry(String key) throws RegistryServiceException, KeyNotFoundException;
+
+    long systemCountAllEntries(String identifierFilter) throws RegistryServiceException;
+
     long systemCountDeletedEntries(String identifierFilter) throws RegistryServiceException;
-    
+
     long systemCountPublishedEntries(String identifierFilter) throws RegistryServiceException;
-    
+
     long systemCountHiddenEntries(String identifierFilter) throws RegistryServiceException;
-    	
+
 }

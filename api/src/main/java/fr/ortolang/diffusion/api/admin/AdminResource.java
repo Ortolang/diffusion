@@ -37,6 +37,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
+import fr.ortolang.diffusion.registry.*;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
@@ -113,12 +114,6 @@ import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
-import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
-import fr.ortolang.diffusion.registry.KeyLockedException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryService;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
@@ -333,9 +328,9 @@ public class AdminResource {
     @Path("/core/metadata")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @GZIP
-    public Response createMetadata(@MultipartForm MetadataObjectFormRepresentation form) throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException,
-            DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException,
-            IndexingServiceException {
+    public Response createMetadata(@MultipartForm MetadataObjectFormRepresentation form)
+            throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
+            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException, PropertyNotFoundException {
         LOGGER.log(Level.INFO, "POST /admin/core/metadata");
         try {
             if (form.getKey() == null) {

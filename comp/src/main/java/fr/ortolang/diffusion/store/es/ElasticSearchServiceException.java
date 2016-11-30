@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.client.cmd;
+package fr.ortolang.diffusion.store.es;
 
 /*
  * #%L
@@ -36,32 +36,13 @@ package fr.ortolang.diffusion.client.cmd;
  * #L%
  */
 
-import fr.ortolang.diffusion.client.OrtolangClientException;
-import org.apache.commons.cli.CommandLine;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 
-import java.io.Console;
+@SuppressWarnings("serial")
+class ElasticSearchServiceException extends IndexingServiceException {
 
-public abstract class Command {
-
-    public abstract void execute(String[] args);
-
-    protected String[] getCredentials(CommandLine cmd) throws OrtolangClientException {
-        String username;
-        String password = null;
-        if (cmd.hasOption("U")) {
-            username = cmd.getOptionValue("U");
-            if (cmd.hasOption("P")) {
-                password = cmd.getOptionValue("P");
-            } else {
-                Console cons;
-                char[] passwd;
-                if ((cons = System.console()) != null && (passwd = cons.readPassword("[%s]", "Password:")) != null) {
-                    password = new String(passwd);
-                }
-            }
-            return new String[] { username, password };
-        }
-        throw new OrtolangClientException("Username and/or password missing");
-    }
+	ElasticSearchServiceException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
 }
