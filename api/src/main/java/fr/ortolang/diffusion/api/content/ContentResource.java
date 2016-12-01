@@ -393,7 +393,6 @@ public class ContentResource {
             builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(attachment.getName(), "utf-8"));
             builder.header("Content-Length", attachment.getSize());
             builder.type(attachment.getType());
-            builder.header("Accept-Ranges", "bytes");
             return builder.build();
         } catch (AccessDeniedException e) {
             return redirectToAuth("/content/attachments/" + mkey + "/" + hash, true, Collections.emptyMap(), securityContext);
@@ -684,8 +683,7 @@ public class ContentResource {
                 if (object instanceof DataObject) {
                     security.checkPermission(okey, "download");
                     File content = store.getFile(((DataObject) object).getStream());
-                    builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize())
-                            .header("Accept-Ranges", "bytes");
+                    builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize());
                     if (download) {
                         builder = builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(object.getObjectName(), "utf-8"));
                     } else {
