@@ -46,6 +46,7 @@ public interface PublicationService extends OrtolangService {
 	
 	String SERVICE_NAME = "publication";
 	
-	void publish(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException;
+	void publishSnapshot(String wskey, String snapshot) throws PublicationServiceException;
+	void publishKey(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException;
 	
 }

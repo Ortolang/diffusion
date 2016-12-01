@@ -45,11 +45,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
 import javax.ejb.EJB;
 import javax.ejb.Local;
-import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
 import javax.json.Json;
 import javax.json.JsonException;
@@ -86,8 +84,6 @@ public class SearchServiceBean implements SearchService {
 	private IndexStoreService indexStore;
 	@EJB
 	private JsonStoreService jsonStore;
-	@Resource
-	private SessionContext ctx;
 	
 	public SearchServiceBean() {
 	}
@@ -122,14 +118,6 @@ public class SearchServiceBean implements SearchService {
 
 	public void setAuthorisationService(AuthorisationService authorisation) {
 		this.authorisation = authorisation;
-	}
-	
-	public void setSessionContext(SessionContext ctx) {
-		this.ctx = ctx;
-	}
-
-	public SessionContext getSessionContext() {
-		return this.ctx;
 	}
 	
 	@Override

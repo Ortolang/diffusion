@@ -1,0 +1,25 @@
+{
+	"title": [{
+		"lang": "fr",
+		"value": "Premier dossier"
+	}],
+	"description": [{
+		"value": "Ce premier dossier permet de tester les métadonnées Dublin Core"
+	}],
+	"abstract": [{
+		"lang": "fr",
+		"value": "Résumé des épisodes à venir"
+	}],
+	"coverage": [{
+		"type": "DCMI:Space",
+		"value": "Earth"
+	}],
+	"subject": [{
+		"type": "discourse",
+		"code": "narrative"
+	}],
+	"identifier": [{
+		"type": "DCMI:URI",
+		"value": "http://www.michel.com"
+	}]
+}

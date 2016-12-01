@@ -61,7 +61,6 @@ import com.lyncode.xoai.dataprovider.exceptions.OAIException;
 import com.lyncode.xoai.dataprovider.model.Context;
 import com.lyncode.xoai.dataprovider.model.MetadataFormat;
 import com.lyncode.xoai.dataprovider.parameters.OAIRequest;
-import com.lyncode.xoai.dataprovider.repository.InMemorySetRepository;
 import com.lyncode.xoai.dataprovider.repository.Repository;
 import com.lyncode.xoai.dataprovider.repository.RepositoryConfiguration;
 import com.lyncode.xoai.model.oaipmh.DeletedRecord;
@@ -77,17 +76,15 @@ import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.oaipmh.dataprovider.DiffusionDataProvider;
 import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionItemRepository;
-import fr.ortolang.diffusion.search.SearchService;
-import fr.ortolang.diffusion.store.handle.HandleStoreService;
+import fr.ortolang.diffusion.api.oaipmh.repository.DiffusionSetRepository;
+import fr.ortolang.diffusion.oai.OaiService;
 
 @Path("/oai")
 @Produces({ MediaType.APPLICATION_XML })
 public class OAIPMHServlet {
 
     @EJB
-    private static SearchService search;
-    @EJB
-    private static HandleStoreService handleStore;
+    private static OaiService oai;
 
     private static final Logger LOGGER = Logger.getLogger(OAIPMHServlet.class.getName());
 
@@ -98,15 +95,15 @@ public class OAIPMHServlet {
             , @QueryParam("metadataPrefix") String metadataPrefix
             , @QueryParam("from") String from
             , @QueryParam("until") String until
+            , @QueryParam("set") String set
             , @QueryParam("resumptionToken") String resumptionToken) throws URISyntaxException {
 
         Context context = new Context();
         context.withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
         context.withMetadataFormat(MetadataFormat.metadataFormat("olac").withNamespace("http://www.language-archives.org/OLAC/1.1/").withSchemaLocation("http://www.language-archives.org/OLAC/1.1/olac.xsd"));
 
-        InMemorySetRepository setRepository = new InMemorySetRepository();
-        setRepository.doesNotSupportSets();
-        DiffusionItemRepository itemRepository = new DiffusionItemRepository(search, handleStore);
+        DiffusionSetRepository setRepository = new DiffusionSetRepository(oai);
+        DiffusionItemRepository itemRepository = new DiffusionItemRepository(oai);
 
         UTCDateProvider dateProvider = new UTCDateProvider();
         String earliestDateStr = "2014-08-12";
@@ -137,7 +134,10 @@ public class OAIPMHServlet {
                 .withMaxListRecords(100)
                 .withMaxListSets(100);
 
-        Repository repository = new Repository().withSetRepository(setRepository).withItemRepository(itemRepository).withResumptionTokenFormatter(new SimpleResumptionTokenFormat())
+        Repository repository = new Repository()
+        		.withSetRepository(setRepository)
+        		.withItemRepository(itemRepository)
+        		.withResumptionTokenFormatter(new SimpleResumptionTokenFormat())
                 .withConfiguration(repositoryConfiguration);
 
         DiffusionDataProvider dataProvider = new DiffusionDataProvider(context, repository);
@@ -147,6 +147,7 @@ public class OAIPMHServlet {
         OAIPMHServlet.putParameter("verb", verb, reqParam);
         OAIPMHServlet.putParameter("identifier", identifier, reqParam);
         OAIPMHServlet.putParameter("metadataPrefix", metadataPrefix, reqParam);
+        OAIPMHServlet.putParameter("set", set, reqParam);
         OAIPMHServlet.putParameter("from", from, reqParam);
         OAIPMHServlet.putParameter("until", until, reqParam);
         OAIPMHServlet.putParameter("resumptionToken", resumptionToken, reqParam);
@@ -158,8 +159,6 @@ public class OAIPMHServlet {
             response = dataProvider.handle(oaiRequest);
         } catch (OAIException e1) {
             LOGGER.log(Level.WARNING, e1.getMessage(), e1.fillInStackTrace());
-            //			resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e1.getMessage());
-            //			return;
             return Response.serverError().build();
         }
 
@@ -170,20 +169,14 @@ public class OAIPMHServlet {
                         .header("Character-Encoding", "UTF-8").build();
             } catch (XMLStreamException e) {
                 LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
-                //				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-                //				return;
                 return Response.serverError().build();
             } catch (XmlWriteException e) {
                 LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
-                //				resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-                //				return;
                 return Response.serverError().build();
             }
         }
 
         LOGGER.log(Level.WARNING, "OAIPMH XMl object is null");
-        //		resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "No valid response to send");
-        //		return;
         return Response.serverError().build();
     }
 

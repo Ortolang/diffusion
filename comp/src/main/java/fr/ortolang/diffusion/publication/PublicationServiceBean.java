@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.publication;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,7 +57,10 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
@@ -67,6 +71,7 @@ import fr.ortolang.diffusion.registry.KeyLockedException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
@@ -166,7 +171,35 @@ public class PublicationServiceBean implements PublicationService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void publish(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException {
+    public void publishSnapshot(String wskey, String snapshot) throws PublicationServiceException {
+        LOGGER.log(Level.FINE, "publishing snapshot ...");
+        try {
+            String caller = membership.getProfileKeyForConnectedIdentifier();
+            LOGGER.log(Level.FINE, "building publication map...");
+            Map<String, Map<String, List<String>>> map = core.buildWorkspacePublicationMap(wskey, snapshot);
+            
+            LOGGER.log(Level.FINE, "starting publication...");
+            //TODO log event or status to set process progression
+            for (Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
+                publishKey(entry.getKey(), entry.getValue());
+            }
+            
+            ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("snapshot", snapshot);
+            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, 
+                    OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, Workspace.OBJECT_TYPE, "publish-snapshot"), argumentsBuilder.build());
+            
+        } catch (CoreServiceException | AccessDeniedException | NotificationServiceException e) {
+            LOGGER.log(Level.SEVERE, "error during publication of key", e);
+            ctx.setRollbackOnly();
+            throw new PublicationServiceException("error during publishing key : " + e);
+        }
+        
+        
+    }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void publishKey(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException {
         LOGGER.log(Level.FINE, "publishing key : " + key);
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -176,7 +209,7 @@ public class PublicationServiceBean implements PublicationService {
             }
 
             if (registry.getPublicationStatus(key).equals(OrtolangObjectState.Status.PUBLISHED.value())) {
-                LOGGER.log(Level.FINE, "key [" + key + "] is already published, only apllying new permissions");
+                LOGGER.log(Level.FINE, "key [" + key + "] is already published, only applying new permissions");
                 authorisation.setPolicyRules(key, permissions);
             } else {
                 LOGGER.log(Level.FINE, "publishing key [" + key + "], changing owner and applying publication permissions");
