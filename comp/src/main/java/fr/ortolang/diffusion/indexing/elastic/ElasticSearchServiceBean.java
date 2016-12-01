@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.store.es;
+package fr.ortolang.diffusion.indexing.elastic;
 
 /*
  * #%L
@@ -38,10 +38,11 @@ package fr.ortolang.diffusion.store.es;
 
 import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
+import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
+import org.apache.commons.io.IOUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
@@ -61,8 +62,10 @@ import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -83,10 +86,18 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
 
     private TransportClient client;
 
-    private Map<String, Set<String>> indices = new HashMap<>();
+    private Map<String, Set<String>> indices;
 
-    public ElasticSearchServiceBean() {
-        LOGGER.log(Level.FINE, "Instantiating Elastic Search Service");
+    private Map<String, String> scripts;
+
+    public ElasticSearchServiceBean() throws IOException {
+        LOGGER.log(Level.INFO, "Instantiating Elastic Search Service");
+        indices = new HashMap<>();
+        scripts = new HashMap<>();
+        LOGGER.log(Level.INFO, "Loading Painless scripts");
+        LOGGER.log(Level.INFO, "Load updateRootCollectionChild script");
+        String script = IOUtils.toString(getClass().getClassLoader().getResourceAsStream("indexing/updateRootCollectionChild.painless"), StandardCharsets.UTF_8);
+        scripts.put("updateRootCollectionChild", script);
     }
 
     @PostConstruct
@@ -121,9 +132,9 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
     }
 
     @Override
-    public void index(String key) throws IndexingServiceException {
+    public void index(String key) throws ElasticSearchServiceException {
         try {
-            LOGGER.log(Level.FINE, "Indexing key [" + key + "]");
+            LOGGER.log(Level.FINEST, "Starting to index key [" + key + "]");
             if (client == null || client.connectedNodes().isEmpty()) {
                 return;
             }
@@ -131,6 +142,7 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
             OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
             List<OrtolangIndexableContent> indexableContents = service.getIndexableContent(key);
             for (OrtolangIndexableContent indexableContent : indexableContents) {
+                LOGGER.log(Level.FINEST, "Start to index key [" + indexableContent.getKey() + "] of type [" + indexableContent.getType() + "] in index [" + indexableContent.getIndex() + "]");
                 if (!indexableContent.isEmpty()) {
                     try {
                         IndicesAdminClient adminClient = client.admin().indices();
@@ -155,7 +167,8 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                         }
                         if (indexableContent.isUpdate()) {
                             LOGGER.log(Level.FINE, "Updating key [" + indexableContent.getKey() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
-                            Script script = new Script(indexableContent.getScript(), ScriptService.ScriptType.INLINE,  DEFAULT_SCRIPT_LANG, indexableContent.getScriptParams());
+
+                            Script script = new Script(scripts.get(indexableContent.getScript()), ScriptService.ScriptType.INLINE,  DEFAULT_SCRIPT_LANG, indexableContent.getScriptParams());
                             client.prepareUpdate(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getKey()).setScript(script).get();
                         } else {
                             LOGGER.log(Level.FINE, "Indexing key [" + indexableContent.getKey() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
@@ -168,24 +181,24 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                         return;
                     } catch (IllegalArgumentException e) {
                         LOGGER.log(Level.WARNING, "IllegalArgumentException for key [" + indexableContent.getKey() + "] with type [" + indexableContent.getType() +
-                                "] in index [" + indexableContent.getIndex() + "] " + e.getMessage() + (e.getCause() != null ? " cause: " + e.getCause().getMessage() : ""));
+                                "] in index [" + indexableContent.getIndex() + "]", e);
                         return;
                     } catch (DocumentMissingException e) {
                         LOGGER.log(Level.WARNING, "Document missing for key [" + indexableContent.getKey() + "] with type [" + indexableContent.getType() +
-                                "] in index [" + indexableContent.getIndex() + "]");
+                                "] in index [" + indexableContent.getIndex() + "] " + e.getMessage());
                     } catch (Exception e) {
                         LOGGER.log(Level.SEVERE, "An unexpected error happened while indexing key [" + indexableContent.getKey() + "]", e);
                         return;
                     }
                 }
             }
-        } catch (KeyNotFoundException | NotIndexableContentException | OrtolangException | RegistryServiceException e) {
+        } catch (OrtolangException | KeyNotFoundException | RegistryServiceException | IndexingServiceException e) {
             throw new ElasticSearchServiceException("An unexpected error happened while indexing key [" + key + "]", e);
         }
     }
 
     @Override
-    public void remove(String key) throws IndexingServiceException {
+    public void remove(String key) throws ElasticSearchServiceException {
         // TODO not implemented
     }
 

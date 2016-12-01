@@ -36,13 +36,10 @@ package fr.ortolang.diffusion.core.indexing;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -62,7 +59,7 @@ public class CollectionIndexableContent extends MetadataSourceIndexableContent {
                 .toArray(String[]::new);
     }
 
-    public CollectionIndexableContent(Collection collection) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
+    public CollectionIndexableContent(Collection collection) throws IndexingServiceException {
         super(collection, CoreService.SERVICE_NAME, Collection.OBJECT_TYPE);
         content.put("root", collection.isRoot());
         Set<CollectionElement> collectionElements = collection.getElements();

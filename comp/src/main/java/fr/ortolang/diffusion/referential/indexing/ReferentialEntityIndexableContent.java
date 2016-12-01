@@ -36,14 +36,11 @@ package fr.ortolang.diffusion.referential.indexing;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
+import fr.ortolang.diffusion.indexing.IndexableContentParsingException;
+import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntity;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
 
 import java.util.Arrays;
 import java.util.stream.Stream;
@@ -116,7 +113,7 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
 
     }
 
-    public ReferentialEntityIndexableContent(ReferentialEntity entity) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
+    public ReferentialEntityIndexableContent(ReferentialEntity entity) throws IndexableContentParsingException {
         super(ReferentialService.SERVICE_NAME, entity.getType().name(), entity.getObjectKey());
         entityType = entity.getType();
         setContent(entity.getContent());

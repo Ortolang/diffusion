@@ -527,6 +527,19 @@ public class RegistryServiceBean implements RegistryService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public boolean hasProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.FINE, "getting property [" + name + "] for key [" + key + "]");
+        RegistryEntry entry = findEntryByKey(key);
+        try {
+            return entry.getProperties().containsKey(name);
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
+            throw new RegistryServiceException(e);
+        }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public String getProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException {
         LOGGER.log(Level.FINE, "getting property [" + name + "] for key [" + key + "]");
         RegistryEntry entry = findEntryByKey(key);

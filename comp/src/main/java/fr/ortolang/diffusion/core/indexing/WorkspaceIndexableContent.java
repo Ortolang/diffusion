@@ -36,14 +36,11 @@ package fr.ortolang.diffusion.core.indexing;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -67,7 +64,7 @@ public class WorkspaceIndexableContent extends OrtolangObjectIndexableContent {
                 .toArray(String[]::new);
     }
 
-    public WorkspaceIndexableContent(Workspace workspace) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
+    public WorkspaceIndexableContent(Workspace workspace) throws IndexingServiceException {
         super(workspace, CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE);
         content.put("alias", workspace.getAlias());
         content.put("head", workspace.getHead());

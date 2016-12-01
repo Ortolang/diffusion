@@ -36,8 +36,14 @@ package fr.ortolang.diffusion.core.indexing;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
+import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
+import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,16 +57,30 @@ abstract class OrtolangObjectIndexableContent extends OrtolangIndexableContent {
                 "key",
                 "type=keyword",
                 "name",
-                "type=string"
+                "type=string",
+                "status",
+                "type=keyword",
+                "creation",
+                "type=date",
+                "modification",
+                "type=date"
         };
     }
 
     protected Map<String, Object> content;
 
-    OrtolangObjectIndexableContent(OrtolangObject object, String index, String type) {
+    OrtolangObjectIndexableContent(OrtolangObject object, String index, String type) throws IndexingServiceException {
         super(index, type, object.getObjectKey());
         content = new HashMap<>();
         content.put("key", object.getObjectKey());
         content.put("name", object.getObjectName());
+        try {
+            RegistryService registry = (RegistryService) OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
+            content.put("status", registry.getPublicationStatus(object.getObjectKey()));
+            content.put("creation", registry.getCreationDate(object.getObjectKey()));
+            content.put("modification", registry.getLastModificationDate(object.getObjectKey()));
+        } catch (OrtolangException | RegistryServiceException | KeyNotFoundException e) {
+            throw new IndexingServiceException(e);
+        }
     }
 }

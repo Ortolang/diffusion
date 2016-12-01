@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.store.es;
+package fr.ortolang.diffusion.indexing.elastic;
 
 /*
  * #%L
@@ -36,9 +36,9 @@ package fr.ortolang.diffusion.store.es;
  * #L%
  */
 
-import fr.ortolang.diffusion.indexing.IndexingService;
+import fr.ortolang.diffusion.OrtolangWorker;
 
-public interface ElasticSearchService extends IndexingService {
+public interface ElasticSearchServiceWorker extends OrtolangWorker {
 
-    String SERVICE_NAME = "es-store";
+    String WORKER_NAME = "es-worker";
 }

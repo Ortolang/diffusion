@@ -36,15 +36,12 @@ package fr.ortolang.diffusion.membership.indexing;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
+import fr.ortolang.diffusion.indexing.IndexableContentParsingException;
+import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
 import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -72,7 +69,7 @@ public class ProfileIndexableContent extends OrtolangIndexableContent {
         };
     }
 
-    public ProfileIndexableContent(Profile profile) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
+    public ProfileIndexableContent(Profile profile) throws IndexableContentParsingException {
         super(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, profile.getObjectKey());
         Map<String, Object> map = new HashMap<>();
         map.put("key", profile.getKey());

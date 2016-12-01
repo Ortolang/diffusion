@@ -36,12 +36,9 @@ package fr.ortolang.diffusion.core.indexing;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -57,12 +54,12 @@ public class RootCollectionIndexableContent extends MetadataSourceIndexableConte
         ROOT_COLLECTION_MAPPING = Stream.concat(Arrays.stream(METADATA_SOURCE_MAPPING),
                 Arrays.stream(new String[] {
                         "registry",
-                        "type=object"
+                        "type=nested"
                 }))
                 .toArray(String[]::new);
     }
 
-    public RootCollectionIndexableContent(Collection collection, Map<String, String> collectionContent) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
+    public RootCollectionIndexableContent(Collection collection, Map<String, String> collectionContent) throws IndexingServiceException {
         super(collection, CoreService.SERVICE_NAME, TYPE);
         content.put("registry", collectionContent);
         setContent(content);

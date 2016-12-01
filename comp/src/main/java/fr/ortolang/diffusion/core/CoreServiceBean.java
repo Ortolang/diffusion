@@ -73,7 +73,7 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
-import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
+import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 import fr.ortolang.diffusion.store.json.OrtolangKeyExtractor;
@@ -113,8 +113,6 @@ public class CoreServiceBean implements CoreService {
 
     private static final String[] RESERVED_ALIASES = new String[] { "key", "auth", "export" };
     private static final String[] RESERVED_TAG_NAMES = new String[] { Workspace.HEAD, Workspace.LATEST };
-
-    private static final String WORKSPACE_REGISTRY_PROPERTY_KEY = "ws";
 
     @EJB
     private RegistryService registry;
@@ -1107,7 +1105,7 @@ public class CoreServiceBean implements CoreService {
                 root = workspace.findSnapshotByName(snapshot).getKey();
             }
 
-            return listCollectionContent(root).getPaths();
+            return listCollectionContent(root).getPathKeyMap();
         } catch (RegistryServiceException | MembershipServiceException | AuthorisationServiceException | KeyNotFoundException | OrtolangException e) {
             LOGGER.log(Level.SEVERE, "unexpected error occurred during listing workspace content", e);
             throw new CoreServiceException("unexpected error while trying to list workspace content", e);
@@ -1130,12 +1128,12 @@ public class CoreServiceBean implements CoreService {
     }
 
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    private void listContent(String key, PathBuilder path, CollectionContent helper) throws OrtolangException, InvalidPathException {
+    private void listContent(String key, PathBuilder path, CollectionContent collectionContent) throws OrtolangException, InvalidPathException {
         OrtolangObject object = findObject(key);
-        helper.put(key, path.build(), object.getObjectIdentifier().getType());
+        collectionContent.add(object, path.build());
         if (object instanceof Collection) {
             for (CollectionElement element : ((Collection) object).getElements()) {
-                listContent(element.getKey(), path.clone().path(element.getName()), helper);
+                listContent(element.getKey(), path.clone().path(element.getName()), collectionContent);
             }
         }
     }
@@ -3851,7 +3849,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, NotIndexableContentException {
+    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, IndexingServiceException, OrtolangException {
         OrtolangObjectIdentifier identifier = registry.lookup(key);
         if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
@@ -3871,39 +3869,24 @@ public class CoreServiceBean implements CoreService {
             object = collection;
             collection.setKey(key);
             indexableContents.add(new CollectionIndexableContent(collection));
-            if (collection.isRoot() && registry.isLocked(key)) {
+            if (collection.isRoot() && Status.PUBLISHED.value().equals(registry.getPublicationStatus(key))) {
                 try {
                     TypedQuery<Workspace> query = em.createNamedQuery("findWorkspaceByRootCollection", Workspace.class).setParameter("root", "%" + collection.getKey() + "%");
                     Workspace workspace = query.getSingleResult();
                     String wskey = registry.lookup(workspace.getObjectIdentifier());
                     workspace.setKey(wskey);
+                    String snapshot = workspace.findSnapshotByKey(collection.getKey()).getName();
                     CollectionContent collectionContent = listCollectionContent(collection.getKey());
-                    indexableContents.add(new RootCollectionIndexableContent(collection, collectionContent.getPaths()));
-                    for (Entry<String, String> entry : collectionContent.getTypes().entrySet()) {
+                    // TODO index root metadata
+//                    indexableContents.add(new RootCollectionIndexableContent(collection, collectionContent.getContent()));
+                    for (CollectionContentEntry entry : collectionContent.getContent()) {
                         Map<String, String> params = new HashMap<>();
                         params.put("alias", workspace.getAlias());
                         params.put("key", workspace.getKey());
                         params.put("root", collection.getKey());
-                        indexableContents.add(new OrtolangObjectScriptedUpdate(CoreService.SERVICE_NAME, entry.getValue(), entry.getKey(),
-                                "def workspace = ['alias': params.alias, 'key': params.key, 'root': [params.root]];"
-                                        + "if (ctx._source.workspaces == null) {"
-                                        + "  ctx._source.workspaces = [workspace];"
-                                        + "} else {"
-                                        + "  def already = false;"
-                                        + "  for (ws in ctx._source.workspaces) {"
-                                        + "    if (ws.alias == workspace.alias) {"
-                                        + "      ws.key = workspace.key;"
-                                        + "      if (!ws.root.contains(params.root)) {"
-                                        + "        ws.root.add(params.root);"
-                                        + "      }"
-                                        + "      already = true;"
-                                        + "      break;"
-                                        + "    }"
-                                        + "  }"
-                                        + "  if (!already) {"
-                                        + "    ctx._source.workspaces.add(workspace)"
-                                        + "  }"
-                                        + "}", params));
+                        params.put("path", entry.getPath());
+                        params.put("snapshot", snapshot);
+                        indexableContents.add(new OrtolangObjectScriptedUpdate(CoreService.SERVICE_NAME, entry.getType(), entry.getKey(),"updateRootCollectionChild", params));
                     }
                 } catch (IdentifierNotRegisteredException| CoreServiceException | NoResultException e) {
                     throw new OrtolangException(e.getMessage(), e);
@@ -4189,7 +4172,7 @@ public class CoreServiceBean implements CoreService {
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void systemCreateMetadata(String tkey, String name, String hash, String filename)
             throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
-            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException, PropertyNotFoundException {
+            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# create metadata for key [" + tkey + "]");
         if (!name.startsWith("system-")) {
             throw new CoreServiceException("only system metadata can be added this way.");
@@ -4248,10 +4231,14 @@ public class CoreServiceBean implements CoreService {
         meta.setKey(UUID.randomUUID().toString());
         em.persist(meta);
 
-        String wskey = registry.getProperty(tkey, WORKSPACE_REGISTRY_PROPERTY_KEY);
-        Properties properties = new Properties();
-        properties.put(WORKSPACE_REGISTRY_PROPERTY_KEY, wskey);
-        registry.register(meta.getKey(), meta.getObjectIdentifier(), "system", properties);
+        try {
+            String wskey = registry.getProperty(tkey, WORKSPACE_REGISTRY_PROPERTY_KEY);
+            Properties properties = new Properties();
+            properties.put(WORKSPACE_REGISTRY_PROPERTY_KEY, wskey);
+            registry.register(meta.getKey(), meta.getObjectIdentifier(), "system", properties);
+        } catch (PropertyNotFoundException e) {
+            registry.register(meta.getKey(), meta.getObjectIdentifier(), "system");
+        }
 
         registry.refresh(tkey);
         indexing.index(tkey);
@@ -4733,36 +4720,56 @@ public class CoreServiceBean implements CoreService {
 
     }
 
+    private static class CollectionContentEntry {
+
+        private OrtolangObject object;
+
+        private String path;
+
+        CollectionContentEntry(OrtolangObject object, String path) {
+            this.object = object;
+            this.path = path;
+        }
+
+        public OrtolangObject getObject() {
+            return object;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public String getKey() {
+            return object.getObjectKey();
+        }
+
+        public String getType() {
+            return object.getObjectIdentifier().getType();
+        }
+    }
+
     private static class CollectionContent {
 
-        private Map<String, String> types;
-
-        private Map<String, String> paths;
-
-        private Map<String, String> keys;
+        private Set<CollectionContentEntry> content;
 
         CollectionContent() {
-            types = new HashMap<>();
-            paths = new HashMap<>();
-            keys = new HashMap<>();
+            content = new HashSet<>();
         }
 
-        public void put(String key, String path, String type) {
-            types.put(key, type);
-            paths.put(path, key);
-            keys.put(key, path);
+        public void add(OrtolangObject object, String path) {
+            content.add(new CollectionContentEntry(object, path));
         }
 
-        public Map<String, String> getTypes() {
-            return types;
+        public Set<CollectionContentEntry> getContent() {
+            return content;
         }
 
-        public Map<String, String> getPaths() {
-            return paths;
-        }
-
-        public Map<String, String> getKeys() {
-            return keys;
+        public Map<String, String> getPathKeyMap() {
+            Map<String, String> map = new HashMap<>();
+            for (CollectionContentEntry entry : content) {
+                map.put(entry.getPath(), entry.getKey());
+            }
+            return map;
         }
     }
 

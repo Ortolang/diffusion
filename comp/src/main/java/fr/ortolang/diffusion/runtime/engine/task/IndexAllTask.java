@@ -82,38 +82,41 @@ public class IndexAllTask extends RuntimeEngineTask {
                 BrowserService browser = getBrowserService();
 
                 String types = execution.getVariable(INDEXING_TYPES_PARAM_NAME, String.class);
+                String phaseVariable = execution.getVariable(INDEXING_PHASE_PARAM_NAME, String.class);
+                Integer phase = phaseVariable != null ? Integer.valueOf(phaseVariable) : -1;
                 boolean all = false;
                 if (types == null || types.isEmpty() || types.contains(ALL_TYPES)) {
+                    types = "";
                     all = true;
                 }
 
                 // PROFILES
-                if (all || types.contains(Profile.OBJECT_TYPE)) {
+                if ((all && phase == 1) || types.contains(Profile.OBJECT_TYPE)) {
                     List<String> profiles = browser.list(0, -1, MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, Status.DRAFT);
                     indexKeys(profiles, Profile.OBJECT_TYPE);
                 }
 
                 // GROUP
-                if (all || types.contains(Group.OBJECT_TYPE)) {
+                if ((all && phase == 1) || types.contains(Group.OBJECT_TYPE)) {
                     List<String> groups = browser.list(0, -1, MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, Status.DRAFT);
                     indexKeys(groups, Group.OBJECT_TYPE);
                 }
 
                 // WORKSPACES
-                if (all || types.contains(Workspace.OBJECT_TYPE)) {
+                if ((all && phase == 1) || types.contains(Workspace.OBJECT_TYPE)) {
                     List<String> workspaces = browser.list(0, -1, CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, Status.DRAFT);
                     indexKeys(workspaces, Workspace.OBJECT_TYPE);
                 }
 
                 // OBJECTS
-                if (all || types.contains(DataObject.OBJECT_TYPE)) {
+                if ((all && phase == 1) || types.contains(DataObject.OBJECT_TYPE)) {
                     List<String> objects = browser.list(0, -1, CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, Status.DRAFT);
                     objects.addAll(browser.list(0, -1, CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, Status.PUBLISHED));
                     indexKeys(objects, DataObject.OBJECT_TYPE);
                 }
 
                 // LINKS
-                if (all || types.contains(Link.OBJECT_TYPE)) {
+                if ((all && phase == 1) || types.contains(Link.OBJECT_TYPE)) {
                     List<String> links = browser.list(0, -1, CoreService.SERVICE_NAME, Link.OBJECT_TYPE, Status.DRAFT);
                     links.addAll(browser.list(0, -1, CoreService.SERVICE_NAME, Link.OBJECT_TYPE, Status.PUBLISHED));
                     indexKeys(links, Link.OBJECT_TYPE);
@@ -125,23 +128,39 @@ public class IndexAllTask extends RuntimeEngineTask {
                     List<Collection> collections = core.systemListCollections();
                     RegistryService registry = getRegistryService();
                     List<String> published = new ArrayList<>();
+                    List<String> publishedRoot = new ArrayList<>();
                     List<String> draft = new ArrayList<>();
+                    List<String> draftRoot = new ArrayList<>();
                     for (Collection collection : collections) {
                         try {
                             if (registry.isHidden(collection.getKey())) {
                                 continue;
                             }
                             if (Status.PUBLISHED.value().equals(registry.getPublicationStatus(collection.getKey()))) {
-                                published.add(collection.getKey());
+                                if (collection.isRoot()) {
+                                    publishedRoot.add(collection.getKey());
+                                } else {
+                                    published.add(collection.getKey());
+                                }
                             } else {
-                                draft.add(collection.getKey());
+                                if (collection.isRoot()) {
+                                    draftRoot.add(collection.getKey());
+                                } else {
+                                    draft.add(collection.getKey());
+                                }
                             }
                         } catch (KeyNotFoundException e) {
                             LOGGER.log(Level.FINE, e.getMessage());
                         }
                     }
-                    indexKeys(draft, Collection.OBJECT_TYPE);
-                    indexKeys(published, Collection.OBJECT_TYPE);
+                    if (phase == -1 || phase == 1) {
+                        indexKeys(published, Collection.OBJECT_TYPE);
+                        indexKeys(draft, Collection.OBJECT_TYPE);
+                        indexKeys(draftRoot, Collection.OBJECT_TYPE);
+                    }
+                    if (phase == -1 || phase == 2) {
+                        indexKeys(publishedRoot, Collection.OBJECT_TYPE);
+                    }
                 }
 
             } catch (BrowserServiceException | CoreServiceException | RegistryServiceException e) {

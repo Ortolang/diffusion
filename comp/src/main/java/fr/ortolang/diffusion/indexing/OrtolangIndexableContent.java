@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.store.es;
+package fr.ortolang.diffusion.indexing;
 
 /*
  * #%L
@@ -36,10 +36,6 @@ package fr.ortolang.diffusion.store.es;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
 import org.json.JSONObject;
 
 import java.util.Collections;
@@ -86,11 +82,11 @@ public abstract class OrtolangIndexableContent {
         return content;
     }
 
-    protected void setContent(Map<String, Object> content) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
+    protected void setContent(Map<String, Object> content) throws IndexableContentParsingException {
         setContent(new JSONObject(content).toString());
     }
 
-    protected void setContent(String json) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
+    protected void setContent(String json) throws IndexableContentParsingException {
         this.content = OrtolangIndexableContentParser.parse(json);
     }
 
@@ -102,7 +98,7 @@ public abstract class OrtolangIndexableContent {
         this.update = update;
     }
 
-    String getScript() {
+    public String getScript() {
         return script;
     }
 
@@ -111,7 +107,7 @@ public abstract class OrtolangIndexableContent {
         this.script = script;
     }
 
-    Map<String, String> getScriptParams() {
+    public Map<String, String> getScriptParams() {
         return scriptParams;
     }
 

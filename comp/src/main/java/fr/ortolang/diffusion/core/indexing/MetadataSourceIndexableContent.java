@@ -36,9 +36,19 @@ package fr.ortolang.diffusion.core.indexing;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangServiceLocator;
+import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.MetadataSource;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.PropertyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 
 abstract class MetadataSourceIndexableContent extends OrtolangObjectIndexableContent {
@@ -54,15 +64,25 @@ abstract class MetadataSourceIndexableContent extends OrtolangObjectIndexableCon
                         "type=integer,index=no",
                         "metadata",
                         "type=object",
-                        "workspaces",
-                        "type=nested"
+                        "workspace",
+                        "type=object"
                 }))
                 .toArray(String[]::new);
     }
 
-    MetadataSourceIndexableContent(MetadataSource object, String index, String type) {
+    MetadataSourceIndexableContent(MetadataSource object, String index, String type) throws IndexingServiceException {
         super(object, index, type);
-        content.put("version", object.getVersion());
-        content.put("clock", object.getClock());
+        try {
+            RegistryService registry = (RegistryService) OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
+            if (registry.hasProperty(object.getKey(), CoreService.WORKSPACE_REGISTRY_PROPERTY_KEY)) {
+                Map<String, String> map = new HashMap<>(1);
+                map.put("key", registry.getProperty(object.getKey(), CoreService.WORKSPACE_REGISTRY_PROPERTY_KEY));
+                content.put("workspace", map);
+            }
+            content.put("version", object.getVersion());
+            content.put("clock", object.getClock());
+        } catch (RegistryServiceException | PropertyNotFoundException | OrtolangException | KeyNotFoundException e) {
+            throw new IndexingServiceException(e);
+        }
     }
 }

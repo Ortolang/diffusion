@@ -62,13 +62,10 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.indexing.*;
 import fr.ortolang.diffusion.referential.indexing.ReferentialEntityIndexableContent;
-import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.indexing.IndexingService;
-import fr.ortolang.diffusion.indexing.IndexingServiceException;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -542,7 +539,7 @@ public class ReferentialServiceBean implements ReferentialService {
     }
 
     @Override
-    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, NotIndexableContentException {
+    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, IndexableContentParsingException {
         OrtolangObjectIdentifier identifier = registry.lookup(key);
         if (!identifier.getService().equals(ReferentialService.SERVICE_NAME)) {
             throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());

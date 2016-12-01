@@ -53,7 +53,8 @@ public class IndexAllCommand extends Command {
         options.addOption("h", "help", false, "show help.");
         options.addOption("U", "username", true, "username for login");
         options.addOption("P", "password", true, "password for login");
-        options.addOption("t", "types", true, "[optional] list of object types to index (coma separated)");
+        options.addOption("t", "types", true, "list of object types to index (coma separated) or 'all'");
+        options.addOption("p", "phase", true, "[optional] phase number (when indexing all)");
     }
 
     @Override
@@ -70,10 +71,27 @@ public class IndexAllCommand extends Command {
             String username = credentials[0];
             String password = credentials[1];
 
-            String types = cmd.getOptionValue("t");
-
             Map<String, String> params = new HashMap<>();
+
+            if (!cmd.hasOption("t")) {
+                System.out.println("Types must be defined");
+                help();
+            }
+            String types = cmd.getOptionValue("t");
+            String phase = cmd.getOptionValue("p");
+            if (types.contains("all")) {
+                if (phase == null) {
+                    System.out.println("When indexing all a phase must be given");
+                    help();
+                } else if (!phase.equals("1") || !phase.equals("2")) {
+                    System.out.println("Phase number indexing all a phase must be given");
+                    help();
+                }
+            }
+
+            params.put("indexingPhase", phase);
             params.put("indexingTypes", types);
+
             OrtolangClient client = OrtolangClient.getInstance();
             if ( username.length() > 0 ) {
                 client.getAccountManager().setCredentials(username, password);

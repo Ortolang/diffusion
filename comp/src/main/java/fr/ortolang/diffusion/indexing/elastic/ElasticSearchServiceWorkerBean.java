@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.store.es;
+package fr.ortolang.diffusion.indexing.elastic;
 
 /*
  * #%L

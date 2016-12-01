@@ -74,6 +74,8 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
     String INFO_OBJECTS_ALL = "objects.all";
     String INFO_OBJECTS_PUBLISHED = "objects.published";
     //String INFO_OBJECTS_DELETED = "objects.deleted";
+
+    String WORKSPACE_REGISTRY_PROPERTY_KEY = "ws";
 	
 	/* Workspace */
 
@@ -248,7 +250,7 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     void systemCreateMetadata(String key, String name, String hash, String filename)
             throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
-            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException, PropertyNotFoundException;
+            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException;
 
     Workspace systemReadWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException;
 

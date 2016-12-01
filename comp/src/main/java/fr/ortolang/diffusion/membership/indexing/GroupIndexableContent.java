@@ -36,13 +36,10 @@ package fr.ortolang.diffusion.membership.indexing;
  * #L%
  */
 
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
+import fr.ortolang.diffusion.indexing.IndexableContentParsingException;
+import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.entity.Group;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -64,7 +61,7 @@ public class GroupIndexableContent extends OrtolangIndexableContent {
         };
     }
 
-    public GroupIndexableContent(Group group) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
+    public GroupIndexableContent(Group group) throws IndexableContentParsingException {
         super(MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, group.getObjectKey());
         Map<String, Object> map = new HashMap<>();
         map.put("key", group.getKey());

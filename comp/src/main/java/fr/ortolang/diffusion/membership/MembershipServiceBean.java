@@ -38,9 +38,7 @@ package fr.ortolang.diffusion.membership;
 
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.*;
-import fr.ortolang.diffusion.indexing.IndexingService;
-import fr.ortolang.diffusion.indexing.IndexingServiceException;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
+import fr.ortolang.diffusion.indexing.*;
 import fr.ortolang.diffusion.membership.entity.*;
 import fr.ortolang.diffusion.membership.export.GroupExportHandler;
 import fr.ortolang.diffusion.membership.export.ProfileExportHandler;
@@ -54,7 +52,6 @@ import fr.ortolang.diffusion.security.authentication.TOTPHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 import org.jboss.ejb3.annotation.SecurityDomain;
@@ -1177,7 +1174,7 @@ public class MembershipServiceBean implements MembershipService {
     }
 
     @Override
-    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, NotIndexableContentException {
+    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, IndexableContentParsingException {
         OrtolangObjectIdentifier identifier = registry.lookup(key);
 
         if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {

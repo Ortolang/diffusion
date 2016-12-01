@@ -113,6 +113,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     public static final String REASON_PARAM_NAME = "reason";
 
     protected static final String INDEXING_TYPES_PARAM_NAME = "indexingTypes";
+    protected static final String INDEXING_PHASE_PARAM_NAME = "indexingPhase";
 
     private static final Logger LOGGER = Logger.getLogger(RuntimeEngineTask.class.getName());
 

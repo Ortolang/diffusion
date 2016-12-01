@@ -119,6 +119,8 @@ public interface RegistryService extends OrtolangService {
 
     void setProperty(String key, String name, String value) throws RegistryServiceException, KeyNotFoundException, KeyLockedException;
 
+    boolean hasProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException;
+
     String getProperty(String key, String name) throws RegistryServiceException, KeyNotFoundException, PropertyNotFoundException;
 
     List<OrtolangObjectProperty> getProperties(String key) throws RegistryServiceException, KeyNotFoundException;

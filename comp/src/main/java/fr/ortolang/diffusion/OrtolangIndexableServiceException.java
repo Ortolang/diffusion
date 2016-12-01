@@ -1,15 +1,5 @@
 package fr.ortolang.diffusion;
 
-import fr.ortolang.diffusion.indexing.IndexingServiceException;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
-import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
-import fr.ortolang.diffusion.store.json.IndexableJsonContent;
-
-import java.util.List;
-
 /*
  * #%L
  * ORTOLANG
@@ -46,12 +36,7 @@ import java.util.List;
  * #L%
  */
 
-public interface OrtolangIndexableService {
+public class OrtolangIndexableServiceException extends OrtolangException {
 
-    IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException;
-
-    IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException, NotIndexableContentException;
-
-    List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, IndexingServiceException, OrtolangException;
 
 }

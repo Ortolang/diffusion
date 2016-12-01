@@ -36,7 +36,7 @@ package fr.ortolang.diffusion.core.indexing;
  * #L%
  */
 
-import fr.ortolang.diffusion.store.es.OrtolangIndexableContent;
+import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 
 import java.util.Map;
 

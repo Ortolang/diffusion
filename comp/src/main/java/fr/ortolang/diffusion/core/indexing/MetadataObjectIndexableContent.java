@@ -42,7 +42,7 @@ import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
@@ -84,7 +84,7 @@ public class MetadataObjectIndexableContent extends OrtolangObjectIndexableConte
                 .toArray(String[]::new);
     }
 
-    public MetadataObjectIndexableContent(MetadataObject metadata) throws OrtolangException, NotIndexableContentException, RegistryServiceException, KeyNotFoundException {
+    public MetadataObjectIndexableContent(MetadataObject metadata) throws IndexingServiceException, OrtolangException, KeyNotFoundException, RegistryServiceException {
         super(metadata, CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE);
         RegistryService registry = (RegistryService) OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
         OrtolangObjectIdentifier objectIdentifier = registry.lookup(metadata.getTarget());
