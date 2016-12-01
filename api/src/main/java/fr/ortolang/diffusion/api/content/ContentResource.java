@@ -424,8 +424,7 @@ public class ContentResource {
                     String sha1 = ((DataObject) object).getStream();
                     File content = store.getFile(sha1);
                     security.checkPermission(key, "download");
-                    builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize())
-                            .header("Accept-Ranges", "bytes");
+                    builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize());
                     if (download) {
                         builder = builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(object.getObjectName(), "utf-8"));
                     } else {
@@ -435,8 +434,7 @@ public class ContentResource {
                 } else if (object instanceof MetadataObject) {
                     File content = store.getFile(((MetadataObject) object).getStream());
                     security.checkPermission(key, "download");
-                    builder = Response.ok(content).header("Content-Type", ((MetadataObject) object).getContentType()).header("Content-Length", ((MetadataObject) object).getSize())
-                            .header("Accept-Ranges", "bytes");
+                    builder = Response.ok(content).header("Content-Type", ((MetadataObject) object).getContentType()).header("Content-Length", ((MetadataObject) object).getSize());
                     if (download) {
                         builder = builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(object.getObjectName(), "utf-8"));
                     } else {
