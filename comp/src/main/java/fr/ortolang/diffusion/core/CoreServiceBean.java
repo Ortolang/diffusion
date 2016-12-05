@@ -993,7 +993,7 @@ public class CoreServiceBean implements CoreService {
             MetadataElement mde = ((MetadataSource) object).findMetadataByName(MetadataFormat.ACL);
             if (mde != null) {
                 LOGGER.log(Level.FINE, "ACL metadata found, load json, find policy template and render it...");
-                MetadataObject md = readMetadataObject(mde.getKey());
+                MetadataObject md = (MetadataObject) readObject(mde.getKey());
                 try {
                     JsonReader reader = Json.createReader(binarystore.get(md.getStream()));
                     JsonObject json = reader.readObject();
