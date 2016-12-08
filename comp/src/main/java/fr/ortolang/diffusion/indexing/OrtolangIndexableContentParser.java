@@ -56,9 +56,6 @@ class OrtolangIndexableContentParser {
         try {
             RegistryService registry = (RegistryService) OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
             Matcher matcher = ORTOLANG_KEY_MATCHER.matcher(json);
-            if (!matcher.matches()) {
-                return json;
-            }
             StringBuffer sb = new StringBuffer();
             while (matcher.find()) {
                 String key = matcher.group(1);

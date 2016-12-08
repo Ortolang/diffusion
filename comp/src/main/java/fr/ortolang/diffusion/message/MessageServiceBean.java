@@ -36,46 +36,15 @@ package fr.ortolang.diffusion.message;
  * #L%
  */
 
-import java.io.File;
-import java.io.InputStream;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ejb.Local;
-import javax.ejb.SessionContext;
-import javax.ejb.Stateless;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
-import javax.mail.Session;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-
-import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectImportHandler;
-import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.NotIndexableContentException;
+import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.message.entity.Message;
@@ -83,15 +52,11 @@ import fr.ortolang.diffusion.message.entity.MessageAttachment;
 import fr.ortolang.diffusion.message.entity.Thread;
 import fr.ortolang.diffusion.message.export.MessageExportHandler;
 import fr.ortolang.diffusion.message.export.ThreadExportHandler;
+import fr.ortolang.diffusion.message.indexing.MessageIndexableContent;
+import fr.ortolang.diffusion.message.indexing.ThreadIndexableContent;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
-import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
-import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
-import fr.ortolang.diffusion.registry.KeyLockedException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryService;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.registry.*;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
@@ -101,6 +66,26 @@ import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.*;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObjectBuilder;
+import javax.mail.Session;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+import java.io.File;
+import java.io.InputStream;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static fr.ortolang.diffusion.membership.MembershipService.ALL_AUTHENTIFIED_GROUP_KEY;
 
 @Local(MessageService.class)
 @Stateless(name = MessageService.SERVICE_NAME)
@@ -247,7 +232,7 @@ public class MessageServiceBean implements MessageService {
             Workspace ws = core.readWorkspace(wskey);
             Map<String, List<String>> trules = new HashMap<String, List<String>>();
             if (!restricted) {
-                trules.put(MembershipService.ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList("read", "post"));
+                trules.put(ALL_AUTHENTIFIED_GROUP_KEY, Arrays.asList("read", "post"));
                 trules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "update", "delete", "post"));
             } else {
                 trules.put(ws.getMembers(), Arrays.asList("read", "post"));
@@ -933,8 +918,23 @@ public class MessageServiceBean implements MessageService {
     }
 
     @Override
-    public List<OrtolangIndexableContent> getIndexableContent(String key) {
-        // TODO
+    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, IndexingServiceException {
+        OrtolangObjectIdentifier identifier = registry.lookup(key);
+
+        if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
+            throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+        }
+
+        switch (identifier.getType()) {
+        case Message.OBJECT_TYPE:
+            Message message = em.find(Message.class, identifier.getId());
+            message.setKey(key);
+            return Collections.singletonList(new MessageIndexableContent(message));
+        case Thread.OBJECT_TYPE:
+            Thread thread = em.find(Thread.class, identifier.getId());
+            thread.setKey(key);
+            return Collections.singletonList(new ThreadIndexableContent(thread));
+        }
         return Collections.emptyList();
     }
 

@@ -1,0 +1,11 @@
+{
+  "schema": "http://www.ortolang.fr/schema/person/02#",
+  "type": "Person",
+  "id": "foo_bar",
+  "fullname": "Foo Bar",
+  "title": "Mr",
+  "firstname": "Foo",
+  "lastname": "Bar",
+  "username": "${foobar}",
+  "organization": "${referential:atilf}"
+}

@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.runtime.engine.task;
  * #L%
  */
 
+import fr.ortolang.diffusion.OrtolangObject;
 import fr.ortolang.diffusion.OrtolangObjectState.Status;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
@@ -50,6 +51,13 @@ import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.message.MessageService;
+import fr.ortolang.diffusion.message.entity.Message;
+import fr.ortolang.diffusion.message.entity.Thread;
+import fr.ortolang.diffusion.referential.ReferentialService;
+import fr.ortolang.diffusion.referential.ReferentialServiceException;
+import fr.ortolang.diffusion.referential.entity.ReferentialEntity;
+import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
@@ -61,6 +69,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class IndexAllTask extends RuntimeEngineTask {
 
@@ -90,26 +99,54 @@ public class IndexAllTask extends RuntimeEngineTask {
                     all = true;
                 }
 
+                LOGGER.log(Level.INFO, "Starting Index All Task for types " + types + " (phase " + phase + ")");
+
+                // REFERENTIAL ENTITIES
+                if (all || types.contains(ReferentialEntity.OBJECT_TYPE)) {
+                    ReferentialService referential = getReferentialService();
+                    if (phase == 1) {
+                        LOGGER.log(Level.INFO, "Indexing all referential entities of type: ORGANIZATION");
+                        List<ReferentialEntity> entities = referential.listEntities(ReferentialEntityType.ORGANIZATION);
+                        indexOrtolangObjects(entities, ReferentialEntityType.ORGANIZATION.name());
+                        LOGGER.log(Level.INFO, "Indexing all referential entities of type: STATUSOFUSE");
+                        entities = referential.listEntities(ReferentialEntityType.STATUSOFUSE);
+                        indexOrtolangObjects(entities, ReferentialEntityType.STATUSOFUSE.name());
+                    }
+                    if (phase == 2) {
+                        for (ReferentialEntityType type : ReferentialEntityType.values()) {
+                            LOGGER.log(Level.INFO, "Indexing all referential entities of type: " + type);
+                            if (type != ReferentialEntityType.ORGANIZATION && type != ReferentialEntityType.STATUSOFUSE) {
+                                List<ReferentialEntity> entities = referential.listEntities(type);
+                                indexOrtolangObjects(entities, type.name());
+                            }
+                        }
+                    }
+                }
+
                 // PROFILES
                 if ((all && phase == 1) || types.contains(Profile.OBJECT_TYPE)) {
+                    LOGGER.log(Level.INFO, "Indexing all profiles");
                     List<String> profiles = browser.list(0, -1, MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, Status.DRAFT);
                     indexKeys(profiles, Profile.OBJECT_TYPE);
                 }
 
-                // GROUP
+                // GROUPS
                 if ((all && phase == 1) || types.contains(Group.OBJECT_TYPE)) {
+                    LOGGER.log(Level.INFO, "Indexing all groups");
                     List<String> groups = browser.list(0, -1, MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, Status.DRAFT);
                     indexKeys(groups, Group.OBJECT_TYPE);
                 }
 
                 // WORKSPACES
                 if ((all && phase == 1) || types.contains(Workspace.OBJECT_TYPE)) {
+                    LOGGER.log(Level.INFO, "Indexing all workspaces");
                     List<String> workspaces = browser.list(0, -1, CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, Status.DRAFT);
                     indexKeys(workspaces, Workspace.OBJECT_TYPE);
                 }
 
                 // OBJECTS
                 if ((all && phase == 1) || types.contains(DataObject.OBJECT_TYPE)) {
+                    LOGGER.log(Level.INFO, "Indexing all data objects");
                     List<String> objects = browser.list(0, -1, CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, Status.DRAFT);
                     objects.addAll(browser.list(0, -1, CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, Status.PUBLISHED));
                     indexKeys(objects, DataObject.OBJECT_TYPE);
@@ -117,6 +154,7 @@ public class IndexAllTask extends RuntimeEngineTask {
 
                 // LINKS
                 if ((all && phase == 1) || types.contains(Link.OBJECT_TYPE)) {
+                    LOGGER.log(Level.INFO, "Indexing all links");
                     List<String> links = browser.list(0, -1, CoreService.SERVICE_NAME, Link.OBJECT_TYPE, Status.DRAFT);
                     links.addAll(browser.list(0, -1, CoreService.SERVICE_NAME, Link.OBJECT_TYPE, Status.PUBLISHED));
                     indexKeys(links, Link.OBJECT_TYPE);
@@ -153,23 +191,47 @@ public class IndexAllTask extends RuntimeEngineTask {
                             LOGGER.log(Level.FINE, e.getMessage());
                         }
                     }
-                    if (phase == -1 || phase == 1) {
+                    if (phase == 1) {
+                        LOGGER.log(Level.INFO, "Indexing all published collections");
                         indexKeys(published, Collection.OBJECT_TYPE);
+                        LOGGER.log(Level.INFO, "Indexing all draft collections");
                         indexKeys(draft, Collection.OBJECT_TYPE);
+                        LOGGER.log(Level.INFO, "Indexing all draft root collections");
                         indexKeys(draftRoot, Collection.OBJECT_TYPE);
                     }
-                    if (phase == -1 || phase == 2) {
+                    if (phase == 2) {
+                        LOGGER.log(Level.INFO, "Indexing all published root collections");
                         indexKeys(publishedRoot, Collection.OBJECT_TYPE);
                     }
                 }
 
-            } catch (BrowserServiceException | CoreServiceException | RegistryServiceException e) {
+                // THREADS
+                if ((all && phase == 1) || types.contains(Thread.OBJECT_TYPE)) {
+                    LOGGER.log(Level.INFO, "Indexing all threads");
+                    List<String> threads = browser.list(0, -1, MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, Status.DRAFT);
+                    indexKeys(threads, Thread.OBJECT_TYPE);
+                }
+
+                // MESSAGES
+                if ((all && phase == 1) || types.contains(Message.OBJECT_TYPE)) {
+                    LOGGER.log(Level.INFO, "Indexing all messages");
+                    List<String> messages = browser.list(0, -1, MessageService.SERVICE_NAME, Message.OBJECT_TYPE, Status.DRAFT);
+                    indexKeys(messages, Message.OBJECT_TYPE);
+                }
+
+                LOGGER.log(Level.INFO, "Indexing event sent");
+
+            } catch (BrowserServiceException | CoreServiceException | RegistryServiceException | ReferentialServiceException e) {
                 LOGGER.log(Level.SEVERE, e.getMessage());
                 throw new RuntimeEngineTaskException(e.getMessage(), e);
             }
         } else {
             throw new RuntimeEngineTaskException("only " + MembershipService.SUPERUSER_IDENTIFIER + " can perform this task !!");
         }
+    }
+
+    private void indexOrtolangObjects(List<? extends OrtolangObject> objects, String type) throws RuntimeEngineTaskException {
+        indexKeys(objects.stream().map(OrtolangObject::getObjectKey).collect(Collectors.toList()), type);
     }
 
     private void indexKeys(List<String> keys, String type) throws RuntimeEngineTaskException {

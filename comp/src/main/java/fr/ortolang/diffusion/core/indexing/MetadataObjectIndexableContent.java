@@ -63,6 +63,8 @@ public class MetadataObjectIndexableContent extends OrtolangObjectIndexableConte
 
     private static final Logger LOGGER = Logger.getLogger(MetadataObjectIndexableContent.class.getName());
 
+    private static final String[] UNUSED_KEYS;
+
     static {
         METADATA_OBJECT_MAPPING = Stream.concat(Arrays.stream(ORTOLANG_OBJECT_MAPPING),
                 Arrays.stream(new String[] {
@@ -82,6 +84,24 @@ public class MetadataObjectIndexableContent extends OrtolangObjectIndexableConte
                         "type=keyword"
                 }))
                 .toArray(String[]::new);
+
+        UNUSED_KEYS = new String[] {
+                "PLTE PLTEEntry",
+                "Chroma Palette PaletteEntry",
+                "tRNS tRNS_Palette tRNS_PaletteEntry",
+                "Text TextEntry",
+                "tEXt tEXtEntry",
+                "iTXt iTXtEntry",
+                "xmpMM:DocumentID",
+                "xmpMM:DerivedFrom:DocumentID",
+                "xmpMM:DerivedFrom:InstanceID",
+                "xmpMM:History:Action",
+                "xmpMM:History:When",
+                "xmpMM:History:SoftwareAgent",
+                "Component 1",
+                "Component 2",
+                "Component 3"
+        };
     }
 
     public MetadataObjectIndexableContent(MetadataObject metadata) throws IndexingServiceException, OrtolangException, KeyNotFoundException, RegistryServiceException {
@@ -97,6 +117,9 @@ public class MetadataObjectIndexableContent extends OrtolangObjectIndexableConte
             ObjectMapper mapper = new ObjectMapper();
             try {
                 Map extraction = mapper.readValue(binary.getFile(metadata.getStream()), Map.class);
+                for (String key : UNUSED_KEYS) {
+                    extraction.remove(key);
+                }
                 content.put("extraction", extraction);
             } catch (IOException | BinaryStoreServiceException | DataNotFoundException e) {
                 LOGGER.log(Level.SEVERE, e.getMessage());

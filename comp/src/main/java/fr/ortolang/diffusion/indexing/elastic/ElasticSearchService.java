@@ -45,4 +45,10 @@ public interface ElasticSearchService extends OrtolangService {
     void index(String key) throws ElasticSearchServiceException;
 
     void remove(String key) throws ElasticSearchServiceException;
+
+    void search(String query);
+
+    void search(String query, String index);
+
+    void search(String query, String index, String type);
 }

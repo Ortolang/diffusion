@@ -44,12 +44,16 @@ import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import org.apache.commons.io.IOUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.engine.DocumentMissingException;
+import org.elasticsearch.index.mapper.MapperParsingException;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
@@ -186,8 +190,13 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                     } catch (DocumentMissingException e) {
                         LOGGER.log(Level.WARNING, "Document missing for key [" + indexableContent.getKey() + "] with type [" + indexableContent.getType() +
                                 "] in index [" + indexableContent.getIndex() + "] " + e.getMessage());
+                    } catch (MapperParsingException e) {
+                        LOGGER.log(Level.WARNING, "MapperParsingException for key [" + indexableContent.getKey() + "] with type [" + indexableContent.getType() +
+                                "] in index [" + indexableContent.getIndex() + "]", e);
+                        throw new ElasticSearchServiceException(e.getMessage(), e);
                     } catch (Exception e) {
                         LOGGER.log(Level.SEVERE, "An unexpected error happened while indexing key [" + indexableContent.getKey() + "]", e);
+                        // TODO throw exception ???
                         return;
                     }
                 }
@@ -200,6 +209,32 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
     @Override
     public void remove(String key) throws ElasticSearchServiceException {
         // TODO not implemented
+    }
+
+    @Override
+    public void search(String query) {
+        search(query, null, null);
+    }
+
+    @Override
+    public void search(String query, String index) {
+        search(query, index, null);
+    }
+
+    @Override
+    public void search(String query, String index, String type) {
+        QueryStringQueryBuilder queryBuilder = new QueryStringQueryBuilder(query);
+        SearchRequestBuilder search = client.prepareSearch();
+        search.setQuery(queryBuilder);
+        if (index != null) {
+            search.setIndices(index);
+        }
+        if (type != null) {
+            search.setTypes(type);
+        }
+        SearchResponse searchResponse = search.get();
+        // TODO
+//        searchResponse.getHits()
     }
 
     private void checkType(OrtolangIndexableContent indexableContent, IndicesAdminClient adminClient) {

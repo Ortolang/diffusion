@@ -44,8 +44,11 @@ import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
+import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 abstract class OrtolangObjectIndexableContent extends OrtolangIndexableContent {
@@ -61,6 +64,8 @@ abstract class OrtolangObjectIndexableContent extends OrtolangIndexableContent {
                 "status",
                 "type=keyword",
                 "creation",
+                "type=date",
+                "modification",
                 "type=date",
                 "modification",
                 "type=date"
@@ -79,7 +84,10 @@ abstract class OrtolangObjectIndexableContent extends OrtolangIndexableContent {
             content.put("status", registry.getPublicationStatus(object.getObjectKey()));
             content.put("creation", registry.getCreationDate(object.getObjectKey()));
             content.put("modification", registry.getLastModificationDate(object.getObjectKey()));
-        } catch (OrtolangException | RegistryServiceException | KeyNotFoundException e) {
+            AuthorisationService authorization = (AuthorisationService) OrtolangServiceLocator.lookup(AuthorisationService.SERVICE_NAME, AuthorisationService.class);
+            Map<String, List<String>> policyRules = authorization.getPolicyRules(object.getObjectKey());
+            // TODO
+        } catch (OrtolangException | RegistryServiceException | KeyNotFoundException | AuthorisationServiceException e) {
             throw new IndexingServiceException(e);
         }
     }

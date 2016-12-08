@@ -41,11 +41,17 @@ import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntity;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
+import org.json.JSONObject;
 
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 public class ReferentialEntityIndexableContent extends OrtolangIndexableContent {
+
+    private static final Logger LOGGER = Logger.getLogger(ReferentialEntityIndexableContent.class.getName());
 
     private static final Object[] MAPPING;
     private static final Object[] PERSON_MAPPING;
@@ -61,7 +67,9 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
                 "type",
                 "type=string,index=no",
                 "id",
-                "type=keyword"
+                "type=keyword",
+                "labels",
+                "type=nested"
         };
 
         PERSON_MAPPING = Stream.concat(Arrays.stream(MAPPING),
@@ -77,7 +85,7 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
                         "title",
                         "type=string,index=no",
                         "username",
-                        "type=string",
+                        "type=object",
                         "organization",
                         "type=object"
                 }))
@@ -105,9 +113,7 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
         LANGUAGE_MAPPING = Stream.concat(Arrays.stream(MAPPING),
                 Arrays.stream(new String[]{
                         "uri",
-                        "type=keyword",
-                        "labels",
-                        "type=nested"
+                        "type=keyword"
                 }))
                 .toArray(String[]::new);
 
@@ -116,7 +122,22 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
     public ReferentialEntityIndexableContent(ReferentialEntity entity) throws IndexableContentParsingException {
         super(ReferentialService.SERVICE_NAME, entity.getType().name(), entity.getObjectKey());
         entityType = entity.getType();
-        setContent(entity.getContent());
+        if (entityType.equals(ReferentialEntityType.PERSON)) {
+            JSONObject jsonObject = new JSONObject(entity.getContent());
+            // Remove empty String properties (ex: empty Organization)
+            Iterator iterator = jsonObject.keys();
+            while (iterator.hasNext()) {
+                String key = (String) iterator.next();
+                Object value = jsonObject.get(key);
+                if (value instanceof String && value.toString().isEmpty()) {
+                    LOGGER.log(Level.WARNING, "Found empty property [" + key + "] in referential entity [" + entity.getKey() + "]");
+                    iterator.remove();
+                }
+            }
+            setContent(jsonObject.toString());
+        } else {
+            setContent(entity.getContent());
+        }
     }
 
     @Override
