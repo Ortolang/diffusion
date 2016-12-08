@@ -84,27 +84,10 @@ public class PublishTask extends RuntimeEngineTask {
         String snapshot = (String) getSnapshot().getValue(execution);
         
         try {
-            LOGGER.log(Level.FINE, "building publication map...");
-            Map<String, Map<String, List<String>>> map = getCoreService().buildWorkspacePublicationMap(wskey, snapshot);
-            
-            LOGGER.log(Level.FINE, "publication map built and contains " + map.size() + " keys");
-            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "PublicationMap built, containing " + map.size() + " elements"));
-    
-            
             LOGGER.log(Level.FINE, "starting publication...");
-            StringBuilder report = new StringBuilder();
-            //TODO log event or status to set process progression
-            for (Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
-                try {
-                    getPublicationService().publish(entry.getKey(), entry.getValue());
-                    report.append(entry.getKey()).append(" - OK\r\n");
-                } catch (Exception e) {
-                    throw new RuntimeEngineTaskException("unexpected error during publish task execution", e);
-                }
-            }
+            getPublicationService().publishSnapshot(wskey, snapshot);
             LOGGER.log(Level.FINE, "publication of all keys done.");
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All elements published succesfully"));
-            throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "Publication Report: \r\n" + report.toString(), null));
         } catch (Exception e) {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to publish elements: " + e.getMessage()));
             throw new RuntimeEngineTaskException("unable to publish elements", e);

@@ -37,7 +37,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
-import fr.ortolang.diffusion.registry.*;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
@@ -114,6 +113,14 @@ import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.oai.OaiService;
+import fr.ortolang.diffusion.oai.exception.OaiServiceException;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyLockedException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
@@ -177,6 +184,8 @@ public class AdminResource {
     private StatisticsService statistics;
     @EJB
     private DumpService dumpService;
+    @EJB
+    private OaiService oaiService;
 
     @GET
     @Path("/infos/{service}")
@@ -736,5 +745,13 @@ public class AdminResource {
         LOGGER.log(Level.INFO, "GET /statistics/piwik");
         statistics.probePiwik();
         return Response.ok().build();
+    }
+
+    @POST
+    @Path("/oai/rebuild")
+    public Response rebuildOAI() throws OaiServiceException {
+    	LOGGER.log(Level.INFO, "GET /oai/rebuild");
+    	oaiService.rebuild();
+    	return Response.ok().build();
     }
 }

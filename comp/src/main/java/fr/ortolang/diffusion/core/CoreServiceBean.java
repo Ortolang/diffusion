@@ -921,6 +921,7 @@ public class CoreServiceBean implements CoreService {
             String root = workspace.findSnapshotByName(snapshot).getKey();
 
             Map<String, Map<String, List<String>>> map = new HashMap<String, Map<String, List<String>>>();
+            
             AuthorisationPolicyTemplate defaultTemplate = authorisation.getPolicyTemplate(AuthorisationPolicyTemplate.DEFAULT);
             Map<String, String> aclParams = new HashMap<String, String>();
             aclParams.put("${workspace.members}", workspace.getMembers());
@@ -941,7 +942,7 @@ public class CoreServiceBean implements CoreService {
             MetadataElement mde = ((MetadataSource) object).findMetadataByName(MetadataFormat.ACL);
             if (mde != null) {
                 LOGGER.log(Level.FINE, "ACL metadata found, load json, find policy template and render it...");
-                MetadataObject md = readMetadataObject(mde.getKey());
+                MetadataObject md = (MetadataObject) readObject(mde.getKey());
                 try {
                     JsonReader reader = Json.createReader(binarystore.get(md.getStream()));
                     JsonObject json = reader.readObject();

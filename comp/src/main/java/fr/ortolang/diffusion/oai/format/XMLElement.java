@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.publication;
+package fr.ortolang.diffusion.oai.format;
 
 /*
  * #%L
@@ -36,17 +36,71 @@ package fr.ortolang.diffusion.publication;
  * #L%
  */
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
-import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+public class XMLElement {
 
-public interface PublicationService extends OrtolangService {
+	private String name;
+	private String prefixNamespace;
+	private Map<String, String> attributes;
+	private String value;
+
+	public XMLElement() {
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getPrefixNamespace() {
+		return prefixNamespace;
+	}
+
+	public void setPrefixNamespace(String prefixNamespace) {
+		this.prefixNamespace = prefixNamespace;
+	}
+
+	public Map<String, String> getAttributes() {
+		return attributes;
+	}
+
+	public void setAttributes(Map<String, String> attributes) {
+		this.attributes = attributes;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public void setValue(String value) {
+		this.value = value;
+	}
+
+	public static XMLElement createElement(String namespace, String name) {
+		XMLElement elem = new XMLElement();
+		elem.setPrefixNamespace(namespace);
+		elem.setName(name);
+		return elem;
+	}
 	
-	String SERVICE_NAME = "publication";
+	public static XMLElement createElement(String namespace, String name, String value) {
+		XMLElement elem = new XMLElement();
+		elem.setPrefixNamespace(namespace);
+		elem.setName(name);
+		elem.setValue(value);
+		return elem;
+	}
 	
-	void publishSnapshot(String wskey, String snapshot) throws PublicationServiceException;
-	void publishKey(String key, Map<String, List<String>> permissions) throws PublicationServiceException, AccessDeniedException;
-	
+	public XMLElement withAttribute(String name, String value) {
+		if(this.attributes==null) {
+			this.attributes = new HashMap<String, String>();
+		}
+		this.attributes.put(name, value);
+		return this;
+	}
 }
