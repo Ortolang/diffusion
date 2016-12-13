@@ -321,28 +321,20 @@ public class ContentResource {
 
         switch (type) {
         case Collection.OBJECT_TYPE:
+            Set<CollectionElement> elements = ((Collection) object).getElements();
+            ArchiveEntry centry = factory.createArchiveEntry(path.build() + "/", infos.getLastModificationDate(), 0L);
             try {
-                Set<CollectionElement> elements = ((Collection) object).getElements();
-                ArchiveEntry centry = factory.createArchiveEntry(path.build() + "/", infos.getLastModificationDate(), 0L);
-                try {
-                    aos.putArchiveEntry(centry);
-                    for (CollectionElement element : elements) {
-                        try {
-                            PathBuilder pelement = path.clone().path(element.getName());
-                            exportToArchive(element.getKey(), aos, factory, pelement, followsymlink);
-                        } catch (InvalidPathException e) {
-                            LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e);
-                        }
+                aos.putArchiveEntry(centry);
+                for (CollectionElement element : elements) {
+                    try {
+                        PathBuilder pelement = path.clone().path(element.getName());
+                        exportToArchive(element.getKey(), aos, factory, pelement, followsymlink);
+                    } catch (InvalidPathException e) {
+                        LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e);
                     }
-                } catch ( IOException e ) {
-                    throw new ExportToArchiveIOException("unable to put archive entry for collection at path: " + path.build(), e);
                 }
-            } finally {
-                try {
-                    aos.closeArchiveEntry();
-                } catch ( IOException e ) {
-                    throw new ExportToArchiveIOException("unable to close archive entry for collection at path: " + path.build(), e);
-                }
+            } catch ( IOException e ) {
+                throw new ExportToArchiveIOException("unable to put archive entry for collection at path: " + path.build(), e);
             }
             break;
         case DataObject.OBJECT_TYPE:
@@ -367,7 +359,7 @@ public class ContentResource {
                 return;
             } catch (CoreServiceException | DataNotFoundException e) {
                 LOGGER.log(Level.SEVERE, "unexpected error during export to zip", e);
-            } 
+            }
             break;
         case Link.OBJECT_TYPE:
             if (followsymlink) {
@@ -377,7 +369,7 @@ public class ContentResource {
             break;
         }
     }
-    
+
     @GET
     @Path("/attachments/{mkey}/{hash}")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
