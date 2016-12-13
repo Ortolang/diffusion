@@ -190,20 +190,31 @@ public class StatisticsServiceBean implements StatisticsService {
     }
 
     @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void collectPiwikForRange(String range, long timestamp) throws StatisticsServiceException, OrtolangException {
+        LOGGER.log(Level.INFO, "Probing Piwik stats for range [" + range + "] and timestamp [" + timestamp + "]");
+        List<String> workspaces = em.createNamedQuery("listAllWorkspaceAlias", String.class).getResultList();
+        PiwikGenericCollector piwikGenericCollector = new PiwikGenericCollector(workspaces, range, timestamp);
+        piwikLatestCollectorThread = managedThreadFactory.newThread(piwikGenericCollector);
+        piwikLatestCollectorThread.setName("Generic Piwik Statistics Collector Thread");
+        piwikLatestCollectorThread.start();
+    }
+
+    @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRES_NEW)
     public void storeWorkspaceStatisticValue(WorkspaceStatisticValue value) throws StatisticsServiceException {
         boolean alreadyExist;
-        WorkspaceStatisticValue latestStoredValue = null;
+        WorkspaceStatisticValue storedValue = null;
         try {
-            latestStoredValue = readWorkspaceValue(value.getName());
-            alreadyExist = latestStoredValue.getTimestamp() == value.getTimestamp();
+            storedValue = readWorkspaceValue(value.getName(), value.getTimestamp());
+            alreadyExist = storedValue.getTimestamp() == value.getTimestamp();
         } catch (StatisticNameNotFoundException e) {
             alreadyExist = false;
         }
         if (alreadyExist) {
-            latestStoredValue.copy(value);
-            em.merge(latestStoredValue);
-        } else if ((latestStoredValue != null && latestStoredValue.getTimestamp() < value.getTimestamp()) || !value.isEmpty()) {
+            storedValue.copy(value);
+            em.merge(storedValue);
+        } else if ((storedValue != null && storedValue.getTimestamp() < value.getTimestamp()) || !value.isEmpty()) {
             em.persist(value);
         }
     }
@@ -245,8 +256,18 @@ public class StatisticsServiceBean implements StatisticsService {
     }
 
     @Override
-    public WorkspaceStatisticValue readWorkspaceValue(String alias) throws StatisticNameNotFoundException {
+    public WorkspaceStatisticValue readLatestWorkspaceValue(String alias) throws StatisticNameNotFoundException {
         TypedQuery<WorkspaceStatisticValue> query = em.createNamedQuery("findWorkspaceValues", WorkspaceStatisticValue.class).setParameter("name", alias).setMaxResults(1);
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            throw new StatisticNameNotFoundException("unable to find a value for workspace stat with alias: " + alias);
+        }
+    }
+
+    @Override
+    public WorkspaceStatisticValue readWorkspaceValue(String alias, long timestamp) throws StatisticNameNotFoundException {
+        TypedQuery<WorkspaceStatisticValue> query = em.createNamedQuery("findWorkspaceValue", WorkspaceStatisticValue.class).setParameter("name", alias).setParameter("timestamp", timestamp);
         try {
             return query.getSingleResult();
         } catch (NoResultException e) {
