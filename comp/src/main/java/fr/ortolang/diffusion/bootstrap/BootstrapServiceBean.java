@@ -133,10 +133,6 @@ public class BootstrapServiceBean implements BootstrapService {
             if (!registry.exists(MembershipService.SUPERUSER_IDENTIFIER)) {
                 LOGGER.log(Level.FINE, "creating root profile");
                 membership.createProfile(MembershipService.SUPERUSER_IDENTIFIER, "Super", "User", "root@ortolang.org", ProfileStatus.ACTIVE);
-                membership
-                        .addProfilePublicKey(
-                                MembershipService.SUPERUSER_IDENTIFIER,
-                                "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDqv8kWdXIgWbFJfOiu9fQYiazwfnpZogatgo3278PIAQ4eaj6p+sjQMQX0hew+rHXCqvi6FaG6Lql7fkJv/NJpSyhyCKYNCxmYKwUvaViOuRLDmnpziEX39WDmiWBE0Q+DNuKIZMx3yZNX/BeBp0FfooKkCnZWEDo4pzcYVp2RlwZuEDZQcQ6KP2S9+z2WQPmsE9tcyPNL12hp8tiG8J/XsPXxnn1mgJxyiwQmEYDxXZTAazeewqftz4GU3Xc9qWOa4GXK/2l0GB/XVuFLoyrXve+hnsiFpeIslJuGl0+AAX+lCULjDcA72r4aT30Z4HV+wxiQxk/j+2CtCw/vfeit achile-laptop");
             }
 
             if (!registry.exists(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
