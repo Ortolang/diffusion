@@ -115,9 +115,4 @@ public class GenerateHandlesTask extends RuntimeEngineTask {
     public String getTaskName() {
         return NAME;
     }
-
-    @Override
-    public int getTransactionTimeout() {
-        return 1800;
-    }
 }

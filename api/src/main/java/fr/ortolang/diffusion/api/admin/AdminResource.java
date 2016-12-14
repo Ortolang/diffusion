@@ -6,13 +6,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -569,6 +563,15 @@ public class AdminResource {
     public Response addSubscriptionFilters() throws SubscriptionServiceException {
         LOGGER.log(Level.INFO, "GET /subscription");
         subscription.addAdminFilters();
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("/subscription/broadcast")
+    @GZIP
+    public Response broadcastMessage(@FormParam("users") String users, @FormParam("title") String title, @FormParam("body") String body) throws SubscriptionServiceException {
+        LOGGER.log(Level.INFO, "POST /subscription/broadcast");
+        subscription.broadcastMessage(Arrays.asList(users.split(",")), title, body);
         return Response.ok().build();
     }
 
