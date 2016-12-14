@@ -28,6 +28,7 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import fr.ortolang.diffusion.membership.entity.Profile;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangConfig;
@@ -70,6 +71,7 @@ public class SMTPNotificationListenerBean implements MessageListener {
     
     private static final String NOTIFY_WORKSPACE_OWNER = Event.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "notify-owner");
     private static final String NOTIFY_WORKSPACE_MEMBERS = Event.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "notify-members");
+    private static final String NOTIFY_WORKSPACE_ADDED_MEMBER = Event.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "notify-added-member");
 
     @EJB
     private MessageService service;
@@ -102,8 +104,7 @@ public class SMTPNotificationListenerBean implements MessageListener {
                 receivers.remove(event.getThrowedBy());
 
                 notify(ws.getAlias(), "thread.create", event.getFromObject(), title, receivers);
-            }
-            if (event.getType().equals(EVENT_UPDATE_THREAD)) {
+            } else if (event.getType().equals(EVENT_UPDATE_THREAD)) {
                 LOGGER.log(Level.FINE, "received update thread event, starting notification");
                 String wskey = event.getArguments().get("wskey");
                 String title = event.getArguments().get("title");
@@ -115,8 +116,7 @@ public class SMTPNotificationListenerBean implements MessageListener {
                 receivers.remove(event.getThrowedBy());
 
                 notify(wsalias, "thread.update", event.getFromObject(), title, receivers);
-            }
-            if (event.getType().equals(EVENT_DELETE_THREAD)) {
+            } else if (event.getType().equals(EVENT_DELETE_THREAD)) {
                 LOGGER.log(Level.FINE, "received delete thread event, starting notification");
                 String wskey = event.getArguments().get("wskey");
                 String title = event.getArguments().get("title");
@@ -128,8 +128,7 @@ public class SMTPNotificationListenerBean implements MessageListener {
                 receivers.remove(event.getThrowedBy());
 
                 notify(wsalias, "thread.delete", event.getFromObject(), title, receivers);
-            }
-            if (event.getType().equals(EVENT_ANSWERED_THREAD)) {
+            } else if (event.getType().equals(EVENT_ANSWERED_THREAD)) {
                 LOGGER.log(Level.FINE, "received answered thread event, starting notification");
                 String wskey = event.getArguments().get("wskey");
                 String body = event.getArguments().get("body");
@@ -141,8 +140,7 @@ public class SMTPNotificationListenerBean implements MessageListener {
                 receivers.remove(event.getThrowedBy());
 
                 notify(wsalias, "thread.answered", event.getFromObject(), body, receivers);
-            }
-            if (event.getType().equals(EVENT_POST_THREAD)) {
+            } else if (event.getType().equals(EVENT_POST_THREAD)) {
                 LOGGER.log(Level.FINE, "received post message in thread event, starting notification");
                 String wskey = event.getArguments().get("wskey");
                 String body = event.getArguments().get("body");
@@ -154,8 +152,7 @@ public class SMTPNotificationListenerBean implements MessageListener {
                 receivers.remove(event.getThrowedBy());
 
                 notify(wsalias, "thread.post", event.getFromObject(), body, receivers);
-            }
-            if (event.getType().equals(NOTIFY_WORKSPACE_OWNER)) {
+            } else if (event.getType().equals(NOTIFY_WORKSPACE_OWNER)) {
                 LOGGER.log(Level.FINE, "received notify workspace owner, starting notification");
                 String wskey = event.getFromObject();
                 String email = event.getArguments().get("email");
@@ -173,8 +170,7 @@ public class SMTPNotificationListenerBean implements MessageListener {
                 }
                 
                 notify(senderName, email, wsalias, "workspace.notify", event.getFromObject(), body, receivers);
-            }
-            if (event.getType().equals(NOTIFY_WORKSPACE_MEMBERS)) {
+            } else if (event.getType().equals(NOTIFY_WORKSPACE_MEMBERS)) {
                 LOGGER.log(Level.FINE, "received notify workspace members, starting notification");
                 String wskey = event.getFromObject();
                 String email = event.getArguments().get("email");
@@ -190,6 +186,26 @@ public class SMTPNotificationListenerBean implements MessageListener {
                 }
                 
                 notify(senderName, email, ws.getAlias(), "workspace.notify", event.getFromObject(), body, receivers);
+            } else if (event.getType().equals(NOTIFY_WORKSPACE_ADDED_MEMBER)) {
+                LOGGER.log(Level.FINE, "received notify workspace added member, starting notification");
+
+                String wskey = event.getFromObject();
+                String body = event.getArguments().get("message");
+                String member = event.getArguments().get("member");
+
+                Workspace ws = core.systemReadWorkspace(wskey);
+                Set<String> receivers = new HashSet<String>();
+                receivers.add(member);
+
+                String senderName = "";
+                String email = "";
+                if ( !event.getThrowedBy().equals(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
+                    Profile sender = membership.systemReadProfile(event.getThrowedBy());
+                    senderName = sender.getFullName();
+                    email = sender.getEmail();
+                }
+
+                notify(senderName, email, ws.getAlias(), "workspace.add-member", event.getFromObject(), body, receivers);
             }
 
         } catch (OrtolangException | MembershipServiceException | KeyNotFoundException | CoreServiceException | MessageServiceException | AuthorisationServiceException e) {
@@ -214,13 +230,14 @@ public class SMTPNotificationListenerBean implements MessageListener {
         
         for (String profile : profiles) {
             try {
-                String recipient = membership.systemReadProfile(profile).getEmail();
-                if (recipient == null || recipient.length() == 0) {
-                    LOGGER.log(Level.INFO, "No email found for profile: " + profile + ", unable to notify");
+                Profile recipient = membership.systemReadProfile(profile);
+                String recipientEmail = recipient.getEmail();
+                if (recipientEmail == null || recipientEmail.length() == 0) {
+                    LOGGER.log(Level.WARNING, "No email found for profile: " + profile + ", unable to notify");
                     continue;
                 }
                 Locale locale = DEFAULT_LOCALE;
-                ProfileData recipientLanguageData = membership.systemReadProfile(profile).getInfo("language");
+                ProfileData recipientLanguageData = recipient.getInfo("language");
                 if (recipientLanguageData != null) {
                     locale = new Locale(recipientLanguageData.getValue());
                 }
@@ -237,7 +254,7 @@ public class SMTPNotificationListenerBean implements MessageListener {
 
                 MimeMessage msg = new MimeMessage(session);
                 msg.setSubject(subject);
-                msg.setRecipient(RecipientType.TO, new InternetAddress(recipient));
+                msg.setRecipient(RecipientType.TO, new InternetAddress(recipientEmail));
                 if ( senderName.length() > 0 ) {
                     msg.setFrom(new InternetAddress(senderEmail, senderName));
                 } else {

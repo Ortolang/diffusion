@@ -74,6 +74,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import fr.ortolang.diffusion.membership.entity.Group;
 import org.apache.commons.io.IOUtils;
 import org.javers.core.Javers;
 import org.javers.core.JaversBuilder;
@@ -1525,6 +1526,17 @@ public class CoreServiceBean implements CoreService {
                 throw e;
             }
         }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public Group addMember(String wskey, String member) throws CoreServiceException, AccessDeniedException, KeyNotFoundException, MembershipServiceException, NotificationServiceException {
+        String caller = membership.getProfileKeyForConnectedIdentifier();
+        Workspace workspace = readWorkspace(wskey);
+        Group group = membership.addMemberInGroup(workspace.getMembers(), member);
+        ArgumentsBuilder argsBuilder = new ArgumentsBuilder().addArgument("ws-alias", workspace.getAlias()).addArgument("member", member);
+        notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "notify-added-member"), argsBuilder.build());
+        return group;
     }
 
     @Override

@@ -51,6 +51,8 @@ import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.extraction.ExtractionServiceException;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
+import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
@@ -134,6 +136,8 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     void deleteElements(String wskey, List<String> sources, boolean force) throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException,
             WorkspaceReadOnlyException, CollectionNotEmptyException, RegistryServiceException;
+
+    Group addMember(String wskey, String member) throws CoreServiceException, AccessDeniedException, KeyNotFoundException, MembershipServiceException, NotificationServiceException;
 
     /* Collection */
 

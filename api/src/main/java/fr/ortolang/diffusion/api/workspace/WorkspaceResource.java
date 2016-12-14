@@ -40,6 +40,7 @@ import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.filter.CORSFilter;
+import fr.ortolang.diffusion.api.group.GroupRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
@@ -51,6 +52,8 @@ import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.membership.entity.Group;
+import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.PropertyNotFoundException;
@@ -712,7 +715,7 @@ public class WorkspaceResource {
         core.notifyWorkspaceOwner(wskey, email, "[" + subject  + "] <br/>" + message);
         return Response.ok().build();
     }
-    
+
     @POST
     @Path("/{wskey}/members/message")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -721,6 +724,17 @@ public class WorkspaceResource {
         LOGGER.log(Level.INFO, "GET /workspaces/" + wskey + "/members/message");
         core.notifyWorkspaceMembers(wskey, email, "[" + subject  + "] <br/>" + message);
         return Response.ok().build();
+    }
+
+    @PUT
+    @Path("/{wskey}/members/{member}")
+    @GZIP
+    public Response addMember(@PathParam(value = "wskey") String wskey, @PathParam(value = "member") String member)
+            throws CoreServiceException, AccessDeniedException, NotificationServiceException, MembershipServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/members/" + member);
+        Group group = core.addMember(wskey, member);
+        GroupRepresentation representation = GroupRepresentation.fromGroup(group);
+        return Response.ok(representation).build();
     }
 
     private WorkspaceElementRepresentation makeRepresentation(OrtolangObject object, String wskey, PathBuilder path) throws KeyNotFoundException, AccessDeniedException, BrowserServiceException {
