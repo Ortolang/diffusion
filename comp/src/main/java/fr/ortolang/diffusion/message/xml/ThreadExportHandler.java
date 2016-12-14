@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.message.export;
+package fr.ortolang.diffusion.message.xml;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,12 +9,12 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
-import fr.ortolang.diffusion.dump.XmlDumpAttributes;
-import fr.ortolang.diffusion.dump.XmlDumpHelper;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.message.entity.Thread;
+import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class ThreadExportHandler implements OrtolangObjectExportHandler {
+public class ThreadExportHandler implements OrtolangObjectXmlExportHandler {
     
     private Thread thread; 
     
@@ -23,7 +23,7 @@ public class ThreadExportHandler implements OrtolangObjectExportHandler {
    }
     
     @Override
-    public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
+    public void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
         try {
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("id", thread.getId());
@@ -32,14 +32,14 @@ public class ThreadExportHandler implements OrtolangObjectExportHandler {
             attrs.put("question", thread.getQuestion());
             attrs.put("answer", thread.getAnswer());
             attrs.put("last-activity", Long.toString(thread.getLastActivity().getTime()));
-            XmlDumpHelper.startElement("message", "thread", attrs, writer);
+            XmlDumpHelper.startElement("thread", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("thread", "observers", attrs, writer);
+            XmlDumpHelper.startElement("thread-observers", attrs, writer);
             for ( String observer : thread.getObservers() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("key", observer);
-                XmlDumpHelper.outputEmptyElement("thread", "observer", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("thread-observer", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             

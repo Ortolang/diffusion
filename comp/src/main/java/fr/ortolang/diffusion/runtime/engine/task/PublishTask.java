@@ -36,9 +36,6 @@ package fr.ortolang.diffusion.runtime.engine.task;
  * #L%
  */
 
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -86,7 +83,7 @@ public class PublishTask extends RuntimeEngineTask {
         try {
             LOGGER.log(Level.FINE, "starting publication...");
             getPublicationService().publishSnapshot(wskey, snapshot);
-            LOGGER.log(Level.FINE, "publication of all keys done.");
+            LOGGER.log(Level.FINE, "publication done.");
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "All elements published succesfully"));
         } catch (Exception e) {
             throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessLogEvent(execution.getProcessBusinessKey(), "unable to publish elements: " + e.getMessage()));

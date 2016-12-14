@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core.export;
+package fr.ortolang.diffusion.core.xml;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -8,13 +8,13 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.dump.XmlDumpAttributes;
-import fr.ortolang.diffusion.dump.XmlDumpHelper;
+import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class DataObjectExportHandler implements OrtolangObjectExportHandler {
+public class DataObjectExportHandler implements OrtolangObjectXmlExportHandler {
     
     private DataObject object; 
     
@@ -23,7 +23,7 @@ public class DataObjectExportHandler implements OrtolangObjectExportHandler {
    }
     
     @Override
-    public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
+    public void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
         try {
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("id", object.getId());
@@ -32,15 +32,15 @@ public class DataObjectExportHandler implements OrtolangObjectExportHandler {
             attrs.put("size", Long.toString(object.getSize()));
             attrs.put("stream", object.getStream());
             attrs.put("clock", Integer.toString(object.getClock()));
-            XmlDumpHelper.startElement("core", "object", attrs, writer);
+            XmlDumpHelper.startElement("dataobject", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("object", "metadatas", attrs, writer);
+            XmlDumpHelper.startElement("metadatas", attrs, writer);
             for ( MetadataElement element : object.getMetadatas() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("name", element.getName());
                 attrs.put("key", element.getKey());
-                XmlDumpHelper.outputEmptyElement("collection", "metadata", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("metadata", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             

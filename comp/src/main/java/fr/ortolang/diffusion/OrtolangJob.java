@@ -43,6 +43,8 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class OrtolangJob implements Serializable, Delayed {
 
+    private static final long serialVersionUID = 7514055741239522173L;
+    
     public static final String OBJECT_TYPE = "job";
 
     public abstract Long getId();

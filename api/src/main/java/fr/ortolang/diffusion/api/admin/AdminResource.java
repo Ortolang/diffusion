@@ -2,16 +2,14 @@ package fr.ortolang.diffusion.api.admin;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,20 +19,25 @@ import java.util.stream.Collectors;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
-import org.apache.commons.io.IOUtils;
 import org.jboss.resteasy.annotations.GZIP;
 import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
-
 
 /*
  * #%L
@@ -74,6 +77,7 @@ import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
+import fr.ortolang.diffusion.OrtolangImportExportLogger.LogType;
 import fr.ortolang.diffusion.OrtolangJob;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangService;
@@ -91,8 +95,6 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.core.entity.Workspace;
-import fr.ortolang.diffusion.dump.DumpService;
-import fr.ortolang.diffusion.dump.DumpServiceException;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
 import fr.ortolang.diffusion.ftp.FtpService;
@@ -106,6 +108,7 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.oai.OaiService;
 import fr.ortolang.diffusion.oai.exception.OaiServiceException;
+import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyLockedException;
@@ -136,6 +139,8 @@ import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
 import fr.ortolang.diffusion.worker.WorkerService;
+import fr.ortolang.diffusion.xml.ImportExportService;
+import fr.ortolang.diffusion.xml.ImportExportServiceException;
 
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -168,15 +173,17 @@ public class AdminResource {
     @EJB
     private JobService jobService;
     @EJB
+    private ReferentialService referentialService;
+    @EJB
     private WorkerService workerService;
     @EJB
     private FtpService ftpService;
     @EJB
     private StatisticsService statistics;
     @EJB
-    private DumpService dumpService;
-    @EJB
     private OaiService oaiService;
+    @EJB
+    private ImportExportService export;
 
     @GET
     @Path("/infos/{service}")
@@ -225,10 +232,40 @@ public class AdminResource {
     }
 
     @GET
-    @Path("/core/workspace/{key}/dump")
+    @Path("/referential/entities/export")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-    public Response dumpEntry(@PathParam("key") String key) throws DumpServiceException, IOException, RegistryServiceException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "GET /admin/core/workspace/" + key + "/dump");
+    public Response dumpReferentialEntities() throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "GET /admin/referential/entities/export");
+        LOGGER.log(Level.FINE, "exporting referentual entities");
+        ResponseBuilder builder = Response.ok();
+        builder.header("Content-Disposition", "attachment; filename*=UTF-8''ortolang-dump.tar.gz");
+        builder.type("application/x-gzip");
+        
+        Set<String> keys = new HashSet<String>(registry.list(0, 1000000, "/referential/entity", null));
+
+        StreamingOutput stream = output -> {
+            try {
+                export.dump(keys, output, new OrtolangImportExportLogger() {
+                    @Override
+                    public void log(LogType type, String message) {
+                        LOGGER.log(Level.FINE, type + " : " + message);
+                    }
+                }, true, true);
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, e.getMessage(), e);
+                // TODO maybe include a warning in the archive...
+            }
+        };
+        builder.entity(stream);
+
+        return builder.build();
+    }
+
+    @GET
+    @Path("/core/workspace/{key}/export")
+    @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
+    public Response dumpWorkspace(@PathParam("key") String key, @DefaultValue(value = "true") @QueryParam("binary") boolean withbinary) throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "GET /admin/core/workspace/" + key + "/export");
         ResponseBuilder builder;
         OrtolangObjectIdentifier identifier = registry.lookup(key);
         if (!identifier.getService().equals(CoreService.SERVICE_NAME) || !identifier.getType().equals(Workspace.OBJECT_TYPE)) {
@@ -239,88 +276,51 @@ public class AdminResource {
             builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(key, "utf-8") + "-dump.tar.gz");
             builder.type("application/x-gzip");
 
-            java.nio.file.Path dump = Files.createTempFile("ortolang-dump", ".xml");
-            java.nio.file.Path log = Files.createTempFile("ortolang-dump", ".log");
-            try (OutputStream os = Files.newOutputStream(dump); OutputStream logos = Files.newOutputStream(log)) {
-                OrtolangImportExportLogger logger = new OrtolangImportExportLogger() {
-                    @Override
-                    public void log(LogType type, String message) {
-                        StringBuilder str = new StringBuilder();
-                        str.append("[").append(type).append("] ").append(message).append("\r\n");
-                        try {
-                            logos.write(str.toString().getBytes());
-                            logos.flush();
-                        } catch (IOException e) {
-                            //
+            StreamingOutput stream = output -> {
+                try {
+                    export.dump(Collections.singleton(key), output, new OrtolangImportExportLogger() {
+                        @Override
+                        public void log(LogType type, String message) {
+                            LOGGER.log(Level.FINE, type + " : " + message);
                         }
-                    }
-                };
-                Set<String> bstreams = dumpService.dump(key, os, logger, false);
-                StreamingOutput stream = output -> {
-                    try (GzipCompressorOutputStream gout = new GzipCompressorOutputStream(output); TarArchiveOutputStream out = new TarArchiveOutputStream(gout)) {
-                        try {
-                            TarArchiveEntry entry = new TarArchiveEntry(key + "-dump.xml");
-                            entry.setModTime(System.currentTimeMillis());
-                            entry.setSize(Files.size(dump));
-                            try (InputStream isdump = Files.newInputStream(dump)) {
-                                out.putArchiveEntry(entry);
-                                IOUtils.copy(isdump, out);
-                            } catch (IOException e) {
-                                throw new DumpServiceException("unable to add dump to archive", e);
-                            } finally {
-                                try {
-                                    out.closeArchiveEntry();
-                                } catch (IOException e) {
-                                    throw new DumpServiceException("unable to close archive entry for xml dump", e);
-                                }
-                            }
-
-                            TarArchiveEntry logentry = new TarArchiveEntry(key + "-dump.log");
-                            logentry.setModTime(System.currentTimeMillis());
-                            logentry.setSize(Files.size(log));
-                            try (InputStream islog = Files.newInputStream(log)) {
-                                out.putArchiveEntry(logentry);
-                                IOUtils.copy(islog, out);
-                            } catch (IOException e) {
-                                throw new DumpServiceException("unable to add dumplog to archive", e);
-                            } finally {
-                                try {
-                                    out.closeArchiveEntry();
-                                } catch (IOException e) {
-                                    throw new DumpServiceException("unable to close archive entry for dump log", e);
-                                }
-                            }
-
-                            for (String bstream : bstreams) {
-                                try (InputStream input = binary.get(bstream)) {
-                                    TarArchiveEntry sentry = new TarArchiveEntry(bstream);
-                                    sentry.setModTime(System.currentTimeMillis());
-                                    sentry.setSize(binary.size(bstream));
-                                    try {
-                                        out.putArchiveEntry(sentry);
-                                        IOUtils.copy(input, out);
-                                    } catch (IOException e) {
-                                        throw new DumpServiceException("unable to dump binary stream for hash: " + bstream, e);
-                                    } finally {
-                                        try {
-                                            out.closeArchiveEntry();
-                                        } catch (IOException e) {
-                                            throw new DumpServiceException("unable to close archive entry for binary stream with hash: " + bstream, e);
-                                        }
-                                    }
-                                } catch (DataNotFoundException | IOException | BinaryStoreServiceException e) {
-                                    throw new DumpServiceException(e);
-                                }
-                            }
-                        } catch (DumpServiceException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                };
-                builder.entity(stream);
-            }
+                    }, true, withbinary);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, e.getMessage(), e);
+                    // TODO maybe include a warning in the archive...
+                }
+            };
+            builder.entity(stream);
         }
 
+        return builder.build();
+    }
+    
+    @POST
+    @Path("/core/workspace/import")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response restoreWorkspace(@MultipartForm ImportFormRepresentation form) throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "POST /admin/core/workspace/import");
+        ResponseBuilder builder;
+        if (form.getDump() == null) {
+            builder = Response.status(Status.BAD_REQUEST);
+            builder.entity("missing dump file");
+            return builder.build();
+        } 
+        builder = Response.ok();
+        builder.type("application/json");
+        StreamingOutput stream = output -> {
+            JsonImportLogger logger = new JsonImportLogger();
+            logger.setOutputStream(output);
+            logger.start();
+            try {
+                export.restore(form.getDump(), logger);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "error during restore workspace", e);
+                logger.log(LogType.ERROR, "CRITICAL ERROR : " + e.getMessage());
+            }
+            logger.finish();
+        };
+        builder.entity(stream);
         return builder.build();
     }
 
@@ -458,22 +458,11 @@ public class AdminResource {
         long nbresults = event.systemCountEvents(etype, ofrom, otype, throwed, after);
         List<OrtolangEvent> events = (List<OrtolangEvent>) event.systemFindEvents(etype, ofrom, otype, throwed, after, offset, limit);
 
-        // UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
         GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>();
         representation.setEntries(events);
         representation.setOffset((offset <= 0) ? 1 : offset);
         representation.setSize(nbresults);
         representation.setLimit(events.size());
-        // representation.setFirst(objects.clone().queryParam("o", 0).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype",
-        // etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        // representation.setPrevious(objects.clone().queryParam("o", Math.max(0, (offset - limit))).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype",
-        // otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        // representation.setSelf(objects.clone().queryParam("o", offset).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype",
-        // etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        // representation.setNext(objects.clone().queryParam("o", (nbresults > (offset + limit)) ? (offset + limit) : offset).queryParam("l", limit).queryParam("ofrom",
-        // ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        // representation.setLast(objects.clone().queryParam("o", ((nbresults - 1) / limit) * limit).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype",
-        // otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
         return Response.ok(representation).build();
     }
 

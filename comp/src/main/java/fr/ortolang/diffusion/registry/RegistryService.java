@@ -142,5 +142,7 @@ public interface RegistryService extends OrtolangService {
     long systemCountPublishedEntries(String identifierFilter) throws RegistryServiceException;
     
     long systemCountHiddenEntries(String identifierFilter) throws RegistryServiceException;
-    	
+    
+    void systemRestoreEntry(RegistryEntry entry, boolean override, boolean force) throws RegistryServiceException;
+    
 }

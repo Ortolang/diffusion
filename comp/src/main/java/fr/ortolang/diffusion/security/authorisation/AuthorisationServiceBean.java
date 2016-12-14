@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.Local;
 import javax.ejb.SessionContext;
 import javax.ejb.Stateless;
@@ -346,6 +347,28 @@ public class AuthorisationServiceBean implements AuthorisationService {
 		}
 		throw new AccessDeniedException("identifier [" + identifier + "] is not superuser");
 	}
+	
+	@Override
+    @RolesAllowed({"admin", "system"})
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void systemRestorePolicy(AuthorisationPolicy policy, boolean override) throws AuthorisationServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# restore authorisation policy for key [" + policy.getId() + "]");
+        AuthorisationPolicy existing = em.find(AuthorisationPolicy.class, policy.getId()); 
+        if ( existing != null ) {
+            if ( policy.equals(existing) ) {
+                LOGGER.log(Level.FINE, "policy already exists and content is the same, nothing to do");
+            } else {
+                if ( override ) {
+                    LOGGER.log(Level.WARNING, "overriding policy for key: " + policy.getId());
+                    em.merge(policy);
+                } else {
+                    throw new AuthorisationServiceException("error restoring policy, policy already exists for key: " + policy.getId());
+                }
+            }
+        } else {
+            em.persist(policy);
+        }
+    }
 
 	//Service methods
     

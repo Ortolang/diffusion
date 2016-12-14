@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core.export;
+package fr.ortolang.diffusion.core.xml;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,13 +9,13 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.core.entity.Link;
 import fr.ortolang.diffusion.core.entity.MetadataElement;
-import fr.ortolang.diffusion.dump.XmlDumpAttributes;
-import fr.ortolang.diffusion.dump.XmlDumpHelper;
+import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class LinkExportHandler implements OrtolangObjectExportHandler {
+public class LinkExportHandler implements OrtolangObjectXmlExportHandler {
     
     private Link link; 
     
@@ -24,22 +24,22 @@ public class LinkExportHandler implements OrtolangObjectExportHandler {
    }
     
     @Override
-    public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
+    public void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
         try {
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("id", link.getId());
             attrs.put("name", link.getName());
             attrs.put("target", link.getTarget());
             attrs.put("clock", Integer.toString(link.getClock()));
-            XmlDumpHelper.startElement("core", "link", attrs, writer);
+            XmlDumpHelper.startElement("link", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("link", "metadatas", attrs, writer);
+            XmlDumpHelper.startElement("metadatas", attrs, writer);
             for ( MetadataElement element : link.getMetadatas() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("name", element.getName());
                 attrs.put("key", element.getKey());
-                XmlDumpHelper.outputEmptyElement("link", "metadata", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("metadata", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             

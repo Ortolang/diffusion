@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.message.export;
+package fr.ortolang.diffusion.message.xml;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -8,13 +8,13 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
-import fr.ortolang.diffusion.dump.XmlDumpAttributes;
-import fr.ortolang.diffusion.dump.XmlDumpHelper;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.message.entity.Message;
 import fr.ortolang.diffusion.message.entity.MessageAttachment;
+import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class MessageExportHandler implements OrtolangObjectExportHandler {
+public class MessageExportHandler implements OrtolangObjectXmlExportHandler {
     
     private Message message; 
     
@@ -23,7 +23,7 @@ public class MessageExportHandler implements OrtolangObjectExportHandler {
    }
     
     @Override
-    public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
+    public void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
         try {
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("id", message.getId());
@@ -35,20 +35,20 @@ public class MessageExportHandler implements OrtolangObjectExportHandler {
             }
             attrs.put("date", Long.toString(message.getDate().getTime()));
             attrs.put("edit", Long.toString(message.getEdit().getTime()));
-            XmlDumpHelper.startElement("message", "message", attrs, writer);
+            XmlDumpHelper.startElement("message", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.outputElementWithContent("message", "content", attrs, message.getBody(), writer);
+            XmlDumpHelper.outputElementWithContent("message-content", attrs, message.getBody(), writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("message", "attachements", attrs, writer);
+            XmlDumpHelper.startElement("message-attachements", attrs, writer);
             for ( MessageAttachment attachment : message.getAttachments() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("name", attachment.getName());
                 attrs.put("type", attachment.getType());
                 attrs.put("hash", attachment.getHash());
                 attrs.put("size", Long.toString(attachment.getSize()));
-                XmlDumpHelper.outputEmptyElement("message", "attachment", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("message-attachment", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             

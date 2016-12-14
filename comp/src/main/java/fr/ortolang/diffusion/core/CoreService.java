@@ -70,15 +70,16 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     String INFO_WORKSPACES_ALL = "workspaces.all";
     String INFO_WORKSPACES_PUBLISHED = "workspaces.published";
-    //String INFO_WORKSPACES_DELETED = "workspaces.deleted";
+    // String INFO_WORKSPACES_DELETED = "workspaces.deleted";
     String INFO_COLLECTIONS_ALL = "collections.all";
     String INFO_COLLECTIONS_PUBLISHED = "collections.published";
-    //String INFO_COLLECTIONS_DELETED = "collections.deleted";
+    // String INFO_COLLECTIONS_DELETED = "collections.deleted";
     String INFO_OBJECTS_ALL = "objects.all";
     String INFO_OBJECTS_PUBLISHED = "objects.published";
-    //String INFO_OBJECTS_DELETED = "objects.deleted";
-	
-	/* Workspace */
+
+    // String INFO_OBJECTS_DELETED = "objects.deleted";
+
+    /* Workspace */
 
     Workspace createWorkspace(String wskey, String alias, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, AliasAlreadyExistsException;
 
@@ -87,9 +88,9 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
     Workspace readWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
     void updateWorkspace(String wskey, String name) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
-    
+
     Workspace archiveWorkspace(String wskey, Boolean archive) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, WorkspaceReadOnlyException;
-    
+
     String snapshotWorkspace(String wskey) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException, WorkspaceUnchangedException;
 
     String getLatestSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
@@ -121,64 +122,69 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
     String resolveWorkspaceMetadata(String wskey, String root, String path, String name) throws CoreServiceException, InvalidPathException, PathNotFoundException, AccessDeniedException;
 
     String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException;
-    
+
     void changeWorkspaceOwner(String wskey, String newOwner) throws CoreServiceException;
-    
+
     void notifyWorkspaceOwner(String wskey, String sender, String message) throws CoreServiceException;
-    
+
     void notifyWorkspaceMembers(String wskey, String sender, String message) throws CoreServiceException;
 
-    void moveElements(String wskey, List<String> sources, String destination)
-            throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException, RegistryServiceException, WorkspaceReadOnlyException,
-            PathAlreadyExistsException;
+    void moveElements(String wskey, List<String> sources, String destination) throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException,
+            RegistryServiceException, WorkspaceReadOnlyException, PathAlreadyExistsException;
 
-    void deleteElements(String wskey, List<String> sources, boolean force)
-            throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException, WorkspaceReadOnlyException, CollectionNotEmptyException,
-            RegistryServiceException;
-	
-	/*Collection*/
+    void deleteElements(String wskey, List<String> sources, boolean force) throws InvalidPathException, CoreServiceException, PathNotFoundException, AccessDeniedException, KeyNotFoundException,
+            WorkspaceReadOnlyException, CollectionNotEmptyException, RegistryServiceException;
 
-    Collection createCollection(String wskey, String path)
-            throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException,
-            KeyAlreadyExistsException;
+    /* Collection */
 
-    Collection createCollection(String wskey, String key, String path) throws CoreServiceException, WorkspaceReadOnlyException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
+    Collection createCollection(String wskey, String path) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException,
+            PathAlreadyExistsException, AccessDeniedException, KeyAlreadyExistsException;
+
+    Collection createCollection(String wskey, String key, String path) throws CoreServiceException, WorkspaceReadOnlyException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException,
+            PathAlreadyExistsException, AccessDeniedException;
 
     Collection readCollection(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
-    Collection moveCollection(String wskey, String from, String to) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
+    Collection moveCollection(String wskey, String from, String to) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException,
+            PathAlreadyExistsException, AccessDeniedException;
 
-    void deleteCollection(String wskey, String path) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, CollectionNotEmptyException;
+    void deleteCollection(String wskey, String path) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException,
+            CollectionNotEmptyException;
 
-    void deleteCollection(String wskey, String path, boolean force) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, CollectionNotEmptyException;
+    void deleteCollection(String wskey, String path, boolean force) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException,
+            AccessDeniedException, CollectionNotEmptyException;
 
     String resolvePathFromCollection(String key, String path) throws KeyNotFoundException, CoreServiceException, AccessDeniedException, PathNotFoundException, InvalidPathException;
-	
-	/*DataObject*/
 
-    DataObject createDataObject(String wskey, String path, String hash)
-            throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException,
-            KeyAlreadyExistsException;
+    /* DataObject */
 
-    DataObject createDataObject(String wskey, String key, String path, String hash) throws CoreServiceException, WorkspaceReadOnlyException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
+    DataObject createDataObject(String wskey, String path, String hash) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException,
+            PathAlreadyExistsException, AccessDeniedException, KeyAlreadyExistsException;
+
+    DataObject createDataObject(String wskey, String key, String path, String hash) throws CoreServiceException, WorkspaceReadOnlyException, KeyAlreadyExistsException, InvalidPathException,
+            PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
 
     DataObject readDataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
     DataObject updateDataObject(String wskey, String path, String hash) throws CoreServiceException, WorkspaceReadOnlyException, InvalidPathException, PathNotFoundException, AccessDeniedException;
 
-    DataObject moveDataObject(String wskey, String from, String to) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
+    DataObject moveDataObject(String wskey, String from, String to) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException,
+            PathAlreadyExistsException, AccessDeniedException;
 
     void deleteDataObject(String wskey, String path) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException;
-	
-	/*Link*/
 
-    Link createLink(String wskey, String path, String target) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
+    /* Link */
 
-    Link createLink(String wskey, String key, String path, String target) throws CoreServiceException, WorkspaceReadOnlyException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
+    Link createLink(String wskey, String path, String target) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, KeyAlreadyExistsException, InvalidPathException,
+            PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
 
-    Link updateLink(String wskey, String path, String target)  throws CoreServiceException, WorkspaceReadOnlyException, InvalidPathException, PathNotFoundException, AccessDeniedException;
+    Link createLink(String wskey, String key, String path, String target) throws CoreServiceException, WorkspaceReadOnlyException, KeyAlreadyExistsException, InvalidPathException,
+            PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
 
-    Link moveLink(String wskey, String from, String to) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, PathAlreadyExistsException, AccessDeniedException;
+    Link updateLink(String wskey, String path, String target) throws CoreServiceException, WorkspaceReadOnlyException, InvalidPathException, PathNotFoundException, AccessDeniedException;
+
+    Link moveLink(String wskey, String from, String to) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException,
+            PathAlreadyExistsException, AccessDeniedException;
 
     void deleteLink(String wskey, String path) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException;
 
@@ -187,15 +193,14 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
     List<String> findLinksForTarget(String target) throws CoreServiceException;
 
     String resolveLinkTarget(String target) throws CoreServiceException, AliasNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException;
-    
-    /*MetadataObject*/
 
-    MetadataObject createMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren)
-            throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException,
-            KeyAlreadyExistsException;
+    /* MetadataObject */
 
-    MetadataObject createMetadataObject(String wskey, String key, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException, WorkspaceReadOnlyException,
-            KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, MetadataFormatException;
+    MetadataObject createMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException, WorkspaceReadOnlyException,
+            KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException, KeyAlreadyExistsException;
+
+    MetadataObject createMetadataObject(String wskey, String key, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException,
+            WorkspaceReadOnlyException, KeyAlreadyExistsException, InvalidPathException, PathNotFoundException, MetadataFormatException;
 
     List<String> findMetadataObjectsForTarget(String target) throws CoreServiceException, AccessDeniedException;
 
@@ -203,20 +208,20 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     MetadataObject readMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException;
 
-    MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
+    MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren) throws CoreServiceException, WorkspaceReadOnlyException,
+            KeyNotFoundException, InvalidPathException, PathNotFoundException, AccessDeniedException, MetadataFormatException;
 
-    MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren, String format) throws CoreServiceException, WorkspaceReadOnlyException,
-            InvalidPathException, PathNotFoundException, MetadataFormatException;
+    MetadataObject updateMetadataObject(String wskey, String path, String name, String hash, String filename, boolean purgeChildren, String format) throws CoreServiceException,
+            WorkspaceReadOnlyException, InvalidPathException, PathNotFoundException, MetadataFormatException;
 
     void deleteMetadataObject(String wskey, String path, String name, boolean recursive) throws CoreServiceException, WorkspaceReadOnlyException, InvalidPathException, PathNotFoundException;
 
     String readPublicationPolicy(String key) throws KeyNotFoundException, RegistryServiceException, DataNotFoundException, BinaryStoreServiceException, IOException, CoreServiceException;
 
-    String readPublicationPolicy(String wskey, String root, String path)
-            throws KeyNotFoundException, RegistryServiceException, DataNotFoundException, BinaryStoreServiceException, IOException, CoreServiceException, AccessDeniedException, InvalidPathException,
-            PathNotFoundException;
+    String readPublicationPolicy(String wskey, String root, String path) throws KeyNotFoundException, RegistryServiceException, DataNotFoundException, BinaryStoreServiceException, IOException,
+            CoreServiceException, AccessDeniedException, InvalidPathException, PathNotFoundException;
 
-	/*MetadataFormat*/
+    /* MetadataFormat */
 
     String createMetadataFormat(String name, String description, String schema, String form, boolean validationNeeded, boolean indexable) throws CoreServiceException;
 
@@ -227,29 +232,29 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
     List<MetadataFormat> listMetadataFormat() throws CoreServiceException;
 
     List<MetadataFormat> listAllMetadataFormat();
-	
-	/*BinaryContent*/
+
+    /* BinaryContent */
 
     InputStream download(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException, DataNotFoundException;
 
     String put(InputStream data) throws CoreServiceException, DataCollisionException;
 
-    void extractMetadata(String wskey, String path, String mimeType)
-            throws CoreServiceException, OrtolangException, InvalidPathException, PathNotFoundException, ExtractionServiceException, KeyNotFoundException;
-	
-	/*System*/
-    
+    void extractMetadata(String wskey, String path, String mimeType) throws CoreServiceException, OrtolangException, InvalidPathException, PathNotFoundException, ExtractionServiceException,
+            KeyNotFoundException;
+
+    /* System */
+
     Set<String> systemListWorkspaceKeys(String wskey) throws CoreServiceException, KeyNotFoundException;
-    
+
     void systemSetWorkspaceReadOnly(String wskey, boolean readonly) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;
-    
-    void systemUpdateWorkspace(String wskey, String alias, boolean changed, String head, String members, String privileged, boolean readOnly, String type) throws CoreServiceException, KeyNotFoundException, NotificationServiceException;
-    
+
+    void systemUpdateWorkspace(String wskey, String alias, boolean changed, String head, String members, String privileged, boolean readOnly, String type) throws CoreServiceException,
+            KeyNotFoundException, NotificationServiceException;
+
     void systemTagWorkspace(String wskey, String tag, String snapshot) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
 
-    void systemCreateMetadata(String key, String name, String hash, String filename)
-            throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
-            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException;
+    void systemCreateMetadata(String key, String name, String hash, String filename) throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException,
+            BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException;
 
     Workspace systemReadWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException;
 

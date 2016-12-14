@@ -94,9 +94,9 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectImportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectPid;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.OrtolangObjectState;
@@ -114,13 +114,13 @@ import fr.ortolang.diffusion.core.entity.TagElement;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
 import fr.ortolang.diffusion.core.entity.WorkspaceType;
-import fr.ortolang.diffusion.core.export.CollectionExportHandler;
-import fr.ortolang.diffusion.core.export.DataObjectExportHandler;
-import fr.ortolang.diffusion.core.export.LinkExportHandler;
-import fr.ortolang.diffusion.core.export.MetadataObjectExportHandler;
-import fr.ortolang.diffusion.core.export.WorkspaceExportHandler;
 import fr.ortolang.diffusion.core.wrapper.CollectionWrapper;
 import fr.ortolang.diffusion.core.wrapper.OrtolangObjectWrapper;
+import fr.ortolang.diffusion.core.xml.CollectionExportHandler;
+import fr.ortolang.diffusion.core.xml.DataObjectExportHandler;
+import fr.ortolang.diffusion.core.xml.LinkExportHandler;
+import fr.ortolang.diffusion.core.xml.MetadataObjectExportHandler;
+import fr.ortolang.diffusion.core.xml.WorkspaceExportHandler;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.extraction.ExtractionService;
 import fr.ortolang.diffusion.extraction.ExtractionServiceException;
@@ -3924,7 +3924,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+    public OrtolangObjectXmlExportHandler getObjectXmlExportHandler(String key) throws OrtolangException {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
@@ -3971,7 +3971,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+    public OrtolangObjectXmlImportHandler getObjectXmlImportHandler(String type) throws OrtolangException {
         throw new OrtolangException("NOT IMPLEMENTED");
     }
 
