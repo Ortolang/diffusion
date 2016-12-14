@@ -36,28 +36,6 @@ package fr.ortolang.diffusion.subscription;
  * #L%
  */
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-import javax.annotation.security.RunAs;
-import javax.ejb.EJB;
-import javax.ejb.Local;
-import javax.ejb.Schedule;
-import javax.ejb.Singleton;
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
-
-import org.atmosphere.cpr.AtmosphereResource;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.event.entity.Event;
@@ -69,12 +47,23 @@ import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
+import org.atmosphere.cpr.AtmosphereResource;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.*;
+import javax.json.Json;
+import javax.json.JsonObjectBuilder;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Local(SubscriptionService.class)
 @Singleton(name = SubscriptionService.SERVICE_NAME)
 @SecurityDomain("ortolang")
 @PermitAll
-@RunAs("system")
 public class SubscriptionServiceBean implements SubscriptionService {
 
     private static final Logger LOGGER = Logger.getLogger(SubscriptionServiceBean.class.getName());
@@ -89,6 +78,7 @@ public class SubscriptionServiceBean implements SubscriptionService {
     private RuntimeService runtime;
     @EJB
     private CoreService core;
+
     private Map<String, Subscription> registry = new HashMap<>();
 
     public SubscriptionServiceBean() {
@@ -163,6 +153,20 @@ public class SubscriptionServiceBean implements SubscriptionService {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    @Override
+    public void broadcastMessage(List<String> users, String title, String body) throws SubscriptionServiceException {
+        for (String user : users) {
+            if (registry.containsKey(user)) {
+                Subscription subscription = registry.get(user);
+                JsonObjectBuilder builder = Json.createObjectBuilder();
+                builder.add("type", "system.notification");
+                builder.add("title", title);
+                builder.add("body", body);
+                subscription.broadcast(builder.build());
             }
         }
     }

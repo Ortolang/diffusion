@@ -405,7 +405,6 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    @RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<String> systemFindWorkspacesForProfile(String profile) throws CoreServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# finding workspaces for profile");

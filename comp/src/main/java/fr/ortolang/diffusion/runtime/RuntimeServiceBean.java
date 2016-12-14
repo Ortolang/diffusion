@@ -324,7 +324,6 @@ public class RuntimeServiceBean implements RuntimeService {
     }
 
     @Override
-    @RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Process> systemListUserProcesses(String username, State state) throws RuntimeServiceException {
         LOGGER.log(Level.INFO, "#SYSTEM# Listing processes for user [" + username + "] in " + ((state != null) ? "state=" + state : "all states"));
@@ -644,7 +643,6 @@ public class RuntimeServiceBean implements RuntimeService {
     }
 
     @Override
-    @RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<HumanTask> systemListUserCandidateTasks(String username) throws RuntimeServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "#SYSTEM# Listing candidate tasks");
