@@ -77,7 +77,6 @@ import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangImportExportLogger.LogType;
 import fr.ortolang.diffusion.OrtolangJob;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangService;
@@ -300,28 +299,29 @@ public class AdminResource {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response restoreWorkspace(@MultipartForm ImportFormRepresentation form) throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "POST /admin/core/workspace/import");
-        ResponseBuilder builder;
-        if (form.getDump() == null) {
-            builder = Response.status(Status.BAD_REQUEST);
-            builder.entity("missing dump file");
-            return builder.build();
-        } 
-        builder = Response.ok();
-        builder.type("application/json");
-        StreamingOutput stream = output -> {
-            JsonImportLogger logger = new JsonImportLogger();
-            logger.setOutputStream(output);
-            logger.start();
-            try {
-                export.restore(form.getDump(), logger);
-            } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "error during restore workspace", e);
-                logger.log(LogType.ERROR, "CRITICAL ERROR : " + e.getMessage());
-            }
-            logger.finish();
-        };
-        builder.entity(stream);
-        return builder.build();
+//        ResponseBuilder builder;
+//        if (form.getDump() == null) {
+//            builder = Response.status(Status.BAD_REQUEST);
+//            builder.entity("missing dump file");
+//            return builder.build();
+//        } 
+//        builder = Response.ok();
+//        builder.type("application/json");
+//        StreamingOutput stream = output -> {
+//            JsonImportLogger logger = new JsonImportLogger();
+//            logger.setOutputStream(output);
+//            logger.start();
+//            try {
+//                export.restore(form.getDump(), logger);
+//            } catch (Exception e) {
+//                LOGGER.log(Level.SEVERE, "error during restore workspace", e);
+//                logger.log(LogType.ERROR, "CRITICAL ERROR : " + e.getMessage());
+//            }
+//            logger.finish();
+//        };
+//        builder.entity(stream);
+//        return builder.build();
+        return Response.serverError().build();
     }
 
     @POST
