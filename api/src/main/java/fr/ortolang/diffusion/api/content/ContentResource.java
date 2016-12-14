@@ -207,7 +207,7 @@ public class ContentResource {
         }
         Pattern pattern = null;
         if (regex != null) {
-            pattern = Pattern.compile(regex);
+            pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
         }
         ResponseBuilder builder = handleExport(false, filename, format, paths, pattern);
         return builder.build();
