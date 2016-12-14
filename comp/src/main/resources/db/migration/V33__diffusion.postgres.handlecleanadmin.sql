@@ -1,0 +1,1 @@
+	delete from handles h where h.idx = 100;
