@@ -120,7 +120,7 @@ public class HandleStoreServiceTest {
 		try {
 			service.recordHandle("11403/666", "mykey", "http://www.free.fr");
 			List<Handle> values = service.listHandleValues("11403/666");
-			assertEquals(2, values.size());
+			assertEquals(1, values.size());
 			for ( Handle handle : values ) {
 				LOGGER.log(Level.INFO, "VALUE " + handle);
 			}
