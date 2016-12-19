@@ -458,6 +458,11 @@ public class OaiServiceBean implements OaiService {
             OrtolangIndexableObject<IndexableJsonContent> indexableObject = OrtolangIndexableObjectFactory.buildJsonIndexableObject(root);
             String item = indexableObject.getContent().getStream().get(MetadataFormat.ITEM);
 
+            if (item == null) {
+            	LOGGER.log(Level.SEVERE, "unable to build xml from root collection cause item metadata is null " + root);
+                throw new OaiServiceException("unable to build xml from root collection cause item metadata " + root);
+            }
+            
             DCXMLDocument xml = null;
             if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
                 xml = OAI_DCFactory.buildFromItem(item);
