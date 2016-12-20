@@ -31,7 +31,7 @@ public class RebuildOAITask extends RuntimeEngineTask {
         try {
             aliases = getCoreService().listAllWorkspaceAlias();
         } catch (AccessDeniedException | CoreServiceException e) {
-        	report.append("unable to list all workspace alias").append("\r\n").append(e.getMessage());
+        	report.append("unable to list all workspace alias").append("\r\n").append(e.getMessage()).append("\r\n");
         	throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "Report: \r\n" + report.toString(), e));
         	throw new RuntimeEngineTaskException("unable to rebuild oai", e);
         }
@@ -42,8 +42,8 @@ public class RebuildOAITask extends RuntimeEngineTask {
                 String wskey = getCoreService().resolveWorkspaceAlias(alias);
                 getOaiService().buildFromWorkspace(wskey);
                 report.append("+ ").append(alias).append("\r\n");
-        	} catch (CoreServiceException | AliasNotFoundException | OaiServiceException e) {
-        		report.append("- ").append(alias).append("\r\n");
+        	} catch (Exception e) {
+        		report.append("- ").append(alias).append("\r\n").append(e.getMessage()).append("\r\n");
         		partial = true;
         	}
         }
