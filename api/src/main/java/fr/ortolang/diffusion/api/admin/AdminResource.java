@@ -737,12 +737,4 @@ public class AdminResource {
         statistics.collectPiwikForRange(range, timestamp);
         return Response.ok().build();
     }
-
-    @POST
-    @Path("/oai/rebuild")
-    public Response rebuildOAI() throws OaiServiceException {
-    	LOGGER.log(Level.INFO, "GET /oai/rebuild");
-    	oaiService.rebuild();
-    	return Response.ok().build();
-    }
 }

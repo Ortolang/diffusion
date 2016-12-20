@@ -277,29 +277,6 @@ public class OaiServiceBean implements OaiService {
     }
 
     /**
-     * Rebuild all records and set. It calls buildFromWorkspace on each workspace.
-     * 
-     * @throws OaiServiceException
-     */
-    @Override
-    @RolesAllowed({ "admin", "system" })
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void rebuild() throws OaiServiceException {
-        List<String> aliases;
-        try {
-            aliases = core.listAllWorkspaceAlias();
-            for (String alias : aliases) {
-                String wskey = core.resolveWorkspaceAlias(alias);
-                buildFromWorkspace(wskey);
-            }
-        } catch (AccessDeniedException | CoreServiceException | AliasNotFoundException e) {
-            ctx.setRollbackOnly();
-            LOGGER.log(Level.SEVERE, "unable to rebuild the oai database ", e);
-            throw new OaiServiceException("unable to build OAI database ", e);
-        }
-    }
-
-    /**
      * Builds a set and a record for a workspace. For each elements (Collection and DataObject) with a Metadata DublinCore or OLAC, a record is created and associated to the set.
      * 
      * If any exception is thrown, the transaction rollbacks.
@@ -374,7 +351,6 @@ public class OaiServiceBean implements OaiService {
                 createRecordsForItem(wskey, root, setsWorkspace);
             }
         } catch (RegistryServiceException | KeyNotFoundException | OaiServiceException | CoreServiceException | MetadataPrefixUnknownException | OrtolangException e) {
-            ctx.setRollbackOnly();
             LOGGER.log(Level.SEVERE, "unable to create OAI record for workspace " + wskey, e);
             throw new OaiServiceException("unable to create OAI records for workspace " + wskey, e);
         }

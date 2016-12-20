@@ -52,6 +52,4 @@ public interface OaiService extends OrtolangService {
     void buildFromWorkspace(String wskey) throws OaiServiceException;
 
     void buildFromWorkspace(String wskey, String snapshot) throws OaiServiceException;
-
-    void rebuild() throws OaiServiceException;
 }
