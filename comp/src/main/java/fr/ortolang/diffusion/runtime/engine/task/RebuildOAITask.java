@@ -1,11 +1,11 @@
 package fr.ortolang.diffusion.runtime.engine.task;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.transaction.Status;
-import javax.transaction.SystemException;
 
 import org.activiti.engine.delegate.DelegateExecution;
 
@@ -32,6 +32,7 @@ public class RebuildOAITask extends RuntimeEngineTask {
 	@Override
 	public void executeTask(DelegateExecution execution) throws RuntimeEngineTaskException {
 		report = new StringBuilder();
+		
 		List<String> aliases = null;
 		try {
             if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
@@ -42,14 +43,18 @@ public class RebuildOAITask extends RuntimeEngineTask {
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "unable to start new user transaction", e);
         }
-		
-        try {
-            aliases = getCoreService().listAllWorkspaceAlias();
-        } catch (AccessDeniedException | CoreServiceException e) {
-        	report.append("unable to list all workspace alias").append("\r\n").append(e.getMessage()).append("\r\n");
-        	throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "Report: \r\n" + report.toString(), e));
-        	throw new RuntimeEngineTaskException("unable to rebuild oai", e);
-        }
+
+		if (execution.hasVariable(WORKSPACE_ALIAS_PARAM_NAME)) {	
+			aliases = Arrays.asList(execution.getVariable(WORKSPACE_ALIAS_PARAM_NAME, String.class));
+		} else {
+			try {
+				aliases = getCoreService().listAllWorkspaceAlias();
+			} catch (AccessDeniedException | CoreServiceException e) {
+				report.append("unable to list all workspace alias").append("\r\n").append(e.getMessage()).append("\r\n");
+				throwRuntimeEngineEvent(RuntimeEngineEvent.createProcessTraceEvent(execution.getProcessBusinessKey(), "Report: \r\n" + report.toString(), e));
+				throw new RuntimeEngineTaskException("unable to rebuild oai", e);
+			}
+		}
         
     	report.append("LIST OF WORKSPACES REBUILDED :").append("\r\n");
         for (String alias : aliases) {
@@ -65,6 +70,7 @@ public class RebuildOAITask extends RuntimeEngineTask {
                     report.append("[BEGIN-TRAN]\r\n");
                 }
         	} catch (Exception e) {
+        		report.append("- ").append(alias).append("\r\n").append(e.getMessage()).append("\r\n");
         		try {
         			report.append("[ROLLBACK-TRAN]\r\n");
 					getUserTransaction().rollback();
@@ -73,7 +79,6 @@ public class RebuildOAITask extends RuntimeEngineTask {
 				} catch (Exception e1) {
 					LOGGER.log(Level.SEVERE, "Unable to rollback transaction", e1);
 				}
-        		report.append("- ").append(alias).append("\r\n").append(e.getMessage()).append("\r\n");
         		partial = true;
         	}
         }
