@@ -67,7 +67,7 @@ public class RebuildOAITask extends RuntimeEngineTask {
         	} catch (Exception e) {
         		try {
         			report.append("[ROLLBACK-TRAN]\r\n");
-					getUserTransaction().setRollbackOnly();
+					getUserTransaction().rollback();
                     getUserTransaction().begin();
                     report.append("[BEGIN-TRAN]\r\n");
 				} catch (Exception e1) {
