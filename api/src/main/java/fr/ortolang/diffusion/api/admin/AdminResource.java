@@ -36,44 +36,11 @@ package fr.ortolang.diffusion.api.admin;
  * #L%
  */
 
-import java.io.File;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
-
 import fr.ortolang.diffusion.*;
-import fr.ortolang.diffusion.api.config.ConfigResource;
-import org.jboss.resteasy.annotations.GZIP;
-import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
-
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.Secured;
+import fr.ortolang.diffusion.api.config.ConfigResource;
 import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.profile.ProfileRepresentation;
 import fr.ortolang.diffusion.api.runtime.HumanTaskRepresentation;
@@ -94,15 +61,8 @@ import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.oai.OaiService;
-import fr.ortolang.diffusion.oai.exception.OaiServiceException;
 import fr.ortolang.diffusion.referential.ReferentialService;
-import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
-import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
-import fr.ortolang.diffusion.registry.KeyLockedException;
-import fr.ortolang.diffusion.registry.KeyNotFoundException;
-import fr.ortolang.diffusion.registry.RegistryService;
-import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.registry.*;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
@@ -111,11 +71,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.statistics.StatisticsService;
 import fr.ortolang.diffusion.statistics.StatisticsServiceException;
-import fr.ortolang.diffusion.store.binary.BinaryStoreContent;
-import fr.ortolang.diffusion.store.binary.BinaryStoreService;
-import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
-import fr.ortolang.diffusion.store.binary.DataCollisionException;
-import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import fr.ortolang.diffusion.store.binary.*;
 import fr.ortolang.diffusion.store.handle.HandleNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
@@ -129,6 +85,27 @@ import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
 import fr.ortolang.diffusion.worker.WorkerService;
 import fr.ortolang.diffusion.xml.ImportExportService;
 import fr.ortolang.diffusion.xml.ImportExportServiceException;
+import org.jboss.resteasy.annotations.GZIP;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
+
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -168,8 +145,6 @@ public class AdminResource {
     private FtpService ftpService;
     @EJB
     private StatisticsService statistics;
-    @EJB
-    private OaiService oaiService;
     @EJB
     private ImportExportService export;
 
