@@ -51,10 +51,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangConfig.Property;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.template.TemplateEngineException;
 import org.jboss.resteasy.annotations.GZIP;
+
+import static fr.ortolang.diffusion.OrtolangConfig.getInstance;
 
 @Path("/config")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -62,6 +64,10 @@ public class ConfigResource {
 
     private static final Logger LOGGER = Logger.getLogger(ConfigResource.class.getName());
     private static String version = null;
+    private static String clientConfig = null;
+    private static String clientAuthConfig = null;
+    private static String adminConfig = null;
+    private static String adminAuthConfig = null;
 
     @Context
     private ServletContext ctx;
@@ -71,6 +77,13 @@ public class ConfigResource {
     @Produces({ MediaType.TEXT_PLAIN })
     public Response ping() {
         return Response.ok("pong").build();
+    }
+
+    public static void clear() {
+        clientConfig = null;
+        clientAuthConfig = null;
+        adminConfig = null;
+        adminAuthConfig = null;
     }
 
     @GET
@@ -96,20 +109,23 @@ public class ConfigResource {
     @Produces({ MediaType.TEXT_PLAIN })
     @GZIP
     public Response getClientConfig() throws TemplateEngineException {
-        StringBuilder builder = new StringBuilder();
-        builder.append("var OrtolangConfig = {};\r\n");
-        builder.append("OrtolangConfig.apiServerUrlDefault='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("';\r\n");
-        builder.append("OrtolangConfig.apiServerUrlNoSSL='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_NOSSL)).append("';\r\n");
-        builder.append("OrtolangConfig.apiContentPath='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_CONTENT)).append("';\r\n");
-        builder.append("OrtolangConfig.apiSubPath='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_SUB)).append("';\r\n");
-        builder.append("OrtolangConfig.piwikHost='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_HOST)).append("';\r\n");
-        builder.append("OrtolangConfig.piwikSiteId='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID)).append("';\r\n");
-        builder.append("OrtolangConfig.keycloakConfigLocation ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("/config/client/auth").append("';\r\n");
-        builder.append("OrtolangConfig.staticSiteVersion ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.STATIC_SITE_VERSION)).append("';\r\n");
-        builder.append("OrtolangConfig.handlePrefix ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX)).append("';\r\n");
-        builder.append("OrtolangConfig.marketServerUrl ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL)).append("';\r\n");
-        builder.append("OrtolangConfig.cacheVersion ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.CACHE_VERSION)).append("';\r\n");
-        return Response.ok(builder.toString()).build();
+        if (clientConfig == null) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("var OrtolangConfig = {};\r\n");
+            builder.append("OrtolangConfig.apiServerUrlDefault='").append(getInstance().getProperty(Property.API_URL_SSL)).append("';\r\n");
+            builder.append("OrtolangConfig.apiServerUrlNoSSL='").append(getInstance().getProperty(Property.API_URL_NOSSL)).append("';\r\n");
+            builder.append("OrtolangConfig.apiContentPath='").append(getInstance().getProperty(Property.API_PATH_CONTENT)).append("';\r\n");
+            builder.append("OrtolangConfig.apiSubPath='").append(getInstance().getProperty(Property.API_PATH_SUB)).append("';\r\n");
+            builder.append("OrtolangConfig.piwikHost='").append(getInstance().getProperty(Property.PIWIK_HOST)).append("';\r\n");
+            builder.append("OrtolangConfig.piwikSiteId='").append(getInstance().getProperty(Property.PIWIK_SITE_ID)).append("';\r\n");
+            builder.append("OrtolangConfig.keycloakConfigLocation ='").append(getInstance().getProperty(Property.API_URL_SSL)).append("/config/client/auth").append("';\r\n");
+            builder.append("OrtolangConfig.staticSiteVersion ='").append(getInstance().getProperty(Property.STATIC_SITE_VERSION)).append("';\r\n");
+            builder.append("OrtolangConfig.handlePrefix ='").append(getInstance().getProperty(Property.HANDLE_PREFIX)).append("';\r\n");
+            builder.append("OrtolangConfig.marketServerUrl ='").append(getInstance().getProperty(Property.MARKET_SERVER_URL)).append("';\r\n");
+            builder.append("OrtolangConfig.cacheVersion ='").append(getInstance().getProperty(Property.CACHE_VERSION)).append("';\r\n");
+            clientConfig = builder.toString();
+        }
+        return Response.ok(clientConfig).build();
     }
 
     @GET
@@ -117,16 +133,19 @@ public class ConfigResource {
     @Produces({ MediaType.APPLICATION_JSON })
     @GZIP
     public Response getClientKeycloakConfig() throws TemplateEngineException {
-        StringBuilder builder = new StringBuilder();
-        builder.append("{\r\n");
-        builder.append("\t\"realm\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_REALM)).append("\",\r\n");
-        builder.append("\t\"realm-public-key\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_CLIENT_PUBKEY)).append("\",\r\n");
-        builder.append("\t\"auth-server-url\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_SERVER_URL)).append("\",\r\n");
-        builder.append("\t\"ssl-required\": \"external\",\r\n");
-        builder.append("\t\"resource\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_CLIENT)).append("\",\r\n");
-        builder.append("\t\"public-client\": true\r\n");
-        builder.append("}");
-        return Response.ok(builder.toString()).build();
+        if (clientAuthConfig == null) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("{\r\n");
+            builder.append("\t\"realm\": \"").append(getInstance().getProperty(Property.AUTH_REALM)).append("\",\r\n");
+            builder.append("\t\"realm-public-key\": \"").append(getInstance().getProperty(Property.AUTH_CLIENT_PUBKEY)).append("\",\r\n");
+            builder.append("\t\"auth-server-url\": \"").append(getInstance().getProperty(Property.AUTH_SERVER_URL)).append("\",\r\n");
+            builder.append("\t\"ssl-required\": \"external\",\r\n");
+            builder.append("\t\"resource\": \"").append(getInstance().getProperty(Property.AUTH_CLIENT)).append("\",\r\n");
+            builder.append("\t\"public-client\": true\r\n");
+            builder.append("}");
+            clientAuthConfig = builder.toString();
+        }
+        return Response.ok(clientAuthConfig).build();
     }
 
     @GET
@@ -134,18 +153,21 @@ public class ConfigResource {
     @Produces({ MediaType.TEXT_PLAIN })
     @GZIP
     public Response getAdminConfig() throws TemplateEngineException {
-        StringBuilder builder = new StringBuilder();
-        builder.append("var OrtolangConfig = {};\r\n");
-        builder.append("OrtolangConfig.apiServerUrlDefault='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("';\r\n");
-        builder.append("OrtolangConfig.apiServerUrlNoSSL='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_NOSSL)).append("';\r\n");
-        builder.append("OrtolangConfig.apiContentPath='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_CONTENT)).append("';\r\n");
-        builder.append("OrtolangConfig.apiSubPath='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_PATH_SUB)).append("';\r\n");
-        builder.append("OrtolangConfig.piwikHost='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_HOST)).append("';\r\n");
-        builder.append("OrtolangConfig.piwikSiteId='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.PIWIK_SITE_ID)).append("';\r\n");
-        builder.append("OrtolangConfig.keycloakConfigLocation ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.API_URL_SSL)).append("/config/admin/auth").append("';\r\n");
-        builder.append("OrtolangConfig.staticSiteVersion ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.STATIC_SITE_VERSION)).append("';\r\n");
-        builder.append("OrtolangConfig.marketServerUrl ='").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.MARKET_SERVER_URL)).append("';\r\n");
-        return Response.ok(builder.toString()).build();
+        if (adminConfig == null) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("var OrtolangConfig = {};\r\n");
+            builder.append("OrtolangConfig.apiServerUrlDefault='").append(getInstance().getProperty(Property.API_URL_SSL)).append("';\r\n");
+            builder.append("OrtolangConfig.apiServerUrlNoSSL='").append(getInstance().getProperty(Property.API_URL_NOSSL)).append("';\r\n");
+            builder.append("OrtolangConfig.apiContentPath='").append(getInstance().getProperty(Property.API_PATH_CONTENT)).append("';\r\n");
+            builder.append("OrtolangConfig.apiSubPath='").append(getInstance().getProperty(Property.API_PATH_SUB)).append("';\r\n");
+            builder.append("OrtolangConfig.piwikHost='").append(getInstance().getProperty(Property.PIWIK_HOST)).append("';\r\n");
+            builder.append("OrtolangConfig.piwikSiteId='").append(getInstance().getProperty(Property.PIWIK_SITE_ID)).append("';\r\n");
+            builder.append("OrtolangConfig.keycloakConfigLocation ='").append(getInstance().getProperty(Property.API_URL_SSL)).append("/config/admin/auth").append("';\r\n");
+            builder.append("OrtolangConfig.staticSiteVersion ='").append(getInstance().getProperty(Property.STATIC_SITE_VERSION)).append("';\r\n");
+            builder.append("OrtolangConfig.marketServerUrl ='").append(getInstance().getProperty(Property.MARKET_SERVER_URL)).append("';\r\n");
+            adminConfig = builder.toString();
+        }
+        return Response.ok(adminConfig).build();
     }
 
     @GET
@@ -153,16 +175,19 @@ public class ConfigResource {
     @Produces({ MediaType.APPLICATION_JSON })
     @GZIP
     public Response getAdminKeycloakConfig() throws TemplateEngineException {
-        StringBuilder builder = new StringBuilder();
-        builder.append("{\r\n");
-        builder.append("\t\"realm\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_REALM)).append("\",\r\n");
-        builder.append("\t\"realm-public-key\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_CLIENT_PUBKEY)).append("\",\r\n");
-        builder.append("\t\"auth-server-url\": \"").append(OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.AUTH_SERVER_URL)).append("\",\r\n");
-        builder.append("\t\"ssl-required\": \"external\",\r\n");
-        builder.append("\t\"resource\": \"admin\",\r\n");
-        builder.append("\t\"public-client\": true\r\n");
-        builder.append("}");
-        return Response.ok(builder.toString()).build();
+        if (adminAuthConfig == null) {
+            StringBuilder builder = new StringBuilder();
+            builder.append("{\r\n");
+            builder.append("\t\"realm\": \"").append(getInstance().getProperty(Property.AUTH_REALM)).append("\",\r\n");
+            builder.append("\t\"realm-public-key\": \"").append(getInstance().getProperty(Property.AUTH_CLIENT_PUBKEY)).append("\",\r\n");
+            builder.append("\t\"auth-server-url\": \"").append(getInstance().getProperty(Property.AUTH_SERVER_URL)).append("\",\r\n");
+            builder.append("\t\"ssl-required\": \"external\",\r\n");
+            builder.append("\t\"resource\": \"admin\",\r\n");
+            builder.append("\t\"public-client\": true\r\n");
+            builder.append("}");
+            adminAuthConfig = builder.toString();
+        }
+        return Response.ok(adminAuthConfig).build();
     }
 
 }
