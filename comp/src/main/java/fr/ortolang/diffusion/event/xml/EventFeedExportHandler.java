@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.event.export;
+package fr.ortolang.diffusion.event.xml;
 
 import java.util.Collections;
 import java.util.Set;
@@ -8,13 +8,13 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
-import fr.ortolang.diffusion.dump.XmlDumpAttributes;
-import fr.ortolang.diffusion.dump.XmlDumpHelper;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.event.entity.EventFeed;
 import fr.ortolang.diffusion.event.entity.EventFeedFilter;
+import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class EventFeedExportHandler implements OrtolangObjectExportHandler {
+public class EventFeedExportHandler implements OrtolangObjectXmlExportHandler {
         
         private EventFeed feed; 
         
@@ -23,16 +23,16 @@ public class EventFeedExportHandler implements OrtolangObjectExportHandler {
        }
         
         @Override
-        public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
+        public void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
             try {
                 XmlDumpAttributes attrs = new XmlDumpAttributes();
                 attrs.put("id", feed.getId());
                 attrs.put("name", feed.getName());
                 attrs.put("description", feed.getDescription());
-                XmlDumpHelper.startElement("event", "feed", attrs, writer);
+                XmlDumpHelper.startElement("feed", attrs, writer);
                 
                 attrs = new XmlDumpAttributes();
-                XmlDumpHelper.startElement("feed", "filters", attrs, writer);
+                XmlDumpHelper.startElement("feed-filters", attrs, writer);
                 for ( EventFeedFilter filter : feed.getFilters() ) {
                     attrs = new XmlDumpAttributes();
                     attrs.put("id", filter.getId());
@@ -40,7 +40,7 @@ public class EventFeedExportHandler implements OrtolangObjectExportHandler {
                     attrs.put("from-object", filter.getFromObjectRE());
                     attrs.put("object-type", filter.getObjectTypeRE());
                     attrs.put("throwed-by", filter.getThrowedByRE());
-                    XmlDumpHelper.outputEmptyElement("feed", "filter", attrs, writer);
+                    XmlDumpHelper.outputEmptyElement("feed-filter", attrs, writer);
                 }
                 XmlDumpHelper.endElement(writer);
                 

@@ -56,9 +56,13 @@ public interface StatisticsService extends OrtolangService {
 
     void probePiwik() throws StatisticsServiceException, OrtolangException;
 
+    void collectPiwikForRange(String range, long timestamp) throws StatisticsServiceException, OrtolangException;
+
     void storeWorkspaceStatisticValue(WorkspaceStatisticValue value) throws StatisticsServiceException;
 
-    WorkspaceStatisticValue readWorkspaceValue(String alias) throws StatisticNameNotFoundException;
+    WorkspaceStatisticValue readLatestWorkspaceValue(String alias) throws StatisticNameNotFoundException;
+
+    WorkspaceStatisticValue readWorkspaceValue(String alias, long timestamp) throws StatisticNameNotFoundException;
 
     List<WorkspaceStatisticValue> workspaceHistory(String alias, long from, long to) throws StatisticNameNotFoundException;
 

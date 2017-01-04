@@ -61,12 +61,12 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectImportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.form.entity.Form;
-import fr.ortolang.diffusion.form.export.FormExportHandler;
+import fr.ortolang.diffusion.form.xml.FormExportHandler;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -309,7 +309,7 @@ public class FormServiceBean implements FormService {
 	}
 	
     @Override
-    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+    public OrtolangObjectXmlExportHandler getObjectXmlExportHandler(String key) throws OrtolangException {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             if (!identifier.getService().equals(FormService.SERVICE_NAME)) {
@@ -332,7 +332,7 @@ public class FormServiceBean implements FormService {
     }
 
     @Override
-    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+    public OrtolangObjectXmlImportHandler getObjectXmlImportHandler(String type) throws OrtolangException {
         // TODO
         throw new OrtolangException("NOT IMPLEMENTED");
     }

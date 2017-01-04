@@ -86,6 +86,10 @@ public class CORSFilter implements Filter {
             ((HttpServletResponse)response).setHeader(ACCESS_CONTROL_ALLOW_HEADERS, AUTHORIZATION_PROPERTY + ", " + CONTENT_TYPE_PROPERTY + ", " + CONTENT_TRANSFER_ENCODING + ", Range, " + HttpHeaders.CACHE_CONTROL);
             ((HttpServletResponse)response).setHeader("Access-Control-Expose-Headers", "Accept-Ranges, Content-Encoding, Content-Length, Content-Range");
         }
-        chain.doFilter(request, response);
+        try {
+            chain.doFilter(request, response);
+        } catch ( IOException e ) {
+            LOGGER.log(Level.INFO, "IOException catched (probably a closed browser tab): " + e.getMessage());
+        }
 	}
 }

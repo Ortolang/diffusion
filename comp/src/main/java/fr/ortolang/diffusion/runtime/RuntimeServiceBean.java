@@ -42,7 +42,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -59,7 +66,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
-import fr.ortolang.diffusion.membership.entity.Profile;
 import org.activiti.engine.task.IdentityLink;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -68,14 +74,16 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectImportHandler;
 import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlImportHandler;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
+import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
+import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
 import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
@@ -90,6 +98,7 @@ import fr.ortolang.diffusion.runtime.entity.HumanTask;
 import fr.ortolang.diffusion.runtime.entity.Process;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.runtime.entity.ProcessType;
+import fr.ortolang.diffusion.runtime.xml.ProcessExportHandler;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
@@ -315,7 +324,6 @@ public class RuntimeServiceBean implements RuntimeService {
     }
 
     @Override
-    @RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Process> systemListUserProcesses(String username, State state) throws RuntimeServiceException {
         LOGGER.log(Level.INFO, "#SYSTEM# Listing processes for user [" + username + "] in " + ((state != null) ? "state=" + state : "all states"));
@@ -635,7 +643,6 @@ public class RuntimeServiceBean implements RuntimeService {
     }
 
     @Override
-    @RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<HumanTask> systemListUserCandidateTasks(String username) throws RuntimeServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "#SYSTEM# Listing candidate tasks");
@@ -777,13 +784,30 @@ public class RuntimeServiceBean implements RuntimeService {
     }
 
     @Override
-    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
-        // TODO
-        throw new OrtolangException("NOT IMPLEMENTED");
+    public OrtolangObjectXmlExportHandler getObjectXmlExportHandler(String key) throws OrtolangException {
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(ReferentialService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+
+            switch (identifier.getType()) {
+            case Process.OBJECT_TYPE:
+                Process process = em.find(Process.class, identifier.getId());
+                if (process == null) {
+                    throw new OrtolangException("unable to load process with id [" + identifier.getId() + "] from storage");
+                }
+                return new ProcessExportHandler(process);
+            }
+
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to build object export handler " + key, e);
+        }
+        throw new OrtolangException("unable to build object export handler for key " + key);
     }
 
     @Override
-    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+    public OrtolangObjectXmlImportHandler getObjectXmlImportHandler(String type) throws OrtolangException {
         // TODO
         throw new OrtolangException("NOT IMPLEMENTED");
     }

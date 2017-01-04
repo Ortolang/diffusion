@@ -85,7 +85,7 @@ import fr.ortolang.diffusion.store.binary.hash.SHA1FilterInputStreamFactory;
  * Local FileSystem based implementation of the BinaryStoreService.<br>
  * <br>
  * This implementation store all contents in the provided base folder in the local file system using a SHA1 hash generator.
- * 
+ *
  * @author Jerome Blanchard (jayblanc@gmail.com)
  * @version 1.0
  */
@@ -227,9 +227,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
             if (Files.size(path) < 50000000) {
                 LOGGER.log(Level.FINEST, "file size is not too large, trying to detect also containers");
                 try (TikaInputStream tis = TikaInputStream.get(is)) {
-                	type = tika.detect(tis, filename);
-                } catch(Exception e) {
-                	throw new BinaryStoreServiceException(e);
+                    type = tika.detect(tis, filename);
                 }
             } else {
                 LOGGER.log(Level.FINEST, "file size is TOO large, does not detect types inside containers");
@@ -419,7 +417,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
                 return Files.list(vpath).map(this::pathToContent).collect(Collectors.toList());
             } catch (IOException e) {
                 throw new BinaryStoreServiceException(e);
-            }    
+            }
         }
     }
 

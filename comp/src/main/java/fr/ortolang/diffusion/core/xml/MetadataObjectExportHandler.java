@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.core.export;
+package fr.ortolang.diffusion.core.xml;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -8,12 +8,12 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
-import fr.ortolang.diffusion.dump.XmlDumpAttributes;
-import fr.ortolang.diffusion.dump.XmlDumpHelper;
+import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class MetadataObjectExportHandler implements OrtolangObjectExportHandler {
+public class MetadataObjectExportHandler implements OrtolangObjectXmlExportHandler {
     
     private MetadataObject metadata; 
     
@@ -22,7 +22,7 @@ public class MetadataObjectExportHandler implements OrtolangObjectExportHandler 
    }
     
     @Override
-    public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
+    public void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
         try {
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("id", metadata.getId());
@@ -32,7 +32,7 @@ public class MetadataObjectExportHandler implements OrtolangObjectExportHandler 
             attrs.put("stream", metadata.getStream());
             attrs.put("content-type", metadata.getContentType());
             attrs.put("size", Long.toString(metadata.getSize()));
-            XmlDumpHelper.outputEmptyElement("collection", "metadata", attrs, writer);
+            XmlDumpHelper.outputEmptyElement("metadata", attrs, writer);
         } catch ( XMLStreamException e ) {
             throw new OrtolangException("error during dumping collection", e);
         }

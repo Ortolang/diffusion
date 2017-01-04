@@ -38,8 +38,6 @@ package fr.ortolang.diffusion.subscription;
 
 import fr.ortolang.diffusion.OrtolangService;
 import fr.ortolang.diffusion.event.entity.Event;
-import fr.ortolang.diffusion.runtime.RuntimeServiceException;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import org.atmosphere.cpr.AtmosphereResource;
 
 import java.util.List;
@@ -55,6 +53,8 @@ public interface SubscriptionService extends OrtolangService {
     void registerBroadcaster(String username, AtmosphereResource atmosphereResource) throws SubscriptionServiceException;
 
     void processEvent(Event event) throws SubscriptionServiceException;
+
+    void broadcastMessage(List<String> users, String title, String body) throws SubscriptionServiceException;
 
     void addAdminFilters() throws SubscriptionServiceException;
 

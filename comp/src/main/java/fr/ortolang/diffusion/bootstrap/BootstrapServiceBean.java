@@ -106,22 +106,17 @@ public class BootstrapServiceBean implements BootstrapService {
     public void init() {
         try {
             String version = getClass().getPackage().getImplementationVersion();
-            if (version == null) {
-                LOGGER.log(Level.WARNING, "Cannot read Implementation Version");
-            }
-            LOGGER.log(Level.INFO, "\n\n"
-                    + "      ____  ____  __________  __    ___    _   ________\n"
+            LOGGER.log(Level.INFO, "\n\n" 
+                    + "      ____  ____  __________  __    ___    _   ________\n" 
                     + "     / __ \\/ __ \\/_  __/ __ \\/ /   /   |  / | / / ____/\n"
-                    + "    / / / / /_/ / / / / / / / /   / /| | /  |/ / / __  \n"
+                    + "    / / / / /_/ / / / / / / / /   / /| | /  |/ / / __  \n" 
                     + "   / /_/ / _, _/ / / / /_/ / /___/ ___ |/ /|  / /_/ /  \n"
                     + "   \\____/_/ |_| /_/  \\____/_____/_/  |_/_/ |_/\\____/   \n"
-                    + (version != null && version.contains("SNAPSHOT") ?
-                    "\n                                    " :
-                    "\n                                             ") + version + "\n");
+                    + (version.contains("SNAPSHOT") ? "\n                                    " : "\n                                             ") + version + "\n");
             OrtolangConfig.getInstance();
             bootstrap();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "error during bootstrap", e);
+            LOGGER.log(Level.SEVERE, "error during bootstrap");
         }
     }
 
@@ -138,11 +133,6 @@ public class BootstrapServiceBean implements BootstrapService {
             if (!registry.exists(MembershipService.SUPERUSER_IDENTIFIER)) {
                 LOGGER.log(Level.FINE, "creating root profile");
                 membership.createProfile(MembershipService.SUPERUSER_IDENTIFIER, "Super", "User", "root@ortolang.org", ProfileStatus.ACTIVE);
-                // TODO put ssh key in config
-                membership
-                        .addProfilePublicKey(
-                                MembershipService.SUPERUSER_IDENTIFIER,
-                                "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDqv8kWdXIgWbFJfOiu9fQYiazwfnpZogatgo3278PIAQ4eaj6p+sjQMQX0hew+rHXCqvi6FaG6Lql7fkJv/NJpSyhyCKYNCxmYKwUvaViOuRLDmnpziEX39WDmiWBE0Q+DNuKIZMx3yZNX/BeBp0FfooKkCnZWEDo4pzcYVp2RlwZuEDZQcQ6KP2S9+z2WQPmsE9tcyPNL12hp8tiG8J/XsPXxnn1mgJxyiwQmEYDxXZTAazeewqftz4GU3Xc9qWOa4GXK/2l0GB/XVuFLoyrXve+hnsiFpeIslJuGl0+AAX+lCULjDcA72r4aT30Z4HV+wxiQxk/j+2CtCw/vfeit achile-laptop");
             }
 
             if (!registry.exists(MembershipService.UNAUTHENTIFIED_IDENTIFIER)) {
@@ -252,10 +242,10 @@ public class BootstrapServiceBean implements BootstrapService {
             InputStream is = getClass().getClassLoader().getResourceAsStream("forms/" + FormService.IMPORT_ZIP_FORM + ".json");
             String json = IOUtils.toString(is, "UTF-8");
             if (!registry.exists(FormService.IMPORT_ZIP_FORM)) {
-                LOGGER.log(Level.FINE, "create form : " + FormService.IMPORT_ZIP_FORM);
+                LOGGER.log(Level.FINE, "create form : " + FormService.IMPORT_ZIP_FORM);                
                 form.createForm(FormService.IMPORT_ZIP_FORM, "Import Zip Process Start Form", json);
             } else {
-                LOGGER.log(Level.FINE, "update form : " + FormService.IMPORT_ZIP_FORM);
+                LOGGER.log(Level.FINE, "update form : " + FormService.IMPORT_ZIP_FORM);                
                 form.updateForm(FormService.IMPORT_ZIP_FORM, "Import Zip Process Start Form", json);
             }
             is.close();
@@ -266,7 +256,7 @@ public class BootstrapServiceBean implements BootstrapService {
                 LOGGER.log(Level.FINE, "create form : " + FormService.REVIEW_SNAPSHOT_FORM);
                 form.createForm(FormService.REVIEW_SNAPSHOT_FORM, "Workspace publication's review form", json);
             } else {
-                LOGGER.log(Level.FINE, "update form : " + FormService.REVIEW_SNAPSHOT_FORM);
+                LOGGER.log(Level.FINE, "update form : " + FormService.REVIEW_SNAPSHOT_FORM);                
                 form.updateForm(FormService.REVIEW_SNAPSHOT_FORM, "Workspace publication's review form", json);
             }
             is.close();
@@ -277,7 +267,7 @@ public class BootstrapServiceBean implements BootstrapService {
                 LOGGER.log(Level.FINE, "create form : " + FormService.MODERATE_SNAPSHOT_FORM);
                 form.createForm(FormService.MODERATE_SNAPSHOT_FORM, "Workspace publication's moderation form", json);
             } else {
-                LOGGER.log(Level.FINE, "update form : " + FormService.MODERATE_SNAPSHOT_FORM);
+                LOGGER.log(Level.FINE, "update form : " + FormService.MODERATE_SNAPSHOT_FORM);                
                 form.updateForm(FormService.MODERATE_SNAPSHOT_FORM, "Workspace publication's moderation form", json);
             }
             is.close();
@@ -288,7 +278,7 @@ public class BootstrapServiceBean implements BootstrapService {
                 LOGGER.log(Level.FINE, "create form : " + FormService.PUBLISH_SNAPSHOT_FORM);
                 form.createForm(FormService.PUBLISH_SNAPSHOT_FORM, "Workspace publication's form", json);
             }else {
-                LOGGER.log(Level.FINE, "update form : " + FormService.MODERATE_SNAPSHOT_FORM);
+                LOGGER.log(Level.FINE, "update form : " + FormService.MODERATE_SNAPSHOT_FORM);                
                 form.updateForm(FormService.PUBLISH_SNAPSHOT_FORM, "Workspace publication's form", json);
             }
             is.close();
@@ -299,7 +289,7 @@ public class BootstrapServiceBean implements BootstrapService {
                 LOGGER.log(Level.FINE, "create form : " + FormService.ITEM_FORM);
                 form.createForm(FormService.ITEM_FORM, "Schema Form for an ORTOLANG item", json);
             }else {
-                LOGGER.log(Level.FINE, "update form : " + FormService.ITEM_FORM);
+                LOGGER.log(Level.FINE, "update form : " + FormService.ITEM_FORM);                
                 form.updateForm(FormService.ITEM_FORM, "Schema Form for an ORTOLANG item", json);
             }
             is.close();
@@ -307,8 +297,8 @@ public class BootstrapServiceBean implements BootstrapService {
             LOGGER.log(Level.FINE, "import metadataformat schemas");
             InputStream schemaItemInputStream = getClass().getClassLoader().getResourceAsStream("schema/ortolang-item-schema-0.16-with-parts.json");
             String schemaItemHash = core.put(schemaItemInputStream);
-            core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site. Nouvelle fonctionnalité : les sous-parties.",
-                    schemaItemHash, "ortolang-item-form", true, true);
+            core.createMetadataFormat(MetadataFormat.ITEM, "Les métadonnées de présentation permettent de paramétrer l\'affichage de la ressource dans la partie consultation du site. Nouvelle fonctionnalité : les sous-parties.", 
+            		schemaItemHash, "ortolang-item-form", true, true);
 
             InputStream schemaInputStream2 = getClass().getClassLoader().getResourceAsStream("schema/ortolang-acl-schema.json");
             String schemaHash2 = core.put(schemaInputStream2);
@@ -369,21 +359,22 @@ public class BootstrapServiceBean implements BootstrapService {
 
             loadMetadataFormat(MetadataFormat.OAI_DC, "Schema for Dublin Core elements in JSON format", "", true, true);
             loadMetadataFormat(MetadataFormat.OLAC, "Schema for OLAC elements in JSON format", "", true, true);
-
+            
             LOGGER.log(Level.INFO, "reimport process types");
             runtime.importProcessTypes();
 
         } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "error during bootstrap", e);
             throw new BootstrapServiceException("error during bootstrap", e);
         }
 
     }
-
-    private void loadMetadataFormat(String mf, String desc, String form, boolean validationNeed, boolean indexable) throws CoreServiceException, DataCollisionException {
-        InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/" + mf + ".json");
+    
+    protected void loadMetadataFormat(String mf, String desc, String form, boolean validationNeed, boolean indexable) throws CoreServiceException, DataCollisionException {
+    	InputStream schemaInputStream = getClass().getClassLoader().getResourceAsStream("schema/" + mf + ".json");
         String schemaHash = core.put(schemaInputStream);
-        core.createMetadataFormat(mf, desc,
-                schemaHash, form, validationNeed, indexable);
+        core.createMetadataFormat(mf, desc, 
+        		schemaHash, form, validationNeed, indexable);
     }
 
     @Override

@@ -66,12 +66,25 @@ import fr.ortolang.diffusion.indexing.*;
 import fr.ortolang.diffusion.referential.indexing.ReferentialEntityIndexableContent;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
+import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.OrtolangObjectState;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlImportHandler;
+import fr.ortolang.diffusion.OrtolangSearchResult;
+import fr.ortolang.diffusion.indexing.IndexingService;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
+import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntity;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
+import fr.ortolang.diffusion.referential.xml.ReferentialEntityExportHandler;
 import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
 import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
@@ -260,9 +273,7 @@ public class ReferentialServiceBean implements ReferentialService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public ReferentialEntity createEntity(String name, ReferentialEntityType type, String content)
-            throws ReferentialServiceException, KeyAlreadyExistsException,
-            AccessDeniedException {
+    public ReferentialEntity createEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyAlreadyExistsException, AccessDeniedException {
         LOGGER.log(Level.FINE, "creating ReferentielEntity for identifier name [" + name + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -297,8 +308,7 @@ public class ReferentialServiceBean implements ReferentialService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public ReferentialEntity readEntity(String name)
-            throws ReferentialServiceException, KeyNotFoundException {
+    public ReferentialEntity readEntity(String name) throws ReferentialServiceException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "reading ReferentialEntity for name [" + name + "]");
         try {
 
@@ -319,17 +329,13 @@ public class ReferentialServiceBean implements ReferentialService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateEntity(String name, ReferentialEntityType type, String content)
-            throws ReferentialServiceException, KeyNotFoundException,
-            AccessDeniedException {
+    public void updateEntity(String name, ReferentialEntityType type, String content) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException {
         updateEntity(name, type, content, null);
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void updateEntity(String name, ReferentialEntityType type, String content, Long boost)
-            throws ReferentialServiceException, KeyNotFoundException,
-            AccessDeniedException {
+    public void updateEntity(String name, ReferentialEntityType type, String content, Long boost) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException {
         LOGGER.log(Level.FINE, "updating ReferentialEntity for name [" + name + "]");
         try {
             String caller = membership.getProfileKeyForConnectedIdentifier();
@@ -348,8 +354,9 @@ public class ReferentialServiceBean implements ReferentialService {
             }
             refEntity.setType(type);
             refEntity.setContent(content);
-            if(boost!=null)
+            if (boost != null) {
                 refEntity.setBoost(boost);
+            }
 
             registry.update(key);
             em.merge(refEntity);
@@ -393,22 +400,24 @@ public class ReferentialServiceBean implements ReferentialService {
 
     /**
      * Finds entities by looking into the index-store.
-     * @param type the type of the entities
-     * @param term the term which you looking for
-     * @param lang the language id of the text looking
+     *
+     * @param type
+     *            the type of the entities
+     * @param term
+     *            the term which you looking for
+     * @param lang
+     *            the language id of the text looking
      */
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<ReferentialEntity> findEntitiesByTerm(ReferentialEntityType type, String term, String lang) throws ReferentialServiceException {
-        String query = new StringBuilder().append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX).append(ReferentialEntity.CONTENT_TEXT)
-                .append(lang.toUpperCase()).append(":").append(term).append("* ")
-                .append("AND ").append(IndexStoreDocumentBuilder.SERVICE_FIELD).append(":").append(ReferentialService.SERVICE_NAME).append(" ")
-                .append("AND ").append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX)
-                .append(ReferentialEntity.CONTENT_TYPE).append(":").append(type.toString().toLowerCase()).toString();
+        String query = new StringBuilder().append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX).append(ReferentialEntity.CONTENT_TEXT).append(lang.toUpperCase()).append(":").append(term)
+                .append("* ").append("AND ").append(IndexStoreDocumentBuilder.SERVICE_FIELD).append(":").append(ReferentialService.SERVICE_NAME).append(" ").append("AND ")
+                .append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX).append(ReferentialEntity.CONTENT_TYPE).append(":").append(type.toString().toLowerCase()).toString();
 
         List<ReferentialEntity> entities = new ArrayList<ReferentialEntity>();
         try {
-            for ( OrtolangSearchResult result : indexStore.search(query) ) {
+            for (OrtolangSearchResult result : indexStore.search(query)) {
                 entities.add(readEntity(result.getKey().replaceFirst(SERVICE_NAME + ":", "")));
             }
         } catch (IndexStoreServiceException | KeyNotFoundException e) {
@@ -427,11 +436,9 @@ public class ReferentialServiceBean implements ReferentialService {
         }
     }
 
-
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public IndexablePlainTextContent getIndexablePlainTextContent(String key)
-            throws OrtolangException, NotIndexableContentException {
+    public IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             if (!identifier.getService().equals(ReferentialService.SERVICE_NAME)) {
@@ -447,7 +454,7 @@ public class ReferentialServiceBean implements ReferentialService {
                 content.setName(key.replaceFirst(SERVICE_NAME + ":", ""));
                 content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TYPE, referentielEntity.getType().toString()));
 
-                if(referentielEntity.getType().equals(ReferentialEntityType.LANGUAGE)) {
+                if (referentielEntity.getType().equals(ReferentialEntityType.LANGUAGE)) {
                     StringReader reader = new StringReader(referentielEntity.getContent());
                     JsonReader jsonReader = Json.createReader(reader);
                     try {
@@ -455,21 +462,21 @@ public class ReferentialServiceBean implements ReferentialService {
 
                         content.setBoost(referentielEntity.getBoost());
                         content.addContentPart(jsonObj.getString("id"));
-                        if(jsonObj.containsKey("labels")) {
-                            for(JsonObject lang : jsonObj.getJsonArray("labels").getValuesAs(JsonObject.class)) {
+                        if (jsonObj.containsKey("labels")) {
+                            for (JsonObject lang : jsonObj.getJsonArray("labels").getValuesAs(JsonObject.class)) {
                                 content.addContentPart(lang.getString("value"));
-                                content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT+lang.getString("lang"), lang.getString("value")));
+                                content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT + lang.getString("lang"), lang.getString("value")));
                             }
                         }
-                    } catch(IllegalStateException | NullPointerException | ClassCastException e) {
+                    } catch (IllegalStateException | NullPointerException | ClassCastException e) {
                         LOGGER.log(Level.WARNING, "No property requested in json object", e);
-                    } catch(JsonException e) {
+                    } catch (JsonException e) {
                         LOGGER.log(Level.SEVERE, "No property requested in json object", e);
                     } finally {
                         jsonReader.close();
                         reader.close();
                     }
-                } else if(referentielEntity.getType().equals(ReferentialEntityType.PERSON)) {
+                } else if (referentielEntity.getType().equals(ReferentialEntityType.PERSON)) {
                     StringReader reader = new StringReader(referentielEntity.getContent());
                     JsonReader jsonReader = Json.createReader(reader);
                     try {
@@ -478,16 +485,16 @@ public class ReferentialServiceBean implements ReferentialService {
                         content.setBoost(referentielEntity.getBoost());
                         content.addContentPart(jsonObj.getString("id"));
                         content.addContentPart(jsonObj.getString("fullname"));
-                        content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT+"FR", jsonObj.getString("fullname")));
-                    } catch(IllegalStateException | NullPointerException | ClassCastException e) {
+                        content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT + "FR", jsonObj.getString("fullname")));
+                    } catch (IllegalStateException | NullPointerException | ClassCastException e) {
                         LOGGER.log(Level.WARNING, "No property requested in json object", e);
-                    } catch(JsonException e) {
+                    } catch (JsonException e) {
                         LOGGER.log(Level.SEVERE, "No property requested in json object", e);
                     } finally {
                         jsonReader.close();
                         reader.close();
                     }
-                } else if(referentielEntity.getType().equals(ReferentialEntityType.ORGANIZATION)) {
+                } else if (referentielEntity.getType().equals(ReferentialEntityType.ORGANIZATION)) {
                     StringReader reader = new StringReader(referentielEntity.getContent());
                     JsonReader jsonReader = Json.createReader(reader);
                     try {
@@ -496,10 +503,10 @@ public class ReferentialServiceBean implements ReferentialService {
                         content.setBoost(referentielEntity.getBoost());
                         content.addContentPart(jsonObj.getString("id"));
                         content.addContentPart(jsonObj.getString("fullname"));
-                        content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT+"FR", jsonObj.getString("fullname")));
-                    } catch(IllegalStateException | NullPointerException | ClassCastException e) {
+                        content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT + "FR", jsonObj.getString("fullname")));
+                    } catch (IllegalStateException | NullPointerException | ClassCastException e) {
                         LOGGER.log(Level.WARNING, "No property requested in json object", e);
-                    } catch(JsonException e) {
+                    } catch (JsonException e) {
                         LOGGER.log(Level.SEVERE, "No property requested in json object", e);
                     } finally {
                         jsonReader.close();
@@ -515,8 +522,7 @@ public class ReferentialServiceBean implements ReferentialService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public IndexableJsonContent getIndexableJsonContent(String key)
-            throws OrtolangException, NotIndexableContentException {
+    public IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException, NotIndexableContentException {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             if (!identifier.getService().equals(ReferentialService.SERVICE_NAME)) {
@@ -556,17 +562,32 @@ public class ReferentialServiceBean implements ReferentialService {
     }
 
     @Override
-    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
-        // TODO
-        throw new OrtolangException("NOT IMPLEMENTED");
+    public OrtolangObjectXmlExportHandler getObjectXmlExportHandler(String key) throws OrtolangException {
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            if (!identifier.getService().equals(ReferentialService.SERVICE_NAME)) {
+                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+            }
+
+            switch (identifier.getType()) {
+            case ReferentialEntity.OBJECT_TYPE:
+                ReferentialEntity referentielEntity = em.find(ReferentialEntity.class, identifier.getId());
+                if (referentielEntity == null) {
+                    throw new OrtolangException("unable to load ReferentialEntity with id [" + identifier.getId() + "] from storage");
+                }
+                return new ReferentialEntityExportHandler(referentielEntity);
+            }
+
+        } catch (RegistryServiceException | KeyNotFoundException e) {
+            throw new OrtolangException("unable to build object export handler " + key, e);
+        }
+        throw new OrtolangException("unable to build object export handler for key " + key);
     }
 
     @Override
-    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+    public OrtolangObjectXmlImportHandler getObjectXmlImportHandler(String type) throws OrtolangException {
         // TODO
         throw new OrtolangException("NOT IMPLEMENTED");
     }
-
-
 
 }

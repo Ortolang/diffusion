@@ -37,52 +37,23 @@ package fr.ortolang.diffusion.statistics;
  */
 
 import fr.ortolang.diffusion.OrtolangException;
-import org.apache.http.HttpResponse;
-import org.piwik.java.tracking.PiwikRequest;
-import org.piwik.java.tracking.PiwikTracker;
 
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-class PiwikLatestCollector extends PiwikCollector {
+class PiwikLatestCollector extends PiwikGenericCollector {
 
-    private static final Logger LOGGER = Logger.getLogger(PiwikLatestCollector.class.getName());
 
     PiwikLatestCollector(List<String> workspaces) throws OrtolangException {
         super(workspaces);
-    }
-
-    @Override
-    public void run() {
-        PiwikTracker tracker = new PiwikTracker(host + "index.php");
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DATE, -1);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM");
-        String range = dateFormat.format(calendar.getTime()) + "-01,yesterday";
+        range = dateFormat.format(calendar.getTime()) + "-01,yesterday";
         SimpleDateFormat monthFormat = new SimpleDateFormat("yyyyMM");
-        long timestamp = Long.parseLong(monthFormat.format(new Date()));
-
-        for (String alias : workspaces) {
-            try {
-                LOGGER.log(Level.INFO, "Collect stats for workspace with alias [" + alias + "] (range: " + range + ")");
-                // Views
-                PiwikRequest request = makePiwikRequestForViews(siteId, authToken, alias, range);
-                HttpResponse viewsResponse = tracker.sendRequest(request);
-                // Downloads
-                request = makePiwikRequestForDownloads(siteId, authToken, alias, range);
-                HttpResponse downloadsResponse = tracker.sendRequest(request);
-                // Single Downloads
-                request = makePiwikRequestForSingleDownloads(siteId, authToken, alias, range);
-                HttpResponse singleDownloadsResponse = tracker.sendRequest(request);
-                compileResults(alias, timestamp, viewsResponse, downloadsResponse, singleDownloadsResponse);
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, "Could not probe Piwik stats for workspace with alias ["  + alias + "]: " + e.getMessage(), e);
-            }
-        }
+        timestamp = Long.parseLong(monthFormat.format(new Date()));
     }
+
 }

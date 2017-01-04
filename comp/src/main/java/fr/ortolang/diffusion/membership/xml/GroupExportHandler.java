@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.membership.export;
+package fr.ortolang.diffusion.membership.xml;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,12 +9,12 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
-import fr.ortolang.diffusion.dump.XmlDumpAttributes;
-import fr.ortolang.diffusion.dump.XmlDumpHelper;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.membership.entity.Group;
+import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class GroupExportHandler implements OrtolangObjectExportHandler {
+public class GroupExportHandler implements OrtolangObjectXmlExportHandler {
     
     private Group group; 
     
@@ -23,20 +23,20 @@ public class GroupExportHandler implements OrtolangObjectExportHandler {
    }
     
     @Override
-    public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
+    public void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
         try {
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("id", group.getId());
             attrs.put("name", group.getName());
             attrs.put("description", group.getDescription());
-            XmlDumpHelper.startElement("membership", "group", attrs, writer);
+            XmlDumpHelper.startElement("group", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("group", "members", attrs, writer);
+            XmlDumpHelper.startElement("group-members", attrs, writer);
             for ( String member : group.getMembers() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("key", member);
-                XmlDumpHelper.outputEmptyElement("group", "member", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("group-member", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             

@@ -54,6 +54,7 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.notification.NotificationService;
+import fr.ortolang.diffusion.oai.OaiService;
 import fr.ortolang.diffusion.publication.PublicationService;
 import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.registry.RegistryService;
@@ -132,6 +133,7 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     protected NotificationService notification;
     protected IndexingService indexing;
     private ExtractionServiceWorker extractionServiceWorker;
+    protected OaiService oaiService;
     protected ReferentialService referential;
 
     public Session getMailSession() throws RuntimeEngineTaskException {
@@ -272,6 +274,17 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
                 extractionServiceWorker = (ExtractionServiceWorker) OrtolangServiceLocator.lookup(ExtractionServiceWorker.WORKER_NAME, ExtractionServiceWorker.class);
             }
             return extractionServiceWorker;
+        } catch (Exception e) {
+            throw new RuntimeEngineTaskException(e);
+        }
+    }
+
+    protected OaiService getOaiService() throws RuntimeEngineTaskException {
+        try {
+            if (oaiService == null) {
+            	oaiService = (OaiService) OrtolangServiceLocator.lookup(OaiService.SERVICE_NAME, OaiService.class);
+            }
+            return oaiService;
         } catch (Exception e) {
             throw new RuntimeEngineTaskException(e);
         }

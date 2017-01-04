@@ -656,7 +656,29 @@ public class RegistryServiceBean implements RegistryService {
         }
         throw new KeyNotFoundException("no entry found for key [" + key + "]");
     }
-
+    
+    @Override
+    @RolesAllowed({"admin", "system"})
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void systemRestoreEntry(RegistryEntry entry, boolean override, boolean force) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# restore entry for key [" + entry.getKey() + "]");
+        RegistryEntry existing = em.find(RegistryEntry.class, entry.getKey()); 
+        if ( existing != null ) {
+            if ( entry.equals(existing) ) {
+                LOGGER.log(Level.FINE, "entry already exists and content is the same, nothing to do");
+            } else {
+                if ( override && ( existing.compareTo(entry) < 0 || force ) ) {
+                    LOGGER.log(Level.WARNING, "overriding entry for key: " + entry.getKey());
+                    em.merge(entry);
+                } else {
+                    throw new RegistryServiceException("error restoring entry, entry already exists for key: " + entry.getKey());
+                }
+            }
+        } else {
+            em.persist(entry);
+        }
+    }
+    
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     private RegistryEntry findEntryByKey(String key) throws KeyNotFoundException {
         RegistryEntry entry = em.find(RegistryEntry.class, key);

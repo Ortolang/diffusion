@@ -55,6 +55,10 @@ public class OrtolangConfig {
     private Path orientdbConfig;
 
     private OrtolangConfig() throws OrtolangException, IOException {
+        loadConfig();
+    }
+
+    private void loadConfig() throws IOException, OrtolangException {
         if (System.getProperty("ortolang.home") != null && System.getProperty("ortolang.home").length() > 0) {
             home = Paths.get(System.getProperty("ortolang.home"));
         } else if (System.getenv("ORTOLANG_HOME") != null && System.getenv("ORTOLANG_HOME").length() > 0) {
@@ -114,6 +118,12 @@ public class OrtolangConfig {
     public String getVersion() {
         Package aPackage = OrtolangConfig.class.getPackage();
         return aPackage.getImplementationVersion();
+    }
+
+    public void refresh() throws IOException, OrtolangException {
+        LOGGER.log(Level.INFO, "Refreshing Ortolang Config");
+        loadConfig();
+        LOGGER.log(Level.INFO, "Successfully refreshed Ortolang Config");
     }
 
     public enum Property {

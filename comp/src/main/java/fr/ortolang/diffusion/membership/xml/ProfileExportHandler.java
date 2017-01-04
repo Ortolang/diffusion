@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.membership.export;
+package fr.ortolang.diffusion.membership.xml;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -10,14 +10,14 @@ import javax.xml.stream.XMLStreamWriter;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangObjectExportHandler;
-import fr.ortolang.diffusion.dump.XmlDumpAttributes;
-import fr.ortolang.diffusion.dump.XmlDumpHelper;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.membership.entity.ProfileData;
 import fr.ortolang.diffusion.membership.entity.ProfileKey;
+import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpHelper;
 
-public class ProfileExportHandler implements OrtolangObjectExportHandler {
+public class ProfileExportHandler implements OrtolangObjectXmlExportHandler {
     
     private Profile profile; 
     
@@ -26,7 +26,7 @@ public class ProfileExportHandler implements OrtolangObjectExportHandler {
    }
     
     @Override
-    public void dumpObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
+    public void exportObject(XMLStreamWriter writer, OrtolangImportExportLogger logger) throws OrtolangException {
         try {
             XmlDumpAttributes attrs = new XmlDumpAttributes();
             attrs.put("id", profile.getId());
@@ -42,29 +42,29 @@ public class ProfileExportHandler implements OrtolangObjectExportHandler {
             attrs.put("status", profile.getStatus().name());
             attrs.put("referential-id", profile.getReferentialId());
             attrs.put("friends", profile.getFriends());
-            XmlDumpHelper.startElement("membership", "profile", attrs, writer);
+            XmlDumpHelper.startElement("profile", attrs, writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("profile", "groups", attrs, writer);
+            XmlDumpHelper.startElement("profile-groups", attrs, writer);
             for ( String group : profile.getGroups() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("key", group);
-                XmlDumpHelper.outputEmptyElement("profile", "group", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("profile-group", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("profile", "keys", attrs, writer);
+            XmlDumpHelper.startElement("profile-keys", attrs, writer);
             for ( ProfileKey key : profile.getKeys() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("key", key.getKey());
                 attrs.put("password", key.getPassword());
-                XmlDumpHelper.outputEmptyElement("profile", "key", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("profile-key", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             
             attrs = new XmlDumpAttributes();
-            XmlDumpHelper.startElement("profile", "infos", attrs, writer);
+            XmlDumpHelper.startElement("profile-infos", attrs, writer);
             for ( Entry<String, ProfileData> info : profile.getInfos().entrySet() ) {
                 attrs = new XmlDumpAttributes();
                 attrs.put("key", info.getKey());
@@ -72,7 +72,7 @@ public class ProfileExportHandler implements OrtolangObjectExportHandler {
                 attrs.put("source", info.getValue().getSource());
                 attrs.put("value", info.getValue().getValue());
                 attrs.put("visibility", info.getValue().getVisibility().name());
-                XmlDumpHelper.outputEmptyElement("profile", "info", attrs, writer);
+                XmlDumpHelper.outputEmptyElement("profile-info", attrs, writer);
             }
             XmlDumpHelper.endElement(writer);
             

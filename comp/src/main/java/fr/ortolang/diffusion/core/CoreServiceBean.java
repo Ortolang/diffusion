@@ -36,6 +36,51 @@ package fr.ortolang.diffusion.core;
  * #L%
  */
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+
+import org.apache.commons.io.IOUtils;
+import org.javers.core.Javers;
+import org.javers.core.JaversBuilder;
+import org.javers.core.diff.Change;
+import org.javers.core.diff.Diff;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jackson.JsonLoader;
@@ -45,6 +90,14 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectXmlImportHandler;
+import fr.ortolang.diffusion.OrtolangObjectPid;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.OrtolangObjectState.Status;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.*;
@@ -52,6 +105,11 @@ import fr.ortolang.diffusion.core.export.*;
 import fr.ortolang.diffusion.core.indexing.*;
 import fr.ortolang.diffusion.core.wrapper.CollectionWrapper;
 import fr.ortolang.diffusion.core.wrapper.OrtolangObjectWrapper;
+import fr.ortolang.diffusion.core.xml.CollectionExportHandler;
+import fr.ortolang.diffusion.core.xml.DataObjectExportHandler;
+import fr.ortolang.diffusion.core.xml.LinkExportHandler;
+import fr.ortolang.diffusion.core.xml.MetadataObjectExportHandler;
+import fr.ortolang.diffusion.core.xml.WorkspaceExportHandler;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.extraction.ExtractionService;
 import fr.ortolang.diffusion.extraction.ExtractionServiceException;
@@ -354,7 +412,6 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    @RolesAllowed("system")
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<String> systemFindWorkspacesForProfile(String profile) throws CoreServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# finding workspaces for profile");
@@ -1490,6 +1547,17 @@ public class CoreServiceBean implements CoreService {
                 throw e;
             }
         }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public Group addMember(String wskey, String member) throws CoreServiceException, AccessDeniedException, KeyNotFoundException, MembershipServiceException, NotificationServiceException {
+        String caller = membership.getProfileKeyForConnectedIdentifier();
+        Workspace workspace = readWorkspace(wskey);
+        Group group = membership.addMemberInGroup(workspace.getMembers(), member);
+        ArgumentsBuilder argsBuilder = new ArgumentsBuilder().addArgument("ws-alias", workspace.getAlias()).addArgument("member", member);
+        notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "notify-added-member"), argsBuilder.build());
+        return group;
     }
 
     @Override
@@ -3962,7 +4030,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+    public OrtolangObjectXmlExportHandler getObjectXmlExportHandler(String key) throws OrtolangException {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
@@ -4009,7 +4077,7 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
-    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+    public OrtolangObjectXmlImportHandler getObjectXmlImportHandler(String type) throws OrtolangException {
         throw new OrtolangException("NOT IMPLEMENTED");
     }
 

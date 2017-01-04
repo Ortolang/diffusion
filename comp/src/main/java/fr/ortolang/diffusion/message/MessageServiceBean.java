@@ -38,6 +38,12 @@ package fr.ortolang.diffusion.message;
 
 import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectXmlImportHandler;
+import fr.ortolang.diffusion.OrtolangObjectSize;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Workspace;
@@ -50,8 +56,8 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.message.entity.Message;
 import fr.ortolang.diffusion.message.entity.MessageAttachment;
 import fr.ortolang.diffusion.message.entity.Thread;
-import fr.ortolang.diffusion.message.export.MessageExportHandler;
-import fr.ortolang.diffusion.message.export.ThreadExportHandler;
+import fr.ortolang.diffusion.message.xml.MessageExportHandler;
+import fr.ortolang.diffusion.message.xml.ThreadExportHandler;
 import fr.ortolang.diffusion.message.indexing.MessageIndexableContent;
 import fr.ortolang.diffusion.message.indexing.ThreadIndexableContent;
 import fr.ortolang.diffusion.notification.NotificationService;
@@ -1048,7 +1054,7 @@ public class MessageServiceBean implements MessageService {
     }
 
     @Override
-    public OrtolangObjectExportHandler getObjectExportHandler(String key) throws OrtolangException {
+    public OrtolangObjectXmlExportHandler getObjectXmlExportHandler(String key) throws OrtolangException {
         try {
             OrtolangObjectIdentifier identifier = registry.lookup(key);
             if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
@@ -1077,7 +1083,7 @@ public class MessageServiceBean implements MessageService {
     }
 
     @Override
-    public OrtolangObjectImportHandler getObjectImportHandler() throws OrtolangException {
+    public OrtolangObjectXmlImportHandler getObjectXmlImportHandler(String type) throws OrtolangException {
         // TODO
         throw new OrtolangException("NOT IMPLEMENTED");
     }

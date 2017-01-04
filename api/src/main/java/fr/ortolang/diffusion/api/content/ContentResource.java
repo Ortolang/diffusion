@@ -53,6 +53,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.ejb.EJB;
 import javax.ws.rs.Consumes;
@@ -159,8 +160,8 @@ public class ContentResource {
     @SuppressWarnings("unchecked")
     public Response resumeExportation(@PathParam("id") String id, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         Map<String, Object> params = exportations.get(id);
-        Response response = export(false, (String) params.get("followsymlink"), (String) params.get("filename"), (String) params.get("format"), (List<String>) params.get("path"),
-                securityContext);
+        Response response = export(false, (String) params.get("followsymlink"), (String) params.get("filename"), (String) params.get("format"),
+                (List<String>) params.get("path"), (String) params.get("regex"), securityContext);
         exportations.remove(id);
         return response;
     }
@@ -171,21 +172,21 @@ public class ContentResource {
     @Consumes({ MediaType.APPLICATION_FORM_URLENCODED })
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response exportPost(final @QueryParam("scope") @DefaultValue("") String scope, final @FormParam("followsymlink") @DefaultValue("false") String followSymlink, @FormParam("filename") @DefaultValue("download") String filename,
-            @FormParam("format") @DefaultValue("zip") String format, final @FormParam("path") List<String> paths, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
+            @FormParam("format") @DefaultValue("zip") String format, final @FormParam("path") List<String> paths, @FormParam("regex") String regex, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "POST /export");
-        return export(!scope.startsWith(anonymousBase64), followSymlink, filename, format, paths, securityContext);
+        return export(!scope.startsWith(anonymousBase64), followSymlink, filename, format, paths, regex, securityContext);
     }
 
     @GET
     @Path("/export")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response exportGet(final @QueryParam("scope") @DefaultValue("") String scope, final @QueryParam("followsymlink") @DefaultValue("false") String followSymlink, @QueryParam("filename") @DefaultValue("download") String filename,
-            @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
+            @QueryParam("format") @DefaultValue("zip") String format, final @QueryParam("path") List<String> paths, final @QueryParam("regex") String regex, @Context SecurityContext securityContext) throws UnsupportedEncodingException {
         LOGGER.log(Level.INFO, "GET /export");
-        return export(!scope.startsWith(anonymousBase64), followSymlink, filename, format, paths, securityContext);
+        return export(!scope.startsWith(anonymousBase64), followSymlink, filename, format, paths, regex, securityContext);
     }
 
-    private Response export(boolean connected, String followSymlink, String filename, String format, List<String> paths, SecurityContext securityContext) throws UnsupportedEncodingException {
+    private Response export(boolean connected, String followSymlink, String filename, String format, List<String> paths, String regex, SecurityContext securityContext) throws UnsupportedEncodingException {
         if (connected && securityContext.getUserPrincipal() == null) {
             LOGGER.log(Level.FINE, "user is not authenticated, redirecting to authentication");
             Map<String, Object> params = new HashMap<>();
@@ -193,6 +194,7 @@ public class ContentResource {
             params.put("filename", filename);
             params.put("format", format);
             params.put("path", paths);
+            params.put("regex", regex);
             String id = UUID.randomUUID().toString();
             exportations.put(id ,params);
             String redirect = "/content/exportations/" + id;
@@ -203,11 +205,15 @@ public class ContentResource {
             builder.queryParam("followsymlink", followSymlink).queryParam("filename", filename).queryParam("format", format).queryParam("path", paths);
             return Response.seeOther(uriInfo.getBaseUriBuilder().path(AuthResource.class).queryParam(AuthResource.REDIRECT_PATH_PARAM_NAME, encodedRedirect).build()).cookie(rcookie).build();
         }
-        ResponseBuilder builder = handleExport(false, filename, format, paths);
+        Pattern pattern = null;
+        if (regex != null) {
+            pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
+        }
+        ResponseBuilder builder = handleExport(false, filename, format, paths, pattern);
         return builder.build();
     }
 
-    private ResponseBuilder handleExport(boolean followSymlink, String filename, String format, final List<String> paths) throws UnsupportedEncodingException {
+    private ResponseBuilder handleExport(boolean followSymlink, String filename, String format, final List<String> paths, final Pattern pattern) throws UnsupportedEncodingException {
         ResponseBuilder builder;
         switch (format) {
         case "zip": {
@@ -230,7 +236,7 @@ public class ContentResource {
                                 }
                                 return entry;
                             };
-                            exportToArchive(key, out, factory, PathBuilder.fromPath(path), false);
+                            exportToArchive(key, out, factory, PathBuilder.fromPath(path), false, pattern);
                         } catch (AccessDeniedException e) {
                             LOGGER.log(Level.FINEST, "access denied during export to zip", e);
                         } catch (BrowserServiceException | CoreServiceException | AliasNotFoundException | KeyNotFoundException | OrtolangException e) {
@@ -269,7 +275,7 @@ public class ContentResource {
                                 }
                                 return entry;
                             };
-                            exportToArchive(key, out, factory, PathBuilder.fromPath(path), false);
+                            exportToArchive(key, out, factory, PathBuilder.fromPath(path), false, pattern);
                         } catch (BrowserServiceException | CoreServiceException | AliasNotFoundException | KeyNotFoundException | OrtolangException e) {
                             LOGGER.log(Level.INFO, "unable to export path to tar", e);
                         } catch (InvalidPathException e) {
@@ -308,7 +314,7 @@ public class ContentResource {
         return core.resolveWorkspacePath(wskey, pparts[1], pbuilder.relativize(2).build());
     }
 
-    private void exportToArchive(String key, ArchiveOutputStream aos, ArchiveEntryFactory factory, PathBuilder path, boolean followsymlink) throws OrtolangException, KeyNotFoundException,
+    private void exportToArchive(String key, ArchiveOutputStream aos, ArchiveEntryFactory factory, PathBuilder path, boolean followsymlink, Pattern pattern) throws OrtolangException, KeyNotFoundException,
             BrowserServiceException, ExportToArchiveIOException {
         OrtolangObject object;
         try {
@@ -329,7 +335,7 @@ public class ContentResource {
                     for (CollectionElement element : elements) {
                         try {
                             PathBuilder pelement = path.clone().path(element.getName());
-                            exportToArchive(element.getKey(), aos, factory, pelement, followsymlink);
+                            exportToArchive(element.getKey(), aos, factory, pelement, followsymlink, pattern);
                         } catch (InvalidPathException e) {
                             LOGGER.log(Level.SEVERE, "unexpected error during export to zip !!", e);
                         }
@@ -341,11 +347,14 @@ public class ContentResource {
                 try {
                     aos.closeArchiveEntry();
                 } catch ( IOException e ) {
-                    throw new ExportToArchiveIOException("unable to close archive entry for collection at path: " + path.build(), e);
+                    LOGGER.log(Level.FINEST, "unable to close archive entry for collection at path [" + path.build() + "]: " +  e.getMessage());
                 }
             }
             break;
         case DataObject.OBJECT_TYPE:
+            if (pattern != null && !pattern.matcher(object.getObjectName()).matches()) {
+                return;
+            }
             try (InputStream input = core.download(object.getObjectKey())) {
                 DataObject dataObject = (DataObject) object;
                 ArchiveEntry oentry = factory.createArchiveEntry(path.build(), infos.getLastModificationDate(), dataObject.getSize());
@@ -367,7 +376,7 @@ public class ContentResource {
                 return;
             } catch (CoreServiceException | DataNotFoundException e) {
                 LOGGER.log(Level.SEVERE, "unexpected error during export to zip", e);
-            } 
+            }
             break;
         case Link.OBJECT_TYPE:
             if (followsymlink) {
@@ -377,7 +386,7 @@ public class ContentResource {
             break;
         }
     }
-    
+
     @GET
     @Path("/attachments/{mkey}/{hash}")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
@@ -392,6 +401,7 @@ public class ContentResource {
             ResponseBuilder builder = Response.ok(store.getFile(attachment.getHash()));
             builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(attachment.getName(), "utf-8"));
             builder.header("Content-Length", attachment.getSize());
+            builder.header("Accept-Ranges", "bytes");
             builder.type(attachment.getType());
             return builder.build();
         } catch (AccessDeniedException e) {
@@ -423,7 +433,8 @@ public class ContentResource {
                     String sha1 = ((DataObject) object).getStream();
                     File content = store.getFile(sha1);
                     security.checkPermission(key, "download");
-                    builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize());
+                    builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize())
+                            .header("Accept-Ranges", "bytes");
                     if (download) {
                         builder = builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(object.getObjectName(), "utf-8"));
                     } else {
@@ -433,7 +444,8 @@ public class ContentResource {
                 } else if (object instanceof MetadataObject) {
                     File content = store.getFile(((MetadataObject) object).getStream());
                     security.checkPermission(key, "download");
-                    builder = Response.ok(content).header("Content-Type", ((MetadataObject) object).getContentType()).header("Content-Length", ((MetadataObject) object).getSize());
+                    builder = Response.ok(content).header("Content-Type", ((MetadataObject) object).getContentType()).header("Content-Length", ((MetadataObject) object).getSize())
+                            .header("Accept-Ranges", "bytes");
                     if (download) {
                         builder = builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(object.getObjectName(), "utf-8"));
                     } else {
@@ -683,7 +695,8 @@ public class ContentResource {
                 if (object instanceof DataObject) {
                     security.checkPermission(okey, "download");
                     File content = store.getFile(((DataObject) object).getStream());
-                    builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize());
+                    builder = Response.ok(content).header("Content-Type", ((DataObject) object).getMimeType()).header("Content-Length", ((DataObject) object).getSize())
+                            .header("Accept-Ranges", "bytes");
                     if (download) {
                         builder = builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(object.getObjectName(), "utf-8"));
                     } else {

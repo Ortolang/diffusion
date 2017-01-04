@@ -1,56 +1,10 @@
 package fr.ortolang.diffusion.api.admin;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.EJB;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.StreamingOutput;
-
-import fr.ortolang.diffusion.registry.*;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
-import org.apache.commons.io.IOUtils;
-import org.jboss.resteasy.annotations.GZIP;
-import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
-
-
 /*
  * #%L
  * ORTOLANG
  * A online network structure for hosting language resources and tools.
- * 
+ *
  * Jean-Marie Pierrel / ATILF UMR 7118 - CNRS / Université de Lorraine
  * Etienne Petitjean / ATILF UMR 7118 - CNRS
  * Jérôme Blanchard / ATILF UMR 7118 - CNRS
@@ -60,7 +14,7 @@ import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
  * Ulrike Fleury / ATILF UMR 7118 - CNRS
  * Frédéric Pierre / ATILF UMR 7118 - CNRS
  * Céline Moro / ATILF UMR 7118 - CNRS
- *  
+ *
  * This work is based on work done in the equipex ORTOLANG (http://www.ortolang.fr/), by several Ortolang contributors (mainly CNRTL and SLDR)
  * ORTOLANG is funded by the French State program "Investissements d'Avenir" ANR-11-EQPX-0032
  * %%
@@ -70,28 +24,23 @@ import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import fr.ortolang.diffusion.OrtolangEvent;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangImportExportLogger;
-import fr.ortolang.diffusion.OrtolangJob;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.OrtolangServiceLocator;
-import fr.ortolang.diffusion.OrtolangWorker;
+
+import fr.ortolang.diffusion.*;
 import fr.ortolang.diffusion.api.ApiUriBuilder;
 import fr.ortolang.diffusion.api.GenericCollectionRepresentation;
 import fr.ortolang.diffusion.api.Secured;
+import fr.ortolang.diffusion.api.config.ConfigResource;
 import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.profile.ProfileRepresentation;
 import fr.ortolang.diffusion.api.runtime.HumanTaskRepresentation;
@@ -101,8 +50,6 @@ import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.MetadataFormatException;
 import fr.ortolang.diffusion.core.entity.Workspace;
-import fr.ortolang.diffusion.dump.DumpService;
-import fr.ortolang.diffusion.dump.DumpServiceException;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
 import fr.ortolang.diffusion.ftp.FtpService;
@@ -114,8 +61,8 @@ import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.oai.OaiService;
-import fr.ortolang.diffusion.oai.exception.OaiServiceException;
+import fr.ortolang.diffusion.referential.ReferentialService;
+import fr.ortolang.diffusion.registry.*;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
@@ -124,11 +71,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.statistics.StatisticsService;
 import fr.ortolang.diffusion.statistics.StatisticsServiceException;
-import fr.ortolang.diffusion.store.binary.BinaryStoreContent;
-import fr.ortolang.diffusion.store.binary.BinaryStoreService;
-import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
-import fr.ortolang.diffusion.store.binary.DataCollisionException;
-import fr.ortolang.diffusion.store.binary.DataNotFoundException;
+import fr.ortolang.diffusion.store.binary.*;
 import fr.ortolang.diffusion.store.handle.HandleNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
@@ -140,6 +83,29 @@ import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
 import fr.ortolang.diffusion.worker.WorkerService;
+import fr.ortolang.diffusion.xml.ImportExportService;
+import fr.ortolang.diffusion.xml.ImportExportServiceException;
+import org.jboss.resteasy.annotations.GZIP;
+import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
+
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Path("/admin")
 @Produces({ MediaType.APPLICATION_JSON })
@@ -172,15 +138,15 @@ public class AdminResource {
     @EJB
     private JobService jobService;
     @EJB
+    private ReferentialService referentialService;
+    @EJB
     private WorkerService workerService;
     @EJB
     private FtpService ftpService;
     @EJB
     private StatisticsService statistics;
     @EJB
-    private DumpService dumpService;
-    @EJB
-    private OaiService oaiService;
+    private ImportExportService export;
 
     @GET
     @Path("/infos/{service}")
@@ -229,10 +195,40 @@ public class AdminResource {
     }
 
     @GET
-    @Path("/core/workspace/{key}/dump")
+    @Path("/referential/entities/export")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
-    public Response dumpEntry(@PathParam("key") String key) throws DumpServiceException, IOException, RegistryServiceException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "GET /admin/core/workspace/" + key + "/dump");
+    public Response dumpReferentialEntities() throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "GET /admin/referential/entities/export");
+        LOGGER.log(Level.FINE, "exporting referentual entities");
+        ResponseBuilder builder = Response.ok();
+        builder.header("Content-Disposition", "attachment; filename*=UTF-8''ortolang-dump.tar.gz");
+        builder.type("application/x-gzip");
+        
+        Set<String> keys = new HashSet<String>(registry.list(0, 1000000, "/referential/entity", null));
+
+        StreamingOutput stream = output -> {
+            try {
+                export.dump(keys, output, new OrtolangImportExportLogger() {
+                    @Override
+                    public void log(LogType type, String message) {
+                        LOGGER.log(Level.FINE, type + " : " + message);
+                    }
+                }, true, true);
+            } catch (Exception e) {
+                LOGGER.log(Level.WARNING, e.getMessage(), e);
+                // TODO maybe include a warning in the archive...
+            }
+        };
+        builder.entity(stream);
+
+        return builder.build();
+    }
+
+    @GET
+    @Path("/core/workspace/{key}/export")
+    @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
+    public Response dumpWorkspace(@PathParam("key") String key, @DefaultValue(value = "true") @QueryParam("binary") boolean withbinary) throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "GET /admin/core/workspace/" + key + "/export");
         ResponseBuilder builder;
         OrtolangObjectIdentifier identifier = registry.lookup(key);
         if (!identifier.getService().equals(CoreService.SERVICE_NAME) || !identifier.getType().equals(Workspace.OBJECT_TYPE)) {
@@ -243,98 +239,62 @@ public class AdminResource {
             builder.header("Content-Disposition", "attachment; filename*=UTF-8''" + URLEncoder.encode(key, "utf-8") + "-dump.tar.gz");
             builder.type("application/x-gzip");
 
-            java.nio.file.Path dump = Files.createTempFile("ortolang-dump", ".xml");
-            java.nio.file.Path log = Files.createTempFile("ortolang-dump", ".log");
-            try (OutputStream os = Files.newOutputStream(dump); OutputStream logos = Files.newOutputStream(log)) {
-                OrtolangImportExportLogger logger = new OrtolangImportExportLogger() {
-                    @Override
-                    public void log(LogType type, String message) {
-                        StringBuilder str = new StringBuilder();
-                        str.append("[").append(type).append("] ").append(message).append("\r\n");
-                        try {
-                            logos.write(str.toString().getBytes());
-                            logos.flush();
-                        } catch (IOException e) {
-                            //
+            StreamingOutput stream = output -> {
+                try {
+                    export.dump(Collections.singleton(key), output, new OrtolangImportExportLogger() {
+                        @Override
+                        public void log(LogType type, String message) {
+                            LOGGER.log(Level.FINE, type + " : " + message);
                         }
-                    }
-                };
-                Set<String> bstreams = dumpService.dump(key, os, logger, false);
-                StreamingOutput stream = output -> {
-                    try (GzipCompressorOutputStream gout = new GzipCompressorOutputStream(output); TarArchiveOutputStream out = new TarArchiveOutputStream(gout)) {
-                        try {
-                            TarArchiveEntry entry = new TarArchiveEntry(key + "-dump.xml");
-                            entry.setModTime(System.currentTimeMillis());
-                            entry.setSize(Files.size(dump));
-                            try (InputStream isdump = Files.newInputStream(dump)) {
-                                out.putArchiveEntry(entry);
-                                IOUtils.copy(isdump, out);
-                            } catch (IOException e) {
-                                throw new DumpServiceException("unable to add dump to archive", e);
-                            } finally {
-                                try {
-                                    out.closeArchiveEntry();
-                                } catch (IOException e) {
-                                    throw new DumpServiceException("unable to close archive entry for xml dump", e);
-                                }
-                            }
-
-                            TarArchiveEntry logentry = new TarArchiveEntry(key + "-dump.log");
-                            logentry.setModTime(System.currentTimeMillis());
-                            logentry.setSize(Files.size(log));
-                            try (InputStream islog = Files.newInputStream(log)) {
-                                out.putArchiveEntry(logentry);
-                                IOUtils.copy(islog, out);
-                            } catch (IOException e) {
-                                throw new DumpServiceException("unable to add dumplog to archive", e);
-                            } finally {
-                                try {
-                                    out.closeArchiveEntry();
-                                } catch (IOException e) {
-                                    throw new DumpServiceException("unable to close archive entry for dump log", e);
-                                }
-                            }
-
-                            for (String bstream : bstreams) {
-                                try (InputStream input = binary.get(bstream)) {
-                                    TarArchiveEntry sentry = new TarArchiveEntry(bstream);
-                                    sentry.setModTime(System.currentTimeMillis());
-                                    sentry.setSize(binary.size(bstream));
-                                    try {
-                                        out.putArchiveEntry(sentry);
-                                        IOUtils.copy(input, out);
-                                    } catch (IOException e) {
-                                        throw new DumpServiceException("unable to dump binary stream for hash: " + bstream, e);
-                                    } finally {
-                                        try {
-                                            out.closeArchiveEntry();
-                                        } catch (IOException e) {
-                                            throw new DumpServiceException("unable to close archive entry for binary stream with hash: " + bstream, e);
-                                        }
-                                    }
-                                } catch (DataNotFoundException | IOException | BinaryStoreServiceException e) {
-                                    throw new DumpServiceException(e);
-                                }
-                            }
-                        } catch (DumpServiceException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                };
-                builder.entity(stream);
-            }
+                    }, true, withbinary);
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, e.getMessage(), e);
+                    // TODO maybe include a warning in the archive...
+                }
+            };
+            builder.entity(stream);
         }
 
         return builder.build();
+    }
+    
+    @POST
+    @Path("/core/workspace/import")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response restoreWorkspace(@MultipartForm ImportFormRepresentation form) throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "POST /admin/core/workspace/import");
+//        ResponseBuilder builder;
+//        if (form.getDump() == null) {
+//            builder = Response.status(Status.BAD_REQUEST);
+//            builder.entity("missing dump file");
+//            return builder.build();
+//        } 
+//        builder = Response.ok();
+//        builder.type("application/json");
+//        StreamingOutput stream = output -> {
+//            JsonImportLogger logger = new JsonImportLogger();
+//            logger.setOutputStream(output);
+//            logger.start();
+//            try {
+//                export.restore(form.getDump(), logger);
+//            } catch (Exception e) {
+//                LOGGER.log(Level.SEVERE, "error during restore workspace", e);
+//                logger.log(LogType.ERROR, "CRITICAL ERROR : " + e.getMessage());
+//            }
+//            logger.finish();
+//        };
+//        builder.entity(stream);
+//        return builder.build();
+        return Response.serverError().build();
     }
 
     @POST
     @Path("/core/metadata")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @GZIP
-    public Response createMetadata(@MultipartForm MetadataObjectFormRepresentation form)
-            throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
-            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException, PropertyNotFoundException {
+    public Response createMetadata(@MultipartForm MetadataObjectFormRepresentation form) throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException,
+            DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException,
+            IndexingServiceException {
         LOGGER.log(Level.INFO, "POST /admin/core/metadata");
         try {
             if (form.getKey() == null) {
@@ -462,22 +422,11 @@ public class AdminResource {
         long nbresults = event.systemCountEvents(etype, ofrom, otype, throwed, after);
         List<OrtolangEvent> events = (List<OrtolangEvent>) event.systemFindEvents(etype, ofrom, otype, throwed, after, offset, limit);
 
-        // UriBuilder objects = ApiUriBuilder.getApiUriBuilder().path(AdminResource.class);
         GenericCollectionRepresentation<OrtolangEvent> representation = new GenericCollectionRepresentation<OrtolangEvent>();
         representation.setEntries(events);
         representation.setOffset((offset <= 0) ? 1 : offset);
         representation.setSize(nbresults);
         representation.setLimit(events.size());
-        // representation.setFirst(objects.clone().queryParam("o", 0).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype",
-        // etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        // representation.setPrevious(objects.clone().queryParam("o", Math.max(0, (offset - limit))).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype",
-        // otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        // representation.setSelf(objects.clone().queryParam("o", offset).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype", otype).queryParam("etype",
-        // etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        // representation.setNext(objects.clone().queryParam("o", (nbresults > (offset + limit)) ? (offset + limit) : offset).queryParam("l", limit).queryParam("ofrom",
-        // ofrom).queryParam("otype", otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
-        // representation.setLast(objects.clone().queryParam("o", ((nbresults - 1) / limit) * limit).queryParam("l", limit).queryParam("ofrom", ofrom).queryParam("otype",
-        // otype).queryParam("etype", etype).queryParam("throwed", throwed).queryParam("after", after).build());
         return Response.ok(representation).build();
     }
 
@@ -584,6 +533,15 @@ public class AdminResource {
     public Response addSubscriptionFilters() throws SubscriptionServiceException {
         LOGGER.log(Level.INFO, "GET /subscription");
         subscription.addAdminFilters();
+        return Response.ok().build();
+    }
+
+    @POST
+    @Path("/subscription/broadcast")
+    @GZIP
+    public Response broadcastMessage(@FormParam("users") String users, @FormParam("title") String title, @FormParam("body") String body) throws SubscriptionServiceException {
+        LOGGER.log(Level.INFO, "POST /subscription/broadcast");
+        subscription.broadcastMessage(Arrays.asList(users.split(",")), title, body);
         return Response.ok().build();
     }
 
@@ -735,7 +693,7 @@ public class AdminResource {
     }
 
     @GET
-    @Path("/statistics/piwik")
+    @Path("/stats/piwik")
     public Response probePiwik() throws StatisticsServiceException, OrtolangException {
         LOGGER.log(Level.INFO, "GET /statistics/piwik");
         statistics.probePiwik();
@@ -743,10 +701,19 @@ public class AdminResource {
     }
 
     @POST
-    @Path("/oai/rebuild")
-    public Response rebuildOAI() throws OaiServiceException {
-    	LOGGER.log(Level.INFO, "GET /oai/rebuild");
-    	oaiService.rebuild();
-    	return Response.ok().build();
+    @Path("/stats/piwik")
+    public Response collectPiwikForRange(@FormParam("range") String range, @FormParam("timestamp") long timestamp) throws StatisticsServiceException, OrtolangException {
+        LOGGER.log(Level.INFO, "POST /statistics/piwik");
+        statistics.collectPiwikForRange(range, timestamp);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("/config/refresh")
+    public Response refreshConfig() throws IOException, OrtolangException {
+        LOGGER.log(Level.INFO, "GET /config/refresh");
+        OrtolangConfig.getInstance().refresh();
+        ConfigResource.clear();
+        return Response.ok().build();
     }
 }

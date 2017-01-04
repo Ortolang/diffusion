@@ -51,19 +51,16 @@ import javax.ejb.Stateless;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
-import net.handle.hdllib.AdminRecord;
 import net.handle.hdllib.Common;
-import net.handle.hdllib.Encoder;
 import net.handle.hdllib.HandleValue;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 
-import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.store.handle.entity.Handle;
+import fr.ortolang.diffusion.store.handle.entity.HandlePK;
 
 @Local(HandleStoreService.class)
 @Stateless(name=HandleStoreService.SERVICE_NAME)
@@ -72,68 +69,52 @@ import fr.ortolang.diffusion.store.handle.entity.Handle;
 public class HandleStoreServiceBean implements HandleStoreService {
 
     private static final Logger LOGGER = Logger.getLogger(HandleStoreServiceBean.class.getName());
-    private static byte[] admin = null;
-
+    
+    private static final int HANDLE_INDEX = 1;
+    
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
-
-    private byte[] getAdminValue() {
-        if ( admin == null ) {
-            String adminHandle = "0.NA/" + OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX);
-            admin = Encoder.encodeAdminRecord(new AdminRecord(adminHandle.getBytes(), 300, true, true, true, true, true, true, true, true, true, true, true, true));
-        }
-        return admin;
-    }
     
-	@Override
+    @Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public Handle readHandle(String handle) throws HandleStoreServiceException, HandleNotFoundException {
-		String name = handle.toUpperCase(Locale.ENGLISH);
         LOGGER.log(Level.FINE, "reading handle : " + handle);
-        try {
-	        Handle hdl = em.createNamedQuery("findHandleByName", Handle.class).setParameter("name", name.getBytes()).getSingleResult();
+        String name = handle.toUpperCase(Locale.ENGLISH);
+		HandlePK pkey = new HandlePK(name.getBytes(), HANDLE_INDEX);
+        Handle hdl = em.find(Handle.class, pkey);
+        if ( hdl == null ) {
+            throw new HandleNotFoundException("unable to find a handle with name: " + name);
+        } else {
 	        return hdl;
-        } catch (NoResultException e) {
-        	throw new HandleNotFoundException("unable to find a handle with name: " + name);
-        }
+        } 
 	}
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void recordHandle(String handle, String key, String url) throws HandleStoreServiceException {
-        String name = handle.toUpperCase(Locale.ENGLISH);
         LOGGER.log(Level.FINE, "recording handle : " + handle);
-        try {
-            List<Handle> oldHandles = listHandleValues(name);
-            for ( Handle old : oldHandles ) {
-                LOGGER.log(Level.FINE, "deleting previously recorded handle for this name: " + old);
-                em.remove(old);
-                em.flush();
-            }
-        } catch (HandleNotFoundException e) {
-            //
-        }
-        int timestamp = (int) (System.currentTimeMillis() / 1000);
-        Handle adminValue = new Handle(name.getBytes(), 100, key, Common.ADMIN_TYPE, getAdminValue(), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
-        Handle urlValue = new Handle(name.getBytes(), 1, key, Common.STD_TYPE_URL, url.getBytes(), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
-        em.persist(adminValue);
-        em.persist(urlValue);
+        String name = handle.toUpperCase(Locale.ENGLISH);
+        HandlePK pkey = new HandlePK(name.getBytes(), HANDLE_INDEX);
+        Handle hdl = em.find(Handle.class, pkey);
+        if ( hdl == null ) {
+            int timestamp = (int) (System.currentTimeMillis() / 1000);
+            Handle urlValue = new Handle(name.getBytes(), 1, key, Common.STD_TYPE_URL, url.getBytes(), HandleValue.TTL_TYPE_RELATIVE, 86400, timestamp, null, true, true, true, false);
+            em.persist(urlValue);
+        } else {
+            hdl.setKey(key);
+            hdl.setData(url.getBytes());
+        } 
     }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void dropHandle(String handle) throws HandleStoreServiceException {
-        String name = handle.toUpperCase(Locale.ENGLISH);
         LOGGER.log(Level.FINE, "dropping handle : " + handle);
-        try {
-            List<Handle> oldHandles = listHandleValues(name);
-            for ( Handle old : oldHandles ) {
-                LOGGER.log(Level.FINE, "deleting handle for this name: " + old);
-                em.remove(old);
-                em.flush();
-            }
-        } catch (HandleNotFoundException e) {
-            //
+        String name = handle.toUpperCase(Locale.ENGLISH);
+        HandlePK pkey = new HandlePK(name.getBytes(), HANDLE_INDEX);
+        Handle hdl = em.find(Handle.class, pkey);
+        if ( hdl != null ) {
+            em.remove(hdl);
         }
     }
 
