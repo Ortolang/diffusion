@@ -59,7 +59,7 @@ import java.util.stream.Stream;
 
 public class MetadataObjectIndexableContent extends OrtolangObjectIndexableContent {
 
-    static final String[] METADATA_OBJECT_MAPPING;
+    private static final String[] METADATA_OBJECT_MAPPING;
 
     private static final Logger LOGGER = Logger.getLogger(MetadataObjectIndexableContent.class.getName());
 

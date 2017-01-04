@@ -3892,8 +3892,15 @@ public class CoreServiceBean implements CoreService {
                     workspace.setKey(wskey);
                     String snapshot = workspace.findSnapshotByKey(collection.getKey()).getName();
                     CollectionContent collectionContent = listCollectionContent(collection.getKey());
-                    // TODO index root metadata
-//                    indexableContents.add(new RootCollectionIndexableContent(collection, collectionContent.getContent()));
+
+                    // Index item metadata for root collections
+                    MetadataElement itemMetadata = collection.findMetadataByName(MetadataFormat.ITEM);
+                    if (itemMetadata != null) {
+                        OrtolangObjectIdentifier itemMetadataIdentifier = registry.lookup(itemMetadata.getKey());
+                        MetadataObject metadataObject = em.find(MetadataObject.class, itemMetadataIdentifier.getId());
+                        indexableContents.add(new ItemIndexableContent(metadataObject, collection));
+                    }
+
                     for (CollectionContentEntry entry : collectionContent.getContent()) {
                         Map<String, Object> params = new HashMap<>();
                         params.put("alias", workspace.getAlias());
