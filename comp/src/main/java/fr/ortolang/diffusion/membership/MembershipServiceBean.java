@@ -37,21 +37,11 @@ package fr.ortolang.diffusion.membership;
  */
 
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
-import fr.ortolang.diffusion.OrtolangException;
-import fr.ortolang.diffusion.OrtolangObject;
-import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
-import fr.ortolang.diffusion.OrtolangObjectIdentifier;
-import fr.ortolang.diffusion.OrtolangObjectXmlImportHandler;
-import fr.ortolang.diffusion.OrtolangObjectSize;
-import fr.ortolang.diffusion.indexing.IndexingService;
-import fr.ortolang.diffusion.indexing.IndexingServiceException;
-import fr.ortolang.diffusion.indexing.NotIndexableContentException;
-import fr.ortolang.diffusion.membership.entity.Group;
-import fr.ortolang.diffusion.membership.entity.Profile;
-import fr.ortolang.diffusion.membership.entity.ProfileData;
-import fr.ortolang.diffusion.membership.entity.ProfileDataType;
-import fr.ortolang.diffusion.membership.entity.ProfileDataVisibility;
-import fr.ortolang.diffusion.membership.entity.ProfileStatus;
+import fr.ortolang.diffusion.*;
+import fr.ortolang.diffusion.indexing.*;
+import fr.ortolang.diffusion.membership.entity.*;
+import fr.ortolang.diffusion.membership.indexing.GroupIndexableContent;
+import fr.ortolang.diffusion.membership.indexing.ProfileIndexableContent;
 import fr.ortolang.diffusion.membership.xml.GroupExportHandler;
 import fr.ortolang.diffusion.membership.xml.ProfileExportHandler;
 import fr.ortolang.diffusion.notification.NotificationService;
