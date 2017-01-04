@@ -55,7 +55,7 @@ import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.mapper.MapperParsingException;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.script.Script;
-import org.elasticsearch.script.ScriptService;
+import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -172,7 +172,7 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                         if (indexableContent.isUpdate()) {
                             LOGGER.log(Level.FINE, "Updating key [" + indexableContent.getKey() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
 
-                            Script script = new Script(scripts.get(indexableContent.getScript()), ScriptService.ScriptType.INLINE,  DEFAULT_SCRIPT_LANG, indexableContent.getScriptParams());
+                            Script script = new Script(ScriptType.INLINE, DEFAULT_SCRIPT_LANG, scripts.get(indexableContent.getScript()), indexableContent.getScriptParams());
                             client.prepareUpdate(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getKey()).setScript(script).get();
                         } else {
                             LOGGER.log(Level.FINE, "Indexing key [" + indexableContent.getKey() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");

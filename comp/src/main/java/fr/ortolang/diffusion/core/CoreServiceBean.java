@@ -3895,7 +3895,7 @@ public class CoreServiceBean implements CoreService {
                     // TODO index root metadata
 //                    indexableContents.add(new RootCollectionIndexableContent(collection, collectionContent.getContent()));
                     for (CollectionContentEntry entry : collectionContent.getContent()) {
-                        Map<String, String> params = new HashMap<>();
+                        Map<String, Object> params = new HashMap<>();
                         params.put("alias", workspace.getAlias());
                         params.put("key", workspace.getKey());
                         params.put("root", collection.getKey());

@@ -55,7 +55,7 @@ public abstract class OrtolangIndexableContent {
 
     private String script;
 
-    private Map<String, String> scriptParams;
+    private Map<String, Object> scriptParams;
 
     public OrtolangIndexableContent(String index, String type, String key) {
         this.index = index;
@@ -107,11 +107,11 @@ public abstract class OrtolangIndexableContent {
         this.script = script;
     }
 
-    public Map<String, String> getScriptParams() {
+    public Map<String, Object> getScriptParams() {
         return scriptParams;
     }
 
-    protected void setScriptParams(Map<String, String> scriptParams) {
+    protected void setScriptParams(Map<String, Object> scriptParams) {
         this.scriptParams = scriptParams;
     }
 

@@ -47,7 +47,7 @@ public class OrtolangObjectScriptedUpdate extends OrtolangIndexableContent {
         setScript(script);
     }
 
-    public OrtolangObjectScriptedUpdate(String index, String type, String key, String script, Map<String, String> scriptParams) {
+    public OrtolangObjectScriptedUpdate(String index, String type, String key, String script, Map<String, Object> scriptParams) {
         this(index, type, key, script);
         setScriptParams(scriptParams);
     }
