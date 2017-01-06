@@ -3896,9 +3896,15 @@ public class CoreServiceBean implements CoreService {
                     // Index item metadata for root collections
                     MetadataElement itemMetadata = collection.findMetadataByName(MetadataFormat.ITEM);
                     if (itemMetadata != null) {
+                        LOGGER.log(Level.INFO, "Add ortolang-item metadata of root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "] to indexable content");
                         OrtolangObjectIdentifier itemMetadataIdentifier = registry.lookup(itemMetadata.getKey());
                         MetadataObject metadataObject = em.find(MetadataObject.class, itemMetadataIdentifier.getId());
-                        indexableContents.add(new ItemIndexableContent(metadataObject, collection));
+                        indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias()));
+                        String latestPublishedSnapshot = findWorkspaceLatestPublishedSnapshot(workspace.getKey());
+                        if (snapshot.equals(latestPublishedSnapshot)) {
+                            LOGGER.log(Level.INFO, "Add ortolang-item metadata as latest published root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "] to indexable content");
+                            indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), true));
+                        }
                     }
 
                     for (CollectionContentEntry entry : collectionContent.getContent()) {

@@ -53,19 +53,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-public class ItemIndexableContent extends MetadataSourceIndexableContent {
+public class OrtolangItemIndexableContent extends MetadataSourceIndexableContent {
 
-    private static final Logger LOGGER = Logger.getLogger(ItemIndexableContent.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(OrtolangItemIndexableContent.class.getName());
 
     private static final String[] ITEM_MAPPING;
 
-    private static final String INDEX = "market";
+    private static final String INDEX = "item";
 
-    private static final String TYPE = "item";
+    private static final String ALL = "all";
+
+    private static final String LATEST = "latest";
 
     static {
         ITEM_MAPPING = Stream.concat(Arrays.stream(METADATA_SOURCE_MAPPING),
                 Arrays.stream(new String[] {
+                        "alias",
+                        "type=keyword",
                         "schema",
                         "type=keyword",
                         "type",
@@ -217,8 +221,17 @@ public class ItemIndexableContent extends MetadataSourceIndexableContent {
                 .toArray(String[]::new);
     }
 
-    public ItemIndexableContent(MetadataObject metadata, Collection collection) throws IndexingServiceException, OrtolangException {
-        super(collection, INDEX, TYPE);
+    public OrtolangItemIndexableContent(MetadataObject metadata, Collection collection, String alias) throws IndexingServiceException, OrtolangException {
+        this(metadata, collection, alias, false);
+    }
+
+    public OrtolangItemIndexableContent(MetadataObject metadata, Collection collection, String alias, boolean latest) throws IndexingServiceException, OrtolangException {
+        super(collection, INDEX, latest ? LATEST : ALL);
+        if (latest) {
+            // For latest key equals workspace alias
+            content.put("key", alias);
+        }
+        content.put("alias", alias);
         BinaryStoreService binary = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
         ObjectMapper mapper = new ObjectMapper();
         try {
