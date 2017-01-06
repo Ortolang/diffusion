@@ -451,7 +451,7 @@ public class OaiServiceBean implements OaiService {
             try {
                 handles = handleStore.listHandlesForKey(root);
                 for (String handle : handles) {
-                    xml.addDcField("identifier", "http://hdl.handle.net/" + OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + handle);
+                    xml.addDcField("identifier", "http://hdl.handle.net/" + handle);
                 }
             } catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
                 LOGGER.log(Level.WARNING, "No handle for key " + root, e);
@@ -498,7 +498,7 @@ public class OaiServiceBean implements OaiService {
             try {
                 handles = handleStore.listHandlesForKey(key);
                 for (String handle : handles) {
-                    xml.addDcField("identifier", "http://hdl.handle.net/" + OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + handle);
+                    xml.addDcField("identifier", "http://hdl.handle.net/" + handle);
                 }
             } catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
                 LOGGER.log(Level.WARNING, "No handle for key " + key, e);
