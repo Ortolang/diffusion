@@ -296,6 +296,16 @@ public class OrtolangClient {
         response.close();
     }
 
+    /**
+     * Uploads a file to the server.
+     * @param workspace workspace key
+     * @param path path of the destination
+     * @param description a description
+     * @param content the file to upload
+     * @param preview the preview of the file
+     * @throws OrtolangClientException
+     * @throws OrtolangClientAccountException
+     */
     public synchronized void writeDataObject(String workspace, String path, String description, File content, File preview) throws OrtolangClientException, OrtolangClientAccountException {
         updateAuthorization();
         WebTarget target = base.path("/workspaces/" + workspace + "/elements");
@@ -330,7 +340,9 @@ public class OrtolangClient {
         mdo.addFormData("path", new ByteArrayInputStream(path.getBytes()), MediaType.TEXT_PLAIN_TYPE);
         mdo.addFormData("type", new ByteArrayInputStream("metadata".getBytes()), MediaType.TEXT_PLAIN_TYPE);
         mdo.addFormData("name", new ByteArrayInputStream(name.getBytes()), MediaType.TEXT_PLAIN_TYPE);
-        mdo.addFormData("format", new ByteArrayInputStream(format.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        if (format != null) {        	
+        	mdo.addFormData("format", new ByteArrayInputStream(format.getBytes()), MediaType.TEXT_PLAIN_TYPE);
+        }
         try {
             if (content != null) {
                 mdo.addFormData("stream", new FileInputStream(content), MediaType.APPLICATION_OCTET_STREAM_TYPE);

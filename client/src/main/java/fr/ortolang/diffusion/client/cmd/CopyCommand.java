@@ -52,16 +52,20 @@ import fr.ortolang.diffusion.client.OrtolangClientException;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
 
 public class CopyCommand extends Command {
-
+	
 	private Options options = new Options();
     private StringBuilder errors = new StringBuilder();
     private OrtolangClient client;
+    private String mode;
 
 	public CopyCommand() {
 		options.addOption("h", "help", false, "show help.");
 		options.addOption("U", "username", true, "username for login");
 		options.addOption("P", "password", true, "password for login");
-        options.addOption("w", "workspace", true, "workspace alias targeted");
+        options.addOption("w", "workspace", true, "workspace key targeted");
+        options.addOption("m", "mode", true, "mode");
+        
+        mode = "objects";
 	}
 
 	@Override
@@ -84,8 +88,13 @@ public class CopyCommand extends Command {
 			if (cmd.hasOption("w")) {
 			    workspace = cmd.getOptionValue("w");
             } else {
-                System.out.println("Workspace alias is needed (-w)");
+                System.out.println("Workspace key is needed (-w)");
                 help();
+            }
+			
+			if (cmd.hasOption("m")) {
+				//TODO validate (with an enum ?)
+			    mode = cmd.getOptionValue("m");
             }
 			
 			List<String> argList = cmd.getArgList();
@@ -110,22 +119,11 @@ public class CopyCommand extends Command {
                 if (Files.exists(Paths.get(localPath))) {
                   copy(Paths.get(localPath), workspace, remotePath);
               }
-//                if (Files.exists(Paths.get(localPath, "data", "snapshots"))) {
-//                    Files.list(Paths.get(localPath, "data", "snapshots")).forEach(this::checkSnapshotMetadata);
-//                    Files.list(Paths.get(localPath, "data", "snapshots")).forEach(this::checkPermissions);
-//                }
-//
-//                if (Files.exists(Paths.get(localPath, "data", "head"))) {
-//                    checkSnapshotMetadata(Paths.get(localPath, "data", "head"));
-//                }
             }
             if (errors.length() > 0) {
                 System.out.println("## Some errors has been found : ");
                 System.out.print(errors.toString());
-            } else {
-                System.out.println("No error found.");
             }
-//			client.writeCollection(workspace, path, description);
 			
 			client.logout();
 			client.close();
@@ -144,29 +142,48 @@ public class CopyCommand extends Command {
 
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    String remoteDir = remotePath + localPath.getParent().relativize(dir).toString();
-                    System.out.println("Copying dir " + dir + " to " + workspace + ":" + remoteDir);
-                    try {
-                        client.writeCollection(workspace, remoteDir, "");
-                    } catch (OrtolangClientException | OrtolangClientAccountException e) {
-                        e.printStackTrace();
-                        errors.append("-> Unable to copy dir ").append(dir).append(" to ").append(remoteDir).append("\r\n");
-                        return FileVisitResult.TERMINATE;
-                    }
+                	switch(mode) {
+                	case "objects":
+                		 String remoteDir = remotePath + localPath.getParent().relativize(dir).toString();
+ 	                    System.out.println("Copying dir " + dir + " to " + workspace + ":" + remoteDir);
+ 	                    try {
+ 	                        client.writeCollection(workspace, remoteDir, "");
+ 	                    } catch (OrtolangClientException | OrtolangClientAccountException e) {
+ 	                        e.printStackTrace();
+ 	                        errors.append("-> Unable to copy dir ").append(dir).append(" to ").append(remoteDir).append("\r\n");
+ 	                        return FileVisitResult.TERMINATE;
+ 	                    }
+                	}
                     return FileVisitResult.CONTINUE;
                 }
 
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    String remoteDir = remotePath + localPath.getParent().relativize(file).toString();
-                    System.out.println("Copying file " + file + " to " + workspace + ":" + remoteDir);
-                    try {
-                        client.writeDataObject(workspace, remoteDir, "", file.toFile(), null);
-                    } catch (OrtolangClientException | OrtolangClientAccountException e) {
-                        e.printStackTrace();
-                        errors.append("-> Unable to copy file ").append(file).append(" to ").append(remoteDir).append("\r\n");
-                        return FileVisitResult.TERMINATE;
-                    }
+                	switch(mode) {
+                	case "objects":
+                		String remoteFile = remotePath + localPath.getParent().relativize(file).toString();
+	                    System.out.println("Copying file " + file + " to " + workspace + ":" + remoteFile);
+	                    try {
+	                        client.writeDataObject(workspace, remoteFile, "", file.toFile(), null);
+	                    } catch (OrtolangClientException | OrtolangClientAccountException e) {
+	                        e.printStackTrace();
+	                        errors.append("-> Unable to copy file ").append(file).append(" to ").append(remoteFile).append("\r\n");
+	                        return FileVisitResult.TERMINATE;
+	                    }
+	                    break;
+                	case "metadata": 
+                		String remoteDir = remotePath + localPath.getParent().relativize(file).getParent().toString();
+	                    System.out.println("Creating metadata file " + file + " to " + workspace + ":" + remoteDir);
+                		String name = file.getFileName().toString();
+                		try {
+							client.writeMetaData(workspace, remoteDir, name, null, file.toFile());
+						} catch (OrtolangClientException | OrtolangClientAccountException e) {
+							 e.printStackTrace();
+	                        errors.append("-> Unable to copy file ").append(file).append(" to ").append(remoteDir).append("\r\n");
+	                        return FileVisitResult.TERMINATE;
+						}
+                		break;
+                	}
                     return FileVisitResult.CONTINUE;
                 }
 
