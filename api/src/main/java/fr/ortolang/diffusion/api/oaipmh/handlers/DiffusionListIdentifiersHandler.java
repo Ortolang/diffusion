@@ -128,7 +128,6 @@ public class DiffusionListIdentifiersHandler extends VerbHandler<ListIdentifiers
 
         ResumptionTokenHelper resumptionTokenHelper = new ResumptionTokenHelper(currentResumptionToken,
                 getRepository().getConfiguration().getMaxListIdentifiers()).withTotalResults(listItemIdentifiersResult.getTotal());
-        System.out.println();
         result.withResumptionToken(resumptionTokenHelper.resolve(listItemIdentifiersResult.hasMore()));
 
         return result;

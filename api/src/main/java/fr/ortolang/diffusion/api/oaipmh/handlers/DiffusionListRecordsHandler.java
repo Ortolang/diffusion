@@ -50,7 +50,6 @@ import com.lyncode.xoai.dataprovider.exceptions.NoMetadataFormatsException;
 import com.lyncode.xoai.dataprovider.exceptions.OAIException;
 import com.lyncode.xoai.dataprovider.handlers.VerbHandler;
 import com.lyncode.xoai.dataprovider.handlers.helpers.ItemHelper;
-import com.lyncode.xoai.dataprovider.handlers.helpers.ResumptionTokenHelper;
 import com.lyncode.xoai.dataprovider.handlers.helpers.SetRepositoryHelper;
 import com.lyncode.xoai.dataprovider.handlers.results.ListItemsResults;
 import com.lyncode.xoai.dataprovider.model.Context;
@@ -66,6 +65,7 @@ import com.lyncode.xoai.model.oaipmh.Record;
 import com.lyncode.xoai.model.oaipmh.ResumptionToken;
 
 import fr.ortolang.diffusion.api.oaipmh.handlers.helpers.MultiMetadataItemRepositoryHelper;
+import fr.ortolang.diffusion.api.oaipmh.handlers.helpers.ResumptionTokenHelper;
 import fr.ortolang.diffusion.api.oaipmh.repository.MultiMetadataItemRepository;
 
 public class DiffusionListRecordsHandler extends VerbHandler<ListRecords> {
@@ -147,7 +147,7 @@ public class DiffusionListRecordsHandler extends VerbHandler<ListRecords> {
         }
 
         ResumptionTokenHelper resumptionTokenHelper = new ResumptionTokenHelper(currentResumptionToken,
-                getRepository().getConfiguration().getMaxListRecords());
+                getRepository().getConfiguration().getMaxListRecords()).withTotalResults(result.getTotal());
         res.withResumptionToken(resumptionTokenHelper.resolve(result.hasMore()));
 
         return res;
