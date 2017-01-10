@@ -76,6 +76,8 @@ import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 
+import static fr.ortolang.diffusion.core.OrtolangItemType.*;
+
 @Startup
 @Local(SeoService.class)
 @Singleton(name = SeoService.SERVICE_NAME)
@@ -294,10 +296,12 @@ public class SeoServiceBean implements SeoService {
     private enum MarketSection {
 
         INDEX("", "1.0", null, null),
-        CORPORA("market/corpora", "0.9", "Corpus", "corpora"),
-        LEXICONS("market/lexicons", "0.9", "Lexique", "lexicons"),
-        TOOLS("market/tools", "0.9", "Outil", "tools"),
-        APPLICATIONS("market/applications", "0.9", "Application", null),
+        CORPORA("market/" + CORPUS.getSection(), "0.9", CORPUS.getMetadataType(), CORPUS.getSection()),
+        LEXICONS("market/" + LEXICON.getSection(), "0.9", LEXICON.getMetadataType(), LEXICON.getSection()),
+        TOOLS("market/" + TOOL.getSection(), "0.9", TOOL.getMetadataType(), LEXICON.getSection()),
+        TERMINOLOGIES("market/" + TERMINOLOGY.getSection(), "0.9", TERMINOLOGY.getMetadataType(), TERMINOLOGY.getSection()),
+        // Do not add marketType for applications as they do not have a description page
+        APPLICATIONS("market/" + APPLICATION.getSection(), "0.9", APPLICATION.getMetadataType(), null),
         INFORMATION("information", "0.9", null, null),
         LEGAL_NOTICES("legal-notices", "0.3", null, null);
 
