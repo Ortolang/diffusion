@@ -36,215 +36,222 @@ package fr.ortolang.diffusion.core.indexing;
  * #L%
  */
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.core.OrtolangItemType;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
+import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
-public class OrtolangItemIndexableContent extends MetadataSourceIndexableContent {
+public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
 
     private static final Logger LOGGER = Logger.getLogger(OrtolangItemIndexableContent.class.getName());
 
-    private static final String[] ITEM_MAPPING;
+    public static final String[] ORTOLANG_ITEM_MAPPING;
 
     private static final String INDEX = "item";
 
-    private static final String ALL = "all";
+    private static final String INDEX_ALL = "item-all";
 
-    private static final String LATEST = "latest";
+    private OrtolangItemType ortolangItemType;
 
     static {
-        ITEM_MAPPING = Stream.concat(Arrays.stream(METADATA_SOURCE_MAPPING),
-                Arrays.stream(new String[] {
-                        "alias",
-                        "type=keyword",
-                        "schema",
-                        "type=keyword",
-                        "type",
-                        "type=keyword",
-                        "title",
-                        "type=nested",
-                        "description",
-                        "type=nested",
-                        "keywords",
-                        "type=nested",
-                        "bibliographicCitation",
-                        "type=nested",
-                        "datasize",
-                        "type=long",
-                        "publications",
-                        "type=text",
-                        "website",
-                        "type=keyword,index=no",
-                        "image",
-                        "type=keyword,index=no",
-                        "preview",
-                        "type=keyword,index=no",
-                        "statusOfUse",
-                        "type=object",
-                        "conditionsOfUse",
-                        "type=nested",
-                        "license",
-                        "type=object",
-                        "derogation",
-                        "type=text,index=no",
-                        "copyright",
-                        "type=text,index=no",
-                        "producers",
-                        "type=nested",
-                        "sponsors",
-                        "type=nested",
-                        "contributors",
-                        "type=nested",
-                        "relations",
-                        "type=nested",
-                        "commercialLinks",
-                        "type=nested",
-                        "creationLocations",
-                        "type=nested",
-                        "originDate",
-                        "type=keyword",
-                        "publicationDate",
-                        "type=date",
-                        "corporaType",
-                        "type=nested",
-                        "corporaLanguages",
-                        "type=nested",
-                        "corporaStudyLanguages",
-                        "type=nested",
-                        "corporaStyles",
-                        "type=nested",
-                        "annotationLevels",
-                        "type=nested",
-                        "corporaFormats",
-                        "type=nested",
-                        "corporaFileEncodings",
-                        "type=nested",
-                        "corporaDataTypes",
-                        "type=nested",
-                        "corporaLanguageType",
-                        "type=nested",
-                        "wordCount",
-                        "type=long", // keywoard ?
-                        "linguisticDataType",
-                        "type=text",
-                        "discourseTypes",
-                        "type=text",
-                        "linguisticSubjects",
-                        "type=text",
-                        "programmingLanguages",
-                        "type=nested",
-                        "operatingSystems",
-                        "type=nested",
-                        "toolSupport",
-                        "type=nested",
-                        "navigationLanguages",
-                        "type=nested",
-                        "toolLanguages",
-                        "type=nested",
-                        "toolFunctionalities",
-                        "type=nested",
-                        "toolInputData",
-                        "type=nested",
-                        "toolOutputData",
-                        "type=nested",
-                        "toolFileEncodings",
-                        "type=nested",
-                        "toolId",
-                        "type=keyword,index=no",
-                        "toolUrl",
-                        "type=keyword,index=no",
-                        "toolHelp",
-                        "type=text,index=no",
-                        "lexiconInputType",
-                        "type=nested",
-                        "lexiconInputLanguages",
-                        "type=nested",
-                        "lexiconInputCount",
-                        "type=long", // keyword ?
-                        "lexiconDescriptionTypes",
-                        "type=nested",
-                        "lexiconDescriptionLanguages",
-                        "type=nested",
-                        "lexiconLanguageType",
-                        "type=nested",
-                        "lexiconFormats",
-                        "type=nested",
-                        "applicationUrl",
-                        "type=keyword,index=no",
-                        "terminoType",
-                        "type=nested",
-                        "terminoStructureType",
-                        "type=nested",
-                        "terminoDescriptionTypes",
-                        "type=nested",
-                        "terminoLanguageType",
-                        "type=nested",
-                        "terminoInputLanguages",
-                        "type=nested",
-                        "terminoDomains",
-                        "type=nested",
-                        "terminoFormat",
-                        "type=nested",
-                        "terminoUsage",
-                        "type=nested",
-                        "terminoOrigin",
-                        "type=nested",
-                        "terminoInputCount",
-                        "type=nested",
-                        "terminoVersion",
-                        "type=keyword",
-                        "terminoControled",
-                        "type=boolean",
-                        "terminoValidated",
-                        "type=boolean",
-                        "terminoApproved",
-                        "type=boolean",
-                        "terminoChecked",
-                        "type=boolean",
-                        "parts",
-                        "type=object" // nested ?
-
-                }))
-                .toArray(String[]::new);
-    }
-
-    public OrtolangItemIndexableContent(MetadataObject metadata, Collection collection, String alias) throws IndexingServiceException, OrtolangException {
-        this(metadata, collection, alias, false);
+        ORTOLANG_ITEM_MAPPING = new String[] {
+                "key",
+                "type=keyword",
+                "alias",
+                "type=keyword",
+                "schema",
+                "type=keyword",
+                "type",
+                "type=keyword",
+                "title",
+                "type=nested",
+                "description",
+                "type=nested",
+                "keywords",
+                "type=nested",
+                "bibliographicCitation",
+                "type=nested",
+                "datasize",
+                "type=long",
+                "publications",
+                "type=text",
+                "website",
+                "type=keyword,index=no",
+                "image",
+                "type=keyword,index=no",
+                "preview",
+                "type=keyword,index=no",
+                "statusOfUse",
+                "type=object",
+                "conditionsOfUse",
+                "type=nested",
+                "license",
+                "type=object",
+                "derogation",
+                "type=text,index=no",
+                "copyright",
+                "type=text,index=no",
+                "producers",
+                "type=nested",
+                "sponsors",
+                "type=nested",
+                "contributors",
+                "type=nested",
+                "relations",
+                "type=nested",
+                "commercialLinks",
+                "type=nested",
+                "creationLocations",
+                "type=nested",
+                "originDate",
+                "type=keyword",
+                "publicationDate",
+                "type=date",
+                "corporaType",
+                "type=nested",
+                "corporaLanguages",
+                "type=nested",
+                "corporaStudyLanguages",
+                "type=nested",
+                "corporaStyles",
+                "type=nested",
+                "annotationLevels",
+                "type=nested",
+                "corporaFormats",
+                "type=nested",
+                "corporaFileEncodings",
+                "type=nested",
+                "corporaDataTypes",
+                "type=nested",
+                "corporaLanguageType",
+                "type=nested",
+                "wordCount",
+                "type=long", // keywoard ?
+                "linguisticDataType",
+                "type=text",
+                "discourseTypes",
+                "type=text",
+                "linguisticSubjects",
+                "type=text",
+                "programmingLanguages",
+                "type=nested",
+                "operatingSystems",
+                "type=nested",
+                "toolSupport",
+                "type=nested",
+                "navigationLanguages",
+                "type=nested",
+                "toolLanguages",
+                "type=nested",
+                "toolFunctionalities",
+                "type=nested",
+                "toolInputData",
+                "type=nested",
+                "toolOutputData",
+                "type=nested",
+                "toolFileEncodings",
+                "type=nested",
+                "toolId",
+                "type=keyword,index=no",
+                "toolUrl",
+                "type=keyword,index=no",
+                "toolHelp",
+                "type=text,index=no",
+                "lexiconInputType",
+                "type=nested",
+                "lexiconInputLanguages",
+                "type=nested",
+                "lexiconInputCount",
+                "type=long", // keyword ?
+                "lexiconDescriptionTypes",
+                "type=nested",
+                "lexiconDescriptionLanguages",
+                "type=nested",
+                "lexiconLanguageType",
+                "type=nested",
+                "lexiconFormats",
+                "type=nested",
+                "applicationUrl",
+                "type=keyword,index=no",
+                "terminoType",
+                "type=nested",
+                "terminoStructureType",
+                "type=nested",
+                "terminoDescriptionTypes",
+                "type=nested",
+                "terminoLanguageType",
+                "type=nested",
+                "terminoInputLanguages",
+                "type=nested",
+                "terminoDomains",
+                "type=nested",
+                "terminoFormat",
+                "type=nested",
+                "terminoUsage",
+                "type=nested",
+                "terminoOrigin",
+                "type=nested",
+                "terminoInputCount",
+                "type=nested",
+                "terminoVersion",
+                "type=keyword",
+                "terminoControled",
+                "type=boolean",
+                "terminoValidated",
+                "type=boolean",
+                "terminoApproved",
+                "type=boolean",
+                "terminoChecked",
+                "type=boolean",
+                "parts",
+                "type=object" // nested ?
+        };
     }
 
     public OrtolangItemIndexableContent(MetadataObject metadata, Collection collection, String alias, boolean latest) throws IndexingServiceException, OrtolangException {
-        super(collection, INDEX, latest ? LATEST : ALL);
-        if (latest) {
-            // For latest key equals workspace alias
-            content.put("key", alias);
-        }
-        content.put("alias", alias);
-        BinaryStoreService binary = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
-        ObjectMapper mapper = new ObjectMapper();
+        super();
         try {
-            Map metadataContent = mapper.readValue(binary.getFile(metadata.getStream()), Map.class);
-            content.putAll(metadataContent);
+            BinaryStoreService binary = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> content = mapper.readValue(binary.getFile(metadata.getStream()), new TypeReference<Map<String, Object>>(){});
+
+            String metadataType = (String) content.get(OrtolangItemType.METADATA_KEY);
+            ortolangItemType = OrtolangItemType.fromMetadataType(metadataType);
+            setType(ortolangItemType.getSection());
+
+            if (latest) {
+                setIndex(INDEX);
+                // For latest: key equals workspace alias
+                setKey(alias);
+                content.put("key", alias);
+            } else {
+                setIndex(INDEX_ALL);
+                setKey(collection.getKey());
+                content.put("key", collection.getKey());
+            }
+            content.put("alias", alias);
+
+            setContent(content);
         } catch (IOException | BinaryStoreServiceException | DataNotFoundException e) {
             LOGGER.log(Level.SEVERE, e.getMessage());
         }
-        setContent(content);
     }
 
     @Override
     public Object[] getMapping() {
-        return ITEM_MAPPING;
+        return ORTOLANG_ITEM_MAPPING;
     }
 }

@@ -43,11 +43,11 @@ import java.util.Map;
 
 public abstract class OrtolangIndexableContent {
 
-    private final String index;
+    private String index;
 
-    private final String type;
+    private String type;
 
-    private final String key;
+    private String key;
 
     private String content;
 
@@ -56,6 +56,10 @@ public abstract class OrtolangIndexableContent {
     private String script;
 
     private Map<String, Object> scriptParams;
+
+    public OrtolangIndexableContent() {
+        this(null, null, null);
+    }
 
     public OrtolangIndexableContent(String index, String type, String key) {
         this.index = index;
@@ -70,12 +74,24 @@ public abstract class OrtolangIndexableContent {
         return index;
     }
 
+    public void setIndex(String index) {
+        this.index = index;
+    }
+
     public String getType() {
         return type;
     }
 
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public String getKey() {
         return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public String getContent() {

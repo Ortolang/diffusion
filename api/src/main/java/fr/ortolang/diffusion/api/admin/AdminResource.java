@@ -199,7 +199,7 @@ public class AdminResource {
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response dumpReferentialEntities() throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /admin/referential/entities/export");
-        LOGGER.log(Level.FINE, "exporting referentual entities");
+        LOGGER.log(Level.FINE, "exporting referential entities");
         ResponseBuilder builder = Response.ok();
         builder.header("Content-Disposition", "attachment; filename*=UTF-8''ortolang-dump.tar.gz");
         builder.type("application/x-gzip");
