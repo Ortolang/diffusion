@@ -70,7 +70,11 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
         ORTOLANG_ITEM_MAPPING = new String[] {
                 "key",
                 "type=keyword",
+                "snapshot",
+                "type=keyword",
                 "alias",
+                "type=keyword",
+                "tag",
                 "type=keyword",
                 "schema",
                 "type=keyword",
@@ -221,7 +225,7 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
         };
     }
 
-    public OrtolangItemIndexableContent(MetadataObject metadata, Collection collection, String alias, boolean latest) throws IndexingServiceException, OrtolangException {
+    public OrtolangItemIndexableContent(MetadataObject metadata, Collection collection, String alias, String snapshot, String tag, boolean latest) throws IndexingServiceException, OrtolangException {
         super();
         try {
             BinaryStoreService binary = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
@@ -236,12 +240,12 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
                 setIndex(INDEX);
                 // For latest: key equals workspace alias
                 setKey(alias);
-                content.put("key", alias);
             } else {
                 setIndex(INDEX_ALL);
-                setKey(collection.getKey());
-                content.put("key", collection.getKey());
+                setKey(alias + "-" + tag);
             }
+            content.put("tag", tag);
+            content.put("snapshot", snapshot);
             content.put("alias", alias);
 
             setContent(content);
