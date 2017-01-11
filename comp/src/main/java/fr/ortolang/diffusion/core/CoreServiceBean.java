@@ -3891,19 +3891,24 @@ public class CoreServiceBean implements CoreService {
                     String wskey = registry.lookup(workspace.getObjectIdentifier());
                     workspace.setKey(wskey);
                     String snapshot = workspace.findSnapshotByKey(collection.getKey()).getName();
-                    String tag = workspace.findTagBySnapshot(snapshot).getName();
+                    TagElement tagElement = workspace.findTagBySnapshot(snapshot);
+                    if (tagElement == null) {
+                        // Do not index published root collection with no associated tag: replaced by new version (tag moved)
+                        break;
+                    }
+                    String tag = tagElement.getName();
                     CollectionContent collectionContent = listCollectionContent(collection.getKey());
 
                     // Index item metadata for root collections
                     MetadataElement itemMetadata = collection.findMetadataByName(MetadataFormat.ITEM);
                     if (itemMetadata != null) {
-                        LOGGER.log(Level.INFO, "Add ortolang-item metadata of root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "] to indexable content");
+                        LOGGER.log(Level.INFO, "Add ortolang-item metadata of root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "/" + snapshot + "/" + tag + "] to indexable content");
                         OrtolangObjectIdentifier itemMetadataIdentifier = registry.lookup(itemMetadata.getKey());
                         MetadataObject metadataObject = em.find(MetadataObject.class, itemMetadataIdentifier.getId());
                         indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, false));
                         String latestPublishedSnapshot = findWorkspaceLatestPublishedSnapshot(workspace.getKey());
                         if (snapshot.equals(latestPublishedSnapshot)) {
-                            LOGGER.log(Level.INFO, "Add ortolang-item metadata as latest published root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "] to indexable content");
+                            LOGGER.log(Level.INFO, "Add ortolang-item metadata as latest published root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "/" + snapshot + "/" + tag + "] to indexable content");
                             indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, true));
                         }
                     }
