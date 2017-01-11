@@ -42,13 +42,13 @@ import java.util.Map;
 
 public class OrtolangObjectScriptedUpdate extends OrtolangIndexableContent {
 
-    public OrtolangObjectScriptedUpdate(String index, String type, String key, String script) {
-        super(index, type, key);
+    public OrtolangObjectScriptedUpdate(String index, String type, String id, String script) {
+        super(index, type, id);
         setScript(script);
     }
 
-    public OrtolangObjectScriptedUpdate(String index, String type, String key, String script, Map<String, Object> scriptParams) {
-        this(index, type, key, script);
+    public OrtolangObjectScriptedUpdate(String index, String type, String id, String script, Map<String, Object> scriptParams) {
+        this(index, type, id, script);
         setScriptParams(scriptParams);
     }
 

@@ -146,7 +146,7 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
             OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
             List<OrtolangIndexableContent> indexableContents = service.getIndexableContent(key);
             for (OrtolangIndexableContent indexableContent : indexableContents) {
-                LOGGER.log(Level.FINEST, "Start to index key [" + indexableContent.getKey() + "] of type [" + indexableContent.getType() + "] in index [" + indexableContent.getIndex() + "]");
+                LOGGER.log(Level.FINEST, "Start to index key [" + indexableContent.getId() + "] of type [" + indexableContent.getType() + "] in index [" + indexableContent.getIndex() + "]");
                 if (!indexableContent.isEmpty()) {
                     try {
                         IndicesAdminClient adminClient = client.admin().indices();
@@ -170,13 +170,13 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                             checkType(indexableContent, adminClient);
                         }
                         if (indexableContent.isUpdate()) {
-                            LOGGER.log(Level.FINE, "Updating key [" + indexableContent.getKey() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
+                            LOGGER.log(Level.FINE, "Updating key [" + indexableContent.getId() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
 
                             Script script = new Script(ScriptType.INLINE, DEFAULT_SCRIPT_LANG, scripts.get(indexableContent.getScript()), indexableContent.getScriptParams());
-                            client.prepareUpdate(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getKey()).setScript(script).get();
+                            client.prepareUpdate(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getId()).setScript(script).get();
                         } else {
-                            LOGGER.log(Level.FINE, "Indexing key [" + indexableContent.getKey() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
-                            client.prepareIndex(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getKey()).setSource(indexableContent.getContent().getBytes()).get();
+                            LOGGER.log(Level.FINE, "Indexing key [" + indexableContent.getId() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
+                            client.prepareIndex(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getId()).setSource(indexableContent.getContent().getBytes()).get();
                         }
                     } catch (IndexNotFoundException e) {
                         LOGGER.log(Level.INFO, "Index not found: removing it from registry and re-trying to index key [" + key + "]");
@@ -184,18 +184,18 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                         index(key);
                         return;
                     } catch (IllegalArgumentException e) {
-                        LOGGER.log(Level.WARNING, "IllegalArgumentException for key [" + indexableContent.getKey() + "] with type [" + indexableContent.getType() +
+                        LOGGER.log(Level.WARNING, "IllegalArgumentException for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
                                 "] in index [" + indexableContent.getIndex() + "]", e);
                         return;
                     } catch (DocumentMissingException e) {
-                        LOGGER.log(Level.WARNING, "Document missing for key [" + indexableContent.getKey() + "] with type [" + indexableContent.getType() +
+                        LOGGER.log(Level.WARNING, "Document missing for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
                                 "] in index [" + indexableContent.getIndex() + "] " + e.getMessage());
                     } catch (MapperParsingException e) {
-                        LOGGER.log(Level.WARNING, "MapperParsingException for key [" + indexableContent.getKey() + "] with type [" + indexableContent.getType() +
+                        LOGGER.log(Level.WARNING, "MapperParsingException for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
                                 "] in index [" + indexableContent.getIndex() + "]", e);
                         throw new ElasticSearchServiceException(e.getMessage(), e);
                     } catch (Exception e) {
-                        LOGGER.log(Level.SEVERE, "An unexpected error happened while indexing key [" + indexableContent.getKey() + "]", e);
+                        LOGGER.log(Level.SEVERE, "An unexpected error happened while indexing key [" + indexableContent.getId() + "]", e);
                         // TODO throw exception ???
                         return;
                     }

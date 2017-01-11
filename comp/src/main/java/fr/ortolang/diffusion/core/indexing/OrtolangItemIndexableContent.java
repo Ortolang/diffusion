@@ -239,11 +239,12 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
             if (latest) {
                 setIndex(INDEX);
                 // For latest: key equals workspace alias
-                setKey(alias);
+                setId(alias);
             } else {
                 setIndex(INDEX_ALL);
-                setKey(alias + "-" + tag);
+                setId(alias + "-" + tag);
             }
+            content.put("key", collection.getKey());
             content.put("tag", tag);
             content.put("snapshot", snapshot);
             content.put("alias", alias);

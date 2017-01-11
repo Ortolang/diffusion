@@ -47,7 +47,7 @@ public abstract class OrtolangIndexableContent {
 
     private String type;
 
-    private String key;
+    private String id;
 
     private String content;
 
@@ -61,10 +61,10 @@ public abstract class OrtolangIndexableContent {
         this(null, null, null);
     }
 
-    public OrtolangIndexableContent(String index, String type, String key) {
+    public OrtolangIndexableContent(String index, String type, String id) {
         this.index = index;
         this.type = type;
-        this.key = key;
+        this.id = id;
         this.update = false;
         this.script = null;
         this.scriptParams = Collections.emptyMap();
@@ -86,12 +86,12 @@ public abstract class OrtolangIndexableContent {
         this.type = type;
     }
 
-    public String getKey() {
-        return key;
+    public String getId() {
+        return id;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getContent() {
