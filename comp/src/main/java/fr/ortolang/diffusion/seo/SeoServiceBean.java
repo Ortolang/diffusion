@@ -200,7 +200,7 @@ public class SeoServiceBean implements SeoService {
         String loc;
         for (MarketSection marketSection : MarketSection.values()) {
             loc = marketServerUrl + marketSection.path;
-            Element url = buildSiteMapEntry(loc, null, ChangeFrequency.ALWAYS, marketSection.priority, doc);
+            Element url = buildSiteMapEntry(loc, null, ChangeFrequency.DAILY, marketSection.priority, doc);
             urlset.appendChild(url);
         }
     }
@@ -221,27 +221,16 @@ public class SeoServiceBean implements SeoService {
             }
         }
 
-        for (ODocument workspace : workspaces) {
-
-            boolean latest = workspacesLatest.containsValue(workspace);
+        // Add an entry for the latest version only
+        for (ODocument workspace : workspacesLatest.values()) {
             String marketType = marketTypes.get((String) workspace.rawField("type"));
             if (marketType == null) {
                 continue;
             }
-            String locLatest =  marketServerUrl + "market/" + marketType + "/" + workspace.rawField("alias");
-            String loc = locLatest + "/" + workspace.rawField("snapshotName");
-            String priority = latest ? "0.7" : "0.5";
-
-            Element url = buildSiteMapEntry(loc, null, ChangeFrequency.WEEKLY, priority, doc);
+            String loc =  marketServerUrl + "market/" + marketType + "/" + workspace.rawField("alias");
+            String priority = "0.7";
+            Element url = buildSiteMapEntry(loc, null, ChangeFrequency.DAILY, priority, doc);
             urlset.appendChild(url);
-
-            // Add an entry for the latest version without the snapshotName in the url
-            if (latest) {
-                loc = locLatest;
-                priority = "0.8";
-                Element urlLatest = buildSiteMapEntry(loc, null, ChangeFrequency.ALWAYS, priority, doc);
-                urlset.appendChild(urlLatest);
-            }
         }
     }
 
@@ -296,13 +285,13 @@ public class SeoServiceBean implements SeoService {
     private enum MarketSection {
 
         INDEX("", "1.0", null, null),
-        CORPORA("market/" + CORPUS.getSection(), "0.9", CORPUS.getMetadataType(), CORPUS.getSection()),
-        LEXICONS("market/" + LEXICON.getSection(), "0.9", LEXICON.getMetadataType(), LEXICON.getSection()),
-        TOOLS("market/" + TOOL.getSection(), "0.9", TOOL.getMetadataType(), LEXICON.getSection()),
-        TERMINOLOGIES("market/" + TERMINOLOGY.getSection(), "0.9", TERMINOLOGY.getMetadataType(), TERMINOLOGY.getSection()),
+        CORPORA("market/" + CORPUS.getSection(), "0.8", CORPUS.getMetadataType(), CORPUS.getSection()),
+        LEXICONS("market/" + LEXICON.getSection(), "0.8", LEXICON.getMetadataType(), LEXICON.getSection()),
+        TOOLS("market/" + TOOL.getSection(), "0.8", TOOL.getMetadataType(), LEXICON.getSection()),
+        TERMINOLOGIES("market/" + TERMINOLOGY.getSection(), "0.8", TERMINOLOGY.getMetadataType(), TERMINOLOGY.getSection()),
         // Do not add marketType for applications as they do not have a description page
-        APPLICATIONS("market/" + APPLICATION.getSection(), "0.9", APPLICATION.getMetadataType(), null),
-        INFORMATION("information", "0.9", null, null),
+        APPLICATIONS("market/" + APPLICATION.getSection(), "0.8", APPLICATION.getMetadataType(), null),
+        INFORMATION("information", "0.8", null, null),
         LEGAL_NOTICES("legal-notices", "0.3", null, null);
 
         private final String path;
