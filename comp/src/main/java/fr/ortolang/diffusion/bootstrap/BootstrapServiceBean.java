@@ -225,8 +225,21 @@ public class BootstrapServiceBean implements BootstrapService {
                 Map<String, List<String>> esrPolicyRules = new HashMap<String, List<String>>();
                 esrPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
                 esrPolicyRules.put(MembershipService.ESR_GROUP_KEY, Arrays.asList("read", "download"));
+                esrPolicyRules.put("${workspace.privileged}", Arrays.asList("read", "download"));
                 authorisation.setPolicyRules(pid, esrPolicyRules);
                 authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.ESR, "All users can read this content but download is restricted to ESR users only", pid);
+            }
+
+            if (!authorisation.isPolicyTemplateExists(AuthorisationPolicyTemplate.PRIVILEGED)) {
+                LOGGER.log(Level.FINE, "create [" + AuthorisationPolicyTemplate.PRIVILEGED + "] authorisation policy template");
+                String pid = UUID.randomUUID().toString();
+                authorisation.createPolicy(pid, MembershipService.SUPERUSER_IDENTIFIER);
+                Map<String, List<String>> privilegedPolicyRules = new HashMap<String, List<String>>();
+                privilegedPolicyRules.put(MembershipService.UNAUTHENTIFIED_IDENTIFIER, Collections.singletonList("read"));
+                privilegedPolicyRules.put(MembershipService.ESR_GROUP_KEY, Collections.singletonList("read"));
+                privilegedPolicyRules.put("${workspace.privileged}", Arrays.asList("read", "download"));
+                authorisation.setPolicyRules(pid, privilegedPolicyRules);
+                authorisation.createPolicyTemplate(AuthorisationPolicyTemplate.PRIVILEGED, "Only privileged users can read and download this content", pid);
             }
 
             if (!authorisation.isPolicyTemplateExists(AuthorisationPolicyTemplate.RESTRICTED)) {

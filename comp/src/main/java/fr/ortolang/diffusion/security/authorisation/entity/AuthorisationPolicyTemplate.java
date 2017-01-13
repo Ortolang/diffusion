@@ -53,6 +53,7 @@ public class AuthorisationPolicyTemplate {
 	public static final String FORALL = "forall";
 	public static final String AUTHENTIFIED = "authentified";
 	public static final String ESR = "esr";
+	public static final String PRIVILEGED = "privileged";
 	public static final String RESTRICTED = "restricted";
 	
 	@Id
