@@ -62,6 +62,7 @@ public class WorkspaceRepresentation {
     private long creationDate;
     private long lastModificationDate;
     private String members;
+    private String privileged;
     private String head;
     private boolean changed;
     private boolean readOnly;
@@ -155,7 +156,15 @@ public class WorkspaceRepresentation {
         this.members = members;
     }
 
-    public String getHead() {
+    public String getPrivileged() {
+		return privileged;
+	}
+
+	public void setPrivileged(String privileged) {
+		this.privileged = privileged;
+	}
+
+	public String getHead() {
         return head;
     }
 
@@ -220,6 +229,7 @@ public class WorkspaceRepresentation {
         representation.setClock(workspace.getClock());
         representation.setHead(workspace.getHead());
         representation.setMembers(workspace.getMembers());
+        representation.setPrivileged(workspace.getPrivileged());
         representation.setChanged(workspace.hasChanged());
         representation.setReadOnly(workspace.isReadOnly());
         representation.setArchive(workspace.isArchive());

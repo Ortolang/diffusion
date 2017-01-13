@@ -84,22 +84,34 @@ public class GroupResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response createGroup(@FormParam("name") String name, @FormParam("description") String description) throws MembershipServiceException, AccessDeniedException, KeyAlreadyExistsException {
-        LOGGER.log(Level.INFO, "POST /groups");
+    public Response createGroup(@FormParam("name") String name, @FormParam("description") String description, @QueryParam("members") @DefaultValue("true") boolean members) throws MembershipServiceException, AccessDeniedException, KeyAlreadyExistsException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "POST FORM /groups");
         String key = UUID.randomUUID().toString();
         membership.createGroup(key, name, description);
+        Group ngroup = membership.readGroup(key);
+        GroupRepresentation representation = GroupRepresentation.fromGroup(ngroup);
+        if ( members ) {
+            for (String member : ngroup.getMembers()) {
+                representation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(member)));
+            }
+        }
         URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
-        return Response.created(location).build();
+        return Response.created(location).entity(representation).build();
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response createGroup(GroupRepresentation group) throws MembershipServiceException, AccessDeniedException, KeyAlreadyExistsException {
-        LOGGER.log(Level.INFO, "POST /groups");
+    public Response createGroup(GroupRepresentation group) throws MembershipServiceException, AccessDeniedException, KeyAlreadyExistsException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "POST JSON /groups");
         String key = UUID.randomUUID().toString();
         membership.createGroup(key, group.getName(), group.getDescription());
+        Group ngroup = membership.readGroup(key);
+        GroupRepresentation representation = GroupRepresentation.fromGroup(ngroup);
+        for (String member : ngroup.getMembers()) {
+            representation.addMember(ProfileCardRepresentation.fromProfile(membership.readProfile(member)));
+        }
         URI location = uriInfo.getBaseUriBuilder().path(this.getClass()).path(key).build();
-        return Response.created(location).build();
+        return Response.created(location).entity(representation).build();
     }
 
     @GET

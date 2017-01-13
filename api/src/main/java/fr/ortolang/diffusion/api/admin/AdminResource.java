@@ -46,9 +46,11 @@ import fr.ortolang.diffusion.api.profile.ProfileRepresentation;
 import fr.ortolang.diffusion.api.runtime.HumanTaskRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessTypeRepresentation;
+import fr.ortolang.diffusion.api.workspace.WorkspaceRepresentation;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.MetadataFormatException;
+import fr.ortolang.diffusion.core.WorkspaceReadOnlyException;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
@@ -61,6 +63,7 @@ import fr.ortolang.diffusion.jobs.entity.Job;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.registry.*;
 import fr.ortolang.diffusion.registry.entity.RegistryEntry;
@@ -313,6 +316,24 @@ public class AdminResource {
         } catch (DataCollisionException | URISyntaxException e) {
             LOGGER.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
             return Response.serverError().entity(e.getMessage()).build();
+        }
+    }
+
+    @PUT
+    @Path("/core/workspace/{wskey}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response updateWorkspace(@PathParam(value = "wskey") String wskey, WorkspaceRepresentation representation) throws KeyNotFoundException {
+        LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey);
+        if (representation.getKey() != null && representation.getKey().length() > 0) {
+            try {
+				core.systemUpdateWorkspace(wskey, representation.getAlias(), representation.isChanged(), representation.getHead(), representation.getMembers(), representation.getPrivileged(), representation.isReadOnly(), representation.getType());
+			} catch (NotificationServiceException | CoreServiceException e) {
+				LOGGER.log(Level.SEVERE, "an error occured while updating workspace element: " + e.getMessage(), e);
+				return Response.serverError().entity(e.getMessage()).build();
+			}
+            return Response.ok().build();
+        } else {
+            return Response.status(Response.Status.BAD_REQUEST).entity("representation does not contains a valid key").build();
         }
     }
 
