@@ -11,6 +11,7 @@
         "forall",
         "authentified",
         "esr",
+        "privileged",
         "restricted"
       ]
     }
