@@ -37,6 +37,8 @@ package fr.ortolang.diffusion.api.search;
  */
 
 import fr.ortolang.diffusion.OrtolangSearchResult;
+import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.indexing.OrtolangItemIndexableContent;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.search.SearchServiceException;
@@ -89,17 +91,33 @@ import java.util.logging.Logger;
     
     @GET
     @Path("/items/{id}")
-    public Response item(@PathParam(value = "id") String id, @QueryParam(value = "type") String type) {
+    public Response item(@PathParam(value = "id") String id, @QueryParam(value = "type") String type, @QueryParam(value = "version") String version) {
     	if (type==null) {
     		return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'type' is mandatory").build();
     	}
     	if (id==null) {
     		return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'id' is mandatory").build();
     	}
-    	String document = search.elasticGet(OrtolangItemIndexableContent.INDEX, type, id);
-    	return Response.ok(document).build();
+    	
+    	String index = OrtolangItemIndexableContent.INDEX;
+    	
+    	if (version!=null) {
+    		index = OrtolangItemIndexableContent.INDEX_ALL;
+    		id = id + "-" + version;
+    	}
+    	return Response.ok(search.elasticGet(index, type, id)).build();
     }
 
+    @GET
+    @Path("/workspaces/{alias}")
+    public Response workspaces(@PathParam(value = "alias") String alias) {
+    	if (alias==null) {
+    		return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'alias' is mandatory").build();
+    	}
+    	String document = search.elasticGet(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, alias);
+    	return Response.ok(document).build();
+    }
+    
     @GET
     @Path("/collections")
     @GZIP
@@ -236,9 +254,9 @@ import java.util.logging.Logger;
         return Response.ok(profile).build();
     }
 
-    @GET
-    @Path("/workspaces")
-    @GZIP
+//    @GET
+//    @Path("/workspaces")
+//    @GZIP
     public Response findWorkspaces(@Context HttpServletRequest request) {
         LOGGER.log(Level.INFO, "GET /search/workspaces");
         String fields = null;
@@ -299,9 +317,9 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
 
-    @GET
-    @Path("/workspaces/{alias}")
-    @GZIP
+//    @GET
+//    @Path("/workspaces/{alias}")
+//    @GZIP
     public Response getWorkspace(@PathParam(value = "alias") String alias) {
         LOGGER.log(Level.INFO, "GET /metdata/workspaces/" + alias);
         try {

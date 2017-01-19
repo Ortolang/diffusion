@@ -66,6 +66,7 @@ public class WorkspaceIndexableContent extends OrtolangObjectIndexableContent {
 
     public WorkspaceIndexableContent(Workspace workspace) throws IndexingServiceException {
         super(workspace, CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE);
+        setId(workspace.getAlias());
         content.put("alias", workspace.getAlias());
         content.put("head", workspace.getHead());
         content.put("archive", workspace.isArchive());
