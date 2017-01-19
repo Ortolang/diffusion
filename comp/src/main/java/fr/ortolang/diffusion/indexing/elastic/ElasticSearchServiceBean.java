@@ -44,6 +44,8 @@ import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
 import org.apache.commons.io.IOUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
+import org.elasticsearch.action.get.GetRequestBuilder;
+import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.IndicesAdminClient;
@@ -56,6 +58,8 @@ import org.elasticsearch.index.mapper.MapperParsingException;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -212,29 +216,49 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
     }
 
     @Override
-    public void search(String query) {
-        search(query, null, null);
+    public List<String> search(String query) {
+        return search(query, null, null);
     }
 
     @Override
-    public void search(String query, String index) {
-        search(query, index, null);
+    public List<String> search(String query, String index) {
+        return search(query, index, null);
     }
 
     @Override
-    public void search(String query, String index, String type) {
-        QueryStringQueryBuilder queryBuilder = new QueryStringQueryBuilder(query);
-        SearchRequestBuilder search = client.prepareSearch();
-        search.setQuery(queryBuilder);
+    public List<String> search(String query, String index, String type) {
+    	LOGGER.log(Level.FINE, "Search in " + index + " with type " + type);
+//        QueryStringQueryBuilder queryBuilder = new QueryStringQueryBuilder(query);
+        SearchRequestBuilder searchRequest = client.prepareSearch();
+//        searchRequest.setQuery(queryBuilder);
         if (index != null) {
-            search.setIndices(index);
+            searchRequest.setIndices(index);
         }
         if (type != null) {
-            search.setTypes(type);
+            searchRequest.setTypes(type);
         }
-        SearchResponse searchResponse = search.get();
-        // TODO
-//        searchResponse.getHits()
+        SearchResponse searchResponse = searchRequest.get();
+        
+        // Parses
+        List<String> results = new ArrayList<String>();
+        long totalHits = searchResponse.getHits().getTotalHits();
+        LOGGER.log(Level.FINE, "total hits : " + totalHits);
+        SearchHit[] searchHits = searchResponse.getHits().getHits();
+        for (SearchHit searchHit : searchHits) {
+        	results.add(searchHit.getSourceAsString());
+        }
+        return results;
+    }
+    
+    @Override
+    public String get(String index, String type, String id) {
+    	GetRequestBuilder requestBuilder = client.prepareGet(index, type, id);
+		
+		GetResponse getResponse = requestBuilder.get();
+		if(getResponse.isExists()) {
+			return getResponse.getSourceAsString();
+		}
+		return null;
     }
 
     private void checkType(OrtolangIndexableContent indexableContent, IndicesAdminClient adminClient) {

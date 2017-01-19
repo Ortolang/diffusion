@@ -57,6 +57,7 @@ import javax.json.JsonReader;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangSearchResult;
+import fr.ortolang.diffusion.indexing.elastic.ElasticSearchService;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -84,6 +85,8 @@ public class SearchServiceBean implements SearchService {
 	private IndexStoreService indexStore;
 	@EJB
 	private JsonStoreService jsonStore;
+	@EJB
+	private ElasticSearchService elasticService;
 	
 	public SearchServiceBean() {
 	}
@@ -358,6 +361,16 @@ public class SearchServiceBean implements SearchService {
 		} catch ( JsonStoreServiceException e ) {
 			throw new SearchServiceException("unable to perform json search", e);
 		}
+	}
+
+	@Override
+	public List<String> elasticSearch(String query, String index, String type) {
+		return elasticService.search(query, index, type);
+	}
+	
+	@Override
+	public String elasticGet(String index, String type, String id) {
+		return elasticService.get(index, type, id);
 	}
 
     private String findByContent(String cls, String content, Map<String, String> fieldsProjection, Map<String, Object> fieldsValue, String group, String limit, String orderProp, String orderDir) {

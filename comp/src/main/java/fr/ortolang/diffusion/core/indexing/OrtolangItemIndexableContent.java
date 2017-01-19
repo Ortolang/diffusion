@@ -60,9 +60,9 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
 
     public static final String[] ORTOLANG_ITEM_MAPPING;
 
-    private static final String INDEX = "item";
+    public static final String INDEX = "item";
 
-    private static final String INDEX_ALL = "item-all";
+    public static final String INDEX_ALL = "item-all";
 
     private OrtolangItemType ortolangItemType;
 

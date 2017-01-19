@@ -37,6 +37,7 @@ package fr.ortolang.diffusion.api.search;
  */
 
 import fr.ortolang.diffusion.OrtolangSearchResult;
+import fr.ortolang.diffusion.core.indexing.OrtolangItemIndexableContent;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.search.SearchServiceException;
 
@@ -77,6 +78,26 @@ import java.util.logging.Logger;
             results = Collections.emptyList();
         }
         return Response.ok(results).build();
+    }
+
+    @GET
+    @Path("/items")
+    public Response items(@QueryParam(value = "query") String query, @QueryParam(value = "type") String type) {
+    	List<String> documents = search.elasticSearch(query, OrtolangItemIndexableContent.INDEX, type);
+    	return Response.ok(documents).build();
+    }
+    
+    @GET
+    @Path("/items/{id}")
+    public Response item(@PathParam(value = "id") String id, @QueryParam(value = "type") String type) {
+    	if (type==null) {
+    		return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'type' is mandatory").build();
+    	}
+    	if (id==null) {
+    		return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'id' is mandatory").build();
+    	}
+    	String document = search.elasticGet(OrtolangItemIndexableContent.INDEX, type, id);
+    	return Response.ok(document).build();
     }
 
     @GET
@@ -353,7 +374,7 @@ import java.util.logging.Logger;
         }
         return Response.status(404).build();
     }
-
+    
     private void processFields(Map.Entry<String, String[]> parameter, Map<String, Object> fieldsMap) {
 //        Map<String, Object> fieldsMap = new HashMap<>();
         if (parameter.getKey().endsWith("[]")) {

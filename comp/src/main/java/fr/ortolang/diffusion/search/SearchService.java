@@ -69,4 +69,8 @@ public interface SearchService extends OrtolangService {
 	List<String> findEntities(String content, Map<String, String> fieldsProjection) throws SearchServiceException;
 	
 	String getEntity(String id) throws SearchServiceException;
+	
+	List<String> elasticSearch(String query, String index, String type);
+	
+	String elasticGet(String index, String type, String id);
 }
