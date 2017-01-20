@@ -40,6 +40,10 @@ import fr.ortolang.diffusion.OrtolangSearchResult;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.indexing.OrtolangItemIndexableContent;
+import fr.ortolang.diffusion.membership.MembershipService;
+import fr.ortolang.diffusion.membership.entity.Profile;
+import fr.ortolang.diffusion.referential.ReferentialService;
+import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.search.SearchServiceException;
 
@@ -70,19 +74,6 @@ import java.util.logging.Logger;
     }
 
     @GET
-    @Path("/index")
-    public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
-        LOGGER.log(Level.INFO, "GET /search/index?query=" + query);
-        List<OrtolangSearchResult> results;
-        if (query != null && query.length() > 0) {
-            results = search.indexSearch(query);
-        } else {
-            results = Collections.emptyList();
-        }
-        return Response.ok(results).build();
-    }
-
-    @GET
     @Path("/items")
     public Response items(@QueryParam(value = "query") String query, @QueryParam(value = "type") String type) {
     	List<String> documents = search.elasticSearch(query, OrtolangItemIndexableContent.INDEX, type);
@@ -105,6 +96,7 @@ import java.util.logging.Logger;
     		index = OrtolangItemIndexableContent.INDEX_ALL;
     		id = id + "-" + version;
     	}
+    	//TOOD find an item if type is not specify
     	return Response.ok(search.elasticGet(index, type, id)).build();
     }
 
@@ -116,6 +108,72 @@ import java.util.logging.Logger;
     	}
     	String document = search.elasticGet(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, alias);
     	return Response.ok(document).build();
+    }
+
+    @GET
+    @Path("/entities/{id}")
+    @GZIP
+    public Response getEntity(@PathParam(value = "id") String id, @QueryParam(value = "type") String type) {
+//        LOGGER.log(Level.INFO, "GET /search/entities/" + id);
+    	if (type==null) {
+    		return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'type' is mandatory").build();
+    	}
+    	if (id==null) {
+    		return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'id' is mandatory").build();
+    	}
+    	//TOOD find an entity if type is not specify
+    	String entity = search.elasticGet(ReferentialService.SERVICE_NAME, type, id);
+        if (entity != null) {
+            return Response.ok(entity).build();
+        }
+        return Response.status(404).build();
+    }
+
+    @GET
+    @Path("/persons/{id}")
+    @GZIP
+    public Response getPerson(@PathParam(value = "key") String key) {
+//        LOGGER.log(Level.INFO, "GET /search/entity/person/" + key);
+    	if (key==null) {
+    		return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
+    	}
+        String person = search.elasticGet(ReferentialService.SERVICE_NAME, ReferentialEntityType.PERSON.name(), key);
+        if (person != null) {
+        	return Response.ok(person).build();
+        }
+        return Response.status(404).build();
+    }
+
+    @GET
+    @Path("/profiles/{key}")
+    @GZIP
+    public Response getProfile(@PathParam(value = "key") String key) {
+//        LOGGER.log(Level.INFO, "GET /search/profiles/" + key);
+    	if (key==null) {
+    		return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
+    	}
+        String profile = search.elasticGet(MembershipService.SERVICE_NAME, Profile.OBJECT_TYPE, key);
+        if (profile != null) {
+        	return Response.ok(profile).build();
+        }
+        return Response.status(404).build();
+    }
+
+    
+    
+    
+
+    @GET
+    @Path("/index")
+    public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
+        LOGGER.log(Level.INFO, "GET /search/index?query=" + query);
+        List<OrtolangSearchResult> results;
+        if (query != null && query.length() > 0) {
+            results = search.indexSearch(query);
+        } else {
+            results = Collections.emptyList();
+        }
+        return Response.ok(results).build();
     }
     
     @GET
@@ -239,21 +297,6 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
 
-    @GET
-    @Path("/profiles/{key}")
-    @GZIP
-    public Response getProfile(@PathParam(value = "key") String key) {
-        LOGGER.log(Level.INFO, "GET /search/profiles/" + key);
-        String profile;
-        try {
-            profile = search.getProfile(key);
-        } catch (SearchServiceException e) {
-            profile = "";
-            LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
-        }
-        return Response.ok(profile).build();
-    }
-
 //    @GET
 //    @Path("/workspaces")
 //    @GZIP
@@ -317,22 +360,6 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
 
-//    @GET
-//    @Path("/workspaces/{alias}")
-//    @GZIP
-    public Response getWorkspace(@PathParam(value = "alias") String alias) {
-        LOGGER.log(Level.INFO, "GET /metdata/workspaces/" + alias);
-        try {
-            String result = search.getWorkspace(alias);
-            if (result != null) {
-                return Response.ok(result).build();
-            }
-        } catch (SearchServiceException e) {
-            LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
-        }
-        return Response.status(404).build();
-    }
-
     @GET
     @Path("/count/workspaces")
     @GZIP
@@ -377,22 +404,6 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
 
-    @GET
-    @Path("/entities/{id}")
-    @GZIP
-    public Response getEntity(@PathParam(value = "id") String id) {
-        LOGGER.log(Level.INFO, "GET /search/entities/" + id);
-        try {
-            String result = search.getEntity(id);
-            if (result != null) {
-                return Response.ok(result).build();
-            }
-        } catch (SearchServiceException e) {
-            LOGGER.log(Level.WARNING, e.getMessage(), e.fillInStackTrace());
-        }
-        return Response.status(404).build();
-    }
-    
     private void processFields(Map.Entry<String, String[]> parameter, Map<String, Object> fieldsMap) {
 //        Map<String, Object> fieldsMap = new HashMap<>();
         if (parameter.getKey().endsWith("[]")) {
