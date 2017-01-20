@@ -130,7 +130,7 @@ import java.util.logging.Logger;
     }
 
     @GET
-    @Path("/persons/{id}")
+    @Path("/persons/{key}")
     @GZIP
     public Response getPerson(@PathParam(value = "key") String key) {
 //        LOGGER.log(Level.INFO, "GET /search/entity/person/" + key);
