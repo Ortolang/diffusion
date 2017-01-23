@@ -55,6 +55,7 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.mapper.MapperParsingException;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
@@ -227,10 +228,12 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
 
     @Override
     public List<String> search(String query, String index, String type) {
-    	LOGGER.log(Level.FINE, "Search in " + index + " with type " + type);
-//        QueryStringQueryBuilder queryBuilder = new QueryStringQueryBuilder(query);
+    	LOGGER.log(Level.FINE, "Search in " + index + " and type " + type + " with query " + query);
         SearchRequestBuilder searchRequest = client.prepareSearch();
-//        searchRequest.setQuery(queryBuilder);
+        QueryBuilder queryBuilder = ElasticSearchSearchQueryParser.parse(query);
+        if (queryBuilder!=null) {
+        	searchRequest.setQuery(queryBuilder);
+        }
         if (index != null) {
             searchRequest.setIndices(index);
         }
