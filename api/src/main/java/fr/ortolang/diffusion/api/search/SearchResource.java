@@ -145,6 +145,21 @@ import java.util.logging.Logger;
     }
 
     @GET
+    @Path("/organizations/{key}")
+    @GZIP
+    public Response getOrganization(@PathParam(value = "key") String key) {
+//        LOGGER.log(Level.INFO, "GET /search/entity/person/" + key);
+    	if (key==null) {
+    		return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
+    	}
+        String person = search.elasticGet(ReferentialService.SERVICE_NAME, ReferentialEntityType.ORGANIZATION.name(), key);
+        if (person != null) {
+        	return Response.ok(person).build();
+        }
+        return Response.status(404).build();
+    }
+
+    @GET
     @Path("/profiles/{key}")
     @GZIP
     public Response getProfile(@PathParam(value = "key") String key) {

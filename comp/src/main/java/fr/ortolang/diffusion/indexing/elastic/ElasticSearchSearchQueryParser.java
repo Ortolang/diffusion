@@ -8,15 +8,18 @@ public class ElasticSearchSearchQueryParser {
 
 	public static QueryBuilder parse(String query) {
 		QueryBuilder queryBuilder = null;
-		String parameter[] = query.split("=");
-		if (parameter[0].endsWith("[]")) {
-			String parameterKey = parameter[0].substring(0, parameter[0].length() - 2);
-			String[] parameterKeyPart = parameterKey.split("\\.");
-			String path = parameterKey;
-			if (parameterKeyPart.length > 1) {
-				path = parameterKeyPart[0];
+		if (query != null) {
+			String parameter[] = query.split("=");
+			if (parameter[0].endsWith("[]")) {
+				String parameterKey = parameter[0].substring(0, parameter[0].length() - 2);
+				String[] parameterKeyPart = parameterKey.split("\\.");
+				String path = parameterKey;
+				if (parameterKeyPart.length > 1) {
+					path = parameterKeyPart[0];
+				}
+				queryBuilder = QueryBuilders.nestedQuery(path, QueryBuilders.termQuery(parameterKey, parameter[1]),
+						ScoreMode.Avg);
 			}
-			queryBuilder = QueryBuilders.nestedQuery(path, QueryBuilders.termQuery(parameterKey, parameter[1]), ScoreMode.Avg);
 		}
 		return queryBuilder;
 	}
