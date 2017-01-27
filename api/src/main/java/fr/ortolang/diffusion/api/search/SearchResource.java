@@ -75,14 +75,14 @@ import java.util.logging.Logger;
 
     @GET
     @Path("/items")
-    public Response items(@QueryParam(value = "query") String query, @QueryParam(value = "type") String type) {
-    	List<String> documents = search.elasticSearch(query, OrtolangItemIndexableContent.INDEX, type);
-    	return Response.ok(documents).build();
+    public Response searchItems(@Context HttpServletRequest request) {
+        
+    	return Response.ok(executeQuery(request, OrtolangItemIndexableContent.INDEX)).build();
     }
     
     @GET
     @Path("/items/{id}")
-    public Response item(@PathParam(value = "id") String id, @QueryParam(value = "type") String type, @QueryParam(value = "version") String version) {
+    public Response getItem(@PathParam(value = "id") String id, @QueryParam(value = "type") String type, @QueryParam(value = "version") String version) {
     	if (type==null) {
     		return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'type' is mandatory").build();
     	}
@@ -102,12 +102,19 @@ import java.util.logging.Logger;
 
     @GET
     @Path("/workspaces/{alias}")
-    public Response workspaces(@PathParam(value = "alias") String alias) {
+    public Response getWorkspaces(@PathParam(value = "alias") String alias) {
     	if (alias==null) {
     		return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'alias' is mandatory").build();
     	}
     	String document = search.elasticGet(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, alias);
     	return Response.ok(document).build();
+    }
+
+    @GET
+    @Path("/entities")
+    @GZIP
+    public Response searchEntities(@Context HttpServletRequest request) {
+		return Response.ok(executeQuery(request, ReferentialService.SERVICE_NAME)).build();
     }
 
     @GET
@@ -174,12 +181,48 @@ import java.util.logging.Logger;
         return Response.status(404).build();
     }
 
-    
+    private List<String> executeQuery(HttpServletRequest request, String index) {
+    	String type = null;
+    	Integer size = null;
+        Map<String, String[]> queryMap = new HashMap<>();
+    	for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
+            if ("type".equals(parameter.getKey())) {
+                type = parameter.getValue()[0];
+            } else if ("size".equals(parameter.getKey())) {
+            	try {
+            		size = Integer.valueOf(parameter.getValue()[0]);
+            	} catch (NumberFormatException e) {
+            	}
+            } else if (!"scope".equals(parameter.getKey())) {
+                // Ignore scope param
+            	queryMap.put(parameter.getKey(), parameter.getValue());
+//                if (parameter.getKey().endsWith("[]")) {
+//                    List<String> paramArr = new ArrayList<String>();
+//                    Collections.addAll(paramArr, parameter.getValue());
+//                    String[] fieldPart = parameter.getKey().substring(0, parameter.getKey().length() - 2).split("\\.");
+//                    if (fieldPart.length > 1) {
+//                    queryMap.put(parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
+//                    } else {
+//                        fieldsMap.put("meta_ortolang-item-json." + parameter.getKey().substring(0, parameter.getKey().length() - 2), paramArr);
+//                    }
+//                } else {
+//                	queryMap.put(parameter.getKey(), parameter.getValue()[0]);
+//                    String[] fieldPart = parameter.getKey().split("\\.");
+//                    if (fieldPart.length > 1) {
+//                        fieldsMap.put("meta_" + parameter.getKey(), parameter.getValue()[0]);
+//                    } else {
+//                        fieldsMap.put("meta_ortolang-item-json." + parameter.getKey(), parameter.getValue()[0]);
+//                    }
+//                }
+            }
+    	}
+    	return search.elasticSearch(queryMap, index, type, size);
+    }
     
     
 
-    @GET
-    @Path("/index")
+//    @GET
+//    @Path("/index")
     public Response plainTextSearch(@QueryParam(value = "query") String query) throws SearchServiceException {
         LOGGER.log(Level.INFO, "GET /search/index?query=" + query);
         List<OrtolangSearchResult> results;
@@ -191,9 +234,9 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
     
-    @GET
-    @Path("/collections")
-    @GZIP
+//    @GET
+//    @Path("/collections")
+//    @GZIP
     public Response findCollections(@Context HttpServletRequest request) {
         LOGGER.log(Level.INFO, "GET /search/collections");
         String fields = null;
@@ -268,9 +311,9 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
 
-    @GET
-    @Path("/collections/{key}")
-    @GZIP
+//    @GET
+//    @Path("/collections/{key}")
+//    @GZIP
     public Response getCollection(@PathParam(value = "key") String key) {
         LOGGER.log(Level.INFO, "GET /search/collections/" + key);
         try {
@@ -284,9 +327,9 @@ import java.util.logging.Logger;
         return Response.status(404).build();
     }
 
-    @GET
-    @Path("/profiles")
-    @GZIP
+//    @GET
+//    @Path("/profiles")
+//    @GZIP
     public Response findProfiles(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
         LOGGER.log(Level.INFO, "GET /search/profiles?content=" + content + (fields != null ? "&fields=" + fields : ""));
         // Sets projections
@@ -375,9 +418,9 @@ import java.util.logging.Logger;
         return Response.ok(results).build();
     }
 
-    @GET
-    @Path("/count/workspaces")
-    @GZIP
+//    @GET
+//    @Path("/count/workspaces")
+//    @GZIP
     public Response countWorkspaces(@Context HttpServletRequest request) {
         LOGGER.log(Level.INFO, "GET /search/count/workspaces");
         Map<String, Object> fieldsMap = new HashMap<String, Object>();
@@ -394,7 +437,10 @@ import java.util.logging.Logger;
         return Response.status(400).build();
     }
 
-    @GET @Path("/entities") @GZIP public Response findEntities(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
+//    @GET 
+//    @Path("/entities") 
+//    @GZIP 
+    public Response findEntities(@QueryParam(value = "content") String content, @QueryParam(value = "fields") String fields) {
         LOGGER.log(Level.INFO, "GET /search/entities?content=" + content + "&fields=" + fields);
         // Sets projections
         Map<String, String> fieldsProjection = new HashMap<String, String>();

@@ -1,6 +1,7 @@
 package fr.ortolang.diffusion.indexing.elastic;
 
 import java.util.List;
+import java.util.Map;
 
 /*
  * #%L
@@ -48,11 +49,7 @@ public interface ElasticSearchService extends OrtolangService {
 
     void remove(String key) throws ElasticSearchServiceException;
 
-    List<String> search(String query);
-
-    List<String> search(String query, String index);
-
-    List<String> search(String query, String index, String type);
+    List<String> search(Map<String, String[]> query, String index, String type, Integer size);
     
     String get(String index, String type, String id);
 }

@@ -70,7 +70,7 @@ public interface SearchService extends OrtolangService {
 	
 	String getEntity(String id) throws SearchServiceException;
 	
-	List<String> elasticSearch(String query, String index, String type);
+	List<String> elasticSearch(Map<String, String[]> query, String index, String type, Integer size);
 	
 	String elasticGet(String index, String type, String id);
 }

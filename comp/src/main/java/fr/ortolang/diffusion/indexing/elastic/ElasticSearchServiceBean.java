@@ -217,28 +217,23 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
     }
 
     @Override
-    public List<String> search(String query) {
-        return search(query, null, null);
-    }
-
-    @Override
-    public List<String> search(String query, String index) {
-        return search(query, index, null);
-    }
-
-    @Override
-    public List<String> search(String query, String index, String type) {
+    public List<String> search(Map<String, String[]> query, String index, String type, Integer size) {
     	LOGGER.log(Level.FINE, "Search in " + index + " and type " + type + " with query " + query);
         SearchRequestBuilder searchRequest = client.prepareSearch();
-        QueryBuilder queryBuilder = ElasticSearchSearchQueryParser.parse(query);
-        if (queryBuilder!=null) {
-        	searchRequest.setQuery(queryBuilder);
+        if (query != null) {
+        	QueryBuilder queryBuilder = ElasticSearchSearchQueryParser.parse(query);
+	        if (queryBuilder!=null) {
+	        	searchRequest.setQuery(queryBuilder);
+	        }
         }
         if (index != null) {
             searchRequest.setIndices(index);
         }
         if (type != null) {
             searchRequest.setTypes(type);
+        }
+        if (size != null) {
+        	searchRequest.setSize(size);
         }
         SearchResponse searchResponse = searchRequest.get();
         

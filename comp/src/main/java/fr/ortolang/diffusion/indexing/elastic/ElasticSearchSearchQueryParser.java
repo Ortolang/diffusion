@@ -1,24 +1,46 @@
 package fr.ortolang.diffusion.indexing.elastic;
 
+import java.util.Map;
+
 import org.apache.lucene.search.join.ScoreMode;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 public class ElasticSearchSearchQueryParser {
 
-	public static QueryBuilder parse(String query) {
-		QueryBuilder queryBuilder = null;
-		if (query != null) {
-			String parameter[] = query.split("=");
-			if (parameter[0].endsWith("[]")) {
-				String parameterKey = parameter[0].substring(0, parameter[0].length() - 2);
-				String[] parameterKeyPart = parameterKey.split("\\.");
-				String path = parameterKey;
-				if (parameterKeyPart.length > 1) {
-					path = parameterKeyPart[0];
+	/**
+	 * Parses a query.
+	 * 
+	 * @param queryMap
+	 *            value of the map must be either a String or an List of String
+	 *            or a Long
+	 * @return the query builder
+	 */
+	public static QueryBuilder parse(Map<String, String[]> queryMap) {
+		BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery();
+		
+		for (Map.Entry<String, String[]> entry : queryMap.entrySet()) {
+			String keyQuery = entry.getKey();
+			String[] valuesQuery = entry.getValue();
+			// String parameter[] = query.split("=");
+			
+			for (String valueQuery : valuesQuery) {
+				if (keyQuery.endsWith("[]")) {
+					String parameterKey = keyQuery.substring(0, keyQuery.length() - 2);
+					String[] parameterKeyPart = parameterKey.split("\\.");
+					String path = parameterKey;
+					if (parameterKeyPart.length > 1) {
+						path = parameterKeyPart[0];
+					}
+					queryBuilder.must(QueryBuilders.nestedQuery(path, QueryBuilders.termQuery(parameterKey, valueQuery),
+							ScoreMode.Avg));
+				} else if (keyQuery.endsWith("*")) {
+					String parameterKey = keyQuery.substring(0, keyQuery.length() - 1);
+					queryBuilder.must(QueryBuilders.matchPhrasePrefixQuery(parameterKey, valueQuery));
+				} else {
+					queryBuilder.must(QueryBuilders.termQuery(keyQuery, valueQuery));
 				}
-				queryBuilder = QueryBuilders.nestedQuery(path, QueryBuilders.termQuery(parameterKey, parameter[1]),
-						ScoreMode.Avg);
 			}
 		}
 		return queryBuilder;
