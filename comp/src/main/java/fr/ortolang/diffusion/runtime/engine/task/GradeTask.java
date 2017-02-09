@@ -83,22 +83,22 @@ public class GradeTask extends RuntimeEngineTask {
         int score = 0;
         switch (grade) {
         case "A":
-            score = 1;
-            break;
-        case "B":
-            score = 2;
-            break;
-        case "C":
-            score = 3;
-            break;
-        case "D":
             score = 4;
             break;
+        case "B":
+            score = 3;
+            break;
+        case "C":
+            score = 2;
+            break;
+        case "D":
+            score = 1;
+            break;
         case "E":
-            score = 5;
+            score = 0;
             break;
         default:
-            score = 6;
+            score = 0;
             break;
         }
         JSONObject jsonObject = new JSONObject();
