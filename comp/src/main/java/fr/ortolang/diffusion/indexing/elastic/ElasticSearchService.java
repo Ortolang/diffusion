@@ -1,8 +1,5 @@
 package fr.ortolang.diffusion.indexing.elastic;
 
-import java.util.List;
-import java.util.Map;
-
 /*
  * #%L
  * ORTOLANG
@@ -40,16 +37,21 @@ import java.util.Map;
  */
 
 import fr.ortolang.diffusion.OrtolangService;
+import fr.ortolang.diffusion.search.SearchQuery;
+import fr.ortolang.diffusion.search.SearchResult;
 
 public interface ElasticSearchService extends OrtolangService {
 
     String SERVICE_NAME = "es-store";
+    
+    String PATH_TO_MAPPINGS = "/indexing/mappings/";
+    String EXTENSION_MAPPING = ".json";
 
     void index(String key) throws ElasticSearchServiceException;
 
     void remove(String key) throws ElasticSearchServiceException;
 
-    List<String> search(Map<String, String[]> query, String index, String type, Integer size);
+    SearchResult search(SearchQuery query);
     
     String get(String index, String type, String id);
 }

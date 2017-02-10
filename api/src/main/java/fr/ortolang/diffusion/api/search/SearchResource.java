@@ -44,6 +44,7 @@ import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
+import fr.ortolang.diffusion.search.SearchQuery;
 import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.search.SearchServiceException;
 
@@ -181,21 +182,34 @@ import java.util.logging.Logger;
         return Response.status(404).build();
     }
 
-    private List<String> executeQuery(HttpServletRequest request, String index) {
-    	String type = null;
-    	Integer size = null;
-        Map<String, String[]> queryMap = new HashMap<>();
+    private SearchResultRepresentation executeQuery(HttpServletRequest request, String index) {
+//    	String type = null;
+//    	String aggregation = null;
+//    	Integer size = null;
+//    	String[] includes = null;
+//    	String[] excludes = null;
+//        Map<String, String[]> queryMap = new HashMap<>();
+        SearchQuery query = new SearchQuery();
+        query.setIndex(index);
     	for (Map.Entry<String, String[]> parameter : request.getParameterMap().entrySet()) {
             if ("type".equals(parameter.getKey())) {
-                type = parameter.getValue()[0];
+            	query.setType(parameter.getValue()[0]);
             } else if ("size".equals(parameter.getKey())) {
             	try {
-            		size = Integer.valueOf(parameter.getValue()[0]);
+            		query.setSize(Integer.valueOf(parameter.getValue()[0]));
             	} catch (NumberFormatException e) {
             	}
+            } else if ("includes".equals(parameter.getKey())) {
+            	query.setIncludes(parameter.getValue());
+            } else if ("excludes".equals(parameter.getKey())) {
+            	query.setExcludes(parameter.getValue());
+            } else if ("aggregations".equals(parameter.getKey())) {
+            	LOGGER.log(Level.INFO, "Aggregations : " + parameter.getValue());
+            	query.setAggregations(parameter.getValue());
             } else if (!"scope".equals(parameter.getKey())) {
                 // Ignore scope param
-            	queryMap.put(parameter.getKey(), parameter.getValue());
+//            	queryMap.put(parameter.getKey(), parameter.getValue());
+            	query.addQuery(parameter.getKey(), parameter.getValue());
 //                if (parameter.getKey().endsWith("[]")) {
 //                    List<String> paramArr = new ArrayList<String>();
 //                    Collections.addAll(paramArr, parameter.getValue());
@@ -216,7 +230,7 @@ import java.util.logging.Logger;
 //                }
             }
     	}
-    	return search.elasticSearch(queryMap, index, type, size);
+    	return SearchResultRepresentation.fromSearchResult(search.elasticSearch(query));
     }
     
     

@@ -77,8 +77,8 @@ public class CollectionIndexableContent extends MetadataSourceIndexableContent {
         setContent(content);
     }
 
-    @Override
-    public Object[] getMapping() {
-        return COLLECTION_MAPPING;
-    }
+//    @Override
+//    public Object[] getMapping() {
+//        return COLLECTION_MAPPING;
+//    }
 }

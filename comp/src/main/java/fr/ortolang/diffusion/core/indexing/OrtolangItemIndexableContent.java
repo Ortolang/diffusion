@@ -100,6 +100,8 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
                 "type=keyword,index=no",
                 "statusOfUse",
                 "type=object",
+//                "statusOfUse.content",
+//                "type=keyword,index=no",
                 "conditionsOfUse",
                 "type=nested",
                 "license",
@@ -125,23 +127,41 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
                 "publicationDate",
                 "type=date",
                 "corporaType",
-                "type=nested",
+                "type=object",
+//                "corporaType.content",
+//                "type=keyword,index=no",
+//                "corporaType.id",
+//                "type=keyword",
+//                "corporaType.labels",
+//                "type=nested",
                 "corporaLanguages",
                 "type=nested",
+//                "corporaLanguages.content",
+//                "type=keyword,index=no",
                 "corporaStudyLanguages",
                 "type=nested",
                 "corporaStyles",
                 "type=nested",
                 "annotationLevels",
                 "type=nested",
+//                "annotationLevels.content",
+//                "type=keyword,index=no",
                 "corporaFormats",
                 "type=nested",
+//                "corporaFormats.content",
+//                "type=keyword,index=no",
                 "corporaFileEncodings",
                 "type=nested",
+//                "corporaFileEncodings.content",
+//                "type=keyword,index=no",
                 "corporaDataTypes",
-                "type=nested",
+                "type=object",
+                "corporaDataTypes.content",
+                "type=keyword,index=no",
                 "corporaLanguageType",
                 "type=nested",
+//                "corporaLanguageType.content",
+//                "type=keyword,index=no",
                 "wordCount",
                 "type=long", // keywoard ?
                 "linguisticDataType",
@@ -235,7 +255,7 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
             String metadataType = (String) content.get(OrtolangItemType.METADATA_KEY);
             ortolangItemType = OrtolangItemType.fromMetadataType(metadataType);
             setType(ortolangItemType.getSection());
-
+            
             if (latest) {
                 setIndex(INDEX);
                 // For latest: key equals workspace alias
@@ -250,13 +270,16 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
             content.put("alias", alias);
 
             setContent(content);
+            
+            
         } catch (IOException | BinaryStoreServiceException | DataNotFoundException e) {
             LOGGER.log(Level.SEVERE, e.getMessage());
         }
     }
 
-    @Override
-    public Object[] getMapping() {
-        return ORTOLANG_ITEM_MAPPING;
-    }
+//    @Override
+//    public InputStream getMapping() {
+//    	
+//        return this.getClass().getResourceAsStream("/indexing/mapping/");
+//    }
 }

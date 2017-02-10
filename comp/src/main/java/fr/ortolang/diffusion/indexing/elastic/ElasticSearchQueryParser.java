@@ -7,7 +7,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
-public class ElasticSearchSearchQueryParser {
+public class ElasticSearchQueryParser {
 
 	/**
 	 * Parses a query.

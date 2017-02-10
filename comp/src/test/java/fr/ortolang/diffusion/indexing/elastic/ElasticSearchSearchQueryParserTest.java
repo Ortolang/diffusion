@@ -19,7 +19,7 @@ public class ElasticSearchSearchQueryParserTest {
 		Map<String, String[]> queryMap = new HashMap<>();
 		String[] values = {"free_use"};
 		queryMap.put("statusOfUse.id", values);
-		QueryBuilder queryBuilder = ElasticSearchSearchQueryParser.parse(queryMap);
+		QueryBuilder queryBuilder = ElasticSearchQueryParser.parse(queryMap);
 		assertNotNull(queryBuilder);
 		LOGGER.log(Level.INFO, queryBuilder.toString());
 	}
@@ -29,7 +29,7 @@ public class ElasticSearchSearchQueryParserTest {
 		Map<String, String[]> queryMap = new HashMap<>();
 		String[] values = {"at"};
 		queryMap.put("_all*", values);
-		QueryBuilder queryBuilder = ElasticSearchSearchQueryParser.parse(queryMap);
+		QueryBuilder queryBuilder = ElasticSearchQueryParser.parse(queryMap);
 		assertNotNull(queryBuilder);
 		LOGGER.log(Level.INFO, queryBuilder.toString());
 	}
@@ -41,7 +41,7 @@ public class ElasticSearchSearchQueryParserTest {
 		String[] status_values = {"published"};
 		queryMap.put("statusOfUse.id", statusOfUse_values);
 		queryMap.put("status", status_values);
-		QueryBuilder queryBuilder = ElasticSearchSearchQueryParser.parse(queryMap);
+		QueryBuilder queryBuilder = ElasticSearchQueryParser.parse(queryMap);
 		assertNotNull(queryBuilder);
 		LOGGER.log(Level.INFO, queryBuilder.toString());
 	}
@@ -51,7 +51,7 @@ public class ElasticSearchSearchQueryParserTest {
 		Map<String, String[]> queryMap = new HashMap<>();
 		String[] producersId_value = {"atilf"};
 		queryMap.put("producers.id[]", producersId_value);
-		QueryBuilder queryBuilder = ElasticSearchSearchQueryParser.parse(queryMap);
+		QueryBuilder queryBuilder = ElasticSearchQueryParser.parse(queryMap);
 		assertNotNull(queryBuilder);
 		LOGGER.log(Level.INFO, queryBuilder.toString());
 	}

@@ -77,8 +77,8 @@ public class ThreadIndexableContent extends OrtolangIndexableContent {
         setContent(content);
     }
 
-    @Override
-    public Object[] getMapping() {
-        return THREAD_MAPPING;
-    }
+//    @Override
+//    public Object[] getMapping() {
+//        return THREAD_MAPPING;
+//    }
 }

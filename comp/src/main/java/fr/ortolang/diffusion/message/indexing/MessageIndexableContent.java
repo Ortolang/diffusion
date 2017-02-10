@@ -94,8 +94,8 @@ public class MessageIndexableContent extends OrtolangIndexableContent {
         setContent(content);
     }
 
-    @Override
-    public Object[] getMapping() {
-        return MESSAGE_MAPPING;
-    }
+//    @Override
+//    public Object[] getMapping() {
+//        return MESSAGE_MAPPING;
+//    }
 }

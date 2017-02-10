@@ -85,8 +85,8 @@ public class WorkspaceIndexableContent extends OrtolangObjectIndexableContent {
         setContent(content);
     }
 
-    @Override
-    public Object[] getMapping() {
-        return WORKSPACE_MAPPING;
-    }
+//    @Override
+//    public Object[] getMapping() {
+//        return WORKSPACE_MAPPING;
+//    }
 }

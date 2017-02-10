@@ -128,8 +128,8 @@ public class MetadataObjectIndexableContent extends OrtolangObjectIndexableConte
         setContent(content);
     }
 
-    @Override
-    public Object[] getMapping() {
-        return METADATA_OBJECT_MAPPING;
-    }
+//    @Override
+//    public Object[] getMapping() {
+//        return METADATA_OBJECT_MAPPING;
+//    }
 }

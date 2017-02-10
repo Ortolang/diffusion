@@ -38,6 +38,7 @@ package fr.ortolang.diffusion.indexing;
 
 import org.json.JSONObject;
 
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.Map;
 
@@ -131,7 +132,7 @@ public abstract class OrtolangIndexableContent {
         this.scriptParams = scriptParams;
     }
 
-    public abstract Object[] getMapping();
+//    public abstract InputStream getMapping();
 
     public boolean isEmpty() {
         return (script == null || script.isEmpty()) && (content == null || content.isEmpty());

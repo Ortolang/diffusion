@@ -89,8 +89,8 @@ public class DataObjectIndexableContent extends MetadataSourceIndexableContent {
         setContent(content);
     }
 
-    @Override
-    public Object[] getMapping() {
-        return DATA_OBJECT_MAPPING;
-    }
+//    @Override
+//    public Object[] getMapping() {
+//        return DATA_OBJECT_MAPPING;
+//    }
 }

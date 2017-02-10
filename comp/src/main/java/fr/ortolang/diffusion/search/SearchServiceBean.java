@@ -364,8 +364,8 @@ public class SearchServiceBean implements SearchService {
 	}
 
 	@Override
-	public List<String> elasticSearch(Map<String, String[]> query, String index, String type, Integer size) {
-		return elasticService.search(query, index, type, size);
+	public SearchResult elasticSearch(SearchQuery query) {
+		return elasticService.search(query);
 	}
 	
 	@Override

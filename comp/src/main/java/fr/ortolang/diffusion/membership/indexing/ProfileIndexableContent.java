@@ -90,9 +90,9 @@ public class ProfileIndexableContent extends OrtolangIndexableContent {
         setContent(map);
     }
 
-    @Override
-    public Object[] getMapping() {
-        return MAPPING;
-    }
+//    @Override
+//    public Object[] getMapping() {
+//        return MAPPING;
+//    }
 
 }

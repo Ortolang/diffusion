@@ -52,10 +52,10 @@ public class OrtolangObjectScriptedUpdate extends OrtolangIndexableContent {
         setScriptParams(scriptParams);
     }
 
-    @Override
-    public Object[] getMapping() {
-        return new Object[0];
-    }
+//    @Override
+//    public Object[] getMapping() {
+//        return new Object[0];
+//    }
 
 
 }

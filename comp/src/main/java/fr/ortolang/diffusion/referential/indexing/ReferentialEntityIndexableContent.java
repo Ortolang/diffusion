@@ -41,8 +41,13 @@ import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.referential.ReferentialService;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntity;
 import fr.ortolang.diffusion.referential.entity.ReferentialEntityType;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -69,7 +74,9 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
                 "id",
                 "type=keyword",
                 "labels",
-                "type=nested"
+                "type=nested",
+                "content",
+                "type=keyword,index=no"
         };
 
         PERSON_MAPPING = Stream.concat(Arrays.stream(MAPPING),
@@ -135,22 +142,46 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
                 }
             }
             setContent(jsonObject.toString());
+//        } else if (entityType.equals(ReferentialEntityType.CORPORATYPE)) {
+//        	JSONObject jsonObject = new JSONObject(entity.getContent());
+//        	JSONArray labels = jsonObject.getJSONArray("labels");
+//        	for(int iLabel = 0;iLabel<labels.length();iLabel++) {
+//        		JSONObject label = labels.getJSONObject(iLabel);
+//        		String lang = label.getString("lang");
+//        		String value = label.getString("value");
+//        		jsonObject.put("value_" + lang, value);
+//        	}
+//        	String content = entity.getContent();
+//        	try {
+//				jsonObject.put("content", URLEncoder.encode(content, "UTF-8"));
+//			} catch (JSONException | UnsupportedEncodingException e) {
+//				LOGGER.log(Level.WARNING, "Unable to encode content", e);
+//			}
+//        	setContent(jsonObject.toString());
         } else {
-            setContent(entity.getContent());
+        	JSONObject jsonObject = new JSONObject(entity.getContent());
+        	String content = entity.getContent();
+        	try {
+				jsonObject.put("content", URLEncoder.encode(content, "UTF-8"));
+			} catch (JSONException | UnsupportedEncodingException e) {
+				LOGGER.log(Level.WARNING, "Unable to encode content", e);
+			}
+//            setContent(entity.getContent());
+        	setContent(jsonObject.toString());
         }
     }
 
-    @Override
-    public Object[] getMapping() {
-        switch (entityType) {
-        case PERSON:
-            return PERSON_MAPPING;
-        case ORGANIZATION:
-            return ORGANIZATION_MAPPING;
-        case LANGUAGE:
-            return LANGUAGE_MAPPING;
-        default:
-            return MAPPING;
-        }
-    }
+//    @Override
+//    public Object[] getMapping() {
+//        switch (entityType) {
+//        case PERSON:
+//            return PERSON_MAPPING;
+//        case ORGANIZATION:
+//            return ORGANIZATION_MAPPING;
+//        case LANGUAGE:
+//            return LANGUAGE_MAPPING;
+//        default:
+//            return MAPPING;
+//        }
+//    }
 }

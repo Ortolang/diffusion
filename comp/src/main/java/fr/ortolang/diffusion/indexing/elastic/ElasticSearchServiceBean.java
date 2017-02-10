@@ -42,6 +42,10 @@ import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
+import fr.ortolang.diffusion.search.SearchQuery;
+import fr.ortolang.diffusion.search.SearchResult;
+import fr.ortolang.diffusion.util.StreamUtils;
+
 import org.apache.commons.io.IOUtils;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.get.GetRequestBuilder;
@@ -61,6 +65,10 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.AggregationBuilder;
+import org.elasticsearch.search.aggregations.bucket.nested.InternalNested;
+import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -72,6 +80,7 @@ import javax.ejb.Local;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -163,8 +172,16 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                             } else {
                                 LOGGER.log(Level.INFO, "Creating index [" + indexableContent.getIndex() + "] and add mapping for type [" + indexableContent.getType() + "]");
                                 CreateIndexRequestBuilder requestBuilder = adminClient.prepareCreate(indexableContent.getIndex());
-                                if (indexableContent.getMapping() != null) {
-                                    requestBuilder.addMapping(indexableContent.getType(), indexableContent.getMapping());
+                                InputStream mapping = this.getClass().getResourceAsStream(PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
+                                if (mapping != null) {
+                                	String mappingAsString = StreamUtils.getContent(mapping);
+                                	if (mappingAsString != null) {                                		
+                                		requestBuilder.addMapping(indexableContent.getType(), mappingAsString);
+                                	} else {
+                                		LOGGER.log(Level.SEVERE, "Unable to put mapping : cannot read file : "+PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
+                                	}
+                                } else {
+                                	LOGGER.log(Level.SEVERE, "Unable to put mapping : file not found : "+PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
                                 }
                                 requestBuilder.get();
                                 HashSet<String> types = new HashSet<>();
@@ -181,7 +198,7 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                             client.prepareUpdate(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getId()).setScript(script).get();
                         } else {
                             LOGGER.log(Level.FINE, "Indexing key [" + indexableContent.getId() + "] in index [" + indexableContent.getIndex() + "] with type [" + indexableContent.getType() + "]");
-                            client.prepareIndex(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getId()).setSource(indexableContent.getContent().getBytes()).get();
+                            client.prepareIndex(indexableContent.getIndex(), indexableContent.getType(), indexableContent.getId()).setSource(indexableContent.getContent()).get();
                         }
                     } catch (IndexNotFoundException e) {
                         LOGGER.log(Level.INFO, "Index not found: removing it from registry and re-trying to index key [" + key + "]");
@@ -217,35 +234,58 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
     }
 
     @Override
-    public List<String> search(Map<String, String[]> query, String index, String type, Integer size) {
-    	LOGGER.log(Level.FINE, "Search in " + index + " and type " + type + " with query " + query);
+    public SearchResult search(SearchQuery query) {
+    	LOGGER.log(Level.FINE, "Search in " + query.getIndex() + " and type " + query.getType() + " with query " + query.getQuery());
         SearchRequestBuilder searchRequest = client.prepareSearch();
-        if (query != null) {
-        	QueryBuilder queryBuilder = ElasticSearchSearchQueryParser.parse(query);
+        if (!query.getQuery().isEmpty()) {
+        	QueryBuilder queryBuilder = ElasticSearchQueryParser.parse(query.getQuery());
 	        if (queryBuilder!=null) {
 	        	searchRequest.setQuery(queryBuilder);
 	        }
         }
-        if (index != null) {
-            searchRequest.setIndices(index);
+        if (query.getIndex() != null) {
+            searchRequest.setIndices(query.getIndex());
         }
-        if (type != null) {
-            searchRequest.setTypes(type);
+        if (query.getType() != null) {
+            searchRequest.setTypes(query.getType());
         }
-        if (size != null) {
-        	searchRequest.setSize(size);
+        if (query.getSize() != null) {
+        	searchRequest.setSize(query.getSize());
         }
+        searchRequest.setFetchSource(query.getIncludes(), query.getExcludes());
+        if (query.getAggregations() != null) {
+	        for(String agg : query.getAggregations()) {
+	        	searchRequest.addAggregation(ElasticSearchAggregationParser.parse(agg));
+	        }
+        }
+        LOGGER.log(Level.FINE, searchRequest.toString());
         SearchResponse searchResponse = searchRequest.get();
         
         // Parses
-        List<String> results = new ArrayList<String>();
-        long totalHits = searchResponse.getHits().getTotalHits();
-        LOGGER.log(Level.FINE, "total hits : " + totalHits);
+        SearchResult result = new SearchResult();
         SearchHit[] searchHits = searchResponse.getHits().getHits();
         for (SearchHit searchHit : searchHits) {
-        	results.add(searchHit.getSourceAsString());
+        	result.addHit(searchHit.getSourceAsString());
         }
-        return results;
+        if (query.getAggregations() != null) {
+	        for(String agg : query.getAggregations()) {
+	        	//TODO optimizes by using forEach method
+	        	if (agg.endsWith("[]")) {
+	        		String aggName = agg.substring(0, agg.length() - 2);
+	        		InternalNested nestedAgg = searchResponse.getAggregations().get(aggName);
+	       		 	Terms terms = nestedAgg.getAggregations().get("content");
+	       		 	for(Terms.Bucket bucket : terms.getBuckets()) {
+			        	result.addAggregation(aggName, bucket.getKeyAsString());
+			        }
+	        	} else {
+			        Terms terms = searchResponse.getAggregations().get(agg);
+			        for(Terms.Bucket bucket : terms.getBuckets()) {
+			        	result.addAggregation(agg, bucket.getKeyAsString());
+			        }
+	        	}
+	        }
+        }
+        return result;
     }
     
     @Override
@@ -260,13 +300,29 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
     }
 
     private void checkType(OrtolangIndexableContent indexableContent, IndicesAdminClient adminClient) {
-        if (!indices.get(indexableContent.getIndex()).contains(indexableContent.getType()) && indexableContent.getMapping() != null) {
+        if (!indices.get(indexableContent.getIndex()).contains(indexableContent.getType())) {
             LOGGER.log(Level.INFO, "Put mapping for type [" + indexableContent.getType() + "] in index [" + indexableContent.getIndex() + "]");
-            adminClient.preparePutMapping(indexableContent.getIndex())
-                    .setType(indexableContent.getType())
-                    .setSource(indexableContent.getMapping())
-                    .get();
-            indices.get(indexableContent.getIndex()).add(indexableContent.getType());
+            try {
+	            InputStream mapping = this.getClass().getResourceAsStream(PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
+	            if (mapping != null) {
+	            	String mappingAsString;
+						mappingAsString = StreamUtils.getContent(mapping);
+	            	if (mappingAsString != null) {
+	            		adminClient.preparePutMapping(indexableContent.getIndex())
+	                    .setType(indexableContent.getType())
+	                    .setSource(mappingAsString)
+	                    .get();
+	            	} else {
+	            		LOGGER.log(Level.SEVERE, "Unable to put mapping : cannot read file : "+PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
+	            	}
+	            } else {
+	            	LOGGER.log(Level.SEVERE, "Unable to put mapping : file not found : "+PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
+	            }
+	            
+	            indices.get(indexableContent.getIndex()).add(indexableContent.getType());
+            } catch (IOException e) {
+            	LOGGER.log(Level.SEVERE, "Unabled to put mapping for type [" + indexableContent.getType() + "] in index [" + indexableContent.getIndex() + "]", e);
+            }
         }
     }
 
