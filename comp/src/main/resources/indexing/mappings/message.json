@@ -1,0 +1,27 @@
+{
+	"message": {
+		"properties": {
+			"key": {
+				"type": "keyword"
+			},
+			"date": {
+				"type": "date"
+			},
+			"edit": {
+				"type": "date"
+			},
+			"body": {
+				"type": "text"
+			},
+			"thread": {
+				"type": "keyword"
+			},
+			"parent": {
+				"type": "keyword"
+			},
+			"attachments": {
+				"type": "nested"
+			}
+		}
+	}
+}

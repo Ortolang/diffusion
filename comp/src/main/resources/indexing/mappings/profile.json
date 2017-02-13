@@ -1,0 +1,29 @@
+{
+	"profile": {
+		"properties": {
+			"key": {
+				"type": "keyword"
+			},
+			"givenName": {
+				"type": "string"
+			},
+			"familyName": {
+				"type": "string"
+			},
+			"emailHash": {
+				"type": "string",
+				"index": "no"
+			},
+			"email": {
+				"type": "string",
+				"index": "no"
+			},
+			"groups": {
+				"type": "nested"
+			},
+			"infos": {
+				"type": "object"
+			}
+		}
+	}
+}

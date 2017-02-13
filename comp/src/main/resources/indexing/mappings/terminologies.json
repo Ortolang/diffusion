@@ -1,5 +1,5 @@
 {
-	"corpora": {
+	"lexicon": {
 		"properties": {
 			"key": {
 				"type": "keyword"
@@ -61,73 +61,78 @@
 			"license": {
 				"type": "object"
 			},
-			
 			"publicationDate": {
 				"type": "date"
 			},
-			"corporaFileEncodings": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaLanguages": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaStudyLanguages": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaStyles": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"annotationLevels": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaFormats": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaDataTypes": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaType": {
+			"terminoType": {
 				"type": "object",
 				"properties": {
 					"content": {"type": "keyword"}
 				}
 			},
-			"corporaLanguageType": {
+			"terminoLanguageType": {
 				"type": "object",
 				"properties": {
 					"content": {"type": "keyword"}
 				}
 			},
-			"wordCount": {
-				"type": "long"
+			"terminoStructureType": {
+				"type": "object",
+				"properties": {
+					"content": {"type": "keyword"}
+				}
+			},
+			"terminoDescriptionTypes": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"terminoDomains": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"terminoInputLanguages": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"terminoFormat": {
+				"type": "object",
+				"properties": {
+					"content": {"type": "keyword"}
+				}
+			},
+			"terminoInputCount": {
+				"type": "object",
+				"properties": {
+					"content": {"type": "keyword"}
+				}
+			},
+			"terminoUsage": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"terminoControled": {
+				"type": "boolean"
+			},
+			"terminoValidated": {
+				"type": "boolean"
+			},
+			"terminoApproved": {
+				"type": "boolean"
+			},
+			"terminoChecked": {
+				"type": "boolean"
 			}
 		}
 	}

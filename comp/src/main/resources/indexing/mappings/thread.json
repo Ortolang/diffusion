@@ -1,0 +1,24 @@
+{
+	"thread": {
+		"properties": {
+			"key": {
+				"type": "keyword"
+			},
+			"title": {
+				"type": "text"
+			},
+			"lastActivity": {
+				"type": "date"
+			},
+			"question": {
+				"type": "text"
+			},
+			"answer": {
+				"type": "keyword"
+			},
+			"workspace": {
+				"type": "keyword"
+			}
+		}
+	}
+}

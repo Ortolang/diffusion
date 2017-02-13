@@ -1,0 +1,41 @@
+{
+	"collection": {
+		"properties": {
+			"key": {
+				"type": "keyword"
+			},
+			"status": {
+				"type": "keyword"
+			},
+			"name": {
+				"type": "string"
+			},
+			"root": {
+				"type": "boolean"
+			},
+			"creation": {
+				"type": "date"
+			},
+			"modification": {
+				"type": "date"
+			},
+			"elements": {
+				"type": "nested"
+			},
+			"metadata": {
+				"type": "object"
+			},
+			"workspace": {
+				"type": "object"
+			},
+			"version": {
+				"type": "long",
+				"index": "no"
+			},
+			"clock": {
+				"type": "integer",
+				"index": "no"
+			}
+		}
+	}
+}

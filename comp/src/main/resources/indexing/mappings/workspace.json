@@ -1,0 +1,33 @@
+{
+	"workspace": {
+		"properties": {
+			"key": {
+				"type": "keyword"
+			},
+			"status": {
+				"type": "keyword"
+			},
+			"name": {
+				"type": "string"
+			},
+			"creation": {
+				"type": "date"
+			},
+			"modification": {
+				"type": "date"
+			},
+			"head": {
+				"type": "keyword"
+			},
+			"alias": {
+				"type": "keyword"
+			},
+			"archive": {
+				"type": "boolean"
+			},
+			"snapshots": {
+				"type": "nested"
+			}
+		}
+	}
+}

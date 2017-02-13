@@ -1,5 +1,5 @@
 {
-	"corpora": {
+	"lexicon": {
 		"properties": {
 			"key": {
 				"type": "keyword"
@@ -61,73 +61,51 @@
 			"license": {
 				"type": "object"
 			},
-			
 			"publicationDate": {
 				"type": "date"
 			},
-			"corporaFileEncodings": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaLanguages": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaStudyLanguages": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaStyles": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"annotationLevels": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaFormats": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaDataTypes": {
-				"type": "nested",
-				"properties": {
-					"id": {"type": "keyword"},
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaType": {
-				"type": "object",
-				"properties": {
-					"content": {"type": "keyword"}
-				}
-			},
-			"corporaLanguageType": {
-				"type": "object",
-				"properties": {
-					"content": {"type": "keyword"}
-				}
-			},
-			"wordCount": {
+			"lexiconInputCount": {
 				"type": "long"
+			},
+			"lexiconInputType": {
+				"type": "object",
+				"properties": {
+					"content": {"type": "keyword"}
+				}
+			},
+			"lexiconLanguageType": {
+				"type": "object",
+				"properties": {
+					"content": {"type": "keyword"}
+				}
+			},
+			"lexiconInputLanguages": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"lexiconFormats": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"lexiconDescriptionTypes": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"lexiconDescriptionLanguages": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
 			}
 		}
 	}

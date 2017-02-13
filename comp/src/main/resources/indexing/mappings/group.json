@@ -1,0 +1,20 @@
+{
+	"group": {
+		"properties": {
+			"key": {
+				"type": "keyword"
+			},
+			"name": {
+				"type": "string",
+				"index": "no"
+			},
+			"description": {
+				"type": "string",
+				"index": "no"
+			},
+			"members": {
+				"type": "nested"
+			}
+		}
+	}
+}

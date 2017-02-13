@@ -1,0 +1,44 @@
+{
+	"object": {
+		"properties": {
+			"key": {
+				"type": "keyword"
+			},
+			"status": {
+				"type": "keyword"
+			},
+			"name": {
+				"type": "string"
+			},
+			"creation": {
+				"type": "date"
+			},
+			"modification": {
+				"type": "date"
+			},
+			"metadata": {
+				"type": "object"
+			},
+			"workspace": {
+				"type": "object"
+			},
+			"version": {
+				"type": "long",
+				"index": "no"
+			},
+			"clock": {
+				"type": "integer",
+				"index": "no"
+			},
+			"size": {
+				"type": "long"
+			},
+			"mimeType": {
+				"type": "string"
+			},
+			"content": {
+				"type": "text"
+			}
+		}
+	}
+}

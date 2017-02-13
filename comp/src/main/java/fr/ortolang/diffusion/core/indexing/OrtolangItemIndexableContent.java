@@ -276,10 +276,4 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
             LOGGER.log(Level.SEVERE, e.getMessage());
         }
     }
-
-//    @Override
-//    public InputStream getMapping() {
-//    	
-//        return this.getClass().getResourceAsStream("/indexing/mapping/");
-//    }
 }
