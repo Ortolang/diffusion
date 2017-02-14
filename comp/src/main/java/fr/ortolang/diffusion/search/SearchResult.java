@@ -8,11 +8,13 @@ import java.util.Map;
 public class SearchResult {
 
 	private List<String> hits;
+	private long totalHits;
 	private Map<String, List<String>> aggregations;
 
 	public SearchResult() {
 		this.hits = new ArrayList<String>();
 		this.aggregations = new HashMap<String, List<String>>();
+		this.setTotalHits(0);
 	}
 
 	public List<String> getHits() {
@@ -43,5 +45,13 @@ public class SearchResult {
 		values.add(value);
 		this.aggregations.put(agg, values);
 	}
-	
+
+	public long getTotalHits() {
+		return totalHits;
+	}
+
+	public void setTotalHits(long totalHits) {
+		this.totalHits = totalHits;
+	}
+
 }

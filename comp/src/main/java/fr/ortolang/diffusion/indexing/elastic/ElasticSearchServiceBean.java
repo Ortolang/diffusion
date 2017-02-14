@@ -263,6 +263,7 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
         
         // Parses
         SearchResult result = new SearchResult();
+        result.setTotalHits(searchResponse.getHits().getTotalHits());
         SearchHit[] searchHits = searchResponse.getHits().getHits();
         for (SearchHit searchHit : searchHits) {
         	result.addHit(searchHit.getSourceAsString());
@@ -274,13 +275,17 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
 	        		String aggName = agg.substring(0, agg.length() - 2);
 	        		InternalNested nestedAgg = searchResponse.getAggregations().get(aggName);
 	       		 	Terms terms = nestedAgg.getAggregations().get("content");
-	       		 	for(Terms.Bucket bucket : terms.getBuckets()) {
-			        	result.addAggregation(aggName, bucket.getKeyAsString());
-			        }
+	       		 	if (terms != null) {
+		       		 	for(Terms.Bucket bucket : terms.getBuckets()) {
+				        	result.addAggregation(aggName, bucket.getKeyAsString());
+				        }
+	       		 	}
 	        	} else {
 			        Terms terms = searchResponse.getAggregations().get(agg);
-			        for(Terms.Bucket bucket : terms.getBuckets()) {
-			        	result.addAggregation(agg, bucket.getKeyAsString());
+			        if (terms != null) {
+				        for(Terms.Bucket bucket : terms.getBuckets()) {
+				        	result.addAggregation(agg, bucket.getKeyAsString());
+				        }
 			        }
 	        	}
 	        }

@@ -1,5 +1,5 @@
 {
-	"lexicon": {
+	"tools": {
 		"properties": {
 			"key": {
 				"type": "keyword"

@@ -13,6 +13,7 @@ public class SearchResultRepresentation {
 
     @XmlAttribute
     private List<String> hits;
+    private long totalHits;
     private Map<String, List<String>> aggregations;
 	
 	public SearchResultRepresentation() {
@@ -21,6 +22,7 @@ public class SearchResultRepresentation {
 	public static SearchResultRepresentation fromSearchResult (SearchResult result) {
 		SearchResultRepresentation representation = new SearchResultRepresentation();
 		representation.setHits(result.getHits());
+		representation.setTotalHits(result.getTotalHits());
 		representation.setAggregations(result.getAggregations());
 		return representation;
 	}
@@ -39,5 +41,13 @@ public class SearchResultRepresentation {
 
 	public void setAggregations(Map<String, List<String>> aggregations) {
 		this.aggregations = aggregations;
+	}
+
+	public long getTotalHits() {
+		return totalHits;
+	}
+
+	public void setTotalHits(long totalHits) {
+		this.totalHits = totalHits;
 	}
 }
