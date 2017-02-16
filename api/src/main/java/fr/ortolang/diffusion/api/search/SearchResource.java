@@ -203,6 +203,10 @@ import java.util.logging.Logger;
             	query.setIncludes(parameter.getValue());
             } else if ("excludes".equals(parameter.getKey())) {
             	query.setExcludes(parameter.getValue());
+            } else if ("orderProp".equals(parameter.getKey())) {
+            	query.setOrderProp(parameter.getValue()[0]);
+            } else if ("orderDir".equals(parameter.getKey())) {
+            	query.setOrderDir(parameter.getValue()[0]);
             } else if ("aggregations".equals(parameter.getKey())) {
             	LOGGER.log(Level.INFO, "Aggregations : " + parameter.getValue());
             	query.setAggregations(parameter.getValue());

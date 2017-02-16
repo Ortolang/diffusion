@@ -69,6 +69,7 @@ import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilder;
 import org.elasticsearch.search.aggregations.bucket.nested.InternalNested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
+import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -251,6 +252,9 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
         }
         if (query.getSize() != null) {
         	searchRequest.setSize(query.getSize());
+        }
+        if (query.hasOrder()) {
+        	searchRequest.addSort(query.getOrderProp(),SortOrder.fromString(query.getOrderDir()));
         }
         searchRequest.setFetchSource(query.getIncludes(), query.getExcludes());
         if (query.getAggregations() != null) {

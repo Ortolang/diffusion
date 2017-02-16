@@ -10,6 +10,8 @@ public class SearchQuery {
 	private String index;
 	private String type;
 	private Integer size;
+	private String orderProp;
+	private String orderDir;
 	private String[] includes;
 	private String[] excludes;
 	private String[] aggregations;
@@ -76,6 +78,26 @@ public class SearchQuery {
 
 	public void setAggregations(String[] aggregations) {
 		this.aggregations = aggregations;
+	}
+
+	public String getOrderProp() {
+		return orderProp;
+	}
+	
+	public boolean hasOrder() {
+		return orderProp != null && orderDir != null;
+	}
+
+	public void setOrderProp(String orderProp) {
+		this.orderProp = orderProp;
+	}
+
+	public String getOrderDir() {
+		return orderDir;
+	}
+
+	public void setOrderDir(String orderDir) {
+		this.orderDir = orderDir;
 	}
 
 }
