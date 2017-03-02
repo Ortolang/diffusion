@@ -83,7 +83,7 @@ public class IndexAllCommand extends Command {
                 if (phase == null) {
                     System.out.println("When indexing all a phase must be given");
                     help();
-                } else if (!phase.equals("1") || !phase.equals("2")) {
+                } else if (!phase.equals("1") && !phase.equals("2")) {
                     System.out.println("Phase number indexing all a phase must be given");
                     help();
                 }
