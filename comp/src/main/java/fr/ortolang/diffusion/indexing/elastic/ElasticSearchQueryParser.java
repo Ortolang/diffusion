@@ -25,7 +25,7 @@ public class ElasticSearchQueryParser {
 			String[] valuesQuery = entry.getValue();
 			// String parameter[] = query.split("=");
 			
-			for (String valueQuery : valuesQuery) {
+//			for (String valueQuery : valuesQuery) {
 				if (keyQuery.endsWith("[]")) {
 					String parameterKey = keyQuery.substring(0, keyQuery.length() - 2);
 					String[] parameterKeyPart = parameterKey.split("\\.");
@@ -33,15 +33,24 @@ public class ElasticSearchQueryParser {
 					if (parameterKeyPart.length > 1) {
 						path = parameterKeyPart[0];
 					}
-					queryBuilder.must(QueryBuilders.nestedQuery(path, QueryBuilders.termQuery(parameterKey, valueQuery),
-							ScoreMode.Avg));
+					if (valuesQuery.length==1) {
+						queryBuilder.must(QueryBuilders.nestedQuery(path, QueryBuilders.termQuery(parameterKey, valuesQuery[0]),ScoreMode.Avg));
+					} else {
+						queryBuilder.must(QueryBuilders.nestedQuery(path, QueryBuilders.termsQuery(parameterKey, valuesQuery),ScoreMode.Avg));
+					}
 				} else if (keyQuery.endsWith("*")) {
 					String parameterKey = keyQuery.substring(0, keyQuery.length() - 1);
-					queryBuilder.must(QueryBuilders.matchPhrasePrefixQuery(parameterKey, valueQuery));
+					if (valuesQuery.length==1) {					
+						queryBuilder.must(QueryBuilders.matchPhrasePrefixQuery(parameterKey, valuesQuery[0]));
+					}
 				} else {
-					queryBuilder.must(QueryBuilders.termQuery(keyQuery, valueQuery));
+					if (valuesQuery.length==1) {
+						queryBuilder.must(QueryBuilders.termQuery(keyQuery, valuesQuery[0]));
+					} else {
+						queryBuilder.must(QueryBuilders.termsQuery(keyQuery, valuesQuery));
+					}
 				}
-			}
+//			}
 		}
 		return queryBuilder;
 	}
