@@ -245,7 +245,7 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
         };
     }
 
-    public OrtolangItemIndexableContent(MetadataObject metadata, Collection collection, String alias, String snapshot, String tag, int rating, boolean latest) throws IndexingServiceException, OrtolangException {
+    public OrtolangItemIndexableContent(MetadataObject metadata, Collection collection, String alias, String snapshot, String tag, int rating, boolean archive, boolean latest) throws IndexingServiceException, OrtolangException {
         super();
         try {
             BinaryStoreService binary = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
@@ -269,6 +269,7 @@ public class OrtolangItemIndexableContent extends OrtolangIndexableContent {
             content.put("snapshot", snapshot);
             content.put("alias", alias);
             content.put("rank", rating);
+            content.put("archive", archive);
 
             setContent(content);
             

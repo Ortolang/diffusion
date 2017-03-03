@@ -3925,11 +3925,11 @@ public class CoreServiceBean implements CoreService {
                         LOGGER.log(Level.FINE, "Add ortolang-item metadata of root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "/" + snapshot + "/" + tag + "] to indexable content");
                         OrtolangObjectIdentifier itemMetadataIdentifier = registry.lookup(itemMetadata.getKey());
                         MetadataObject metadataObject = em.find(MetadataObject.class, itemMetadataIdentifier.getId());
-                        indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, rate, false));
+                        indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, rate, workspace.isArchive(), false));
                         String latestPublishedSnapshot = findWorkspaceLatestPublishedSnapshot(workspace.getKey());
                         if (snapshot.equals(latestPublishedSnapshot)) {
                             LOGGER.log(Level.INFO, "Add ortolang-item metadata as latest published root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "/" + snapshot + "/" + tag + "] to indexable content");
-                            indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, rate, true));
+                            indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, rate, workspace.isArchive(), true));
                         }
                     }
 
