@@ -5,21 +5,19 @@
 				"type": "keyword"
 			},
 			"givenName": {
-				"type": "string"
+				"type": "text"
 			},
 			"familyName": {
-				"type": "string"
+				"type": "text"
 			},
 			"emailHash": {
-				"type": "string",
-				"index": "no"
+				"type": "keyword"
 			},
 			"email": {
-				"type": "string",
-				"index": "no"
+				"type": "keyword"
 			},
 			"groups": {
-				"type": "nested"
+				"type": "keyword"
 			},
 			"infos": {
 				"type": "object"

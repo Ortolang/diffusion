@@ -11,10 +11,12 @@
 				"type": "string"
 			},
 			"creation": {
-				"type": "date"
+				"type": "date",
+				"format": "epoch_millis"
 			},
 			"modification": {
-				"type": "date"
+				"type": "date",
+				"format": "epoch_millis"
 			},
 			"target": {
 				"type": "keyword"

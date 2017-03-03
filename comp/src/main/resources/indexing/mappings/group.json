@@ -5,15 +5,13 @@
 				"type": "keyword"
 			},
 			"name": {
-				"type": "string",
-				"index": "no"
+				"type": "text"
 			},
 			"description": {
-				"type": "string",
-				"index": "no"
+				"type": "text"
 			},
 			"members": {
-				"type": "nested"
+				"type": "keyword"
 			}
 		}
 	}

@@ -67,7 +67,8 @@ public class GroupIndexableContent extends OrtolangIndexableContent {
         map.put("key", group.getKey());
         map.put("name", group.getName());
         map.put("description", group.getDescription());
-        map.put("members", group.getMembers());
+        if (group.getMembers() != null) 
+        	map.put("members", group.getMembers());
         setContent(map);
     }
 

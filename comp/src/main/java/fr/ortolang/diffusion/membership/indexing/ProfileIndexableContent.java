@@ -79,7 +79,8 @@ public class ProfileIndexableContent extends OrtolangIndexableContent {
         if (profile.getEmailVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
             map.put("email", profile.getEmail());
         }
-        map.put("groups", profile.getGroups());
+        if (profile.getGroups() != null)
+        	map.put("groups", profile.getGroups());
         Map<String, Object> infos = new HashMap<>();
         for (Map.Entry<String, ProfileData> info : profile.getInfos().entrySet()) {
             if (info.getValue().getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {

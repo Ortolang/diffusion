@@ -65,6 +65,20 @@
 			"publicationDate": {
 				"type": "date"
 			},
+			"producers": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"contributors": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
 			"corporaFileEncodings": {
 				"type": "nested",
 				"properties": {

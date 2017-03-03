@@ -8,16 +8,18 @@
 				"type": "keyword"
 			},
 			"name": {
-				"type": "string"
+				"type": "text"
 			},
 			"root": {
 				"type": "boolean"
 			},
 			"creation": {
-				"type": "date"
+				"type": "date",
+				"format": "epoch_millis"
 			},
 			"modification": {
-				"type": "date"
+				"type": "date",
+				"format": "epoch_millis"
 			},
 			"elements": {
 				"type": "nested"
