@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.core;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+
 /*
  * #%L
  * ORTOLANG
@@ -3899,17 +3901,35 @@ public class CoreServiceBean implements CoreService {
                     String tag = tagElement.getName();
                     CollectionContent collectionContent = listCollectionContent(collection.getKey());
 
+                    // Rating metadata for root collections
+                    int rate = 0;
+                    MetadataElement ratingMetadata = collection.findMetadataByName(MetadataFormat.RATING);
+                    if (ratingMetadata != null) {
+                    	OrtolangObjectIdentifier ratingMetadataIdentifier = registry.lookup(ratingMetadata.getKey());
+                        MetadataObject ratingMetadataObject = em.find(MetadataObject.class, ratingMetadataIdentifier.getId());
+                        ObjectMapper mapper = new ObjectMapper();
+                        try {
+							Map<String, Object> content = mapper.readValue(binarystore.getFile(ratingMetadataObject.getStream()), new TypeReference<Map<String, Object>>(){});
+							Object score = content.get("score");
+							if (score != null && score instanceof Integer) {
+								rate = (Integer) score;
+							}
+						} catch (IOException | BinaryStoreServiceException | DataNotFoundException e) {
+						}
+
+                    }
+                    
                     // Index item metadata for root collections
                     MetadataElement itemMetadata = collection.findMetadataByName(MetadataFormat.ITEM);
                     if (itemMetadata != null) {
-                        LOGGER.log(Level.INFO, "Add ortolang-item metadata of root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "/" + snapshot + "/" + tag + "] to indexable content");
+                        LOGGER.log(Level.FINE, "Add ortolang-item metadata of root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "/" + snapshot + "/" + tag + "] to indexable content");
                         OrtolangObjectIdentifier itemMetadataIdentifier = registry.lookup(itemMetadata.getKey());
                         MetadataObject metadataObject = em.find(MetadataObject.class, itemMetadataIdentifier.getId());
-                        indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, false));
+                        indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, rate, false));
                         String latestPublishedSnapshot = findWorkspaceLatestPublishedSnapshot(workspace.getKey());
                         if (snapshot.equals(latestPublishedSnapshot)) {
                             LOGGER.log(Level.INFO, "Add ortolang-item metadata as latest published root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "/" + snapshot + "/" + tag + "] to indexable content");
-                            indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, true));
+                            indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, rate, true));
                         }
                     }
 
