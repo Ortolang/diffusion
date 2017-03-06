@@ -81,18 +81,21 @@
 			"terminoType": {
 				"type": "object",
 				"properties": {
+					"id": {"type": "keyword"},
 					"content": {"type": "keyword"}
 				}
 			},
 			"terminoLanguageType": {
 				"type": "object",
 				"properties": {
+					"id": {"type": "keyword"},
 					"content": {"type": "keyword"}
 				}
 			},
 			"terminoStructureType": {
 				"type": "object",
 				"properties": {
+					"id": {"type": "keyword"},
 					"content": {"type": "keyword"}
 				}
 			},
@@ -120,12 +123,14 @@
 			"terminoFormat": {
 				"type": "object",
 				"properties": {
+					"id": {"type": "keyword"},
 					"content": {"type": "keyword"}
 				}
 			},
 			"terminoInputCount": {
 				"type": "object",
 				"properties": {
+					"id": {"type": "keyword"},
 					"content": {"type": "keyword"}
 				}
 			},
