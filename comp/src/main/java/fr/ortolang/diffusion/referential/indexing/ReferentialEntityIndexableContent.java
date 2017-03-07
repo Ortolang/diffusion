@@ -49,7 +49,9 @@ import org.json.JSONObject;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -126,22 +128,51 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
 
     }
 
+    protected Map<String, Object> content;
+
     public ReferentialEntityIndexableContent(ReferentialEntity entity) throws IndexableContentParsingException {
         super(ReferentialService.SERVICE_NAME, entity.getType().name(), entity.getObjectKey());
         entityType = entity.getType();
-        if (entityType.equals(ReferentialEntityType.PERSON)) {
-            JSONObject jsonObject = new JSONObject(entity.getContent());
-            // Remove empty String properties (ex: empty Organization)
-            Iterator iterator = jsonObject.keys();
-            while (iterator.hasNext()) {
-                String key = (String) iterator.next();
-                Object value = jsonObject.get(key);
-                if (value instanceof String && value.toString().isEmpty()) {
-                    LOGGER.log(Level.WARNING, "Found empty property [" + key + "] in referential entity [" + entity.getKey() + "]");
-                    iterator.remove();
-                }
+        content = new HashMap<>();
+        
+        // Copies referential to content
+        JSONObject jsonObject = new JSONObject(entity.getContent());
+        Iterator iterator = jsonObject.keys();
+        while (iterator.hasNext()) {
+            String key = (String) iterator.next();
+            Object value = jsonObject.get(key);
+            if (value instanceof String && value.toString().isEmpty()) {
+                LOGGER.log(Level.WARNING, "Found empty property [" + key + "] in referential entity [" + entity.getKey() + "]");
+                iterator.remove();
+            } else {
+            	content.put(key, value);
             }
-            setContent(jsonObject.toString());
+        }
+        
+        // Encodes referential to content
+        String referentialEntityContent = entity.getContent();
+    	try {
+    		content.put("content", URLEncoder.encode(referentialEntityContent, "UTF-8"));
+		} catch (JSONException | UnsupportedEncodingException e) {
+			LOGGER.log(Level.WARNING, "Unable to encode content", e);
+		}
+
+        content.put("key", entity.getKey());
+        setContent(content);
+        
+//        if (entityType.equals(ReferentialEntityType.PERSON)) {
+//            JSONObject jsonObject = new JSONObject(entity.getContent());
+//            // Remove empty String properties (ex: empty Organization)
+//            Iterator iterator = jsonObject.keys();
+//            while (iterator.hasNext()) {
+//                String key = (String) iterator.next();
+//                Object value = jsonObject.get(key);
+//                if (value instanceof String && value.toString().isEmpty()) {
+//                    LOGGER.log(Level.WARNING, "Found empty property [" + key + "] in referential entity [" + entity.getKey() + "]");
+//                    iterator.remove();
+//                }
+//            }
+//            setContent(jsonObject.toString());
 //        } else if (entityType.equals(ReferentialEntityType.CORPORATYPE)) {
 //        	JSONObject jsonObject = new JSONObject(entity.getContent());
 //        	JSONArray labels = jsonObject.getJSONArray("labels");
@@ -158,17 +189,17 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
 //				LOGGER.log(Level.WARNING, "Unable to encode content", e);
 //			}
 //        	setContent(jsonObject.toString());
-        } else {
-        	JSONObject jsonObject = new JSONObject(entity.getContent());
-        	String content = entity.getContent();
-        	try {
-				jsonObject.put("content", URLEncoder.encode(content, "UTF-8"));
-			} catch (JSONException | UnsupportedEncodingException e) {
-				LOGGER.log(Level.WARNING, "Unable to encode content", e);
-			}
-//            setContent(entity.getContent());
-        	setContent(jsonObject.toString());
-        }
+//        } else {
+//        	JSONObject jsonObject = new JSONObject(entity.getContent());
+//        	String content = entity.getContent();
+//        	try {
+//				jsonObject.put("content", URLEncoder.encode(content, "UTF-8"));
+//			} catch (JSONException | UnsupportedEncodingException e) {
+//				LOGGER.log(Level.WARNING, "Unable to encode content", e);
+//			}
+////            setContent(entity.getContent());
+//        	setContent(jsonObject.toString());
+//        }
     }
 
 //    @Override
