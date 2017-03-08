@@ -62,10 +62,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-@Startup
-@Singleton(name = JsonStoreServiceWorker.WORKER_NAME)
-@SecurityDomain("ortolang")
-@PermitAll
+//@Startup
+//@Singleton(name = JsonStoreServiceWorker.WORKER_NAME)
+//@SecurityDomain("ortolang")
+//@PermitAll
 public class JsonStoreServiceWorkerBean implements JsonStoreServiceWorker {
 
     private static final Logger LOGGER = Logger.getLogger(JsonStoreServiceWorkerBean.class.getName());

@@ -57,10 +57,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-@Startup
-@Singleton(name = IndexStoreServiceWorker.WORKER_NAME)
-@SecurityDomain("ortolang")
-@PermitAll
+//@Startup
+//@Singleton(name = IndexStoreServiceWorker.WORKER_NAME)
+//@SecurityDomain("ortolang")
+//@PermitAll
 public class IndexStoreServiceWorkerBean implements IndexStoreServiceWorker {
 
     private static final Logger LOGGER = Logger.getLogger(IndexStoreServiceWorkerBean.class.getName());

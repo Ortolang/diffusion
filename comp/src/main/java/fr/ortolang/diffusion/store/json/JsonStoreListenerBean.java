@@ -48,10 +48,10 @@ import javax.jms.MessageListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@MessageDriven(name = "JsonStoreListener", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
-        @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
-        @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
-@SecurityDomain("ortolang")
+//@MessageDriven(name = "JsonStoreListener", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
+//        @ActivationConfigProperty(propertyName = "destination", propertyValue = "jms/topic/indexing"),
+//        @ActivationConfigProperty(propertyName = "acknowledgeMode", propertyValue = "Auto-acknowledge") })
+//@SecurityDomain("ortolang")
 public class JsonStoreListenerBean implements MessageListener {
 
     private static final Logger LOGGER = Logger.getLogger(JsonStoreListenerBean.class.getName());
@@ -62,15 +62,15 @@ public class JsonStoreListenerBean implements MessageListener {
     @Override
     @PermitAll
     public void onMessage(Message message) {
-        try {
-            LOGGER.log(Level.FINEST, "indexation message received");
-            String action = message.getStringProperty("action");
-            String key = message.getStringProperty("key");
-            LOGGER.log(Level.FINEST, "submitting action to json indexation service worker");
-            worker.submit(key, action);
-        } catch (JMSException e) {
-            LOGGER.log(Level.WARNING, "unable to handle indexation message", e);
-        }
+//        try {
+//            LOGGER.log(Level.FINEST, "indexation message received");
+//            String action = message.getStringProperty("action");
+//            String key = message.getStringProperty("key");
+//            LOGGER.log(Level.FINEST, "submitting action to json indexation service worker");
+//            worker.submit(key, action);
+//        } catch (JMSException e) {
+//            LOGGER.log(Level.WARNING, "unable to handle indexation message", e);
+//        }
     }
 
 }
