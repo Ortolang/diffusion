@@ -158,6 +158,7 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
 		}
 
         content.put("key", entity.getKey());
+        content.put("boost", entity.getBoost());
         setContent(content);
         
 //        if (entityType.equals(ReferentialEntityType.PERSON)) {

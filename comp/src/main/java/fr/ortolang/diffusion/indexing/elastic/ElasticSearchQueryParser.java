@@ -6,6 +6,8 @@ import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.FieldValueFactorFunctionBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 
 public class ElasticSearchQueryParser {
 
@@ -41,7 +43,9 @@ public class ElasticSearchQueryParser {
 				} else if (keyQuery.endsWith("*")) {
 					String parameterKey = keyQuery.substring(0, keyQuery.length() - 1);
 					if (valuesQuery.length==1) {					
-						queryBuilder.must(QueryBuilders.matchPhrasePrefixQuery(parameterKey, valuesQuery[0]));
+						FieldValueFactorFunctionBuilder fieldValueFactorFunction = ScoreFunctionBuilders.fieldValueFactorFunction("boost");
+						fieldValueFactorFunction.missing(1);
+						queryBuilder.must(QueryBuilders.functionScoreQuery(QueryBuilders.matchPhrasePrefixQuery(parameterKey, valuesQuery[0]), fieldValueFactorFunction));
 					}
 				} else {
 					if (valuesQuery.length==1) {
