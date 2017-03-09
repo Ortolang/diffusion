@@ -45,6 +45,7 @@ import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.indexing.IndexingService;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
@@ -150,6 +151,14 @@ public class IndexAllTask extends RuntimeEngineTask {
                     List<String> objects = browser.list(0, -1, CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, Status.DRAFT);
                     objects.addAll(browser.list(0, -1, CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, Status.PUBLISHED));
                     indexKeys(objects, DataObject.OBJECT_TYPE);
+                }
+
+                // METADATA
+                if ((all && phase == 1) || types.contains(MetadataObject.OBJECT_TYPE)) {
+                    LOGGER.log(Level.INFO, "Indexing all metadata objects");
+                    List<String> metadatas = browser.list(0, -1, CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, Status.PUBLISHED);
+//                    objects.addAll(browser.list(0, -1, CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE, Status.PUBLISHED));
+                    indexKeys(metadatas, MetadataObject.OBJECT_TYPE);
                 }
 
                 // LINKS

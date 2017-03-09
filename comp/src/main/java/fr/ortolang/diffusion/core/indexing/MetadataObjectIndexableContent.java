@@ -41,6 +41,7 @@ import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.OrtolangServiceLocator;
 import fr.ortolang.diffusion.core.CoreService;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -104,7 +105,7 @@ public class MetadataObjectIndexableContent extends OrtolangObjectIndexableConte
         };
     }
 
-    public MetadataObjectIndexableContent(MetadataObject metadata) throws IndexingServiceException, OrtolangException, KeyNotFoundException, RegistryServiceException {
+    public MetadataObjectIndexableContent(MetadataObject metadata, MetadataFormat format) throws IndexingServiceException, OrtolangException, KeyNotFoundException, RegistryServiceException {
         super(metadata, CoreService.SERVICE_NAME, MetadataObject.OBJECT_TYPE);
         RegistryService registry = (RegistryService) OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
         OrtolangObjectIdentifier objectIdentifier = registry.lookup(metadata.getTarget());
@@ -112,7 +113,8 @@ public class MetadataObjectIndexableContent extends OrtolangObjectIndexableConte
         content.put("targetType", objectIdentifier.getType());
         content.put("size", metadata.getSize());
         content.put("mimeType", metadata.getContentType());
-        if (metadata.getName().startsWith("system-x-")) {
+//        if (metadata.getName().startsWith("system-x-")) {
+        if (format != null && format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
             BinaryStoreService binary = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
             ObjectMapper mapper = new ObjectMapper();
             try {
@@ -122,7 +124,7 @@ public class MetadataObjectIndexableContent extends OrtolangObjectIndexableConte
                 }
                 content.put("extraction", extraction);
             } catch (IOException | BinaryStoreServiceException | DataNotFoundException e) {
-                LOGGER.log(Level.SEVERE, e.getMessage());
+                LOGGER.log(Level.SEVERE, e.getMessage(), e);
             }
         }
         setContent(content);

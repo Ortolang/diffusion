@@ -3953,18 +3953,25 @@ public class CoreServiceBean implements CoreService {
             return Collections.singletonList(new WorkspaceIndexableContent(workspace));
         case MetadataObject.OBJECT_TYPE:
             MetadataObject metadataObject = em.find(MetadataObject.class, identifier.getId());
+            MetadataFormat format = em.find(MetadataFormat.class, metadataObject.getFormat());
             metadataObject.setKey(key);
-            return Collections.singletonList(new MetadataObjectIndexableContent(metadataObject));
+            indexableContents.add(new MetadataObjectIndexableContent(metadataObject, format));
+            if (!metadataObject.getName().startsWith("system-") && 
+            		!metadataObject.getName().startsWith("ortolang-") && 
+            		Status.PUBLISHED.value().equals(registry.getPublicationStatus(key))
+            	) {
+            	indexableContents.add(new UserMetadataIndexableContent(metadataObject, format));
+            }
         }
         if (object != null) {
             for (MetadataElement metadataElement : ((MetadataSource) object).getMetadatas()) {
-                // TODO index more type of md
-                if (metadataElement.getName().startsWith("system-x-")) {
+//                if (metadataElement.getName().startsWith("system-x-")) {
                     OrtolangObjectIdentifier mdIdentifier = registry.lookup(metadataElement.getKey());
                     MetadataObject metadataObject = em.find(MetadataObject.class, mdIdentifier.getId());
+                    MetadataFormat format = em.find(MetadataFormat.class, metadataObject.getFormat());
                     metadataObject.setKey(metadataElement.getKey());
-                    indexableContents.add(new MetadataObjectIndexableContent(metadataObject));
-                }
+                    indexableContents.add(new MetadataObjectIndexableContent(metadataObject, format));
+//                }
             }
         }
         return indexableContents;

@@ -65,7 +65,7 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
     private static final Object[] ORGANIZATION_MAPPING;
     private static final Object[] LANGUAGE_MAPPING;
 
-    private final ReferentialEntityType entityType;
+//    private final ReferentialEntityType entityType;
 
     static {
         MAPPING = new String[]{
@@ -132,7 +132,7 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
 
     public ReferentialEntityIndexableContent(ReferentialEntity entity) throws IndexableContentParsingException {
         super(ReferentialService.SERVICE_NAME, entity.getType().name(), entity.getObjectKey());
-        entityType = entity.getType();
+//        entityType = entity.getType();
         content = new HashMap<>();
         
         // Copies referential to content

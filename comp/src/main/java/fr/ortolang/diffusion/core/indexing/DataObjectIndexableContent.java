@@ -77,15 +77,15 @@ public class DataObjectIndexableContent extends MetadataSourceIndexableContent {
         super(object, CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE);
         content.put("size", object.getSize());
         content.put("mimeType", object.getMimeType());
-        BinaryStoreService binary = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
-        try {
-            String extraction = binary.extract(object.getStream());
-            if (!extraction.isEmpty()) {
-                content.put("content", extraction);
-            }
-        } catch (BinaryStoreServiceException | DataNotFoundException e) {
-            LOGGER.log(Level.FINE, "Cannot extract content of data object with key [" + object.getKey() + "]", e);
-        }
+//        BinaryStoreService binary = (BinaryStoreService) OrtolangServiceLocator.lookup(BinaryStoreService.SERVICE_NAME, BinaryStoreService.class);
+//        try {
+//            String extraction = binary.extract(object.getStream());
+//            if (!extraction.isEmpty()) {
+//                content.put("content", extraction);
+//            }
+//        } catch (BinaryStoreServiceException | DataNotFoundException e) {
+//            LOGGER.log(Level.FINE, "Cannot extract content of data object with key [" + object.getKey() + "]", e);
+//        }
         setContent(content);
     }
 
