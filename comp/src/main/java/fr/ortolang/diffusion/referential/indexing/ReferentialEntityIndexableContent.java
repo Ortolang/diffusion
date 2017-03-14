@@ -131,7 +131,7 @@ public class ReferentialEntityIndexableContent extends OrtolangIndexableContent 
     protected Map<String, Object> content;
 
     public ReferentialEntityIndexableContent(ReferentialEntity entity) throws IndexableContentParsingException {
-        super(ReferentialService.SERVICE_NAME, entity.getType().name(), entity.getObjectKey());
+        super(ReferentialService.SERVICE_NAME, entity.getType().name().toLowerCase(), entity.getObjectKey());
 //        entityType = entity.getType();
         content = new HashMap<>();
         

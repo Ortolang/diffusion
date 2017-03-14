@@ -1,0 +1,15 @@
+{
+	"person": {
+		"properties": {
+			"fullname": {
+				"type": "text",
+				"fields": {
+					"autocomplete": {
+						"type": "text",
+						"analyzer": "person_fullname_analyzer"
+					}
+				}
+			}
+		}
+	}
+}

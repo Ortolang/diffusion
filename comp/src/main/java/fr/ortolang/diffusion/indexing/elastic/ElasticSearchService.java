@@ -44,6 +44,7 @@ public interface ElasticSearchService extends OrtolangService {
 
     String SERVICE_NAME = "es-store";
     
+    String PATH_TO_SETTINGS = "/indexing/settings/";
     String PATH_TO_MAPPINGS = "/indexing/mappings/";
     String EXTENSION_MAPPING = ".json";
 

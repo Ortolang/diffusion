@@ -169,6 +169,17 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                             } else {
                                 LOGGER.log(Level.INFO, "Creating index [" + indexableContent.getIndex() + "] and add mapping for type [" + indexableContent.getType() + "]");
                                 CreateIndexRequestBuilder requestBuilder = adminClient.prepareCreate(indexableContent.getIndex());
+                                InputStream settings = this.getClass().getResourceAsStream(PATH_TO_SETTINGS + indexableContent.getType() + EXTENSION_MAPPING);
+                                if (settings != null) {
+                                	String mappingAsString = StreamUtils.getContent(settings);
+                                	if (mappingAsString != null) {                                		
+                                		requestBuilder.setSettings(mappingAsString);
+                                	} else {
+                                		LOGGER.log(Level.SEVERE, "Unable to set configuration : cannot read file : "+PATH_TO_SETTINGS + indexableContent.getType() + EXTENSION_MAPPING);
+                                	}
+                                } else {
+                                	LOGGER.log(Level.WARNING, "Unable to set configuration : file not found : "+PATH_TO_SETTINGS + indexableContent.getType() + EXTENSION_MAPPING);
+                                }
                                 InputStream mapping = this.getClass().getResourceAsStream(PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
                                 if (mapping != null) {
                                 	String mappingAsString = StreamUtils.getContent(mapping);
@@ -178,7 +189,7 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                                 		LOGGER.log(Level.SEVERE, "Unable to put mapping : cannot read file : "+PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
                                 	}
                                 } else {
-                                	LOGGER.log(Level.SEVERE, "Unable to put mapping : file not found : "+PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
+                                	LOGGER.log(Level.WARNING, "Unable to put mapping : file not found : "+PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
                                 }
                                 requestBuilder.get();
                                 HashSet<String> types = new HashSet<>();

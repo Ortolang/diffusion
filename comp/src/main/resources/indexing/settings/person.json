@@ -1,0 +1,18 @@
+{
+	"analysis": {
+		"analyzer": {
+			"std_french_analyzer": {
+				"type": "standard",
+				"stopwords": "_french_"
+			},
+			"person_fullname_analyzer": {
+				"type": "custom",
+				"tokenizer": "standard",
+				"filter": [
+					"lowercase",
+					"asciifolding"
+				]
+			}
+		}
+	}
+}

@@ -136,11 +136,19 @@ public class SearchResource {
 		if (key == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
 		}
-		String person = search.get(ReferentialService.SERVICE_NAME, ReferentialEntityType.PERSON.name(), key);
+		String person = search.get(ReferentialService.SERVICE_NAME, ReferentialEntityType.PERSON.name().toLowerCase(), key);
 		if (person != null) {
 			return Response.ok(person).build();
 		}
 		return Response.status(404).build();
+	}
+
+	@GET
+	@Path("/persons")
+	@GZIP
+	public Response searchPersons(@Context HttpServletRequest request) {
+		SearchQuery query = SearchResourceHelper.executeQuery(request, ReferentialService.SERVICE_NAME, ReferentialEntityType.PERSON.name().toLowerCase());
+		return Response.ok(SearchResultRepresentation.fromSearchResult(search.search(query))).build();
 	}
 
 	@GET
@@ -150,11 +158,49 @@ public class SearchResource {
 		if (key == null) {
 			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
 		}
-		String person = search.get(ReferentialService.SERVICE_NAME, ReferentialEntityType.ORGANIZATION.name(), key);
+		String person = search.get(ReferentialService.SERVICE_NAME, ReferentialEntityType.ORGANIZATION.name().toLowerCase(), key);
 		if (person != null) {
 			return Response.ok(person).build();
 		}
 		return Response.status(404).build();
+	}
+
+	@GET
+	@Path("/organizations")
+	@GZIP
+	public Response searchOrganizations(@Context HttpServletRequest request) {
+		SearchQuery query = SearchResourceHelper.executeQuery(request, ReferentialService.SERVICE_NAME, ReferentialEntityType.ORGANIZATION.name().toLowerCase());
+		return Response.ok(SearchResultRepresentation.fromSearchResult(search.search(query))).build();
+	}
+
+	@GET
+	@Path("/roles/{key}")
+	@GZIP
+	public Response getRole(@PathParam(value = "key") String key) {
+		if (key == null) {
+			return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
+		}
+		String role = search.get(ReferentialService.SERVICE_NAME, ReferentialEntityType.ROLE.name().toLowerCase(), key);
+		if (role != null) {
+			return Response.ok(role).build();
+		}
+		return Response.status(404).build();
+	}
+
+	@GET
+	@Path("/roles")
+	@GZIP
+	public Response searchRoles(@Context HttpServletRequest request) {
+		SearchQuery query = SearchResourceHelper.executeQuery(request, ReferentialService.SERVICE_NAME, ReferentialEntityType.ROLE.name().toLowerCase());
+		return Response.ok(SearchResultRepresentation.fromSearchResult(search.search(query))).build();
+	}
+
+	@GET
+	@Path("/languages")
+	@GZIP
+	public Response searchLanguages(@Context HttpServletRequest request) {
+		SearchQuery query = SearchResourceHelper.executeQuery(request, ReferentialService.SERVICE_NAME, ReferentialEntityType.LANGUAGE.name().toLowerCase());
+		return Response.ok(SearchResultRepresentation.fromSearchResult(search.search(query))).build();
 	}
 
 	@GET
