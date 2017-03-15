@@ -168,7 +168,8 @@ public class OaiServiceBean implements OaiService {
     public Record findRecord(String identifier, String metadataPrefix) throws RecordNotFoundException {
         LOGGER.log(Level.FINE, "finding record with identifier " + identifier + " and metadataPrefix " + metadataPrefix);
         try {
-            return em.createNamedQuery("findRecordsByIdentifier", Record.class).setParameter("identifier", identifier).getSingleResult();
+            return em.createNamedQuery("findRecordsByIdentifierAndMetadataPrefix", Record.class).setParameter("identifier", identifier)
+            		.setParameter("metadataPrefix", metadataPrefix).getSingleResult();
         } catch (NoResultException e) {
             throw new RecordNotFoundException("unable to find a record with identifier: " + identifier);
         }

@@ -83,7 +83,26 @@ public class OaiServiceTest {
 		} catch (RecordNotFoundException e) {
 			fail(e.getMessage());
 		}
+	}
+
+	@Test
+	public void findRecord() {
+		String identifier1 = "1";
+		String metadataPrefix = "oai_dc";
+		long lastModificationDate = System.currentTimeMillis();
+		String xml = "<oai_dc></oai_dc>";
+		Record record1 = oai.createRecord(identifier1, metadataPrefix, lastModificationDate, xml);
 		
+		String identifier2 = "2";
+		String olacMetadataPrefix = "olac";
+		lastModificationDate = System.currentTimeMillis();
+		oai.createRecord(identifier2, olacMetadataPrefix, lastModificationDate, xml);
+		try {
+			Record recordFound = oai.findRecord(identifier1, metadataPrefix);
+			assertTrue(record1.getIdentifier().equals(recordFound.getIdentifier()));
+		} catch (RecordNotFoundException e) {
+			fail(e.getMessage());
+		}
 	}
 
 }
