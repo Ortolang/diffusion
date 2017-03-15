@@ -249,10 +249,10 @@ public class SecurityServiceBean implements SecurityService {
     @Override
     @RolesAllowed("admin")
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public void systemSetRule(String key, String subject, List<String> permissions) throws SecurityServiceException, KeyNotFoundException {
+    public void systemSetRule(String key, String subject, List<String> permissions, boolean force) throws SecurityServiceException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "{SYSTEM} setting rule for key [" + key + "] and subject [" + subject + "]");
         try {
-            if ( registry.isLocked(key) ) {
+            if ( !force && registry.isLocked(key) ) {
                 throw new SecurityServiceException("key [" + key + "] is locked and cannot be modified.");
             }
 

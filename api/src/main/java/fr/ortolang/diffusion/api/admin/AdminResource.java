@@ -70,6 +70,8 @@ import fr.ortolang.diffusion.registry.entity.RegistryEntry;
 import fr.ortolang.diffusion.runtime.RuntimeService;
 import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
+import fr.ortolang.diffusion.security.SecurityService;
+import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.statistics.StatisticsService;
@@ -128,6 +130,8 @@ public class AdminResource {
     private BinaryStoreService binary;
     @EJB
     private RegistryService registry;
+    @EJB
+    private SecurityService security;
     @EJB
     private CoreService core;
     @EJB
@@ -195,6 +199,14 @@ public class AdminResource {
         LOGGER.log(Level.INFO, "DELETE /admin/registry/entries/" + key);
         registry.delete(key, true);
         return Response.ok().build();
+    }
+    
+    @PUT
+    @Path("/security/rules")
+    @GZIP
+    public Response setRules(RulesRepresentation rules) throws SecurityServiceException, KeyNotFoundException {
+    	security.systemSetRule(rules.getKey(), rules.getSubject(), rules.getPermissions(), true);
+    	return Response.ok().build();
     }
 
     @GET
