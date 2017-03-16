@@ -1189,13 +1189,13 @@ public class MembershipServiceBean implements MembershipService {
             Profile profile = em.find(Profile.class, identifier.getId());
             profile.setKey(key);
             return Collections.singletonList(new ProfileIndexableContent(profile));
-        case Group.OBJECT_TYPE:
-            if (ALL_AUTHENTIFIED_GROUP_KEY.equals(key)) {
-                break;
-            }
-            Group group = em.find(Group.class, identifier.getId());
-            group.setKey(key);
-            return Collections.singletonList(new GroupIndexableContent(group));
+//        case Group.OBJECT_TYPE:
+//            if (ALL_AUTHENTIFIED_GROUP_KEY.equals(key)) {
+//                break;
+//            }
+//            Group group = em.find(Group.class, identifier.getId());
+//            group.setKey(key);
+//            return Collections.singletonList(new GroupIndexableContent(group));
         }
         return Collections.emptyList();
     }

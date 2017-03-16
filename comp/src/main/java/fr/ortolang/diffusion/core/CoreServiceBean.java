@@ -3879,13 +3879,13 @@ public class CoreServiceBean implements CoreService {
             DataObject dataObject = em.find(DataObject.class, identifier.getId());
             object = dataObject;
             dataObject.setKey(key);
-            indexableContents.add(new DataObjectIndexableContent(dataObject));
+//            indexableContents.add(new DataObjectIndexableContent(dataObject));
             break;
         case Collection.OBJECT_TYPE:
             Collection collection = em.find(Collection.class, identifier.getId());
             object = collection;
             collection.setKey(key);
-            indexableContents.add(new CollectionIndexableContent(collection));
+//            indexableContents.add(new CollectionIndexableContent(collection));
             if (collection.isRoot() && Status.PUBLISHED.value().equals(registry.getPublicationStatus(key))) {
                 try {
                     TypedQuery<Workspace> query = em.createNamedQuery("findWorkspaceByRootCollection", Workspace.class).setParameter("root", "%" + collection.getKey() + "%");
@@ -3899,7 +3899,7 @@ public class CoreServiceBean implements CoreService {
                         break;
                     }
                     String tag = tagElement.getName();
-                    CollectionContent collectionContent = listCollectionContent(collection.getKey());
+//                    CollectionContent collectionContent = listCollectionContent(collection.getKey());
 
                     // Rating metadata for root collections
                     int rate = 0;
@@ -3922,26 +3922,28 @@ public class CoreServiceBean implements CoreService {
                     // Index item metadata for root collections
                     MetadataElement itemMetadata = collection.findMetadataByName(MetadataFormat.ITEM);
                     if (itemMetadata != null) {
-                        LOGGER.log(Level.FINE, "Add ortolang-item metadata of root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "/" + snapshot + "/" + tag + "] to indexable content");
+//                        LOGGER.log(Level.FINE, "Add ortolang-item metadata of root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "/" + snapshot + "/" + tag + "] to indexable content");
                         OrtolangObjectIdentifier itemMetadataIdentifier = registry.lookup(itemMetadata.getKey());
                         MetadataObject metadataObject = em.find(MetadataObject.class, itemMetadataIdentifier.getId());
+                        // Indexes in item-all index : /item-all/{ortolang-type}
                         indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, rate, workspace.isArchive(), false));
                         String latestPublishedSnapshot = findWorkspaceLatestPublishedSnapshot(workspace.getKey());
                         if (snapshot.equals(latestPublishedSnapshot)) {
-                            LOGGER.log(Level.INFO, "Add ortolang-item metadata as latest published root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "/" + snapshot + "/" + tag + "] to indexable content");
+//                            LOGGER.log(Level.FINE, "Add ortolang-item metadata as latest published root collection [" + collection.getKey() + "] of workspace [" + workspace.getAlias() + "/" + snapshot + "/" + tag + "] to indexable content");
+                        	// Indexes in item index : /item/{ortolang-type}
                             indexableContents.add(new OrtolangItemIndexableContent(metadataObject, collection, workspace.getAlias(), snapshot, tag, rate, workspace.isArchive(), true));
                         }
                     }
 
-                    for (CollectionContentEntry entry : collectionContent.getContent()) {
-                        Map<String, Object> params = new HashMap<>();
-                        params.put("alias", workspace.getAlias());
-                        params.put("key", workspace.getKey());
-                        params.put("root", collection.getKey());
-                        params.put("path", entry.getPath());
-                        params.put("snapshot", snapshot);
-                        indexableContents.add(new OrtolangObjectScriptedUpdate(CoreService.SERVICE_NAME, entry.getType(), entry.getKey(),"updateRootCollectionChild", params));
-                    }
+//                    for (CollectionContentEntry entry : collectionContent.getContent()) {
+//                        Map<String, Object> params = new HashMap<>();
+//                        params.put("alias", workspace.getAlias());
+//                        params.put("key", workspace.getKey());
+//                        params.put("root", collection.getKey());
+//                        params.put("path", entry.getPath());
+//                        params.put("snapshot", snapshot);
+//                        indexableContents.add(new OrtolangObjectScriptedUpdate(CoreService.SERVICE_NAME, entry.getType(), entry.getKey(),"updateRootCollectionChild", params));
+//                    }
                 } catch (IdentifierNotRegisteredException| CoreServiceException | NoResultException e) {
                     throw new OrtolangException(e.getMessage(), e);
                 }
@@ -3950,30 +3952,33 @@ public class CoreServiceBean implements CoreService {
         case Workspace.OBJECT_TYPE:
             Workspace workspace = em.find(Workspace.class, identifier.getId());
             workspace.setKey(key);
+            // Indexes in core index : /core/workspace
             return Collections.singletonList(new WorkspaceIndexableContent(workspace));
         case MetadataObject.OBJECT_TYPE:
             MetadataObject metadataObject = em.find(MetadataObject.class, identifier.getId());
             MetadataFormat format = em.find(MetadataFormat.class, metadataObject.getFormat());
             metadataObject.setKey(key);
+            // Indexes in core index : /core/metadata
             indexableContents.add(new MetadataObjectIndexableContent(metadataObject, format));
             if (!metadataObject.getName().startsWith("system-") && 
             		!metadataObject.getName().startsWith("ortolang-") && 
             		Status.PUBLISHED.value().equals(registry.getPublicationStatus(key))
             	) {
+            	// Indexes in core index :  /metadata/{format}
             	indexableContents.add(new UserMetadataIndexableContent(metadataObject, format));
             }
         }
-        if (object != null) {
-            for (MetadataElement metadataElement : ((MetadataSource) object).getMetadatas()) {
-//                if (metadataElement.getName().startsWith("system-x-")) {
-                    OrtolangObjectIdentifier mdIdentifier = registry.lookup(metadataElement.getKey());
-                    MetadataObject metadataObject = em.find(MetadataObject.class, mdIdentifier.getId());
-                    MetadataFormat format = em.find(MetadataFormat.class, metadataObject.getFormat());
-                    metadataObject.setKey(metadataElement.getKey());
-                    indexableContents.add(new MetadataObjectIndexableContent(metadataObject, format));
-//                }
-            }
-        }
+//        if (object != null) {
+//            for (MetadataElement metadataElement : ((MetadataSource) object).getMetadatas()) {
+////                if (metadataElement.getName().startsWith("system-x-")) {
+//                    OrtolangObjectIdentifier mdIdentifier = registry.lookup(metadataElement.getKey());
+//                    MetadataObject metadataObject = em.find(MetadataObject.class, mdIdentifier.getId());
+//                    MetadataFormat format = em.find(MetadataFormat.class, metadataObject.getFormat());
+//                    metadataObject.setKey(metadataElement.getKey());
+//                    indexableContents.add(new MetadataObjectIndexableContent(metadataObject, format));
+////                }
+//            }
+//        }
         return indexableContents;
     }
 

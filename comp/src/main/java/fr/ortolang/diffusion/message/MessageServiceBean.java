@@ -835,114 +835,114 @@ public class MessageServiceBean implements MessageService {
         }
     }
 
-    @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException {
-        try {
-            OrtolangObjectIdentifier identifier = registry.lookup(key);
-            if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
-                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-            }
-            IndexablePlainTextContent content = new IndexablePlainTextContent();
+//    @Override
+//    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+//    public IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException {
+//        try {
+//            OrtolangObjectIdentifier identifier = registry.lookup(key);
+//            if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
+//                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+//            }
+//            IndexablePlainTextContent content = new IndexablePlainTextContent();
+//
+//            if (identifier.getType().equals(Thread.OBJECT_TYPE)) {
+//                Thread thread = em.find(Thread.class, identifier.getId());
+//                if (thread == null) {
+//                    throw new OrtolangException("unable to load thread with id [" + identifier.getId() + "] from storage");
+//                }
+//                if (thread.getTitle() != null) {
+//                    content.setName(thread.getTitle());
+//                    content.addContentPart(thread.getTitle());
+//                }
+//            }
+//
+//            if (identifier.getType().equals(Message.OBJECT_TYPE)) {
+//                Message message = em.find(Message.class, identifier.getId());
+//                if (message == null) {
+//                    throw new OrtolangException("unable to load message with id [" + identifier.getId() + "] from storage");
+//                }
+//                if (message.getBody() != null && message.getBody().length() > 0) {
+//                    content.addContentPart(message.getBody());
+//                }
+//            }
+//
+//            return content;
+//        } catch (KeyNotFoundException | RegistryServiceException e) {
+//            throw new OrtolangException("unable to find an object for key " + key);
+//        }
+//    }
 
-            if (identifier.getType().equals(Thread.OBJECT_TYPE)) {
-                Thread thread = em.find(Thread.class, identifier.getId());
-                if (thread == null) {
-                    throw new OrtolangException("unable to load thread with id [" + identifier.getId() + "] from storage");
-                }
-                if (thread.getTitle() != null) {
-                    content.setName(thread.getTitle());
-                    content.addContentPart(thread.getTitle());
-                }
-            }
+//    @Override
+//    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+//    public IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException, NotIndexableContentException {
+//        try {
+//            OrtolangObjectIdentifier identifier = registry.lookup(key);
+//
+//            if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
+//                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+//            }
+//
+//            IndexableJsonContent content = new IndexableJsonContent();
+//
+//            if (identifier.getType().equals(Message.OBJECT_TYPE)) {
+//                Message message = em.find(Message.class, identifier.getId());
+//                if (message == null) {
+//                    throw new OrtolangException("unable to load message with id [" + identifier.getId() + "] from storage");
+//                }
+//                JsonObjectBuilder builder = Json.createObjectBuilder();
+//                builder.add("key", key);
+//                if (message.getBody() != null) {
+//                    builder.add("body", message.getBody());
+//                }
+//                builder.add("thread", message.getThread());
+//                if (message.getParent() != null) {
+//                    builder.add("parent", message.getParent());
+//                }
+//                JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+//                for (MessageAttachment attachment : message.getAttachments()) {
+//                    arrayBuilder.add(attachment.getName());
+//                }
+//                builder.add("attachments", arrayBuilder);
+//                content.put(Message.OBJECT_TYPE, builder.build().toString());
+//            }
+//
+//            if (identifier.getType().equals(Thread.OBJECT_TYPE)) {
+//                Thread thread = em.find(Thread.class, identifier.getId());
+//                if (thread == null) {
+//                    throw new OrtolangException("unable to load thread with id [" + identifier.getId() + "] from storage");
+//                }
+//                JsonObjectBuilder builder = Json.createObjectBuilder();
+//                builder.add("key", key);
+//                builder.add("title", thread.getTitle());
+//                builder.add("workspace", thread.getWorkspace());
+//                content.put(Thread.OBJECT_TYPE, builder.build().toString());
+//            }
+//            return content;
+//        } catch (KeyNotFoundException | RegistryServiceException e) {
+//            throw new OrtolangException("unable to find an object for key " + key);
+//        }
+//    }
 
-            if (identifier.getType().equals(Message.OBJECT_TYPE)) {
-                Message message = em.find(Message.class, identifier.getId());
-                if (message == null) {
-                    throw new OrtolangException("unable to load message with id [" + identifier.getId() + "] from storage");
-                }
-                if (message.getBody() != null && message.getBody().length() > 0) {
-                    content.addContentPart(message.getBody());
-                }
-            }
-
-            return content;
-        } catch (KeyNotFoundException | RegistryServiceException e) {
-            throw new OrtolangException("unable to find an object for key " + key);
-        }
-    }
-
-    @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException, NotIndexableContentException {
-        try {
-            OrtolangObjectIdentifier identifier = registry.lookup(key);
-
-            if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
-                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-            }
-
-            IndexableJsonContent content = new IndexableJsonContent();
-
-            if (identifier.getType().equals(Message.OBJECT_TYPE)) {
-                Message message = em.find(Message.class, identifier.getId());
-                if (message == null) {
-                    throw new OrtolangException("unable to load message with id [" + identifier.getId() + "] from storage");
-                }
-                JsonObjectBuilder builder = Json.createObjectBuilder();
-                builder.add("key", key);
-                if (message.getBody() != null) {
-                    builder.add("body", message.getBody());
-                }
-                builder.add("thread", message.getThread());
-                if (message.getParent() != null) {
-                    builder.add("parent", message.getParent());
-                }
-                JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
-                for (MessageAttachment attachment : message.getAttachments()) {
-                    arrayBuilder.add(attachment.getName());
-                }
-                builder.add("attachments", arrayBuilder);
-                content.put(Message.OBJECT_TYPE, builder.build().toString());
-            }
-
-            if (identifier.getType().equals(Thread.OBJECT_TYPE)) {
-                Thread thread = em.find(Thread.class, identifier.getId());
-                if (thread == null) {
-                    throw new OrtolangException("unable to load thread with id [" + identifier.getId() + "] from storage");
-                }
-                JsonObjectBuilder builder = Json.createObjectBuilder();
-                builder.add("key", key);
-                builder.add("title", thread.getTitle());
-                builder.add("workspace", thread.getWorkspace());
-                content.put(Thread.OBJECT_TYPE, builder.build().toString());
-            }
-            return content;
-        } catch (KeyNotFoundException | RegistryServiceException e) {
-            throw new OrtolangException("unable to find an object for key " + key);
-        }
-    }
-
-    @Override
-    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, IndexingServiceException {
-        OrtolangObjectIdentifier identifier = registry.lookup(key);
-
-        if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
-            throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-        }
-
-        switch (identifier.getType()) {
-        case Message.OBJECT_TYPE:
-            Message message = em.find(Message.class, identifier.getId());
-            message.setKey(key);
-            return Collections.singletonList(new MessageIndexableContent(message));
-        case Thread.OBJECT_TYPE:
-            Thread thread = em.find(Thread.class, identifier.getId());
-            thread.setKey(key);
-            return Collections.singletonList(new ThreadIndexableContent(thread));
-        }
-        return Collections.emptyList();
-    }
+//    @Override
+//    public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, IndexingServiceException {
+//        OrtolangObjectIdentifier identifier = registry.lookup(key);
+//
+//        if (!identifier.getService().equals(MessageService.SERVICE_NAME)) {
+//            throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+//        }
+//
+//        switch (identifier.getType()) {
+//        case Message.OBJECT_TYPE:
+//            Message message = em.find(Message.class, identifier.getId());
+//            message.setKey(key);
+//            return Collections.singletonList(new MessageIndexableContent(message));
+//        case Thread.OBJECT_TYPE:
+//            Thread thread = em.find(Thread.class, identifier.getId());
+//            thread.setKey(key);
+//            return Collections.singletonList(new ThreadIndexableContent(thread));
+//        }
+//        return Collections.emptyList();
+//    }
 
     @Override
     public String getServiceName() {
