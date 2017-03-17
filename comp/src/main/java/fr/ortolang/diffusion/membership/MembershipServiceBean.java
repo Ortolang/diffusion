@@ -1181,7 +1181,7 @@ public class MembershipServiceBean implements MembershipService {
 
         switch (identifier.getType()) {
         case Profile.OBJECT_TYPE:
-            if (UNAUTHENTIFIED_IDENTIFIER.equals(key)) {
+            if (UNAUTHENTIFIED_IDENTIFIER.equals(key) || SUPERUSER_IDENTIFIER.equals(key)) {
                 break;
             }
             Profile profile = em.find(Profile.class, identifier.getId());
