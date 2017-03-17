@@ -95,11 +95,6 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-import fr.ortolang.diffusion.store.index.IndexStoreDocumentBuilder;
-import fr.ortolang.diffusion.store.index.IndexStoreService;
-import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
-import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
-import fr.ortolang.diffusion.store.index.IndexablePlainTextContentProperty;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 
 @Local(ReferentialService.class)
@@ -123,8 +118,8 @@ public class ReferentialServiceBean implements ReferentialService {
     private AuthorisationService authorisation;
     @EJB
     private IndexingService indexing;
-    @EJB
-    private IndexStoreService indexStore;
+//    @EJB
+//    private IndexStoreService indexStore;
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
     @Resource
@@ -173,13 +168,13 @@ public class ReferentialServiceBean implements ReferentialService {
         this.indexing = indexing;
     }
 
-    public IndexStoreService getIndexStore() {
-        return indexStore;
-    }
-
-    public void setIndexStore(IndexStoreService indexStore) {
-        this.indexStore = indexStore;
-    }
+//    public IndexStoreService getIndexStore() {
+//        return indexStore;
+//    }
+//
+//    public void setIndexStore(IndexStoreService indexStore) {
+//        this.indexStore = indexStore;
+//    }
 
     public EntityManager getEm() {
         return em;
@@ -408,23 +403,23 @@ public class ReferentialServiceBean implements ReferentialService {
      * @param lang
      *            the language id of the text looking
      */
-    @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<ReferentialEntity> findEntitiesByTerm(ReferentialEntityType type, String term, String lang) throws ReferentialServiceException {
-        String query = new StringBuilder().append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX).append(ReferentialEntity.CONTENT_TEXT).append(lang.toUpperCase()).append(":").append(term)
-                .append("* ").append("AND ").append(IndexStoreDocumentBuilder.SERVICE_FIELD).append(":").append(ReferentialService.SERVICE_NAME).append(" ").append("AND ")
-                .append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX).append(ReferentialEntity.CONTENT_TYPE).append(":").append(type.toString().toLowerCase()).toString();
-
-        List<ReferentialEntity> entities = new ArrayList<ReferentialEntity>();
-        try {
-            for (OrtolangSearchResult result : indexStore.search(query)) {
-                entities.add(readEntity(result.getKey().replaceFirst(SERVICE_NAME + ":", "")));
-            }
-        } catch (IndexStoreServiceException | KeyNotFoundException e) {
-            throw new ReferentialServiceException("error while looking for a ReferentialEntity with term [" + term + "]");
-        }
-        return entities;
-    }
+//    @Override
+//    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+//    public List<ReferentialEntity> findEntitiesByTerm(ReferentialEntityType type, String term, String lang) throws ReferentialServiceException {
+//        String query = new StringBuilder().append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX).append(ReferentialEntity.CONTENT_TEXT).append(lang.toUpperCase()).append(":").append(term)
+//                .append("* ").append("AND ").append(IndexStoreDocumentBuilder.SERVICE_FIELD).append(":").append(ReferentialService.SERVICE_NAME).append(" ").append("AND ")
+//                .append(IndexStoreDocumentBuilder.CONTENT_PROPERTY_FIELD_PREFIX).append(ReferentialEntity.CONTENT_TYPE).append(":").append(type.toString().toLowerCase()).toString();
+//
+//        List<ReferentialEntity> entities = new ArrayList<ReferentialEntity>();
+//        try {
+//            for (OrtolangSearchResult result : indexStore.search(query)) {
+//                entities.add(readEntity(result.getKey().replaceFirst(SERVICE_NAME + ":", "")));
+//            }
+//        } catch (IndexStoreServiceException | KeyNotFoundException e) {
+//            throw new ReferentialServiceException("error while looking for a ReferentialEntity with term [" + term + "]");
+//        }
+//        return entities;
+//    }
 
     private void checkObjectType(OrtolangObjectIdentifier identifier, String objectType) throws ReferentialServiceException {
         if (!identifier.getService().equals(getServiceName())) {
@@ -436,89 +431,89 @@ public class ReferentialServiceBean implements ReferentialService {
         }
     }
 
-    @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException {
-        try {
-            OrtolangObjectIdentifier identifier = registry.lookup(key);
-            if (!identifier.getService().equals(ReferentialService.SERVICE_NAME)) {
-                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-            }
-            IndexablePlainTextContent content = new IndexablePlainTextContent();
-
-            if (identifier.getType().equals(ReferentialEntity.OBJECT_TYPE)) {
-                ReferentialEntity referentielEntity = em.find(ReferentialEntity.class, identifier.getId());
-                if (referentielEntity == null) {
-                    throw new OrtolangException("unable to load ReferentialEntity with id [" + identifier.getId() + "] from storage");
-                }
-                content.setName(key.replaceFirst(SERVICE_NAME + ":", ""));
-                content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TYPE, referentielEntity.getType().toString()));
-
-                if (referentielEntity.getType().equals(ReferentialEntityType.LANGUAGE)) {
-                    StringReader reader = new StringReader(referentielEntity.getContent());
-                    JsonReader jsonReader = Json.createReader(reader);
-                    try {
-                        JsonObject jsonObj = jsonReader.readObject();
-
-                        content.setBoost(referentielEntity.getBoost());
-                        content.addContentPart(jsonObj.getString("id"));
-                        if (jsonObj.containsKey("labels")) {
-                            for (JsonObject lang : jsonObj.getJsonArray("labels").getValuesAs(JsonObject.class)) {
-                                content.addContentPart(lang.getString("value"));
-                                content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT + lang.getString("lang"), lang.getString("value")));
-                            }
-                        }
-                    } catch (IllegalStateException | NullPointerException | ClassCastException e) {
-                        LOGGER.log(Level.WARNING, "No property requested in json object", e);
-                    } catch (JsonException e) {
-                        LOGGER.log(Level.SEVERE, "No property requested in json object", e);
-                    } finally {
-                        jsonReader.close();
-                        reader.close();
-                    }
-                } else if (referentielEntity.getType().equals(ReferentialEntityType.PERSON)) {
-                    StringReader reader = new StringReader(referentielEntity.getContent());
-                    JsonReader jsonReader = Json.createReader(reader);
-                    try {
-                        JsonObject jsonObj = jsonReader.readObject();
-
-                        content.setBoost(referentielEntity.getBoost());
-                        content.addContentPart(jsonObj.getString("id"));
-                        content.addContentPart(jsonObj.getString("fullname"));
-                        content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT + "FR", jsonObj.getString("fullname")));
-                    } catch (IllegalStateException | NullPointerException | ClassCastException e) {
-                        LOGGER.log(Level.WARNING, "No property requested in json object", e);
-                    } catch (JsonException e) {
-                        LOGGER.log(Level.SEVERE, "No property requested in json object", e);
-                    } finally {
-                        jsonReader.close();
-                        reader.close();
-                    }
-                } else if (referentielEntity.getType().equals(ReferentialEntityType.ORGANIZATION)) {
-                    StringReader reader = new StringReader(referentielEntity.getContent());
-                    JsonReader jsonReader = Json.createReader(reader);
-                    try {
-                        JsonObject jsonObj = jsonReader.readObject();
-
-                        content.setBoost(referentielEntity.getBoost());
-                        content.addContentPart(jsonObj.getString("id"));
-                        content.addContentPart(jsonObj.getString("fullname"));
-                        content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT + "FR", jsonObj.getString("fullname")));
-                    } catch (IllegalStateException | NullPointerException | ClassCastException e) {
-                        LOGGER.log(Level.WARNING, "No property requested in json object", e);
-                    } catch (JsonException e) {
-                        LOGGER.log(Level.SEVERE, "No property requested in json object", e);
-                    } finally {
-                        jsonReader.close();
-                        reader.close();
-                    }
-                }
-            }
-            return content;
-        } catch (RegistryServiceException | KeyNotFoundException e) {
-            throw new OrtolangException("unable to find an object for key " + key);
-        }
-    }
+//    @Override
+//    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+//    public IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException {
+//        try {
+//            OrtolangObjectIdentifier identifier = registry.lookup(key);
+//            if (!identifier.getService().equals(ReferentialService.SERVICE_NAME)) {
+//                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+//            }
+//            IndexablePlainTextContent content = new IndexablePlainTextContent();
+//
+//            if (identifier.getType().equals(ReferentialEntity.OBJECT_TYPE)) {
+//                ReferentialEntity referentielEntity = em.find(ReferentialEntity.class, identifier.getId());
+//                if (referentielEntity == null) {
+//                    throw new OrtolangException("unable to load ReferentialEntity with id [" + identifier.getId() + "] from storage");
+//                }
+//                content.setName(key.replaceFirst(SERVICE_NAME + ":", ""));
+//                content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TYPE, referentielEntity.getType().toString()));
+//
+//                if (referentielEntity.getType().equals(ReferentialEntityType.LANGUAGE)) {
+//                    StringReader reader = new StringReader(referentielEntity.getContent());
+//                    JsonReader jsonReader = Json.createReader(reader);
+//                    try {
+//                        JsonObject jsonObj = jsonReader.readObject();
+//
+//                        content.setBoost(referentielEntity.getBoost());
+//                        content.addContentPart(jsonObj.getString("id"));
+//                        if (jsonObj.containsKey("labels")) {
+//                            for (JsonObject lang : jsonObj.getJsonArray("labels").getValuesAs(JsonObject.class)) {
+//                                content.addContentPart(lang.getString("value"));
+//                                content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT + lang.getString("lang"), lang.getString("value")));
+//                            }
+//                        }
+//                    } catch (IllegalStateException | NullPointerException | ClassCastException e) {
+//                        LOGGER.log(Level.WARNING, "No property requested in json object", e);
+//                    } catch (JsonException e) {
+//                        LOGGER.log(Level.SEVERE, "No property requested in json object", e);
+//                    } finally {
+//                        jsonReader.close();
+//                        reader.close();
+//                    }
+//                } else if (referentielEntity.getType().equals(ReferentialEntityType.PERSON)) {
+//                    StringReader reader = new StringReader(referentielEntity.getContent());
+//                    JsonReader jsonReader = Json.createReader(reader);
+//                    try {
+//                        JsonObject jsonObj = jsonReader.readObject();
+//
+//                        content.setBoost(referentielEntity.getBoost());
+//                        content.addContentPart(jsonObj.getString("id"));
+//                        content.addContentPart(jsonObj.getString("fullname"));
+//                        content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT + "FR", jsonObj.getString("fullname")));
+//                    } catch (IllegalStateException | NullPointerException | ClassCastException e) {
+//                        LOGGER.log(Level.WARNING, "No property requested in json object", e);
+//                    } catch (JsonException e) {
+//                        LOGGER.log(Level.SEVERE, "No property requested in json object", e);
+//                    } finally {
+//                        jsonReader.close();
+//                        reader.close();
+//                    }
+//                } else if (referentielEntity.getType().equals(ReferentialEntityType.ORGANIZATION)) {
+//                    StringReader reader = new StringReader(referentielEntity.getContent());
+//                    JsonReader jsonReader = Json.createReader(reader);
+//                    try {
+//                        JsonObject jsonObj = jsonReader.readObject();
+//
+//                        content.setBoost(referentielEntity.getBoost());
+//                        content.addContentPart(jsonObj.getString("id"));
+//                        content.addContentPart(jsonObj.getString("fullname"));
+//                        content.addProperties(new IndexablePlainTextContentProperty(ReferentialEntity.CONTENT_TEXT + "FR", jsonObj.getString("fullname")));
+//                    } catch (IllegalStateException | NullPointerException | ClassCastException e) {
+//                        LOGGER.log(Level.WARNING, "No property requested in json object", e);
+//                    } catch (JsonException e) {
+//                        LOGGER.log(Level.SEVERE, "No property requested in json object", e);
+//                    } finally {
+//                        jsonReader.close();
+//                        reader.close();
+//                    }
+//                }
+//            }
+//            return content;
+//        } catch (RegistryServiceException | KeyNotFoundException e) {
+//            throw new OrtolangException("unable to find an object for key " + key);
+//        }
+//    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)

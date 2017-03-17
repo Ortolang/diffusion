@@ -62,5 +62,5 @@ public interface ReferentialService extends OrtolangObjectProviderService, Ortol
 
     void deleteEntity(String name) throws ReferentialServiceException, KeyNotFoundException, AccessDeniedException;
 
-    List<ReferentialEntity> findEntitiesByTerm(ReferentialEntityType type, String term, String lang) throws ReferentialServiceException;
+//    List<ReferentialEntity> findEntitiesByTerm(ReferentialEntityType type, String term, String lang) throws ReferentialServiceException;
 }

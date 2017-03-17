@@ -44,7 +44,6 @@ import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 import fr.ortolang.diffusion.store.json.JsonStoreDocumentBuilder;
 import fr.ortolang.diffusion.store.json.OrtolangKeyExtractor;
@@ -54,20 +53,20 @@ public class OrtolangIndexableObjectFactory {
     private OrtolangIndexableObjectFactory() {
     }
 
-    public static OrtolangIndexableObject<IndexablePlainTextContent> buildPlainTextIndexableObject(String key) throws OrtolangException, NotIndexableContentException {
-        try {
-            RegistryService registry = (RegistryService)OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
-            OrtolangObjectIdentifier identifier = registry.lookup(key);
-            OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
-            IndexablePlainTextContent content = service.getIndexablePlainTextContent(key);
-            OrtolangIndexableObject<IndexablePlainTextContent> object = new OrtolangIndexableObject<IndexablePlainTextContent>();
-            loadCommonIndexableObject(key, identifier, object);
-            object.setContent(content);
-            return object;
-        } catch (RegistryServiceException | KeyNotFoundException e) {
-            throw new OrtolangException("unable to get plain text indexable content for object cause : " + e.getMessage(), e);
-        }
-    }
+//    public static OrtolangIndexableObject<IndexablePlainTextContent> buildPlainTextIndexableObject(String key) throws OrtolangException, NotIndexableContentException {
+//        try {
+//            RegistryService registry = (RegistryService)OrtolangServiceLocator.lookup(RegistryService.SERVICE_NAME, RegistryService.class);
+//            OrtolangObjectIdentifier identifier = registry.lookup(key);
+//            OrtolangIndexableService service = OrtolangServiceLocator.findIndexableService(identifier.getService());
+//            IndexablePlainTextContent content = service.getIndexablePlainTextContent(key);
+//            OrtolangIndexableObject<IndexablePlainTextContent> object = new OrtolangIndexableObject<IndexablePlainTextContent>();
+//            loadCommonIndexableObject(key, identifier, object);
+//            object.setContent(content);
+//            return object;
+//        } catch (RegistryServiceException | KeyNotFoundException e) {
+//            throw new OrtolangException("unable to get plain text indexable content for object cause : " + e.getMessage(), e);
+//        }
+//    }
 
     public static OrtolangIndexableObject<IndexableJsonContent> buildJsonIndexableObject(String key) throws OrtolangException, NotIndexableContentException {
         return buildJsonIndexableObject(key, new ArrayList<String>());

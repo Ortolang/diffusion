@@ -64,198 +64,200 @@ import fr.ortolang.diffusion.OrtolangSearchResult;
 
 public class IndexStoreServiceTest {
 	
-	private static final Logger LOGGER = Logger.getLogger(IndexStoreServiceTest.class.getName());
-	private IndexStoreServiceBean service;
+	//TODO uses the same method to test elasticSearch service
 	
-	@BeforeClass
-	public static void globalSetup() {
-		try {
-			LogManager.getLogManager().readConfiguration(ClassLoader.getSystemResourceAsStream("logging.properties"));
-		} catch (SecurityException | IOException e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-		}
-	}
-	
-	@Before
-	public void setup() {
-		try {
-		    service = new IndexStoreServiceBean();
-		    Files.walkFileTree(service.getBase(), new FileVisitor<Path>() {
-                @Override
-                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                    Files.delete(file);
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-                    LOGGER.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
-                    return FileVisitResult.TERMINATE;
-                }
-
-                @Override
-                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                    Files.delete(dir);
-                    return FileVisitResult.CONTINUE;
-                }
-                
-            });
-			service.init();
-		} catch (Exception e) {
-			fail(e.getMessage());
-		}
-	}
-	
-	@After
-	public void tearDown() {
-		try {
-			service.shutdown();
-			Files.walkFileTree(service.getBase(), new FileVisitor<Path>() {
-				@Override
-				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-					return FileVisitResult.CONTINUE;
-				}
-
-				@Override
-				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-					Files.delete(file);
-					return FileVisitResult.CONTINUE;
-				}
-
-				@Override
-				public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-					LOGGER.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
-					return FileVisitResult.TERMINATE;
-				}
-
-				@Override
-				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-					Files.delete(dir);
-					return FileVisitResult.CONTINUE;
-				}
-				
-			});
-		} catch (IOException e) {
-			LOGGER.log(Level.SEVERE, e.getMessage(), e);
-		}
-	}
-	
-	@Test
-    public void testIndexDocument() {
-		IndexablePlainTextContent content = new IndexablePlainTextContent();
-		content.addContentPart("tagada");
-		content.addContentPart("ceci est une petite phrase");
-		content.addContentPart("qui dure longtemps...");
-		OrtolangIndexableObject<IndexablePlainTextContent> object = new OrtolangIndexableObject<IndexablePlainTextContent>();
-		object.setKey("K1");
-		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
-		object.setService("service");
-		object.setType("type");
-		object.setHidden(false);
-		object.setLocked(false);
-		object.setStatus("draft");
-		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
-		object.setContent(content);
-		
-		try {
-			service.index(object);
-			List<OrtolangSearchResult> results = service.search("tagada");
-			dumpResults(results);
-			assertEquals(1, results.size());
-			results = service.search("PROPERTY.AUTHOR:jayblanc");
-			dumpResults(results);
-			assertEquals(1, results.size());
-			results = service.search("STATUS:DRAFT");
-			dumpResults(results);
-			assertEquals(1, results.size());
-		} catch (IndexStoreServiceException e) {
-			fail(e.getMessage());
-		}
-	}
-	
-	@Test
-    public void testReindexDocument() {
-		IndexablePlainTextContent content = new IndexablePlainTextContent();
-		content.addContentPart("tagada");
-		content.addContentPart("ceci est une petite phrase");
-		content.addContentPart("qui dure longtemps...");
-		OrtolangIndexableObject<IndexablePlainTextContent> object = new OrtolangIndexableObject<IndexablePlainTextContent>();
-		object.setKey("K1");
-		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
-		object.setService("service");
-		object.setType("type");
-		object.setHidden(false);
-		object.setLocked(false);
-		object.setStatus("DRAFT");
-		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
-		object.setContent(content);
-		
-		try {
-			service.index(object);
-			List<OrtolangSearchResult> results = service.search("tagada");
-			dumpResults(results);
-			assertEquals(1, results.size());
-			
-			results = service.search("bidules");
-			dumpResults(results);
-			assertEquals(0, results.size());
-			
-			object.getContent().addContentPart("avec des bidules en plus !");
-			service.index(object);
-			
-			results = service.search("bidules");
-			dumpResults(results);
-			assertEquals(1, results.size());
-		} catch (IndexStoreServiceException e) {
-			fail(e.getMessage());
-		}
-	}
-	
-	@Test
-    public void testRemoveDocument() {
-		IndexablePlainTextContent content = new IndexablePlainTextContent();
-		content.addContentPart("tagada");
-		content.addContentPart("ceci est une petite phrase");
-		content.addContentPart("qui dure longtemps...");
-		OrtolangIndexableObject<IndexablePlainTextContent> object = new OrtolangIndexableObject<IndexablePlainTextContent>();
-		object.setKey("K1");
-		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
-		object.setService("service");
-		object.setType("type");
-		object.setHidden(false);
-		object.setLocked(false);
-		object.setStatus("DRAFT");
-		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
-		object.setContent(content);
-		
-		try {
-			service.index(object);
-			List<OrtolangSearchResult> results = service.search("tagada");
-			dumpResults(results);
-			assertEquals(1, results.size());
-			
-			service.remove("K1");
-			
-			results = service.search("tagada");
-			dumpResults(results);
-			assertTrue(results.size() <= 1);
-			assertEquals(0, results.size());
-		} catch (IndexStoreServiceException e) {
-			fail(e.getMessage());
-		}
-	}
-	
-	private void dumpResults(List<OrtolangSearchResult> results) {
-		StringBuffer dump = new StringBuffer();
-		dump.append(results.size()).append(" results found :");
-		for ( OrtolangSearchResult result : results ) {
-			dump.append("\r\n").append(result.toString());
-		}
-		LOGGER.log(Level.FINE, dump.toString());
-	}
+//	private static final Logger LOGGER = Logger.getLogger(IndexStoreServiceTest.class.getName());
+//	private IndexStoreServiceBean service;
+//	
+//	@BeforeClass
+//	public static void globalSetup() {
+//		try {
+//			LogManager.getLogManager().readConfiguration(ClassLoader.getSystemResourceAsStream("logging.properties"));
+//		} catch (SecurityException | IOException e) {
+//			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+//		}
+//	}
+//	
+//	@Before
+//	public void setup() {
+//		try {
+//		    service = new IndexStoreServiceBean();
+//		    Files.walkFileTree(service.getBase(), new FileVisitor<Path>() {
+//                @Override
+//                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+//                    return FileVisitResult.CONTINUE;
+//                }
+//
+//                @Override
+//                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+//                    Files.delete(file);
+//                    return FileVisitResult.CONTINUE;
+//                }
+//
+//                @Override
+//                public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+//                    LOGGER.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
+//                    return FileVisitResult.TERMINATE;
+//                }
+//
+//                @Override
+//                public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+//                    Files.delete(dir);
+//                    return FileVisitResult.CONTINUE;
+//                }
+//                
+//            });
+//			service.init();
+//		} catch (Exception e) {
+//			fail(e.getMessage());
+//		}
+//	}
+//	
+//	@After
+//	public void tearDown() {
+//		try {
+//			service.shutdown();
+//			Files.walkFileTree(service.getBase(), new FileVisitor<Path>() {
+//				@Override
+//				public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+//					return FileVisitResult.CONTINUE;
+//				}
+//
+//				@Override
+//				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+//					Files.delete(file);
+//					return FileVisitResult.CONTINUE;
+//				}
+//
+//				@Override
+//				public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+//					LOGGER.log(Level.SEVERE, "unable to purge temporary created filesystem", exc);
+//					return FileVisitResult.TERMINATE;
+//				}
+//
+//				@Override
+//				public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+//					Files.delete(dir);
+//					return FileVisitResult.CONTINUE;
+//				}
+//				
+//			});
+//		} catch (IOException e) {
+//			LOGGER.log(Level.SEVERE, e.getMessage(), e);
+//		}
+//	}
+//	
+//	@Test
+//    public void testIndexDocument() {
+//		IndexablePlainTextContent content = new IndexablePlainTextContent();
+//		content.addContentPart("tagada");
+//		content.addContentPart("ceci est une petite phrase");
+//		content.addContentPart("qui dure longtemps...");
+//		OrtolangIndexableObject<IndexablePlainTextContent> object = new OrtolangIndexableObject<IndexablePlainTextContent>();
+//		object.setKey("K1");
+//		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
+//		object.setService("service");
+//		object.setType("type");
+//		object.setHidden(false);
+//		object.setLocked(false);
+//		object.setStatus("draft");
+//		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
+//		object.setContent(content);
+//		
+//		try {
+//			service.index(object);
+//			List<OrtolangSearchResult> results = service.search("tagada");
+//			dumpResults(results);
+//			assertEquals(1, results.size());
+//			results = service.search("PROPERTY.AUTHOR:jayblanc");
+//			dumpResults(results);
+//			assertEquals(1, results.size());
+//			results = service.search("STATUS:DRAFT");
+//			dumpResults(results);
+//			assertEquals(1, results.size());
+//		} catch (IndexStoreServiceException e) {
+//			fail(e.getMessage());
+//		}
+//	}
+//	
+//	@Test
+//    public void testReindexDocument() {
+//		IndexablePlainTextContent content = new IndexablePlainTextContent();
+//		content.addContentPart("tagada");
+//		content.addContentPart("ceci est une petite phrase");
+//		content.addContentPart("qui dure longtemps...");
+//		OrtolangIndexableObject<IndexablePlainTextContent> object = new OrtolangIndexableObject<IndexablePlainTextContent>();
+//		object.setKey("K1");
+//		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
+//		object.setService("service");
+//		object.setType("type");
+//		object.setHidden(false);
+//		object.setLocked(false);
+//		object.setStatus("DRAFT");
+//		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
+//		object.setContent(content);
+//		
+//		try {
+//			service.index(object);
+//			List<OrtolangSearchResult> results = service.search("tagada");
+//			dumpResults(results);
+//			assertEquals(1, results.size());
+//			
+//			results = service.search("bidules");
+//			dumpResults(results);
+//			assertEquals(0, results.size());
+//			
+//			object.getContent().addContentPart("avec des bidules en plus !");
+//			service.index(object);
+//			
+//			results = service.search("bidules");
+//			dumpResults(results);
+//			assertEquals(1, results.size());
+//		} catch (IndexStoreServiceException e) {
+//			fail(e.getMessage());
+//		}
+//	}
+//	
+//	@Test
+//    public void testRemoveDocument() {
+//		IndexablePlainTextContent content = new IndexablePlainTextContent();
+//		content.addContentPart("tagada");
+//		content.addContentPart("ceci est une petite phrase");
+//		content.addContentPart("qui dure longtemps...");
+//		OrtolangIndexableObject<IndexablePlainTextContent> object = new OrtolangIndexableObject<IndexablePlainTextContent>();
+//		object.setKey("K1");
+//		object.setIdentifier(new OrtolangObjectIdentifier("service", "type", "id1"));
+//		object.setService("service");
+//		object.setType("type");
+//		object.setHidden(false);
+//		object.setLocked(false);
+//		object.setStatus("DRAFT");
+//		object.setProperties(Arrays.asList(new OrtolangObjectProperty[] {new OrtolangObjectProperty("AUTHOR", "jayblanc")} ));
+//		object.setContent(content);
+//		
+//		try {
+//			service.index(object);
+//			List<OrtolangSearchResult> results = service.search("tagada");
+//			dumpResults(results);
+//			assertEquals(1, results.size());
+//			
+//			service.remove("K1");
+//			
+//			results = service.search("tagada");
+//			dumpResults(results);
+//			assertTrue(results.size() <= 1);
+//			assertEquals(0, results.size());
+//		} catch (IndexStoreServiceException e) {
+//			fail(e.getMessage());
+//		}
+//	}
+//	
+//	private void dumpResults(List<OrtolangSearchResult> results) {
+//		StringBuffer dump = new StringBuffer();
+//		dump.append(results.size()).append(" results found :");
+//		for ( OrtolangSearchResult result : results ) {
+//			dump.append("\r\n").append(result.toString());
+//		}
+//		LOGGER.log(Level.FINE, dump.toString());
+//	}
 }

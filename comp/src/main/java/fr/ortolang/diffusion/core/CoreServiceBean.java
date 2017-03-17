@@ -77,7 +77,6 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
-import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 import fr.ortolang.diffusion.store.json.OrtolangKeyExtractor;
 import org.apache.commons.io.IOUtils;
@@ -3672,131 +3671,131 @@ public class CoreServiceBean implements CoreService {
         }
     }
 
-    @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException {
-        try {
-            OrtolangObjectIdentifier identifier = registry.lookup(key);
-            if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
-                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-            }
-            IndexablePlainTextContent content = new IndexablePlainTextContent();
-
-            if (identifier.getType().equals(Workspace.OBJECT_TYPE)) {
-                Workspace workspace = em.find(Workspace.class, identifier.getId());
-                if (workspace == null) {
-                    throw new OrtolangException("unable to load workspace with id [" + identifier.getId() + "] from storage");
-                }
-                if (workspace.getAlias() != null) {
-                    content.addContentPart(workspace.getAlias());
-                }
-                if (workspace.getName() != null) {
-                    content.setName(workspace.getName());
-                    content.addContentPart(workspace.getName());
-                }
-            }
-
-            if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
-                DataObject object = em.find(DataObject.class, identifier.getId());
-                if (object == null) {
-                    throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
-                }
-                if (object.getName() != null) {
-                    content.setName(object.getName());
-                    content.addContentPart(object.getName());
-                }
-                if (object.getMimeType() != null) {
-                    content.addContentPart(object.getMimeType());
-                }
-
-                for (MetadataElement mde : object.getMetadatas()) {
-                    OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-                    MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
-                    if (metadata == null) {
-                        throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
-                    }
-                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
-                    if (format == null) {
-                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
-                        break;
-                    }
-                    try {
-                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
-                            content.addContentPart(binarystore.extract(metadata.getStream()));
-                        }
-                    } catch (DataNotFoundException | BinaryStoreServiceException e) {
-                        LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
-                    }
-                }
-            }
-
-            if (identifier.getType().equals(Collection.OBJECT_TYPE)) {
-                Collection collection = em.find(Collection.class, identifier.getId());
-                if (collection == null) {
-                    throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
-                }
-                if (collection.getName() != null) {
-                    content.setName(collection.getName());
-                    content.addContentPart(collection.getName());
-                }
-
-                for (MetadataElement mde : collection.getMetadatas()) {
-                    OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-                    MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
-                    if (metadata == null) {
-                        throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
-                    }
-                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
-                    if (format == null) {
-                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
-                        break;
-                    }
-                    try {
-                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
-                            content.addContentPart(binarystore.extract(metadata.getStream()));
-                        }
-                    } catch (DataNotFoundException | BinaryStoreServiceException e) {
-                        LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
-                    }
-                }
-            }
-
-            if (identifier.getType().equals(Link.OBJECT_TYPE)) {
-                Link link = em.find(Link.class, identifier.getId());
-                if (link == null) {
-                    throw new OrtolangException("unable to load reference with id [" + identifier.getId() + "] from storage");
-                }
-                if (link.getName() != null) {
-                    content.setName(link.getName());
-                    content.addContentPart(link.getName());
-                }
-
-                for (MetadataElement mde : link.getMetadatas()) {
-                    OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
-                    MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
-                    if (metadata == null) {
-                        throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
-                    }
-                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
-                    if (format == null) {
-                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
-                        break;
-                    }
-                    try {
-                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
-                            content.addContentPart(binarystore.extract(metadata.getStream()));
-                        }
-                    } catch (DataNotFoundException | BinaryStoreServiceException e) {
-                        LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
-                    }
-                }
-            }
-
-            return content;
-        } catch (KeyNotFoundException | RegistryServiceException e) {
-            throw new OrtolangException("unable to find an object for key " + key);
-        }
-    }
+//    @Override
+//    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+//    public IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException {
+//        try {
+//            OrtolangObjectIdentifier identifier = registry.lookup(key);
+//            if (!identifier.getService().equals(CoreService.SERVICE_NAME)) {
+//                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+//            }
+//            IndexablePlainTextContent content = new IndexablePlainTextContent();
+//
+//            if (identifier.getType().equals(Workspace.OBJECT_TYPE)) {
+//                Workspace workspace = em.find(Workspace.class, identifier.getId());
+//                if (workspace == null) {
+//                    throw new OrtolangException("unable to load workspace with id [" + identifier.getId() + "] from storage");
+//                }
+//                if (workspace.getAlias() != null) {
+//                    content.addContentPart(workspace.getAlias());
+//                }
+//                if (workspace.getName() != null) {
+//                    content.setName(workspace.getName());
+//                    content.addContentPart(workspace.getName());
+//                }
+//            }
+//
+//            if (identifier.getType().equals(DataObject.OBJECT_TYPE)) {
+//                DataObject object = em.find(DataObject.class, identifier.getId());
+//                if (object == null) {
+//                    throw new OrtolangException("unable to load object with id [" + identifier.getId() + "] from storage");
+//                }
+//                if (object.getName() != null) {
+//                    content.setName(object.getName());
+//                    content.addContentPart(object.getName());
+//                }
+//                if (object.getMimeType() != null) {
+//                    content.addContentPart(object.getMimeType());
+//                }
+//
+//                for (MetadataElement mde : object.getMetadatas()) {
+//                    OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
+//                    MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
+//                    if (metadata == null) {
+//                        throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
+//                    }
+//                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
+//                    if (format == null) {
+//                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
+//                        break;
+//                    }
+//                    try {
+//                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
+//                            content.addContentPart(binarystore.extract(metadata.getStream()));
+//                        }
+//                    } catch (DataNotFoundException | BinaryStoreServiceException e) {
+//                        LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
+//                    }
+//                }
+//            }
+//
+//            if (identifier.getType().equals(Collection.OBJECT_TYPE)) {
+//                Collection collection = em.find(Collection.class, identifier.getId());
+//                if (collection == null) {
+//                    throw new OrtolangException("unable to load collection with id [" + identifier.getId() + "] from storage");
+//                }
+//                if (collection.getName() != null) {
+//                    content.setName(collection.getName());
+//                    content.addContentPart(collection.getName());
+//                }
+//
+//                for (MetadataElement mde : collection.getMetadatas()) {
+//                    OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
+//                    MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
+//                    if (metadata == null) {
+//                        throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
+//                    }
+//                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
+//                    if (format == null) {
+//                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
+//                        break;
+//                    }
+//                    try {
+//                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
+//                            content.addContentPart(binarystore.extract(metadata.getStream()));
+//                        }
+//                    } catch (DataNotFoundException | BinaryStoreServiceException e) {
+//                        LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
+//                    }
+//                }
+//            }
+//
+//            if (identifier.getType().equals(Link.OBJECT_TYPE)) {
+//                Link link = em.find(Link.class, identifier.getId());
+//                if (link == null) {
+//                    throw new OrtolangException("unable to load reference with id [" + identifier.getId() + "] from storage");
+//                }
+//                if (link.getName() != null) {
+//                    content.setName(link.getName());
+//                    content.addContentPart(link.getName());
+//                }
+//
+//                for (MetadataElement mde : link.getMetadatas()) {
+//                    OrtolangObjectIdentifier mdeIdentifier = registry.lookup(mde.getKey());
+//                    MetadataObject metadata = em.find(MetadataObject.class, mdeIdentifier.getId());
+//                    if (metadata == null) {
+//                        throw new OrtolangException("unable to load metadata with id [" + mdeIdentifier.getId() + "] from storage");
+//                    }
+//                    MetadataFormat format = em.find(MetadataFormat.class, metadata.getFormat());
+//                    if (format == null) {
+//                        LOGGER.log(Level.WARNING, "unable to get metadata format with id : " + metadata.getFormat());
+//                        break;
+//                    }
+//                    try {
+//                        if (format.isIndexable() && metadata.getStream() != null && metadata.getStream().length() > 0) {
+//                            content.addContentPart(binarystore.extract(metadata.getStream()));
+//                        }
+//                    } catch (DataNotFoundException | BinaryStoreServiceException e) {
+//                        LOGGER.log(Level.WARNING, "unable to extract plain text for key : " + mde.getKey(), e);
+//                    }
+//                }
+//            }
+//
+//            return content;
+//        } catch (KeyNotFoundException | RegistryServiceException e) {
+//            throw new OrtolangException("unable to find an object for key " + key);
+//        }
+//    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)

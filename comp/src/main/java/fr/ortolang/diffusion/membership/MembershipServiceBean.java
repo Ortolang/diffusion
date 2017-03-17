@@ -52,7 +52,6 @@ import fr.ortolang.diffusion.security.authentication.TOTPHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
@@ -1054,59 +1053,59 @@ public class MembershipServiceBean implements MembershipService {
         }
     }
 
-    @Override
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException {
-        try {
-            OrtolangObjectIdentifier identifier = registry.lookup(key);
-            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
-                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-            }
-            IndexablePlainTextContent content = new IndexablePlainTextContent();
-
-            if (identifier.getType().equals(Group.OBJECT_TYPE)) {
-                Group group = em.find(Group.class, identifier.getId());
-                if (group == null) {
-                    throw new OrtolangException("unable to load group with id [" + identifier.getId() + "] from storage");
-                }
-                if (group.getName() != null) {
-                    content.setName(group.getName());
-                    content.addContentPart(group.getName());
-                }
-                if (group.getDescription() != null) {
-                    content.addContentPart(group.getDescription());
-                }
-                if (group.getMembersList().length() > 0 ) {
-                    content.addContentPart(group.getMembersList());
-                }
-            }
-
-            if (identifier.getType().equals(Profile.OBJECT_TYPE)) {
-                Profile profile = em.find(Profile.class, identifier.getId());
-                if (profile == null) {
-                    throw new OrtolangException("unable to load profile with id [" + identifier.getId() + "] from storage");
-                }
-                if (profile.getFullName() != null) {
-                    content.setName(profile.getFullName());
-                    content.addContentPart(profile.getFullName());
-                }
-                if (profile.getEmail() != null && profile.getEmail().length() > 0) {
-                    if (profile.getEmailVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
-                        content.addContentPart(profile.getEmail());
-                    }
-                }
-                for (ProfileData info : profile.getInfos().values()) {
-                    if (info.getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
-                        content.addContentPart(info.getValue());
-                    }
-                }
-            }
-
-            return content;
-        } catch (KeyNotFoundException | RegistryServiceException e) {
-            throw new OrtolangException("unable to find an object for key " + key);
-        }
-    }
+//    @Override
+//    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+//    public IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException {
+//        try {
+//            OrtolangObjectIdentifier identifier = registry.lookup(key);
+//            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+//                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+//            }
+//            IndexablePlainTextContent content = new IndexablePlainTextContent();
+//
+//            if (identifier.getType().equals(Group.OBJECT_TYPE)) {
+//                Group group = em.find(Group.class, identifier.getId());
+//                if (group == null) {
+//                    throw new OrtolangException("unable to load group with id [" + identifier.getId() + "] from storage");
+//                }
+//                if (group.getName() != null) {
+//                    content.setName(group.getName());
+//                    content.addContentPart(group.getName());
+//                }
+//                if (group.getDescription() != null) {
+//                    content.addContentPart(group.getDescription());
+//                }
+//                if (group.getMembersList().length() > 0 ) {
+//                    content.addContentPart(group.getMembersList());
+//                }
+//            }
+//
+//            if (identifier.getType().equals(Profile.OBJECT_TYPE)) {
+//                Profile profile = em.find(Profile.class, identifier.getId());
+//                if (profile == null) {
+//                    throw new OrtolangException("unable to load profile with id [" + identifier.getId() + "] from storage");
+//                }
+//                if (profile.getFullName() != null) {
+//                    content.setName(profile.getFullName());
+//                    content.addContentPart(profile.getFullName());
+//                }
+//                if (profile.getEmail() != null && profile.getEmail().length() > 0) {
+//                    if (profile.getEmailVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
+//                        content.addContentPart(profile.getEmail());
+//                    }
+//                }
+//                for (ProfileData info : profile.getInfos().values()) {
+//                    if (info.getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
+//                        content.addContentPart(info.getValue());
+//                    }
+//                }
+//            }
+//
+//            return content;
+//        } catch (KeyNotFoundException | RegistryServiceException e) {
+//            throw new OrtolangException("unable to find an object for key " + key);
+//        }
+//    }
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)

@@ -5,7 +5,6 @@ import fr.ortolang.diffusion.indexing.NotIndexableContentException;
 import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.store.index.IndexablePlainTextContent;
 import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 
 import java.util.List;
@@ -47,8 +46,6 @@ import java.util.List;
  */
 
 public interface OrtolangIndexableService {
-
-    IndexablePlainTextContent getIndexablePlainTextContent(String key) throws OrtolangException, NotIndexableContentException;
 
     IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException, NotIndexableContentException;
 
