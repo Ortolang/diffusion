@@ -35,13 +35,12 @@ public class OLACFactory {
 	        JsonArray corporaLanguages = jsonDoc.getJsonArray("corporaLanguages");
 	        if(corporaLanguages!=null) {
 	            for(JsonObject corporaLanguage : corporaLanguages.getValuesAs(JsonObject.class)) {
-	            	JsonObject metaLanguage = corporaLanguage.getJsonObject("meta_ortolang-referential-json");
-	            	JsonArray multilingualLabels = metaLanguage.getJsonArray("labels");
+	            	JsonArray multilingualLabels = corporaLanguage.getJsonArray("labels");
 	            	
 	            	for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 	//            		this.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
 	//            		this.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
-	            		olac.addOlacField("language", "olac:language", metaLanguage.getString("id"), label.getString("lang"), label.getString("value"));
+	            		olac.addOlacField("language", "olac:language", corporaLanguage.getString("id"), label.getString("lang"), label.getString("value"));
 	            	}
 	            }
 	        }
@@ -49,13 +48,12 @@ public class OLACFactory {
 	        JsonArray studyLanguages = jsonDoc.getJsonArray("studyLanguages");
 	        if(studyLanguages!=null) {
 	            for(JsonObject studyLanguage : studyLanguages.getValuesAs(JsonObject.class)) {
-	            	JsonObject metaLanguage = studyLanguage.getJsonObject("meta_ortolang-referential-json");
-	            	JsonArray multilingualLabels = metaLanguage.getJsonArray("labels");
+	            	JsonArray multilingualLabels = studyLanguage.getJsonArray("labels");
 	            	
 	            	for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 	//            		this.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
 	//            		this.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
-	            		olac.addOlacField("subject", "olac:language", metaLanguage.getString("id"), label.getString("lang"), label.getString("value"));
+	            		olac.addOlacField("subject", "olac:language", studyLanguage.getString("id"), label.getString("lang"), label.getString("value"));
 	            	}
 	            }
 	        }
@@ -72,8 +70,8 @@ public class OLACFactory {
 	            for(JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
 	                JsonArray roles = contributor.getJsonArray("roles");
 	                for(JsonObject role : roles.getValuesAs(JsonObject.class)) {
-	                	JsonObject metaRole = role.getJsonObject("meta_ortolang-referential-json");
-						String roleId = metaRole.getString("id");
+//	                	JsonObject metaRole = role.getJsonObject("meta_ortolang-referential-json");
+						String roleId = role.getString("id");
 	                    
 						olac.addOlacField("contributor", "olac:role", roleId, OAI_DC.person(contributor));
 	                    
@@ -87,10 +85,10 @@ public class OLACFactory {
 	        JsonArray producers = jsonDoc.getJsonArray("producers");
 	        if(producers!=null) {
 	        	for(JsonObject producer : producers.getValuesAs(JsonObject.class)) {
-	            	JsonObject metaOrganization = producer.getJsonObject("meta_ortolang-referential-json");
+//	            	JsonObject metaOrganization = producer.getJsonObject("meta_ortolang-referential-json");
 	            	
-	            	if(metaOrganization.containsKey("fullname")) {
-	            		olac.addDcField("publisher", metaOrganization.getString("fullname"));
+	            	if(producer.containsKey("fullname")) {
+	            		olac.addDcField("publisher", producer.getString("fullname"));
 	            	}
 	            }
 	        }
@@ -98,21 +96,20 @@ public class OLACFactory {
 	        JsonArray sponsors = jsonDoc.getJsonArray("sponsors");
 	        if(sponsors!=null) {
 	        	for(JsonObject sponsor : sponsors.getValuesAs(JsonObject.class)) {
-	            	JsonObject metaOrganization = sponsor.getJsonObject("meta_ortolang-referential-json");
+//	            	JsonObject metaOrganization = sponsor.getJsonObject("meta_ortolang-referential-json");
 	            	
-	            	if(metaOrganization.containsKey("fullname")) {
-	            		olac.addOlacField("contributor", "olac:role", "sponsor", metaOrganization.getString("fullname"));
+	            	if(sponsor.containsKey("fullname")) {
+	            		olac.addOlacField("contributor", "olac:role", "sponsor", sponsor.getString("fullname"));
 	            	}
 	            }
 	        }
 	        
 	        JsonObject statusOfUse = jsonDoc.getJsonObject("statusOfUse");
 	        if(statusOfUse!=null) {
-	        	JsonObject metaStatusOfUse = statusOfUse.getJsonObject("meta_ortolang-referential-json");
-	        	String idStatusOfUse = metaStatusOfUse.getString("id");
+	        	String idStatusOfUse = statusOfUse.getString("id");
 	        	olac.addDcField("rights", idStatusOfUse);
 	            
-	            JsonArray multilingualLabels = metaStatusOfUse.getJsonArray("labels");
+	            JsonArray multilingualLabels = statusOfUse.getJsonArray("labels");
 	        	for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 	        		olac.addDcMultilingualField("rights", label.getString("lang"), label.getString("value"));
 	        	}
@@ -126,9 +123,8 @@ public class OLACFactory {
 	        
 	        JsonObject license = jsonDoc.getJsonObject("license");
 	        if(license!=null) {
-	        	JsonObject metaLicense = license.getJsonObject("meta_ortolang-referential-json");
-	        	if(metaLicense!=null) {
-	        		olac.addDctermsMultilingualField("license", "fr", metaLicense.getString("label"));
+	        	if(license.containsKey("label")) {
+	        		olac.addDctermsMultilingualField("license", "fr", license.getString("label"));
 	        	}
 	        }
 	

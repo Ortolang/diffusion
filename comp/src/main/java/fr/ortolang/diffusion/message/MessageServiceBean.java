@@ -70,7 +70,6 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
-import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.Resource;

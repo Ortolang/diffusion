@@ -95,7 +95,6 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 
 @Local(ReferentialService.class)
 @Stateless(name = ReferentialService.SERVICE_NAME)
@@ -515,29 +514,29 @@ public class ReferentialServiceBean implements ReferentialService {
 //        }
 //    }
 
-    @Override
-    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException, NotIndexableContentException {
-        try {
-            OrtolangObjectIdentifier identifier = registry.lookup(key);
-            if (!identifier.getService().equals(ReferentialService.SERVICE_NAME)) {
-                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-            }
-            IndexableJsonContent content = new IndexableJsonContent();
-
-            if (identifier.getType().equals(ReferentialEntity.OBJECT_TYPE)) {
-                ReferentialEntity referentielEntity = em.find(ReferentialEntity.class, identifier.getId());
-                if (referentielEntity == null) {
-                    throw new OrtolangException("unable to load ReferentialEntity with id [" + identifier.getId() + "] from storage");
-                }
-                String json = referentielEntity.getContent();
-                content.put("ortolang-referential-json", json);
-            }
-            return content;
-        } catch (RegistryServiceException | KeyNotFoundException e) {
-            throw new OrtolangException("unable to find an object for key " + key);
-        }
-    }
+//    @Override
+//    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+//    public IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException, NotIndexableContentException {
+//        try {
+//            OrtolangObjectIdentifier identifier = registry.lookup(key);
+//            if (!identifier.getService().equals(ReferentialService.SERVICE_NAME)) {
+//                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+//            }
+//            IndexableJsonContent content = new IndexableJsonContent();
+//
+//            if (identifier.getType().equals(ReferentialEntity.OBJECT_TYPE)) {
+//                ReferentialEntity referentielEntity = em.find(ReferentialEntity.class, identifier.getId());
+//                if (referentielEntity == null) {
+//                    throw new OrtolangException("unable to load ReferentialEntity with id [" + identifier.getId() + "] from storage");
+//                }
+//                String json = referentielEntity.getContent();
+//                content.put("ortolang-referential-json", json);
+//            }
+//            return content;
+//        } catch (RegistryServiceException | KeyNotFoundException e) {
+//            throw new OrtolangException("unable to find an object for key " + key);
+//        }
+//    }
 
     @Override
     public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, IndexableContentParsingException {

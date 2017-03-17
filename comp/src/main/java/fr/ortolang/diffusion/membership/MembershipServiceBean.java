@@ -52,7 +52,6 @@ import fr.ortolang.diffusion.security.authentication.TOTPHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationService;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
-import fr.ortolang.diffusion.store.json.IndexableJsonContent;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import javax.annotation.Resource;
@@ -1107,70 +1106,70 @@ public class MembershipServiceBean implements MembershipService {
 //        }
 //    }
 
-    @Override
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
-    public IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException {
-        try {
-            OrtolangObjectIdentifier identifier = registry.lookup(key);
-
-            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
-                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
-            }
-
-            IndexableJsonContent content = new IndexableJsonContent();
-
-            if (identifier.getType().equals(Profile.OBJECT_TYPE)) {
-                Profile profile = em.find(Profile.class, identifier.getId());
-                if (profile == null) {
-                    throw new OrtolangException("unable to load profile with id [" + identifier.getId() + "] from storage");
-                }
-                JsonObjectBuilder builder = Json.createObjectBuilder();
-                builder.add("key", key);
-                builder.add("givenName", profile.getGivenName());
-                builder.add("familyName", profile.getFamilyName());
-                builder.add("fullname", profile.getFullName());
-                builder.add("emailHash", profile.getEmailHash());
-                if (profile.getEmail() != null && profile.getEmail().length() > 0) {
-                    if (profile.getEmailVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
-                        builder.add("email", profile.getEmail());
-                    }
-                }
-                JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
-                for (String group : profile.getGroups()) {
-                    arrayBuilder.add(group);
-                }
-                builder.add("groups", arrayBuilder);
-                JsonObjectBuilder infoBuilder = Json.createObjectBuilder();
-                Map<String, ProfileData> infos = profile.getInfos();
-                for(Map.Entry<String, ProfileData> info : infos.entrySet()) {
-                    if(info.getValue().getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
-                        infoBuilder.add(info.getKey(), info.getValue().getValue());
-                    }
-                }
-                builder.add("infos", infoBuilder);
-                content.put(Profile.OBJECT_TYPE, builder.build().toString());
-            }
-
-            if (identifier.getType().equals(Group.OBJECT_TYPE)) {
-                Group group = em.find(Group.class, identifier.getId());
-                if (group == null) {
-                    throw new OrtolangException("unable to load group with id [" + identifier.getId() + "] from storage");
-                }
-                JsonObjectBuilder builder = Json.createObjectBuilder();
-                builder.add("key", key);
-                builder.add("name", group.getName());
-                JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
-                for (String member : group.getMembers()) {
-                    arrayBuilder.add(member);
-                }
-                builder.add("members", arrayBuilder);
-                content.put(Group.OBJECT_TYPE, builder.build().toString());
-            }
-            return content;
-        } catch (KeyNotFoundException | RegistryServiceException e) {
-            throw new OrtolangException("unable to find an object for key " + key);
-        }
-    }
+//    @Override
+//    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+//    public IndexableJsonContent getIndexableJsonContent(String key) throws OrtolangException {
+//        try {
+//            OrtolangObjectIdentifier identifier = registry.lookup(key);
+//
+//            if (!identifier.getService().equals(MembershipService.SERVICE_NAME)) {
+//                throw new OrtolangException("object identifier " + identifier + " does not refer to service " + getServiceName());
+//            }
+//
+//            IndexableJsonContent content = new IndexableJsonContent();
+//
+//            if (identifier.getType().equals(Profile.OBJECT_TYPE)) {
+//                Profile profile = em.find(Profile.class, identifier.getId());
+//                if (profile == null) {
+//                    throw new OrtolangException("unable to load profile with id [" + identifier.getId() + "] from storage");
+//                }
+//                JsonObjectBuilder builder = Json.createObjectBuilder();
+//                builder.add("key", key);
+//                builder.add("givenName", profile.getGivenName());
+//                builder.add("familyName", profile.getFamilyName());
+//                builder.add("fullname", profile.getFullName());
+//                builder.add("emailHash", profile.getEmailHash());
+//                if (profile.getEmail() != null && profile.getEmail().length() > 0) {
+//                    if (profile.getEmailVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
+//                        builder.add("email", profile.getEmail());
+//                    }
+//                }
+//                JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+//                for (String group : profile.getGroups()) {
+//                    arrayBuilder.add(group);
+//                }
+//                builder.add("groups", arrayBuilder);
+//                JsonObjectBuilder infoBuilder = Json.createObjectBuilder();
+//                Map<String, ProfileData> infos = profile.getInfos();
+//                for(Map.Entry<String, ProfileData> info : infos.entrySet()) {
+//                    if(info.getValue().getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
+//                        infoBuilder.add(info.getKey(), info.getValue().getValue());
+//                    }
+//                }
+//                builder.add("infos", infoBuilder);
+//                content.put(Profile.OBJECT_TYPE, builder.build().toString());
+//            }
+//
+//            if (identifier.getType().equals(Group.OBJECT_TYPE)) {
+//                Group group = em.find(Group.class, identifier.getId());
+//                if (group == null) {
+//                    throw new OrtolangException("unable to load group with id [" + identifier.getId() + "] from storage");
+//                }
+//                JsonObjectBuilder builder = Json.createObjectBuilder();
+//                builder.add("key", key);
+//                builder.add("name", group.getName());
+//                JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
+//                for (String member : group.getMembers()) {
+//                    arrayBuilder.add(member);
+//                }
+//                builder.add("members", arrayBuilder);
+//                content.put(Group.OBJECT_TYPE, builder.build().toString());
+//            }
+//            return content;
+//        } catch (KeyNotFoundException | RegistryServiceException e) {
+//            throw new OrtolangException("unable to find an object for key " + key);
+//        }
+//    }
 
     @Override
     public List<OrtolangIndexableContent> getIndexableContent(String key) throws KeyNotFoundException, RegistryServiceException, OrtolangException, IndexableContentParsingException {

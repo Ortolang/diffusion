@@ -80,7 +80,6 @@ import fr.ortolang.diffusion.store.handle.HandleNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 import fr.ortolang.diffusion.store.handle.entity.Handle;
-import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
 import fr.ortolang.diffusion.worker.WorkerService;
@@ -495,7 +494,7 @@ public class AdminResource {
     @GET
     @Path("/index/search")
     @GZIP
-    public Response search(@Context HttpServletRequest request) throws JsonStoreServiceException {
+    public Response search(@Context HttpServletRequest request) {
         SearchQuery query = SearchResourceHelper.executeQuery(request);
 		return Response.ok(SearchResultRepresentation.fromSearchResult(search.search(query))).build();
     }

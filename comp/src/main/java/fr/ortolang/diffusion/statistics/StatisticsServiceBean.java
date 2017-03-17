@@ -72,7 +72,6 @@ import fr.ortolang.diffusion.statistics.entity.StatisticValue;
 import fr.ortolang.diffusion.statistics.entity.WorkspaceStatisticValue;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
-import fr.ortolang.diffusion.store.json.JsonStoreService;
 import fr.ortolang.diffusion.thumbnail.ThumbnailService;
 
 @Startup
@@ -111,8 +110,7 @@ public class StatisticsServiceBean implements StatisticsService {
         STATS_NAMES.put(MembershipService.SERVICE_NAME, Arrays.asList(membershipInfos));
         String[] handleInfos = new String[] { HandleStoreService.INFO_TOTAL_SIZE };
         STATS_NAMES.put(HandleStoreService.SERVICE_NAME, Arrays.asList(handleInfos));
-        String[] jsonInfos = new String[] { JsonStoreService.INFO_SIZE, JsonStoreService.INFO_DB_SIZE };
-        STATS_NAMES.put(JsonStoreService.SERVICE_NAME, Arrays.asList(jsonInfos));
+        //TODO adds elastic search infos
         String[] thumbnailInfos = new String[] { ThumbnailService.INFO_SIZE, ThumbnailService.INFO_FILES };
         STATS_NAMES.put(ThumbnailService.SERVICE_NAME, Arrays.asList(thumbnailInfos));
     }

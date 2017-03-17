@@ -59,22 +59,22 @@ public class OAI_DC extends DCXMLDocument {
 
     public static String person(JsonObject contributor) {
         JsonObject entityContributor = contributor.getJsonObject("entity");
-        JsonObject entityMetaContributor = entityContributor.getJsonObject("meta_ortolang-referential-json");
-        if(entityMetaContributor!=null) {
-            JsonString lastname = entityMetaContributor.getJsonString("lastname");
-            JsonString midname = entityMetaContributor.getJsonString("midname");
-            JsonString firstname = entityMetaContributor.getJsonString("firstname");
-            JsonString title = entityMetaContributor.getJsonString("title");
-            JsonString acronym = null;
-
-            if(entityMetaContributor.containsKey("organization")) {
-                JsonObject entityOrganization = entityMetaContributor.getJsonObject("organization");
-                JsonObject entityMetaOrganization = entityOrganization.getJsonObject("meta_ortolang-referential-json");
-
-                acronym = entityMetaOrganization.getJsonString("acronym");
-            }
-            return (lastname!=null?lastname.getString():"")+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
-        } else {
+//        JsonObject entityMetaContributor = entityContributor.getJsonObject("meta_ortolang-referential-json");
+//        if(entityContributor!=null) {
+//            JsonString lastname = entityContributor.getJsonString("lastname");
+//            JsonString midname = entityContributor.getJsonString("midname");
+//            JsonString firstname = entityContributor.getJsonString("firstname");
+//            JsonString title = entityContributor.getJsonString("title");
+//            JsonString acronym = null;
+//
+//            if(entityContributor.containsKey("organization")) {
+//                JsonObject entityOrganization = entityContributor.getJsonObject("organization");
+//                JsonObject entityMetaOrganization = entityOrganization.getJsonObject("meta_ortolang-referential-json");
+//
+//                acronym = entityMetaOrganization.getJsonString("acronym");
+//            }
+//            return (lastname!=null?lastname.getString():"")+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
+//        } else {
             JsonString lastname = entityContributor.getJsonString("lastname");
             JsonString midname = entityContributor.getJsonString("midname");
             JsonString firstname = entityContributor.getJsonString("firstname");
@@ -83,11 +83,11 @@ public class OAI_DC extends DCXMLDocument {
 
             if(entityContributor.containsKey("organization")) {
                 JsonObject entityOrganization = entityContributor.getJsonObject("organization");
-                JsonObject entityMetaOrganization = entityOrganization.getJsonObject("meta_ortolang-referential-json");
+//                JsonObject entityMetaOrganization = entityOrganization.getJsonObject("meta_ortolang-referential-json");
 
-                acronym = entityMetaOrganization.getJsonString("acronym");
+                acronym = entityOrganization.getJsonString("acronym");
             }
             return (lastname!=null?lastname.getString():"")+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
-        }
+//        }
     }
 }
