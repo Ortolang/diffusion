@@ -167,18 +167,18 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                                 indices.put(indexableContent.getIndex(), new HashSet<>());
                                 checkType(indexableContent, adminClient);
                             } else {
-                                LOGGER.log(Level.INFO, "Creating index [" + indexableContent.getIndex() + "] and add mapping for type [" + indexableContent.getType() + "]");
+                                LOGGER.log(Level.FINE, "Creating index [" + indexableContent.getIndex() + "] and add mapping for type [" + indexableContent.getType() + "]");
                                 CreateIndexRequestBuilder requestBuilder = adminClient.prepareCreate(indexableContent.getIndex());
-                                InputStream settings = this.getClass().getResourceAsStream(PATH_TO_SETTINGS + indexableContent.getType() + EXTENSION_MAPPING);
+                                InputStream settings = this.getClass().getResourceAsStream(PATH_TO_SETTINGS + indexableContent.getIndex() + EXTENSION_MAPPING);
                                 if (settings != null) {
-                                	String mappingAsString = StreamUtils.getContent(settings);
-                                	if (mappingAsString != null) {                                		
-                                		requestBuilder.setSettings(mappingAsString);
+                                	String settingsAsString = StreamUtils.getContent(settings);
+                                	if (settingsAsString != null) {                                		
+                                		requestBuilder.setSettings(settingsAsString);
                                 	} else {
-                                		LOGGER.log(Level.SEVERE, "Unable to set configuration : cannot read file : "+PATH_TO_SETTINGS + indexableContent.getType() + EXTENSION_MAPPING);
+                                		LOGGER.log(Level.SEVERE, "Unable to set configuration : cannot read file : "+PATH_TO_SETTINGS + indexableContent.getIndex() + EXTENSION_MAPPING);
                                 	}
                                 } else {
-                                	LOGGER.log(Level.WARNING, "Unable to set configuration : file not found : "+PATH_TO_SETTINGS + indexableContent.getType() + EXTENSION_MAPPING);
+                                	LOGGER.log(Level.WARNING, "Unable to set configuration : file not found : "+PATH_TO_SETTINGS + indexableContent.getIndex() + EXTENSION_MAPPING);
                                 }
                                 InputStream mapping = this.getClass().getResourceAsStream(PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
                                 if (mapping != null) {
@@ -317,7 +317,7 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
 
     private void checkType(OrtolangIndexableContent indexableContent, IndicesAdminClient adminClient) {
         if (!indices.get(indexableContent.getIndex()).contains(indexableContent.getType())) {
-            LOGGER.log(Level.INFO, "Put mapping for type [" + indexableContent.getType() + "] in index [" + indexableContent.getIndex() + "]");
+            LOGGER.log(Level.FINE, "[checkType] Put mapping for type [" + indexableContent.getType() + "] in index [" + indexableContent.getIndex() + "]");
             try {
 	            InputStream mapping = this.getClass().getResourceAsStream(PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
 	            if (mapping != null) {
