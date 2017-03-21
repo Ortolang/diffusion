@@ -1,0 +1,13 @@
+def snapshot  = ['root': params.root, 'path': params.path, 'snapshot': params.snapshot];
+if (ctx._source.workspace == null) {
+    ctx._source.workspace = ['alias': params.alias, 'key': params.key, 'snapshots': [snapshot]];
+} else {
+    if (ctx._source.workspace.alias == null) {
+        ctx._source.workspace.alias = params.key;
+    }
+    if (ctx._source.workspace.snapshots == null) {
+        ctx._source.workspace.snapshots = [snapshot];
+    } else if (!ctx._source.workspace.snapshots.contains(snapshot)) {
+        ctx._source.workspace.snapshots.add(snapshot);
+    }
+}

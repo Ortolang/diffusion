@@ -81,7 +81,7 @@ public class ReindexCommand extends Command {
             String status = cmd.getOptionValue("a", "PUBLISHED");
             boolean fakeMode = cmd.hasOption("F");
 
-            if(type != null && service != null) {
+            if (service != null) {
 
                 OrtolangClient client = OrtolangClient.getInstance();
                 if ( username.length() > 0 ) {

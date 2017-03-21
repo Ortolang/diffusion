@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.seo;
 
+import java.io.IOException;
+
 /*
  * #%L
  * ORTOLANG
@@ -70,11 +72,18 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import com.orientechnologies.orient.core.record.impl.ODocument;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fr.ortolang.diffusion.OrtolangConfig;
-import fr.ortolang.diffusion.store.json.JsonStoreService;
-import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.core.OrtolangItemType;
+import fr.ortolang.diffusion.core.indexing.OrtolangItemIndexableContent;
+import fr.ortolang.diffusion.search.SearchQuery;
+import fr.ortolang.diffusion.search.SearchResult;
+import fr.ortolang.diffusion.search.SearchService;
+
+import static fr.ortolang.diffusion.core.OrtolangItemType.*;
 
 import static fr.ortolang.diffusion.core.OrtolangItemType.*;
 
@@ -91,7 +100,7 @@ public class SeoServiceBean implements SeoService {
     private static final String ORTOLANG_USER_AGENT = "ortolangbot";
 
     @EJB
-    private JsonStoreService json;
+	private SearchService search;
     @Resource
     private ManagedExecutorService executor;
     private final boolean prerenderingActivated;
@@ -122,7 +131,7 @@ public class SeoServiceBean implements SeoService {
     }
 
     @Override
-    public String generateSiteMap() throws JsonStoreServiceException, ParserConfigurationException, TransformerException, SeoServiceException {
+    public String generateSiteMap() throws ParserConfigurationException, TransformerException, SeoServiceException {
         LOGGER.log(Level.INFO, "Start generating Site Map");
         Document document = generateSiteMapDocument();
         return generateSiteMap(document);
@@ -140,7 +149,7 @@ public class SeoServiceBean implements SeoService {
     }
 
     @Override
-    public String prerenderSiteMap() throws SeoServiceException, ParserConfigurationException, JsonStoreServiceException, TransformerException {
+    public String prerenderSiteMap() throws SeoServiceException, ParserConfigurationException, TransformerException {
         LOGGER.log(Level.INFO, "Start prerendering Site Map");
         Document document = generateSiteMapDocument();
         NodeList nodes = document.getElementsByTagNameNS(SITEMAP_NS_URI, "loc");
@@ -171,7 +180,7 @@ public class SeoServiceBean implements SeoService {
         return generateSiteMap(document);
     }
 
-    private Document generateSiteMapDocument() throws ParserConfigurationException, SeoServiceException, JsonStoreServiceException {
+    private Document generateSiteMapDocument() throws ParserConfigurationException, SeoServiceException {
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
         Document doc = docBuilder.newDocument();
@@ -190,7 +199,7 @@ public class SeoServiceBean implements SeoService {
     }
 
     @Schedule(hour = "5")
-    private void schedulePrerendering() throws ParserConfigurationException, JsonStoreServiceException, TransformerException, SeoServiceException {
+    private void schedulePrerendering() throws ParserConfigurationException, TransformerException, SeoServiceException {
         if (prerenderingActivated) {
             prerenderSiteMap();
         }
@@ -205,33 +214,34 @@ public class SeoServiceBean implements SeoService {
         }
     }
 
-    private void generateWorkspacesEntries(Element urlset, Document doc, String marketServerUrl) throws JsonStoreServiceException, SeoServiceException {
-        List<ODocument> workspaces = json.systemSearch("SELECT key, lastModificationDate as lastModificationDate, `meta_ortolang-item-json.type` as type, `meta_ortolang-workspace-json.wsalias` as alias, `meta_ortolang-workspace-json.snapshotName` as snapshotName FROM collection WHERE status = 'published' AND `meta_ortolang-item-json.type` IS NOT null AND `meta_ortolang-workspace-json.wsalias` IS NOT null");
-
-        Map<String, ODocument> workspacesLatest = new HashMap<>();
-        // Find latest version of each published resource
-        for (ODocument workspace : workspaces) {
-            String alias = workspace.rawField("alias");
-            if (workspacesLatest.containsKey(alias)) {
-                if ((long) workspacesLatest.get(alias).rawField("lastModificationDate") < (long) workspace.rawField("lastModificationDate")) {
-                    workspacesLatest.put(alias, workspace);
-                }
-            } else {
-                workspacesLatest.put(alias, workspace);
-            }
-        }
-
+    private void generateWorkspacesEntries(Element urlset, Document doc, String marketServerUrl) {
+//        List<ODocument> workspaces = json.systemSearch("SELECT key, lastModificationDate as lastModificationDate, `meta_ortolang-item-json.type` as type, `meta_ortolang-workspace-json.wsalias` as alias, `meta_ortolang-workspace-json.snapshotName` as snapshotName FROM collection WHERE status = 'published' AND `meta_ortolang-item-json.type` IS NOT null AND `meta_ortolang-workspace-json.wsalias` IS NOT null");
+    	SearchQuery query = new SearchQuery();
+    	query.setIndex(OrtolangItemIndexableContent.INDEX);
+    	SearchResult result = search.search(query);
+    	
         // Add an entry for the latest version only
-        for (ODocument workspace : workspacesLatest.values()) {
-            String marketType = marketTypes.get((String) workspace.rawField("type"));
-            if (marketType == null) {
-                continue;
-            }
-            String loc =  marketServerUrl + "market/" + marketType + "/" + workspace.rawField("alias");
-            String priority = "0.7";
-            Element url = buildSiteMapEntry(loc, null, ChangeFrequency.DAILY, priority, doc);
-            urlset.appendChild(url);
+    	for (String item : result.getHits()) {
+			try {
+	    		ObjectMapper mapper = new ObjectMapper();
+				Map<String, Object> content = mapper.readValue(item, new TypeReference<Map<String, Object>>(){});
+	    		String metadataType = (String) content.get(OrtolangItemType.METADATA_KEY);
+	    		OrtolangItemType ortolangItemType = OrtolangItemType.fromMetadataType(metadataType);
+	//            String marketType = marketTypes.get((String) workspace.rawField("type"));
+	            if (ortolangItemType == null) {
+	                continue;
+	            }
+	            String alias = (String) content.get("alias");
+	            
+	            String loc =  marketServerUrl + "market/" + ortolangItemType.getSection() + "/" + alias;
+	            String priority = "0.7";
+	            Element url = buildSiteMapEntry(loc, null, ChangeFrequency.DAILY, priority, doc);
+	            urlset.appendChild(url);
+			} catch (IOException | OrtolangException | SeoServiceException e) {
+				LOGGER.log(Level.WARNING, e.getMessage(), e);
+			}
         }
+    	
     }
 
     @Override

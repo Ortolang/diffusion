@@ -46,27 +46,33 @@ public interface SearchService extends OrtolangService {
 	
 	String SERVICE_NAME = "search";
 	
-	List<OrtolangSearchResult> indexSearch(String query) throws SearchServiceException;
+//	List<OrtolangSearchResult> indexSearch(String query) throws SearchServiceException;
 	
-	List<String> jsonSearch(String query) throws SearchServiceException;
+//	List<String> jsonSearch(String query) throws SearchServiceException;
 
-    List<String> findCollections(Map<String, String> fieldsProjection, String content, String group, String limit, String orderProp, String orderDir, Map<String, Object> fieldsMap) throws SearchServiceException;
+//    List<String> findCollections(Map<String, String> fieldsProjection, String content, String group, String limit, String orderProp, String orderDir, Map<String, Object> fieldsMap) throws SearchServiceException;
 
-    int countCollections(Map<String, Object> fieldsMap) throws SearchServiceException;
+//    int countCollections(Map<String, Object> fieldsMap) throws SearchServiceException;
 
-	String getCollection(String key) throws SearchServiceException;
+//	String getCollection(String key) throws SearchServiceException;
 	
-	List<String> findProfiles(String content, Map<String, String> fieldsProjection) throws SearchServiceException;
+//	List<String> findProfiles(String content, Map<String, String> fieldsProjection) throws SearchServiceException;
 	
-	String getProfile(String key) throws SearchServiceException;
+//	String getProfile(String key) throws SearchServiceException;
 	
-	List<String> findWorkspaces(String content, Map<String, String> fieldsProjection, String group, String limit, String orderProp, String orderDir, Map<String, Object> fieldsMap) throws SearchServiceException;
+//	List<String> findWorkspaces(String content, Map<String, String> fieldsProjection, String group, String limit, String orderProp, String orderDir, Map<String, Object> fieldsMap) throws SearchServiceException;
 	
-	String getWorkspace(String wsalias) throws SearchServiceException;
+//	String getWorkspace(String wsalias) throws SearchServiceException;
 	
-	int countWorkspaces(Map<String, Object> fieldsMap) throws SearchServiceException;
+//	int countWorkspaces(Map<String, Object> fieldsMap) throws SearchServiceException;
 
-	List<String> findEntities(String content, Map<String, String> fieldsProjection) throws SearchServiceException;
+//	List<String> findEntities(String content, Map<String, String> fieldsProjection) throws SearchServiceException;
 	
-	String getEntity(String id) throws SearchServiceException;
+//	String getEntity(String id) throws SearchServiceException;
+	
+	SearchResult search(SearchQuery query);
+	
+	String get(String index, String type, String id);
+
+//	List<OrtolangSearchResult> searchText(String text) throws SearchServiceException;
 }

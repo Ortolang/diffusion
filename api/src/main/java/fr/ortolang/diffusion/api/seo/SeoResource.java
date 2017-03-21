@@ -41,7 +41,6 @@ import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.seo.SeoService;
 import fr.ortolang.diffusion.seo.SeoServiceException;
-import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import org.jboss.resteasy.annotations.GZIP;
 
 import javax.annotation.security.RolesAllowed;
@@ -68,7 +67,7 @@ public class SeoResource {
     @Path("/sitemap")
     @GZIP
     public Response getSiteMap()
-            throws KeyNotFoundException, AccessDeniedException, EventServiceException, JsonStoreServiceException, TransformerException, ParserConfigurationException, SeoServiceException {
+            throws KeyNotFoundException, AccessDeniedException, EventServiceException, TransformerException, ParserConfigurationException, SeoServiceException {
         LOGGER.log(Level.INFO, "GET /seo/sitemap/");
         String siteMap = seo.generateSiteMap();
         return Response.ok(siteMap).build();
@@ -79,7 +78,7 @@ public class SeoResource {
     @Path("/sitemap/prerender")
     @RolesAllowed("admin")
     @GZIP
-    public Response prerenderSiteMap() throws ParserConfigurationException, JsonStoreServiceException, TransformerException, SeoServiceException {
+    public Response prerenderSiteMap() throws ParserConfigurationException, TransformerException, SeoServiceException {
         LOGGER.log(Level.INFO, "GET /seo/sitemap/prerender");
         String siteMap = seo.prerenderSiteMap();
         return Response.ok(siteMap).build();

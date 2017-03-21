@@ -226,6 +226,11 @@ public class RegistryEntry implements Serializable, Comparable<RegistryEntry> {
 		return properties;
 	}
 
+	public void setProperties(Properties properties) throws IOException {
+		this.properties = properties;
+		saveProperties();
+	}
+
 	private void saveProperties() throws IOException {
 		if (properties != null && !properties.isEmpty()) {
 			StringWriter output = new StringWriter();

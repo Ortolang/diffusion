@@ -37,7 +37,6 @@ package fr.ortolang.diffusion.seo;
  */
 
 import fr.ortolang.diffusion.OrtolangService;
-import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -48,7 +47,7 @@ public interface SeoService extends OrtolangService {
 
     String INFO_SITEMAP_ENTRIES_ALL = "sitemap.entries.all";
 
-    String generateSiteMap() throws JsonStoreServiceException, ParserConfigurationException, TransformerException, SeoServiceException;
+    String generateSiteMap() throws ParserConfigurationException, TransformerException, SeoServiceException;
 
-    String prerenderSiteMap() throws SeoServiceException, ParserConfigurationException, JsonStoreServiceException, TransformerException;
+    String prerenderSiteMap() throws SeoServiceException, ParserConfigurationException, TransformerException;
 }

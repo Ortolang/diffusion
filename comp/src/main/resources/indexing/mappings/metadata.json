@@ -1,0 +1,44 @@
+{
+	"metadata": {
+		"properties": {
+			"key": {
+				"type": "keyword"
+			},
+			"status": {
+				"type": "keyword"
+			},
+			"name": {
+				"type": "string"
+			},
+			"creation": {
+				"type": "date",
+				"format": "epoch_millis"
+			},
+			"modification": {
+				"type": "date",
+				"format": "epoch_millis"
+			},
+			"target": {
+				"type": "keyword"
+			},
+			"targetType": {
+				"type": "keyword"
+			},
+			"size": {
+				"type": "long"
+			},
+			"mimeType": {
+				"type": "string"
+			},
+			"content": {
+				"type": "text"
+			},
+			"extraction": {
+				"type": "object"
+			},
+			"format": {
+				"type": "keyword"
+			}
+		}
+	}
+}

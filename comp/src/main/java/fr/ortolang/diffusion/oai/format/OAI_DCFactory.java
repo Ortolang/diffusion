@@ -39,14 +39,13 @@ public class OAI_DCFactory {
             JsonArray corporaLanguages = jsonDoc.getJsonArray("corporaLanguages");
             if(corporaLanguages!=null) {
                 for(JsonObject corporaLanguage : corporaLanguages.getValuesAs(JsonObject.class)) {
-                    JsonObject metaLanguage = corporaLanguage.getJsonObject("meta_ortolang-referential-json");
-                    JsonArray multilingualLabels = metaLanguage.getJsonArray("labels");
+                    JsonArray multilingualLabels = corporaLanguage.getJsonArray("labels");
 
                     for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
                     	oai_dc.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
                     	oai_dc.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
                     }
-                    oai_dc.addDcField("language", metaLanguage.getString("id"));
+                    oai_dc.addDcField("language", corporaLanguage.getString("id"));
                 }
             }
 
@@ -60,10 +59,10 @@ public class OAI_DCFactory {
             JsonArray producers = jsonDoc.getJsonArray("producers");
             if(producers!=null) {
                 for(JsonObject producer : producers.getValuesAs(JsonObject.class)) {
-                    JsonObject metaOrganization = producer.getJsonObject("meta_ortolang-referential-json");
+//                    JsonObject metaOrganization = producer.getJsonObject("meta_ortolang-referential-json");
 
-                    if(metaOrganization.containsKey("fullname")) {
-                    	oai_dc.addDcField("publisher", metaOrganization.getString("fullname"));
+                    if(producer.containsKey("fullname")) {
+                    	oai_dc.addDcField("publisher", producer.getString("fullname"));
                     }
                 }
             }
@@ -73,8 +72,8 @@ public class OAI_DCFactory {
                 for(JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
                     JsonArray roles = contributor.getJsonArray("roles");
                     for(JsonObject role : roles.getValuesAs(JsonObject.class)) {
-                        JsonObject metaRole = role.getJsonObject("meta_ortolang-referential-json");
-                        String roleId = metaRole.getString("id");
+//                        JsonObject metaRole = role.getJsonObject("meta_ortolang-referential-json");
+                        String roleId = role.getString("id");
                         oai_dc.addDcField("contributor", OAI_DC.person(contributor)+" ("+roleId+")");
 
                         if("author".equals(roleId)) {
@@ -86,11 +85,10 @@ public class OAI_DCFactory {
 
             JsonObject statusOfUse = jsonDoc.getJsonObject("statusOfUse");
             if(statusOfUse!=null) {
-                JsonObject metaStatusOfUse = statusOfUse.getJsonObject("meta_ortolang-referential-json");
-                String idStatusOfUse = metaStatusOfUse.getString("id");
+                String idStatusOfUse = statusOfUse.getString("id");
                 oai_dc.addDcField("rights", idStatusOfUse);
 
-                JsonArray multilingualLabels = metaStatusOfUse.getJsonArray("labels");
+                JsonArray multilingualLabels = statusOfUse.getJsonArray("labels");
                 for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
                 	oai_dc.addDcMultilingualField("rights", label.getString("lang"), label.getString("value"));
                 }
@@ -104,9 +102,8 @@ public class OAI_DCFactory {
 
             JsonObject license = jsonDoc.getJsonObject("license");
             if(license!=null) {
-                JsonObject metaLicense = license.getJsonObject("meta_ortolang-referential-json");
-                if(metaLicense!=null) {
-                	oai_dc.addDcMultilingualField("rights", "fr", metaLicense.getString("label"));
+                if(license!=null) {
+                	oai_dc.addDcMultilingualField("rights", "fr", license.getString("label"));
                 }
             }
 

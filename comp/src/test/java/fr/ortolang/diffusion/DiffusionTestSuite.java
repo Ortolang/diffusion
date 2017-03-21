@@ -48,7 +48,6 @@ import fr.ortolang.diffusion.membership.MembershipServiceTest;
 import fr.ortolang.diffusion.registry.RegistryServiceTest;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceTest;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceTest;
-import fr.ortolang.diffusion.store.index.IndexStoreServiceTest;
 
 
 @RunWith(Suite.class)
@@ -61,7 +60,6 @@ import fr.ortolang.diffusion.store.index.IndexStoreServiceTest;
 	RegistryServiceTest.class,
 	BinaryStoreServiceTest.class,
 	HandleStoreServiceTest.class,
-	IndexStoreServiceTest.class,
 })
 public class DiffusionTestSuite {
 

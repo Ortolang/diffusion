@@ -47,7 +47,7 @@ import java.util.logging.Logger;
 
 public class OrtolangConfig {
 
-    private static final String CURRENT_CONFIG_VERSION = "14";
+    private static final String CURRENT_CONFIG_VERSION = "15";
     private static final Logger LOGGER = Logger.getLogger(OrtolangConfig.class.getName());
     private static OrtolangConfig config;
     private Properties props;
@@ -176,7 +176,10 @@ public class OrtolangConfig {
         CACHE_VERSION("cache.version"),
         
         SMTP_SENDER_NAME("smtp.sender.name"),
-        SMTP_SENDER_EMAIL("smtp.sender.email");
+        SMTP_SENDER_EMAIL("smtp.sender.email"),
+
+        ELASTIC_SEARCH_HOST("elastic.search.host"),
+        ELASTIC_SEARCH_PORT("elastic.search.port");
 
         private final String key;
 

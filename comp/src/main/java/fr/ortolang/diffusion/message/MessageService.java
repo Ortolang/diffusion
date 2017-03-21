@@ -53,7 +53,7 @@ import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 
-public interface MessageService extends OrtolangObjectProviderService, OrtolangBinaryService, OrtolangIndexableService {
+public interface MessageService extends OrtolangObjectProviderService, OrtolangBinaryService {
     
     String SERVICE_NAME = "message";
     

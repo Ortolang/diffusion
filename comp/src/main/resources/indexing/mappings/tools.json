@@ -1,0 +1,145 @@
+{
+	"tools": {
+		"properties": {
+			"key": {
+				"type": "keyword"
+			},
+			"snapshot": {
+				"type": "keyword"
+			},
+			"alias": {
+				"type": "keyword"
+			},
+			"tag": {
+				"type": "keyword"
+			},
+			"schema": {
+				"type": "keyword"
+			},
+			"type": {
+				"type": "keyword"
+			},
+			"title": {
+				"type": "nested"
+			},
+			"description": {
+				"type": "nested"
+			},
+			"keywords": {
+				"type": "nested"
+			},
+			"bibliographicCitation": {
+				"type": "nested"
+			},
+			"datasize": {
+				"type": "long"
+			},
+			"publications": {
+				"type": "text"
+			},
+			"website": {
+				"type": "keyword",
+				"index": "no"
+			},
+			"image": {
+				"type": "keyword",
+				"index": "no"
+			},
+			"preview": {
+				"type": "keyword",
+				"index": "no"
+			},
+			"statusOfUse": {
+				"type": "object",
+				"properties": {
+					"content": {"type": "keyword"}
+				}
+			},
+			"conditionsOfUse": {
+				"type": "nested"
+			},
+			"license": {
+				"type": "object"
+			},
+			"publicationDate": {
+				"type": "date"
+			},
+			"producers": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"contributors": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"toolSupport": {
+				"type": "object",
+				"properties": {
+					"content": {"type": "keyword"}
+				}
+			},
+			"programmingLanguages": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"navigationLanguages": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"toolLanguages": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"toolFunctionalities": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"toolInputData": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"toolOutputData": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"toolFileEncodings": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
+			"operatingSystems": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			}
+		}
+	}
+}

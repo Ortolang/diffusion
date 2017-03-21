@@ -1,0 +1,43 @@
+{
+	"collection": {
+		"properties": {
+			"key": {
+				"type": "keyword"
+			},
+			"status": {
+				"type": "keyword"
+			},
+			"name": {
+				"type": "text"
+			},
+			"root": {
+				"type": "boolean"
+			},
+			"creation": {
+				"type": "date",
+				"format": "epoch_millis"
+			},
+			"modification": {
+				"type": "date",
+				"format": "epoch_millis"
+			},
+			"elements": {
+				"type": "nested"
+			},
+			"metadata": {
+				"type": "object"
+			},
+			"workspace": {
+				"type": "object"
+			},
+			"version": {
+				"type": "long",
+				"index": "no"
+			},
+			"clock": {
+				"type": "integer",
+				"index": "no"
+			}
+		}
+	}
+}

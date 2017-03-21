@@ -36,6 +36,7 @@ package fr.ortolang.diffusion.client.cmd;
  * #L%
  */
 
+import fr.ortolang.diffusion.client.OrtolangClientException;
 import org.apache.commons.cli.CommandLine;
 
 import java.io.Console;
@@ -44,8 +45,8 @@ public abstract class Command {
 
     public abstract void execute(String[] args);
 
-    protected String[] getCredentials(CommandLine cmd) {
-        String username = null;
+    protected String[] getCredentials(CommandLine cmd) throws OrtolangClientException {
+        String username;
         String password = null;
         if (cmd.hasOption("U")) {
             username = cmd.getOptionValue("U");
@@ -58,8 +59,9 @@ public abstract class Command {
                     password = new String(passwd);
                 }
             }
+            return new String[] { username, password };
         }
-        return new String[] { username, password };
+        throw new OrtolangClientException("Username and/or password missing");
     }
 
 }

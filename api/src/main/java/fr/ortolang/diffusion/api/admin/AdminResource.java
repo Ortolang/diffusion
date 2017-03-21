@@ -47,10 +47,11 @@ import fr.ortolang.diffusion.api.runtime.HumanTaskRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessTypeRepresentation;
 import fr.ortolang.diffusion.api.workspace.WorkspaceRepresentation;
+import fr.ortolang.diffusion.api.search.SearchResourceHelper;
+import fr.ortolang.diffusion.api.search.SearchResultRepresentation;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.MetadataFormatException;
-import fr.ortolang.diffusion.core.WorkspaceReadOnlyException;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.event.EventServiceException;
@@ -72,6 +73,8 @@ import fr.ortolang.diffusion.runtime.RuntimeServiceException;
 import fr.ortolang.diffusion.runtime.entity.Process.State;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
+import fr.ortolang.diffusion.search.SearchQuery;
+import fr.ortolang.diffusion.search.SearchService;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.security.authorisation.AuthorisationServiceException;
 import fr.ortolang.diffusion.statistics.StatisticsService;
@@ -81,10 +84,6 @@ import fr.ortolang.diffusion.store.handle.HandleNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 import fr.ortolang.diffusion.store.handle.entity.Handle;
-import fr.ortolang.diffusion.store.index.IndexStoreService;
-import fr.ortolang.diffusion.store.index.IndexStoreServiceException;
-import fr.ortolang.diffusion.store.json.JsonStoreService;
-import fr.ortolang.diffusion.store.json.JsonStoreServiceException;
 import fr.ortolang.diffusion.subscription.SubscriptionService;
 import fr.ortolang.diffusion.subscription.SubscriptionServiceException;
 import fr.ortolang.diffusion.worker.WorkerService;
@@ -95,7 +94,9 @@ import org.jboss.resteasy.annotations.providers.multipart.MultipartForm;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -119,13 +120,11 @@ import java.util.stream.Collectors;
 public class AdminResource {
 
     private static final Logger LOGGER = Logger.getLogger(AdminResource.class.getName());
-
-    @EJB
-    private JsonStoreService json;
-    @EJB
-    private IndexStoreService index;
+;
     @EJB
     private HandleStoreService handle;
+    @EJB
+    private SearchService search;
     @EJB
     private BinaryStoreService binary;
     @EJB
@@ -214,7 +213,7 @@ public class AdminResource {
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response dumpReferentialEntities() throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
         LOGGER.log(Level.INFO, "GET /admin/referential/entities/export");
-        LOGGER.log(Level.FINE, "exporting referentual entities");
+        LOGGER.log(Level.FINE, "exporting referential entities");
         ResponseBuilder builder = Response.ok();
         builder.header("Content-Disposition", "attachment; filename*=UTF-8''ortolang-dump.tar.gz");
         builder.type("application/x-gzip");
@@ -525,39 +524,11 @@ public class AdminResource {
     }
 
     @GET
-    @Path("/store/json/documents/{key}")
+    @Path("/index/search")
     @GZIP
-    public Response getJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/json/" + key);
-        String document = json.systemGetDocument(key);
-        return Response.ok(document).build();
-    }
-
-    @DELETE
-    @Path("/store/json/documents/{key}")
-    @GZIP
-    public Response deleteJsonDocumentForKey(@PathParam(value = "key") String key) throws JsonStoreServiceException {
-        LOGGER.log(Level.INFO, "DELETE /admin/store/json/" + key);
-        json.remove(key);
-        return Response.ok().build();
-    }
-
-    @GET
-    @Path("/store/json/search")
-    @GZIP
-    public Response searchInJsonStore(@QueryParam(value = "query") String query) throws JsonStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/json/search?query=" + query);
-        List<String> documents = json.search(query);
-        return Response.ok(documents).build();
-    }
-
-    @GET
-    @Path("/store/index/documents/{key}")
-    @GZIP
-    public Response getIndexDocumentForKey(@PathParam(value = "key") String key) throws IndexStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/index/" + key);
-        String document = index.systemGetDocument(key);
-        return Response.ok(document).build();
+    public Response search(@Context HttpServletRequest request) {
+        SearchQuery query = SearchResourceHelper.executeQuery(request);
+		return Response.ok(SearchResultRepresentation.fromSearchResult(search.search(query))).build();
     }
 
     @GET

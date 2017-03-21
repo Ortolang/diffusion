@@ -95,11 +95,12 @@ public class ReferentialResource {
 	    	if(entityType != null) {
 	    	    
 	    	    List<ReferentialEntity> refs;
-	    	    if(term!=null) {
-	    	        refs = referential.findEntitiesByTerm(entityType, term, lang);
-	    	    } else {
+	    	    //TODO allows to search a term in referential entities ?
+//	    	    if(term!=null) {
+//	    	        refs = referential.findEntitiesByTerm(entityType, term, lang);
+//	    	    } else {
 	    	        refs = referential.listEntities(entityType);
-	    	    }
+//	    	    }
 	            
 	            for(ReferentialEntity ref : refs) {
 	                representation.addEntry(ReferentialEntityRepresentation.fromReferentialEntity(ref));

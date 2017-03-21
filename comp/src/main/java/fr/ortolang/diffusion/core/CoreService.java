@@ -72,16 +72,17 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     String INFO_WORKSPACES_ALL = "workspaces.all";
     String INFO_WORKSPACES_PUBLISHED = "workspaces.published";
-    // String INFO_WORKSPACES_DELETED = "workspaces.deleted";
+    //String INFO_WORKSPACES_DELETED = "workspaces.deleted";
     String INFO_COLLECTIONS_ALL = "collections.all";
     String INFO_COLLECTIONS_PUBLISHED = "collections.published";
-    // String INFO_COLLECTIONS_DELETED = "collections.deleted";
+    //String INFO_COLLECTIONS_DELETED = "collections.deleted";
     String INFO_OBJECTS_ALL = "objects.all";
     String INFO_OBJECTS_PUBLISHED = "objects.published";
+    //String INFO_OBJECTS_DELETED = "objects.deleted";
 
-    // String INFO_OBJECTS_DELETED = "objects.deleted";
+    String WORKSPACE_REGISTRY_PROPERTY_KEY = "ws";
 
-    /* Workspace */
+	/* Workspace */
 
     Workspace createWorkspace(String wskey, String alias, String name, String type) throws CoreServiceException, KeyAlreadyExistsException, AccessDeniedException, AliasAlreadyExistsException;
 
@@ -160,7 +161,9 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     String resolvePathFromCollection(String key, String path) throws KeyNotFoundException, CoreServiceException, AccessDeniedException, PathNotFoundException, InvalidPathException;
 
-    /* DataObject */
+    List<Collection> systemListCollections() throws CoreServiceException;
+
+	/*DataObject*/
 
     DataObject createDataObject(String wskey, String path, String hash) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException,
             PathAlreadyExistsException, AccessDeniedException, KeyAlreadyExistsException;

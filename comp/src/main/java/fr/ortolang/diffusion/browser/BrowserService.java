@@ -52,35 +52,35 @@ import fr.ortolang.diffusion.registry.PropertyNotFoundException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 
 public interface BrowserService extends OrtolangService {
-	
-	String SERVICE_NAME = "browser";
-	
-	List<String> list(int limit, int offset, String service, String type, OrtolangObjectState.Status status) throws BrowserServiceException;
-	
-	long count(String service, String type, OrtolangObjectState.Status status) throws BrowserServiceException;
-	
-	OrtolangObjectIdentifier lookup(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
-	
-	List<OrtolangObjectProperty> listProperties(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
-	
-	OrtolangObjectProperty getProperty(String key, String name) throws BrowserServiceException, KeyNotFoundException, PropertyNotFoundException, AccessDeniedException;
-	
-	void setProperty(String key, String name, String value) throws BrowserServiceException, KeyNotFoundException, KeyLockedException, AccessDeniedException;
-	
-	OrtolangObjectState getState(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
-	
-	OrtolangObjectInfos getInfos(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
-	
-	OrtolangObjectVersion getVersion(String key) throws BrowserServiceException, KeyNotFoundException;
-	 
-	List<OrtolangObjectVersion> getHistory(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
-	
-	List<String> listHandles(String key) throws BrowserServiceException;
-	
-	void index(String key) throws BrowserServiceException, AccessDeniedException;
-	
-	OrtolangObject findObject(String key) throws BrowserServiceException;
-	
-	OrtolangObjectSize getSize(String key) throws BrowserServiceException;
-	
+
+    String SERVICE_NAME = "browser";
+
+    List<String> list(int offset, int limit, String service, String type, OrtolangObjectState.Status status) throws BrowserServiceException;
+
+    long count(String service, String type, OrtolangObjectState.Status status) throws BrowserServiceException;
+
+    OrtolangObjectIdentifier lookup(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+
+    List<OrtolangObjectProperty> listProperties(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+
+    OrtolangObjectProperty getProperty(String key, String name) throws BrowserServiceException, KeyNotFoundException, PropertyNotFoundException, AccessDeniedException;
+
+    void setProperty(String key, String name, String value) throws BrowserServiceException, KeyNotFoundException, KeyLockedException, AccessDeniedException;
+
+    OrtolangObjectState getState(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+
+    OrtolangObjectInfos getInfos(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+
+    OrtolangObjectVersion getVersion(String key) throws BrowserServiceException, KeyNotFoundException;
+
+    List<OrtolangObjectVersion> getHistory(String key) throws BrowserServiceException, KeyNotFoundException, AccessDeniedException;
+
+    List<String> listHandles(String key) throws BrowserServiceException;
+
+    void index(String key) throws BrowserServiceException, AccessDeniedException;
+
+    OrtolangObject findObject(String key) throws BrowserServiceException;
+
+    OrtolangObjectSize getSize(String key) throws BrowserServiceException;
+
 }
