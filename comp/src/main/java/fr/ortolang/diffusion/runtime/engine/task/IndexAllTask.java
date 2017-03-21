@@ -132,11 +132,11 @@ public class IndexAllTask extends RuntimeEngineTask {
                 }
 
                 // GROUPS
-                if ((all && phase == 1) || types.contains(Group.OBJECT_TYPE)) {
-                    LOGGER.log(Level.INFO, "Indexing all groups");
-                    List<String> groups = browser.list(0, -1, MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, Status.DRAFT);
-                    indexKeys(groups, Group.OBJECT_TYPE);
-                }
+//                if ((all && phase == 1) || types.contains(Group.OBJECT_TYPE)) {
+//                    LOGGER.log(Level.INFO, "Indexing all groups");
+//                    List<String> groups = browser.list(0, -1, MembershipService.SERVICE_NAME, Group.OBJECT_TYPE, Status.DRAFT);
+//                    indexKeys(groups, Group.OBJECT_TYPE);
+//                }
 
                 // WORKSPACES
                 if ((all && phase == 1) || types.contains(Workspace.OBJECT_TYPE)) {
@@ -146,12 +146,12 @@ public class IndexAllTask extends RuntimeEngineTask {
                 }
 
                 // OBJECTS
-                if ((all && phase == 1) || types.contains(DataObject.OBJECT_TYPE)) {
-                    LOGGER.log(Level.INFO, "Indexing all data objects");
-                    List<String> objects = browser.list(0, -1, CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, Status.DRAFT);
-                    objects.addAll(browser.list(0, -1, CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, Status.PUBLISHED));
-                    indexKeys(objects, DataObject.OBJECT_TYPE);
-                }
+//                if ((all && phase == 1) || types.contains(DataObject.OBJECT_TYPE)) {
+//                    LOGGER.log(Level.INFO, "Indexing all data objects");
+//                    List<String> objects = browser.list(0, -1, CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, Status.DRAFT);
+//                    objects.addAll(browser.list(0, -1, CoreService.SERVICE_NAME, DataObject.OBJECT_TYPE, Status.PUBLISHED));
+//                    indexKeys(objects, DataObject.OBJECT_TYPE);
+//                }
 
                 // METADATA
                 if ((all && phase == 1) || types.contains(MetadataObject.OBJECT_TYPE)) {
@@ -162,12 +162,12 @@ public class IndexAllTask extends RuntimeEngineTask {
                 }
 
                 // LINKS
-                if ((all && phase == 1) || types.contains(Link.OBJECT_TYPE)) {
-                    LOGGER.log(Level.INFO, "Indexing all links");
-                    List<String> links = browser.list(0, -1, CoreService.SERVICE_NAME, Link.OBJECT_TYPE, Status.DRAFT);
-                    links.addAll(browser.list(0, -1, CoreService.SERVICE_NAME, Link.OBJECT_TYPE, Status.PUBLISHED));
-                    indexKeys(links, Link.OBJECT_TYPE);
-                }
+//                if ((all && phase == 1) || types.contains(Link.OBJECT_TYPE)) {
+//                    LOGGER.log(Level.INFO, "Indexing all links");
+//                    List<String> links = browser.list(0, -1, CoreService.SERVICE_NAME, Link.OBJECT_TYPE, Status.DRAFT);
+//                    links.addAll(browser.list(0, -1, CoreService.SERVICE_NAME, Link.OBJECT_TYPE, Status.PUBLISHED));
+//                    indexKeys(links, Link.OBJECT_TYPE);
+//                }
 
                 // COLLECTIONS
                 if (all || types.contains(Collection.OBJECT_TYPE)) {
@@ -215,18 +215,18 @@ public class IndexAllTask extends RuntimeEngineTask {
                 }
 
                 // THREADS
-                if ((all && phase == 1) || types.contains(Thread.OBJECT_TYPE)) {
-                    LOGGER.log(Level.INFO, "Indexing all threads");
-                    List<String> threads = browser.list(0, -1, MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, Status.DRAFT);
-                    indexKeys(threads, Thread.OBJECT_TYPE);
-                }
+//                if ((all && phase == 1) || types.contains(Thread.OBJECT_TYPE)) {
+//                    LOGGER.log(Level.INFO, "Indexing all threads");
+//                    List<String> threads = browser.list(0, -1, MessageService.SERVICE_NAME, Thread.OBJECT_TYPE, Status.DRAFT);
+//                    indexKeys(threads, Thread.OBJECT_TYPE);
+//                }
 
                 // MESSAGES
-                if ((all && phase == 1) || types.contains(Message.OBJECT_TYPE)) {
-                    LOGGER.log(Level.INFO, "Indexing all messages");
-                    List<String> messages = browser.list(0, -1, MessageService.SERVICE_NAME, Message.OBJECT_TYPE, Status.DRAFT);
-                    indexKeys(messages, Message.OBJECT_TYPE);
-                }
+//                if ((all && phase == 1) || types.contains(Message.OBJECT_TYPE)) {
+//                    LOGGER.log(Level.INFO, "Indexing all messages");
+//                    List<String> messages = browser.list(0, -1, MessageService.SERVICE_NAME, Message.OBJECT_TYPE, Status.DRAFT);
+//                    indexKeys(messages, Message.OBJECT_TYPE);
+//                }
 
                 LOGGER.log(Level.INFO, "Indexing event sent");
 
