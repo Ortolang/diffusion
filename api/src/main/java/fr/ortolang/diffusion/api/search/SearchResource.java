@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.api.search;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.indexing.OrtolangItemIndexableContent;
+import fr.ortolang.diffusion.core.indexing.UserMetadataIndexableContent;
 import fr.ortolang.diffusion.membership.MembershipService;
 import fr.ortolang.diffusion.membership.entity.Profile;
 import fr.ortolang.diffusion.referential.ReferentialService;
@@ -225,4 +226,13 @@ public class SearchResource {
 		}
 		return Response.status(404).build();
 	}
+
+	@GET
+	@Path("/metadata")
+	@GZIP
+	public Response searchUserMetadata(@Context HttpServletRequest request) {
+		SearchQuery query = SearchResourceHelper.executeQuery(request, UserMetadataIndexableContent.INDEX);
+		return Response.ok(SearchResultRepresentation.fromSearchResult(search.search(query))).build();
+	}
+
 }
