@@ -281,9 +281,19 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
         }
         if (query.getAggregations() != null) {
 	        for(String agg : query.getAggregations()) {
+	        	String aggPath = agg;
+	    		String aggField = agg;
+	    		String[] aggNameSplit = agg.split(":");
+	    		if (aggNameSplit.length>1) {
+	    			aggPath = aggNameSplit[0];
+	    			aggField = aggNameSplit[1];
+	    		}
 	        	//TODO optimizes by using forEach method
-	        	if (agg.endsWith("[]")) {
-	        		String aggName = agg.substring(0, agg.length() - 2);
+	        	if (aggPath.endsWith("[]")) {
+	        		String aggName = aggPath.substring(0, aggPath.length() - 2);
+	        		if (aggField.endsWith("[]")) {
+	    				aggField = aggField.substring(0, aggField.length() - 2);
+	    			}
 	        		InternalNested nestedAgg = searchResponse.getAggregations().get(aggName);
 	       		 	Terms terms = nestedAgg.getAggregations().get("content");
 	       		 	if (terms != null) {
@@ -292,10 +302,10 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
 				        }
 	       		 	}
 	        	} else {
-			        Terms terms = searchResponse.getAggregations().get(agg);
+			        Terms terms = searchResponse.getAggregations().get(aggPath);
 			        if (terms != null) {
 				        for(Terms.Bucket bucket : terms.getBuckets()) {
-				        	result.addAggregation(agg, bucket.getKeyAsString());
+				        	result.addAggregation(aggPath, bucket.getKeyAsString());
 				        }
 			        }
 	        	}

@@ -22,8 +22,26 @@ public class ElasticSearchAggregationParserTest {
 	}
 
 	@Test
+	public void aggStringWithPath() {
+		String aggName = "corporaType:corporaType.content";
+		AggregationBuilder aggBuilder = ElasticSearchAggregationParser.parse(aggName);
+		//TODO parse json
+		assertNotNull(aggBuilder);
+		LOGGER.log(Level.INFO, aggBuilder.toString());
+	}
+
+	@Test
 	public void aggArray() {
 		String aggName = "corporaFormats[]";
+		AggregationBuilder aggBuilder = ElasticSearchAggregationParser.parse(aggName);
+		//TODO parse json
+		assertNotNull(aggBuilder);
+		LOGGER.log(Level.INFO, aggBuilder.toString());
+	}
+
+	@Test
+	public void aggArrayWithPath() {
+		String aggName = "corporaFormats[]:corporaFormats.content";
 		AggregationBuilder aggBuilder = ElasticSearchAggregationParser.parse(aggName);
 		//TODO parse json
 		assertNotNull(aggBuilder);
