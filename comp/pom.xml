@@ -148,11 +148,11 @@
             <artifactId>spring-context</artifactId>
             <version>${version.springframework.spring-context}</version>
         </dependency>
-        <dependency>
-            <groupId>com.orientechnologies</groupId>
-            <artifactId>orientdb-graphdb</artifactId>
-            <version>${version.orientechnologies.orientdb}</version>
-        </dependency>
+		<dependency>
+		    <groupId>org.codehaus.jettison</groupId>
+		    <artifactId>jettison</artifactId>
+		    <version>${version.codehaus.jettison}</version>
+		</dependency>
         <dependency>
             <groupId>com.github.fge</groupId>
             <artifactId>json-schema-validator</artifactId>
