@@ -78,6 +78,13 @@
 					"content": {"type": "keyword"}
 				}
 			},
+			"navigationLanguages": {
+				"type": "nested",
+				"properties": {
+					"id": {"type": "keyword"},
+					"content": {"type": "keyword"}
+				}
+			},
 			"applicationUrl": {
 				"type": "keyword",
 				"index": "no"
