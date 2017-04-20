@@ -9,6 +9,32 @@
 						"analyzer": "person_fullname_analyzer"
 					}
 				}
+			},
+			"username": {
+				"type": "object",
+				"properties": {
+					"key": {
+						"type": "keyword"
+					},
+					"givenName": {
+						"type": "text"
+					},
+					"familyName": {
+						"type": "text"
+					},
+					"emailHash": {
+						"type": "keyword"
+					},
+					"email": {
+						"type": "keyword"
+					},
+					"groups": {
+						"type": "keyword"
+					},
+					"infos": {
+						"type": "object"
+					}
+				}
 			}
 		}
 	}
