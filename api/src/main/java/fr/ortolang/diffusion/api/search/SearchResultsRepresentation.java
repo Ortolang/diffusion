@@ -9,29 +9,29 @@ import javax.xml.bind.annotation.XmlRootElement;
 import fr.ortolang.diffusion.search.SearchResult;
 
 @XmlRootElement(name = "result")
-public class SearchResultRepresentation {
+public class SearchResultsRepresentation {
 
     @XmlAttribute
-    private String[] hits;
+    private Object[] hits;
     private long totalHits;
     private Map<String, List<String>> aggregations;
 	
-	public SearchResultRepresentation() {
+	public SearchResultsRepresentation() {
 	}
 
-	public static SearchResultRepresentation fromSearchResult (SearchResult result) {
-		SearchResultRepresentation representation = new SearchResultRepresentation();
-		representation.setHits(result.getSourceOfHits());
+	public static SearchResultsRepresentation fromSearchResult (SearchResult result) {
+		SearchResultsRepresentation representation = new SearchResultsRepresentation();
+		representation.setHits(result.getHits());
 		representation.setTotalHits(result.getTotalHits());
 		representation.setAggregations(result.getAggregations());
 		return representation;
 	}
 
-	public String[] getHits() {
+	public Object[] getHits() {
 		return hits;
 	}
 
-	public void setHits(String[] hits) {
+	public void setHits(Object[] hits) {
 		this.hits = hits;
 	}
 

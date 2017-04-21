@@ -221,7 +221,7 @@ public class SeoServiceBean implements SeoService {
     	SearchResult result = search.search(query);
     	
         // Add an entry for the latest version only
-    	for (String item : result.getHits()) {
+    	for (String item : result.getSourceOfHits()) {
 			try {
 	    		ObjectMapper mapper = new ObjectMapper();
 				Map<String, Object> content = mapper.readValue(item, new TypeReference<Map<String, Object>>(){});

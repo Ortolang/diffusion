@@ -458,7 +458,7 @@ public class OaiServiceBean implements OaiService {
 
 		String item = null;
 		if (result.getTotalHits() > 0) {
-			item = result.getHits().get(0);
+			item = result.getSourceOfHits()[0];
 		}
 
 		if (item == null) {

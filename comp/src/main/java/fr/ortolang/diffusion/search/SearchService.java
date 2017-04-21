@@ -71,6 +71,7 @@ public interface SearchService extends OrtolangService {
 //	String getEntity(String id) throws SearchServiceException;
 	
 	SearchResult search(SearchQuery query);
+	SearchResult systemSearch(SearchQuery query);
 	
 	String get(String index, String type, String id);
 

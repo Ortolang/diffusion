@@ -53,6 +53,7 @@ public interface ElasticSearchService extends OrtolangService {
     void remove(String key) throws ElasticSearchServiceException;
 
     SearchResult search(SearchQuery query);
+    SearchResult systemSearch(SearchQuery query);
     
     String get(String index, String type, String id);
 }

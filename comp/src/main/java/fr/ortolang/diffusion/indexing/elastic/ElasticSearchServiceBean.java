@@ -62,7 +62,6 @@ import org.elasticsearch.index.mapper.MapperParsingException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
-import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.bucket.nested.InternalNested;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.sort.SortOrder;
@@ -72,6 +71,7 @@ import org.jboss.ejb3.annotation.SecurityDomain;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
 import javax.ejb.EJB;
 import javax.ejb.Local;
 import javax.ejb.Singleton;
@@ -244,7 +244,42 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
     @Override
     public SearchResult search(SearchQuery query) {
     	LOGGER.log(Level.FINE, "Search in " + query.getIndex() + " and type " + query.getType() + " with query " + query.getQuery());
-        SearchRequestBuilder searchRequest = client.prepareSearch();
+    	SearchRequestBuilder searchRequest = searchRequest(query, client);
+    	
+        LOGGER.log(Level.FINE, searchRequest.toString());
+        SearchResponse searchResponse = searchRequest.get();
+        
+        // Parses
+        SearchResult result = new SearchResult();
+        result.setTotalHits(searchResponse.getHits().getTotalHits());
+        result.setHits(searchResponse.getHits().getHits());
+        if (query.getAggregations() != null) {
+        	ElasticSearchServiceBean.fillAggregations(query.getAggregations(), searchResponse, result);
+        }
+        return result;
+    }
+
+    @Override
+    @RolesAllowed({"admin", "system"})
+    public SearchResult systemSearch(SearchQuery query) {
+    	LOGGER.log(Level.FINE, "Search in " + query.getIndex() + " and type " + query.getType() + " with query " + query.getQuery());
+    	SearchRequestBuilder searchRequest = searchRequest(query, client);
+    	
+        LOGGER.log(Level.FINE, searchRequest.toString());
+        SearchResponse searchResponse = searchRequest.get();
+        
+        // Parses
+        SearchResult result = new SearchResult();
+        result.setTotalHits(searchResponse.getHits().getTotalHits());
+        result.setHits(searchResponse.getHits().getHits());
+        if (query.getAggregations() != null) {
+	        ElasticSearchServiceBean.fillAggregations(query.getAggregations(), searchResponse, result);
+        }
+        return result;
+    }
+
+    protected static SearchRequestBuilder searchRequest(SearchQuery query, TransportClient client) {
+    	SearchRequestBuilder searchRequest = client.prepareSearch();
         if (!query.getQuery().isEmpty()) {
         	QueryBuilder queryBuilder = ElasticSearchQueryParser.parse(query.getQuery());
 	        if (queryBuilder!=null) {
@@ -269,49 +304,40 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
 	        	searchRequest.addAggregation(ElasticSearchAggregationParser.parse(agg));
 	        }
         }
-        LOGGER.log(Level.FINE, searchRequest.toString());
-        SearchResponse searchResponse = searchRequest.get();
-        
-        // Parses
-        SearchResult result = new SearchResult();
-        result.setTotalHits(searchResponse.getHits().getTotalHits());
-        SearchHit[] searchHits = searchResponse.getHits().getHits();
-        for (SearchHit searchHit : searchHits) {
-        	result.addHit(searchHit.getSourceAsString());
-        }
-        if (query.getAggregations() != null) {
-	        for(String agg : query.getAggregations()) {
-	        	String aggPath = agg;
-	    		String aggField = agg;
-	    		String[] aggNameSplit = agg.split(":");
-	    		if (aggNameSplit.length>1) {
-	    			aggPath = aggNameSplit[0];
-	    			aggField = aggNameSplit[1];
-	    		}
-	        	//TODO optimizes by using forEach method
-	        	if (aggPath.endsWith("[]")) {
-	        		String aggName = aggPath.substring(0, aggPath.length() - 2);
-	        		if (aggField.endsWith("[]")) {
-	    				aggField = aggField.substring(0, aggField.length() - 2);
-	    			}
-	        		InternalNested nestedAgg = searchResponse.getAggregations().get(aggName);
-	       		 	Terms terms = nestedAgg.getAggregations().get("content");
-	       		 	if (terms != null) {
-		       		 	for(Terms.Bucket bucket : terms.getBuckets()) {
-				        	result.addAggregation(aggName, bucket.getKeyAsString());
-				        }
-	       		 	}
-	        	} else {
-			        Terms terms = searchResponse.getAggregations().get(aggPath);
-			        if (terms != null) {
-				        for(Terms.Bucket bucket : terms.getBuckets()) {
-				        	result.addAggregation(aggPath, bucket.getKeyAsString());
-				        }
+        return searchRequest;
+    }
+    
+    protected static void fillAggregations(String[] aggrs, SearchResponse searchResponse, SearchResult result) {
+    	for(String agg : aggrs) {
+        	String aggPath = agg;
+    		String aggField = agg;
+    		String[] aggNameSplit = agg.split(":");
+    		if (aggNameSplit.length>1) {
+    			aggPath = aggNameSplit[0];
+    			aggField = aggNameSplit[1];
+    		}
+        	//TODO optimizes by using forEach method
+        	if (aggPath.endsWith("[]")) {
+        		String aggName = aggPath.substring(0, aggPath.length() - 2);
+        		if (aggField.endsWith("[]")) {
+    				aggField = aggField.substring(0, aggField.length() - 2);
+    			}
+        		InternalNested nestedAgg = searchResponse.getAggregations().get(aggName);
+       		 	Terms terms = nestedAgg.getAggregations().get("content");
+       		 	if (terms != null) {
+	       		 	for(Terms.Bucket bucket : terms.getBuckets()) {
+			        	result.addAggregation(aggName, bucket.getKeyAsString());
 			        }
-	        	}
-	        }
+       		 	}
+        	} else {
+		        Terms terms = searchResponse.getAggregations().get(aggPath);
+		        if (terms != null) {
+			        for(Terms.Bucket bucket : terms.getBuckets()) {
+			        	result.addAggregation(aggPath, bucket.getKeyAsString());
+			        }
+		        }
+        	}
         }
-        return result;
     }
     
     @Override

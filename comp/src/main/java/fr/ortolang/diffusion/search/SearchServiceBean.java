@@ -109,6 +109,11 @@ public class SearchServiceBean implements SearchService {
 	public SearchResult search(SearchQuery query) {
 		return elasticService.search(query);
 	}
+
+	@Override
+	public SearchResult systemSearch(SearchQuery query) {
+		return elasticService.systemSearch(query);
+	}
 	
 	@Override
 	public String get(String index, String type, String id) {
