@@ -2,13 +2,24 @@ package fr.ortolang.diffusion.oai.format;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public abstract class XMLDocument {
 
     protected static final SimpleDateFormat w3cdtf = new SimpleDateFormat("yyyy-MM-dd");
+    
+    private static HashMap<Pattern, String> patterns = new HashMap<Pattern, String>();
+    
+    static {
+    	patterns.put(Pattern.compile("\\<.*?>", Pattern.DOTALL), "");
+    	patterns.put(Pattern.compile("\\&nbsp;"), "");
+    	patterns.put(Pattern.compile("\\&"), "");
+    }
     
     protected String header;
     protected String footer;
@@ -55,6 +66,15 @@ public abstract class XMLDocument {
     }
 
     public static String removeHTMLTag(String str) {
-        return str.replaceAll("\\<.*?>","").replaceAll("\\&nbsp;"," ").replaceAll("\\&","");
+//    	return str.replaceAll("[\\n\\r]", "").replaceAll("\\<.*?>","").replaceAll("\\&nbsp;"," ").replaceAll("\\&","");
+    	for(Map.Entry<Pattern, String> pattern : patterns.entrySet()) {
+    		str = replace(str, pattern.getKey(), pattern.getValue());
+    	}
+    	return str;
+    }
+    
+    protected static String replace(String str, Pattern pattern, String replacement) {
+    	Matcher m = pattern.matcher(str);
+    	return m.replaceAll(replacement);
     }
 }
