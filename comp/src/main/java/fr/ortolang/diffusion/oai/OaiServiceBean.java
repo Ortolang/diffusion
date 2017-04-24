@@ -64,6 +64,7 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
+import fr.ortolang.diffusion.util.StreamUtils;
 
 @Local(OaiService.class)
 @Stateless(name = OaiService.SERVICE_NAME)
@@ -511,9 +512,9 @@ public class OaiServiceBean implements OaiService {
 				String mdKey = mdKeys.get(0);
 				MetadataObject md = core.readMetadataObject(mdKey);
 				if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
-					xml = OAI_DCFactory.buildFromJson(getContent(binaryStore.get(md.getStream())));
+					xml = OAI_DCFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
 				} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
-					xml = OLACFactory.buildFromJson(getContent(binaryStore.get(md.getStream())));
+					xml = OLACFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
 				}
 			} else {
 				return null;
@@ -540,18 +541,6 @@ public class OaiServiceBean implements OaiService {
 			LOGGER.log(Level.SEVERE, "unable to build oai_dc from ortolang object  " + key, e);
 			throw new OaiServiceException("unable to build xml for oai record");
 		}
-	}
-
-	private String getContent(InputStream is) throws IOException {
-		String content = null;
-		try {
-			content = IOUtils.toString(is, "UTF-8");
-		} catch (IOException e) {
-			LOGGER.log(Level.SEVERE, "  unable to get content from stream", e);
-		} finally {
-			is.close();
-		}
-		return content;
 	}
 
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)

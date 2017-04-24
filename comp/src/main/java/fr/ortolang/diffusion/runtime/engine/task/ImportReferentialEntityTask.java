@@ -68,6 +68,7 @@ import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
+import fr.ortolang.diffusion.util.StreamUtils;
 
 public class ImportReferentialEntityTask extends RuntimeEngineTask {
 
@@ -102,7 +103,7 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
                         if (filename!= null && matcher.matches(filename)) {
 
                             File jsonFile = filepath.toFile();
-                            String content = getContent(jsonFile);
+                            String content = StreamUtils.getContent(jsonFile);
                             if(content==null) {
                                 //									LOGGER.log(Level.SEVERE, "Referential entity content is empty for file " + jsonFile);
                                 report.append(" - referential entity content is empty for file ").append(jsonFile).append("\r\n");
@@ -218,12 +219,6 @@ public class ImportReferentialEntityTask extends RuntimeEngineTask {
         } catch (ReferentialServiceException | AccessDeniedException | KeyNotFoundException e) {
             //			LOGGER.log(Level.SEVERE, "  unable to update referential entity named "+name, e);
             throw new RuntimeEngineTaskException(e.getMessage());
-        }
-    }
-
-    private String getContent(File file) throws IOException {
-        try (InputStream is = new FileInputStream(file)) {
-            return IOUtils.toString(is, "UTF-8");
         }
     }
 

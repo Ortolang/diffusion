@@ -12,6 +12,7 @@ import org.junit.Test;
 import fr.ortolang.diffusion.oai.format.OLAC;
 import fr.ortolang.diffusion.oai.format.OLACFactory;
 import fr.ortolang.diffusion.oai.format.XMLElement;
+import fr.ortolang.diffusion.util.StreamUtils;
 
 public class OLACTest {
 
@@ -22,7 +23,7 @@ public class OLACTest {
 	public void buildFromJson() {
 		InputStream olacInputStream = getClass().getClassLoader().getResourceAsStream("json/sample-olac.json");
 		try {
-			String olac_json = getContent(olacInputStream);
+			String olac_json = StreamUtils.getContent(olacInputStream);
 			OLAC olac = OLACFactory.buildFromJson(olac_json);
 			checkIfPresent(olac, new String[] {"title", "description", "abstract", "coverage", "subject", "identifier"});
 		} catch (IOException e) {
@@ -39,18 +40,4 @@ public class OLACTest {
 			}
 		}
 	}
-
-    private String getContent(InputStream is) throws IOException {
-        String content = null;
-        try {
-            content = IOUtils.toString(is, "UTF-8");
-        } catch (IOException e) {
-        	System.err.println("unable to get content from stream");
-        	e.printStackTrace();
-        } finally {
-            is.close();
-        }
-        return content;
-    }
-
 }

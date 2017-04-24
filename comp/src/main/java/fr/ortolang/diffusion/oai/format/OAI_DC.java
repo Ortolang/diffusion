@@ -43,51 +43,34 @@ import fr.ortolang.diffusion.OrtolangConfig;
 
 public class OAI_DC extends DCXMLDocument {
 
-    public OAI_DC() {
-    	header = "<oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd http://purl.org/dc/elements/1.1/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd\">";
-        footer = "</oai_dc:dc>";
-    }
+	public OAI_DC() {
+		header = "<oai_dc:dc xmlns:oai_dc=\"http://www.openarchives.org/OAI/2.0/oai_dc/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd http://purl.org/dc/elements/1.1/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd\">";
+		footer = "</oai_dc:dc>";
+	}
 
-    public static String identifier(String wsalias) {
-        return identifier(wsalias, null);
-    }
+	public static String identifier(String wsalias) {
+		return identifier(wsalias, null);
+	}
 
-    public static String identifier(String wsalias, String snapshotName) {
-        return "http://hdl.handle.net/"+OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX)
-                + "/" + wsalias + ((snapshotName!=null) ? "/" + snapshotName : "");
-    }
+	public static String identifier(String wsalias, String snapshotName) {
+		return "http://hdl.handle.net/"
+				+ OrtolangConfig.getInstance().getProperty(OrtolangConfig.Property.HANDLE_PREFIX) + "/" + wsalias
+				+ ((snapshotName != null) ? "/" + snapshotName : "");
+	}
 
-    public static String person(JsonObject contributor) {
-        JsonObject entityContributor = contributor.getJsonObject("entity");
-//        JsonObject entityMetaContributor = entityContributor.getJsonObject("meta_ortolang-referential-json");
-//        if(entityContributor!=null) {
-//            JsonString lastname = entityContributor.getJsonString("lastname");
-//            JsonString midname = entityContributor.getJsonString("midname");
-//            JsonString firstname = entityContributor.getJsonString("firstname");
-//            JsonString title = entityContributor.getJsonString("title");
-//            JsonString acronym = null;
-//
-//            if(entityContributor.containsKey("organization")) {
-//                JsonObject entityOrganization = entityContributor.getJsonObject("organization");
-//                JsonObject entityMetaOrganization = entityOrganization.getJsonObject("meta_ortolang-referential-json");
-//
-//                acronym = entityMetaOrganization.getJsonString("acronym");
-//            }
-//            return (lastname!=null?lastname.getString():"")+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
-//        } else {
-            JsonString lastname = entityContributor.getJsonString("lastname");
-            JsonString midname = entityContributor.getJsonString("midname");
-            JsonString firstname = entityContributor.getJsonString("firstname");
-            JsonString title = entityContributor.getJsonString("title");
-            JsonString acronym = null;
+	public static String person(JsonObject contributor) {
+		JsonObject entityContributor = contributor.getJsonObject("entity");
+		JsonString lastname = entityContributor.getJsonString("lastname");
+		JsonString midname = entityContributor.getJsonString("midname");
+		JsonString firstname = entityContributor.getJsonString("firstname");
+		JsonString title = entityContributor.getJsonString("title");
+		JsonString acronym = null;
 
-            if(entityContributor.containsKey("organization")) {
-                JsonObject entityOrganization = entityContributor.getJsonObject("organization");
-//                JsonObject entityMetaOrganization = entityOrganization.getJsonObject("meta_ortolang-referential-json");
-
-                acronym = entityOrganization.getJsonString("acronym");
-            }
-            return (lastname!=null?lastname.getString():"")+(midname!=null?", "+midname.getString():"")+(firstname!=null?", "+firstname.getString():"")+(title!=null?" "+title.getString():"")+(acronym!=null?", "+acronym.getString():"");
-//        }
-    }
+		if (entityContributor.containsKey("organization")) {
+			acronym = entityContributor.getJsonObject("organization").getJsonString("acronym");
+		}
+		return (lastname != null ? lastname.getString() : "") + (midname != null ? ", " + midname.getString() : "")
+				+ (firstname != null ? ", " + firstname.getString() : "")
+				+ (title != null ? " " + title.getString() : "") + (acronym != null ? ", " + acronym.getString() : "");
+	}
 }
