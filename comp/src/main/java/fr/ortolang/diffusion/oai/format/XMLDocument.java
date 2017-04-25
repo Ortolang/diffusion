@@ -13,12 +13,13 @@ public abstract class XMLDocument {
 
     protected static final SimpleDateFormat w3cdtf = new SimpleDateFormat("yyyy-MM-dd");
     
-    private static HashMap<Pattern, String> patterns = new HashMap<Pattern, String>();
+    private static Patterns patterns = new Patterns();
     
     static {
-    	patterns.put(Pattern.compile("\\<.*?>", Pattern.DOTALL), "");
-    	patterns.put(Pattern.compile("\\&nbsp;"), "");
-    	patterns.put(Pattern.compile("\\&"), "");
+    	patterns.add(Pattern.compile("\\<!--.*-->", Pattern.DOTALL), "");
+    	patterns.add(Pattern.compile("\\<.*?>", Pattern.DOTALL), "");
+    	patterns.add(Pattern.compile("\\&nbsp;"), " ");
+    	patterns.add(Pattern.compile("\\&"), "");
     }
     
     protected String header;
@@ -66,9 +67,8 @@ public abstract class XMLDocument {
     }
 
     public static String removeHTMLTag(String str) {
-//    	return str.replaceAll("[\\n\\r]", "").replaceAll("\\<.*?>","").replaceAll("\\&nbsp;"," ").replaceAll("\\&","");
-    	for(Map.Entry<Pattern, String> pattern : patterns.entrySet()) {
-    		str = replace(str, pattern.getKey(), pattern.getValue());
+    	for(Patterns.Entry pattern : patterns.getPatterns()) {
+    		str = replace(str, pattern.getPattern(), pattern.getReplacement());
     	}
     	return str;
     }

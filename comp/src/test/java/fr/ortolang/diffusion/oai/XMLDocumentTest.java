@@ -1,6 +1,8 @@
 package fr.ortolang.diffusion.oai;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
@@ -11,9 +13,13 @@ import fr.ortolang.diffusion.util.StreamUtils;
 
 public class XMLDocumentTest {
 
+	private static final Logger LOGGER = Logger.getLogger(XMLDocumentTest.class.getName());
+
 	@Test
 	public void removeHTMLTagWithNewlineTest() throws IOException {
 		String content = StreamUtils.getContent(this.getClass().getResourceAsStream("/text.txt"));
-		Assert.assertThat(XMLDocument.removeHTMLTag(content), CoreMatchers.not(CoreMatchers.containsString("<")));
+		String newContent = XMLDocument.removeHTMLTag(content);
+		LOGGER.log(Level.FINE,newContent);
+		Assert.assertThat(newContent, CoreMatchers.not(CoreMatchers.containsString("<")));
 	}
 }
