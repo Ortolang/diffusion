@@ -39,7 +39,6 @@ package fr.ortolang.diffusion.client.cmd;
 import fr.ortolang.diffusion.client.OrtolangClient;
 import fr.ortolang.diffusion.client.OrtolangClientException;
 import fr.ortolang.diffusion.client.account.OrtolangClientAccountException;
-import fr.ortolang.diffusion.util.StreamUtils;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.io.IOUtils;
@@ -274,7 +273,7 @@ import java.util.regex.Pattern;
     }
 
     private void checkOrtolangItemJson(Path filepath) {
-        String jsonContent = StreamUtils.getContent(filepath);
+        String jsonContent = getContent(filepath);
         if (jsonContent != null) {
             List<String> keys = extractOrtolangKeys(jsonContent);
 
@@ -303,6 +302,16 @@ import java.util.regex.Pattern;
             }
         }
         return ortolangKeys;
+    }
+
+    public static final String getContent(Path filepath) {
+        String content = null;
+        try (InputStream is = Files.newInputStream(filepath)) {
+            content = IOUtils.toString(is, "UTF-8");
+        } catch (IOException e) {
+            System.out.println("  unable to get content of file : " + filepath + " : " + e.getMessage());
+        }
+        return content;
     }
 
     private void help() {
