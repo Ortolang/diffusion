@@ -1,6 +1,7 @@
 package fr.ortolang.diffusion.oai.format;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.json.JsonArray;
@@ -51,7 +52,12 @@ public class OLAC extends DCXMLDocument {
     		"dateSubmitted", "educationLevel", "extent", "hasFormat", "hasPart", "hasVersion", "instructionalMethod", "isFormatOf", 
     		"isPartOf", "isReferencedBy", "isReplacedBy", "isRequiredBy", "issued", "isVersionOf", "license", "mediator", "medium",
     		"modified", "provenance", "references", "replaces", "requires", "rightsHolder", "spatial", "tableOfContents", "temporal",
-    		"valid"); 
+    		"valid");
+	public static HashMap<List<String>, String> OLAC_TO_DC_ELEMENTS = new HashMap<List<String>, String>();
+	static {
+		OLAC_TO_DC_ELEMENTS.put(Arrays.asList("alternative"), "title");
+		OLAC_TO_DC_ELEMENTS.put(Arrays.asList("tableOfContents", "abstract"), "description");
+	}
     
     public OLAC() {
         header = "<olac:olac xmlns:olac=\"http://www.language-archives.org/OLAC/1.1/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dcterms=\"http://purl.org/dc/terms/\"  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.language-archives.org/OLAC/1.1/ http://www.language-archives.org/OLAC/1.1/olac.xsd http://purl.org/dc/elements/1.1/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd http://purl.org/dc/terms/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dcterms.xsd\">";

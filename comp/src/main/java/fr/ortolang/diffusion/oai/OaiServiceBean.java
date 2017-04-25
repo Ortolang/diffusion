@@ -59,6 +59,7 @@ import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.search.SearchQuery;
 import fr.ortolang.diffusion.search.SearchResult;
 import fr.ortolang.diffusion.search.SearchService;
+import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -425,13 +426,26 @@ public class OaiServiceBean implements OaiService {
 	 */
 	private void createRecordsForEarchMetadataObject(String key, HashSet<String> setsWorkspace)
 			throws OaiServiceException, RegistryServiceException, KeyNotFoundException, MetadataPrefixUnknownException {
+		
+		String olac = buildXMLFromMetadataObject(key, MetadataFormat.OLAC);
 		String oai_dc = buildXMLFromMetadataObject(key, MetadataFormat.OAI_DC);
+		
 		if (oai_dc != null) {
 			createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), oai_dc, setsWorkspace);
+		} else {
+			if (olac != null) {
+				oai_dc = buildXMLFromMetadataObject(key, MetadataFormat.OLAC, MetadataFormat.OAI_DC);
+				createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), oai_dc, setsWorkspace);
+			}
 		}
-		String olac = buildXMLFromMetadataObject(key, MetadataFormat.OLAC);
+		
 		if (olac != null) {
 			createRecord(key, MetadataFormat.OLAC, registry.getLastModificationDate(key), olac, setsWorkspace);
+		} else {
+			if (oai_dc != null) {
+				olac = buildXMLFromMetadataObject(key, MetadataFormat.OAI_DC, MetadataFormat.OLAC);
+				createRecord(key, MetadataFormat.OLAC, registry.getLastModificationDate(key), olac, setsWorkspace);
+			}
 		}
 	}
 
@@ -502,6 +516,18 @@ public class OaiServiceBean implements OaiService {
 	 */
 	private String buildXMLFromMetadataObject(String key, String metadataPrefix)
 			throws OaiServiceException, MetadataPrefixUnknownException {
+		return buildXMLFromMetadataObject(key, metadataPrefix, metadataPrefix);
+	}
+	/**
+	 * Builds XML from OrtolangObject.
+	 * 
+	 * @param key
+	 * @param metadataPrefix
+	 * @return
+	 * @throws OaiServiceException
+	 */
+	private String buildXMLFromMetadataObject(String key, String metadataPrefix, String outputMetadataFormat)
+			throws OaiServiceException, MetadataPrefixUnknownException {
 		LOGGER.log(Level.FINE,
 				"creating OAI record for ortolang object " + key + " for metadataPrefix " + metadataPrefix);
 		try {
@@ -511,10 +537,22 @@ public class OaiServiceBean implements OaiService {
 			if (!mdKeys.isEmpty()) {
 				String mdKey = mdKeys.get(0);
 				MetadataObject md = core.readMetadataObject(mdKey);
-				if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
-					xml = OAI_DCFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
-				} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
-					xml = OLACFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
+				if (outputMetadataFormat.equals(MetadataFormat.OAI_DC) && 
+						(metadataPrefix.equals(MetadataFormat.OAI_DC) || 
+								metadataPrefix.equals(MetadataFormat.OLAC))) {
+//					if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
+						xml = OAI_DCFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
+//					} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
+//					
+//					}
+				} else if (outputMetadataFormat.equals(MetadataFormat.OLAC) && 
+						(metadataPrefix.equals(MetadataFormat.OLAC) || 
+								metadataPrefix.equals(MetadataFormat.OAI_DC))) {
+//					if (metadataPrefix.equals(MetadataFormat.OLAC)) {
+						xml = OLACFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
+//					} else if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
+//						xml = OLACFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
+//					}
 				}
 			} else {
 				return null;
@@ -543,6 +581,11 @@ public class OaiServiceBean implements OaiService {
 		}
 	}
 
+	private boolean hasMetadataFormat(String key, String metadataFormat) throws AccessDeniedException, CoreServiceException, KeyNotFoundException {
+		List<String> mdKeys = core.findMetadataObjectsForTargetAndName(key, metadataFormat);
+		return mdKeys !=null && !mdKeys.isEmpty();
+	}
+	
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private long countSets() {
 		try {

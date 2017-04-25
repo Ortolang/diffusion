@@ -1,6 +1,8 @@
 package fr.ortolang.diffusion.oai.format;
 
 import java.io.StringReader;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -153,6 +155,12 @@ public class OAI_DCFactory {
         	JsonObject jsonDoc = jsonReader.readObject();
         	for(String elm : DCXMLDocument.DC_ELEMENTS) {
         		oai_dc.addDCElement(elm, jsonDoc);
+        	}
+        	// Converts elements from OLAC to DC
+        	for(Map.Entry<List<String>, String> elm : OLAC.OLAC_TO_DC_ELEMENTS.entrySet()) {
+        		for(String olacElement : elm.getKey()) {
+        			oai_dc.addDCElement(olacElement, jsonDoc, elm.getValue());
+        		}
         	}
         } catch(Exception e) {
         	LOGGER.log(Level.SEVERE, "unable to build OAI_DC from json", e);

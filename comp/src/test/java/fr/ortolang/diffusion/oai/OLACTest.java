@@ -19,12 +19,25 @@ public class OLACTest {
 	}
 
 	@Test
-	public void buildFromJson() {
+	public void buildFromJsonOlac() {
 		InputStream olacInputStream = getClass().getClassLoader().getResourceAsStream("json/sample-olac.json");
 		try {
 			String olac_json = StreamUtils.getContent(olacInputStream);
 			OLAC olac = OLACFactory.buildFromJson(olac_json);
 			checkIfPresent(olac, new String[] {"title", "description", "abstract", "coverage", "subject", "identifier"});
+		} catch (IOException e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		}
+	}
+
+	@Test
+	public void buildFromJsonDc() {
+		InputStream dcInputStream = getClass().getClassLoader().getResourceAsStream("json/sample-dc.json");
+		try {
+			String dc_json = StreamUtils.getContent(dcInputStream);
+			OLAC olac = OLACFactory.buildFromJson(dc_json);
+			checkIfPresent(olac, new String[] {"title", "description", "coverage", "subject", "identifier"});
 		} catch (IOException e) {
 			e.printStackTrace();
 			fail(e.getMessage());

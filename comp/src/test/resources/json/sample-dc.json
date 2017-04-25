@@ -1,0 +1,22 @@
+{
+	"title": [{
+		"lang": "fr",
+		"value": "Premier dossier"
+	}],
+	"description": [{
+		"value": "Ce premier dossier permet de tester les métadonnées Dublin Core"
+	},
+	{
+		"lang": "fr",
+		"value": "Résumé des épisodes à venir"
+	}],
+	"coverage": [{
+		"value": "Earth"
+	}],
+	"subject": [{
+		"code": "narrative"
+	}],
+	"identifier": [{
+		"value": "http://www.michel.com"
+	}]
+}
