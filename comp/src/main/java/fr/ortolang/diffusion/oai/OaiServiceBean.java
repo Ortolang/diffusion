@@ -43,6 +43,8 @@ import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.core.indexing.OrtolangItemIndexableContent;
+import fr.ortolang.diffusion.indexing.IndexingServiceException;
+import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.oai.entity.Record;
 import fr.ortolang.diffusion.oai.entity.Set;
 import fr.ortolang.diffusion.oai.exception.MetadataPrefixUnknownException;
@@ -464,18 +466,17 @@ public class OaiServiceBean implements OaiService {
 		LOGGER.log(Level.FINE,
 				"building XML from ITEM metadata of root collection " + root + " and metadataPrefix " + metadataPrefix);
 
-		// Index return the full metadata of item
-		// Search in ITEM index an item with key equals to root
-		SearchQuery query = new SearchQuery();
-		query.setIndex(OrtolangItemIndexableContent.INDEX);
-		query.addQuery("key", Arrays.asList(root).toArray(new String[0]));
-		SearchResult result = search.search(query);
-
 		String item = null;
-		if (result.getTotalHits() > 0) {
-			item = result.getSourceOfHits()[0];
+		try {
+			List<OrtolangIndexableContent> indexableContents = core.getIndexableContent(root);
+			if (indexableContents.size()>0) {
+				item = indexableContents.get(0).getContent();
+			}
+		} catch (KeyNotFoundException | RegistryServiceException | IndexingServiceException | OrtolangException e1) {
+			LOGGER.log(Level.SEVERE, "unable to get json content from root collection " + root);
+			throw new OaiServiceException("unable to get json content from root collection " + root, e1);
 		}
-
+		
 		if (item == null) {
 			LOGGER.log(Level.SEVERE, "unable to build xml from root collection cause item metadata is null " + root);
 			throw new OaiServiceException("unable to build xml from root collection cause item metadata " + root);

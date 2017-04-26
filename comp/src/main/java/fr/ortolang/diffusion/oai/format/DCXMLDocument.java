@@ -26,14 +26,16 @@ public abstract class DCXMLDocument extends XMLDocument {
     
     public DCXMLDocument addDCElement(String elementName, JsonObject meta, String tagName) {
     	if (meta.containsKey(elementName)) {
-    		JsonArray titleArray = meta.getJsonArray(elementName);
-            for(JsonObject title : titleArray.getValuesAs(JsonObject.class)) {
-            	if (title.containsKey("lang")) {
+    		JsonArray elmArray = meta.getJsonArray(elementName);
+            for(JsonObject elm : elmArray.getValuesAs(JsonObject.class)) {
+            	if (elm.containsKey("lang") && elm.containsKey("value")) {
             		this.addDcMultilingualField(tagName, 
-                		title.getString("lang"), 
-                		XMLDocument.removeHTMLTag(title.getString("value")));
+                		elm.getString("lang"), 
+                		XMLDocument.removeHTMLTag(elm.getString("value")));
             	} else {
-            		this.addDcField(tagName, XMLDocument.removeHTMLTag(title.getString("value")));
+            		if (elm.containsKey("value")) {
+	            		this.addDcField(tagName, XMLDocument.removeHTMLTag(elm.getString("value")));
+	            	}
             	}
             }
     	}
