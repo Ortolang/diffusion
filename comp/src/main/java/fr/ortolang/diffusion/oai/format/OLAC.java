@@ -57,6 +57,12 @@ public class OLAC extends DCXMLDocument {
 	static {
 		OLAC_TO_DC_ELEMENTS.put(Arrays.asList("alternative"), "title");
 		OLAC_TO_DC_ELEMENTS.put(Arrays.asList("tableOfContents", "abstract"), "description");
+		OLAC_TO_DC_ELEMENTS.put(Arrays.asList("created", "valid", "available", "issued", "modified", "dateAccepted", "dateCopyrighted", "dateSubmitted"), "date");
+		OLAC_TO_DC_ELEMENTS.put(Arrays.asList("extent", "medium"), "format");
+		OLAC_TO_DC_ELEMENTS.put(Arrays.asList("bibliographicCitation"), "identifier");
+		OLAC_TO_DC_ELEMENTS.put(Arrays.asList("isVersionOf", "hasVersion", "isReplacedBy", "replaces", "isRequiredBy", "requires", "isPartOf", "hasPart", "isReferencedBy", "references", "isFormatOf", "hasFormat", "conformsTo"), "relation");
+		OLAC_TO_DC_ELEMENTS.put(Arrays.asList("spatial", "temporal"), "coverage");
+		OLAC_TO_DC_ELEMENTS.put(Arrays.asList("accessRights", "license"), "rights");
 	}
     
     public OLAC() {
