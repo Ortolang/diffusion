@@ -14,7 +14,7 @@
 		"value": "Earth"
 	}],
 	"subject": [{
-		"code": "narrative"
+		"value": "dc subject"
 	}],
 	"identifier": [{
 		"value": "http://www.michel.com"

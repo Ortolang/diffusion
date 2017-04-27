@@ -64,6 +64,8 @@ public class OLAC extends DCXMLDocument {
 		OLAC_TO_DC_ELEMENTS.put(Arrays.asList("spatial", "temporal"), "coverage");
 		OLAC_TO_DC_ELEMENTS.put(Arrays.asList("accessRights", "license"), "rights");
 	}
+	
+	public static final List<String> DATE_ELEMENTS = Arrays.asList("date", "issued", "dateCopyrighted", "created", "available", "dateAccepted", "dateSubmitted", "modified", "valid");
     
     public OLAC() {
         header = "<olac:olac xmlns:olac=\"http://www.language-archives.org/OLAC/1.1/\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dcterms=\"http://purl.org/dc/terms/\"  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.language-archives.org/OLAC/1.1/ http://www.language-archives.org/OLAC/1.1/olac.xsd http://purl.org/dc/elements/1.1/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dc.xsd http://purl.org/dc/terms/ http://dublincore.org/schemas/xmls/qdc/2006/01/06/dcterms.xsd\">";

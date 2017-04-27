@@ -153,10 +153,61 @@ public class OAI_DCFactory {
         
         try {
         	JsonObject jsonDoc = jsonReader.readObject();
+        	// Converts elements from OLAC to DC based on OLAC-to-OAI_DC crosswalk [http://www.language-archives.org/NOTE/olac_display.html]
+        	if (jsonDoc.containsKey("type")) {
+        		JsonArray elmArray = jsonDoc.getJsonArray("type");
+                for(JsonObject elm : elmArray.getValuesAs(JsonObject.class)) {
+                	if (elm.containsKey("type")) {
+                		String xsitype = elm.getString("type");
+                		if ("olac:linguistic-type".equals(xsitype) && elm.containsKey("code")) {
+                    		// Rules 1 & 2
+                			String value = "Linguistic type:" + elm.getString("code").replaceAll("_", " ");
+                			oai_dc.addDcField("type", value);
+                		} else if ("olac:discourse-type".equals(xsitype)) {
+                    		// Rules 1 & 3
+                			String value = "Discourse type:" + elm.getString("code").replaceAll("_", " ");
+                			oai_dc.addDcField("description", value);
+                		} else if ("olac:linguistic-field".equals(xsitype)) {
+                    		// Rules 1
+                			String value = elm.getString("code").replaceAll("_", " ");
+                			oai_dc.addDcField("type", value);
+                		}
+                	}
+                }
+        	}
+    		// Rules 4
+        	if (jsonDoc.containsKey("contributor")) {
+        		JsonArray elmArray = jsonDoc.getJsonArray("contributor");
+        		for(JsonObject elm : elmArray.getValuesAs(JsonObject.class)) {
+        			if (elm.containsKey("code") && "author".equals(elm.getString("code")) && elm.containsKey("value")) {
+        				oai_dc.addDcField("creator", elm.getString("value"));
+        				//TODO remove contributor
+        			}
+        		}
+        	}
+    		//TODO Rules 5
+    		// Rules 6
+//        	if (jsonDoc.containsKey("date")) {
+//        		remainsDateElement("date", jsonDoc);
+//        	} else {
+        		for (String dateElementName : OLAC.DATE_ELEMENTS) {
+        			if (jsonDoc.containsKey(dateElementName)) { 
+            			JsonArray elmArray = jsonDoc.getJsonArray(dateElementName);
+                		for(JsonObject elm : elmArray.getValuesAs(JsonObject.class)) {
+                			if (elm.containsKey("value")) {
+                				oai_dc.addDcField("date", elm.getString("value"));
+                			}
+                		}
+                		purgeDateElements(jsonDoc);
+                		break;
+            		}
+        		}
+//        	}
+        	// otherwise add DC elements
         	for(String elm : DCXMLDocument.DC_ELEMENTS) {
         		oai_dc.addDCElement(elm, jsonDoc);
         	}
-        	// Converts elements from OLAC to DC
+        	// and convert DCTERMS to DC
         	for(Map.Entry<List<String>, String> elm : OLAC.OLAC_TO_DC_ELEMENTS.entrySet()) {
         		for(String olacElement : elm.getKey()) {
         			oai_dc.addDCElement(olacElement, jsonDoc, elm.getValue());
@@ -172,4 +223,11 @@ public class OAI_DCFactory {
         return oai_dc;
     }
 
+	private static void purgeDateElements(JsonObject jsonDoc) {
+		for(String elmName : OLAC.DATE_ELEMENTS) {
+			if (jsonDoc.containsKey(elmName)) {
+				jsonDoc.remove(elmName);
+			}
+		}
+	}
 }

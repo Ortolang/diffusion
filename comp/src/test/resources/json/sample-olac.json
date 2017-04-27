@@ -15,11 +15,34 @@
 		"value": "Earth"
 	}],
 	"subject": [{
-		"type": "discourse",
+		"type": "olac:discourse-type",
 		"code": "narrative"
 	}],
 	"identifier": [{
 		"type": "DCMI:URI",
 		"value": "http://www.michel.com"
-	}]
+	}],
+	"type": [{
+		"type": "olac:linguistic-type",
+		"code": "primary_text"
+		},
+		{
+		"type": "olac:discourse-type",
+		"code": "unintelligible_speech"
+		},
+		{
+		"type": "olac:linguistic-field",
+		"code": "anthropological_linguistics"
+		}
+	],
+	"contributor": [
+		{
+		"code": "sponsor",
+		"value": "Cyril"
+		},
+		{
+		"code": "author",
+		"value": "Bertrand"
+		}
+	]
 }
