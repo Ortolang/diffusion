@@ -167,10 +167,23 @@ public class OAI_DCFactory {
                     		// Rules 1 & 3
                 			String value = "Discourse type:" + elm.getString("code").replaceAll("_", " ");
                 			oai_dc.addDcField("description", value);
+                		}
+                	}
+                }
+        	}
+        	if (jsonDoc.containsKey("subject")) {
+        		JsonArray elmArray = jsonDoc.getJsonArray("subject");
+                for(JsonObject elm : elmArray.getValuesAs(JsonObject.class)) {
+                	if (elm.containsKey("type")) {
+                		String xsitype = elm.getString("type");
+                		if ("olac:discourse-type".equals(xsitype) && elm.containsKey("code")) {
+                    		// Rules 1 & 2
+                			String value = "Discourse type:" + elm.getString("code").replaceAll("_", " ");
+                			oai_dc.addDcField("subject", value);
                 		} else if ("olac:linguistic-field".equals(xsitype)) {
                     		// Rules 1
                 			String value = elm.getString("code").replaceAll("_", " ");
-                			oai_dc.addDcField("type", value);
+                			oai_dc.addDcField("subject", value);
                 		}
                 	}
                 }

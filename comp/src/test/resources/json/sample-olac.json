@@ -17,6 +17,10 @@
 	"subject": [{
 		"type": "olac:discourse-type",
 		"code": "narrative"
+	},
+	{
+		"type": "olac:linguistic-field",
+		"code": "anthropological_linguistics"
 	}],
 	"identifier": [{
 		"type": "DCMI:URI",
@@ -29,10 +33,6 @@
 		{
 		"type": "olac:discourse-type",
 		"code": "unintelligible_speech"
-		},
-		{
-		"type": "olac:linguistic-field",
-		"code": "anthropological_linguistics"
 		}
 	],
 	"contributor": [

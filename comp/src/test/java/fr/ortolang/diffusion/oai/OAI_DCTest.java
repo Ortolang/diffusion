@@ -34,7 +34,7 @@ public class OAI_DCTest {
 			String olac_json = StreamUtils.getContent(olacInputStream);
 			OAI_DC oai_dc = OAI_DCFactory.buildFromJson(olac_json);
 			System.out.println(oai_dc.toString());
-			XMLDocumentTest.checkIfPresent(oai_dc, new String[] {"title", "description", "coverage", "subject", "identifier", "type"});
+			XMLDocumentTest.checkIfPresent(oai_dc, new String[] {"title", "description", "coverage", "subject", "identifier", "type", "contributor", "creator"});
 		} catch (IOException e) {
 			e.printStackTrace();
 			fail(e.getMessage());
