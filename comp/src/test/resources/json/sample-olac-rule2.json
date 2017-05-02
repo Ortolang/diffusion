@@ -1,0 +1,7 @@
+{
+	"type": [{
+		"type": "olac:linguistic-type",
+		"code": "primary_text"
+		}
+	]
+}

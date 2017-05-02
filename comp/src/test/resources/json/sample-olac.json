@@ -34,15 +34,5 @@
 		"type": "olac:discourse-type",
 		"code": "unintelligible_speech"
 		}
-	],
-	"contributor": [
-		{
-		"code": "sponsor",
-		"value": "Cyril"
-		},
-		{
-		"code": "author",
-		"value": "Bertrand"
-		}
 	]
 }

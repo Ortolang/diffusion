@@ -1,0 +1,12 @@
+{
+	"subject": [{
+		"type": "olac:discourse-type",
+		"code": "narrative"
+	}],
+	"type": [
+		{
+		"type": "olac:discourse-type",
+		"code": "unintelligible_speech"
+		}
+	]
+}

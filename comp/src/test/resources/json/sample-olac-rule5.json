@@ -1,0 +1,23 @@
+{
+	"language": [
+		{
+		"type": "olac:language",
+		"code": "fra"
+		},
+		{
+		"type": "olac:language",
+		"code": "eng"
+		}
+	],
+	"subject": [
+		{
+			"type": "olac:language",
+			"code": "fra",
+			"value": "Français"
+		},
+		{
+			"type": "olac:language",
+			"code": "fra"
+		}
+	]
+}
