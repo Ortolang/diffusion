@@ -23,12 +23,12 @@ public class XMLDocumentTest {
 	public void removeHTMLTagWithNewlineTest() throws IOException {
 		String content = StreamUtils.getContent(this.getClass().getResourceAsStream("/text.txt"));
 		String newContent = XMLDocument.removeHTMLTag(content);
-		LOGGER.log(Level.FINE,newContent);
+		LOGGER.log(Level.FINE, newContent);
 		Assert.assertThat(newContent, CoreMatchers.not(CoreMatchers.containsString("<")));
 	}
 
 	public static void checkIfPresent(XMLDocument olac, String[] elementsName) {
-		for(String elm : elementsName) {
+		for (String elm : elementsName) {
 			List<XMLElement> elms = olac.listFields(elm);
 			if (elms.isEmpty()) {
 				fail("Element '" + elm + "' must be present");

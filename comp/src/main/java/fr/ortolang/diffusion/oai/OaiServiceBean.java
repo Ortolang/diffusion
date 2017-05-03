@@ -1,7 +1,6 @@
 package fr.ortolang.diffusion.oai;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,7 +28,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-import org.apache.commons.io.IOUtils;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangException;
@@ -42,7 +40,6 @@ import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.Workspace;
-import fr.ortolang.diffusion.core.indexing.OrtolangItemIndexableContent;
 import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.oai.entity.Record;
@@ -58,10 +55,7 @@ import fr.ortolang.diffusion.oai.format.OLACFactory;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
-import fr.ortolang.diffusion.search.SearchQuery;
-import fr.ortolang.diffusion.search.SearchResult;
 import fr.ortolang.diffusion.search.SearchService;
-import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
 import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
@@ -174,8 +168,9 @@ public class OaiServiceBean implements OaiService {
 		LOGGER.log(Level.FINE,
 				"finding record with identifier " + identifier + " and metadataPrefix " + metadataPrefix);
 		try {
-			return em.createNamedQuery("findRecordsByIdentifierAndMetadataPrefix", Record.class).setParameter("identifier", identifier)
-            		.setParameter("metadataPrefix", metadataPrefix).getSingleResult();
+			return em.createNamedQuery("findRecordsByIdentifierAndMetadataPrefix", Record.class)
+					.setParameter("identifier", identifier).setParameter("metadataPrefix", metadataPrefix)
+					.getSingleResult();
 		} catch (NoResultException e) {
 			throw new RecordNotFoundException("unable to find a record with identifier: " + identifier);
 		}
@@ -428,10 +423,10 @@ public class OaiServiceBean implements OaiService {
 	 */
 	private void createRecordsForEarchMetadataObject(String key, HashSet<String> setsWorkspace)
 			throws OaiServiceException, RegistryServiceException, KeyNotFoundException, MetadataPrefixUnknownException {
-		
+
 		String olac = buildXMLFromMetadataObject(key, MetadataFormat.OLAC);
 		String oai_dc = buildXMLFromMetadataObject(key, MetadataFormat.OAI_DC);
-		
+
 		if (oai_dc != null) {
 			createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), oai_dc, setsWorkspace);
 		} else {
@@ -440,7 +435,7 @@ public class OaiServiceBean implements OaiService {
 				createRecord(key, MetadataFormat.OAI_DC, registry.getLastModificationDate(key), oai_dc, setsWorkspace);
 			}
 		}
-		
+
 		if (olac != null) {
 			createRecord(key, MetadataFormat.OLAC, registry.getLastModificationDate(key), olac, setsWorkspace);
 		} else {
@@ -469,14 +464,14 @@ public class OaiServiceBean implements OaiService {
 		String item = null;
 		try {
 			List<OrtolangIndexableContent> indexableContents = core.getIndexableContent(root);
-			if (indexableContents.size()>0) {
+			if (indexableContents.size() > 0) {
 				item = indexableContents.get(0).getContent();
 			}
 		} catch (KeyNotFoundException | RegistryServiceException | IndexingServiceException | OrtolangException e1) {
 			LOGGER.log(Level.SEVERE, "unable to get json content from root collection " + root);
 			throw new OaiServiceException("unable to get json content from root collection " + root, e1);
 		}
-		
+
 		if (item == null) {
 			LOGGER.log(Level.SEVERE, "unable to build xml from root collection cause item metadata is null " + root);
 			throw new OaiServiceException("unable to build xml from root collection cause item metadata " + root);
@@ -519,6 +514,7 @@ public class OaiServiceBean implements OaiService {
 			throws OaiServiceException, MetadataPrefixUnknownException {
 		return buildXMLFromMetadataObject(key, metadataPrefix, metadataPrefix);
 	}
+
 	/**
 	 * Builds XML from OrtolangObject.
 	 * 
@@ -538,22 +534,18 @@ public class OaiServiceBean implements OaiService {
 			if (!mdKeys.isEmpty()) {
 				String mdKey = mdKeys.get(0);
 				MetadataObject md = core.readMetadataObject(mdKey);
-				if (outputMetadataFormat.equals(MetadataFormat.OAI_DC) && 
-						(metadataPrefix.equals(MetadataFormat.OAI_DC) || 
-								metadataPrefix.equals(MetadataFormat.OLAC))) {
-//					if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
+				if (outputMetadataFormat.equals(MetadataFormat.OAI_DC) && (metadataPrefix.equals(MetadataFormat.OAI_DC)
+						|| metadataPrefix.equals(MetadataFormat.OLAC))) {
+					if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
 						xml = OAI_DCFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
-//					} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
-//					
-//					}
-				} else if (outputMetadataFormat.equals(MetadataFormat.OLAC) && 
-						(metadataPrefix.equals(MetadataFormat.OLAC) || 
-								metadataPrefix.equals(MetadataFormat.OAI_DC))) {
-//					if (metadataPrefix.equals(MetadataFormat.OLAC)) {
-						xml = OLACFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
-//					} else if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
-//						xml = OLACFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
-//					}
+					} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
+						xml = OAI_DCFactory
+								.convertFromJsonOlac(StreamUtils.getContent(binaryStore.get(md.getStream())));
+					}
+				} else if (outputMetadataFormat.equals(MetadataFormat.OLAC)
+						&& (metadataPrefix.equals(MetadataFormat.OLAC)
+								|| metadataPrefix.equals(MetadataFormat.OAI_DC))) {
+					xml = OLACFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
 				}
 			} else {
 				return null;
@@ -582,11 +574,6 @@ public class OaiServiceBean implements OaiService {
 		}
 	}
 
-	private boolean hasMetadataFormat(String key, String metadataFormat) throws AccessDeniedException, CoreServiceException, KeyNotFoundException {
-		List<String> mdKeys = core.findMetadataObjectsForTargetAndName(key, metadataFormat);
-		return mdKeys !=null && !mdKeys.isEmpty();
-	}
-	
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	private long countSets() {
 		try {
