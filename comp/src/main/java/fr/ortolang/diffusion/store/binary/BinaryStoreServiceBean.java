@@ -282,7 +282,7 @@ public class BinaryStoreServiceBean implements BinaryStoreService {
                     Files.move(tmpfile, file);
                     LOGGER.log(Level.FINE, "content moved in local definitive file: " + file.toString());
                 } else {
-                    LOGGER.log(Level.INFO, "a file with same hash already exists, trying to detect collision");
+                    LOGGER.log(Level.FINE, "a file with same hash already exists, trying to detect collision");
                     try (InputStream input1 = Files.newInputStream(file); InputStream input2 = Files.newInputStream(tmpfile)) {
                         if (IOUtils.contentEquals(input1, input2)) {
                             Files.delete(tmpfile);
