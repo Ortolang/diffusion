@@ -104,6 +104,18 @@ public class OrtolangClientAccountManager {
 		return false;
 	}
 
+	public synchronized void setUserAccount(String user, String id_token, String access_token, String refresh_token, String session_state, long expiration) {
+		OrtolangClientAccount account = new OrtolangClientAccount();
+		account.setUsername(user);
+		account.setIdToken(id_token);
+		account.setAccessToken(access_token);
+		account.setRefreshToken(refresh_token);
+		account.setSessionState(session_state);
+		account.setExpires(expiration);
+		accounts.put(user, account);
+		LOGGER.log(Level.FINE, "AccessToken stored for user: " + user);
+	}
+	
 	public synchronized void setAuthorisationCode(String user, String code) throws OrtolangClientAccountException {
 		LOGGER.log(Level.INFO, "Asking AccessToken using authorisation code for user: " + user);
 		
