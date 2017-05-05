@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,15 +30,4 @@ public class StreamUtils {
             return IOUtils.toString(is, "UTF-8");
         }
     }
-
-    public static final String getContent(Path filepath) {
-        String content = null;
-        try (InputStream is = Files.newInputStream(filepath)) {
-            content = IOUtils.toString(is, "UTF-8");
-        } catch (IOException e) {
-            System.out.println("  unable to get content of file : " + filepath + " : " + e.getMessage());
-        }
-        return content;
-    }
-
 }

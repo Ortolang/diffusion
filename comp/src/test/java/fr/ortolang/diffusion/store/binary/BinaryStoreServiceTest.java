@@ -206,6 +206,6 @@ public class BinaryStoreServiceTest {
 		final byte[] content = "Sample Digital Content v1.0".getBytes();
 		String identifier1 = service.put(new ByteArrayInputStream(content));
 		String extraction = service.extract(identifier1);
-		System.out.println("extracted data: " + extraction);
+		LOGGER.log(Level.INFO, "extracted data: " + extraction);
 	}
 }

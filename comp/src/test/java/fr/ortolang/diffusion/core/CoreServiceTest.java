@@ -129,8 +129,9 @@ public class CoreServiceTest {
         jar.addPackage("fr.ortolang.diffusion.store.binary.hash");
         jar.addPackage("fr.ortolang.diffusion.store.handle");
         jar.addPackage("fr.ortolang.diffusion.store.handle.entity");
-        jar.addClass("fr.ortolang.diffusion.store.json.IndexableJsonContent");
-        jar.addClass("fr.ortolang.diffusion.store.index.IndexablePlainTextContent");
+        jar.addClass("fr.ortolang.diffusion.indexing.IndexingService");
+        jar.addClass("fr.ortolang.diffusion.indexing.IndexingServiceException");
+        jar.addClass("fr.ortolang.diffusion.indexing.OrtolangIndexableContent");
         jar.addPackage("fr.ortolang.diffusion.template");
         jar.addAsResource("config.properties");
         jar.addAsResource("orientdb-config.xml");
