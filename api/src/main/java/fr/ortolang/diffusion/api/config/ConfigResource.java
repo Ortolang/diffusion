@@ -124,6 +124,7 @@ public class ConfigResource {
             builder.append("OrtolangConfig.marketServerUrl ='").append(getInstance().getProperty(Property.MARKET_SERVER_URL)).append("';\r\n");
             builder.append("OrtolangConfig.cacheVersion ='").append(getInstance().getProperty(Property.CACHE_VERSION)).append("';\r\n");
             builder.append("OrtolangConfig.treeTaggerUrl ='").append(getInstance().getProperty(Property.TREETAGGER_URL)).append("';\r\n");
+            builder.append("OrtolangConfig.teiCorpoUrl ='").append(getInstance().getProperty(Property.TEICORPO_URL)).append("';\r\n");
             clientConfig = builder.toString();
         }
         return Response.ok(clientConfig).build();

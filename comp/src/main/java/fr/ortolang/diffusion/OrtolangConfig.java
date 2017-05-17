@@ -180,7 +180,8 @@ public class OrtolangConfig {
 
         ELASTIC_SEARCH_HOST("elastic.search.host"),
         ELASTIC_SEARCH_PORT("elastic.search.port"),
-    	
+
+        TEICORPO_URL("teicorpo.url"),
     	TREETAGGER_URL("treetagger.url");
 
         private final String key;
