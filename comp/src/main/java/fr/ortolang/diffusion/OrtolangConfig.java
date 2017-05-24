@@ -47,7 +47,7 @@ import java.util.logging.Logger;
 
 public class OrtolangConfig {
 
-    private static final String CURRENT_CONFIG_VERSION = "16";
+    private static final String CURRENT_CONFIG_VERSION = "15";
     private static final Logger LOGGER = Logger.getLogger(OrtolangConfig.class.getName());
     private static OrtolangConfig config;
     private Properties props;
@@ -179,10 +179,7 @@ public class OrtolangConfig {
         SMTP_SENDER_EMAIL("smtp.sender.email"),
 
         ELASTIC_SEARCH_HOST("elastic.search.host"),
-        ELASTIC_SEARCH_PORT("elastic.search.port"),
-
-        TEICORPO_URL("teicorpo.url"),
-    	TREETAGGER_URL("treetagger.url");
+        ELASTIC_SEARCH_PORT("elastic.search.port");
 
         private final String key;
 
