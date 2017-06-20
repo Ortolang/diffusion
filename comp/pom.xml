@@ -131,6 +131,12 @@
             <groupId>gov.loc</groupId>
             <artifactId>bagit</artifactId>
             <version>${version.bagit}</version>
+            <exclusions>
+                <exclusion>  <!-- declare the exclusion here -->
+                    <groupId>dom4j</groupId>
+                    <artifactId>dom4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.hibernate</groupId>
