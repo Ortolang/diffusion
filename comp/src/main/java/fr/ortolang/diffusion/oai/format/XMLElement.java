@@ -1,5 +1,7 @@
 package fr.ortolang.diffusion.oai.format;
 
+import java.util.ArrayList;
+
 /*
  * #%L
  * ORTOLANG
@@ -37,6 +39,7 @@ package fr.ortolang.diffusion.oai.format;
  */
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class XMLElement {
@@ -45,8 +48,10 @@ public class XMLElement {
 	private String prefixNamespace;
 	private Map<String, String> attributes;
 	private String value;
+	protected List<XMLElement> fields;
 
 	public XMLElement() {
+		fields = new ArrayList<XMLElement>();
 	}
 
 	public String getName() {
@@ -81,6 +86,10 @@ public class XMLElement {
 		this.value = value;
 	}
 
+	public void addElement(XMLElement element) {
+		this.fields.add(element);
+	}
+	
 	public static XMLElement createElement(String namespace, String name) {
 		XMLElement elem = new XMLElement();
 		elem.setPrefixNamespace(namespace);

@@ -1,6 +1,8 @@
 package fr.ortolang.diffusion.oai;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,7 +29,12 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 
+import org.activiti.bpmn.converter.IndentingXMLStreamWriter;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangException;
@@ -44,14 +51,19 @@ import fr.ortolang.diffusion.indexing.IndexingServiceException;
 import fr.ortolang.diffusion.indexing.OrtolangIndexableContent;
 import fr.ortolang.diffusion.oai.entity.Record;
 import fr.ortolang.diffusion.oai.entity.Set;
+import fr.ortolang.diffusion.oai.exception.MetadataConverterException;
+import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
 import fr.ortolang.diffusion.oai.exception.MetadataPrefixUnknownException;
 import fr.ortolang.diffusion.oai.exception.OaiServiceException;
 import fr.ortolang.diffusion.oai.exception.RecordNotFoundException;
 import fr.ortolang.diffusion.oai.exception.SetAlreadyExistsException;
 import fr.ortolang.diffusion.oai.exception.SetNotFoundException;
 import fr.ortolang.diffusion.oai.format.DCXMLDocument;
+import fr.ortolang.diffusion.oai.format.DublinCoreConverter;
+import fr.ortolang.diffusion.oai.format.DublinCoreHandler;
 import fr.ortolang.diffusion.oai.format.OAI_DCFactory;
 import fr.ortolang.diffusion.oai.format.OLACFactory;
+import fr.ortolang.diffusion.oai.format.XMLMetadataBuilder;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
@@ -477,29 +489,50 @@ public class OaiServiceBean implements OaiService {
 			throw new OaiServiceException("unable to build xml from root collection cause item metadata " + root);
 		}
 
-		DCXMLDocument xml = null;
-		if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
-			xml = OAI_DCFactory.buildFromItem(item);
-		} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
-			xml = OLACFactory.buildFromItem(item);
+//		DCXMLDocument xml = null;
+		try {
+			StringWriter result = new StringWriter();
+			XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(result);
+		
+			XMLMetadataBuilder builder = new XMLMetadataBuilder(writer);
+			
+			if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
+	//			xml = OAI_DCFactory.buildFromItem(item);
+				DublinCoreHandler handler = new DublinCoreHandler();
+	
+				// Writes metadata from JSON to XML
+				handler.writeItem(item, builder);
+				
+			} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
+				//TODO OLAC metadata handler
+	//			xml = OLACFactory.buildFromItem(item);
+			}
+	
+			//TODO Automatically adds handles to 'identifier' XML element
+	//		List<String> handles;
+	//		try {
+	//			handles = handleStore.listHandlesForKey(root);
+	//			for (String handle : handles) {
+	//				xml.addDcField("identifier", "http://hdl.handle.net/" + handle);
+	//			}
+	//		} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
+	//			LOGGER.log(Level.WARNING, "No handle for key " + root, e);
+	//		}
+			if (writer != null) {
+				writer.flush();
+	            writer.close();
+			}
+			if (!result.toString().isEmpty()) {
+				return result.toString();
+			} else {
+				throw new MetadataPrefixUnknownException(
+						"unable to build xml for oai record cause metadata prefix unknown " + metadataPrefix);
+			}
+		} catch (XMLStreamException | FactoryConfigurationError | MetadataHandlerException e) {
+			throw new MetadataPrefixUnknownException(
+					"unable to build xml for oai record cause metadata prefix unknown " + metadataPrefix, e);
 		}
 
-		// Automatically adds handles to 'identifier' XML element
-		List<String> handles;
-		try {
-			handles = handleStore.listHandlesForKey(root);
-			for (String handle : handles) {
-				xml.addDcField("identifier", "http://hdl.handle.net/" + handle);
-			}
-		} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
-			LOGGER.log(Level.WARNING, "No handle for key " + root, e);
-		}
-		if (xml != null) {
-			return xml.toString();
-		} else {
-			throw new MetadataPrefixUnknownException(
-					"unable to build xml for oai record cause metadata prefix unknown " + metadataPrefix);
-		}
 	}
 
 	/**
@@ -529,7 +562,11 @@ public class OaiServiceBean implements OaiService {
 				"creating OAI record for ortolang object " + key + " for metadataPrefix " + metadataPrefix);
 		try {
 			List<String> mdKeys = core.findMetadataObjectsForTargetAndName(key, metadataPrefix);
-			DCXMLDocument xml = null;
+//			DCXMLDocument xml = null;
+			StringWriter result = new StringWriter();
+			XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(result);
+		
+			XMLMetadataBuilder builder = new XMLMetadataBuilder(writer);
 
 			if (!mdKeys.isEmpty()) {
 				String mdKey = mdKeys.get(0);
@@ -537,38 +574,52 @@ public class OaiServiceBean implements OaiService {
 				if (outputMetadataFormat.equals(MetadataFormat.OAI_DC) && (metadataPrefix.equals(MetadataFormat.OAI_DC)
 						|| metadataPrefix.equals(MetadataFormat.OLAC))) {
 					if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
-						xml = OAI_DCFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
+//						xml = OAI_DCFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
+						DublinCoreHandler handler = new DublinCoreHandler();
+						
+						// Writes metadata from JSON to XML
+						handler.write(StreamUtils.getContent(binaryStore.get(md.getStream())), builder);
 					} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
-						xml = OAI_DCFactory
-								.convertFromJsonOlac(StreamUtils.getContent(binaryStore.get(md.getStream())));
+//						xml = OAI_DCFactory
+//								.convertFromJsonOlac(StreamUtils.getContent(binaryStore.get(md.getStream())));
+						DublinCoreConverter converter = new DublinCoreConverter();
+						converter.convert(StreamUtils.getContent(binaryStore.get(md.getStream())), metadataPrefix, builder);
 					}
 				} else if (outputMetadataFormat.equals(MetadataFormat.OLAC)
 						&& (metadataPrefix.equals(MetadataFormat.OLAC)
 								|| metadataPrefix.equals(MetadataFormat.OAI_DC))) {
-					xml = OLACFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
+					//TODO olac from json
+//					xml = OLACFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
 				}
+
 			} else {
 				return null;
 			}
 
-			// Automatically adds handles to 'identifier' XML element
-			List<String> handles;
-			try {
-				handles = handleStore.listHandlesForKey(key);
-				for (String handle : handles) {
-					xml.addDcField("identifier", "http://hdl.handle.net/" + handle);
-				}
-			} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
-				LOGGER.log(Level.WARNING, "No handle for key " + key, e);
+			// TODO Automatically adds handles to 'identifier' XML element
+//			List<String> handles;
+//			try {
+//				handles = handleStore.listHandlesForKey(key);
+//				for (String handle : handles) {
+//					xml.addDcField("identifier", "http://hdl.handle.net/" + handle);
+//				}
+//			} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
+//				LOGGER.log(Level.WARNING, "No handle for key " + key, e);
+//			}
+
+			if (writer != null) {
+				writer.flush();
+	            writer.close();
 			}
-			if (xml != null) {
-				return xml.toString();
+			
+			if (!result.toString().isEmpty()) {
+				return result.toString();
 			} else {
 				throw new MetadataPrefixUnknownException(
 						"unable to build xml for oai record cause metadata prefix unknown " + metadataPrefix);
 			}
 		} catch (OrtolangException | KeyNotFoundException | CoreServiceException | IOException
-				| BinaryStoreServiceException | DataNotFoundException e) {
+				| BinaryStoreServiceException | DataNotFoundException | XMLStreamException | FactoryConfigurationError | MetadataHandlerException | MetadataConverterException e) {
 			LOGGER.log(Level.SEVERE, "unable to build oai_dc from ortolang object  " + key, e);
 			throw new OaiServiceException("unable to build xml for oai record");
 		}
