@@ -16,8 +16,8 @@ import javax.xml.stream.XMLStreamWriter;
 import org.junit.Test;
 
 import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
-import fr.ortolang.diffusion.oai.format.DublinCoreHandler;
-import fr.ortolang.diffusion.oai.format.XMLMetadataBuilder;
+import fr.ortolang.diffusion.oai.format.builder.XMLMetadataBuilder;
+import fr.ortolang.diffusion.oai.format.handler.DublinCoreHandler;
 import fr.ortolang.diffusion.util.StreamUtils;
 
 public class DublinCoreHandlerTest {

@@ -2,14 +2,14 @@ package fr.ortolang.diffusion.xml;
 
 import java.util.LinkedHashMap;
 
-public class XmlDumpNamespaces extends LinkedHashMap<String, String> {
+public class XmlDumpNamespaces extends LinkedHashMap<String, XmlDumpNamespace> {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    public synchronized String put(String key, String value) {
+    public synchronized XmlDumpNamespace put(String key, XmlDumpNamespace value) {
         if (value == null) {
-            value = new String();
+            return null;
         }
         return super.put(key, value);
     }

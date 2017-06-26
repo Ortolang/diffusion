@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.oai.format;
+package fr.ortolang.diffusion.oai.format.converter;
 
 import java.io.StringReader;
 import java.util.List;
@@ -12,6 +12,11 @@ import javax.json.JsonReader;
 
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.oai.exception.MetadataConverterException;
+import fr.ortolang.diffusion.oai.format.Constant;
+import fr.ortolang.diffusion.oai.format.DCXMLDocument;
+import fr.ortolang.diffusion.oai.format.OLAC;
+import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
+import fr.ortolang.diffusion.oai.format.handler.DublinCoreHandler;
 
 public class DublinCoreConverter implements MetadataConverter {
 
@@ -28,11 +33,11 @@ public class DublinCoreConverter implements MetadataConverter {
 	}
 	
 	private void convertToOlac(String source, MetadataBuilder builder) throws MetadataConverterException {
-//		OAI_DC oai_dc = new OAI_DC();
 		StringReader reader = new StringReader(source);
 		JsonReader jsonReader = Json.createReader(reader);
 
 		try {
+			DublinCoreHandler.writeDcDocument(builder);
 			JsonObject jsonDoc = jsonReader.readObject();
 
 			// Converts elements from OLAC to DC based on OLAC-to-OAI_DC
@@ -46,11 +51,11 @@ public class DublinCoreConverter implements MetadataConverter {
 						if ("olac:linguistic-type".equals(xsitype) && elm.containsKey("code")) {
 							// Rules 1 & 2
 							String value = "Linguistic type:" + elm.getString("code").replaceAll("_", " ");
-							builder.writeStartEndElement(DublinCoreConstant.DC_NAMESPACE_PREFIX, "type", value);
+							builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "type", value);
 						} else if ("olac:discourse-type".equals(xsitype)) {
 							// Rules 1 & 3
 							String value = "Discourse type:" + elm.getString("code").replaceAll("_", " ");
-							builder.writeStartEndElement(DublinCoreConstant.DC_NAMESPACE_PREFIX, "description", value);
+							builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "description", value);
 						}
 					}
 				}
@@ -63,11 +68,11 @@ public class DublinCoreConverter implements MetadataConverter {
 						if ("olac:discourse-type".equals(xsitype) && elm.containsKey("code")) {
 							// Rules 1 & 2
 							String value = "Discourse type:" + elm.getString("code").replaceAll("_", " ");
-							builder.writeStartEndElement(DublinCoreConstant.DC_NAMESPACE_PREFIX, "subject", value);
+							builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "subject", value);
 						} else if ("olac:linguistic-field".equals(xsitype)) {
 							// Rules 1
 							String value = elm.getString("code").replaceAll("_", " ");
-							builder.writeStartEndElement(DublinCoreConstant.DC_NAMESPACE_PREFIX, "subject", value);
+							builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "subject", value);
 						}
 					}
 				}
@@ -77,9 +82,9 @@ public class DublinCoreConverter implements MetadataConverter {
 				JsonArray elmArray = jsonDoc.getJsonArray("contributor");
 				for (JsonObject elm : elmArray.getValuesAs(JsonObject.class)) {
 					if (elm.containsKey("code") && "author".equals(elm.getString("code")) && elm.containsKey("value")) {
-						builder.writeStartEndElement(DublinCoreConstant.DC_NAMESPACE_PREFIX, "creator", elm.getString("value"));
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "creator", elm.getString("value"));
 					} else if (elm.containsKey("value")) {
-						builder.writeStartEndElement(DublinCoreConstant.DC_NAMESPACE_PREFIX, "contributor", elm.getString("value"));
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "contributor", elm.getString("value"));
 					}
 				}
 			}
@@ -108,7 +113,7 @@ public class DublinCoreConverter implements MetadataConverter {
 				for (JsonObject elmLanguage : elmArray.getValuesAs(JsonObject.class)) {
 					if (elmLanguage.containsKey("type") && elmLanguage.getString("type").equals("olac:language")
 							&& elmLanguage.containsKey("code")) {
-						builder.writeStartEndElement(DublinCoreConstant.DC_NAMESPACE_PREFIX, "language", elmLanguage.getString("code"));
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "language", elmLanguage.getString("code"));
 					}
 				}
 			}
@@ -119,7 +124,7 @@ public class DublinCoreConverter implements MetadataConverter {
 					JsonArray elmArray = jsonDoc.getJsonArray(dateElementName);
 					for (JsonObject elm : elmArray.getValuesAs(JsonObject.class)) {
 						if (elm.containsKey("value")) {
-							builder.writeStartEndElement(DublinCoreConstant.DC_NAMESPACE_PREFIX, "date", elm.getString("value"));
+							builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", elm.getString("value"));
 						}
 					}
 					break;
@@ -137,6 +142,7 @@ public class DublinCoreConverter implements MetadataConverter {
 					DublinCoreHandler.writeDcElement(olacElement, jsonDoc, elm.getValue(), builder);
 				}
 			}
+			builder.writeEndDocument();
 		} catch (Exception e) {
 			throw new MetadataConverterException("unable to build OAI_DC from json", e);
 		} finally {

@@ -1,4 +1,4 @@
-package fr.ortolang.diffusion.oai.format;
+package fr.ortolang.diffusion.oai.format.handler;
 
 import java.io.StringReader;
 import java.util.Date;
@@ -13,7 +13,12 @@ import javax.json.JsonString;
 import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.oai.exception.MetadataBuilderException;
 import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
+import fr.ortolang.diffusion.oai.format.Constant;
+import fr.ortolang.diffusion.oai.format.XMLDocument;
+import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
+import fr.ortolang.diffusion.xml.XmlDumpNamespace;
+import fr.ortolang.diffusion.xml.XmlDumpNamespaces;
 
 /**
  * Writes DublinCore metadata.
@@ -37,8 +42,8 @@ public class DublinCoreHandler implements MetadataHandler {
 		JsonObject jsonDoc = jsonReader.readObject();
 
 		try {
-			builder.writeStartDocument(DublinCoreConstant.OAI_DC_NAMESPACE_PREFIX, DublinCoreConstant.OAI_DC_ELEMENT, null);
-		
+			writeDcDocument(builder);
+			
 //			JsonArray multilingualTitles = jsonDoc.getJsonArray("title");
 //			for (JsonObject multilingualTitle : multilingualTitles.getValuesAs(JsonObject.class)) {
 
@@ -169,17 +174,12 @@ public class DublinCoreHandler implements MetadataHandler {
 	public void write(String json, MetadataBuilder builder) throws MetadataHandlerException {
 		StringReader reader = new StringReader(json);
 		JsonReader jsonReader = Json.createReader(reader);
-
 		try {
-			builder.writeStartDocument(DublinCoreConstant.OAI_DC_NAMESPACE_PREFIX, DublinCoreConstant.OAI_DC_ELEMENT, null);
-
+			writeDcDocument(builder);
 			JsonObject jsonDoc = jsonReader.readObject();
-
-			for (String elm : DCXMLDocument.DC_ELEMENTS) {
-//				oai_dc.addDCElement(elm, jsonDoc);
+			for (String elm : Constant.DC_ELEMENTS) {
 				writeDcElement(elm, jsonDoc, builder);
 			}
-			
 			builder.writeEndDocument();
 		} catch (Exception e) {
 			throw new MetadataHandlerException("unable to write DublinCore metadata", e);
@@ -187,6 +187,15 @@ public class DublinCoreHandler implements MetadataHandler {
 			jsonReader.close();
 			reader.close();
 		}
+	}
+	
+	public static void writeDcDocument(MetadataBuilder builder) throws MetadataBuilderException {
+		XmlDumpNamespaces namespaces = new XmlDumpNamespaces();
+		namespaces.put(Constant.OAI_DC_NAMESPACE_PREFIX, new XmlDumpNamespace(Constant.OAI_DC_NAMESPACE_URI, Constant.OAI_DC_NAMESPACE_SCHEMA_LOCATION));
+		namespaces.put(Constant.DC_NAMESPACE_PREFIX, new XmlDumpNamespace(Constant.DC_NAMESPACE_URI, Constant.DC_NAMESPACE_SCHEMA_LOCATION));
+		namespaces.put(Constant.XSI_NAMESPACE_PREFIX, new XmlDumpNamespace(Constant.XSI_NAMESPACE_URI));
+		builder.setNamespaces(namespaces);
+		builder.writeStartDocument(Constant.OAI_DC_NAMESPACE_PREFIX, Constant.OAI_DC_ELEMENT, null);
 	}
 
 	public static void writeDcElement(String elementName, JsonObject meta, MetadataBuilder builder) throws MetadataBuilderException {
@@ -198,13 +207,10 @@ public class DublinCoreHandler implements MetadataHandler {
 			JsonArray elmArray = meta.getJsonArray(elementName);
 			for (JsonObject elm : elmArray.getValuesAs(JsonObject.class)) {
 				if (elm.containsKey("lang") && elm.containsKey("value")) {
-//					this.addDcMultilingualField(tagName, elm.getString("lang"),
-//							XMLDocument.removeHTMLTag(elm.getString("value")));
 					writeDcMultilingualElement(tagName, elm, builder);
 				} else {
 					if (elm.containsKey("value")) {
-//						this.addDcField(tagName, XMLDocument.removeHTMLTag(elm.getString("value")));
-						builder.writeStartEndElement(DublinCoreConstant.DC_NAMESPACE_PREFIX, tagName, XMLDocument.removeHTMLTag(elm.getString("value")));
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, tagName, XMLDocument.removeHTMLTag(elm.getString("value")));
 					}
 				}
 			}
@@ -214,7 +220,7 @@ public class DublinCoreHandler implements MetadataHandler {
 	public static void writeDcMultilingualElement(String tag, JsonObject multilingualObject, MetadataBuilder builder) throws MetadataBuilderException {
 		XmlDumpAttributes attrs = new XmlDumpAttributes();
         attrs.put("xml:lang", multilingualObject.getString("lang"));
-		builder.writeStartEndElement(DublinCoreConstant.DC_NAMESPACE_PREFIX, tag, attrs, XMLDocument.removeHTMLTag(multilingualObject.getString("value")));
+		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, tag, attrs, XMLDocument.removeHTMLTag(multilingualObject.getString("value")));
 	}
 
 }

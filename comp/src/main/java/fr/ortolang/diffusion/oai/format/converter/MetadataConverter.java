@@ -1,6 +1,7 @@
-package fr.ortolang.diffusion.oai.format;
+package fr.ortolang.diffusion.oai.format.converter;
 
 import fr.ortolang.diffusion.oai.exception.MetadataConverterException;
+import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
 
 public interface MetadataConverter {
 

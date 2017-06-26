@@ -59,11 +59,12 @@ import fr.ortolang.diffusion.oai.exception.RecordNotFoundException;
 import fr.ortolang.diffusion.oai.exception.SetAlreadyExistsException;
 import fr.ortolang.diffusion.oai.exception.SetNotFoundException;
 import fr.ortolang.diffusion.oai.format.DCXMLDocument;
-import fr.ortolang.diffusion.oai.format.DublinCoreConverter;
-import fr.ortolang.diffusion.oai.format.DublinCoreHandler;
 import fr.ortolang.diffusion.oai.format.OAI_DCFactory;
 import fr.ortolang.diffusion.oai.format.OLACFactory;
-import fr.ortolang.diffusion.oai.format.XMLMetadataBuilder;
+import fr.ortolang.diffusion.oai.format.builder.XMLMetadataBuilder;
+import fr.ortolang.diffusion.oai.format.converter.DublinCoreConverter;
+import fr.ortolang.diffusion.oai.format.handler.DublinCoreHandler;
+import fr.ortolang.diffusion.oai.format.handler.OlacHandler;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
 import fr.ortolang.diffusion.registry.RegistryService;
 import fr.ortolang.diffusion.registry.RegistryServiceException;
@@ -489,7 +490,6 @@ public class OaiServiceBean implements OaiService {
 			throw new OaiServiceException("unable to build xml from root collection cause item metadata " + root);
 		}
 
-//		DCXMLDocument xml = null;
 		try {
 			StringWriter result = new StringWriter();
 			XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(result);
@@ -497,15 +497,13 @@ public class OaiServiceBean implements OaiService {
 			XMLMetadataBuilder builder = new XMLMetadataBuilder(writer);
 			
 			if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
-	//			xml = OAI_DCFactory.buildFromItem(item);
+				// Writes DC metadata
 				DublinCoreHandler handler = new DublinCoreHandler();
-	
-				// Writes metadata from JSON to XML
 				handler.writeItem(item, builder);
-				
 			} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
-				//TODO OLAC metadata handler
-	//			xml = OLACFactory.buildFromItem(item);
+				// Writes OLAC metadata 
+				OlacHandler handler = new OlacHandler();
+				handler.writeItem(item, builder);
 			}
 	
 			//TODO Automatically adds handles to 'identifier' XML element
@@ -562,7 +560,6 @@ public class OaiServiceBean implements OaiService {
 				"creating OAI record for ortolang object " + key + " for metadataPrefix " + metadataPrefix);
 		try {
 			List<String> mdKeys = core.findMetadataObjectsForTargetAndName(key, metadataPrefix);
-//			DCXMLDocument xml = null;
 			StringWriter result = new StringWriter();
 			XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(result);
 		
@@ -574,22 +571,20 @@ public class OaiServiceBean implements OaiService {
 				if (outputMetadataFormat.equals(MetadataFormat.OAI_DC) && (metadataPrefix.equals(MetadataFormat.OAI_DC)
 						|| metadataPrefix.equals(MetadataFormat.OLAC))) {
 					if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
-//						xml = OAI_DCFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
+						// Writes DC metadata from JSON to XML
 						DublinCoreHandler handler = new DublinCoreHandler();
-						
-						// Writes metadata from JSON to XML
 						handler.write(StreamUtils.getContent(binaryStore.get(md.getStream())), builder);
 					} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
-//						xml = OAI_DCFactory
-//								.convertFromJsonOlac(StreamUtils.getContent(binaryStore.get(md.getStream())));
+						// Downgrades OLAC to DC metadata
 						DublinCoreConverter converter = new DublinCoreConverter();
 						converter.convert(StreamUtils.getContent(binaryStore.get(md.getStream())), metadataPrefix, builder);
 					}
 				} else if (outputMetadataFormat.equals(MetadataFormat.OLAC)
 						&& (metadataPrefix.equals(MetadataFormat.OLAC)
 								|| metadataPrefix.equals(MetadataFormat.OAI_DC))) {
-					//TODO olac from json
-//					xml = OLACFactory.buildFromJson(StreamUtils.getContent(binaryStore.get(md.getStream())));
+					// Writes OLAC metadata  from JSON
+					OlacHandler handler = new OlacHandler();
+					handler.write(StreamUtils.getContent(binaryStore.get(md.getStream())), builder);
 				}
 
 			} else {
