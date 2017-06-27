@@ -2,11 +2,17 @@
 	"title":[
 		{
 			"lang": "fr",
-			"value": "Corpus"
+			"value": "Exemple d'item"
 		},
 		{
 			"lang": "en",
-			"value": "Corpora"
+			"value": "Sample item"
+		}
+	],
+	"description": [
+		{
+			"lang": "fr",
+			"value": "Description du corpus Sample item"
 		}
 	]
 }

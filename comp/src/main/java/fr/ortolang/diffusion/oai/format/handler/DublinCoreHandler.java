@@ -1,8 +1,6 @@
 package fr.ortolang.diffusion.oai.format.handler;
 
 import java.io.StringReader;
-import java.util.Date;
-import java.util.logging.Level;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -10,7 +8,6 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonString;
 
-import fr.ortolang.diffusion.OrtolangConfig;
 import fr.ortolang.diffusion.oai.exception.MetadataBuilderException;
 import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
 import fr.ortolang.diffusion.oai.format.Constant;
@@ -35,8 +32,6 @@ public class DublinCoreHandler implements MetadataHandler {
 	 */
 	@Override
 	public void writeItem(String item, MetadataBuilder builder) throws MetadataHandlerException {
-//		OAI_DC oai_dc = new OAI_DC();
-		
 		StringReader reader = new StringReader(item);
 		JsonReader jsonReader = Json.createReader(reader);
 		JsonObject jsonDoc = jsonReader.readObject();
@@ -44,121 +39,96 @@ public class DublinCoreHandler implements MetadataHandler {
 		try {
 			writeDcDocument(builder);
 			
-//			JsonArray multilingualTitles = jsonDoc.getJsonArray("title");
-//			for (JsonObject multilingualTitle : multilingualTitles.getValuesAs(JsonObject.class)) {
+			writeDcElement("title", jsonDoc, builder);
+			writeDcElement("description", jsonDoc, builder);
+			writeDcElement("keywords", jsonDoc, "subject", builder);
 
-//				oai_dc.addDcMultilingualField("title", multilingualTitle.getString("lang"),
-//						XMLDocument.removeHTMLTag(multilingualTitle.getString("value")));
-				writeDcElement("title", jsonDoc, builder);
-//			}
-//
-//			JsonArray multilingualDescriptions = jsonDoc.getJsonArray("description");
-//			for (JsonObject multilingualTitle : multilingualDescriptions.getValuesAs(JsonObject.class)) {
-//				oai_dc.addDcMultilingualField("description", multilingualTitle.getString("lang"),
-//						XMLDocument.removeHTMLTag(multilingualTitle.getString("value")));
-//			}
-//
-//			JsonArray corporaLanguages = jsonDoc.getJsonArray("corporaLanguages");
-//			if (corporaLanguages != null) {
-//				for (JsonObject corporaLanguage : corporaLanguages.getValuesAs(JsonObject.class)) {
-//					JsonArray multilingualLabels = corporaLanguage.getJsonArray("labels");
-//
-//					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-//						oai_dc.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
-//						oai_dc.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
-//					}
-//					oai_dc.addDcField("language", corporaLanguage.getString("id"));
-//				}
-//			}
-//
-//			JsonArray multilingualKeywords = jsonDoc.getJsonArray("keywords");
-//			if (multilingualKeywords != null) {
-//				for (JsonObject multilingualKeyword : multilingualKeywords.getValuesAs(JsonObject.class)) {
-//					oai_dc.addDcMultilingualField("subject", multilingualKeyword.getString("lang"),
-//							multilingualKeyword.getString("value"));
-//				}
-//			}
-//
-//			JsonArray producers = jsonDoc.getJsonArray("producers");
-//			if (producers != null) {
-//				for (JsonObject producer : producers.getValuesAs(JsonObject.class)) {
-//					// JsonObject metaOrganization =
-//					// producer.getJsonObject("meta_ortolang-referential-json");
-//
-//					if (producer.containsKey("fullname")) {
-//						oai_dc.addDcField("publisher", producer.getString("fullname"));
-//					}
-//				}
-//			}
-//
-//			JsonArray contributors = jsonDoc.getJsonArray("contributors");
-//			if (contributors != null) {
-//				for (JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
-//					JsonArray roles = contributor.getJsonArray("roles");
-//					for (JsonObject role : roles.getValuesAs(JsonObject.class)) {
-//						// JsonObject metaRole =
-//						// role.getJsonObject("meta_ortolang-referential-json");
-//						String roleId = role.getString("id");
-//						oai_dc.addDcField("contributor", OAI_DC.person(contributor) + " (" + roleId + ")");
-//
-//						if ("author".equals(roleId)) {
-//							oai_dc.addDcField("creator", OAI_DC.person(contributor));
-//						}
-//					}
-//				}
-//			}
-//
-//			JsonObject statusOfUse = jsonDoc.getJsonObject("statusOfUse");
-//			if (statusOfUse != null) {
-//				String idStatusOfUse = statusOfUse.getString("id");
-//				oai_dc.addDcField("rights", idStatusOfUse);
-//
-//				JsonArray multilingualLabels = statusOfUse.getJsonArray("labels");
-//				for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-//					oai_dc.addDcMultilingualField("rights", label.getString("lang"), label.getString("value"));
-//				}
-//			}
-//			JsonArray conditionsOfUse = jsonDoc.getJsonArray("conditionsOfUse");
-//			if (conditionsOfUse != null) {
-//				for (JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
-//					oai_dc.addDcMultilingualField("rights", label.getString("lang"),
-//							XMLDocument.removeHTMLTag(label.getString("value")));
-//				}
-//			}
-//
-//			JsonObject license = jsonDoc.getJsonObject("license");
-//			if (license != null) {
-//				if (license != null) {
-//					oai_dc.addDcMultilingualField("rights", "fr", license.getString("label"));
-//				}
-//			}
-//
-//			JsonArray linguisticSubjects = jsonDoc.getJsonArray("linguisticSubjects");
-//			if (linguisticSubjects != null) {
-//				for (JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
-//					oai_dc.addDcField("subject", "linguistic field: " + linguisticSubject.getString());
-//				}
-//			}
-//			JsonString linguisticDataType = jsonDoc.getJsonString("linguisticDataType");
-//			if (linguisticDataType != null) {
-//				oai_dc.addDcField("type", "linguistic-type: " + linguisticDataType.getString());
-//			}
-//			JsonArray discourseTypes = jsonDoc.getJsonArray("discourseTypes");
-//			if (discourseTypes != null) {
-//				for (JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
-//					oai_dc.addDcField("type", "discourse-type: " + discourseType.getString());
-//				}
-//			}
-//			JsonString creationDate = jsonDoc.getJsonString("originDate");
-//			if (creationDate != null) {
-//				oai_dc.addDcField("date", creationDate.getString());
-//			} else {
-//				JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
-//				if (publicationDate != null) {
-//					oai_dc.addDcField("date", publicationDate.getString());
-//				}
-//			}
+			JsonArray corporaLanguages = jsonDoc.getJsonArray("corporaLanguages");
+			if (corporaLanguages != null) {
+				for (JsonObject corporaLanguage : corporaLanguages.getValuesAs(JsonObject.class)) {
+					JsonArray multilingualLabels = corporaLanguage.getJsonArray("labels");
 
+					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+						writeDcMultilingualElement("subject", label, builder);
+						writeDcMultilingualElement("language", label, builder);
+					}
+					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "language", corporaLanguage.getString("id"));
+				}
+			}
+
+			JsonArray producers = jsonDoc.getJsonArray("producers");
+			if (producers != null) {
+				for (JsonObject producer : producers.getValuesAs(JsonObject.class)) {
+					if (producer.containsKey("fullname")) {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "publisher", producer.getString("fullname"));
+					}
+				}
+			}
+
+			JsonArray contributors = jsonDoc.getJsonArray("contributors");
+			if (contributors != null) {
+				for (JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
+					JsonArray roles = contributor.getJsonArray("roles");
+					for (JsonObject role : roles.getValuesAs(JsonObject.class)) {
+						String roleId = role.getString("id");
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "contributor", Constant.person(contributor) + " (" + roleId + ")");
+
+						if ("author".equals(roleId)) {
+							builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "creator", Constant.person(contributor));
+						}
+					}
+				}
+			}
+
+			JsonObject statusOfUse = jsonDoc.getJsonObject("statusOfUse");
+			if (statusOfUse != null) {
+				String idStatusOfUse = statusOfUse.getString("id");
+				builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "rights", idStatusOfUse);
+
+				JsonArray multilingualLabels = statusOfUse.getJsonArray("labels");
+				for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+					writeDcMultilingualElement("rights", label, builder);
+				}
+			}
+			JsonArray conditionsOfUse = jsonDoc.getJsonArray("conditionsOfUse");
+			if (conditionsOfUse != null) {
+				for (JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
+					writeDcMultilingualElement("rights", label, builder);
+				}
+			}
+			JsonObject license = jsonDoc.getJsonObject("license");
+			if (license != null) {
+				if (license != null) {
+					XmlDumpAttributes attrs = new XmlDumpAttributes();
+			        attrs.put("xml:lang", "fr");
+					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "rights", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
+				}
+			}
+			JsonArray linguisticSubjects = jsonDoc.getJsonArray("linguisticSubjects");
+			if (linguisticSubjects != null) {
+				for (JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
+					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "subject", "linguistic field: " + linguisticSubject.getString());
+				}
+			}
+			JsonString linguisticDataType = jsonDoc.getJsonString("linguisticDataType");
+			if (linguisticDataType != null) {
+				builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "type", "linguistic-type: " + linguisticDataType.getString());
+			}
+			JsonArray discourseTypes = jsonDoc.getJsonArray("discourseTypes");
+			if (discourseTypes != null) {
+				for (JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
+					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "type", "discourse-type: " + discourseType.getString());
+				}
+			}
+			JsonString creationDate = jsonDoc.getJsonString("originDate");
+			if (creationDate != null) {
+				builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", creationDate.getString());
+			} else {
+				JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
+				if (publicationDate != null) {
+					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+				}
+			}
 			builder.writeEndDocument();
 		} catch (Exception e) {
 			throw new MetadataHandlerException("unable to build OAI_DC", e);
@@ -166,8 +136,6 @@ public class DublinCoreHandler implements MetadataHandler {
 			jsonReader.close();
 			reader.close();
 		}
-
-//		return oai_dc;
 	}
 
 	@Override

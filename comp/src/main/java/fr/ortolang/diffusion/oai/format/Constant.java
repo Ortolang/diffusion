@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.json.JsonObject;
+import javax.json.JsonString;
+
 public class Constant {
 
 	// OAI_DC metadata format
@@ -113,4 +116,20 @@ public class Constant {
     	Matcher m = pattern.matcher(str);
     	return m.replaceAll(replacement);
     }
+
+	public static String person(JsonObject contributor) {
+		JsonObject entityContributor = contributor.getJsonObject("entity");
+		JsonString lastname = entityContributor.getJsonString("lastname");
+		JsonString midname = entityContributor.getJsonString("midname");
+		JsonString firstname = entityContributor.getJsonString("firstname");
+		JsonString title = entityContributor.getJsonString("title");
+		JsonString acronym = null;
+
+		if (entityContributor.containsKey("organization")) {
+			acronym = entityContributor.getJsonObject("organization").getJsonString("acronym");
+		}
+		return (lastname != null ? lastname.getString() : "") + (midname != null ? ", " + midname.getString() : "")
+				+ (firstname != null ? ", " + firstname.getString() : "")
+				+ (title != null ? " " + title.getString() : "") + (acronym != null ? ", " + acronym.getString() : "");
+	}
 }
