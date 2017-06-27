@@ -387,6 +387,8 @@ public class OaiServiceBean implements OaiService {
 				buildXMLFromItem(root, MetadataFormat.OAI_DC), setsWorkspace);
 		createRecord(wskey, MetadataFormat.OLAC, registry.getLastModificationDate(root),
 				buildXMLFromItem(root, MetadataFormat.OLAC), setsWorkspace);
+		createRecord(wskey, MetadataFormat.CMDI, registry.getLastModificationDate(root),
+				buildXMLFromItem(root, MetadataFormat.CMDI), setsWorkspace);
 
 		createRecordsFromMetadataObject(root, setsWorkspace);
 	}
