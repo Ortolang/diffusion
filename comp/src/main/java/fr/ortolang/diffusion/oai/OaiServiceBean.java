@@ -62,7 +62,9 @@ import fr.ortolang.diffusion.oai.format.DCXMLDocument;
 import fr.ortolang.diffusion.oai.format.OAI_DCFactory;
 import fr.ortolang.diffusion.oai.format.OLACFactory;
 import fr.ortolang.diffusion.oai.format.builder.XMLMetadataBuilder;
-import fr.ortolang.diffusion.oai.format.converter.DublinCoreConverter;
+import fr.ortolang.diffusion.oai.format.converter.DublinCoreOutputConverter;
+import fr.ortolang.diffusion.oai.format.converter.CmdiOutputConverter;
+import fr.ortolang.diffusion.oai.format.handler.CmdiHandler;
 import fr.ortolang.diffusion.oai.format.handler.DublinCoreHandler;
 import fr.ortolang.diffusion.oai.format.handler.OlacHandler;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -504,6 +506,10 @@ public class OaiServiceBean implements OaiService {
 				// Writes OLAC metadata 
 				OlacHandler handler = new OlacHandler();
 				handler.writeItem(item, builder);
+			} else if (metadataPrefix.equals(MetadataFormat.CMDI)) {
+				// Writes CMDI metadata 
+				CmdiHandler handler = new CmdiHandler();
+				handler.writeItem(item, builder);
 			}
 	
 			//TODO Automatically adds handles to 'identifier' XML element
@@ -571,22 +577,31 @@ public class OaiServiceBean implements OaiService {
 				if (outputMetadataFormat.equals(MetadataFormat.OAI_DC) && (metadataPrefix.equals(MetadataFormat.OAI_DC)
 						|| metadataPrefix.equals(MetadataFormat.OLAC))) {
 					if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
-						// Writes DC metadata from JSON to XML
+						// Input : OAI_DC JSON
+						// Output : OAI_DC XML
 						DublinCoreHandler handler = new DublinCoreHandler();
 						handler.write(StreamUtils.getContent(binaryStore.get(md.getStream())), builder);
 					} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
-						// Downgrades OLAC to DC metadata
-						DublinCoreConverter converter = new DublinCoreConverter();
+						// Downgrades
+						// Input : OLAC JSON
+						// Output : OAI_DC XML
+						DublinCoreOutputConverter converter = new DublinCoreOutputConverter();
 						converter.convert(StreamUtils.getContent(binaryStore.get(md.getStream())), metadataPrefix, builder);
 					}
 				} else if (outputMetadataFormat.equals(MetadataFormat.OLAC)
 						&& (metadataPrefix.equals(MetadataFormat.OLAC)
 								|| metadataPrefix.equals(MetadataFormat.OAI_DC))) {
-					// Writes OLAC metadata  from JSON
+					// Input : OLAC | OAI_DC JSON
+					// Output : OLAC XML
 					OlacHandler handler = new OlacHandler();
 					handler.write(StreamUtils.getContent(binaryStore.get(md.getStream())), builder);
+				} else if (outputMetadataFormat.equals(MetadataFormat.CMDI) 
+						&& metadataPrefix.equals(MetadataFormat.OLAC)) {
+					// Input : OLAC | OAI_DC JSON
+					// Output : CMDI OLAC XML
+					CmdiOutputConverter converter = new CmdiOutputConverter();
+					converter.convert(StreamUtils.getContent(binaryStore.get(md.getStream())), metadataPrefix, builder);
 				}
-
 			} else {
 				return null;
 			}

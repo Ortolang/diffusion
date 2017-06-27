@@ -67,6 +67,11 @@ public class XMLMetadataBuilder implements MetadataBuilder {
 	}
 
 	@Override
+	public void writeStartElement(String ns, String name) throws MetadataBuilderException {
+		writeStartElement(ns, name, null, null);
+	}
+	
+	@Override
 	public void writeStartElement(String ns, String name, XmlDumpAttributes attrs) throws MetadataBuilderException {
 		writeStartElement(ns, name, attrs, null);
 	}
@@ -101,6 +106,12 @@ public class XMLMetadataBuilder implements MetadataBuilder {
 	@Override
 	public void writeStartEndElement(String ns, String name, XmlDumpAttributes attrs, String value) throws MetadataBuilderException {
 		writeStartElement(ns, name, attrs, value);
+		writeEndElement();
+	}
+
+	@Override
+	public void writeStartEndElement(String ns, String name) throws MetadataBuilderException {
+		writeStartElement(ns, name, null, null);
 		writeEndElement();
 	}
 

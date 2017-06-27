@@ -58,6 +58,38 @@ public class Constant {
 	
 	public static final List<String> DATE_ELEMENTS = Arrays.asList("date", "issued", "dateCopyrighted", "created", "available", "dateAccepted", "dateSubmitted", "modified", "valid");
     
+	// CMDI
+	public static final String CMDI_NAMESPACE_PREFIX = "cmd";
+	public static final String CMDI_NAMESPACE_URI = "http://www.clarin.eu/cmd/1";
+	public static final String CMDI_NAMESPACE_SCHEMA_LOCATION = "https://infra.clarin.eu/CMDI/1.x/xsd/cmd-envelop.xsd";
+
+	// CMDI OLAC Profile
+	public static final String CMDI_OLAC_NAMESPACE_PREFIX = "cmdOlac";
+	public static final String CMDI_OLAC_NAMESPACE_URI = "http://www.clarin.eu/cmd/1/profiles/clarin.eu:cr1:p_1288172614026";
+	public static final String CMDI_OLAC_NAMESPACE_SCHEMA_LOCATION = "https://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/1.x/profiles/clarin.eu:cr1:p_1288172614026/xsd";
+
+	public static final String CMDI_VERSION_ATTRIBUTE = "CMDVersion";
+	
+	public static final String CMDI_ELEMENT = "CMD";
+	public static final String CMDI_HEADER_ELEMENT = "Header";
+	public static final String CMDI_MDCREATOR_ELEMENT = "MdCreator";
+	public static final String CMDI_MDCREATIONDATE_ELEMENT = "MdCreationDate";
+	public static final String CMDI_MDSELFLINK_ELEMENT = "MdSelfLink";
+	public static final String CMDI_MDPROFILE_ELEMENT = "MdProfile";
+	public static final String CMDI_MDCOLLECTIONDISPLAYNAME_ELEMENT = "MdCollectionDisplayName";
+	public static final String CMDI_RESOURCES_ELEMENT = "Resources";
+	public static final String CMDI_RESOURCEPROXYLIST_ELEMENT = "ResourceProxyList";
+	public static final String CMDI_RESOURCEPROXY_ELEMENT = "ResourceProxy";
+	public static final String CMDI_RESOURCETYPE_ELEMENT = "ResourceType";
+	public static final String CMDI_RESOURCEREF_ELEMENT = "ResourceRef";
+	public static final String CMDI_JOURNALFILEPROXYLIST_ELEMENT = "JournalFileProxyList";
+	public static final String CMDI_RESOURCERELATIONLISTT_ELEMENT = "ResourceRelationList";
+	public static final String CMDI_COMPONENTS_ELEMENT = "Components";
+	public static final String CMDI_OLAC_ELEMENT = "OLAC-DcmiTerms";
+	
+	public static final String CMDI_MDCREATOR_VALUE = "ORTOLANG Repository";
+	public static final String CMDI_OLAC_PROFILE_VALUE = "clarin.eu:cr1:p_1288172614026";
+	
 	// Utils
     public static final SimpleDateFormat w3cdtf = new SimpleDateFormat("yyyy-MM-dd");
     

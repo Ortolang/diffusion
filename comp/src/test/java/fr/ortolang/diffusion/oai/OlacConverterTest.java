@@ -19,10 +19,11 @@ import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.oai.exception.MetadataConverterException;
 import fr.ortolang.diffusion.oai.format.builder.XMLMetadataBuilder;
 import fr.ortolang.diffusion.oai.format.converter.DublinCoreOutputConverter;
+import fr.ortolang.diffusion.oai.format.converter.CmdiOutputConverter;
 import fr.ortolang.diffusion.util.StreamUtils;
 
-public class DublinCoreConverterTest {
-	
+public class OlacConverterTest {
+
 	private static final Logger LOGGER = Logger.getLogger(OAI_DCTest.class.getName());
 	
 	public void convertFromJsonOLAC(String path) {
@@ -34,8 +35,8 @@ public class DublinCoreConverterTest {
 			XMLMetadataBuilder builder = new XMLMetadataBuilder(writer);
 			
 //			OAI_DC oai_dc = OAI_DCFactory.convertFromJsonOlac(olac_json);
-			DublinCoreOutputConverter converter = new DublinCoreOutputConverter();
-			converter.convert(olac_json, MetadataFormat.OLAC, builder);
+			CmdiOutputConverter converter = new CmdiOutputConverter();
+			converter.convert(olac_json, MetadataFormat.CMDI, builder);
 
 			writer.flush();
 			writer.close();
@@ -55,33 +56,4 @@ public class DublinCoreConverterTest {
 //		new String[] { "title", "description", "coverage", "subject", "identifier", "type" });
 	}
 
-	@Test
-	public void buildFromJsonOLACRule2() {
-		convertFromJsonOLAC("json/sample-olac-rule2.json");
-//		XMLDocumentTest.checkIfPresent(oai_dc, new String[] { "type" });
-	}
-
-	@Test
-	public void buildFromJsonOLACRule3() {
-		convertFromJsonOLAC("json/sample-olac-rule3.json");
-//		XMLDocumentTest.checkIfPresent(oai_dc, new String[] { "description" });
-	}
-
-	@Test
-	public void buildFromJsonOLACRule4() {
-		convertFromJsonOLAC("json/sample-olac-rule4.json");
-//		XMLDocumentTest.checkIfPresent(oai_dc, new String[] { "contributor", "creator" });
-	}
-
-	@Test
-	public void buildFromJsonOLACRule5() {
-		convertFromJsonOLAC("json/sample-olac-rule5.json");
-//		XMLDocumentTest.checkIfPresent(oai_dc, new String[] { "subject", "language" });
-	}
-
-	@Test
-	public void buildFromJsonOLACRule6() {
-		convertFromJsonOLAC("json/sample-olac-rule6.json");
-//		XMLDocumentTest.checkIfPresent(oai_dc, new String[] { "date" });
-	}
 }

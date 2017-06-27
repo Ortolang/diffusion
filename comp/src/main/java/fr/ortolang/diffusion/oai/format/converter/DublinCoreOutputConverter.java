@@ -18,12 +18,20 @@ import fr.ortolang.diffusion.oai.format.OLAC;
 import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
 import fr.ortolang.diffusion.oai.format.handler.DublinCoreHandler;
 
-public class DublinCoreConverter implements MetadataConverter {
+/**
+ * Converts to Dublin Core metadata.
+ * <p>
+ * For now, OLAC is the only metadata that could be convert to Dublin Core.
+ * </p>
+ * @author cpestel
+ *
+ */
+public class DublinCoreOutputConverter implements MetadataConverter {
 
 	@Override
 	public void convert(String source, String format, MetadataBuilder builder) throws MetadataConverterException {
 		if ( MetadataFormat.OLAC.equals(format)) {
-			convertToOlac(source, builder);
+			convertFromOlac(source, builder);
 		}
 	}
 
@@ -32,7 +40,7 @@ public class DublinCoreConverter implements MetadataConverter {
 		return MetadataFormat.OLAC.equals(format);
 	}
 	
-	private void convertToOlac(String source, MetadataBuilder builder) throws MetadataConverterException {
+	private void convertFromOlac(String source, MetadataBuilder builder) throws MetadataConverterException {
 		StringReader reader = new StringReader(source);
 		JsonReader jsonReader = Json.createReader(reader);
 

@@ -9,9 +9,11 @@ public interface MetadataBuilder {
 	void setNamespaces(XmlDumpNamespaces namespaces);
 	void writeStartDocument(String ns, String name, XmlDumpAttributes attrs) throws MetadataBuilderException;
 	void writeEndDocument() throws MetadataBuilderException;
+	void writeStartElement(String ns, String name) throws MetadataBuilderException;
 	void writeStartElement(String ns, String name, XmlDumpAttributes attrs) throws MetadataBuilderException;
 	void writeStartElement(String ns, String name, XmlDumpAttributes attrs, String value) throws MetadataBuilderException;
 	void writeStartElement(String ns, String name, String value) throws MetadataBuilderException;
+	void writeStartEndElement(String ns, String name) throws MetadataBuilderException;
 	void writeStartEndElement(String ns, String name, XmlDumpAttributes attrs, String value) throws MetadataBuilderException;
 	void writeStartEndElement(String ns, String name, String value) throws MetadataBuilderException;
 	void writeEndElement() throws MetadataBuilderException;
