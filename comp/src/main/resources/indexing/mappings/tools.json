@@ -139,6 +139,10 @@
 					"id": {"type": "keyword"},
 					"content": {"type": "keyword"}
 				}
+			},
+			"originDate": {
+				"type": "keyword",
+				"index": "no"
 			}
 		}
 	}

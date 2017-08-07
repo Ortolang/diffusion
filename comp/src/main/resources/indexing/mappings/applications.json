@@ -88,6 +88,10 @@
 			"applicationUrl": {
 				"type": "keyword",
 				"index": "no"
+			},
+			"originDate": {
+				"type": "keyword",
+				"index": "no"
 			}
 		}
 	}
