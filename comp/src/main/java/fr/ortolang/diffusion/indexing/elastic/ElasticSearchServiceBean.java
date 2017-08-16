@@ -211,23 +211,23 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                     } catch (IndexNotFoundException e) {
                         LOGGER.log(Level.INFO, "Index not found: removing it from registry and re-trying to index key [" + key + "]");
                         indices.remove(indexableContent.getIndex());
-                        index(key);
-                        return;
+//                        index(key);
+                        throw new ElasticSearchServiceException(e.getMessage(), e);
                     } catch (IllegalArgumentException e) {
-                        LOGGER.log(Level.WARNING, "IllegalArgumentException for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
+                        LOGGER.log(Level.SEVERE, "IllegalArgumentException for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
                                 "] in index [" + indexableContent.getIndex() + "]", e);
-                        return;
+                        throw new ElasticSearchServiceException(e.getMessage(), e);
                     } catch (DocumentMissingException e) {
-                        LOGGER.log(Level.WARNING, "Document missing for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
+                        LOGGER.log(Level.SEVERE, "Document missing for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
                                 "] in index [" + indexableContent.getIndex() + "] " + e.getMessage());
+                        throw new ElasticSearchServiceException(e.getMessage(), e);
                     } catch (MapperParsingException e) {
-                        LOGGER.log(Level.WARNING, "MapperParsingException for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
+                        LOGGER.log(Level.SEVERE, "MapperParsingException for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
                                 "] in index [" + indexableContent.getIndex() + "]", e);
                         throw new ElasticSearchServiceException(e.getMessage(), e);
                     } catch (Exception e) {
                         LOGGER.log(Level.SEVERE, "An unexpected error happened while indexing key [" + indexableContent.getId() + "]", e);
-                        // TODO throw exception ???
-                        return;
+                        throw new ElasticSearchServiceException(e.getMessage(), e);
                     }
                 }
             }
@@ -351,10 +351,10 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
 		return null;
     }
 
-    private void checkType(OrtolangIndexableContent indexableContent, IndicesAdminClient adminClient) {
+    private void checkType(OrtolangIndexableContent indexableContent, IndicesAdminClient adminClient) throws IOException {
         if (!indices.get(indexableContent.getIndex()).contains(indexableContent.getType())) {
             LOGGER.log(Level.FINE, "[checkType] Put mapping for type [" + indexableContent.getType() + "] in index [" + indexableContent.getIndex() + "]");
-            try {
+            
 	            InputStream mapping = this.getClass().getResourceAsStream(PATH_TO_MAPPINGS + indexableContent.getType() + EXTENSION_MAPPING);
 	            if (mapping != null) {
 	            	String mappingAsString;
@@ -372,9 +372,7 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
 	            }
 	            
 	            indices.get(indexableContent.getIndex()).add(indexableContent.getType());
-            } catch (IOException e) {
-            	LOGGER.log(Level.SEVERE, "Unabled to put mapping for type [" + indexableContent.getType() + "] in index [" + indexableContent.getIndex() + "]", e);
-            }
+            
         }
     }
 
