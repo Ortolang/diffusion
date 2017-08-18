@@ -141,7 +141,8 @@
 				}
 			},
 			"wordCount": {
-				"type": "long"
+				"type": "keyword",
+				"index": "no"
 			},
 			"originDate": {
 				"type": "keyword",
