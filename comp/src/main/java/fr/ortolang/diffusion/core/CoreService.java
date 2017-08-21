@@ -161,7 +161,7 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     String resolvePathFromCollection(String key, String path) throws KeyNotFoundException, CoreServiceException, AccessDeniedException, PathNotFoundException, InvalidPathException;
 
-    List<Collection> systemListCollections() throws CoreServiceException;
+    List<Collection> systemListCollections(boolean isRoot) throws CoreServiceException;
 
 	/*DataObject*/
 

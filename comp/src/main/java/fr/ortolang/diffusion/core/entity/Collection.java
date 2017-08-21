@@ -49,7 +49,8 @@ import java.util.regex.Pattern;
 
 @Entity
 @NamedQueries({
-        @NamedQuery(name = "findCollections", query = "SELECT c FROM Collection c")
+        @NamedQuery(name = "findCollections", query = "SELECT c FROM Collection c"),
+        @NamedQuery(name = "findRootCollections", query = "SELECT c FROM Collection c WHERE root=true")
 })
 @SuppressWarnings("serial")
 public class Collection extends MetadataSource {

@@ -4085,9 +4085,12 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<Collection> systemListCollections() throws CoreServiceException {
+    public List<Collection> systemListCollections(boolean isRoot) throws CoreServiceException {
         try {
             TypedQuery<Collection> query = em.createNamedQuery("findCollections", Collection.class);
+            if (isRoot) {
+            	query = em.createNamedQuery("findRootCollections", Collection.class);
+            }
             List<Collection> collections = query.getResultList();
             for (Iterator<Collection> iterator = collections.iterator(); iterator.hasNext(); ) {
                 try {

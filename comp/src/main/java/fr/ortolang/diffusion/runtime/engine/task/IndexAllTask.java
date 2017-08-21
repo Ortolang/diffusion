@@ -172,7 +172,7 @@ public class IndexAllTask extends RuntimeEngineTask {
                 // COLLECTIONS
                 if (all || types.contains(Collection.OBJECT_TYPE)) {
                     CoreService core = getCoreService();
-                    List<Collection> collections = core.systemListCollections();
+                    List<Collection> collections = core.systemListCollections(phase == 2);
                     RegistryService registry = getRegistryService();
                     List<String> published = new ArrayList<>();
                     List<String> publishedRoot = new ArrayList<>();
