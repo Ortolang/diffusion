@@ -81,13 +81,13 @@ public class ProfileIndexableContent extends OrtolangIndexableContent {
         }
         if (profile.getGroups() != null)
         	map.put("groups", profile.getGroups());
-        Map<String, Object> infos = new HashMap<>();
-        for (Map.Entry<String, ProfileData> info : profile.getInfos().entrySet()) {
-            if (info.getValue().getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
-                infos.put(info.getKey(), info.getValue().getValue());
-            }
-        }
-        map.put("infos", infos);
+//        Map<String, Object> infos = new HashMap<>();
+//        for (Map.Entry<String, ProfileData> info : profile.getInfos().entrySet()) {
+//            if (info.getValue().getVisibility().equals(ProfileDataVisibility.EVERYBODY)) {
+//                infos.put(info.getKey(), info.getValue().getValue());
+//            }
+//        }
+//        map.put("infos", infos);
         setContent(map);
     }
 
