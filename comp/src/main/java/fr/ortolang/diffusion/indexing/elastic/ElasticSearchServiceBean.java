@@ -216,17 +216,21 @@ public class ElasticSearchServiceBean implements ElasticSearchService {
                     } catch (IllegalArgumentException e) {
                         LOGGER.log(Level.SEVERE, "IllegalArgumentException for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
                                 "] in index [" + indexableContent.getIndex() + "]", e);
+                        LOGGER.log(Level.SEVERE, indexableContent.getContent());
                         throw new ElasticSearchServiceException(e.getMessage(), e);
                     } catch (DocumentMissingException e) {
                         LOGGER.log(Level.SEVERE, "Document missing for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
                                 "] in index [" + indexableContent.getIndex() + "] " + e.getMessage());
+                        LOGGER.log(Level.SEVERE, indexableContent.getContent());
                         throw new ElasticSearchServiceException(e.getMessage(), e);
                     } catch (MapperParsingException e) {
                         LOGGER.log(Level.SEVERE, "MapperParsingException for key [" + indexableContent.getId() + "] with type [" + indexableContent.getType() +
                                 "] in index [" + indexableContent.getIndex() + "]", e);
+                        LOGGER.log(Level.SEVERE, indexableContent.getContent());
                         throw new ElasticSearchServiceException(e.getMessage(), e);
                     } catch (Exception e) {
                         LOGGER.log(Level.SEVERE, "An unexpected error happened while indexing key [" + indexableContent.getId() + "]", e);
+                        LOGGER.log(Level.SEVERE, indexableContent.getContent());
                         throw new ElasticSearchServiceException(e.getMessage(), e);
                     }
                 }
