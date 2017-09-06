@@ -1,16 +1,21 @@
 package fr.ortolang.diffusion.oai.format.handler;
 
 import java.io.StringReader;
+import java.util.Date;
 
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.json.JsonString;
 
 import fr.ortolang.diffusion.oai.exception.MetadataBuilderException;
 import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
 import fr.ortolang.diffusion.oai.format.Constant;
+import fr.ortolang.diffusion.oai.format.OAI_DC;
 import fr.ortolang.diffusion.oai.format.XMLDocument;
+import fr.ortolang.diffusion.oai.format.XMLElement;
 import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpNamespace;
@@ -29,150 +34,129 @@ public class OlacHandler implements MetadataHandler {
 			writeOlacDocument(builder);
 			
 			DublinCoreHandler.writeDcElement("title", jsonDoc, builder);
-//			JsonArray multilingualTitles = jsonDoc.getJsonArray("title");
-//	        for(JsonObject multilingualTitle : multilingualTitles.getValuesAs(JsonObject.class)) {
-//	        	olac.addDcMultilingualField("title", multilingualTitle.getString("lang"), XMLDocument.removeHTMLTag(multilingualTitle.getString("value")));
-//	        }
-	
-//	        JsonArray multilingualDescriptions = jsonDoc.getJsonArray("description");
-//	        for(JsonObject multilingualTitle : multilingualDescriptions.getValuesAs(JsonObject.class)) {
-//	        	olac.addDcMultilingualField("description", multilingualTitle.getString("lang"), XMLDocument.removeHTMLTag(multilingualTitle.getString("value")));
-//	        }
-//	
-//	        JsonArray corporaLanguages = jsonDoc.getJsonArray("corporaLanguages");
-//	        if(corporaLanguages!=null) {
-//	            for(JsonObject corporaLanguage : corporaLanguages.getValuesAs(JsonObject.class)) {
-//	            	JsonArray multilingualLabels = corporaLanguage.getJsonArray("labels");
-//	            	
-//	            	for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-//	//            		this.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
-//	//            		this.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
-//	            		olac.addOlacField("language", "olac:language", corporaLanguage.getString("id"), label.getString("lang"), label.getString("value"));
-//	            	}
-//	            }
-//	        }
-//	
-//	        JsonArray studyLanguages = jsonDoc.getJsonArray("studyLanguages");
-//	        if(studyLanguages!=null) {
-//	            for(JsonObject studyLanguage : studyLanguages.getValuesAs(JsonObject.class)) {
-//	            	JsonArray multilingualLabels = studyLanguage.getJsonArray("labels");
-//	            	
-//	            	for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-//	//            		this.addDcMultilingualField("subject", label.getString("lang"), label.getString("value"));
-//	//            		this.addDcMultilingualField("language", label.getString("lang"), label.getString("value"));
-//	            		olac.addOlacField("subject", "olac:language", studyLanguage.getString("id"), label.getString("lang"), label.getString("value"));
-//	            	}
-//	            }
-//	        }
-//	        
-//	        JsonArray multilingualKeywords = jsonDoc.getJsonArray("keywords");
-//	        if(multilingualKeywords!=null) {
-//	            for(JsonObject multilingualKeyword : multilingualKeywords.getValuesAs(JsonObject.class)) {
-//	            	olac.addDcMultilingualField("subject", multilingualKeyword.getString("lang"), multilingualKeyword.getString("value"));
-//	            }
-//	        }
-//	
-//	        JsonArray contributors = jsonDoc.getJsonArray("contributors");
-//	        if(contributors!=null) {
-//	            for(JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
-//	                JsonArray roles = contributor.getJsonArray("roles");
-//	                for(JsonObject role : roles.getValuesAs(JsonObject.class)) {
-////	                	JsonObject metaRole = role.getJsonObject("meta_ortolang-referential-json");
-//						String roleId = role.getString("id");
-//	                    
-//						olac.addOlacField("contributor", "olac:role", roleId, OAI_DC.person(contributor));
-//	                    
-//	                    if("author".equals(roleId)) {
-//	                    	olac.addDcField("creator", OAI_DC.person(contributor));
-//	                    }
-//	                }
-//	            }
-//	        }
-//	
-//	        JsonArray producers = jsonDoc.getJsonArray("producers");
-//	        if(producers!=null) {
-//	        	for(JsonObject producer : producers.getValuesAs(JsonObject.class)) {
-////	            	JsonObject metaOrganization = producer.getJsonObject("meta_ortolang-referential-json");
-//	            	
-//	            	if(producer.containsKey("fullname")) {
-//	            		olac.addDcField("publisher", producer.getString("fullname"));
-//	            	}
-//	            }
-//	        }
-//	
-//	        JsonArray sponsors = jsonDoc.getJsonArray("sponsors");
-//	        if(sponsors!=null) {
-//	        	for(JsonObject sponsor : sponsors.getValuesAs(JsonObject.class)) {
-////	            	JsonObject metaOrganization = sponsor.getJsonObject("meta_ortolang-referential-json");
-//	            	
-//	            	if(sponsor.containsKey("fullname")) {
-//	            		olac.addOlacField("contributor", "olac:role", "sponsor", sponsor.getString("fullname"));
-//	            	}
-//	            }
-//	        }
-//	        
-//	        JsonObject statusOfUse = jsonDoc.getJsonObject("statusOfUse");
-//	        if(statusOfUse!=null) {
-//	        	String idStatusOfUse = statusOfUse.getString("id");
-//	        	olac.addDcField("rights", idStatusOfUse);
-//	            
-//	            JsonArray multilingualLabels = statusOfUse.getJsonArray("labels");
-//	        	for(JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-//	        		olac.addDcMultilingualField("rights", label.getString("lang"), label.getString("value"));
-//	        	}
-//	        }
-//	        JsonArray conditionsOfUse = jsonDoc.getJsonArray("conditionsOfUse");
-//	        if(conditionsOfUse!=null) {
-//	        	for(JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
-//	        		olac.addDcMultilingualField("rights", label.getString("lang"), XMLDocument.removeHTMLTag(label.getString("value")));
-//	        	}
-//	        }
-//	        
-//	        JsonObject license = jsonDoc.getJsonObject("license");
-//	        if(license!=null) {
-//	        	if(license.containsKey("label")) {
-//	        		olac.addDctermsMultilingualField("license", "fr", license.getString("label"));
-//	        	}
-//	        }
-//	
-//	        JsonString linguisticDataType = jsonDoc.getJsonString("linguisticDataType");
-//	        if(linguisticDataType!=null) {
-//	        	olac.addOlacField("type", "olac:linguistic-type", linguisticDataType.getString());
-//	        }
-//	        JsonArray discourseTypes = jsonDoc.getJsonArray("discourseTypes");
-//	        if(discourseTypes!=null) {
-//	            for(JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
-//	            	olac.addOlacField("type", "olac:discourse-type", discourseType.getString());
-//	            }
-//	        }
-//	        JsonArray linguisticSubjects = jsonDoc.getJsonArray("linguisticSubjects");
-//	        if(linguisticSubjects!=null) {
-//	            for(JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
-//	            	olac.addOlacField("subject", "olac:linguistic-field", linguisticSubject.getString());
-//	            }
-//	        }
-//	
-//	        JsonArray bibligraphicCitations = jsonDoc.getJsonArray("bibliographicCitation");
-//	        if(bibligraphicCitations!=null) {
-//	            for(JsonObject multilingualBibliographicCitation : bibligraphicCitations.getValuesAs(JsonObject.class)) {
-//	            	olac.addDctermsMultilingualField("bibliographicCitation", multilingualBibliographicCitation.getString("lang"), multilingualBibliographicCitation.getString("value"));
-//	            }
-//	        }
-//	        JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
-//	        JsonString creationDate = jsonDoc.getJsonString("originDate");
-//	        if(creationDate!=null) {
-//	        	olac.addDcField("date", creationDate.getString());
-//	          //TODO check date validation and convert
-//	            olac.addDctermsField("temporal", "dcterms:W3CDTF", creationDate.getString());
-//	        } else {
-//	            if(publicationDate!=null) {
-//	            	olac.addDcField("date", publicationDate.getString());
-//	            }
-//	        }
-//	        JsonNumber lastModificationDate = doc.getJsonNumber("lastModificationDate");
-//	        Long longTimestamp = lastModificationDate.longValue();
-//	        Date datestamp = new Date(longTimestamp);
-//	        olac.addDctermsField("modified", "dcterms:W3CDTF", w3cdtf.format(datestamp));
+			DublinCoreHandler.writeDcElement("description", jsonDoc, builder);
+			DublinCoreHandler.writeDcElement("keywords", jsonDoc, "subject", builder);
+
+			JsonArray corporaLanguages = jsonDoc.getJsonArray("corporaLanguages");
+			if (corporaLanguages != null) {
+				for (JsonObject corporaLanguage : corporaLanguages.getValuesAs(JsonObject.class)) {
+					JsonArray multilingualLabels = corporaLanguage.getJsonArray("labels");
+
+					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+						DublinCoreHandler.writeDcMultilingualElement("subject", label, builder);
+						DublinCoreHandler.writeDcMultilingualElement("language", label, builder);
+						writeOlacElement("language", "olac:language", corporaLanguage.getString("id"), label.getString("lang"), label.getString("value"), builder);
+					}
+				}
+			}
+
+			JsonArray studyLanguages = jsonDoc.getJsonArray("studyLanguages");
+			if (studyLanguages != null) {
+				for (JsonObject studyLanguage : studyLanguages.getValuesAs(JsonObject.class)) {
+					JsonArray multilingualLabels = studyLanguage.getJsonArray("labels");
+
+					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+						DublinCoreHandler.writeDcMultilingualElement("subject", label, builder);
+						DublinCoreHandler.writeDcMultilingualElement("language", label, builder);
+						writeOlacElement("subject", "olac:language", studyLanguage.getString("id"), label.getString("lang"), label.getString("value"), builder);
+					}
+				}
+			}
+
+			JsonArray producers = jsonDoc.getJsonArray("producers");
+			if (producers != null) {
+				for (JsonObject producer : producers.getValuesAs(JsonObject.class)) {
+					if (producer.containsKey("fullname")) {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "publisher", producer.getString("fullname"));
+					}
+				}
+			}
+
+			JsonArray contributors = jsonDoc.getJsonArray("contributors");
+			if (contributors != null) {
+				for (JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
+					JsonArray roles = contributor.getJsonArray("roles");
+					for (JsonObject role : roles.getValuesAs(JsonObject.class)) {
+						String roleId = role.getString("id");
+						writeOlacElement("contributor", "olac:role", roleId, null, Constant.person(contributor), builder);
+	                    
+	                    if("author".equals(roleId)) {
+	                    	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "creator", Constant.person(contributor));
+	                    }
+					}
+				}
+			}
+
+	        JsonArray sponsors = jsonDoc.getJsonArray("sponsors");
+	        if(sponsors!=null) {
+	        	for(JsonObject sponsor : sponsors.getValuesAs(JsonObject.class)) {
+	            	
+	            	if(sponsor.containsKey("fullname")) {
+	            		writeOlacElement("contributor", "olac:role", "sponsor", null, sponsor.getString("fullname"), builder);
+	            	}
+	            }
+	        }
+	        JsonObject statusOfUse = jsonDoc.getJsonObject("statusOfUse");
+			if (statusOfUse != null) {
+				String idStatusOfUse = statusOfUse.getString("id");
+				builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "rights", idStatusOfUse);
+
+				JsonArray multilingualLabels = statusOfUse.getJsonArray("labels");
+				for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+					DublinCoreHandler.writeDcMultilingualElement("rights", label, builder);
+				}
+			}
+			JsonArray conditionsOfUse = jsonDoc.getJsonArray("conditionsOfUse");
+			if (conditionsOfUse != null) {
+				for (JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
+					DublinCoreHandler.writeDcMultilingualElement("rights", label, builder);
+				}
+			}
+			JsonObject license = jsonDoc.getJsonObject("license");
+			if (license != null) {
+				if (license != null) {
+					XmlDumpAttributes attrs = new XmlDumpAttributes();
+			        attrs.put("xml:lang", "fr");
+					builder.writeStartEndElement(Constant.DCTERMS_NAMESPACE_PREFIX, "license", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
+				}
+			}
+			JsonArray linguisticSubjects = jsonDoc.getJsonArray("linguisticSubjects");
+			if (linguisticSubjects != null) {
+				for (JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
+					writeOlacElement("subject", "olac:linguistic-field", linguisticSubject.getString(), null, null, builder);
+				}
+			}
+			JsonString linguisticDataType = jsonDoc.getJsonString("linguisticDataType");
+			if (linguisticDataType != null) {
+				writeOlacElement("type", "olac:linguistic-type", linguisticDataType.getString(), null, null, builder);
+			}
+			JsonArray discourseTypes = jsonDoc.getJsonArray("discourseTypes");
+			if (discourseTypes != null) {
+				for (JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
+					writeOlacElement("type", "olac:discourse-type", discourseType.getString(), null, null, builder);
+				}
+			}
+	        JsonArray bibligraphicCitations = jsonDoc.getJsonArray("bibliographicCitation");
+	        if(bibligraphicCitations!=null) {
+	            for(JsonObject multilingualBibliographicCitation : bibligraphicCitations.getValuesAs(JsonObject.class)) {
+	            	XmlDumpAttributes attrs = new XmlDumpAttributes();
+			        attrs.put("xml:lang", multilingualBibliographicCitation.getString("lang"));
+					builder.writeStartEndElement(Constant.DCTERMS_NAMESPACE_PREFIX, "bibliographicCitation", attrs, XMLDocument.removeHTMLTag(multilingualBibliographicCitation.getString("value")));
+	            }
+	        }
+	        JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
+	        JsonString creationDate = jsonDoc.getJsonString("originDate");
+	        if(creationDate!=null) {
+	        	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", creationDate.getString());
+	          //TODO check date validation and convert
+	            XmlDumpAttributes attrs = new XmlDumpAttributes();
+		        attrs.put("xsi:type", "dcterms:W3CDTF");
+				builder.writeStartEndElement(Constant.DCTERMS_NAMESPACE_PREFIX, "temporal", attrs, creationDate.getString());
+	        } else {
+	            if(publicationDate!=null) {
+		        	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+	            }
+	        }
 			
         	builder.writeEndDocument();
 		} catch (Exception e) {
@@ -272,5 +256,20 @@ public class OlacHandler implements MetadataHandler {
     	}
 //    	return this;
     }
-    
+
+    public void writeOlacElement(String elementName, String xsitype, String olaccode, String lang, String value, MetadataBuilder builder) throws MetadataBuilderException {
+    	XmlDumpAttributes attrs = new XmlDumpAttributes();
+    	if (xsitype!=null) {
+    		attrs.put("xsi:type", xsitype);
+    	}
+    	if (olaccode!=null) {
+    		attrs.put("olac:code", olaccode);
+    	}
+    	if (lang!=null) {
+    		attrs.put("xml:lang", lang);
+    	}
+    	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, elementName, attrs, value!=null ? XMLDocument.removeHTMLTag(value) : null);
+//    	fields.add(XMLElement.createElement(OLAC_NAMESPACE, name, value).withAttribute("xsi:type", xsitype).withAttribute("olac:code", olaccode).withAttribute("xml:lang", lang));
+    }
+
 }
