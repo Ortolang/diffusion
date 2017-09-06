@@ -44,7 +44,7 @@ public class OlacHandler implements MetadataHandler {
 
 					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 						DublinCoreHandler.writeDcMultilingualElement("subject", label, builder);
-						DublinCoreHandler.writeDcMultilingualElement("language", label, builder);
+//						DublinCoreHandler.writeDcMultilingualElement("language", label, builder);
 						writeOlacElement("language", "olac:language", corporaLanguage.getString("id"), label.getString("lang"), label.getString("value"), builder);
 					}
 				}
@@ -57,7 +57,7 @@ public class OlacHandler implements MetadataHandler {
 
 					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 						DublinCoreHandler.writeDcMultilingualElement("subject", label, builder);
-						DublinCoreHandler.writeDcMultilingualElement("language", label, builder);
+//						DublinCoreHandler.writeDcMultilingualElement("language", label, builder);
 						writeOlacElement("subject", "olac:language", studyLanguage.getString("id"), label.getString("lang"), label.getString("value"), builder);
 					}
 				}
