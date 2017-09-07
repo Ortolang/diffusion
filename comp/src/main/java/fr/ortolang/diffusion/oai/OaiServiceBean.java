@@ -611,17 +611,6 @@ public class OaiServiceBean implements OaiService {
 				return null;
 			}
 
-			// TODO Automatically adds handles to 'identifier' XML element
-//			List<String> handles;
-//			try {
-//				handles = handleStore.listHandlesForKey(key);
-//				for (String handle : handles) {
-//					xml.addDcField("identifier", "http://hdl.handle.net/" + handle);
-//				}
-//			} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
-//				LOGGER.log(Level.WARNING, "No handle for key " + key, e);
-//			}
-
 			if (writer != null) {
 				writer.flush();
 	            writer.close();

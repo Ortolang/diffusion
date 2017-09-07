@@ -269,20 +269,6 @@ public class CmdiHandler implements MetadataHandler {
 		builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, tag, attrs, XMLDocument.removeHTMLTag(multilingualObject.getString("value")));
 	}
 
-    public void writeCmdiOlacElement(String elementName, String xsitype, String olaccode, String lang, String value, MetadataBuilder builder) throws MetadataBuilderException {
-    	XmlDumpAttributes attrs = new XmlDumpAttributes();
-    	if (xsitype!=null) {
-    		attrs.put("xsi:type", xsitype);
-    	}
-    	if (olaccode!=null) {
-    		attrs.put("olac:code", olaccode);
-    	}
-    	if (lang!=null) {
-    		attrs.put("xml:lang", lang);
-    	}
-    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, elementName, attrs, value!=null ? XMLDocument.removeHTMLTag(value) : null);
-    }
-
 	public List<String> getListHandlesRoot() {
 		return listHandlesRoot;
 	}
