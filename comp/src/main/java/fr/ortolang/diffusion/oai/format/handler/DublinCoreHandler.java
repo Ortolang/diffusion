@@ -28,7 +28,7 @@ public class DublinCoreHandler implements MetadataHandler {
 
     private static final Logger LOGGER = Logger.getLogger(DublinCoreHandler.class.getName());
 
-	private List<String> listHandlesRoot;
+	private List<String> listHandles;
 	
 	public DublinCoreHandler() { }
 
@@ -46,8 +46,8 @@ public class DublinCoreHandler implements MetadataHandler {
 		try {
 			writeDcDocument(builder);
 			
-			if (listHandlesRoot != null) {
-				listHandlesRoot.forEach(handleUrl -> {
+			if (listHandles != null) {
+				listHandles.forEach(handleUrl -> {
 					try {
 						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
 					} catch (MetadataBuilderException e) {
@@ -163,6 +163,18 @@ public class DublinCoreHandler implements MetadataHandler {
 		try {
 			writeDcDocument(builder);
 			JsonObject jsonDoc = jsonReader.readObject();
+
+			if (listHandles != null) {
+				listHandles.forEach(handleUrl -> {
+					try {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+					} catch (MetadataBuilderException e) {
+						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
+						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
+					}
+				});
+			}
+			
 			for (String elm : Constant.DC_ELEMENTS) {
 				writeDcElement(elm, jsonDoc, builder);
 			}
@@ -210,11 +222,11 @@ public class DublinCoreHandler implements MetadataHandler {
 	}
 
 	public List<String> getListHandlesRoot() {
-		return listHandlesRoot;
+		return listHandles;
 	}
 
 	public void setListHandlesRoot(List<String> listHandlesRoot) {
-		this.listHandlesRoot = listHandlesRoot;
+		this.listHandles = listHandlesRoot;
 	}
 
 }

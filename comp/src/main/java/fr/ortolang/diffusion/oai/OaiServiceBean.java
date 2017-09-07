@@ -498,17 +498,17 @@ public class OaiServiceBean implements OaiService {
 			if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
 				// Writes DC metadata
 				DublinCoreHandler handler = new DublinCoreHandler();
-				handler.setListHandlesRoot(listHandlesRoot(root));
+				handler.setListHandlesRoot(listHandlesForKey(root));
 				handler.writeItem(item, builder);
 			} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
 				// Writes OLAC metadata 
 				OlacHandler handler = new OlacHandler();
-				handler.setListHandlesRoot(listHandlesRoot(root));
+				handler.setListHandlesRoot(listHandlesForKey(root));
 				handler.writeItem(item, builder);
 			} else if (metadataPrefix.equals(MetadataFormat.CMDI)) {
 				// Writes CMDI metadata 
 				CmdiHandler handler = new CmdiHandler();
-				handler.setListHandlesRoot(listHandlesRoot(root));
+				handler.setListHandlesRoot(listHandlesForKey(root));
 				handler.writeItem(item, builder);
 			}
 	
@@ -528,15 +528,15 @@ public class OaiServiceBean implements OaiService {
 		}
 	}
 
-	private List<String> listHandlesRoot(String root) {
+	private List<String> listHandlesForKey(String key) {
 		List<String> urls = new ArrayList<String>();
 		try {
-			List<String> handles = handleStore.listHandlesForKey(root);
+			List<String> handles = handleStore.listHandlesForKey(key);
 			for (String handle : handles) {
 				urls.add("http://hdl.handle.net/" + handle);
 			}
 		} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
-			LOGGER.log(Level.WARNING, "No handle for key " + root, e);
+			LOGGER.log(Level.WARNING, "No handle for key " + key, e);
 		}
 		return urls;
 	}
@@ -582,12 +582,14 @@ public class OaiServiceBean implements OaiService {
 						// Input : OAI_DC JSON
 						// Output : OAI_DC XML
 						DublinCoreHandler handler = new DublinCoreHandler();
+						handler.setListHandlesRoot(listHandlesForKey(key));
 						handler.write(StreamUtils.getContent(binaryStore.get(md.getStream())), builder);
 					} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
 						// Downgrades
 						// Input : OLAC JSON
 						// Output : OAI_DC XML
 						DublinCoreOutputConverter converter = new DublinCoreOutputConverter();
+						converter.setListHandles(listHandlesForKey(key));
 						converter.convert(StreamUtils.getContent(binaryStore.get(md.getStream())), metadataPrefix, builder);
 					}
 				} else if (outputMetadataFormat.equals(MetadataFormat.OLAC)
@@ -596,6 +598,7 @@ public class OaiServiceBean implements OaiService {
 					// Input : OLAC | OAI_DC JSON
 					// Output : OLAC XML
 					OlacHandler handler = new OlacHandler();
+					handler.setListHandlesRoot(listHandlesForKey(key));
 					handler.write(StreamUtils.getContent(binaryStore.get(md.getStream())), builder);
 				} else if (outputMetadataFormat.equals(MetadataFormat.CMDI) 
 						&& metadataPrefix.equals(MetadataFormat.OLAC)) {

@@ -4,6 +4,7 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -11,6 +12,7 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
+import fr.ortolang.diffusion.oai.exception.MetadataBuilderException;
 import fr.ortolang.diffusion.oai.exception.MetadataConverterException;
 import fr.ortolang.diffusion.oai.format.Constant;
 import fr.ortolang.diffusion.oai.format.DCXMLDocument;
@@ -28,6 +30,10 @@ import fr.ortolang.diffusion.oai.format.handler.DublinCoreHandler;
  */
 public class DublinCoreOutputConverter implements MetadataConverter {
 
+    private static final Logger LOGGER = Logger.getLogger(DublinCoreOutputConverter.class.getName());
+
+	private List<String> listHandles;
+	
 	@Override
 	public void convert(String source, String format, MetadataBuilder builder) throws MetadataConverterException {
 		if ( MetadataFormat.OLAC.equals(format)) {
@@ -48,6 +54,17 @@ public class DublinCoreOutputConverter implements MetadataConverter {
 			DublinCoreHandler.writeDcDocument(builder);
 			JsonObject jsonDoc = jsonReader.readObject();
 
+			if (listHandles != null) {
+				listHandles.forEach(handleUrl -> {
+					try {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+					} catch (MetadataBuilderException e) {
+						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
+						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
+					}
+				});
+			}
+			
 			// Converts elements from OLAC to DC based on OLAC-to-OAI_DC
 			// crosswalk
 			// [http://www.language-archives.org/NOTE/olac_display.html]
@@ -157,6 +174,14 @@ public class DublinCoreOutputConverter implements MetadataConverter {
 			jsonReader.close();
 			reader.close();
 		}
+	}
+
+	public List<String> getListHandles() {
+		return listHandles;
+	}
+
+	public void setListHandles(List<String> listHandles) {
+		this.listHandles = listHandles;
 	}
 
 }

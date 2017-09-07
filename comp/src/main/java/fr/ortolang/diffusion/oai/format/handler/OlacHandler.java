@@ -24,7 +24,7 @@ public class OlacHandler implements MetadataHandler {
 
     private static final Logger LOGGER = Logger.getLogger(OlacHandler.class.getName());
 
-	private List<String> listHandlesRoot;
+	private List<String> listHandles;
 	
 	@Override
 	public void writeItem(String item, MetadataBuilder builder) throws MetadataHandlerException {
@@ -36,8 +36,8 @@ public class OlacHandler implements MetadataHandler {
 		try {
 			writeOlacDocument(builder);
 
-			if (listHandlesRoot != null) {
-				listHandlesRoot.forEach(handleUrl -> {
+			if (listHandles != null) {
+				listHandles.forEach(handleUrl -> {
 					try {
 						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
 					} catch (MetadataBuilderException e) {
@@ -190,7 +190,18 @@ public class OlacHandler implements MetadataHandler {
         try {
         	writeOlacDocument(builder);
         	JsonObject jsonDoc = jsonReader.readObject();
-        	
+
+			if (listHandles != null) {
+				listHandles.forEach(handleUrl -> {
+					try {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+					} catch (MetadataBuilderException e) {
+						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
+						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
+					}
+				});
+			}
+			
         	// DCTerms elements
 //        	Constant.DCTERMS_ELEMENTS.stream().forEach(elm -> writeDctermsElement(elm, jsonDoc, builder));
         	for(String dcterms : Constant.DCTERMS_ELEMENTS) {
@@ -287,11 +298,11 @@ public class OlacHandler implements MetadataHandler {
     }
 
 	public List<String> getListHandlesRoot() {
-		return listHandlesRoot;
+		return listHandles;
 	}
 
 	public void setListHandlesRoot(List<String> listHandlesRoot) {
-		this.listHandlesRoot = listHandlesRoot;
+		this.listHandles = listHandlesRoot;
 	}
 
 }
