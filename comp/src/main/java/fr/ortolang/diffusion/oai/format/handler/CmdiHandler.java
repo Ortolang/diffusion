@@ -1,6 +1,9 @@
 package fr.ortolang.diffusion.oai.format.handler;
 
 import java.io.StringReader;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -19,6 +22,10 @@ import fr.ortolang.diffusion.xml.XmlDumpNamespaces;
 
 public class CmdiHandler implements MetadataHandler {
 
+    private static final Logger LOGGER = Logger.getLogger(CmdiHandler.class.getName());
+
+	private List<String> listHandlesRoot;
+	
 	@Override
 	public void writeItem(String item, MetadataBuilder builder) throws MetadataHandlerException {
 
@@ -37,6 +44,17 @@ public class CmdiHandler implements MetadataHandler {
 			builder.writeStartElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_COMPONENTS_ELEMENT);
 			
 			builder.writeStartElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, Constant.CMDI_OLAC_ELEMENT);
+
+			if (listHandlesRoot != null) {
+				listHandlesRoot.forEach(handleUrl -> {
+					try {
+						builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "identifier", handleUrl);
+					} catch (MetadataBuilderException e) {
+						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
+						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
+					}
+				});
+			}
 			
 			writeCmdiOlacElement("title", jsonDoc, builder);
 			writeCmdiOlacElement("description", jsonDoc, builder);
@@ -264,4 +282,12 @@ public class CmdiHandler implements MetadataHandler {
     	}
     	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, elementName, attrs, value!=null ? XMLDocument.removeHTMLTag(value) : null);
     }
+
+	public List<String> getListHandlesRoot() {
+		return listHandlesRoot;
+	}
+
+	public void setListHandlesRoot(List<String> listHandlesRoot) {
+		this.listHandlesRoot = listHandlesRoot;
+	}
 }

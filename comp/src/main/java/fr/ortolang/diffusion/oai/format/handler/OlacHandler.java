@@ -1,11 +1,12 @@
 package fr.ortolang.diffusion.oai.format.handler;
 
 import java.io.StringReader;
-import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.json.Json;
 import javax.json.JsonArray;
-import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonString;
@@ -13,9 +14,7 @@ import javax.json.JsonString;
 import fr.ortolang.diffusion.oai.exception.MetadataBuilderException;
 import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
 import fr.ortolang.diffusion.oai.format.Constant;
-import fr.ortolang.diffusion.oai.format.OAI_DC;
 import fr.ortolang.diffusion.oai.format.XMLDocument;
-import fr.ortolang.diffusion.oai.format.XMLElement;
 import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpNamespace;
@@ -23,6 +22,10 @@ import fr.ortolang.diffusion.xml.XmlDumpNamespaces;
 
 public class OlacHandler implements MetadataHandler {
 
+    private static final Logger LOGGER = Logger.getLogger(OlacHandler.class.getName());
+
+	private List<String> listHandlesRoot;
+	
 	@Override
 	public void writeItem(String item, MetadataBuilder builder) throws MetadataHandlerException {
 
@@ -32,6 +35,17 @@ public class OlacHandler implements MetadataHandler {
 
 		try {
 			writeOlacDocument(builder);
+
+			if (listHandlesRoot != null) {
+				listHandlesRoot.forEach(handleUrl -> {
+					try {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+					} catch (MetadataBuilderException e) {
+						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
+						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
+					}
+				});
+			}
 			
 			DublinCoreHandler.writeDcElement("title", jsonDoc, builder);
 			DublinCoreHandler.writeDcElement("description", jsonDoc, builder);
@@ -271,5 +285,13 @@ public class OlacHandler implements MetadataHandler {
     	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, elementName, attrs, value!=null ? XMLDocument.removeHTMLTag(value) : null);
 //    	fields.add(XMLElement.createElement(OLAC_NAMESPACE, name, value).withAttribute("xsi:type", xsitype).withAttribute("olac:code", olaccode).withAttribute("xml:lang", lang));
     }
+
+	public List<String> getListHandlesRoot() {
+		return listHandlesRoot;
+	}
+
+	public void setListHandlesRoot(List<String> listHandlesRoot) {
+		this.listHandlesRoot = listHandlesRoot;
+	}
 
 }

@@ -1,6 +1,5 @@
 package fr.ortolang.diffusion.oai;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -34,7 +33,6 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
-import org.activiti.bpmn.converter.IndentingXMLStreamWriter;
 import org.jboss.ejb3.annotation.SecurityDomain;
 
 import fr.ortolang.diffusion.OrtolangException;
@@ -58,9 +56,6 @@ import fr.ortolang.diffusion.oai.exception.OaiServiceException;
 import fr.ortolang.diffusion.oai.exception.RecordNotFoundException;
 import fr.ortolang.diffusion.oai.exception.SetAlreadyExistsException;
 import fr.ortolang.diffusion.oai.exception.SetNotFoundException;
-import fr.ortolang.diffusion.oai.format.DCXMLDocument;
-import fr.ortolang.diffusion.oai.format.OAI_DCFactory;
-import fr.ortolang.diffusion.oai.format.OLACFactory;
 import fr.ortolang.diffusion.oai.format.builder.XMLMetadataBuilder;
 import fr.ortolang.diffusion.oai.format.converter.DublinCoreOutputConverter;
 import fr.ortolang.diffusion.oai.format.converter.CmdiOutputConverter;
@@ -503,27 +498,20 @@ public class OaiServiceBean implements OaiService {
 			if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
 				// Writes DC metadata
 				DublinCoreHandler handler = new DublinCoreHandler();
+				handler.setListHandlesRoot(listHandlesRoot(root));
 				handler.writeItem(item, builder);
 			} else if (metadataPrefix.equals(MetadataFormat.OLAC)) {
 				// Writes OLAC metadata 
 				OlacHandler handler = new OlacHandler();
+				handler.setListHandlesRoot(listHandlesRoot(root));
 				handler.writeItem(item, builder);
 			} else if (metadataPrefix.equals(MetadataFormat.CMDI)) {
 				// Writes CMDI metadata 
 				CmdiHandler handler = new CmdiHandler();
+				handler.setListHandlesRoot(listHandlesRoot(root));
 				handler.writeItem(item, builder);
 			}
 	
-			//TODO Automatically adds handles to 'identifier' XML element
-	//		List<String> handles;
-	//		try {
-	//			handles = handleStore.listHandlesForKey(root);
-	//			for (String handle : handles) {
-	//				xml.addDcField("identifier", "http://hdl.handle.net/" + handle);
-	//			}
-	//		} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
-	//			LOGGER.log(Level.WARNING, "No handle for key " + root, e);
-	//		}
 			if (writer != null) {
 				writer.flush();
 	            writer.close();
@@ -538,7 +526,19 @@ public class OaiServiceBean implements OaiService {
 			throw new MetadataPrefixUnknownException(
 					"unable to build xml for oai record cause metadata prefix unknown " + metadataPrefix, e);
 		}
+	}
 
+	private List<String> listHandlesRoot(String root) {
+		List<String> urls = new ArrayList<String>();
+		try {
+			List<String> handles = handleStore.listHandlesForKey(root);
+			for (String handle : handles) {
+				urls.add("http://hdl.handle.net/" + handle);
+			}
+		} catch (NullPointerException | ClassCastException | HandleStoreServiceException e) {
+			LOGGER.log(Level.WARNING, "No handle for key " + root, e);
+		}
+		return urls;
 	}
 
 	/**

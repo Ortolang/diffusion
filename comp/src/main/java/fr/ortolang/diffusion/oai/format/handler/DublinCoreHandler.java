@@ -1,6 +1,9 @@
 package fr.ortolang.diffusion.oai.format.handler;
 
 import java.io.StringReader;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -23,6 +26,10 @@ import fr.ortolang.diffusion.xml.XmlDumpNamespaces;
  */
 public class DublinCoreHandler implements MetadataHandler {
 
+    private static final Logger LOGGER = Logger.getLogger(DublinCoreHandler.class.getName());
+
+	private List<String> listHandlesRoot;
+	
 	public DublinCoreHandler() { }
 
 	/**
@@ -38,6 +45,17 @@ public class DublinCoreHandler implements MetadataHandler {
 
 		try {
 			writeDcDocument(builder);
+			
+			if (listHandlesRoot != null) {
+				listHandlesRoot.forEach(handleUrl -> {
+					try {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+					} catch (MetadataBuilderException e) {
+						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
+						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
+					}
+				});
+			}
 			
 			writeDcElement("title", jsonDoc, builder);
 			writeDcElement("description", jsonDoc, builder);
@@ -189,6 +207,14 @@ public class DublinCoreHandler implements MetadataHandler {
 		XmlDumpAttributes attrs = new XmlDumpAttributes();
         attrs.put("xml:lang", multilingualObject.getString("lang"));
 		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, tag, attrs, XMLDocument.removeHTMLTag(multilingualObject.getString("value")));
+	}
+
+	public List<String> getListHandlesRoot() {
+		return listHandlesRoot;
+	}
+
+	public void setListHandlesRoot(List<String> listHandlesRoot) {
+		this.listHandlesRoot = listHandlesRoot;
 	}
 
 }
