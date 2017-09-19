@@ -1,5 +1,6 @@
 package fr.ortolang.diffusion.oai;
 
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,7 +17,6 @@ import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.event.entity.Event;
-import fr.ortolang.diffusion.oai.exception.OaiServiceException;
 import fr.ortolang.diffusion.registry.RegistryService;
 
 @MessageDriven(name = "OaiListener", activationConfig = { @ActivationConfigProperty(propertyName = "destinationType", propertyValue = "javax.jms.Topic"),
@@ -33,8 +33,8 @@ public class OaiListenerBean implements MessageListener {
     @EJB
     private CoreService core;
     @EJB
-    private OaiService oai;
-
+    private OaiWorker worker;
+    
     @Override
     @PermitAll
     public void onMessage(Message message) {
@@ -44,12 +44,13 @@ public class OaiListenerBean implements MessageListener {
             if (event.getArguments().containsKey("snapshot")) {
                 String wskey = event.getFromObject();
                 String snapshot = event.getArguments().get("snapshot");
-
-                oai.buildFromWorkspace(wskey, snapshot);
+                HashMap<String, String> args = new HashMap<String, String>();
+                args.put("snapshot", snapshot);
+                worker.submit(wskey, OaiWorker.BUILD_ACTION, args);
             } else {
                 LOGGER.log(Level.SEVERE, "unable to create OAI record without specifying a snapshot");
             }
-        } catch (OrtolangException | OaiServiceException e) {
+        } catch (OrtolangException e) {
             LOGGER.log(Level.SEVERE, "unable to create OAI record when receiving publication event for a snapshot", e);
         }
     }

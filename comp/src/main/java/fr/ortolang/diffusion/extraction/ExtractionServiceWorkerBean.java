@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.extraction;
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -193,6 +194,12 @@ public class ExtractionServiceWorkerBean implements ExtractionServiceWorker {
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void submit(String key, String action) {
+        submit(key, action, null);
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void submit(String key, String action, Map<String, String> args) {
         Job job = jobService.create(JOB_TYPE, EXTRACT_ACTION, key, System.currentTimeMillis() + DELAY);
         queue.put(job);
     }

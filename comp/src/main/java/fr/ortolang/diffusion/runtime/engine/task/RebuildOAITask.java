@@ -9,7 +9,11 @@ import javax.transaction.Status;
 
 import org.activiti.engine.delegate.DelegateExecution;
 
+import fr.ortolang.diffusion.OrtolangEvent;
+import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
 import fr.ortolang.diffusion.core.CoreServiceException;
+import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.publication.PublicationService;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineEvent;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTask;
 import fr.ortolang.diffusion.runtime.engine.RuntimeEngineTaskException;
@@ -56,21 +60,28 @@ public class RebuildOAITask extends RuntimeEngineTask {
 			}
 		}
         
-    	report.append("LIST OF WORKSPACES REBUILDED :").append("\r\n");
         for (String alias : aliases) {
         	try {
                 String wskey = getCoreService().resolveWorkspaceAlias(alias);
-                getOaiService().buildFromWorkspace(wskey);
-                report.append("+ ").append(alias).append("\r\n");
-
+                String snapshot = getCoreService().findWorkspaceLatestPublishedSnapshot(wskey);
+                
+                if (snapshot != null) {
+	                String caller = getMembershipService().getProfileKeyForConnectedIdentifier();
+	                report.append("[INFO] publishing snapshot ").append(snapshot).append(" to workspace ").append(wskey).append("\r\n");
+	                
+	                ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("snapshot", snapshot);
+	                getNotificationService().throwEvent(wskey, caller, Workspace.OBJECT_TYPE, 
+	                        OrtolangEvent.buildEventType(PublicationService.SERVICE_NAME, Workspace.OBJECT_TYPE, "publish-snapshot"), argumentsBuilder.build());
+                }
+                
                 if (getUserTransaction().getStatus() == Status.STATUS_ACTIVE) {
-                    report.append("[COMMIT-TRAN]\r\n");
+//                    report.append("[COMMIT-TRAN]\r\n");
                     getUserTransaction().commit();
                     getUserTransaction().begin();
-                    report.append("[BEGIN-TRAN]\r\n");
+//                    report.append("[BEGIN-TRAN]\r\n");
                 }
         	} catch (Exception e) {
-        		report.append("- ").append(alias).append("\r\n").append(e.getMessage()).append("\r\n");
+        		report.append("[ERROR] workspace ").append(alias).append("\r\n").append(e.getMessage()).append("\r\n");
         		try {
         			report.append("[ROLLBACK-TRAN]\r\n");
 					getUserTransaction().rollback();
