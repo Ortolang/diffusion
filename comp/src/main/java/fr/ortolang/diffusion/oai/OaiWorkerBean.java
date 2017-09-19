@@ -1,6 +1,7 @@
 package fr.ortolang.diffusion.oai;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,12 +24,18 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.concurrent.ManagedThreadFactory;
+import javax.xml.XMLConstants;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
+import org.xml.sax.SAXException;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangJob;
@@ -386,6 +393,14 @@ public class OaiWorkerBean implements OaiWorker {
     	            writer.close();
     			}
     			if (!result.toString().isEmpty()) {
+    				// Validates the XML Document
+    				try {
+						validateXml(result.toString());
+					} catch (SAXException | IOException e) {
+						throw new OaiServiceException(
+        						"unable to build xml for oai record cause xml is not valid ", e);
+					}
+    					
     				return result.toString();
     			} else {
     				throw new MetadataPrefixUnknownException(
@@ -397,6 +412,14 @@ public class OaiWorkerBean implements OaiWorker {
     		}
     	}
 
+    	private void validateXml(String xml) throws SAXException, IOException {
+    		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            Schema schema = schemaFactory.newSchema();
+
+            Validator validator = schema.newValidator();
+            validator.validate(new StreamSource(new StringReader(xml)));
+    	}
+    	
     	private List<String> listHandlesForKey(String key) {
     		List<String> urls = new ArrayList<String>();
     		try {
