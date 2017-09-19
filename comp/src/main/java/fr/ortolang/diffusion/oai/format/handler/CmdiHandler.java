@@ -37,14 +37,61 @@ public class CmdiHandler implements MetadataHandler {
 			
 			writeCmdiDocument(builder);
 			writeCmdiHeader(Constant.CMDI_MDCREATOR_VALUE, builder);
-			//TODO writeCmdiResources : for each identifier ?
-			builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_JOURNALFILEPROXYLIST_ELEMENT);
-			builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCERELATIONLISTT_ELEMENT);
+			writeCmdiResources(builder);
 			
 			builder.writeStartElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_COMPONENTS_ELEMENT);
 			
 			builder.writeStartElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, Constant.CMDI_OLAC_ELEMENT);
 
+			JsonArray bibligraphicCitations = jsonDoc.getJsonArray("bibliographicCitation");
+	        if(bibligraphicCitations!=null) {
+	            for(JsonObject multilingualBibliographicCitation : bibligraphicCitations.getValuesAs(JsonObject.class)) {
+	            	XmlDumpAttributes attrs = new XmlDumpAttributes();
+			        attrs.put("xml:lang", multilingualBibliographicCitation.getString("lang"));
+					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "bibliographicCitation", attrs, XMLDocument.removeHTMLTag(multilingualBibliographicCitation.getString("value")));
+	            }
+	        }
+	        
+			JsonArray sponsors = jsonDoc.getJsonArray("sponsors");
+	        if(sponsors!=null) {
+	        	for(JsonObject sponsor : sponsors.getValuesAs(JsonObject.class)) {
+	            	if(sponsor.containsKey("fullname")) {
+	            		XmlDumpAttributes attrs = new XmlDumpAttributes();
+				    	attrs.put("olac-role", "sponsor");
+				    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "contributor", attrs, sponsor.getString("fullname"));
+	            	}
+	            }
+	        }
+
+			JsonArray contributors = jsonDoc.getJsonArray("contributors");
+			if (contributors != null) {
+				for (JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
+					JsonArray roles = contributor.getJsonArray("roles");
+					for (JsonObject role : roles.getValuesAs(JsonObject.class)) {
+						String roleId = role.getString("id");
+						XmlDumpAttributes attrs = new XmlDumpAttributes();
+				    	attrs.put("olac-role", roleId);
+				    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "contributor", attrs, Constant.person(contributor));
+	                    
+	                    if("author".equals(roleId)) {
+	                    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "creator", Constant.person(contributor));
+	                    }
+					}
+				}
+			}
+			
+			JsonString creationDate = jsonDoc.getJsonString("originDate");
+	        if(creationDate!=null) {
+	        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", creationDate.getString());
+	        } else {
+	        	JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
+	            if(publicationDate!=null) {
+		        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+	            }
+	        }
+	        
+			writeCmdiOlacElement("description", jsonDoc, builder);
+			
 			if (listHandlesRoot != null) {
 				listHandlesRoot.forEach(handleUrl -> {
 					try {
@@ -55,10 +102,6 @@ public class CmdiHandler implements MetadataHandler {
 					}
 				});
 			}
-			
-			writeCmdiOlacElement("title", jsonDoc, builder);
-			writeCmdiOlacElement("description", jsonDoc, builder);
-			writeCmdiOlacElement("keywords", jsonDoc, "subject", builder);
 
 			JsonArray corporaLanguages = jsonDoc.getJsonArray("corporaLanguages");
 			if (corporaLanguages != null) {
@@ -78,6 +121,54 @@ public class CmdiHandler implements MetadataHandler {
 				}
 			}
 
+			JsonObject license = jsonDoc.getJsonObject("license");
+			if (license != null) {
+				if (license != null) {
+					XmlDumpAttributes attrs = new XmlDumpAttributes();
+			        attrs.put("xml:lang", "fr");
+					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "license", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
+				}
+			}
+			
+			JsonArray producers = jsonDoc.getJsonArray("producers");
+			if (producers != null) {
+				for (JsonObject producer : producers.getValuesAs(JsonObject.class)) {
+					if (producer.containsKey("fullname")) {
+						builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "publisher", producer.getString("fullname"));
+					}
+				}
+			}
+
+			JsonArray conditionsOfUse = jsonDoc.getJsonArray("conditionsOfUse");
+			if (conditionsOfUse != null) {
+				for (JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
+					writeCmdiOlacMultilingualElement("rights", label, builder);
+				}
+			}
+			
+	        JsonObject statusOfUse = jsonDoc.getJsonObject("statusOfUse");
+			if (statusOfUse != null) {
+				String idStatusOfUse = statusOfUse.getString("id");
+				builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "rights", idStatusOfUse);
+
+				JsonArray multilingualLabels = statusOfUse.getJsonArray("labels");
+				for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
+					writeCmdiOlacMultilingualElement("rights", label, builder);
+				}
+			}
+
+			writeCmdiOlacElement("keywords", jsonDoc, "subject", builder);
+
+			JsonArray linguisticSubjects = jsonDoc.getJsonArray("linguisticSubjects");
+			if (linguisticSubjects != null) {
+				for (JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
+					XmlDumpAttributes attrs = new XmlDumpAttributes();
+			        attrs.put("olac-linguistic-field", linguisticSubject.getString());
+					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "subject", attrs, null);
+					
+				}
+			}
+			
 			JsonArray studyLanguages = jsonDoc.getJsonArray("studyLanguages");
 			if (studyLanguages != null) {
 				for (JsonObject studyLanguage : studyLanguages.getValuesAs(JsonObject.class)) {
@@ -95,79 +186,16 @@ public class CmdiHandler implements MetadataHandler {
 					}
 				}
 			}
-
-			JsonArray producers = jsonDoc.getJsonArray("producers");
-			if (producers != null) {
-				for (JsonObject producer : producers.getValuesAs(JsonObject.class)) {
-					if (producer.containsKey("fullname")) {
-						builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "publisher", producer.getString("fullname"));
-					}
-				}
-			}
-
-			JsonArray contributors = jsonDoc.getJsonArray("contributors");
-			if (contributors != null) {
-				for (JsonObject contributor : contributors.getValuesAs(JsonObject.class)) {
-					JsonArray roles = contributor.getJsonArray("roles");
-					for (JsonObject role : roles.getValuesAs(JsonObject.class)) {
-						String roleId = role.getString("id");
-						XmlDumpAttributes attrs = new XmlDumpAttributes();
-				    	attrs.put("olac-role", roleId);
-				    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "contributor", attrs, Constant.person(contributor));
-	                    
-	                    if("author".equals(roleId)) {
-	                    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "creator", Constant.person(contributor));
-	                    }
-					}
-				}
-			}
-
-			JsonArray sponsors = jsonDoc.getJsonArray("sponsors");
-	        if(sponsors!=null) {
-	        	for(JsonObject sponsor : sponsors.getValuesAs(JsonObject.class)) {
-	            	if(sponsor.containsKey("fullname")) {
-	            		XmlDumpAttributes attrs = new XmlDumpAttributes();
-				    	attrs.put("olac-role", "sponsor");
-				    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "contributor", attrs, sponsor.getString("fullname"));
-	            	}
-	            }
-	        }
-
-	        JsonObject statusOfUse = jsonDoc.getJsonObject("statusOfUse");
-			if (statusOfUse != null) {
-				String idStatusOfUse = statusOfUse.getString("id");
-				builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "rights", idStatusOfUse);
-
-				JsonArray multilingualLabels = statusOfUse.getJsonArray("labels");
-				for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-					writeCmdiOlacMultilingualElement("rights", label, builder);
-				}
-			}
-
-			JsonArray conditionsOfUse = jsonDoc.getJsonArray("conditionsOfUse");
-			if (conditionsOfUse != null) {
-				for (JsonObject label : conditionsOfUse.getValuesAs(JsonObject.class)) {
-					writeCmdiOlacMultilingualElement("rights", label, builder);
-				}
-			}
 			
-			JsonObject license = jsonDoc.getJsonObject("license");
-			if (license != null) {
-				if (license != null) {
-					XmlDumpAttributes attrs = new XmlDumpAttributes();
-			        attrs.put("xml:lang", "fr");
-					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "license", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
-				}
-			}
-			JsonArray linguisticSubjects = jsonDoc.getJsonArray("linguisticSubjects");
-			if (linguisticSubjects != null) {
-				for (JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
-					XmlDumpAttributes attrs = new XmlDumpAttributes();
-			        attrs.put("olac-linguistic-field", linguisticSubject.getString());
-					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "subject", attrs, null);
-					
-				}
-			}
+	        if(creationDate!=null) {
+	          //TODO check date validation and convert
+	            XmlDumpAttributes attrs = new XmlDumpAttributes();
+		        attrs.put("dcterms-type", "W3CDTF");
+				builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "temporal", attrs, creationDate.getString());
+	        }
+	        
+			writeCmdiOlacElement("title", jsonDoc, builder);
+
 			JsonString linguisticDataType = jsonDoc.getJsonString("linguisticDataType");
 			if (linguisticDataType != null) {
 				XmlDumpAttributes attrs = new XmlDumpAttributes();
@@ -182,27 +210,8 @@ public class CmdiHandler implements MetadataHandler {
 					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "type", attrs, null);
 				}
 			}
-			JsonArray bibligraphicCitations = jsonDoc.getJsonArray("bibliographicCitation");
-	        if(bibligraphicCitations!=null) {
-	            for(JsonObject multilingualBibliographicCitation : bibligraphicCitations.getValuesAs(JsonObject.class)) {
-	            	XmlDumpAttributes attrs = new XmlDumpAttributes();
-			        attrs.put("xml:lang", multilingualBibliographicCitation.getString("lang"));
-					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "bibliographicCitation", attrs, XMLDocument.removeHTMLTag(multilingualBibliographicCitation.getString("value")));
-	            }
-	        }
-	        JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
-	        JsonString creationDate = jsonDoc.getJsonString("originDate");
-	        if(creationDate!=null) {
-	        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", creationDate.getString());
-	          //TODO check date validation and convert
-	            XmlDumpAttributes attrs = new XmlDumpAttributes();
-		        attrs.put("dcterms-type", "W3CDTF");
-				builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "temporal", attrs, creationDate.getString());
-	        } else {
-	            if(publicationDate!=null) {
-		        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", publicationDate.getString());
-	            }
-	        }
+	        
+	        
 	        
 			builder.writeEndElement(); // OLAC-DcmiTerms
 			builder.writeEndElement(); // Components
@@ -229,7 +238,7 @@ public class CmdiHandler implements MetadataHandler {
 		namespaces.put(Constant.XSI_NAMESPACE_PREFIX, new XmlDumpNamespace(Constant.XSI_NAMESPACE_URI));
 		builder.setNamespaces(namespaces);
 		XmlDumpAttributes attrs = new XmlDumpAttributes();
-		attrs.put(Constant.CMDI_VERSION_ATTRIBUTE, "1.2");
+		attrs.put(Constant.CMDI_VERSION_ATTRIBUTE, Constant.CMDI_VERSION_VALUE_ATTRIBUTE);
 		builder.writeStartDocument(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_ELEMENT, attrs);
 	}
 	
@@ -244,6 +253,15 @@ public class CmdiHandler implements MetadataHandler {
 		builder.writeEndElement(); // End of Header
 	}
 
+	public static void writeCmdiResources(MetadataBuilder builder) throws MetadataBuilderException {
+		builder.writeStartElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCES_ELEMENT);
+		//TODO writeCmdiResources : for each identifier ?
+		builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCEPROXYLIST_ELEMENT);
+		builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_JOURNALFILEPROXYLIST_ELEMENT);
+		builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCERELATIONLISTT_ELEMENT);
+		builder.writeEndElement(); // End of Resources
+	}
+	
 	public static void writeCmdiOlacElement(String elementName, JsonObject meta, MetadataBuilder builder) throws MetadataBuilderException {
 		writeCmdiOlacElement(elementName, meta, elementName, builder);
 	}
@@ -251,14 +269,27 @@ public class CmdiHandler implements MetadataHandler {
 	public static void writeCmdiOlacElement(String elementName, JsonObject meta, String tagName, MetadataBuilder builder) throws MetadataBuilderException {
 		if (meta.containsKey(elementName)) {
 			JsonArray elmArray = meta.getJsonArray(elementName);
-			for (JsonObject elm : elmArray.getValuesAs(JsonObject.class)) {
-				if (elm.containsKey("lang") && elm.containsKey("value")) {
-					writeCmdiOlacMultilingualElement(tagName, elm, builder);
-				} else {
-					if (elm.containsKey("value")) {
-						builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, tagName, XMLDocument.removeHTMLTag(elm.getString("value")));
+			for (JsonObject elementObject : elmArray.getValuesAs(JsonObject.class)) {
+				XmlDumpAttributes attrs = new XmlDumpAttributes();
+				if (elementObject.containsKey("lang")) {
+            		attrs.put("xml:lang", elementObject.getString("lang"));
+            	}
+				if (elementObject.containsKey("type")) {
+					if (elementObject.getString("type").equals("olac:language")) {
+						attrs.put("olac-language", elementObject.getString("code"));
+					} else if (elementObject.getString("type").equals("olac:role")) {
+						attrs.put("olac-role", elementObject.getString("code"));
+					} else if (elementObject.getString("type").equals("olac:linguistic-field")) {
+						attrs.put("olac-linguistic-field", elementObject.getString("code"));
+					} else if (elementObject.getString("type").equals("olac:discourse-type")) {
+						attrs.put("olac-discourse-type", elementObject.getString("code"));
+					} else if (elementObject.getString("type").equals("olac:linguistic-type")) {
+						attrs.put("olac-linguistic-type", elementObject.getString("code"));
+					} else {
+						attrs.put("dcterms-type", elementObject.getString("type")); //TODO enlever dcterms: ou DCMI: de la chaine de caractère 'type' ?
 					}
-				}
+            	}
+				builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, elementName, attrs, elementObject.containsKey("value") ? XMLDocument.removeHTMLTag(elementObject.getString("value")) : null);
 			}
 		}
 	}

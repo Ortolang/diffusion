@@ -72,6 +72,7 @@ public class Constant {
 	public static final String CMDI_OLAC_NAMESPACE_SCHEMA_LOCATION = "https://catalog.clarin.eu/ds/ComponentRegistry/rest/registry/1.x/profiles/clarin.eu:cr1:p_1288172614026/xsd";
 
 	public static final String CMDI_VERSION_ATTRIBUTE = "CMDVersion";
+	public static final String CMDI_VERSION_VALUE_ATTRIBUTE = "1.2";
 	
 	public static final String CMDI_ELEMENT = "CMD";
 	public static final String CMDI_HEADER_ELEMENT = "Header";

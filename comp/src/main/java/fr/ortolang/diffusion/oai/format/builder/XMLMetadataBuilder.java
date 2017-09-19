@@ -52,6 +52,11 @@ public class XMLMetadataBuilder implements MetadataBuilder {
 			if ( xsiNamespace ) {
 				writer.writeAttribute(Constant.XSI_SCHEMA_LOCATION, schemaLocationValue.toString());
 			}
+			if ( attrs != null ) {
+	            for ( Entry<String, String> attr : attrs.entrySet() ) {
+	                writer.writeAttribute(attr.getKey(), attr.getValue());
+	            }
+	        }
 		} catch (XMLStreamException e) {
 			throw new MetadataBuilderException(e.getMessage(), e);
 		}

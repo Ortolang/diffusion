@@ -55,9 +55,7 @@ public class CmdiOutputConverter implements MetadataConverter {
 			
 			CmdiHandler.writeCmdiDocument(builder);
 			CmdiHandler.writeCmdiHeader(Constant.CMDI_MDCREATOR_VALUE, builder);
-			//TODO writeCmdiResources : for each identifier ?
-			builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_JOURNALFILEPROXYLIST_ELEMENT);
-			builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCERELATIONLISTT_ELEMENT);
+			CmdiHandler.writeCmdiResources(builder);
 			
 			builder.writeStartElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_COMPONENTS_ELEMENT);
 			
@@ -98,9 +96,7 @@ public class CmdiOutputConverter implements MetadataConverter {
 			
 			CmdiHandler.writeCmdiDocument(builder);
 			CmdiHandler.writeCmdiHeader(Constant.CMDI_MDCREATOR_VALUE, builder);
-			//TODO writeCmdiResources : for each identifier ?
-			builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_JOURNALFILEPROXYLIST_ELEMENT);
-			builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCERELATIONLISTT_ELEMENT);
+			CmdiHandler.writeCmdiResources(builder);
 			
 			builder.writeStartElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_COMPONENTS_ELEMENT);
 			
