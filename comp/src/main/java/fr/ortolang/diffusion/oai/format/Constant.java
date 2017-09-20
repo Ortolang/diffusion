@@ -84,7 +84,9 @@ public class Constant {
 	public static final String CMDI_RESOURCES_ELEMENT = "Resources";
 	public static final String CMDI_RESOURCEPROXYLIST_ELEMENT = "ResourceProxyList";
 	public static final String CMDI_RESOURCEPROXY_ELEMENT = "ResourceProxy";
+	public static final String CMDI_RESOURCEPROXYID_ELEMENT = "id";
 	public static final String CMDI_RESOURCETYPE_ELEMENT = "ResourceType";
+	public static final String CMDI_RESOURCETYPE_LANDINGPAGE = "LandingPage";
 	public static final String CMDI_RESOURCEREF_ELEMENT = "ResourceRef";
 	public static final String CMDI_JOURNALFILEPROXYLIST_ELEMENT = "JournalFileProxyList";
 	public static final String CMDI_RESOURCERELATIONLISTT_ELEMENT = "ResourceRelationList";
@@ -95,7 +97,8 @@ public class Constant {
 	public static final String CMDI_OLAC_PROFILE_VALUE = "clarin.eu:cr1:p_1288172614026";
 	
 	// Utils
-    public static final SimpleDateFormat w3cdtf = new SimpleDateFormat("yyyy-MM-dd");
+	public static final String w3cdtfFormat = "yyyy-MM-dd";
+    public static final SimpleDateFormat w3cdtf = new SimpleDateFormat(w3cdtfFormat);
     
     private static Patterns patterns = new Patterns();
     

@@ -16,6 +16,7 @@ import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
 import fr.ortolang.diffusion.oai.format.Constant;
 import fr.ortolang.diffusion.oai.format.XMLDocument;
 import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
+import fr.ortolang.diffusion.util.DateUtils;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpNamespace;
 import fr.ortolang.diffusion.xml.XmlDumpNamespaces;
@@ -161,14 +162,19 @@ public class OlacHandler implements MetadataHandler {
 	        JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
 	        JsonString creationDate = jsonDoc.getJsonString("originDate");
 	        if(creationDate!=null) {
-	        	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", creationDate.getString());
-	          //TODO check date validation and convert
-	            XmlDumpAttributes attrs = new XmlDumpAttributes();
-		        attrs.put("xsi:type", "dcterms:W3CDTF");
-				builder.writeStartEndElement(Constant.DCTERMS_NAMESPACE_PREFIX, "temporal", attrs, creationDate.getString());
+	        	if (DateUtils.isThisDateValid(creationDate.getString())) {
+	        		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", creationDate.getString());
+		            XmlDumpAttributes attrs = new XmlDumpAttributes();
+			        attrs.put("xsi:type", "dcterms:W3CDTF");
+		        	builder.writeStartEndElement(Constant.DCTERMS_NAMESPACE_PREFIX, "temporal", attrs, creationDate.getString());
+		        } else {
+		        	LOGGER.log(Level.WARNING, "invalid creation date : " + creationDate.getString());
+		        }
 	        } else {
-	            if(publicationDate!=null) {
-		        	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+	            if(publicationDate!=null && DateUtils.isThisDateValid(publicationDate.getString())) {
+	            	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+	            } else {
+	            	LOGGER.log(Level.WARNING, "invalid publication date : " + publicationDate.getString());
 	            }
 	        }
 			

@@ -1,7 +1,11 @@
 package fr.ortolang.diffusion.oai.format.handler;
 
 import java.io.StringReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,6 +20,7 @@ import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
 import fr.ortolang.diffusion.oai.format.Constant;
 import fr.ortolang.diffusion.oai.format.XMLDocument;
 import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
+import fr.ortolang.diffusion.util.DateUtils;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpNamespace;
 import fr.ortolang.diffusion.xml.XmlDumpNamespaces;
@@ -24,6 +29,7 @@ public class CmdiHandler implements MetadataHandler {
 
     private static final Logger LOGGER = Logger.getLogger(CmdiHandler.class.getName());
 
+    private String id;
 	private List<String> listHandlesRoot;
 	
 	@Override
@@ -36,8 +42,8 @@ public class CmdiHandler implements MetadataHandler {
 			JsonObject jsonDoc = jsonReader.readObject();
 			
 			writeCmdiDocument(builder);
-			writeCmdiHeader(Constant.CMDI_MDCREATOR_VALUE, builder);
-			writeCmdiResources(builder);
+			writeCmdiHeader(Constant.CMDI_MDCREATOR_VALUE, id, Constant.w3cdtf.format(new Date()), builder);
+			writeCmdiResources(listHandlesRoot, builder);
 			
 			builder.writeStartElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_COMPONENTS_ELEMENT);
 			
@@ -82,11 +88,19 @@ public class CmdiHandler implements MetadataHandler {
 			
 			JsonString creationDate = jsonDoc.getJsonString("originDate");
 	        if(creationDate!=null) {
-	        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", creationDate.getString());
+		        if (DateUtils.isThisDateValid(creationDate.getString())) {
+		        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", creationDate.getString());
+		        } else {
+		        	LOGGER.log(Level.WARNING, "invalid creation date : " + creationDate.getString());
+		        }
 	        } else {
 	        	JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
 	            if(publicationDate!=null) {
-		        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+			        if (DateUtils.isThisDateValid(publicationDate.getString())) {
+			        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+			        } else {
+			        	LOGGER.log(Level.WARNING, "invalid publication date : " + publicationDate.getString());
+			        }
 	            }
 	        }
 	        
@@ -188,10 +202,13 @@ public class CmdiHandler implements MetadataHandler {
 			}
 			
 	        if(creationDate!=null) {
-	          //TODO check date validation and convert
 	            XmlDumpAttributes attrs = new XmlDumpAttributes();
 		        attrs.put("dcterms-type", "W3CDTF");
-				builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "temporal", attrs, creationDate.getString());
+		        if (DateUtils.isThisDateValid(creationDate.getString())) {
+		        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "temporal", attrs, creationDate.getString());
+		        } else {
+		        	LOGGER.log(Level.WARNING, "invalid creation date : " + creationDate.getString());
+		        }
 	        }
 	        
 			writeCmdiOlacElement("title", jsonDoc, builder);
@@ -210,8 +227,6 @@ public class CmdiHandler implements MetadataHandler {
 					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "type", attrs, null);
 				}
 			}
-	        
-	        
 	        
 			builder.writeEndElement(); // OLAC-DcmiTerms
 			builder.writeEndElement(); // Components
@@ -242,21 +257,34 @@ public class CmdiHandler implements MetadataHandler {
 		builder.writeStartDocument(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_ELEMENT, attrs);
 	}
 	
-	public static void writeCmdiHeader(String mdCreator, MetadataBuilder builder) throws MetadataBuilderException {
+	public static void writeCmdiHeader(String mdCreator, String mdSelfLink, String mdCreationDate, MetadataBuilder builder) throws MetadataBuilderException {
 		builder.writeStartElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_HEADER_ELEMENT);
 		builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_MDCREATOR_ELEMENT, null, mdCreator);
-		//TODO format date
-//		builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_MDCREATIONDATE_ELEMENT, null, System.currentTimeMillis());
-		//TODO get key to MdSelfLink
+		builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_MDCREATIONDATE_ELEMENT, mdCreationDate);
+		if (mdSelfLink != null) {
+			builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_MDSELFLINK_ELEMENT, mdSelfLink);
+		}
 		builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_MDPROFILE_ELEMENT, Constant.CMDI_OLAC_PROFILE_VALUE);
 		builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_MDCOLLECTIONDISPLAYNAME_ELEMENT, null, mdCreator);
 		builder.writeEndElement(); // End of Header
 	}
 
-	public static void writeCmdiResources(MetadataBuilder builder) throws MetadataBuilderException {
+	public static void writeCmdiResources(List<String> ressources, MetadataBuilder builder) throws MetadataBuilderException {
 		builder.writeStartElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCES_ELEMENT);
-		//TODO writeCmdiResources : for each identifier ?
-		builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCEPROXYLIST_ELEMENT);
+		
+		if (ressources != null && !ressources.isEmpty()) {
+			builder.writeStartElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCEPROXYLIST_ELEMENT);
+			XmlDumpAttributes attrs = new XmlDumpAttributes();
+			attrs.put(Constant.CMDI_RESOURCEPROXYID_ELEMENT, "_"+UUID.randomUUID().toString().substring(0,8));
+			builder.writeStartElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCEPROXY_ELEMENT, attrs);
+			builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCETYPE_ELEMENT, Constant.CMDI_RESOURCETYPE_LANDINGPAGE);
+			builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCEREF_ELEMENT, ressources.get(0));
+			builder.writeEndElement();
+			builder.writeEndElement();
+		}
+		else {
+			builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCEPROXYLIST_ELEMENT);
+		}
 		builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_JOURNALFILEPROXYLIST_ELEMENT);
 		builder.writeStartEndElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_RESOURCERELATIONLISTT_ELEMENT);
 		builder.writeEndElement(); // End of Resources
@@ -286,7 +314,7 @@ public class CmdiHandler implements MetadataHandler {
 					} else if (elementObject.getString("type").equals("olac:linguistic-type")) {
 						attrs.put("olac-linguistic-type", elementObject.getString("code"));
 					} else {
-						attrs.put("dcterms-type", elementObject.getString("type")); //TODO enlever dcterms: ou DCMI: de la chaine de caractère 'type' ?
+						attrs.put("dcterms-type", elementObject.getString("type"));
 					}
             	}
 				builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, elementName, attrs, elementObject.containsKey("value") ? XMLDocument.removeHTMLTag(elementObject.getString("value")) : null);
@@ -299,12 +327,20 @@ public class CmdiHandler implements MetadataHandler {
         attrs.put("xml:lang", multilingualObject.getString("lang"));
 		builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, tag, attrs, XMLDocument.removeHTMLTag(multilingualObject.getString("value")));
 	}
-
+	
 	public List<String> getListHandlesRoot() {
 		return listHandlesRoot;
 	}
 
 	public void setListHandlesRoot(List<String> listHandlesRoot) {
 		this.listHandlesRoot = listHandlesRoot;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 }

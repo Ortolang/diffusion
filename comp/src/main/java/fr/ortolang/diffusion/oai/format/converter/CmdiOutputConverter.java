@@ -1,12 +1,12 @@
 package fr.ortolang.diffusion.oai.format.converter;
 
 import java.io.StringReader;
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
@@ -14,12 +14,8 @@ import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.oai.exception.MetadataBuilderException;
 import fr.ortolang.diffusion.oai.exception.MetadataConverterException;
 import fr.ortolang.diffusion.oai.format.Constant;
-import fr.ortolang.diffusion.oai.format.XMLDocument;
 import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
 import fr.ortolang.diffusion.oai.format.handler.CmdiHandler;
-import fr.ortolang.diffusion.xml.XmlDumpAttributes;
-import fr.ortolang.diffusion.xml.XmlDumpNamespace;
-import fr.ortolang.diffusion.xml.XmlDumpNamespaces;
 
 /**
  * Converts to OLAC metadata.
@@ -30,6 +26,7 @@ public class CmdiOutputConverter implements MetadataConverter {
 
     private static final Logger LOGGER = Logger.getLogger(CmdiOutputConverter.class.getName());
 
+    private String id;
 	private List<String> listHandles;
 	
 	@Override
@@ -54,8 +51,8 @@ public class CmdiOutputConverter implements MetadataConverter {
 			JsonObject jsonDoc = jsonReader.readObject();
 			
 			CmdiHandler.writeCmdiDocument(builder);
-			CmdiHandler.writeCmdiHeader(Constant.CMDI_MDCREATOR_VALUE, builder);
-			CmdiHandler.writeCmdiResources(builder);
+			CmdiHandler.writeCmdiHeader(Constant.CMDI_MDCREATOR_VALUE, id, Constant.w3cdtf.format(new Date()), builder);
+			CmdiHandler.writeCmdiResources(listHandles, builder);
 			
 			builder.writeStartElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_COMPONENTS_ELEMENT);
 			
@@ -95,8 +92,8 @@ public class CmdiOutputConverter implements MetadataConverter {
 			JsonObject jsonDoc = jsonReader.readObject();
 			
 			CmdiHandler.writeCmdiDocument(builder);
-			CmdiHandler.writeCmdiHeader(Constant.CMDI_MDCREATOR_VALUE, builder);
-			CmdiHandler.writeCmdiResources(builder);
+			CmdiHandler.writeCmdiHeader(Constant.CMDI_MDCREATOR_VALUE, id, Constant.w3cdtf.format(new Date()), builder);
+			CmdiHandler.writeCmdiResources(listHandles, builder);
 			
 			builder.writeStartElement(Constant.CMDI_NAMESPACE_PREFIX, Constant.CMDI_COMPONENTS_ELEMENT);
 			
@@ -140,5 +137,13 @@ public class CmdiOutputConverter implements MetadataConverter {
 
 	public void setListHandles(List<String> listHandles) {
 		this.listHandles = listHandles;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 }

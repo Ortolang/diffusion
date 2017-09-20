@@ -37,6 +37,7 @@ public class CmdiOutputConverterTest {
 
 			List<String> handles = Arrays.asList("http://handle.net/111/EEE", "http://handle.net/223/EFF");
 			CmdiOutputConverter converter = new CmdiOutputConverter();
+			converter.setId(path);
 			converter.setListHandles(handles);
 			converter.convert(olac_json, MetadataFormat.OLAC, builder);
 

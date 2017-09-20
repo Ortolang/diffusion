@@ -385,6 +385,7 @@ public class OaiWorkerBean implements OaiWorker {
     			} else if (metadataPrefix.equals(MetadataFormat.CMDI)) {
     				// Writes CMDI metadata 
     				CmdiHandler handler = new CmdiHandler();
+    				handler.setId(root);
     				handler.setListHandlesRoot(listHandlesForKey(root));
     				handler.writeItem(item, builder);
     			}
@@ -525,6 +526,8 @@ public class OaiWorkerBean implements OaiWorker {
     					// Output : CMDI OLAC XML
     					// Input : OLAC | OAI_DC JSON
     					CmdiOutputConverter converter = new CmdiOutputConverter();
+    					converter.setId(key);
+    					converter.setListHandles(listHandlesForKey(key));
     					converter.convert(StreamUtils.getContent(binaryStore.get(md.getStream())), metadataPrefix, builder);
     				}
 
