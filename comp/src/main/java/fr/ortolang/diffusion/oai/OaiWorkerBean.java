@@ -75,6 +75,7 @@ import fr.ortolang.diffusion.store.binary.DataNotFoundException;
 import fr.ortolang.diffusion.store.handle.HandleStoreService;
 import fr.ortolang.diffusion.store.handle.HandleStoreServiceException;
 import fr.ortolang.diffusion.util.StreamUtils;
+import fr.ortolang.diffusion.util.XmlUtils;
 
 @Startup
 @Singleton(name = OaiWorker.WORKER_NAME)
@@ -395,7 +396,7 @@ public class OaiWorkerBean implements OaiWorker {
     			if (!result.toString().isEmpty()) {
     				// Validates the XML Document
     				try {
-						validateXml(result.toString());
+						XmlUtils.validateXml(result.toString());
 					} catch (SAXException | IOException e) {
 						throw new OaiServiceException(
         						"unable to build xml for oai record cause xml is not valid ", e);
@@ -412,14 +413,6 @@ public class OaiWorkerBean implements OaiWorker {
     		}
     	}
 
-    	private void validateXml(String xml) throws SAXException, IOException {
-    		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            Schema schema = schemaFactory.newSchema();
-
-            Validator validator = schema.newValidator();
-            validator.validate(new StreamSource(new StringReader(xml)));
-    	}
-    	
     	private List<String> listHandlesForKey(String key) {
     		List<String> urls = new ArrayList<String>();
     		try {
