@@ -535,6 +535,13 @@ public class OaiWorkerBean implements OaiWorker {
     			}
 
     			if (!result.toString().isEmpty()) {
+    				// Validates the XML Document
+    				try {
+						XmlUtils.validateXml(result.toString());
+					} catch (SAXException | IOException e) {
+						throw new OaiServiceException(
+        						"unable to build xml for oai record cause xml is not valid ", e);
+					}
     				return result.toString();
     			} else {
     				throw new MetadataPrefixUnknownException(
