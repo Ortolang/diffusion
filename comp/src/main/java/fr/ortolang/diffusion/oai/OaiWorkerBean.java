@@ -1,7 +1,6 @@
 package fr.ortolang.diffusion.oai;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,15 +23,10 @@ import javax.ejb.Startup;
 import javax.ejb.TransactionAttribute;
 import javax.ejb.TransactionAttributeType;
 import javax.enterprise.concurrent.ManagedThreadFactory;
-import javax.xml.XMLConstants;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 
 import org.jboss.ejb3.annotation.SecurityDomain;
 import org.xml.sax.SAXException;
@@ -293,7 +287,6 @@ public class OaiWorkerBean implements OaiWorker {
     		oai.createRecord(wskey, MetadataFormat.CMDI, registry.getLastModificationDate(root),
     				buildXMLFromItem(root, MetadataFormat.CMDI), setsWorkspace);
 
-//    		createRecordsFromMetadataObject(root, setsWorkspace);
     		OrtolangObject object = core.findObject(root);
     		java.util.Set<CollectionElement> elements = ((Collection) object).getElements();
     		for (CollectionElement element : elements) {
