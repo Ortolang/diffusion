@@ -1,17 +1,16 @@
 package fr.ortolang.diffusion.oai.format.converter;
 
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
-import fr.ortolang.diffusion.oai.exception.MetadataBuilderException;
 import fr.ortolang.diffusion.oai.exception.MetadataConverterException;
 import fr.ortolang.diffusion.oai.format.Constant;
 import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
@@ -23,8 +22,6 @@ import fr.ortolang.diffusion.oai.format.handler.CmdiHandler;
  *
  */
 public class CmdiOutputConverter implements MetadataConverter {
-
-    private static final Logger LOGGER = Logger.getLogger(CmdiOutputConverter.class.getName());
 
     private String id;
 	private List<String> listHandles;
@@ -58,17 +55,6 @@ public class CmdiOutputConverter implements MetadataConverter {
 			
 			builder.writeStartElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, Constant.CMDI_OLAC_ELEMENT);
 
-			if (listHandles != null) {
-				listHandles.forEach(handleUrl -> {
-					try {
-						builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "identifier", handleUrl);
-					} catch (MetadataBuilderException e) {
-						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
-						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
-					}
-				});
-			}
-			
 			for (String elm : Constant.DC_ELEMENTS) {
 				CmdiHandler.writeCmdiOlacElement(elm, jsonDoc, builder);
 			}
@@ -99,27 +85,15 @@ public class CmdiOutputConverter implements MetadataConverter {
 			
 			builder.writeStartElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, Constant.CMDI_OLAC_ELEMENT);
 
-			if (listHandles != null) {
-				listHandles.forEach(handleUrl -> {
-					try {
-						builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "identifier", handleUrl);
-					} catch (MetadataBuilderException e) {
-						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
-						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
-					}
-				});
-			}
-			//TODO write olac-linguistic-*, dcterms*
+			// Merge DC and DCTERMS, then sort by
+			List<String> allElements = new ArrayList<String>(Constant.DCTERMS_ELEMENTS);
+			allElements.addAll(Constant.DC_ELEMENTS);
+			Collections.sort(allElements);
 			
-        	// DCTerms elements
-        	for(String dcterms : Constant.DCTERMS_ELEMENTS) {
-        		CmdiHandler.writeCmdiOlacElement(dcterms, jsonDoc, builder);
+			for(String elm : allElements) {
+        		CmdiHandler.writeCmdiOlacElement(elm, jsonDoc, builder);
         	}
-        	// Dublin Core elements with OLAC attributes
-        	for(String dc : Constant.DC_ELEMENTS) {
-        		CmdiHandler.writeCmdiOlacElement(dc, jsonDoc, builder);
-        	}
-			
+
 			builder.writeEndElement(); // OLAC-DcmiTerms
 			builder.writeEndElement(); // Components
 			builder.writeEndDocument();

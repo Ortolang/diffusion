@@ -6,12 +6,8 @@
 	"description": [{
 		"value": "Ce premier dossier permet de tester les métadonnées Dublin Core"
 	}],
-	"abstract": [{
-		"lang": "fr",
-		"value": "Résumé des épisodes à venir"
-	}],
 	"coverage": [{
-		"type": "DCMI:Space",
+		"type": "TGN",
 		"value": "Earth"
 	}],
 	"subject": [{
@@ -23,7 +19,7 @@
 		"code": "anthropological_linguistics"
 	}],
 	"identifier": [{
-		"type": "DCMI:URI",
+		"type": "URI",
 		"value": "http://www.michel.com"
 	}],
 	"type": [{
@@ -34,5 +30,9 @@
 		"type": "olac:discourse-type",
 		"code": "unintelligible_speech"
 		}
-	]
+	],
+	"abstract": [{
+		"lang": "fr",
+		"value": "Résumé des épisodes à venir"
+	}]
 }

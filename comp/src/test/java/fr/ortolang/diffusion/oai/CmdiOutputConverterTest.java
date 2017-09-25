@@ -16,18 +16,20 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.junit.Test;
+import org.xml.sax.SAXException;
 
 import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.oai.exception.MetadataConverterException;
 import fr.ortolang.diffusion.oai.format.builder.XMLMetadataBuilder;
 import fr.ortolang.diffusion.oai.format.converter.CmdiOutputConverter;
 import fr.ortolang.diffusion.util.StreamUtils;
+import fr.ortolang.diffusion.util.XmlUtils;
 
 public class CmdiOutputConverterTest {
 
 	private static final Logger LOGGER = Logger.getLogger(CmdiOutputConverterTest.class.getName());
 
-	public void convertFromJsonOLAC(String path) {
+	public void convertFromJson(String path) {
 		InputStream olacInputStream = getClass().getClassLoader().getResourceAsStream(path);
 		try {
 			String olac_json = StreamUtils.getContent(olacInputStream);
@@ -44,19 +46,25 @@ public class CmdiOutputConverterTest {
 			writer.flush();
 			writer.close();
 
-			LOGGER.log(Level.INFO, "Build CMDI from json OLAC");
+			XmlUtils.validateXml(result.toString());
+			
 			LOGGER.log(Level.INFO, result.toString());
-		} catch (IOException | XMLStreamException | FactoryConfigurationError | MetadataConverterException e) {
+		} catch (IOException | XMLStreamException | FactoryConfigurationError | MetadataConverterException | SAXException e) {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
 	}
 
 	@Test
+	public void convertFromJsonDC() {
+		LOGGER.log(Level.INFO, "Building CMDI from DC");
+		convertFromJson("json/sample-dc.json");
+	}
+
+	@Test
 	public void convertFromJsonOLAC() {
-		convertFromJsonOLAC("json/sample-olac.json");
-//		XMLDocumentTest.checkIfPresent(oai_dc,
-//		new String[] { "title", "description", "coverage", "subject", "identifier", "type" });
+		LOGGER.log(Level.INFO, "Building CMDI from OLAC");
+		convertFromJson("json/sample-olac.json");
 	}
 
 }

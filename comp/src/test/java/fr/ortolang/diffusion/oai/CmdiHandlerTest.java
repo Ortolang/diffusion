@@ -17,7 +17,6 @@ import org.junit.Test;
 import org.xml.sax.SAXException;
 
 import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
-import fr.ortolang.diffusion.oai.exception.OaiServiceException;
 import fr.ortolang.diffusion.oai.format.builder.XMLMetadataBuilder;
 import fr.ortolang.diffusion.oai.format.handler.CmdiHandler;
 import fr.ortolang.diffusion.util.StreamUtils;

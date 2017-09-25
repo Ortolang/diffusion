@@ -27,9 +27,8 @@ public class Constant {
 	
 	public static final String OAI_DC_ELEMENT = "dc";
 	
-	public static final List<String> DC_ELEMENTS = Arrays.asList("identifier", "title", "creator", "subject",
-			"description", "publisher", "contributor", "date", "type", "format", "source", "language", "relation",
-			"coverage", "rights");
+	public static final List<String> DC_ELEMENTS = Arrays.asList("contributor", "coverage", "creator", "date", "description",
+			"format", "identifier", "language", "publisher", "relation", "rights", "source", "subject","title", "type");
 
 	// OLAC metadata format
 	public static final String OLAC_NAMESPACE_PREFIX = "olac";
