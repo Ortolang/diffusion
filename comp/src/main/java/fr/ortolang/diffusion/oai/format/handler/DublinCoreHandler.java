@@ -16,6 +16,7 @@ import fr.ortolang.diffusion.oai.exception.MetadataHandlerException;
 import fr.ortolang.diffusion.oai.format.Constant;
 import fr.ortolang.diffusion.oai.format.XMLDocument;
 import fr.ortolang.diffusion.oai.format.builder.MetadataBuilder;
+import fr.ortolang.diffusion.util.DateUtils;
 import fr.ortolang.diffusion.xml.XmlDumpAttributes;
 import fr.ortolang.diffusion.xml.XmlDumpNamespace;
 import fr.ortolang.diffusion.xml.XmlDumpNamespaces;
@@ -140,11 +141,19 @@ public class DublinCoreHandler implements MetadataHandler {
 			}
 			JsonString creationDate = jsonDoc.getJsonString("originDate");
 			if (creationDate != null) {
-				builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", creationDate.getString());
+				if (DateUtils.isThisDateValid(creationDate.getString())) {
+					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", creationDate.getString());
+				} else {
+		        	LOGGER.log(Level.WARNING, "invalid creation date : " + creationDate.getString());
+		        }
 			} else {
 				JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
 				if (publicationDate != null) {
-					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+					if (DateUtils.isThisDateValid(publicationDate.getString())) {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+					} else {
+			        	LOGGER.log(Level.WARNING, "invalid publication date : " + publicationDate.getString());
+			        }
 				}
 			}
 			builder.writeEndDocument();
