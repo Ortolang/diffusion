@@ -37,6 +37,7 @@ package fr.ortolang.diffusion;
  */
 
 import java.util.List;
+import java.util.Map;
 
 public interface OrtolangWorker {
 
@@ -53,6 +54,8 @@ public interface OrtolangWorker {
     void retryAll(boolean failed);
 
     void submit(String key, String action);
+    
+    void submit(String key, String action, Map<String, String> args);
 
     void start();
 

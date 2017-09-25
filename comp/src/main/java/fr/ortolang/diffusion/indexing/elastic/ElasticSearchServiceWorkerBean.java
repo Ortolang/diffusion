@@ -52,7 +52,10 @@ import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.enterprise.concurrent.ManagedThreadFactory;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.DelayQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -157,7 +160,12 @@ public class ElasticSearchServiceWorkerBean implements ElasticSearchServiceWorke
 
     @Override
     public void submit(String key, String action) {
-        LOGGER.log(Level.FINE, "submit new job action: " + action + " for key: " + key);
+        submit(key, action, null);
+    }
+
+	@Override
+	public void submit(String key, String action, Map<String, String> args) {
+		LOGGER.log(Level.FINE, "submit new job action: " + action + " for key: " + key);
         Job existingJob = getJob(key);
         if (existingJob != null) {
             LOGGER.log(Level.FINE, "a job already exists for key: " + key);
@@ -177,7 +185,7 @@ public class ElasticSearchServiceWorkerBean implements ElasticSearchServiceWorke
         } else {
             queue.put(jobService.create(JOB_TYPE, action, key, System.currentTimeMillis() + DEFAULT_INDEXATION_DELAY));
         }
-    }
+	}
 
     private Job getJob(String key) {
         for (Job job : queue) {
@@ -228,5 +236,4 @@ public class ElasticSearchServiceWorkerBean implements ElasticSearchServiceWorke
         }
 
     }
-
 }

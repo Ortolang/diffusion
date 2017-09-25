@@ -59,6 +59,7 @@ public class MetadataFormat {
     public static final String TEMPLATE = "ortolang-template-json";
     public static final String OAI_DC = "oai_dc";
     public static final String OLAC = "olac";
+    public static final String CMDI = "cmdi";
     public static final String TCOF = "tcof";
     // System metadata
     public static final String TRUSTRANK = "system-trustrank-json";

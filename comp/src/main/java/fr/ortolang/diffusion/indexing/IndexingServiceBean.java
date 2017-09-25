@@ -75,12 +75,12 @@ public class IndexingServiceBean implements IndexingService {
 
 	@Override
 	public void index(String key) throws IndexingServiceException {
-		sendMessage("index", key);
+		sendMessage(INDEX_ACTION, key);
 	}
 
 	@Override
 	public void remove(String key) throws IndexingServiceException {
-		sendMessage("remove", key);
+		sendMessage(REMOVE_ACTION, key);
 	}
 
 	@TransactionAttribute(TransactionAttributeType.REQUIRED)

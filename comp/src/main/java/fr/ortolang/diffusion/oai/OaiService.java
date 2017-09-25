@@ -48,8 +48,4 @@ public interface OaiService extends OrtolangService {
     Set updateSet(String spec, String name) throws SetNotFoundException;
 
     void deleteSet(String spec) throws SetNotFoundException;
-
-    void buildFromWorkspace(String wskey) throws OaiServiceException;
-
-    void buildFromWorkspace(String wskey, String snapshot) throws OaiServiceException;
 }

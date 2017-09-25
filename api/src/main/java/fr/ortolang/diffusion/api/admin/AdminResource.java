@@ -159,7 +159,6 @@ public class AdminResource {
     @Path("/infos/{service}")
     @GZIP
     public Response getRegistryInfos(@PathParam(value = "service") String serviceName) throws OrtolangException {
-        LOGGER.log(Level.INFO, "GET /admin/infos/" + serviceName);
         OrtolangService service = OrtolangServiceLocator.findService(serviceName);
         Map<String, String> infos = service.getServiceInfos();
         return Response.ok(infos).build();
@@ -169,7 +168,6 @@ public class AdminResource {
     @Path("/registry/entries")
     @GZIP
     public Response listEntries(@QueryParam("kfilter") String kfilter, @QueryParam("ifilter") String ifilter) throws RegistryServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/registry/entries?kfilter=" + kfilter + "&ifilter=" + ifilter);
         List<RegistryEntry> entries = registry.systemListEntries(kfilter, ifilter);
         return Response.ok(entries).build();
     }
@@ -178,7 +176,6 @@ public class AdminResource {
     @Path("/registry/entries/{key}")
     @GZIP
     public Response readEntry(@PathParam("key") String key) throws RegistryServiceException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "GET /admin/registry/entries/" + key);
         RegistryEntry entry = registry.systemReadEntry(key);
         return Response.ok(entry).build();
     }
@@ -188,7 +185,6 @@ public class AdminResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @GZIP
     public Response updateEntry(@PathParam("key") String key, RegistryEntry entry) throws RegistryServiceException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "PUT /admin/registry/entries/" + key);
         // TODO compare what changes in order to update state...
         return Response.serverError().entity("NOT IMPLEMENTED").build();
     }
@@ -196,7 +192,6 @@ public class AdminResource {
     @DELETE
     @Path("/registry/entries/{key}")
     public Response deleteEntry(@PathParam("key") String key) throws RegistryServiceException, KeyNotFoundException, KeyLockedException {
-        LOGGER.log(Level.INFO, "DELETE /admin/registry/entries/" + key);
         registry.delete(key, true);
         return Response.ok().build();
     }
@@ -213,8 +208,6 @@ public class AdminResource {
     @Path("/referential/entities/export")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response dumpReferentialEntities() throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "GET /admin/referential/entities/export");
-        LOGGER.log(Level.FINE, "exporting referential entities");
         ResponseBuilder builder = Response.ok();
         builder.header("Content-Disposition", "attachment; filename*=UTF-8''ortolang-dump.tar.gz");
         builder.type("application/x-gzip");
@@ -243,7 +236,6 @@ public class AdminResource {
     @Path("/core/workspace/{key}/export")
     @Produces({ MediaType.TEXT_HTML, MediaType.WILDCARD })
     public Response dumpWorkspace(@PathParam("key") String key, @DefaultValue(value = "true") @QueryParam("binary") boolean withbinary) throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "GET /admin/core/workspace/" + key + "/export");
         ResponseBuilder builder;
         OrtolangObjectIdentifier identifier = registry.lookup(key);
         if (!identifier.getService().equals(CoreService.SERVICE_NAME) || !identifier.getType().equals(Workspace.OBJECT_TYPE)) {
@@ -277,7 +269,6 @@ public class AdminResource {
     @Path("/core/workspace/import")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response restoreWorkspace(@MultipartForm ImportFormRepresentation form) throws ImportExportServiceException, IOException, RegistryServiceException, KeyNotFoundException {
-        LOGGER.log(Level.INFO, "POST /admin/core/workspace/import");
 //        ResponseBuilder builder;
 //        if (form.getDump() == null) {
 //            builder = Response.status(Status.BAD_REQUEST);
@@ -310,7 +301,6 @@ public class AdminResource {
     public Response createMetadata(@MultipartForm MetadataObjectFormRepresentation form) throws OrtolangException, KeyNotFoundException, CoreServiceException, MetadataFormatException,
             DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException,
             IndexingServiceException {
-        LOGGER.log(Level.INFO, "POST /admin/core/metadata");
         try {
             if (form.getKey() == null) {
                 return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'key' is mandatory").build();
@@ -335,7 +325,6 @@ public class AdminResource {
     @Path("/core/workspace/{wskey}")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response updateWorkspace(@PathParam(value = "wskey") String wskey, WorkspaceRepresentation representation) throws KeyNotFoundException {
-        LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey);
         if (representation.getKey() != null && representation.getKey().length() > 0) {
             try {
 				core.systemUpdateWorkspace(wskey, representation.getAlias(), representation.isChanged(), representation.getHead(), representation.getMembers(), representation.getPrivileged(), representation.isReadOnly(), representation.getType());
@@ -352,7 +341,6 @@ public class AdminResource {
     @DELETE
     @Path("/membership/profiles/{key}")
     public Response deleteProfile(@PathParam("key") String key) throws KeyNotFoundException, AccessDeniedException, MembershipServiceException {
-        LOGGER.log(Level.INFO, "DELETE /admin/membership/profiles/" + key);
         membership.deleteProfile(key);
         return Response.ok().build();
     }
@@ -360,7 +348,6 @@ public class AdminResource {
     @GET
     @Path("/membership/profiles")
     public Response listProfiles() throws MembershipServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/membership/profiles");
         List<Profile> profiles = membership.systemListProfiles();
         List<ProfileRepresentation> representations = new ArrayList<>(profiles.size());
         List<String> connectedUsers = subscription.getConnectedUsers();
@@ -377,7 +364,6 @@ public class AdminResource {
     @Path("/runtime/types")
     @GZIP
     public Response listDefinitions() throws RuntimeServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/runtime/types");
         List<ProcessTypeRepresentation> types = runtime.listProcessTypes(false).stream().map(ProcessTypeRepresentation::fromProcessType).collect(Collectors.toCollection(ArrayList::new));
         return Response.ok(types).build();
     }
@@ -386,7 +372,6 @@ public class AdminResource {
     @Path("/runtime/processes")
     @GZIP
     public Response listProcesses(@QueryParam("state") String state) throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "GET /admin/runtime/processes?state=" + state);
         State estate = null;
         if (state != null && state.length() > 0) {
             try {
@@ -403,7 +388,6 @@ public class AdminResource {
     @Path("/runtime/tasks")
     @GZIP
     public Response listTasks() throws RegistryServiceException, RuntimeServiceException, AccessDeniedException {
-        LOGGER.log(Level.INFO, "GET /admin/runtime/tasks");
         List<HumanTaskRepresentation> entries = runtime.systemListTasks().stream().map(HumanTaskRepresentation::fromHumanTask).collect(Collectors.toCollection(ArrayList::new));
         return Response.ok(entries).build();
     }
@@ -412,7 +396,6 @@ public class AdminResource {
     @Path("/store/binary")
     @GZIP
     public Response browseBinaryStoreRoot() throws BinaryStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/binary");
         List<BinaryStoreContent> infos = binary.systemBrowse(null, null);
         return Response.ok(infos).build();
     }
@@ -421,7 +404,6 @@ public class AdminResource {
     @Path("/store/binary/{name}")
     @GZIP
     public Response browseBinaryStoreVolume(@PathParam("name") String name) throws BinaryStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name);
         List<BinaryStoreContent> infos = binary.systemBrowse(name, null);
         return Response.ok(infos).build();
     }
@@ -430,7 +412,6 @@ public class AdminResource {
     @Path("/store/binary/{name}/{prefix}")
     @GZIP
     public Response browseBinaryStorePrefix(@PathParam("name") String name, @PathParam("prefix") String prefix) throws BinaryStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name + "/" + prefix);
         List<BinaryStoreContent> infos = binary.systemBrowse(name, prefix);
         return Response.ok(infos).build();
     }
@@ -439,7 +420,6 @@ public class AdminResource {
     @Path("/store/binary/{name}/{prefix}/{hash}")
     @GZIP
     public Response getBinaryStoreContent(@PathParam("name") String name, @PathParam("prefix") String prefix, @PathParam("hash") String hash) throws BinaryStoreServiceException, DataNotFoundException {
-        LOGGER.log(Level.INFO, "GET /admin/store/binary/" + name + "/" + prefix + "/" + hash);
         File content = binary.getFile(hash);
         return Response.ok(content).build();
     }
@@ -451,7 +431,6 @@ public class AdminResource {
     public Response searchEvents(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("2000") @QueryParam("l") int limit, @QueryParam("ofrom") String ofrom,
             @QueryParam("otype") String otype, @QueryParam("etype") String etype, @QueryParam("throwed") String throwed, @DefaultValue("0") @QueryParam("after") long after)
             throws EventServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/events");
         long nbresults = event.systemCountEvents(etype, ofrom, otype, throwed, after);
         List<OrtolangEvent> events = (List<OrtolangEvent>) event.systemFindEvents(etype, ofrom, otype, throwed, after, offset, limit);
 
@@ -468,7 +447,6 @@ public class AdminResource {
     @GZIP
     public Response searchHandles(@DefaultValue("0") @QueryParam("o") int offset, @DefaultValue("10000") @QueryParam("l") int limit, @QueryParam("filter") String filter,
             @DefaultValue("name") @QueryParam("type") String type) throws HandleStoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/store/handle");
         List<Handle> handles = Collections.emptyList();
         if (type != null && "name".equals(type)) {
             handles = handle.findHandlesByName(filter);
@@ -489,7 +467,6 @@ public class AdminResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @GZIP
     public Response createHandle(HandleRepresentation hdl) throws HandleStoreServiceException, UnsupportedEncodingException {
-        LOGGER.log(Level.INFO, "POST /admin/store/handle");
         handle.recordHandle(hdl.getHandle(), hdl.getKey(), hdl.getUrl());
         return Response.ok().build();
     }
@@ -498,7 +475,6 @@ public class AdminResource {
     @Path("/store/handle/{id:.*}")
     @GZIP
     public Response readHandle(@PathParam("id") String id) throws HandleStoreServiceException, HandleNotFoundException {
-        LOGGER.log(Level.INFO, "GET /admin/store/handle/" + id);
         Handle hdl = handle.readHandle(id);
         HandleRepresentation handleRepresentation = HandleRepresentation.fromHandle(hdl);
         return Response.ok(handleRepresentation).build();
@@ -509,7 +485,6 @@ public class AdminResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @GZIP
     public Response updateHandle(@PathParam("id") String id, HandleRepresentation hdl) throws HandleStoreServiceException, UnsupportedEncodingException {
-        LOGGER.log(Level.INFO, "PUT /admin/store/handle/" + id);
         handle.dropHandle(hdl.getHandle());
         handle.recordHandle(hdl.getHandle(), hdl.getKey(), hdl.getUrl());
         return Response.ok(hdl).build();
@@ -519,7 +494,6 @@ public class AdminResource {
     @Path("/store/handle/{id:.*}")
     @GZIP
     public Response deleteHandle(@PathParam("id") String id) throws HandleStoreServiceException {
-        LOGGER.log(Level.INFO, "DELETE /admin/store/handle/" + id);
         handle.dropHandle(id);
         return Response.ok().build();
     }
@@ -536,7 +510,6 @@ public class AdminResource {
     @Path("/subscription")
     @GZIP
     public Response addSubscriptionFilters() throws SubscriptionServiceException {
-        LOGGER.log(Level.INFO, "GET /subscription");
         subscription.addAdminFilters();
         return Response.ok().build();
     }
@@ -545,7 +518,6 @@ public class AdminResource {
     @Path("/subscription/broadcast")
     @GZIP
     public Response broadcastMessage(@FormParam("users") String users, @FormParam("title") String title, @FormParam("body") String body) throws SubscriptionServiceException {
-        LOGGER.log(Level.INFO, "POST /subscription/broadcast");
         subscription.broadcastMessage(Arrays.asList(users.split(",")), title, body);
         return Response.ok().build();
     }
@@ -555,7 +527,6 @@ public class AdminResource {
     @GZIP
     public Response getJobs(@QueryParam("type") String type, @QueryParam("o") Integer offset, @QueryParam("l") Integer limit, @DefaultValue("false") @QueryParam("failed") boolean failed,
             @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed) {
-        LOGGER.log(Level.INFO, "GET /admin/jobs");
         List<Job> jobs;
         if (failed) {
             jobs = jobService.getFailedJobsOfType(type, offset, limit);
@@ -575,7 +546,6 @@ public class AdminResource {
     @Path("/jobs/{id}")
     @GZIP
     public Response getJob(@PathParam(value = "id") Long id) {
-        LOGGER.log(Level.INFO, "GET /admin/jobs/" + id);
         Job job = jobService.read(id);
         return Response.ok().entity(job).build();
     }
@@ -583,7 +553,6 @@ public class AdminResource {
     @DELETE
     @Path("/jobs")
     public Response removeJobs(@QueryParam(value = "e") String exception) {
-        LOGGER.log(Level.INFO, "DELETE /admin/jobs");
         for (Job job : jobService.getFailedJobs()) {
             if (exception == null || exception.equals(job.getParameter("failedCausedBy"))) {
                 jobService.remove(job.getId());
@@ -595,7 +564,6 @@ public class AdminResource {
     @DELETE
     @Path("/jobs/{id}")
     public Response removeJob(@PathParam(value = "id") Long id) {
-        LOGGER.log(Level.INFO, "DELETE /admin/jobs/" + id);
         jobService.remove(id);
         return Response.ok().build();
     }
@@ -603,7 +571,6 @@ public class AdminResource {
     @GET
     @Path("/jobs/retry")
     public Response restoreJobs(@QueryParam("e") String exception) throws OrtolangException {
-        LOGGER.log(Level.INFO, "GET /admin/jobs/retry");
         if (exception == null) {
             for (OrtolangWorker worker : workerService.getWorkers()) {
                 worker.retryAll(false);
@@ -622,7 +589,6 @@ public class AdminResource {
     @GET
     @Path("/jobs/{id}/retry")
     public Response retryJob(@PathParam(value = "id") Long id) throws OrtolangException {
-        LOGGER.log(Level.INFO, "GET /admin/jobs/" + id + "/retry");
         Job job = jobService.read(id);
         OrtolangWorker worker = workerService.getWorkerForJobType(job.getType());
         worker.retry(id);
@@ -633,7 +599,6 @@ public class AdminResource {
     @Path("/jobs/count")
     public Response countJobs(@QueryParam("type") String type, @DefaultValue("false") @QueryParam("unprocessed") boolean unprocessed, @DefaultValue("false") @QueryParam("failed") boolean failed)
             throws CoreServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/jobs/count");
         Map<String, Long> map = new HashMap<>(1);
         if (failed) {
             map.put("count", jobService.countFailedJobs());
@@ -652,7 +617,6 @@ public class AdminResource {
     @GET
     @Path("/jobs/workers")
     public Response getWorkersState() throws OrtolangException {
-        LOGGER.log(Level.INFO, "GET /admin/jobs/workers");
         Map<String, String> workersState = new HashMap<>();
         for (OrtolangWorker worker : workerService.getWorkers()) {
             if (worker != null) {
@@ -665,7 +629,6 @@ public class AdminResource {
     @GET
     @Path("/jobs/workers/{id}/start")
     public Response restartWorker(@PathParam("id") String id) throws OrtolangException {
-        LOGGER.log(Level.INFO, "GET /admin/jobs/workers/" + id + "/start");
         workerService.startWorker(id);
         return Response.ok().build();
     }
@@ -673,7 +636,6 @@ public class AdminResource {
     @GET
     @Path("/jobs/workers/queue")
     public Response getQueues() throws OrtolangException {
-        LOGGER.log(Level.INFO, "GET /admin/jobs/workers/queue");
         List<OrtolangJob> queue = new ArrayList<>();
         for (OrtolangWorker worker : workerService.getWorkers()) {
             queue.addAll(worker.getQueue());
@@ -684,7 +646,6 @@ public class AdminResource {
     @GET
     @Path("/jobs/workers/{id}/queue")
     public Response getWorkerQueue(@PathParam("id") String id) throws OrtolangException {
-        LOGGER.log(Level.INFO, "GET /admin/jobs/workers/" + id + "/queue");
         List<OrtolangJob> queue = workerService.getQueue(id);
         return Response.ok(queue).build();
     }
@@ -692,7 +653,6 @@ public class AdminResource {
     @GET
     @Path("/ftp/sessions")
     public Response getActiveFtpSessions() throws FtpServiceException {
-        LOGGER.log(Level.INFO, "GET /admin/ftp/sessions");
         Set<FtpSession> sessions = ftpService.getActiveSessions();
         return Response.ok(sessions).build();
     }
@@ -700,7 +660,6 @@ public class AdminResource {
     @GET
     @Path("/stats/piwik")
     public Response probePiwik() throws StatisticsServiceException, OrtolangException {
-        LOGGER.log(Level.INFO, "GET /statistics/piwik");
         statistics.probePiwik();
         return Response.ok().build();
     }
@@ -708,7 +667,6 @@ public class AdminResource {
     @POST
     @Path("/stats/piwik")
     public Response collectPiwikForRange(@FormParam("range") String range, @FormParam("timestamp") long timestamp) throws StatisticsServiceException, OrtolangException {
-        LOGGER.log(Level.INFO, "POST /statistics/piwik");
         statistics.collectPiwikForRange(range, timestamp);
         return Response.ok().build();
     }
@@ -716,7 +674,6 @@ public class AdminResource {
     @GET
     @Path("/config/refresh")
     public Response refreshConfig() throws IOException, OrtolangException {
-        LOGGER.log(Level.INFO, "GET /config/refresh");
         OrtolangConfig.getInstance().refresh();
         ConfigResource.clear();
         return Response.ok().build();

@@ -101,6 +101,7 @@ public class OAIPMHServlet {
         Context context = new Context();
         context.withMetadataFormat(MetadataFormat.metadataFormat("oai_dc").withNamespace("http://www.openarchives.org/OAI/2.0/oai_dc/").withSchemaLocation("http://www.openarchives.org/OAI/2.0/oai_dc.xsd"));
         context.withMetadataFormat(MetadataFormat.metadataFormat("olac").withNamespace("http://www.language-archives.org/OLAC/1.1/").withSchemaLocation("http://www.language-archives.org/OLAC/1.1/olac.xsd"));
+        context.withMetadataFormat(MetadataFormat.metadataFormat("cmdi").withNamespace("http://www.clarin.eu/cmd/1").withSchemaLocation("https://infra.clarin.eu/CMDI/1.x/xsd/cmd-envelop.xsd"));
 
         DiffusionSetRepository setRepository = new DiffusionSetRepository(oai);
         DiffusionItemRepository itemRepository = new DiffusionItemRepository(oai);

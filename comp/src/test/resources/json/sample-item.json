@@ -1,0 +1,18 @@
+{
+	"title":[
+		{
+			"lang": "fr",
+			"value": "Exemple d'item"
+		},
+		{
+			"lang": "en",
+			"value": "Sample item"
+		}
+	],
+	"description": [
+		{
+			"lang": "fr",
+			"value": "Description du corpus Sample item"
+		}
+	]
+}
