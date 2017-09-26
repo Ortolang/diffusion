@@ -141,19 +141,11 @@ public class DublinCoreHandler implements MetadataHandler {
 			}
 			JsonString creationDate = jsonDoc.getJsonString("originDate");
 			if (creationDate != null) {
-				if (DateUtils.isThisDateValid(creationDate.getString())) {
-					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", creationDate.getString());
-				} else {
-		        	LOGGER.log(Level.WARNING, "invalid creation date : " + creationDate.getString());
-		        }
+				builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", creationDate.getString());
 			} else {
 				JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
 				if (publicationDate != null) {
-					if (DateUtils.isThisDateValid(publicationDate.getString())) {
 						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
-					} else {
-			        	LOGGER.log(Level.WARNING, "invalid publication date : " + publicationDate.getString());
-			        }
 				}
 			}
 			builder.writeEndDocument();

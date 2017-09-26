@@ -75,13 +75,11 @@ public class CmdiHandler implements MetadataHandler {
 					JsonArray roles = contributor.getJsonArray("roles");
 					for (JsonObject role : roles.getValuesAs(JsonObject.class)) {
 						String roleId = role.getString("id");
-						XmlDumpAttributes attrs = new XmlDumpAttributes();
-				    	attrs.put("olac-role", roleId);
-				    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "contributor", attrs, Constant.person(contributor));
-	                    
-	                    if("author".equals(roleId)) {
-	                    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "creator", Constant.person(contributor));
-	                    }
+						if (Constant.OLAC_ROLES.contains(roleId)) {
+							XmlDumpAttributes attrs = new XmlDumpAttributes();
+					    	attrs.put("olac-role", roleId);
+					    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "contributor", attrs, Constant.person(contributor));
+						}
 					}
 				}
 			}
@@ -89,17 +87,23 @@ public class CmdiHandler implements MetadataHandler {
 			JsonString creationDate = jsonDoc.getJsonString("originDate");
 	        if(creationDate!=null) {
 		        if (DateUtils.isThisDateValid(creationDate.getString())) {
-		        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", creationDate.getString());
+		        	XmlDumpAttributes attrs = new XmlDumpAttributes();
+			        attrs.put("dcterms-type", "W3CDTF");
+		        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", attrs, creationDate.getString());
 		        } else {
 		        	LOGGER.log(Level.WARNING, "invalid creation date : " + creationDate.getString());
+		        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", creationDate.getString());
 		        }
 	        } else {
 	        	JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
 	            if(publicationDate!=null) {
 			        if (DateUtils.isThisDateValid(publicationDate.getString())) {
-			        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+			        	XmlDumpAttributes attrs = new XmlDumpAttributes();
+				        attrs.put("dcterms-type", "W3CDTF");
+			        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", attrs, publicationDate.getString());
 			        } else {
 			        	LOGGER.log(Level.WARNING, "invalid publication date : " + publicationDate.getString());
+			        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "date", publicationDate.getString());
 			        }
 	            }
 	        }
@@ -202,12 +206,13 @@ public class CmdiHandler implements MetadataHandler {
 			}
 			
 	        if(creationDate!=null) {
-	            XmlDumpAttributes attrs = new XmlDumpAttributes();
-		        attrs.put("dcterms-type", "W3CDTF");
 		        if (DateUtils.isThisDateValid(creationDate.getString())) {
+		        	XmlDumpAttributes attrs = new XmlDumpAttributes();
+		        	attrs.put("dcterms-type", "W3CDTF");
 		        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "temporal", attrs, creationDate.getString());
 		        } else {
-		        	LOGGER.log(Level.WARNING, "invalid creation date : " + creationDate.getString());
+		        	LOGGER.log(Level.WARNING, "invalid creation date (temporal) : " + creationDate.getString());
+		        	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "temporal", creationDate.getString());
 		        }
 	        }
 	        
@@ -317,7 +322,7 @@ public class CmdiHandler implements MetadataHandler {
 						attrs.put("dcterms-type", elementObject.getString("type"));
 					}
             	}
-				builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, elementName, attrs, elementObject.containsKey("value") ? XMLDocument.removeHTMLTag(elementObject.getString("value")) : null);
+				builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, tagName, attrs, elementObject.containsKey("value") ? XMLDocument.removeHTMLTag(elementObject.getString("value")) : null);
 			}
 		}
 	}

@@ -60,6 +60,10 @@ public class Constant {
 	
 	public static final List<String> DATE_ELEMENTS = Arrays.asList("date", "issued", "dateCopyrighted", "created", "available", "dateAccepted", "dateSubmitted", "modified", "valid");
     
+	public static final List<String> OLAC_ROLES = Arrays.asList("annotator", "author", "compiler", "consultant", "data_inputter", "depositor", "developer", "editor", "illustrator",
+			"interpreter", "interviewer", "participant", "performer", "photographer", "recorder", "researcher", "research_participant", "responder", "signer", "singer", "speaker",
+			"sponsor", "transcriber", "translator");
+	
 	// CMDI
 	public static final String CMDI_NAMESPACE_PREFIX = "cmd";
 	public static final String CMDI_NAMESPACE_URI = "http://www.clarin.eu/cmd/1";

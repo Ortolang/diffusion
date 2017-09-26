@@ -248,7 +248,7 @@ public class OaiWorkerBean implements OaiWorker {
     				try {
     					oai.createSet(wskey, "Workspace " + wskey);
     				} catch (SetAlreadyExistsException e) {
-    					LOGGER.log(Level.WARNING, "unable to create a Set " + wskey, e);
+    					LOGGER.log(Level.WARNING, "unable to create a Set " + wskey);
     				}
     				createRecordsForItem(wskey, root, setsWorkspace);
     			} else {
