@@ -79,6 +79,8 @@ public class CmdiHandler implements MetadataHandler {
 							XmlDumpAttributes attrs = new XmlDumpAttributes();
 					    	attrs.put("olac-role", roleId);
 					    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "contributor", attrs, Constant.person(contributor));
+						} else {
+							builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "contributor", Constant.person(contributor));
 						}
 					}
 				}

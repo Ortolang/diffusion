@@ -392,6 +392,7 @@ public class OaiWorkerBean implements OaiWorker {
     				try {
 						XmlUtils.validateXml(result.toString());
 					} catch (SAXException | IOException e) {
+						LOGGER.log(Level.SEVERE, result.toString());
 						throw new OaiServiceException(
         						"unable to build xml for oai record cause xml is not valid ", e);
 					}

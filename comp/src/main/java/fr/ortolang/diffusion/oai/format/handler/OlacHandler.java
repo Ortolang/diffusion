@@ -93,8 +93,12 @@ public class OlacHandler implements MetadataHandler {
 					JsonArray roles = contributor.getJsonArray("roles");
 					for (JsonObject role : roles.getValuesAs(JsonObject.class)) {
 						String roleId = role.getString("id");
-						writeOlacElement("contributor", "olac:role", roleId, null, Constant.person(contributor), builder);
-	                    
+
+						if (Constant.OLAC_ROLES.contains(roleId)) {
+							writeOlacElement("contributor", "olac:role", roleId, null, Constant.person(contributor), builder);
+						} else {
+							builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "contributor", Constant.person(contributor) + " (" + roleId + ")");
+						}
 	                    if("author".equals(roleId)) {
 	                    	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "creator", Constant.person(contributor));
 	                    }
