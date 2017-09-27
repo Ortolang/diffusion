@@ -552,12 +552,18 @@ public class AdminResource {
 
     @DELETE
     @Path("/jobs")
-    public Response removeJobs(@QueryParam(value = "e") String exception) {
-        for (Job job : jobService.getFailedJobs()) {
-            if (exception == null || exception.equals(job.getParameter("failedCausedBy"))) {
-                jobService.remove(job.getId());
-            }
-        }
+    public Response removeJobs(@QueryParam(value = "e") String exception, @QueryParam(value = "type") String type) {
+    	if (exception != null) {
+	        for (Job job : jobService.getFailedJobs()) {
+	            if (exception == null || exception.equals(job.getParameter("failedCausedBy"))) {
+	                jobService.remove(job.getId());
+	            }
+	        }
+    	} else if (type != null) {
+    		for (Job job : jobService.getUnprocessedJobsOfType(type)) {
+    			jobService.remove(job.getId());
+    		}
+    	}
         return Response.ok().build();
     }
 
