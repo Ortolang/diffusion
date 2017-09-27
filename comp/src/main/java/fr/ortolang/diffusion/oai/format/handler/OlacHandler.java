@@ -60,7 +60,10 @@ public class OlacHandler implements MetadataHandler {
 					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 						DublinCoreHandler.writeDcMultilingualElement("subject", label, builder);
 //						DublinCoreHandler.writeDcMultilingualElement("language", label, builder);
-						writeOlacElement("language", "olac:language", corporaLanguage.getString("id"), label.getString("lang"), label.getString("value"), builder);
+						//TODO downgrade language (ex. mar-1 to mar)
+						writeOlacElement("language", "olac:language", 
+							corporaLanguage.getString("id").matches(Constant.iso639_3pattern) ? corporaLanguage.getString("id") : null, 
+							label.getString("lang"), label.getString("value"), builder);
 					}
 				}
 			}
@@ -73,7 +76,9 @@ public class OlacHandler implements MetadataHandler {
 					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 						DublinCoreHandler.writeDcMultilingualElement("subject", label, builder);
 //						DublinCoreHandler.writeDcMultilingualElement("language", label, builder);
-						writeOlacElement("subject", "olac:language", studyLanguage.getString("id"), label.getString("lang"), label.getString("value"), builder);
+						writeOlacElement("subject", "olac:language", 
+							studyLanguage.getString("id").matches(Constant.iso639_3pattern) ? studyLanguage.getString("id") : null, 
+							label.getString("lang"), label.getString("value"), builder);
 					}
 				}
 			}

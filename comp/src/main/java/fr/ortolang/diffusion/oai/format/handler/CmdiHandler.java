@@ -129,14 +129,18 @@ public class CmdiHandler implements MetadataHandler {
 					JsonArray multilingualLabels = corporaLanguage.getJsonArray("labels");
 
 					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-						writeCmdiOlacElement("subject", label, builder);
+						// Can't write subject here !!
+//						writeCmdiOlacElement("subject", label, builder);
+						
 						XmlDumpAttributes attrs = new XmlDumpAttributes();
-				    	attrs.put("olac-language", label.getString("lang"));
-				    	if (label.containsKey("lang")) {
+						//TODO downgrade language (ex. mar-1 to mar)
+						if (label.containsKey("id") && label.getString("id").matches(Constant.iso639_3pattern)) {
+					    	attrs.put("olac-language", label.getString("id"));
+						}
+				    	if (label.containsKey("lang") && label.getString("lang").matches(Constant.iso639_2pattern)) {
 				    		attrs.put("xml:lang", label.getString("lang"));
 				    	}
 				    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "language", attrs, label.containsKey("value") ? XMLDocument.removeHTMLTag(label.getString("value")) : null);
-//						writeOlacElement("language", "olac:language", corporaLanguage.getString("id"), label.getString("lang"), label.getString("value"), builder);
 					}
 				}
 			}
@@ -195,14 +199,15 @@ public class CmdiHandler implements MetadataHandler {
 					JsonArray multilingualLabels = studyLanguage.getJsonArray("labels");
 
 					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
-//						writeCmdiOlacElement("subject", label, builder);
 						XmlDumpAttributes attrs = new XmlDumpAttributes();
-				    	attrs.put("olac-language", label.getString("id"));
-				    	if (label.containsKey("lang")) {
+						//TODO downgrade language (ex. mar-1 to mar)
+						if (label.containsKey("id") && label.getString("id").matches(Constant.iso639_3pattern)) {
+							attrs.put("olac-language", label.getString("id"));
+						}
+				    	if (label.containsKey("lang") && label.getString("lang").matches(Constant.iso639_2pattern)) {
 				    		attrs.put("xml:lang", label.getString("lang"));
 				    	}
 				    	builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "subject", attrs, label.containsKey("value") ? XMLDocument.removeHTMLTag(label.getString("value")) : null);
-//						writeOlacElement("subject", "olac:language", studyLanguage.getString("id"), label.getString("lang"), label.getString("value"), builder);
 					}
 				}
 			}
