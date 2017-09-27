@@ -355,8 +355,7 @@ public class OaiWorkerBean implements OaiWorker {
     		}
 
     		if (item == null) {
-    			LOGGER.log(Level.SEVERE, "unable to build xml from root collection cause item metadata is null " + root);
-    			throw new OaiServiceException("unable to build xml from root collection cause item metadata " + root);
+    			throw new OaiServiceException("unable to build xml from root collection cause item metadata is null " + root);
     		}
 
     		try {
