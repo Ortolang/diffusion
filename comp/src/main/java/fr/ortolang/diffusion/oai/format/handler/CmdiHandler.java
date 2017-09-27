@@ -186,10 +186,13 @@ public class CmdiHandler implements MetadataHandler {
 			JsonArray linguisticSubjects = jsonDoc.getJsonArray("linguisticSubjects");
 			if (linguisticSubjects != null) {
 				for (JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
-					XmlDumpAttributes attrs = new XmlDumpAttributes();
-			        attrs.put("olac-linguistic-field", linguisticSubject.getString());
-					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "subject", attrs, null);
-					
+					if (Constant.OLAC_LINGUISTIC_FIELDS.contains(linguisticSubject.getString())) {
+						XmlDumpAttributes attrs = new XmlDumpAttributes();
+				        attrs.put("olac-linguistic-field", linguisticSubject.getString());
+						builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "subject", attrs, null);
+					} else {
+						builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "subject", linguisticSubject.getString());
+					}
 				}
 			}
 			
@@ -227,16 +230,24 @@ public class CmdiHandler implements MetadataHandler {
 
 			JsonString linguisticDataType = jsonDoc.getJsonString("linguisticDataType");
 			if (linguisticDataType != null) {
-				XmlDumpAttributes attrs = new XmlDumpAttributes();
-		        attrs.put("olac-linguistic-type", linguisticDataType.getString());
-				builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "type", attrs, null);
+				if (Constant.OLAC_LINGUISTIC_TYPES.contains(linguisticDataType.getString())) {
+					XmlDumpAttributes attrs = new XmlDumpAttributes();
+					attrs.put("olac-linguistic-type", linguisticDataType.getString());
+					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "type", attrs, null);
+				} else {
+					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "type", linguisticDataType.getString());
+				}
 			}
 			JsonArray discourseTypes = jsonDoc.getJsonArray("discourseTypes");
 			if (discourseTypes != null) {
 				for (JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
-					XmlDumpAttributes attrs = new XmlDumpAttributes();
-			        attrs.put("olac-discourse-type", discourseType.getString());
-					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "type", attrs, null);
+					if (Constant.OLAC_DISCOURSE_TYPES.contains(discourseType.getString())) {
+						XmlDumpAttributes attrs = new XmlDumpAttributes();
+				        attrs.put("olac-discourse-type", discourseType.getString());
+						builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "type", attrs, null);
+					} else {
+						builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "type", discourseType.getString());
+					}
 				}
 			}
 	        
@@ -326,7 +337,11 @@ public class CmdiHandler implements MetadataHandler {
 					} else if (elementObject.getString("type").equals("olac:linguistic-type")) {
 						attrs.put("olac-linguistic-type", elementObject.getString("code"));
 					} else {
-						attrs.put("dcterms-type", elementObject.getString("type"));
+						if (Constant.DCTERMS_TYPE.contains(elementObject.getString("type"))) {
+							attrs.put("dcterms-type", elementObject.getString("type"));
+						} else {
+							LOGGER.log(Level.WARNING, "DCTerms type is invalide : " + elementObject.getString("type"));
+						}
 					}
             	}
 				builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, tagName, attrs, elementObject.containsKey("value") ? XMLDocument.removeHTMLTag(elementObject.getString("value")) : null);

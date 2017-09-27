@@ -64,6 +64,22 @@ public class Constant {
 			"interpreter", "interviewer", "participant", "performer", "photographer", "recorder", "researcher", "research_participant", "responder", "signer", "singer", "speaker",
 			"sponsor", "transcriber", "translator");
 	
+	public static final List<String> DCTERMS_TYPE = Arrays.asList("DCMIType", "DDC", "IMT", "LCC", "LCSH", "MESH", "NLM", "TGN", 
+			"UDC", "Box", "ISO3166", "ISO639-2", "ISO639-3", "Period", "Point", "RFC1766", "RFC3066", "RFC4646", "RFC5646", 
+			"URI", "W3CDTF");
+	
+	public static final List<String> OLAC_LINGUISTIC_FIELDS = Arrays.asList("anthropological_linguistics", "applied_linguistics", 
+			"cognitive_science", "computational_linguistics", "discourse_analysis", "forensic_linguistics", "general_linguistics", 
+			"historical_linguistics", "history_of_linguistics", "language_acquisition", "language_documentation", "lexicography", 
+			"linguistics_and_literature", "linguistic_theories", "mathematical_linguistics", "morphology", "neurolinguistics", 
+			"philosophy_of_language", "phonetics", "phonology", "pragmatics", "psycholinguistics", "semantics", "sociolinguistics", 
+			"syntax", "text_and_corpus_linguistics", "translating_and_interpreting", "typology", "writing_systems");
+	
+	public static final List<String> OLAC_DISCOURSE_TYPES = Arrays.asList("dialogue", "drama", "formulaic", "ludic", "oratory", 
+			"narrative", "procedural", "report", "singing", "unintelligible_speech");
+	
+	public static final List<String> OLAC_LINGUISTIC_TYPES = Arrays.asList("language_description", "lexicon", "primary_text");
+	
 	// CMDI
 	public static final String CMDI_NAMESPACE_PREFIX = "cmd";
 	public static final String CMDI_NAMESPACE_URI = "http://www.clarin.eu/cmd/1";
