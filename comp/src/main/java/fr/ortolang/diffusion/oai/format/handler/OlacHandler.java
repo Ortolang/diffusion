@@ -63,7 +63,8 @@ public class OlacHandler implements MetadataHandler {
 						//TODO downgrade language (ex. mar-1 to mar)
 						writeOlacElement("language", "olac:language", 
 							corporaLanguage.getString("id").matches(Constant.iso639_3pattern) ? corporaLanguage.getString("id") : null, 
-							label.getString("lang"), label.getString("value"), builder);
+									label.getString("lang").matches(Constant.iso639_2pattern) ? label.getString("lang") : null, 
+											label.getString("value"), builder);
 					}
 				}
 			}
@@ -78,7 +79,8 @@ public class OlacHandler implements MetadataHandler {
 //						DublinCoreHandler.writeDcMultilingualElement("language", label, builder);
 						writeOlacElement("subject", "olac:language", 
 							studyLanguage.getString("id").matches(Constant.iso639_3pattern) ? studyLanguage.getString("id") : null, 
-							label.getString("lang"), label.getString("value"), builder);
+									label.getString("lang").matches(Constant.iso639_2pattern) ? label.getString("lang") : null, 
+											label.getString("value"), builder);
 					}
 				}
 			}
@@ -147,24 +149,41 @@ public class OlacHandler implements MetadataHandler {
 			JsonArray linguisticSubjects = jsonDoc.getJsonArray("linguisticSubjects");
 			if (linguisticSubjects != null) {
 				for (JsonString linguisticSubject : linguisticSubjects.getValuesAs(JsonString.class)) {
-					writeOlacElement("subject", "olac:linguistic-field", linguisticSubject.getString(), null, null, builder);
+					if (Constant.OLAC_LINGUISTIC_FIELDS.contains(linguisticSubject.getString())) {
+						writeOlacElement("subject", "olac:linguistic-field", linguisticSubject.getString(), null, null, builder);
+					} else {
+						LOGGER.log(Level.WARNING, "Olac linguistic field is invalid : " + linguisticSubject.getString());
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "subject", linguisticSubject.getString());
+					}
 				}
 			}
 			JsonString linguisticDataType = jsonDoc.getJsonString("linguisticDataType");
 			if (linguisticDataType != null) {
-				writeOlacElement("type", "olac:linguistic-type", linguisticDataType.getString(), null, null, builder);
+				if (Constant.OLAC_LINGUISTIC_TYPES.contains(linguisticDataType.getString())) {
+					writeOlacElement("type", "olac:linguistic-type", linguisticDataType.getString(), null, null, builder);
+				} else {
+					LOGGER.log(Level.WARNING, "Olac linguistic type is invalid : " + linguisticDataType.getString());
+					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "type", linguisticDataType.getString());
+				}
 			}
 			JsonArray discourseTypes = jsonDoc.getJsonArray("discourseTypes");
 			if (discourseTypes != null) {
 				for (JsonString discourseType : discourseTypes.getValuesAs(JsonString.class)) {
-					writeOlacElement("type", "olac:discourse-type", discourseType.getString(), null, null, builder);
+					if (Constant.OLAC_DISCOURSE_TYPES.contains(discourseType.getString())) {
+						writeOlacElement("type", "olac:discourse-type", discourseType.getString(), null, null, builder);
+					} else {
+						LOGGER.log(Level.WARNING, "Olac discourse type is invalid : " + discourseType.getString());
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "type", discourseType.getString());
+					}
 				}
 			}
 	        JsonArray bibligraphicCitations = jsonDoc.getJsonArray("bibliographicCitation");
 	        if(bibligraphicCitations!=null) {
 	            for(JsonObject multilingualBibliographicCitation : bibligraphicCitations.getValuesAs(JsonObject.class)) {
 	            	XmlDumpAttributes attrs = new XmlDumpAttributes();
-			        attrs.put("xml:lang", multilingualBibliographicCitation.getString("lang"));
+	            	if (multilingualBibliographicCitation.getString("lang").matches(Constant.iso639_2pattern)) {
+	            		attrs.put("xml:lang", multilingualBibliographicCitation.getString("lang"));
+	            	}
 					builder.writeStartEndElement(Constant.DCTERMS_NAMESPACE_PREFIX, "bibliographicCitation", attrs, XMLDocument.removeHTMLTag(multilingualBibliographicCitation.getString("value")));
 	            }
 	        }

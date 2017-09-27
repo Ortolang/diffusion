@@ -218,7 +218,9 @@ public class DublinCoreHandler implements MetadataHandler {
 	
 	public static void writeDcMultilingualElement(String tag, JsonObject multilingualObject, MetadataBuilder builder) throws MetadataBuilderException {
 		XmlDumpAttributes attrs = new XmlDumpAttributes();
-        attrs.put("xml:lang", multilingualObject.getString("lang"));
+		if (multilingualObject.getString("lang").matches(Constant.iso639_2pattern)) {
+			attrs.put("xml:lang", multilingualObject.getString("lang"));
+		}
 		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, tag, attrs, XMLDocument.removeHTMLTag(multilingualObject.getString("value")));
 	}
 
