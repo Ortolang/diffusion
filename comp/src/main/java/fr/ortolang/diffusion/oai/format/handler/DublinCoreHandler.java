@@ -116,12 +116,10 @@ public class DublinCoreHandler implements MetadataHandler {
 				}
 			}
 			JsonObject license = jsonDoc.getJsonObject("license");
-			if (license != null) {
-				if (license != null) {
-					XmlDumpAttributes attrs = new XmlDumpAttributes();
-			        attrs.put("xml:lang", "fr");
-					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "rights", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
-				}
+			if (license != null && license.containsKey("label")) {
+				XmlDumpAttributes attrs = new XmlDumpAttributes();
+		        attrs.put("xml:lang", "fr");
+				builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "rights", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
 			}
 			JsonArray linguisticSubjects = jsonDoc.getJsonArray("linguisticSubjects");
 			if (linguisticSubjects != null) {
@@ -150,7 +148,7 @@ public class DublinCoreHandler implements MetadataHandler {
 			}
 			builder.writeEndDocument();
 		} catch (Exception e) {
-			throw new MetadataHandlerException("unable to build OAI_DC", e);
+			throw new MetadataHandlerException("unable to build OAI_DC cause " + e.getMessage(), e);
 		} finally {
 			jsonReader.close();
 			reader.close();
