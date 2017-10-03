@@ -37,7 +37,11 @@ package fr.ortolang.diffusion.runtime.engine.task;
  */
 
 import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.*;
+import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataSource;
 import fr.ortolang.diffusion.core.entity.Workspace;
 import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
 import fr.ortolang.diffusion.registry.KeyNotFoundException;
@@ -99,7 +103,13 @@ public class ImportZipTask extends RuntimeEngineTask {
                 report.append("zip import with OVERWRITING existing files\r\n");
             }
         }
-
+        String mode = null;
+        if (execution.hasVariable(ZIP_MODE_PARAM_NAME)) {
+        	mode = execution.getVariable(ZIP_MODE_PARAM_NAME, String.class);
+        } else {
+        	mode = DATAOBJECT_ZIPMODE_VALUE;
+        }
+        
         try {
             if (getUserTransaction().getStatus() == Status.STATUS_NO_TRANSACTION) {
                 LOGGER.log(Level.FINE, "starting new user transaction.");
@@ -137,51 +147,89 @@ public class ImportZipTask extends RuntimeEngineTask {
                     }
                     if (!entry.isDirectory()) {
                         PathBuilder opath = rootPath.clone().path(entry.getName());
-                        try {
-                            getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, opath.build());
-                            if ( overwrite ) {
-                                LOGGER.log(Level.FINE, " updating object at path: " + opath.build());
-                                try {
-                                    InputStream is = zip.getInputStream(entry);
-                                    String hash = getCoreService().put(is);
-                                    is.close();
-                                    getCoreService().updateDataObject(wskey, opath.build(), hash);
-                                    report.append("[DONE] object updated at path: ").append(opath.build()).append("\r\n");
-                                } catch ( InvalidPathException | DataCollisionException | PathNotFoundException | WorkspaceReadOnlyException e4 ) {
-                                    partial = true;
-                                    report.append("[ERROR] object updated failed for path: ").append(opath.build()).append("\r\n\t-> message: ").append(e4.getMessage()).append("\r\n");
-                                }
-                            }
-                        } catch ( PathNotFoundException e3 ) {
-                            LOGGER.log(Level.FINE, " creating object at path: " + opath.build());
-                            try {
-                                InputStream is = zip.getInputStream(entry);
-                                String hash = getCoreService().put(is);
-                                is.close();
-                                PathBuilder oppath = opath.clone().parent();
-                                if (!oppath.isRoot() && !cache.contains(oppath.build())) {
-                                    String[] parents = oppath.buildParts();
-                                    String current = "";
-                                    for (int i = 0; i < parents.length; i++) {
-                                        current += "/" + parents[i];
-                                        if (!cache.contains(current)) {
-                                            try {
-                                                getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, current);
-                                            } catch (InvalidPathException | PathNotFoundException e2) {
-                                                getCoreService().createCollection(wskey, current);
-                                                report.append("[DONE] collection created at path: ").append(current).append("\r\n");
-                                            }
-                                            cache.add(current);
-                                        }
-                                    }
-                                }
-                                String current = opath.build();
-                                getCoreService().createDataObject(wskey, current, hash);
-                                report.append("[DONE] data object created at path: ").append(current).append("\r\n");
-                            } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException | KeyAlreadyExistsException e4 ) {
-                                partial = true;
-                                report.append("[ERROR] create object failed for path: ").append(opath.build()).append("\r\n\t-> message: ").append(e4.getMessage()).append("\r\n");
-                            }
+                        if (mode.equals(DATAOBJECT_ZIPMODE_VALUE)) {
+	                        try {
+	                            getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, opath.build());
+	                            if ( overwrite ) {
+	                                LOGGER.log(Level.FINE, " updating object at path: " + opath.build());
+	                                try {
+	                                    InputStream is = zip.getInputStream(entry);
+	                                    String hash = getCoreService().put(is);
+	                                    is.close();
+	                                    getCoreService().updateDataObject(wskey, opath.build(), hash);
+	                                    report.append("[DONE] object updated at path: ").append(opath.build()).append("\r\n");
+	                                } catch ( InvalidPathException | DataCollisionException | PathNotFoundException | WorkspaceReadOnlyException e4 ) {
+	                                    partial = true;
+	                                    report.append("[ERROR] object updated failed for path: ").append(opath.build()).append("\r\n\t-> message: ").append(e4.getMessage()).append("\r\n");
+	                                }
+	                            }
+	                        } catch ( PathNotFoundException e3 ) {
+	                            LOGGER.log(Level.FINE, " creating object at path: " + opath.build());
+	                            try {
+	                                InputStream is = zip.getInputStream(entry);
+	                                String hash = getCoreService().put(is);
+	                                is.close();
+	                                PathBuilder oppath = opath.clone().parent();
+	                                if (!oppath.isRoot() && !cache.contains(oppath.build())) {
+	                                    String[] parents = oppath.buildParts();
+	                                    String current = "";
+	                                    for (int i = 0; i < parents.length; i++) {
+	                                        current += "/" + parents[i];
+	                                        if (!cache.contains(current)) {
+	                                            try {
+	                                                getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, current);
+	                                            } catch (InvalidPathException | PathNotFoundException e2) {
+	                                                getCoreService().createCollection(wskey, current);
+	                                                report.append("[DONE] collection created at path: ").append(current).append("\r\n");
+	                                            }
+	                                            cache.add(current);
+	                                        }
+	                                    }
+	                                }
+	                                String current = opath.build();
+	                                getCoreService().createDataObject(wskey, current, hash);
+	                                report.append("[DONE] data object created at path: ").append(current).append("\r\n");
+	                            } catch ( InvalidPathException | DataCollisionException | KeyNotFoundException | PathNotFoundException | PathAlreadyExistsException | WorkspaceReadOnlyException | KeyAlreadyExistsException e4 ) {
+	                                partial = true;
+	                                report.append("[ERROR] create object failed for path: ").append(opath.build()).append("\r\n\t-> message: ").append(e4.getMessage()).append("\r\n");
+	                            }
+	                        }
+                        } else if (mode.equals(METADATA_ZIPMODE_VALUE)) {
+                        	PathBuilder parentPath = opath.clone().parent();
+                        	try {
+								String parentKey = getCoreService().resolveWorkspacePath(wskey, Workspace.HEAD, parentPath.build());
+								try {
+									OrtolangObject object = getBrowserService().findObject(parentKey);
+									boolean mdexists = false;
+									String name = opath.part();
+									for (MetadataElement element : ((MetadataSource) object).getMetadatas()) {
+				                        if (element.getName().equals(name)) {
+				                            mdexists = true;
+				                            break;
+				                        }
+				                    }
+									InputStream is = zip.getInputStream(entry);
+	                                String hash = getCoreService().put(is);
+	                                is.close();
+									if (mdexists) {
+				                        getCoreService().updateMetadataObject(wskey, parentPath.build(), name, hash, name, false);
+				                        report.append("[DONE] metadata object updated at path: ").append(opath.build()).append("\r\n");
+				                    } else {
+				                    	getCoreService().createMetadataObject(wskey, parentPath.build(), name, hash, name, false);
+				                    	report.append("[DONE] metadata object created at path: ").append(opath.build()).append("\r\n");
+				                    }
+								} catch (BrowserServiceException | DataCollisionException | WorkspaceReadOnlyException | KeyNotFoundException | MetadataFormatException | KeyAlreadyExistsException e1) {
+									partial = true;
+	                                report.append("[ERROR] update metadata failed for path : ").append(opath.build()).append("\r\n\t-> message: ").append(e1.getMessage()).append("\r\n");
+								}
+							} catch (PathNotFoundException e1) {
+								partial = true;
+			                    report.append("[ERROR] cannot create metadata on path which not exists : ").append(e1.getMessage()).append("\r\n");
+							}
+                        } else {
+                        	report.append("[ERROR] unknow mode ").append(mode).append("\r\n");
+                        	partial = true;
+                        	throw new RuntimeEngineTaskException("parameter " + ZIP_MODE_PARAM_NAME + " value " + mode + " is not valid");
                         }
                     }
                 } catch (InvalidPathException | CoreServiceException | AccessDeniedException e2) {

@@ -70,6 +70,9 @@ public abstract class RuntimeEngineTask implements JavaDelegate {
     public static final String ZIP_PATH_PARAM_NAME = "zippath";
     public static final String ZIP_ROOT_PARAM_NAME = "ziproot";
     public static final String ZIP_OVERWRITE_PARAM_NAME = "zipoverwrites";
+    public static final String ZIP_MODE_PARAM_NAME = "zipmode";
+    public static final String METADATA_ZIPMODE_VALUE = "metadata";
+    public static final String DATAOBJECT_ZIPMODE_VALUE = "data";
 
     public static final String PROFILES_PATH_PARAM_NAME = "profilespath";
     public static final String PROFILES_OVERWRITE_PARAM_NAME = "profilesoverwrites";
