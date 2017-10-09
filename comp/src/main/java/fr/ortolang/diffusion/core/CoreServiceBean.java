@@ -3870,6 +3870,49 @@ public class CoreServiceBean implements CoreService {
     }
 
     @Override
+    @RolesAllowed({ "admin", "system" })
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public Collection systemReadCollection(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "#SYSTEM# reading collection with key [" + key + "]");
+        try {
+            OrtolangObjectIdentifier cidentifier = registry.lookup(key);
+            checkObjectType(cidentifier, Collection.OBJECT_TYPE);
+            Collection collection = em.find(Collection.class, cidentifier.getId());
+            if (collection == null) {
+                throw new CoreServiceException("unable to load collection with id [" + cidentifier.getId() + "] from storage");
+            }
+            collection.setKey(key);
+
+            return collection;
+        } catch (RegistryServiceException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error while reading collection", e);
+            throw new CoreServiceException("unable to read collection with key [" + key + "]", e);
+        }
+    }
+
+    @Override
+    @RolesAllowed({ "admin", "system" })
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public MetadataObject systemReadMetadataObject(String key) throws CoreServiceException, KeyNotFoundException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "#SYSTEM# reading metadata for key [" + key + "]");
+        try {
+            OrtolangObjectIdentifier identifier = registry.lookup(key);
+            checkObjectType(identifier, MetadataObject.OBJECT_TYPE);
+
+            MetadataObject meta = em.find(MetadataObject.class, identifier.getId());
+            if (meta == null) {
+                throw new CoreServiceException("unable to load metadata with id [" + identifier.getId() + "] from storage");
+            }
+            meta.setKey(key);
+
+            return meta;
+        } catch (RegistryServiceException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred during reading metadata", e);
+            throw new CoreServiceException("unable to read metadata with key [" + key + "]", e);
+        }
+    }
+
+    @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Set<String> systemListWorkspaceKeys(String wskey) throws CoreServiceException, KeyNotFoundException {
         LOGGER.log(Level.FINE, "#SYSTEM# listing workspace keys [" + wskey + "]");
@@ -4082,7 +4125,27 @@ public class CoreServiceBean implements CoreService {
         ((MetadataSource) object).addMetadata(new MetadataElement(name, meta.getKey()));
         em.merge(object);
     }
-
+    
+    @Override
+    @RolesAllowed({ "admin", "system" })
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<String> systemFindMetadataObjectsForTargetAndName(String target, String name) throws CoreServiceException, AccessDeniedException {
+        LOGGER.log(Level.FINE, "#SYSTEM# finding metadata for target [" + target + "]");
+        try {
+            TypedQuery<MetadataObject> query = em.createNamedQuery("findMetadataObjectsForTargetAndName", MetadataObject.class).setParameter("target", target).setParameter("name", name);
+            List<MetadataObject> mdos = query.getResultList();
+            List<String> results = new ArrayList<String>();
+            for (MetadataObject mdo : mdos) {
+                String key = registry.lookup(mdo.getObjectIdentifier());
+                results.add(key);
+            }
+            return results;
+        } catch (RegistryServiceException | IdentifierNotRegisteredException e) {
+            LOGGER.log(Level.SEVERE, "unexpected error occurred during finding metadata", e);
+            throw new CoreServiceException("unable to find metadata for target [" + target + "]", e);
+        }
+    }
+    
     @Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public List<Collection> systemListCollections(boolean isRoot) throws CoreServiceException {

@@ -17,6 +17,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RunAs;
 import javax.ejb.EJB;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
@@ -33,7 +34,7 @@ import org.xml.sax.SAXException;
 
 import fr.ortolang.diffusion.OrtolangException;
 import fr.ortolang.diffusion.OrtolangJob;
-import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
 import fr.ortolang.diffusion.core.CoreService;
 import fr.ortolang.diffusion.core.CoreServiceException;
 import fr.ortolang.diffusion.core.entity.Collection;
@@ -73,6 +74,7 @@ import fr.ortolang.diffusion.util.XmlUtils;
 
 @Startup
 @Singleton(name = OaiWorker.WORKER_NAME)
+@RunAs("system")
 @SecurityDomain("ortolang")
 @PermitAll
 public class OaiWorkerBean implements OaiWorker {
@@ -234,7 +236,7 @@ public class OaiWorkerBean implements OaiWorker {
     				return;
     			}
     			LOGGER.log(Level.FINE, "build from workspace " + wskey + " and snapshot " + snapshot);
-    			Workspace workspace = core.readWorkspace(wskey);
+    			Workspace workspace = core.systemReadWorkspace(wskey);
     			String root = workspace.findSnapshotByName(snapshot).getKey();
 
     			List<Record> records = null;
@@ -287,8 +289,7 @@ public class OaiWorkerBean implements OaiWorker {
     		oai.createRecord(wskey, MetadataFormat.CMDI, registry.getLastModificationDate(root),
     				buildXMLFromItem(root, MetadataFormat.CMDI), setsWorkspace);
 
-    		OrtolangObject object = core.findObject(root);
-    		java.util.Set<CollectionElement> elements = ((Collection) object).getElements();
+    		java.util.Set<CollectionElement> elements = core.systemReadCollection(root).getElements();
     		for (CollectionElement element : elements) {
     			createRecordsFromMetadataObject(element.getKey(), setsWorkspace);
     		}
@@ -311,13 +312,14 @@ public class OaiWorkerBean implements OaiWorker {
     	private void createRecordsFromMetadataObject(String key, HashSet<String> setsWorkspace)
     			throws OrtolangException, OaiServiceException, RegistryServiceException, KeyNotFoundException,
     			CoreServiceException, MetadataPrefixUnknownException {
-    		OrtolangObject object = core.findObject(key);
-    		String type = object.getObjectIdentifier().getType();
+    		OrtolangObjectIdentifier identifier = registry.lookup(key);
+    		String type = identifier.getType();
 
     		switch (type) {
     		case Collection.OBJECT_TYPE:
     			createRecordsForEarchMetadataObject(key, setsWorkspace);
-    			java.util.Set<CollectionElement> elements = ((Collection) object).getElements();
+    			
+    			java.util.Set<CollectionElement> elements = core.systemReadCollection(key).getElements();
     			for (CollectionElement element : elements) {
     				createRecordsFromMetadataObject(element.getKey(), setsWorkspace);
     			}
@@ -402,8 +404,8 @@ public class OaiWorkerBean implements OaiWorker {
     						"unable to build xml for oai record cause metadata prefix unknown " + metadataPrefix);
     			}
     		} catch (XMLStreamException | FactoryConfigurationError | MetadataHandlerException e) {
-    			throw new MetadataPrefixUnknownException(
-    					"unable to build xml for oai record cause metadata prefix unknown " + metadataPrefix, e);
+    			throw new OaiServiceException(
+    					"unable to build xml for oai record for metadata prefix " + metadataPrefix, e);
     		}
     	}
 
@@ -485,7 +487,7 @@ public class OaiWorkerBean implements OaiWorker {
     		LOGGER.log(Level.FINE,
     				"creating OAI record for ortolang object " + key + " for metadataPrefix " + metadataPrefix);
     		try {
-    			List<String> mdKeys = core.findMetadataObjectsForTargetAndName(key, metadataPrefix);
+    			List<String> mdKeys = core.systemFindMetadataObjectsForTargetAndName(key, metadataPrefix);
     			StringWriter result = new StringWriter();
     			
     			if (!mdKeys.isEmpty()) {
@@ -494,7 +496,7 @@ public class OaiWorkerBean implements OaiWorker {
     				XMLMetadataBuilder builder = new XMLMetadataBuilder(writer);
 
     				String mdKey = mdKeys.get(0);
-    				MetadataObject md = core.readMetadataObject(mdKey);
+    				MetadataObject md = core.systemReadMetadataObject(mdKey);
     				if (outputMetadataFormat.equals(MetadataFormat.OAI_DC)) {
     					// Output : OAI_DC XML
     					if (metadataPrefix.equals(MetadataFormat.OAI_DC)) {
@@ -545,14 +547,13 @@ public class OaiWorkerBean implements OaiWorker {
     			}
     		} catch (OrtolangException | KeyNotFoundException | CoreServiceException | IOException
     				| BinaryStoreServiceException | DataNotFoundException | XMLStreamException | FactoryConfigurationError | MetadataHandlerException | MetadataConverterException e) {
-    			LOGGER.log(Level.SEVERE, "unable to build oai_dc from ortolang object  " + key, e);
-    			throw new OaiServiceException("unable to build xml for oai record");
+    			throw new OaiServiceException("unable to build xml for oai record", e);
     		}
     	}
 
     	private boolean metadataObjectExists(String key, String metadataPrefix) {
     		try {
-    			List<String> mdKeys = core.findMetadataObjectsForTargetAndName(key, metadataPrefix);
+    			List<String> mdKeys = core.systemFindMetadataObjectsForTargetAndName(key, metadataPrefix);
     			if (!mdKeys.isEmpty()) {
     				return true;
     			}
