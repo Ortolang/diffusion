@@ -190,25 +190,25 @@ public class OlacHandler implements MetadataHandler {
 	        JsonString publicationDate = jsonDoc.getJsonString("publicationDate");
 	        JsonString creationDate = jsonDoc.getJsonString("originDate");
 	        if(creationDate!=null) {
-	        	builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", creationDate.getString());
-	        	if (DateUtils.isThisDateValid(creationDate.getString())) {
-		            XmlDumpAttributes attrs = new XmlDumpAttributes();
-			        attrs.put("xsi:type", "dcterms:W3CDTF");
-		        	builder.writeStartEndElement(Constant.DCTERMS_NAMESPACE_PREFIX, "temporal", attrs, creationDate.getString());
+		        	if (DateUtils.isThisDateValid(creationDate.getString())) {
+		        		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", creationDate.getString());
+			            XmlDumpAttributes attrs = new XmlDumpAttributes();
+				        attrs.put("xsi:type", "dcterms:W3CDTF");
+			        	builder.writeStartEndElement(Constant.DCTERMS_NAMESPACE_PREFIX, "temporal", attrs, creationDate.getString());
+			        } else {
+			        	LOGGER.log(Level.WARNING, "invalid creation date : " + creationDate.getString());
+			        }
 		        } else {
-		        	LOGGER.log(Level.WARNING, "invalid creation date : " + creationDate.getString());
-		        }
-	        } else {
-	            if(publicationDate!=null) {
-	            	if (DateUtils.isThisDateValid(publicationDate.getString())) {
-	            		XmlDumpAttributes attrs = new XmlDumpAttributes();
-	            		attrs.put("xsi:type", "dcterms:W3CDTF");
-	            		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", attrs, publicationDate.getString());
-	            	} else {
-	            		LOGGER.log(Level.WARNING, "invalid publication date : " + publicationDate.getString());
-	            		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+		            if(publicationDate!=null) {
+		            	if (DateUtils.isThisDateValid(publicationDate.getString())) {
+		            		XmlDumpAttributes attrs = new XmlDumpAttributes();
+		            		attrs.put("xsi:type", "dcterms:W3CDTF");
+		            		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", attrs, publicationDate.getString());
+		            	} else {
+		            		LOGGER.log(Level.WARNING, "invalid publication date : " + publicationDate.getString());
+		            		builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
+		            	}
 	            	}
-            	}
 	        }
 			
         	builder.writeEndDocument();
