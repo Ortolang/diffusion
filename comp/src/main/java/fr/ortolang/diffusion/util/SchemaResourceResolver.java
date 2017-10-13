@@ -21,13 +21,10 @@ public class SchemaResourceResolver implements LSResourceResolver {
 	public LSInput resolveResource(String type, String namespaceURI,
 	        String publicId, String systemId, String baseURI) {
 	     // note: in this sample, the XSD's are expected to be in the root of the classpath
-		LOGGER.log(Level.INFO, "resolve resource " + type + " ; " + namespaceURI + ";" + publicId + " ; " + systemId + " ; " + baseURI);
 		String[] systemIdSplit = systemId.split("/");
 		if (systemIdSplit.length > 0) {
-			LOGGER.log(Level.INFO, "Looking for " + schema_directory + resource_separator + systemIdSplit[systemIdSplit.length - 1]);
 			InputStream resourceAsStream = this.getClass().getClassLoader()
 	            .getResourceAsStream(schema_directory + resource_separator + systemIdSplit[systemIdSplit.length - 1]);
-			LOGGER.log(Level.INFO, "resource stream  : " + resourceAsStream);
 			if (resourceAsStream == null) {
 				try {
 					resourceAsStream = new URL(systemId).openStream();
@@ -37,7 +34,6 @@ public class SchemaResourceResolver implements LSResourceResolver {
 			}
 			return new Input(publicId, systemId, resourceAsStream);
 		}
-		LOGGER.log(Level.INFO, "return NULL");
 		return null;
 	}
 	
