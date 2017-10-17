@@ -71,7 +71,11 @@ public class DublinCoreHandler implements MetadataHandler {
 						writeDcMultilingualElement("subject", label, builder);
 						writeDcMultilingualElement("language", label, builder);
 					}
-					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "language", corporaLanguage.getString("id"));
+					if (corporaLanguage.containsKey("id")) {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "language", corporaLanguage.getString("id"));
+					} else {
+						LOGGER.log(Level.WARNING, "corporaLanguage missing id");
+					}
 				}
 			}
 
