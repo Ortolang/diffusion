@@ -118,6 +118,7 @@ public class Constant {
 	// Utils
 	public static final String w3cdtfFormat = "yyyy-MM-dd";
     public static final SimpleDateFormat w3cdtf = new SimpleDateFormat(w3cdtfFormat);
+    public static final String w3cdtfPattern = "(\\d{4})|(\\d{4}-\\d{2})|(\\d{4}-\\d{2}-\\d{2})|(\\d{4}-\\d{2}-\\d{2}T\\d{2}(:\\d{2}){1,2}[-+]\\d{2}:\\d{2})";
     public static final String iso639_3pattern = "[A-Za-z][A-Za-z][A-Za-z]?";
     public static final String iso639_2pattern = "[A-Za-z][A-Za-z]";
     

@@ -12,6 +12,9 @@ public class DateUtils {
 		if(dateToValidate == null){
 			return false;
 		}
+		if (!dateToValidate.matches(Constant.w3cdtfPattern)) {
+			return false;
+		}
 		SimpleDateFormat sdf = new SimpleDateFormat(Constant.w3cdtfFormat);
 		sdf.setLenient(false);
 		try {
