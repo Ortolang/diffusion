@@ -146,12 +146,10 @@ public class CmdiHandler implements MetadataHandler {
 			}
 
 			JsonObject license = jsonDoc.getJsonObject("license");
-			if (license != null) {
-				if (license != null) {
-					XmlDumpAttributes attrs = new XmlDumpAttributes();
-			        attrs.put("xml:lang", "fr");
-					builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "license", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
-				}
+			if (license != null && license.containsKey("label")) {
+				XmlDumpAttributes attrs = new XmlDumpAttributes();
+		        attrs.put("xml:lang", "fr");
+				builder.writeStartEndElement(Constant.CMDI_OLAC_NAMESPACE_PREFIX, "license", attrs, XMLDocument.removeHTMLTag(license.getString("label")));
 			}
 			
 			JsonArray producers = jsonDoc.getJsonArray("producers");

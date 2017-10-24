@@ -60,11 +60,15 @@ public class OlacHandler implements MetadataHandler {
 					for (JsonObject label : multilingualLabels.getValuesAs(JsonObject.class)) {
 						DublinCoreHandler.writeDcMultilingualElement("subject", label, builder);
 //						DublinCoreHandler.writeDcMultilingualElement("language", label, builder);
+						if (corporaLanguage.containsKey("id")) {
 						//TODO downgrade language (ex. mar-1 to mar)
-						writeOlacElement("language", "olac:language", 
-							corporaLanguage.getString("id").matches(Constant.iso639_3pattern) ? corporaLanguage.getString("id") : null, 
-									label.getString("lang").matches(Constant.iso639_2pattern) ? label.getString("lang") : null, 
-											label.getString("value"), builder);
+							writeOlacElement("language", "olac:language", 
+								corporaLanguage.getString("id").matches(Constant.iso639_3pattern) ? corporaLanguage.getString("id") : null, 
+										label.getString("lang").matches(Constant.iso639_2pattern) ? label.getString("lang") : null, 
+												label.getString("value"), builder);
+						} else {
+							LOGGER.log(Level.SEVERE, "corporaLanguage missing id for " + corporaLanguage.toString());
+						}
 					}
 				}
 			}
