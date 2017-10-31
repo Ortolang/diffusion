@@ -459,6 +459,16 @@ public class OaiWorkerBean implements OaiWorker {
     			String olacXml = buildXMLFromMetadataObject(key, MetadataFormat.OAI_DC, MetadataFormat.OLAC);
     			oai.createRecord(key, MetadataFormat.OLAC, registry.getLastModificationDate(key), olacXml, setsWorkspace);
     		}
+    		
+    		if ( cmdi ) {
+    			//TODO Transform CMDI/JSON to CMDI/XML
+    		} else if ( olac ) {
+    			String cmdiXml = buildXMLFromMetadataObject(key, MetadataFormat.OLAC, MetadataFormat.CMDI);
+    			oai.createRecord(key, MetadataFormat.CMDI, registry.getLastModificationDate(key), cmdiXml, setsWorkspace);
+    		} else if ( oai_dc ) {
+    			String cmdiXml = buildXMLFromMetadataObject(key, MetadataFormat.OAI_DC, MetadataFormat.CMDI);
+    			oai.createRecord(key, MetadataFormat.CMDI, registry.getLastModificationDate(key), cmdiXml, setsWorkspace);
+    		}
     	}
 
     	/**
