@@ -4052,9 +4052,6 @@ public class CoreServiceBean implements CoreService {
             throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
             IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
         LOGGER.log(Level.FINE, "#SYSTEM# create metadata for key [" + tkey + "]");
-        if (!name.startsWith("system-")) {
-            throw new CoreServiceException("only system metadata can be added this way.");
-        }
         OrtolangObjectIdentifier identifier = registry.lookup(tkey);
         if (!identifier.getService().equals(SERVICE_NAME)) {
             throw new CoreServiceException("metadata target can only be a Link, a DataObject or a Collection.");
