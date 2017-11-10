@@ -4122,6 +4122,46 @@ public class CoreServiceBean implements CoreService {
         ((MetadataSource) object).addMetadata(new MetadataElement(name, meta.getKey()));
         em.merge(object);
     }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void systemUpdateMetadata(String key, String hash)
+            throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException,
+            IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# update metadata for key [" + key + "]");
+        OrtolangObjectIdentifier identifier = registry.lookup(key);
+        checkObjectType(identifier, MetadataObject.OBJECT_TYPE);
+        MetadataObject meta = em.find(MetadataObject.class, identifier.getId());
+        if (meta == null) {
+        	throw new CoreServiceException("unable to find metadata with id " + identifier.getId() + " from the storage");
+        }
+
+        MetadataFormat format = findMetadataFormatById(meta.getFormat());
+//        MetadataFormat format = getMetadataFormat(name);
+        if (format == null) {
+            LOGGER.log(Level.SEVERE, "Unable to find a metadata format for name: " + meta.getFormat());
+            throw new CoreServiceException("unknown metadata format for name: " + meta.getFormat());
+        }
+
+        if (hash != null && hash.length() > 0) {
+            if (format.isValidationNeeded()) {
+                validateMetadata(hash, format);
+            }
+            meta.setSize(binarystore.size(hash));
+            meta.setContentType(binarystore.type(hash));
+            meta.setStream(hash);
+        } else {
+            meta.setSize(0);
+            meta.setContentType("application/octet-stream");
+            meta.setStream("");
+        }
+
+        meta.setFormat(format.getId());
+        em.merge(meta);
+
+        registry.refresh(meta.getTarget());
+        indexing.index(meta.getTarget());
+    }
     
     @Override
     @RolesAllowed({ "admin", "system" })

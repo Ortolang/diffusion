@@ -263,6 +263,9 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
     void systemCreateMetadata(String key, String name, String hash, String filename) throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException,
             BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException;
 
+    void systemUpdateMetadata(String key, String hash) throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException,
+            BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException;
+
     List<String> systemFindMetadataObjectsForTargetAndName(String target, String name) throws CoreServiceException, AccessDeniedException;
     
     Workspace systemReadWorkspace(String wskey) throws CoreServiceException, KeyNotFoundException;

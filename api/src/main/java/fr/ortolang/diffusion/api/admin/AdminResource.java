@@ -320,6 +320,23 @@ public class AdminResource {
             return Response.serverError().entity(e.getMessage()).build();
         }
     }
+    
+    @POST
+    @Path("/core/metadata/{mdkey}")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @GZIP
+    public Response updateMetadata(@PathParam(value = "mdkey") String mdkey, @MultipartForm MetadataObjectFormRepresentation form) throws KeyNotFoundException, CoreServiceException, MetadataFormatException, DataNotFoundException, BinaryStoreServiceException, KeyAlreadyExistsException, IdentifierAlreadyRegisteredException, RegistryServiceException, AuthorisationServiceException, IndexingServiceException {
+    	try {
+	        if (form.getStream() != null) {
+	            form.setStreamHash(core.put(form.getStream()));
+	        }
+			core.systemUpdateMetadata(mdkey, form.getStreamHash());
+			 return Response.ok().build();
+    	} catch (DataCollisionException e) {
+            LOGGER.log(Level.SEVERE, "an error occured while creating workspace element: " + e.getMessage(), e);
+            return Response.serverError().entity(e.getMessage()).build();
+        }
+    }
 
     @PUT
     @Path("/core/workspace/{wskey}")
