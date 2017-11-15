@@ -717,6 +717,26 @@ public class WorkspaceResource {
     }
 
     @POST
+    @Path("/{wskey}/privileged")
+    public Response setWorkspacePrivilegedGroup(@PathParam(value = "wskey") String wskey)
+            throws KeyNotFoundException, CoreServiceException, KeyAlreadyExistsException {
+        Group group = core.setWorkspacePrivilegedGroup(wskey);
+        GroupRepresentation representation = GroupRepresentation.fromGroup(group);
+        return Response.ok().entity(representation).build();
+    }
+
+    @PUT
+    @Path("/{wskey}/privileged/{member}")
+    @GZIP
+    public Response addPrivilegedMember(@PathParam(value = "wskey") String wskey, @PathParam(value = "member") String member)
+            throws CoreServiceException, AccessDeniedException, NotificationServiceException, MembershipServiceException, KeyNotFoundException {
+        LOGGER.log(Level.INFO, "PUT /workspaces/" + wskey + "/privileged/" + member);
+        Group group = core.addPrivilegedMember(wskey, member);
+        GroupRepresentation representation = GroupRepresentation.fromGroup(group);
+        return Response.ok(representation).build();
+    }
+
+    @POST
     @Path("/{wskey}/members/message")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response postMessageToWorkspaceMembers(@PathParam(value = "wskey") String wskey, @FormParam(value = "subject") String subject, @FormParam(value = "email") String email, @FormParam(value = "message") String message)

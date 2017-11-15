@@ -126,6 +126,8 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     String findWorkspaceLatestPublishedSnapshot(String wskey) throws CoreServiceException, KeyNotFoundException;
 
+    Group setWorkspacePrivilegedGroup(String wskey) throws CoreServiceException, KeyAlreadyExistsException;
+    
     void changeWorkspaceOwner(String wskey, String newOwner) throws CoreServiceException;
 
     void notifyWorkspaceOwner(String wskey, String sender, String message) throws CoreServiceException;
@@ -140,6 +142,8 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     Group addMember(String wskey, String member) throws CoreServiceException, AccessDeniedException, KeyNotFoundException, MembershipServiceException, NotificationServiceException;
 
+    Group addPrivilegedMember(String wskey, String member) throws CoreServiceException, AccessDeniedException, KeyNotFoundException, MembershipServiceException, NotificationServiceException;
+    
     /* Collection */
 
     Collection createCollection(String wskey, String path) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, InvalidPathException, PathNotFoundException,

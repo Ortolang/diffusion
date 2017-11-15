@@ -724,6 +724,54 @@ public class CoreServiceBean implements CoreService {
 
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public Group setWorkspacePrivilegedGroup(String wskey) throws CoreServiceException, KeyAlreadyExistsException {
+    	LOGGER.log(Level.FINE, "setting workspace privileged group of workspace [" + wskey + "]");
+    	try {
+    		String caller = membership.getProfileKeyForConnectedIdentifier();
+            List<String> subjects = membership.getConnectedIdentifierSubjects();
+
+            if (!MembershipService.SUPERUSER_IDENTIFIER.equals(caller)) {
+                throw new CoreServiceException("only " + MembershipService.SUPERUSER_IDENTIFIER + " can archive workspace");
+            }
+
+            OrtolangObjectIdentifier identifier = registry.lookup(wskey);
+            checkObjectType(identifier, Workspace.OBJECT_TYPE);
+            authorisation.checkPermission(wskey, subjects, "update");
+
+	        Workspace workspace = readWorkspace(wskey);
+	        if (workspace.getPrivileged() != null && !workspace.getPrivileged().isEmpty()) {
+	        	throw new CoreServiceException("privileged group already exists for workspace with key [" + wskey + "]");
+	        }
+	        String wsOwner = security.getOwner(wskey);
+	    	String privilegedMembers = UUID.randomUUID().toString();
+	        membership.createGroup(privilegedMembers, workspace.getName() + "'s privileged group", "Privileged group of a workspace have permission to read published content");
+	        Map<String, List<String>> membersrules = authorisation.getPolicyRules(privilegedMembers);
+	        membersrules.put(MembershipService.MODERATORS_GROUP_KEY, Arrays.asList("read", "update"));
+	        membersrules.put(MembershipService.PUBLISHERS_GROUP_KEY, Arrays.asList("read"));
+	        membersrules.put(MembershipService.REVIEWERS_GROUP_KEY, Arrays.asList("read"));
+	        membersrules.put(workspace.getMembers(), Arrays.asList("read"));
+	        authorisation.setPolicyRules(privilegedMembers, membersrules);
+	        security.changeOwner(privilegedMembers, wsOwner);
+	        
+	        workspace.setPrivileged(privilegedMembers);
+	        em.merge(workspace);
+	        
+            registry.update(wskey);
+            indexing.index(wskey);
+
+            ArgumentsBuilder argsBuilder = new ArgumentsBuilder(2).addArgument("ws-alias", workspace.getAlias()).addArgument("privileged", privilegedMembers);
+            notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "update"), argsBuilder.build());
+
+	        return membership.readGroup(privilegedMembers);
+    	} catch (SecurityServiceException | AccessDeniedException | KeyNotFoundException | MembershipServiceException | AuthorisationServiceException | RegistryServiceException | KeyLockedException | IndexingServiceException | NotificationServiceException e) {
+            ctx.setRollbackOnly();
+            LOGGER.log(Level.SEVERE, "unexpected error occurred while changing workspace owner", e);
+            throw new CoreServiceException("unable to change owner of workspace with key [" + wskey + "]", e);
+        }
+    }
+    
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public void changeWorkspaceOwner(String wskey, String newOwner) throws CoreServiceException {
         LOGGER.log(Level.FINE, "changing workspace [" + wskey + "] owner to: " + newOwner);
         try {
@@ -1506,6 +1554,21 @@ public class CoreServiceBean implements CoreService {
         return group;
     }
 
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public Group addPrivilegedMember(String wskey, String member) throws CoreServiceException, AccessDeniedException, KeyNotFoundException, MembershipServiceException, NotificationServiceException {
+        String caller = membership.getProfileKeyForConnectedIdentifier();
+        Workspace workspace = readWorkspace(wskey);
+        String privilegedGroup = workspace.getPrivileged();
+        if (privilegedGroup == null || (privilegedGroup != null && privilegedGroup.isEmpty())) {
+        	throw new CoreServiceException("privileged group is not defined for workspace [" + wskey + "] and alias [" + workspace.getAlias() + "]");
+        }
+        Group group = membership.addMemberInGroup(privilegedGroup, member);
+        ArgumentsBuilder argsBuilder = new ArgumentsBuilder().addArgument("ws-alias", workspace.getAlias()).addArgument("member", member);
+        notification.throwEvent(wskey, caller, Workspace.OBJECT_TYPE, OrtolangEvent.buildEventType(CoreService.SERVICE_NAME, Workspace.OBJECT_TYPE, "notify-added-privileged-member"), argsBuilder.build());
+        return group;
+    }
+    
     @Override
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     public Collection moveCollection(String wskey, String source, String destination) throws CoreServiceException, KeyNotFoundException, InvalidPathException, AccessDeniedException,

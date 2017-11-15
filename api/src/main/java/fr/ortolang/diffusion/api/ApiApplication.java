@@ -57,6 +57,7 @@ import fr.ortolang.diffusion.api.mapper.AliasAlreadyExistsExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.AliasNotFoundExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.BrowserServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.CollectionNotEmptyExceptionMapper;
+import fr.ortolang.diffusion.api.mapper.CoreServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.EJBAccessExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.HandleNotFoundExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.InvalidPathExceptionMapper;
@@ -131,6 +132,7 @@ public class ApiApplication extends Application {
         set.add(new SearchServiceExceptionMapper());
         set.add(new SecurityServiceExceptionMapper());
         set.add(new CollectionNotEmptyExceptionMapper());
+        set.add(new CoreServiceExceptionMapper());
         set.add(new SubscriptionServiceExceptionMapper());
         set.add(new EJBAccessExceptionMapper());
         set.add(new PathAlreadyExistsExceptionMapper());
