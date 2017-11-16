@@ -169,6 +169,15 @@ public class GroupResource {
         return Response.noContent().build();
     }
 
+    @POST
+    @Path("/{key}/owner")
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response changeGroupOwner(@PathParam(value = "key") String key, @FormParam(value = "newowner") String newowner) throws MembershipServiceException {
+    	LOGGER.log(Level.INFO, "POST /groups/" + key + "/owner?newowner=" + newowner);
+    	membership.changeGroupOwner(key, newowner);
+    	return Response.ok().build();
+    }
+
     @PUT
     @Path("/{key}/members/{member}")
     public Response addMember(@PathParam(value = "key") String key, @PathParam(value = "member") String member, @QueryParam("members") @DefaultValue("true") boolean members) throws MembershipServiceException, AccessDeniedException, KeyNotFoundException {

@@ -47,6 +47,8 @@ import fr.ortolang.diffusion.membership.xml.ProfileExportHandler;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
 import fr.ortolang.diffusion.registry.*;
+import fr.ortolang.diffusion.security.SecurityService;
+import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authentication.AuthenticationService;
 import fr.ortolang.diffusion.security.authentication.TOTPHelper;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -93,6 +95,8 @@ public class MembershipServiceBean implements MembershipService {
     private IndexingService indexing;
     @EJB
     private AuthorisationService authorisation;
+    @EJB
+    private SecurityService security;
     @PersistenceContext(unitName = "ortolangPU")
     private EntityManager em;
     @Resource
@@ -133,7 +137,15 @@ public class MembershipServiceBean implements MembershipService {
         this.authorisation = authorisation;
     }
 
-    @Override
+    public SecurityService getSecurity() {
+		return security;
+	}
+
+	public void setSecurity(SecurityService security) {
+		this.security = security;
+	}
+
+	@Override
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
     public String getProfileKeyForConnectedIdentifier() {
         return authentication.getConnectedIdentifier();
@@ -721,6 +733,18 @@ public class MembershipServiceBean implements MembershipService {
             ctx.setRollbackOnly();
             throw new MembershipServiceException("unable to delete group with key [" + key + "]", e);
         }
+    }
+
+    @Override
+    @TransactionAttribute(TransactionAttributeType.REQUIRED)
+    public void changeGroupOwner(String gkey, String newOwner) throws MembershipServiceException {
+    	try {
+			readGroup(gkey);
+			security.changeOwner(gkey, newOwner);
+		} catch (AccessDeniedException | KeyNotFoundException | SecurityServiceException e) {
+			ctx.setRollbackOnly();
+            throw new MembershipServiceException("unable to change ownership from group with key [" + gkey + "]", e);
+		}
     }
 
     @Override

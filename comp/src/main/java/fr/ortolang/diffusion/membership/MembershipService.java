@@ -101,6 +101,8 @@ public interface MembershipService extends OrtolangObjectProviderService, Ortola
 
     void deleteGroup(String key) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
+    void changeGroupOwner(String gkey, String newOwner) throws MembershipServiceException;
+    
     Group addMemberInGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
 
     void removeMemberFromGroup(String key, String member) throws MembershipServiceException, KeyNotFoundException, AccessDeniedException;
