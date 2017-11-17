@@ -153,7 +153,6 @@ public class SecurityServiceBean implements SecurityService {
             authorisation.updatePolicyOwner(key, newowner);
             ArgumentsBuilder argumentsBuilder = new ArgumentsBuilder("owner", newowner);
             notification.throwEvent(key, caller, keyid.getType(), OrtolangEvent.buildEventType(keyid.getService(), keyid.getType(), "change-owner"), argumentsBuilder.build());
-            LOGGER.log(Level.INFO, "owner changed to [" + newowner + "] for key [" + key + "]");
         } catch (MembershipServiceException | RegistryServiceException | AuthorisationServiceException | NotificationServiceException e) {
             ctx.setRollbackOnly();
             throw new SecurityServiceException(e);

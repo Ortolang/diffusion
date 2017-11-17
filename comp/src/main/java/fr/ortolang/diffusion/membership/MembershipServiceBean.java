@@ -741,7 +741,9 @@ public class MembershipServiceBean implements MembershipService {
     	try {
 			readGroup(gkey);
 			security.changeOwner(gkey, newOwner);
-		} catch (AccessDeniedException | KeyNotFoundException | SecurityServiceException e) {
+			registry.update(gkey);
+			indexing.index(gkey);
+		} catch (AccessDeniedException | KeyNotFoundException | SecurityServiceException | RegistryServiceException | KeyLockedException | IndexingServiceException e) {
 			ctx.setRollbackOnly();
             throw new MembershipServiceException("unable to change ownership from group with key [" + gkey + "]", e);
 		}

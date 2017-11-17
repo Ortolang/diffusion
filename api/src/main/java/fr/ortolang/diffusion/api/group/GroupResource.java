@@ -174,6 +174,9 @@ public class GroupResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response changeGroupOwner(@PathParam(value = "key") String key, @FormParam(value = "newowner") String newowner) throws MembershipServiceException {
     	LOGGER.log(Level.INFO, "POST /groups/" + key + "/owner?newowner=" + newowner);
+    	if (newowner == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("parameter 'newowner' is mandatory").build();
+        }
     	membership.changeGroupOwner(key, newowner);
     	return Response.ok().build();
     }
