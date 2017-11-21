@@ -3513,12 +3513,12 @@ public class CoreServiceBean implements CoreService {
                     throw new MetadataFormatException(report.toString());
                 }
             } else {
-                LOGGER.log(Level.SEVERE, "unexpected error occurred during validating metadata with metadata format [" + format + "] : schema not found");
-                throw new MetadataFormatException("unable to validate metadata with metadata format [" + format + "] : schema not found");
+                LOGGER.log(Level.SEVERE, "unexpected error occurred during validating metadata with metadata format [" + format.getName() + "] : schema not found");
+                throw new MetadataFormatException("unable to validate metadata with metadata format [" + format.getName() + "] : schema not found");
             }
         } catch (IOException | ProcessingException | DataNotFoundException | BinaryStoreServiceException e) {
-            LOGGER.log(Level.SEVERE, "unexpected error occurred during validating metadata with metadata format [" + format + "] : " + e.getMessage());
-            throw new MetadataFormatException("unable to validate metadata with metadata format [" + format + "] : " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "unexpected error occurred during validating metadata with metadata format [" + format.getName() + "] : " + e.getMessage());
+            throw new MetadataFormatException("unable to validate metadata with metadata format [" + format.getName() + "] : " + e.getMessage());
         }
     }
 

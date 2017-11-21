@@ -163,7 +163,7 @@
                                         "properties": {
                                         	"mimetype": {
                                         		"type": "string",
-                                        		"id": "http://www.clarin.eu/cmd/1/ResourceProxyList/ResourceProxy/ResourceType/mimetype",
+                                        		"id": "http://www.clarin.eu/cmd/1/ResourceProxyList/ResourceProxy/ResourceType/mimetype"
                                         	},
                                             "value": {
                                                 "enum": [
