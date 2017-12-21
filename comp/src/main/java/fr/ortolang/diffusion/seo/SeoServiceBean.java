@@ -218,6 +218,7 @@ public class SeoServiceBean implements SeoService {
 //        List<ODocument> workspaces = json.systemSearch("SELECT key, lastModificationDate as lastModificationDate, `meta_ortolang-item-json.type` as type, `meta_ortolang-workspace-json.wsalias` as alias, `meta_ortolang-workspace-json.snapshotName` as snapshotName FROM collection WHERE status = 'published' AND `meta_ortolang-item-json.type` IS NOT null AND `meta_ortolang-workspace-json.wsalias` IS NOT null");
     	SearchQuery query = new SearchQuery();
     	query.setIndex(OrtolangItemIndexableContent.INDEX);
+    	query.setSize(-1);
     	SearchResult result = search.search(query);
     	
         // Add an entry for the latest version only
