@@ -238,6 +238,9 @@ public class SeoServiceBean implements SeoService {
 	            String priority = "0.7";
 	            Element url = buildSiteMapEntry(loc, null, ChangeFrequency.DAILY, priority, doc);
 	            urlset.appendChild(url);
+	            String locEn =  marketServerUrl + "market/" + ortolangItemType.getSection() + "/" + alias + "?lang=en";
+	            Element urlEn = buildSiteMapEntry(locEn, null, ChangeFrequency.DAILY, priority, doc);
+	            urlset.appendChild(urlEn);
 			} catch (IOException | OrtolangException | SeoServiceException e) {
 				LOGGER.log(Level.WARNING, e.getMessage(), e);
 			}
@@ -303,7 +306,9 @@ public class SeoServiceBean implements SeoService {
         // Do not add marketType for applications as they do not have a description page
         APPLICATIONS("market/" + APPLICATION.getSection(), "0.8", APPLICATION.getMetadataType(), null),
         INFORMATION("information", "0.8", null, null),
-        LEGAL_NOTICES("legal-notices", "0.3", null, null);
+        INFORMATION_EN("information?lang=en", "0.8", null, null),
+        LEGAL_NOTICES("legal-notices", "0.3", null, null),
+    	LEGAL_NOTICES_EN("legal-notices?lang=en", "0.3", null, null);
 
         private final String path;
         private final String mdValue;
