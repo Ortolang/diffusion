@@ -32,32 +32,32 @@ body {
 code {
 	font-family:consolas,monospace;	
 }
-a {
-	color:#61666c;
-	text-decoration:none;
-}
-a:hover {
-	color:#2a2a2a;
-}
 address {
 	font-size:.875em;
 	margin-top: 20px;
+}
+a {
+	color:#61666c;
+}
+a:hover {
+	color:#2a2a2a;
 }
 /*------------------------------------*\
     Wrapper
 \*------------------------------------*/
 .wrapper {
-	padding-top:20px;
 	max-width:1024px;
 }
 /*------------------------------------*\
     Demo block
 \*------------------------------------*/
-.block {
-	font-size:.875em;
+section {
 	margin:20px 0;
-	padding:20px;
-	color:#9099A3;
+	padding:20px 20px 0px 20px;
+	width: 80%;
+}
+section article {
+	font-size:.875em;
 }
 /*------------------------------------*\
     Table (directory listing)
@@ -66,6 +66,9 @@ table {
 	width:100%;
 	border-collapse:collapse;
 	font-size:.875em;
+}
+table a {
+	text-decoration:none;
 }
 tr {
 	outline:0;
@@ -115,16 +118,38 @@ td {
 td a{
 	display: block;
 }
-tr.parent a[href^="/"] {
-	color:#9099A3;
-}
-	.parent a[href^="/"]:hover {
-		color:#2281d0;
-	}
-	
 img {
     padding-top: 10px;
 }
+
+/*------------------------------------*\
+    Title
+\*------------------------------------*/
+h2 {
+	display: inline;
+	border-bottom: 2px solid;
+}
+
+h4 {
+	font-size: 18px;
+    margin-bottom: 20px;
+	border-bottom: 2px dotted #efefef;
+}
+
+
+/*------------------------------------*\
+    Definition
+\*------------------------------------*/
+dt {
+	font-weight: 600;
+	font-size: 16px;
+}
+
+dd {
+	margin-left: 30px;
+	margin-bottom: 20px;
+}
+
 /*------------------------------------*\
     Footer
 \*------------------------------------*/

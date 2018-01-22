@@ -39,6 +39,7 @@ package fr.ortolang.diffusion.api.content;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.ortolang.diffusion.api.content.metadata.DcDocument;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 
 public class ContentRepresentation {
@@ -53,6 +54,7 @@ public class ContentRepresentation {
 	private boolean linkbykey;
 	private String parentPath;
 	private List<CollectionElement> elements;
+	private DcDocument dcDocument;
 
 	public ContentRepresentation() {
 		context = "";
@@ -65,6 +67,7 @@ public class ContentRepresentation {
 		asc = true;
 		parentPath = "";
 		elements = new ArrayList<CollectionElement> ();
+		dcDocument = new DcDocument();
 	}
 
 	public String getContext() {
@@ -146,5 +149,12 @@ public class ContentRepresentation {
 	public void setElements(List<CollectionElement> elements) {
 		this.elements = elements;
 	}
-	
+
+	public DcDocument getDcDocument() {
+		return dcDocument;
+	}
+
+	public void setDcDocument(DcDocument dcDocument) {
+		this.dcDocument = dcDocument;
+	}
 }

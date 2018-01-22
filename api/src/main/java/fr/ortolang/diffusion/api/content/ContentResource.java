@@ -94,6 +94,7 @@ import fr.ortolang.diffusion.OrtolangObjectInfos;
 import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.api.ApiHelper;
 import fr.ortolang.diffusion.api.auth.AuthResource;
+import fr.ortolang.diffusion.api.content.metadata.DcDocument;
 import fr.ortolang.diffusion.browser.BrowserService;
 import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.core.AliasNotFoundException;
@@ -106,6 +107,8 @@ import fr.ortolang.diffusion.core.entity.Collection;
 import fr.ortolang.diffusion.core.entity.CollectionElement;
 import fr.ortolang.diffusion.core.entity.DataObject;
 import fr.ortolang.diffusion.core.entity.Link;
+import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
 import fr.ortolang.diffusion.core.entity.MetadataObject;
 import fr.ortolang.diffusion.core.entity.SnapshotElement;
 import fr.ortolang.diffusion.core.entity.TagElement;
@@ -704,9 +707,20 @@ public class ContentResource {
                     }
                     builder.lastModified(lmd);
                 } else if (object instanceof Collection) {
-                    representation.setElements(new ArrayList<>(((Collection) object).getElements()));
-                    sort(representation, asc, order);
-                    builder = Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation));
+                	MetadataElement dcMetadata = ((Collection) object).findMetadataByName(MetadataFormat.OAI_DC);
+                	representation.setElements(new ArrayList<>(((Collection) object).getElements()));
+                	sort(representation, asc, order);
+                	if(dcMetadata == null) {
+	                    builder = Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("collection", representation));
+                	} else {
+                		MetadataObject metadataObject = core.readMetadataObject(dcMetadata.getKey());
+                		try {
+							representation.setDcDocument(DcDocument.valueOf(store.getFile(metadataObject.getStream())));
+						} catch (IOException e) {
+							LOGGER.log(Level.WARNING, e.getMessage(), e);
+						}
+                		builder = Response.ok(TemplateEngine.getInstance(TEMPLATE_ENGINE_CL).process("metadata", representation));
+                	}
                     builder.lastModified(lmd);
                 } else if (object instanceof Link) {
                     return Response.seeOther(uriInfo.getBaseUriBuilder().path(ContentResource.class).path(((Link) object).getTarget()).build()).build();
