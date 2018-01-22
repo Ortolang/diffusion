@@ -37,17 +37,6 @@ public class OlacHandler implements MetadataHandler {
 		try {
 			writeOlacDocument(builder);
 
-			if (listHandles != null) {
-				listHandles.forEach(handleUrl -> {
-					try {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
-					} catch (MetadataBuilderException e) {
-						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
-						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
-					}
-				});
-			}
-			
 			DublinCoreHandler.writeDcElement("title", jsonDoc, builder);
 			DublinCoreHandler.writeDcElement("description", jsonDoc, builder);
 			DublinCoreHandler.writeDcElement("keywords", jsonDoc, "subject", builder);
@@ -212,6 +201,17 @@ public class OlacHandler implements MetadataHandler {
 		            	}
 	            	}
 	        }
+
+			if (listHandles != null) {
+				listHandles.forEach(handleUrl -> {
+					try {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+					} catch (MetadataBuilderException e) {
+						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
+						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
+					}
+				});
+			}
 			
         	builder.writeEndDocument();
 		} catch (Exception e) {
@@ -232,17 +232,6 @@ public class OlacHandler implements MetadataHandler {
         	writeOlacDocument(builder);
         	JsonObject jsonDoc = jsonReader.readObject();
 
-			if (listHandles != null) {
-				listHandles.forEach(handleUrl -> {
-					try {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
-					} catch (MetadataBuilderException e) {
-						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
-						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
-					}
-				});
-			}
-			
         	// DCTerms elements
 //        	Constant.DCTERMS_ELEMENTS.stream().forEach(elm -> writeDctermsElement(elm, jsonDoc, builder));
         	for(String dcterms : Constant.DCTERMS_ELEMENTS) {
@@ -253,7 +242,18 @@ public class OlacHandler implements MetadataHandler {
         	for(String dc : Constant.DC_ELEMENTS) {
         		writeOlacElement(dc, jsonDoc, builder);
         	}
-        	
+
+		if (listHandles != null) {
+			listHandles.forEach(handleUrl -> {
+				try {
+					builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+				} catch (MetadataBuilderException e) {
+					LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
+					LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
+				}
+			});
+		}
+			
         	builder.writeEndDocument();
         } catch(Exception e) {
         	throw new MetadataHandlerException("unable to build OLAC metadata format from json", e);

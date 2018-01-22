@@ -54,17 +54,6 @@ public class DublinCoreOutputConverter implements MetadataConverter {
 			DublinCoreHandler.writeDcDocument(builder);
 			JsonObject jsonDoc = jsonReader.readObject();
 
-			if (listHandles != null) {
-				listHandles.forEach(handleUrl -> {
-					try {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
-					} catch (MetadataBuilderException e) {
-						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
-						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
-					}
-				});
-			}
-			
 			// Converts elements from OLAC to DC based on OLAC-to-OAI_DC
 			// crosswalk
 			// [http://www.language-archives.org/NOTE/olac_display.html]
@@ -167,6 +156,18 @@ public class DublinCoreOutputConverter implements MetadataConverter {
 					DublinCoreHandler.writeDcElement(olacElement, jsonDoc, elm.getValue(), builder);
 				}
 			}
+
+			if (listHandles != null) {
+				listHandles.forEach(handleUrl -> {
+					try {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+					} catch (MetadataBuilderException e) {
+						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
+						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
+					}
+				});
+			}
+			
 			builder.writeEndDocument();
 		} catch (Exception e) {
 			throw new MetadataConverterException("unable to build OAI_DC from json", e);

@@ -47,17 +47,6 @@ public class DublinCoreHandler implements MetadataHandler {
 		try {
 			writeDcDocument(builder);
 			
-			if (listHandles != null) {
-				listHandles.forEach(handleUrl -> {
-					try {
-						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
-					} catch (MetadataBuilderException e) {
-						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
-						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
-					}
-				});
-			}
-			
 			writeDcElement("title", jsonDoc, builder);
 			writeDcElement("description", jsonDoc, builder);
 			writeDcElement("keywords", jsonDoc, "subject", builder);
@@ -150,6 +139,18 @@ public class DublinCoreHandler implements MetadataHandler {
 						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "date", publicationDate.getString());
 				}
 			}
+
+			if (listHandles != null) {
+				listHandles.forEach(handleUrl -> {
+					try {
+						builder.writeStartEndElement(Constant.DC_NAMESPACE_PREFIX, "identifier", handleUrl);
+					} catch (MetadataBuilderException e) {
+						LOGGER.log(Level.WARNING, "Unables to build XML : " + e.getMessage());
+						LOGGER.log(Level.FINE, "Unables to build XML : " + e.getMessage(), e);
+					}
+				});
+			}
+			
 			builder.writeEndDocument();
 		} catch (Exception e) {
 			throw new MetadataHandlerException("unable to build OAI_DC cause " + e.getMessage(), e);
@@ -167,6 +168,10 @@ public class DublinCoreHandler implements MetadataHandler {
 			writeDcDocument(builder);
 			JsonObject jsonDoc = jsonReader.readObject();
 
+			for (String elm : Constant.DC_ELEMENTS) {
+				writeDcElement(elm, jsonDoc, builder);
+			}
+
 			if (listHandles != null) {
 				listHandles.forEach(handleUrl -> {
 					try {
@@ -178,9 +183,6 @@ public class DublinCoreHandler implements MetadataHandler {
 				});
 			}
 			
-			for (String elm : Constant.DC_ELEMENTS) {
-				writeDcElement(elm, jsonDoc, builder);
-			}
 			builder.writeEndDocument();
 		} catch (Exception e) {
 			throw new MetadataHandlerException("unable to write DublinCore metadata", e);
