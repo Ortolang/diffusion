@@ -11,7 +11,7 @@
 <div class="wrapper">
 	<section>
 		<article>
-			<p>Vous pouvez retrouver toutes les informations du projet à l'adresse : <a href="//www.ortolang.fr/market/item/${alias}">www.ortolang.fr/market/item/${alias}</a>.</p>
+			<p>Vous pouvez retrouver toutes les informations du projet à l'adresse : <a href="//www.ortolang.fr/market/item/${alias}" target="_BLANK">www.ortolang.fr/market/item/${alias}</a>.</p>
 		</article>
 	</section>
     <section>
