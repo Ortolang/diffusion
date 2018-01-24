@@ -1,5 +1,49 @@
 package fr.ortolang.diffusion.core;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.Resource;
+import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+import javax.ejb.EJB;
+import javax.ejb.Local;
+import javax.ejb.SessionContext;
+import javax.ejb.Stateless;
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
+import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
+
+import org.javers.core.Javers;
+import org.javers.core.JaversBuilder;
+import org.javers.core.diff.Change;
+import org.javers.core.diff.Diff;
+import org.jboss.ejb3.annotation.SecurityDomain;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 
 /*
@@ -45,15 +89,42 @@ import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
-import fr.ortolang.diffusion.*;
+
+import fr.ortolang.diffusion.OrtolangConfig;
+import fr.ortolang.diffusion.OrtolangEvent;
 import fr.ortolang.diffusion.OrtolangEvent.ArgumentsBuilder;
+import fr.ortolang.diffusion.OrtolangException;
+import fr.ortolang.diffusion.OrtolangObject;
+import fr.ortolang.diffusion.OrtolangObjectIdentifier;
+import fr.ortolang.diffusion.OrtolangObjectPid;
+import fr.ortolang.diffusion.OrtolangObjectSize;
+import fr.ortolang.diffusion.OrtolangObjectState;
 import fr.ortolang.diffusion.OrtolangObjectState.Status;
+import fr.ortolang.diffusion.OrtolangObjectXmlExportHandler;
+import fr.ortolang.diffusion.OrtolangObjectXmlImportHandler;
 import fr.ortolang.diffusion.core.entity.Collection;
-import fr.ortolang.diffusion.core.entity.*;
-import fr.ortolang.diffusion.core.indexing.*;
+import fr.ortolang.diffusion.core.entity.CollectionElement;
+import fr.ortolang.diffusion.core.entity.DataObject;
+import fr.ortolang.diffusion.core.entity.Link;
+import fr.ortolang.diffusion.core.entity.MetadataElement;
+import fr.ortolang.diffusion.core.entity.MetadataFormat;
+import fr.ortolang.diffusion.core.entity.MetadataObject;
+import fr.ortolang.diffusion.core.entity.MetadataSource;
+import fr.ortolang.diffusion.core.entity.SnapshotElement;
+import fr.ortolang.diffusion.core.entity.TagElement;
+import fr.ortolang.diffusion.core.entity.Workspace;
+import fr.ortolang.diffusion.core.entity.WorkspaceAlias;
+import fr.ortolang.diffusion.core.entity.WorkspaceType;
+import fr.ortolang.diffusion.core.indexing.OrtolangItemIndexableContent;
+import fr.ortolang.diffusion.core.indexing.UserMetadataIndexableContent;
+import fr.ortolang.diffusion.core.indexing.WorkspaceIndexableContent;
 import fr.ortolang.diffusion.core.wrapper.CollectionWrapper;
 import fr.ortolang.diffusion.core.wrapper.OrtolangObjectWrapper;
-import fr.ortolang.diffusion.core.xml.*;
+import fr.ortolang.diffusion.core.xml.CollectionExportHandler;
+import fr.ortolang.diffusion.core.xml.DataObjectExportHandler;
+import fr.ortolang.diffusion.core.xml.LinkExportHandler;
+import fr.ortolang.diffusion.core.xml.MetadataObjectExportHandler;
+import fr.ortolang.diffusion.core.xml.WorkspaceExportHandler;
 import fr.ortolang.diffusion.event.EventService;
 import fr.ortolang.diffusion.extraction.ExtractionService;
 import fr.ortolang.diffusion.extraction.ExtractionServiceException;
@@ -65,7 +136,14 @@ import fr.ortolang.diffusion.membership.MembershipServiceException;
 import fr.ortolang.diffusion.membership.entity.Group;
 import fr.ortolang.diffusion.notification.NotificationService;
 import fr.ortolang.diffusion.notification.NotificationServiceException;
-import fr.ortolang.diffusion.registry.*;
+import fr.ortolang.diffusion.registry.IdentifierAlreadyRegisteredException;
+import fr.ortolang.diffusion.registry.IdentifierNotRegisteredException;
+import fr.ortolang.diffusion.registry.KeyAlreadyExistsException;
+import fr.ortolang.diffusion.registry.KeyLockedException;
+import fr.ortolang.diffusion.registry.KeyNotFoundException;
+import fr.ortolang.diffusion.registry.PropertyNotFoundException;
+import fr.ortolang.diffusion.registry.RegistryService;
+import fr.ortolang.diffusion.registry.RegistryServiceException;
 import fr.ortolang.diffusion.security.SecurityService;
 import fr.ortolang.diffusion.security.SecurityServiceException;
 import fr.ortolang.diffusion.security.authorisation.AccessDeniedException;
@@ -76,30 +154,6 @@ import fr.ortolang.diffusion.store.binary.BinaryStoreService;
 import fr.ortolang.diffusion.store.binary.BinaryStoreServiceException;
 import fr.ortolang.diffusion.store.binary.DataCollisionException;
 import fr.ortolang.diffusion.store.binary.DataNotFoundException;
-
-import org.javers.core.Javers;
-import org.javers.core.JaversBuilder;
-import org.javers.core.diff.Change;
-import org.javers.core.diff.Diff;
-import org.jboss.ejb3.annotation.SecurityDomain;
-
-import javax.annotation.Resource;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-import javax.ejb.*;
-import javax.json.*;
-import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
-import javax.persistence.PersistenceContext;
-import javax.persistence.TypedQuery;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Local(CoreService.class)
 @Stateless(name = CoreService.SERVICE_NAME)
@@ -435,6 +489,19 @@ public class CoreServiceBean implements CoreService {
             LOGGER.log(Level.SEVERE, "unable to list all workspace aliases", e);
             throw new CoreServiceException("unable to list all workspace aliases", e);
         }
+    }
+    
+
+    @Override
+    @RolesAllowed({ "admin" })
+    @TransactionAttribute(TransactionAttributeType.SUPPORTS)
+    public List<Workspace> systemListWorkspaces(int limit) {
+    	LOGGER.log(Level.FINE, "#system listing workspaces with limit to" + limit);
+    	TypedQuery<Workspace> query = em.createNamedQuery("listWorkspaces", Workspace.class);
+    	if (limit > -1) {
+            query.setMaxResults(limit);
+        }
+    	return query.getResultList();
     }
 
     @Override

@@ -63,7 +63,8 @@ import fr.ortolang.diffusion.core.CoreService;
         @NamedQuery(name = "findWorkspaceByMember", query = "select w from Workspace w where w.members in :groups"),
         @NamedQuery(name = "findWorkspaceByRootCollection", query = "select w from Workspace w where w.snapshotsContent like :root"),
         @NamedQuery(name = "findWorkspaceByAlias", query = "select w from Workspace w where w.alias = :alias"),
-        @NamedQuery(name = "listAllWorkspaceAlias", query = "select w.alias from Workspace w where w.alias not like ''")
+        @NamedQuery(name = "listAllWorkspaceAlias", query = "select w.alias from Workspace w where w.alias not like ''"),
+        @NamedQuery(name = "listWorkspaces", query = "select w from Workspace w order by changed desc")
 })
 @SuppressWarnings("serial")
 public class Workspace extends OrtolangObject {

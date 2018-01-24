@@ -102,6 +102,8 @@ public interface CoreService extends OrtolangObjectProviderService, OrtolangBina
 
     void deleteWorkspace(String wskey, boolean force) throws CoreServiceException, WorkspaceReadOnlyException, KeyNotFoundException, AccessDeniedException;
 
+    List<Workspace> systemListWorkspaces(int limit);
+    
     List<String> findWorkspacesForProfile(String profile) throws CoreServiceException, AccessDeniedException;
 
     List<String> findWorkspacesAliasForProfile(String profile) throws CoreServiceException, AccessDeniedException;

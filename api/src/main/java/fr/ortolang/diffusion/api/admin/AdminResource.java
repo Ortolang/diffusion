@@ -47,6 +47,8 @@ import fr.ortolang.diffusion.api.runtime.HumanTaskRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessRepresentation;
 import fr.ortolang.diffusion.api.runtime.ProcessTypeRepresentation;
 import fr.ortolang.diffusion.api.workspace.WorkspaceRepresentation;
+import fr.ortolang.diffusion.browser.BrowserService;
+import fr.ortolang.diffusion.browser.BrowserServiceException;
 import fr.ortolang.diffusion.api.search.SearchResourceHelper;
 import fr.ortolang.diffusion.api.search.SearchResultRepresentation;
 import fr.ortolang.diffusion.api.search.SearchResultsRepresentation;
@@ -134,6 +136,8 @@ public class AdminResource {
     private SecurityService security;
     @EJB
     private CoreService core;
+    @EJB
+    private BrowserService browser;
     @EJB
     private RuntimeService runtime;
     @EJB
@@ -377,6 +381,26 @@ public class AdminResource {
         return Response.ok().entity(representations).build();
     }
 
+    @GET
+    @Path("/workspaces")
+    @GZIP
+    public Response listWorkspaces(@DefaultValue(value = "-1") @QueryParam(value = "limit") int limit) throws AccessDeniedException, BrowserServiceException, KeyNotFoundException, SecurityServiceException, RegistryServiceException, IdentifierNotRegisteredException {
+    	List<Workspace> workspaces = core.systemListWorkspaces(limit);
+    	GenericCollectionRepresentation<WorkspaceRepresentation> representation = new GenericCollectionRepresentation<WorkspaceRepresentation>();
+        for (Workspace workspace : workspaces) {
+        	OrtolangObjectIdentifier identifier = workspace.getObjectIdentifier();
+        	String key = registry.lookup(identifier);
+            OrtolangObjectInfos infos = browser.getInfos(key);
+            WorkspaceRepresentation workspaceRepresentation = WorkspaceRepresentation.fromWorkspace(workspace, infos);
+            workspaceRepresentation.setKey(key);
+            workspaceRepresentation.setOwner(security.getOwner(key));
+            representation.addEntry(workspaceRepresentation);
+        }
+        representation.setOffset(0);
+        representation.setLimit(limit);
+    	return Response.ok(representation).build();
+    }
+    
     @GET
     @Path("/runtime/types")
     @GZIP
