@@ -73,6 +73,7 @@ import fr.ortolang.diffusion.api.mapper.SearchServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SecurityServiceExceptionMapper;
 import fr.ortolang.diffusion.api.mapper.SubscriptionServiceExceptionMapper;
 import fr.ortolang.diffusion.api.message.MessageResource;
+import fr.ortolang.diffusion.api.oai.OaiResource;
 import fr.ortolang.diffusion.api.oaipmh.OAIPMHServlet;
 import fr.ortolang.diffusion.api.object.ObjectResource;
 import fr.ortolang.diffusion.api.profile.ProfileResource;
@@ -109,6 +110,7 @@ public class ApiApplication extends Application {
         classes.add(EventFeedResource.class);
         classes.add(SeoResource.class);
         classes.add(MessageResource.class);
+        classes.add(OaiResource.class);
     }
 
     @Override

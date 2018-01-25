@@ -81,6 +81,13 @@ public class OaiServiceBean implements OaiService {
 
 	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
+	public List<Record> listRecords() {
+		TypedQuery<Record> query = em.createNamedQuery("findRecords", Record.class);
+		return query.getResultList();
+	}
+	
+	@Override
+	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
 	public List<Record> listRecordsByIdentifier(String identifier) throws RecordNotFoundException {
 		TypedQuery<Record> query = em.createNamedQuery("findRecordsByIdentifier", Record.class)
 				.setParameter("identifier", identifier);
@@ -256,8 +263,9 @@ public class OaiServiceBean implements OaiService {
 		em.remove(set);
 	}
 
+	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	private long countSets() {
+	public long countSets() {
 		try {
 			TypedQuery<Long> query = em.createNamedQuery("countSets", Long.class);
 			return query.getSingleResult();
@@ -266,8 +274,9 @@ public class OaiServiceBean implements OaiService {
 		return 0;
 	}
 
+	@Override
 	@TransactionAttribute(TransactionAttributeType.SUPPORTS)
-	private long countRecords() {
+	public long countRecords() {
 		try {
 			TypedQuery<Long> query = em.createNamedQuery("countRecordsGroupByIdentifier", Long.class);
 			return query.getSingleResult();

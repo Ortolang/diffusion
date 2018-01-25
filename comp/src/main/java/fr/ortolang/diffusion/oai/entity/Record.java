@@ -16,6 +16,7 @@ import org.hibernate.annotations.Type;
 
 @Entity
 @NamedQueries({ @NamedQuery(name = "findRecordsByIdentifier", query = "SELECT r FROM Record r WHERE r.identifier = :identifier"),
+        @NamedQuery(name = "findRecords", query = "SELECT r FROM Record r"),
         @NamedQuery(name = "findRecordsByMetadataPrefix", query = "SELECT r FROM Record r WHERE r.metadataPrefix = :metadataPrefix"),
         @NamedQuery(name = "listRecordsBySet", query = "SELECT r FROM Record r WHERE :set MEMBER OF r.sets"),
         @NamedQuery(name = "findRecordsByIdentifierAndMetadataPrefix", query = "SELECT r FROM Record r WHERE r.identifier = :identifier AND r.metadataPrefix = :metadataPrefix"),

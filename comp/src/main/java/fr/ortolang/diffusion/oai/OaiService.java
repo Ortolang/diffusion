@@ -17,6 +17,8 @@ public interface OaiService extends OrtolangService {
     String INFO_COUNT_SETS = "count.sets";
     String INFO_COUNT_RECORDS = "count.records";
 
+    List<Record> listRecords();
+    
     List<Record> listRecordsByIdentifier(String identifier) throws RecordNotFoundException;
 
     List<Record> listRecordsBySet(String set) throws RecordNotFoundException;
@@ -48,4 +50,8 @@ public interface OaiService extends OrtolangService {
     Set updateSet(String spec, String name) throws SetNotFoundException;
 
     void deleteSet(String spec) throws SetNotFoundException;
+    
+    long countSets();
+    
+    long countRecords();
 }
