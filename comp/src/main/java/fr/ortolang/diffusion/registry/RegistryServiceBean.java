@@ -633,15 +633,21 @@ public class RegistryServiceBean implements RegistryService {
     @Override
     @RolesAllowed({"admin", "system"})
     @TransactionAttribute(TransactionAttributeType.SUPPORTS)
-    public List<RegistryEntry> systemListEntries(String keyFilter, String identifierFilter) throws RegistryServiceException {
-        LOGGER.log(Level.FINE, "#SYSTEM# list entries for key filter [" + keyFilter + "] and identifierFilter [" + identifierFilter + "]");
+    public List<RegistryEntry> systemListEntries(int offset, int limit, String keyFilter, String identifierFilter) throws RegistryServiceException {
+        LOGGER.log(Level.FINE, "#SYSTEM# list entries for key filter [" + keyFilter + "] and identifierFilter [" + identifierFilter + "] with offset to " + offset + " and limit to " + limit);
+        if (offset < 0) {
+            throw new RegistryServiceException("offset MUST be >= 0");
+        }
         if ( keyFilter == null ) {
             keyFilter = "";
         }
         if ( identifierFilter == null ) {
             identifierFilter = "";
         }
-        TypedQuery<RegistryEntry> query = em.createNamedQuery("findEntryByKeyAndIdentifier", RegistryEntry.class).setParameter("keyFilter", keyFilter + "%").setParameter("identifierFilter", identifierFilter + "%");
+        TypedQuery<RegistryEntry> query = em.createNamedQuery("findEntryByKeyAndIdentifier", RegistryEntry.class).setParameter("keyFilter", keyFilter + "%").setParameter("identifierFilter", identifierFilter + "%").setFirstResult(offset);
+        if (limit > -1) {
+            query.setMaxResults(limit);
+        }
         return query.getResultList();
     }
 

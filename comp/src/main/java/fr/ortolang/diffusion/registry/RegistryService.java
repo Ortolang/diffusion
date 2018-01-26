@@ -136,7 +136,7 @@ public interface RegistryService extends OrtolangService {
     boolean exists(String key) throws RegistryServiceException;
 
 
-    List<RegistryEntry> systemListEntries(String keyFilter, String identifierFilter) throws RegistryServiceException;
+    List<RegistryEntry> systemListEntries(int offset, int limit, String keyFilter, String identifierFilter) throws RegistryServiceException;
 
     RegistryEntry systemReadEntry(String key) throws RegistryServiceException, KeyNotFoundException;
 

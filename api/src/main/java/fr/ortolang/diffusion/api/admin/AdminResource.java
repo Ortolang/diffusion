@@ -171,8 +171,8 @@ public class AdminResource {
     @GET
     @Path("/registry/entries")
     @GZIP
-    public Response listEntries(@QueryParam("kfilter") String kfilter, @QueryParam("ifilter") String ifilter) throws RegistryServiceException {
-        List<RegistryEntry> entries = registry.systemListEntries(kfilter, ifilter);
+    public Response listEntries(@DefaultValue(value = "0") @QueryParam(value = "offset") int offset, @DefaultValue(value = "-1") @QueryParam(value = "limit") int limit,@QueryParam("kfilter") String kfilter, @QueryParam("ifilter") String ifilter) throws RegistryServiceException {
+        List<RegistryEntry> entries = registry.systemListEntries(offset, limit, kfilter, ifilter);
         return Response.ok(entries).build();
     }
 
