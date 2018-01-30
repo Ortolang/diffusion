@@ -108,7 +108,6 @@ public class IndexingServiceTest {
         jar.addPackage("fr.ortolang.diffusion.jobs.entity");
         jar.addPackage("fr.ortolang.diffusion.template");
         jar.addAsResource("config.properties");
-        jar.addAsResource("orientdb-config.xml");
         jar.addAsResource("schema/ortolang-item-schema.json");
         jar.addAsResource("schema/ortolang-workspace-schema.json");
         jar.addAsResource("json/sample3.json");

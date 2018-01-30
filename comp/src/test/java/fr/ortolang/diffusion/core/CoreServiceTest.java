@@ -134,7 +134,6 @@ public class CoreServiceTest {
         jar.addClass("fr.ortolang.diffusion.indexing.OrtolangIndexableContent");
         jar.addPackage("fr.ortolang.diffusion.template");
         jar.addAsResource("config.properties");
-        jar.addAsResource("orientdb-config.xml");
         jar.addAsResource("schema/ortolang-item-schema.json");
         jar.addAsResource("schema/ortolang-workspace-schema.json");
         jar.addAsResource("json/meta.json");
