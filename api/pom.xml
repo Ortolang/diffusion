@@ -104,6 +104,7 @@
                 <includes>
                     <include>**/*.ftl</include>
                     <include>**/*.properties</include>
+                    <include>**/javax.ws.rs.ext.Providers</include>
                 </includes>
             </resource>
         </resources>
