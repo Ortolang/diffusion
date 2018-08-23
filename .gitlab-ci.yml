@@ -12,13 +12,9 @@ stages:
   - deploy
 
 maven_build:
-  image: maven:3-jdk-8
+  image: roffe/kubectl:v1.9.7
   stage: build
   tags:
     - ortolang-docker-bind
-  before_script:
-    - curl -O "http://download.jboss.org/wildfly/10.1.0.Final/wildfly-10.1.0.Final.zip"
-    - unzip wildfly-10.1.0.Final.zip
-    - export JBOSS_HOME=$PWD/wildfly-10.1.0.Final
   script:
-    - "mvn clean package -B"
+    - "mvn -DskipTests clean package -B"
