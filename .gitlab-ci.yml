@@ -17,4 +17,4 @@ maven_build:
   tags:
     - ortolang-docker-bind
   script:
-    - "mvn -DskipTests clean package -B"
+    - "mvn -DskipTests clean package"
