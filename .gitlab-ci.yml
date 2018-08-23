@@ -18,6 +18,3 @@ maven_build:
     - ortolang-docker-bind
   script:
     - "mvn -q -DskipTests clean package"
-  artifacts:
-    paths:
-    - appli/target/ortolang-diffusion.ear
