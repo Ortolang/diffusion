@@ -17,8 +17,8 @@ maven_build:
   tags:
     - ortolang-docker-bind
   before_script:
-    - curl -O "http://download.jboss.org/wildfly/11.0.0.Final/wildfly-11.0.0.Final.zip"
-    - unzip wildfly-11.0.0.Final.zip
-    - export JBOSS_HOME=$PWD/wildfly-11.0.0.Final
+    - curl -O "http://download.jboss.org/wildfly/10.1.0.Final/wildfly-10.1.0.Final.zip"
+    - unzip wildfly-10.1.0.Final.zip
+    - export JBOSS_HOME=$PWD/wildfly-10.1.0.Final
   script:
     - "mvn clean package -B"
