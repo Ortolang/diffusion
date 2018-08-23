@@ -12,9 +12,9 @@ stages:
   - deploy
 
 maven_build:
-  image: roffe/kubectl:v1.9.7
+  image: maven:3-jdk-8
   stage: build
   tags:
     - ortolang-docker-bind
   script:
-    - "mvn -DskipTests clean package -B"
+    - "mvn -DskipTests clean package"
