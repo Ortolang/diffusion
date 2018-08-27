@@ -1,7 +1,7 @@
-image: docker:latest
+image: docker:18.06.0
 
 services:
-- docker:dind
+- docker:18.06.0-dind
 
 variables:
   GIT_SSL_NO_VERIFY: "true"
@@ -15,8 +15,6 @@ maven_docker_build:
   tags:
     - ortolang-docker-bind
   script:
-    - echo $CI_REGISTRY
-    - echo $CI_REGISTRY_USER
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker build -t $ORTOLANG_DIFFUSION_IMAGE .
     - docker push $ORTOLANG_DIFFUSION_IMAGE
