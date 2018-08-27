@@ -5,16 +5,16 @@ services:
 
 variables:
   GIT_SSL_NO_VERIFY: "true"
+  ORTOLANG_DIFFUSION_IMAGE: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$CI_COMMIT_REF_NAME
 
 stages:
   - build
-  - package
-  - deploy
 
-maven_build:
-  image: maven:3-jdk-11-slim
+maven_docker_build:
   stage: build
   tags:
     - ortolang-docker-bind
   script:
-    - "mvn -DskipTests clean package"
+    - docker build -t $ORTOLANG_DIFFUSION_IMAGE .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $ORTOLANG_DIFFUSION_IMAGE
