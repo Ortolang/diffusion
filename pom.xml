@@ -33,7 +33,7 @@
         <version.ear.plugin>2.10.1</version.ear.plugin>
         <version.ejb.plugin>2.5.1</version.ejb.plugin>
         <version.wildfly.maven.plugin>1.1.0.Alpha11</version.wildfly.maven.plugin>
-        <version.wildfly>10.1.0.Final</version.wildfly>
+        <version.wildfly>11.0.0.Final</version.wildfly>
         <slf4j.version>1.6.4</slf4j.version>
         <version.apache.tika>1.13</version.apache.tika>
         <version.apache.velocity>1.7</version.apache.velocity>
@@ -44,8 +44,8 @@
         <version.keycloak>2.2.1.Final</version.keycloak>
         <version.shrinkwrap>1.2.6</version.shrinkwrap>
         <version.shrinkwrap-resolver>2.2.2</version.shrinkwrap-resolver>
-        <version.arquillian>1.1.11.Final</version.arquillian>
-        <version.wildfly.arquillian>2.0.0.Final</version.wildfly.arquillian>
+        <version.arquillian>1.4.0.Final</version.arquillian>
+        <version.wildfly.arquillian>2.1.1.Final</version.wildfly.arquillian>
         <version.fasterxml.jackson>2.8.3</version.fasterxml.jackson>
         <version.commons-io>2.5</version.commons-io>
         <version.springframework.spring-context>4.3.2.RELEASE</version.springframework.spring-context>
