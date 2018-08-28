@@ -39,18 +39,9 @@
         <property name="ortolang.db.user" value="${env.ORTOLANG_DB_USER}"/>
         <property name="ortolang.db.pass" value="${env.ORTOLANG_DB_PASS}"/>
         <property name='ortolang.keystore.name' value="${env.ORTOLANG_KEYSTORE_NAME}"/>
-        <property name='ortolang.keystore.alias' value="ORTOLANG_KEYSTORE_ALIAS"/>
+        <property name='ortolang.keystore.alias' value="${env.ORTOLANG_KEYSTORE_ALIAS}"/>
         <property name='ortolang.keystore.pass' value="${env.ORTOLANG_KEYSTORE_PASS}"/>
         <property name="ortolang.key.pass" value="${env.ORTOLANG_KEY_PASS}"/>
-        <property name='jboss.management.http.port' value="${env.ORTOLANG_MGMT_HTTP_PORT}"/>
-        <property name='jboss.management.https.port' value="${env.ORTOLANG_MGMT_HTTPS_PORT}"/>
-        <property name='jboss.ajp.port' value="${env.ORTOLANG_AJP_PORT}"/>
-        <property name='jboss.http.port' value="${env.ORTOLANG_HTTP_PORT}"/>
-        <property name='jboss.https.port' value="${env.ORTOLANG_HTTPS_PORT}"/>
-        <property name='txn.recovery.environment.port' value="${env.ORTOLANG_TXN_RECOVERY_PORT}"/>
-        <property name='txn.status.manager.port' value="${env.ORTOLANG_TXN_STATUS_PORT}"/>
-        <property name='smtp.host' value="${env.ORTOLANG_SMTP_HOST}"/>
-        <property name='smtp.port' value="${env.ORTOLANG_SMTP_PORT}"/>
     </system-properties>
 
     <management>

@@ -5,7 +5,7 @@ ENV JBOSS_HOME=/jboss/wildfly-11.0.0.Final
 WORKDIR /jboss
 
 RUN curl -O "http://download.jboss.org/wildfly/11.0.0.Final/wildfly-11.0.0.Final.zip" && \
-    unzip wildfly-11.0.0.Final.zip
+    unzip -q wildfly-11.0.0.Final.zip
 
 COPY comp/src/test/resources/ortolang-roles.properties /jboss/wildfly-11.0.0.Final/standalone/configuration/
 COPY comp/src/test/resources/ortolang-users.properties /jboss/wildfly-11.0.0.Final/standalone/configuration/
@@ -20,15 +20,16 @@ RUN mvn -q clean package -DjbossHome=/jboss/wildfly-11.0.0.Final -Djboss.home=/j
 FROM jboss/wildfly:11.0.0.Final
 
 ARG VERSION_PGSQL=9.4.1208
-ARG VERSION_KEYCLOAK=2.2.1.Final
+ARG VERSION_KEYCLOAK=3.4.3.Final
 
 WORKDIR /opt/jboss/wildfly/
 
 # Downloading custom PostgreSQL module for wildlfy
 RUN curl -q -O "http://maven.ortolang.fr/service/local/repositories/releases/content/fr/ortolang/ortolang-pgsql-wf-module/${VERSION_PGSQL}/ortolang-pgsql-wf-module-${VERSION_PGSQL}.zip" && \
-    unzip ortolang-pgsql-wf-module-${VERSION_PGSQL}.zip -d /opt/jboss/wildfly/
+    unzip -q ortolang-pgsql-wf-module-${VERSION_PGSQL}.zip -d /opt/jboss/wildfly/
 # Keycloak Adapter
 RUN curl -L "https://downloads.jboss.org/keycloak/${VERSION_KEYCLOAK}/adapters/keycloak-oidc/keycloak-wildfly-adapter-dist-${VERSION_KEYCLOAK}.tar.gz" | tar zx
+RUN $JBOSS_HOME/bin/jboss-cli.sh --file=bin/adapter-elytron-install-offline.cli
 
 COPY src/main/docker/configuration/* /opt/jboss/wildfly/standalone/configuration/    
 
