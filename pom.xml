@@ -44,8 +44,8 @@
         <version.keycloak>3.4.3</version.keycloak>
         <version.shrinkwrap>1.2.6</version.shrinkwrap>
         <version.shrinkwrap-resolver>2.2.2</version.shrinkwrap-resolver>
-        <version.arquillian>1.1.11.Final</version.arquillian>
-        <version.wildfly.arquillian>2.0.0.Final</version.wildfly.arquillian>
+        <version.arquillian>1.4.0.Final</version.arquillian>
+        <version.wildfly.arquillian>2.1.1.Final</version.wildfly.arquillian>
         <version.fasterxml.jackson>2.8.3</version.fasterxml.jackson>
         <version.commons-io>2.5</version.commons-io>
         <version.springframework.spring-context>4.3.2.RELEASE</version.springframework.spring-context>
