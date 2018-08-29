@@ -24,6 +24,13 @@ ARG VERSION_KEYCLOAK=3.4.3.Final
 
 WORKDIR /opt/jboss/wildfly/
 
+USER root
+
+# Install envsubst
+RUN yum install -y gettext
+
+USER jboss
+
 # Downloading custom PostgreSQL module for wildlfy
 RUN curl -q -O "http://maven.ortolang.fr/service/local/repositories/releases/content/fr/ortolang/ortolang-pgsql-wf-module/${VERSION_PGSQL}/ortolang-pgsql-wf-module-${VERSION_PGSQL}.zip" && \
     unzip -q ortolang-pgsql-wf-module-${VERSION_PGSQL}.zip -d /opt/jboss/wildfly/
@@ -33,8 +40,12 @@ RUN $JBOSS_HOME/bin/jboss-cli.sh --file=bin/adapter-elytron-install-offline.cli
 
 COPY src/main/docker/configuration/* /opt/jboss/wildfly/standalone/configuration/    
 
-RUN mkdir /opt/jboss/.ortolang-data
-RUN mkdir /opt/jboss/.ortolang-data/binary-store
-COPY src/main/docker/config.properties /opt/jboss/.ortolang-data
+RUN mkdir /opt/jboss/.ortolang
+RUN mkdir /opt/jboss/.ortolang/binary-store
+COPY src/main/docker/config.properties /opt/jboss/.ortolang
 
 COPY --from=builder /app/appli/target/ortolang-diffusion.ear /opt/jboss/wildfly/standalone/deployments/
+
+CMD cp /opt/jboss/.ortolang/config.properties /tmp/ && \
+    envsubst < /tmp/config.properties > /opt/jboss/.ortolang/config.properties && \
+    /opt/jboss/wildfly/bin/standalone.sh -b 0.0.0.0
