@@ -31,7 +31,7 @@
 
     <properties>
         <version.ear.plugin>2.10.1</version.ear.plugin>
-        <version.ejb.plugin>2.5.1</version.ejb.plugin>
+        <version.ejb.plugin>3.0.0</version.ejb.plugin>
         <version.wildfly.maven.plugin>1.1.0.Alpha11</version.wildfly.maven.plugin>
         <version.wildfly>11.0.0.Final</version.wildfly>
         <slf4j.version>1.6.4</slf4j.version>
@@ -40,8 +40,8 @@
         <version.apache.velocity-tools>2.0</version.apache.velocity-tools>
         <version.apache.httpcore>4.4.4</version.apache.httpcore>
         <version.javax.javaee>7.0</version.javax.javaee>
-        <version.jboss.resteasy>3.0.19.Final</version.jboss.resteasy>
-        <version.keycloak>2.2.1.Final</version.keycloak>
+        <version.jboss.resteasy>3.0.24.Final</version.jboss.resteasy>
+        <version.keycloak>3.4.3</version.keycloak>
         <version.shrinkwrap>1.2.6</version.shrinkwrap>
         <version.shrinkwrap-resolver>2.2.2</version.shrinkwrap-resolver>
         <version.arquillian>1.4.0.Final</version.arquillian>
