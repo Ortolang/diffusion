@@ -42,6 +42,7 @@
         <property name='ortolang.keystore.alias' value="${env.ORTOLANG_KEYSTORE_ALIAS}"/>
         <property name='ortolang.keystore.pass' value="${env.ORTOLANG_KEYSTORE_PASS}"/>
         <property name="ortolang.key.pass" value="${env.ORTOLANG_KEY_PASS}"/>
+        <property name="ortolang.auth.url" value="${env.ORTOLANG_AUTH_URL}"/>
     </system-properties>
 
     <management>
@@ -594,8 +595,7 @@
                 <resource>api</resource>
                 <enable-basic-auth>true</enable-basic-auth>
                 <public-client>true</public-client>
-                <realm-public-key>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCRmBCDTUMDthejFWpp0ExceHDpVoXI/5WPXq/JLf/D0iY0QWRl1/M/hcBV07VRH8rfJXejisxHyZX/aPx2mYYaRychTz/oEtG3Beio5E7iq/HDz/qoJaQCY1qOU3sNdrykpEY/gVjbFDgDRIOI9shg+J1KRpaVQt5fM5JDTIgNpQIDAQAB</realm-public-key>
-                <auth-server-url>http://localhost:18080/auth</auth-server-url>
+                <auth-server-url>${ortolang.auth.ur}</auth-server-url>
                 <ssl-required>EXTERNAL</ssl-required>
                 <principal-attribute>preferred_username</principal-attribute>
             </secure-deployment>
