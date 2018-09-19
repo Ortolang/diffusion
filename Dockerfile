@@ -44,6 +44,8 @@ RUN mkdir /opt/jboss/.ortolang
 RUN mkdir /opt/jboss/.ortolang/binary-store
 COPY src/main/docker/config.properties /opt/jboss/.ortolang
 
+RUN curl -O -L 'https://github.com/vishnubob/wait-for-it/raw/master/wait-for-it.sh' && chmod +x wait-for-it.sh
+
 COPY --from=builder /app/appli/target/ortolang-diffusion.ear /opt/jboss/wildfly/standalone/deployments/
 
 CMD cp /opt/jboss/.ortolang/config.properties /tmp/ && \
