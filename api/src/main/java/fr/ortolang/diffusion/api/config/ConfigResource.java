@@ -137,7 +137,9 @@ public class ConfigResource {
             StringBuilder builder = new StringBuilder();
             builder.append("{\r\n");
             builder.append("\t\"realm\": \"").append(getInstance().getProperty(Property.AUTH_REALM)).append("\",\r\n");
-            builder.append("\t\"realm-public-key\": \"").append(getInstance().getProperty(Property.AUTH_CLIENT_PUBKEY)).append("\",\r\n");
+            if (getInstance().getProperty(Property.AUTH_CLIENT_PUBKEY) != null) {
+            	builder.append("\t\"realm-public-key\": \"").append(getInstance().getProperty(Property.AUTH_CLIENT_PUBKEY)).append("\",\r\n");
+            }
             builder.append("\t\"auth-server-url\": \"").append(getInstance().getProperty(Property.AUTH_SERVER_URL)).append("\",\r\n");
             builder.append("\t\"ssl-required\": \"external\",\r\n");
             builder.append("\t\"resource\": \"").append(getInstance().getProperty(Property.AUTH_CLIENT)).append("\",\r\n");
@@ -179,7 +181,9 @@ public class ConfigResource {
             StringBuilder builder = new StringBuilder();
             builder.append("{\r\n");
             builder.append("\t\"realm\": \"").append(getInstance().getProperty(Property.AUTH_REALM)).append("\",\r\n");
-            builder.append("\t\"realm-public-key\": \"").append(getInstance().getProperty(Property.AUTH_CLIENT_PUBKEY)).append("\",\r\n");
+            if (getInstance().getProperty(Property.AUTH_CLIENT_PUBKEY) != null) {
+            	builder.append("\t\"realm-public-key\": \"").append(getInstance().getProperty(Property.AUTH_CLIENT_PUBKEY)).append("\",\r\n");
+            }
             builder.append("\t\"auth-server-url\": \"").append(getInstance().getProperty(Property.AUTH_SERVER_URL)).append("\",\r\n");
             builder.append("\t\"ssl-required\": \"external\",\r\n");
             builder.append("\t\"resource\": \"admin\",\r\n");
