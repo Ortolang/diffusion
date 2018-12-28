@@ -120,9 +120,10 @@ abstract class PiwikCollector implements Runnable {
             request.setCustomTrackingParameter("filter_pattern_recursive", "api/content/" + (single ? "" : "export/") + alias + "/");
         } else {
             // Get stats for all the different versions and not if url /market/item/.*
-            request.setCustomTrackingParameter("filter_pattern_recursive", "^market/(?!item)\\w*/" + alias + "($|/.*$)");
+            request.setCustomTrackingParameter("filter_pattern_recursive", "^/market/(?!item)\\w*/" + alias + "($|/.*$)");
         }
         request.setAuthToken(authToken);
+        LOGGER.log(Level.FINEST,"url sended " + request.getUrlEncodedQueryString());
         return request;
     }
 
