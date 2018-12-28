@@ -171,7 +171,7 @@ public class WorkspaceStatisticValue implements Serializable {
         this.name = value.getName();
         this.timestamp = value.getTimestamp();
         this.visits = value.getVisits();
-        this.uniqueVisitors = value.getHits();
+        this.uniqueVisitors = value.getUniqueVisitors();
         this.hits = value.getHits();
         this.downloads = value.getDownloads();
         this.singleDownloads = value.getSingleDownloads();
