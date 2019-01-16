@@ -459,7 +459,7 @@
         <subsystem xmlns="urn:jboss:domain:jsf:1.0"/>
         <subsystem xmlns="urn:jboss:domain:mail:3.0">
             <mail-session name="default" jndi-name="java:jboss/mail/Default">
-                <smtp-server outbound-socket-binding-ref="mail-smtp" ssl="${smtp.ssl:true}" username="${smtp.username:username}" password="${smtp.password:mySmtpPassword}"/>
+                <smtp-server outbound-socket-binding-ref="mail-smtp" tls="${smtp.ssl:true}" username="${smtp.username:username}" password="${smtp.password:mySmtpPassword}"/>
             </mail-session>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:messaging-activemq:1.0">
